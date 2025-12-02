@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
   <head>
@@ -101,6 +100,118 @@
       .dark .glass {
         background: rgba(28, 25, 23, 0.8);
         border: 1px solid rgba(255, 255, 255, 0.05);
+      }
+
+      /* Theme Variables */
+      .theme-modern {
+        --theme-bg: #fafaf9; /* Warm Paper */
+        --card-bg: rgba(255, 255, 255, 0.95);
+        --card-border: rgba(0,0,0,0.06);
+        --card-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+        --card-text: #1c1917;
+        --gender-male-text: #0f766e; /* Teal 700 */
+        --gender-female-text: #be185d; /* Pink 700 */
+        --gender-male-border: #5eead4;
+        --gender-female-border: #fbcfe8;
+        --link-line-stroke: #a8a29e; /* Stone 400 */
+        --focus-ring-color: #0d9488; /* Brand Teal */
+      }
+      .dark .theme-modern {
+        --theme-bg: #0c0a09;
+        --card-bg: rgba(28, 25, 23, 0.9);
+        --card-border: rgba(255,255,255,0.08);
+        --card-shadow: 0 4px 6px -1px rgba(0,0,0,0.3);
+        --card-text: #f5f5f4;
+        --gender-male-text: #5eead4; /* Teal 300 */
+        --gender-female-text: #f9a8d4; /* Pink 300 */
+        --gender-male-border: #5eead4;
+        --gender-female-border: #fbcfe8;
+        --link-line-stroke: #57534e;
+        --focus-ring-color: #2dd4bf;
+      }
+
+      .theme-vintage {
+        --theme-bg: #f4e4bc;
+        --card-bg: rgba(253, 246, 227, 0.9);
+        --card-border: #8b7355;
+        --card-shadow: 2px 2px 5px rgba(60, 40, 20, 0.2);
+        --card-text: #4a3b2a;
+        --gender-male-text: #5c4b37;
+        --gender-female-text: #8b5a2b;
+        --gender-male-border: #5c4b37;
+        --gender-female-border: #8b5a2b;
+        --link-line-stroke: #8b7355;
+        --focus-ring-color: #8b7355;
+      }
+      .dark .theme-vintage {
+        --theme-bg: #3a3020;
+        --card-bg: rgba(58, 48, 32, 0.9);
+        --card-border: #b8a280;
+        --card-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+        --card-text: #e0d0b0;
+        --gender-male-text: #b8a280;
+        --gender-female-text: #d0b090;
+        --gender-male-border: #b8a280;
+        --gender-female-border: #d0b090;
+        --link-line-stroke: #b8a280;
+        --focus-ring-color: #b8a280;
+      }
+
+      .theme-blueprint {
+        --theme-bg: #1e3a8a;
+        --card-bg: rgba(30, 58, 138, 0.9);
+        --card-border: #93c5fd;
+        --card-shadow: 0 0 10px rgba(147, 197, 253, 0.2);
+        --card-text: #dbeafe;
+        --gender-male-text: #93c5fd;
+        --gender-female-text: #fff;
+        --gender-male-border: #93c5fd;
+        --gender-female-border: #fff;
+        --link-line-stroke: #93c5fd;
+        --focus-ring-color: #fff;
+      }
+      .dark .theme-blueprint {
+        --theme-bg: #1e3a8a;
+        --card-bg: rgba(30, 58, 138, 0.9);
+        --card-border: #93c5fd;
+        --card-shadow: 0 0 10px rgba(147, 197, 253, 0.2);
+        --card-text: #dbeafe;
+        --gender-male-text: #93c5fd;
+        --gender-female-text: #fff;
+        --gender-male-border: #93c5fd;
+        --gender-female-border: #fff;
+        --link-line-stroke: #93c5fd;
+        --focus-ring-color: #fff;
+      }
+
+      /* Common styles using variables */
+      .uiverse-card {
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        box-shadow: var(--card-shadow);
+        color: var(--card-text);
+      }
+      .uiverse-card:hover {
+        border-color: var(--focus-ring-color); /* Use focus color for hover border */
+      }
+      .link-line {
+        stroke: var(--link-line-stroke);
+      }
+      .gender-text-male {
+        color: var(--gender-male-text);
+      }
+      .gender-text-female {
+        color: var(--gender-female-text);
+      }
+      .gender-border-male {
+        border-color: var(--gender-male-border);
+      }
+      .gender-border-female {
+        border-color: var(--gender-female-border);
+      }
+      .focus-ring {
+        outline: 2px solid var(--focus-ring-color);
+        outline-offset: 2px;
       }
     </style>
   <script type="importmap">

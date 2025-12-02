@@ -1,4 +1,3 @@
-
 import * as d3 from 'd3';
 import { Person, TreeNode, TreeLink, TreeSettings } from '../types';
 import { getDisplayDate } from './familyLogic';
@@ -64,7 +63,7 @@ const calculateDescendantLayout = (
     // Track visited nodes to prevent cycles
     const visitedInHierarchy = new Set<string>();
     
-    const buildHierarchy = (id: string): any => {
+    const buildHierarchy = (id: string): d3.HierarchyNode<any> | null => { // Explicitly type return
         if (visitedInHierarchy.has(id)) return null; 
         visitedInHierarchy.add(id);
 
@@ -151,7 +150,7 @@ const calculateDescendantLayout = (
     
     const treeLayout = d3.tree<any>()
         .nodeSize(isVertical ? [nodeSpace, levelGap] : [levelGap, nodeSpace])
-        .separation((a, b) => {
+        .separation((a: d3.HierarchyPointNode<any>, b: d3.HierarchyPointNode<any>) => { // Explicitly type a, b
             const pA = a.data.person as Person;
             const pB = b.data.person as Person;
             
@@ -195,7 +194,7 @@ const calculateDescendantLayout = (
         return { x: d.y + offsetY, y: d.x + offsetX };
     };
 
-    root.descendants().forEach((d) => {
+    root.descendants().forEach((d: d3.HierarchyPointNode<any>) => { // Explicitly type d
         const person = d.data.person as Person;
         const spouseIds = person.spouses || [];
         const hasMultipleSpouses = spouseIds.length > 1;
@@ -287,7 +286,7 @@ const calculateDescendantLayout = (
 
         // Add Parent-Child Links
         if (d.children) {
-            d.children.forEach(child => {
+            d.children.forEach((child: d3.HierarchyPointNode<any>) => { // Explicitly type child
                 links.push({ source: person.id, target: child.data.id, type: 'parent-child' });
             });
         }

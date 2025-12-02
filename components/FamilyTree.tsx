@@ -1,4 +1,3 @@
-
 import React, { useMemo, useRef, useEffect, useState, useCallback } from 'react';
 import * as d3 from 'd3';
 import { Person, TreeLink, TreeSettings, TreeNode } from '../types';
@@ -13,78 +12,7 @@ interface FamilyTreeProps {
   settings: TreeSettings;
 }
 
-// THEME STYLES (Dynamic injection)
-const getThemeStyles = (theme: string) => {
-    if (theme === 'vintage') {
-        return `
-            .theme-bg { background-color: #f4e4bc; background-image: url("https://www.transparenttextures.com/patterns/aged-paper.png"); }
-            .uiverse-card { background: rgba(253, 246, 227, 0.9); border: 2px solid #8b7355; border-radius: 4px; box-shadow: 2px 2px 5px rgba(60, 40, 20, 0.2); }
-            .uiverse-card:hover { transform: translateY(-3px) scale(1.02); box-shadow: 4px 4px 10px rgba(60, 40, 20, 0.3); }
-            .card-content { font-family: 'Courier New', serif; color: #4a3b2a; }
-            .avatar-img { filter: sepia(0.6); }
-            .link-line { stroke: #8b7355 !important; stroke-width: 1.5px; }
-            .gender-text-male { color: #5c4b37 !important; }
-            .gender-text-female { color: #8b5a2b !important; }
-            .gender-border-male { border-color: #5c4b37 !important; }
-            .gender-border-female { border-color: #8b5a2b !important; }
-        `;
-    }
-    if (theme === 'blueprint') {
-        return `
-            .theme-bg { background-color: #1e3a8a; background-image: radial-gradient(#3b82f6 1px, transparent 1px); background-size: 20px 20px; }
-            .uiverse-card { background: rgba(30, 58, 138, 0.9); border: 1px solid #93c5fd; border-radius: 0; box-shadow: 0 0 10px rgba(147, 197, 253, 0.2); }
-            .uiverse-card:hover { box-shadow: 0 0 20px rgba(147, 197, 253, 0.5); border-color: #fff; }
-            .card-content { font-family: 'Consolas', monospace; color: #dbeafe; }
-            .avatar-img { filter: grayscale(1) contrast(1.2); }
-            .link-line { stroke: #93c5fd !important; stroke-dasharray: 2,2; }
-            .gender-text-male { color: #93c5fd !important; }
-            .gender-text-female { color: #fff !important; }
-            .gender-border-male { border-color: #93c5fd !important; }
-            .gender-border-female { border-color: #fff !important; }
-        `;
-    }
-    // Default Modern (Updated to Nature/Clean look)
-    return `
-        .theme-bg { background-color: #fafaf9; } /* Warm Paper */
-        .dark .theme-bg { background-color: #0c0a09; }
-        
-        .uiverse-card { 
-            background: rgba(255, 255, 255, 0.95); 
-            border-radius: 16px; 
-            border: 1px solid rgba(0,0,0,0.06); 
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
-        }
-        .dark .uiverse-card { 
-            background: rgba(28, 25, 23, 0.9); 
-            border-color: rgba(255,255,255,0.08); 
-            color: #f5f5f4; 
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3);
-        }
-        .uiverse-card:hover { 
-            transform: translateY(-4px); 
-            box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.1); 
-            border-color: #0d9488; /* Brand Teal */
-        }
-        
-        .link-line { stroke: #a8a29e; opacity: 0.6; } /* Stone 400 */
-        .dark .link-line { stroke: #57534e; opacity: 0.6; }
-        
-        /* Modern Nature Colors */
-        .gender-text-male { color: #0f766e; } /* Teal 700 */
-        .dark .gender-text-male { color: #5eead4; } /* Teal 300 */
-        
-        .gender-text-female { color: #be185d; } /* Pink 700 */
-        .dark .gender-text-female { color: #f9a8d4; } /* Pink 300 */
-
-        .gender-border-male { border-color: #5eead4; }
-        .gender-border-female { border-color: #fbcfe8; }
-        
-        .focus-ring { ring: 2px solid #0d9488; ring-offset: 2px; }
-        .dark .focus-ring { ring-color: #2dd4bf; ring-offset-color: #0c0a09; }
-    `;
-};
-
-// Common Styles
+// Common Styles (now using CSS variables defined in index.html)
 const COMMON_STYLES = `
     .uiverse-card { transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); backdrop-filter: blur(8px); }
     .card-content { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; height: 100%; width: 100%; padding: 12px 8px; gap: 6px; position: relative; overflow: hidden; }
@@ -134,12 +62,12 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({ people, focus
 
      if (isFanChart) {
          const depthLimit = 6;
-         const buildAncestry = (id: string, depth: number): any => {
+         const buildAncestry = (id: string, depth: number): d3.HierarchyNode<any> | null => { // Explicitly type return
              if (depth > depthLimit) return null;
-             const p = people[id];
+             const p = people[id]; // Corrected: use 'p' as the person object
              if (!p) return null;
              
-             const node: any = { name: id, person: p, depth };
+             const node: any = { id: p.id, person: p, depth }; // Corrected: use 'p'
              
              const fatherId = p.parents.find(pid => people[pid]?.gender === 'male');
              const motherId = p.parents.find(pid => people[pid]?.gender === 'female');
@@ -177,7 +105,7 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({ people, focus
          const centerRadius = 80;
          const ringWidth = 100;
 
-         hierarchy.descendants().forEach((d: any) => {
+         hierarchy.descendants().forEach((d: d3.HierarchyPointNode<any>) => { // Explicitly type d
              const innerR = d.depth === 0 ? 0 : centerRadius + (d.depth - 1) * ringWidth;
              const outerR = d.depth === 0 ? centerRadius : centerRadius + d.depth * ringWidth;
 
@@ -247,7 +175,7 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({ people, focus
 
     const zoom = d3.zoom<SVGSVGElement, unknown>()
       .scaleExtent([0.1, 4])
-      .on('zoom', (event) => {
+      .on('zoom', (event: d3.D3ZoomEvent<SVGSVGElement, unknown>) => { // Explicitly type event
          if (gRef.current) d3.select(gRef.current).attr('transform', event.transform);
       });
 
@@ -365,7 +293,7 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({ people, focus
           const childData = target.data as Person;
           let correctJoint = null;
           if (childData.parents.length > 1) {
-             const otherParentId = childData.parents.find(id => id !== (source.data as Person).id); 
+             const otherParentId = childData.parents.find(id => people[id]?.id !== (source.data as Person).id); 
              if (otherParentId) {
                 correctJoint = collapsePoints.find(cp => cp.id === (source.data as Person).id && cp.spouseId === otherParentId);
              }
@@ -374,44 +302,43 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({ people, focus
           if (correctJoint) return drawRoundedPath(correctJoint.x, source.y, correctJoint.x, correctJoint.y, target.x, target.y);
       }
       return `M ${source.x} ${source.y} L ${target.x} ${target.y}`;
-  }, [nodes, settings.chartType, collapsePoints, drawRoundedPath, NODE_WIDTH, isForce]);
+  }, [nodes, settings.chartType, collapsePoints, drawRoundedPath, NODE_WIDTH, isForce, people]);
 
 
-  const arcGen = d3.arc<any>()
-      .startAngle(d => d.startAngle)
-      .endAngle(d => d.endAngle)
+  const arcGen = d3.arc<any, d3.DefaultArcObject>() // Explicitly type arc generator
+      .startAngle((d: d3.DefaultArcObject) => d.startAngle) // Explicitly type d
+      .endAngle((d: d3.DefaultArcObject) => d.endAngle) // Explicitly type d
       .padAngle(0.005)
-      .innerRadius(d => d.innerRadius) 
-      .outerRadius(d => d.outerRadius)
+      .innerRadius((d: d3.DefaultArcObject) => d.innerRadius)  // Explicitly type d
+      .outerRadius((d: d3.DefaultArcObject) => d.outerRadius) // Explicitly type d
       .cornerRadius(6); 
 
   return (
     <div ref={wrapperRef} className="flex-1 h-full theme-bg overflow-hidden relative cursor-move select-none transition-colors duration-500">
       
       <style>{COMMON_STYLES}</style>
-      <style>{getThemeStyles(settings.theme)}</style>
 
       {/* Minimap */}
       {!isFanChart && !isForce && settings.showMinimap && nodes.length > 0 && (
           <div className="minimap flex items-center justify-center">
               <svg viewBox={`${Math.min(...nodes.map(n=>n.x))-100} ${Math.min(...nodes.map(n=>n.y))-100} ${Math.max(...nodes.map(n=>n.x))-Math.min(...nodes.map(n=>n.x))+200} ${Math.max(...nodes.map(n=>n.y))-Math.min(...nodes.map(n=>n.y))+200}`} className="w-full h-full opacity-50">
                   {nodes.map(n => (
-                      <circle key={n.id} cx={n.x} cy={n.y} r={20} fill={n.id === focusId ? '#0d9488' : '#a8a29e'} />
+                      <circle key={n.id} cx={n.x} cy={n.y} r={20} fill={n.id === focusId ? 'var(--focus-ring-color)' : 'var(--link-line-stroke)'} />
                   ))}
                   {links.map((l, i) => {
                       const s = nodes.find(n => n.id === l.source);
                       const t = nodes.find(n => n.id === l.target);
                       if(!s || !t) return null;
-                      return <line key={i} x1={s.x} y1={s.y} x2={t.x} y2={t.y} stroke="#d6d3d1" strokeWidth="10" />
+                      return <line key={i} x1={s.x} y1={s.y} x2={t.x} y2={t.y} stroke="var(--link-line-stroke)" strokeWidth="10" />
                   })}
               </svg>
           </div>
       )}
 
       <div className="absolute bottom-6 right-6 flex flex-col gap-2 z-10 print:hidden">
-          <button onClick={() => handleZoom(1.2)} className="p-2.5 bg-white dark:bg-stone-800 rounded-full shadow-lg text-stone-600 dark:text-stone-300 hover:text-teal-600 hover:bg-teal-50 dark:hover:bg-stone-700 transition-all"><ZoomIn className="w-5 h-5" /></button>
-          <button onClick={() => handleZoom(0.8)} className="p-2.5 bg-white dark:bg-stone-800 rounded-full shadow-lg text-stone-600 dark:text-stone-300 hover:text-teal-600 hover:bg-teal-50 dark:hover:bg-stone-700 transition-all"><ZoomOut className="w-5 h-5" /></button>
-          <button onClick={handleReset} className="p-2.5 bg-white dark:bg-stone-800 rounded-full shadow-lg text-stone-600 dark:text-stone-300 hover:text-teal-600 hover:bg-teal-50 dark:hover:bg-stone-700 transition-all"><Maximize className="w-5 h-5" /></button>
+          <button onClick={() => handleZoom(1.2)} className="p-2.5 bg-white dark:bg-stone-800 rounded-full shadow-lg text-stone-600 dark:text-stone-300 hover:text-teal-600 hover:bg-teal-50 dark:hover:bg-stone-700 transition-all" aria-label="Zoom In"><ZoomIn className="w-5 h-5" /></button>
+          <button onClick={() => handleZoom(0.8)} className="p-2.5 bg-white dark:bg-stone-800 rounded-full shadow-lg text-stone-600 dark:text-stone-300 hover:text-teal-600 hover:bg-teal-50 dark:hover:bg-stone-700 transition-all" aria-label="Zoom Out"><ZoomOut className="w-5 h-5" /></button>
+          <button onClick={handleReset} className="p-2.5 bg-white dark:bg-stone-800 rounded-full shadow-lg text-stone-600 dark:text-stone-300 hover:text-teal-600 hover:bg-teal-50 dark:hover:bg-stone-700 transition-all" aria-label="Reset Zoom"><Maximize className="w-5 h-5" /></button>
       </div>
 
       <svg ref={svgRef} className="w-full h-full block">
@@ -435,12 +362,12 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({ people, focus
                       
                       let fillColor;
                       if (isRoot) {
-                          fillColor = "#ffffff";
+                          fillColor = "var(--card-bg)";
                       } else {
                           if (d.person.gender === 'male') {
-                              fillColor = d.depth % 2 === 0 ? '#99f6e4' : '#ccfbf1'; // Teal variants
+                              fillColor = d.depth % 2 === 0 ? 'var(--gender-male-border)' : 'var(--brand-100)'; // Teal variants
                           } else {
-                              fillColor = d.depth % 2 === 0 ? '#fbcfe8' : '#fce7f3'; 
+                              fillColor = d.depth % 2 === 0 ? 'var(--gender-female-border)' : 'var(--pink-100)'; 
                           }
                       }
 
@@ -469,7 +396,7 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({ people, focus
                                         textAnchor={textAnchor} 
                                         dy="0.35em" 
                                         className="text-[10px] font-bold fill-stone-800 dark:fill-stone-900 pointer-events-none select-none font-sans" 
-                                        style={{ fontSize: Math.max(8, 14 - d.depth * 1.5) }}
+                                        style={{ fontSize: Math.max(8, 14 - d.depth * 1.5), fill: 'var(--card-text)' }}
                                     >
                                         {d.person.firstName}
                                     </text>
@@ -479,6 +406,7 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({ people, focus
                                             textAnchor={textAnchor} 
                                             dy="1.6em" 
                                             className="text-[7px] fill-stone-600 dark:fill-stone-700 pointer-events-none select-none opacity-80"
+                                            style={{ fill: 'var(--card-text)' }}
                                         >
                                             {d.person.birthDate ? d.person.birthDate.split('-')[0] : ''}
                                         </text>
@@ -487,15 +415,15 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({ people, focus
                               )}
                               {isRoot && (
                                   <foreignObject x={-50} y={-50} width={100} height={100} style={{pointerEvents: 'none'}}>
-                                      <div className={`w-full h-full rounded-full overflow-hidden border-4 flex items-center justify-center bg-stone-50 ${d.person.gender === 'male' ? 'border-teal-300' : 'border-pink-300'}`}>
+                                      <div className={`w-full h-full rounded-full overflow-hidden border-4 flex items-center justify-center bg-stone-50`} style={{ borderColor: d.person.gender === 'male' ? 'var(--gender-male-border)' : 'var(--gender-female-border)' }}>
                                           {d.person.photoUrl ? (
                                               <img src={d.person.photoUrl} className="w-full h-full object-cover" />
                                           ) : (
-                                              <User className={`w-12 h-12 ${d.person.gender === 'male' ? 'text-teal-300' : 'text-pink-300'}`}/>
+                                              <User className={`w-12 h-12`} style={{ color: d.person.gender === 'male' ? 'var(--gender-male-border)' : 'var(--gender-female-border)' }}/>
                                           )}
                                       </div>
                                       <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 translate-y-10 text-center">
-                                          <span className={`text-[10px] font-bold bg-white/90 dark:bg-stone-900/90 px-2 py-0.5 rounded-full shadow-sm whitespace-nowrap ${d.person.gender === 'male' ? 'text-teal-700 dark:text-teal-300' : 'text-pink-700 dark:text-pink-300'}`}>
+                                          <span className={`text-[10px] font-bold bg-white/90 dark:bg-stone-900/90 px-2 py-0.5 rounded-full shadow-sm whitespace-nowrap`} style={{ color: d.person.gender === 'male' ? 'var(--gender-male-text)' : 'var(--gender-female-text)' }}>
                                               {d.person.firstName}
                                           </span>
                                       </div>
@@ -509,17 +437,17 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({ people, focus
               // === FORCE GRAPH RENDERING ===
               <g>
                   {links.map((link, i) => (
-                      <path key={i} className="force-link link-line" stroke="#a8a29e" strokeWidth="2" fill="none" />
+                      <path key={i} className="force-link link-line" stroke="var(--link-line-stroke)" strokeWidth="2" fill="none" />
                   ))}
                   {nodes.map((node) => (
                       <g key={node.id} className="force-node cursor-pointer" onClick={(e) => { e.stopPropagation(); onSelect(node.data.id); }}>
-                          <circle r={30} fill={node.data.gender === 'male' ? '#ccfbf1' : '#fce7f3'} stroke="#fff" strokeWidth="2" />
+                          <circle r={30} fill={node.data.gender === 'male' ? 'var(--brand-100)' : 'var(--pink-100)'} stroke="var(--card-border)" strokeWidth="2" />
                           {node.data.photoUrl ? (
                               <image href={node.data.photoUrl} x="-30" y="-30" height="60" width="60" clipPath="circle(30px at 30px 30px)" />
                           ) : (
-                              <text dy="5" textAnchor="middle" fill="#555" fontSize="20">{node.data.firstName[0]}</text>
+                              <text dy="5" textAnchor="middle" fill="var(--card-text)" fontSize="20">{node.data.firstName[0]}</text>
                           )}
-                          <text dy="45" textAnchor="middle" className="text-xs font-bold fill-stone-700 dark:fill-stone-300 pointer-events-none">{node.data.firstName}</text>
+                          <text dy="45" textAnchor="middle" className="text-xs font-bold fill-stone-700 dark:fill-stone-300 pointer-events-none" style={{ fill: 'var(--card-text)' }}>{node.data.firstName}</text>
                       </g>
                   ))}
               </g>
@@ -593,7 +521,7 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({ people, focus
                                                 <img src={node.data.photoUrl} className={`avatar-img ${node.data.isDeceased ? 'grayscale' : ''}`} />
                                             ) : (
                                                 <div className="avatar-img flex items-center justify-center bg-stone-50 dark:bg-stone-800">
-                                                    <User className={`w-8 h-8 ${node.data.gender === 'female' ? 'text-pink-300' : 'text-teal-300'}`} />
+                                                    <User className={`w-8 h-8`} style={{ color: node.data.gender === 'male' ? 'var(--gender-male-border)' : 'var(--gender-female-border)' }} />
                                                 </div>
                                             )}
                                         </div>
@@ -606,18 +534,18 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({ people, focus
                                         
                                         {/* Display Nickname below name */}
                                         {node.data.nickName && (
-                                            <div className="text-[10px] text-stone-500 dark:text-stone-400 italic mt-0.5 opacity-90 truncate w-full">
+                                            <div className="text-[10px] text-stone-500 dark:text-stone-400 italic mt-0.5 opacity-90 truncate w-full" style={{ color: 'var(--card-text)' }}>
                                                 "{node.data.nickName}"
                                             </div>
                                         )}
 
                                         {settings.showDates && (
-                                            <div className="text-[10px] text-stone-500 dark:text-stone-400 font-medium mt-1 tracking-wide">
+                                            <div className="text-[10px] text-stone-500 dark:text-stone-400 font-medium mt-1 tracking-wide" style={{ color: 'var(--card-text)' }}>
                                                 {years}
                                             </div>
                                         )}
                                         {settings.showMiddleName && node.data.middleName && (
-                                            <div className="text-[9px] text-stone-400 mt-0.5 opacity-80 truncate w-full">
+                                            <div className="text-[9px] text-stone-400 mt-0.5 opacity-80 truncate w-full" style={{ color: 'var(--card-text)' }}>
                                                 {node.data.middleName}
                                             </div>
                                         )}

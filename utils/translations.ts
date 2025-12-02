@@ -245,7 +245,9 @@ export const translations = {
     calendarExport: "Calendar (.ics)",
     viewOnMap: "View on Google Maps",
     storyTitle: "The Story of the",
-    family: "Family"
+    family: "Family",
+    undo: "Undo", // Added
+    redo: "Redo" // Added
   },
   ar: {
     appTitle: "جذور",
@@ -491,8 +493,10 @@ export const translations = {
     calendarExport: "تصدير التقويم (.ics)",
     viewOnMap: "عرض على الخريطة",
     storyTitle: "قصة عائلة",
-    family: "عائلة"
+    family: "عائلة",
+    undo: "تراجع", // Added
+    redo: "إعادة" // Added
   }
 };
 
-export const getTranslation = (lang: Language) => translations[lang];
+export const getTranslation = (lang: Language) => translations[lang] as typeof translations.en; // Cast to specific type

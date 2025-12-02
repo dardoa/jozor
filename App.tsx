@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { FamilyTree } from './components/FamilyTree';
@@ -9,6 +8,10 @@ import { ModalManager } from './components/ModalManager';
 import { Gender, Language, TreeSettings } from './types';
 import { useFamilyTree } from './hooks/useFamilyTree';
 import { useGoogleSync } from './hooks/useGoogleSync';
+import { useThemeSync } from './hooks/useThemeSync'; // New import
+import { useLanguageSync } from './hooks/useLanguageSync'; // New import
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts'; // New import
+
 import { INITIAL_ROOT_ID } from './constants';
 import { getTranslation } from './utils/translations';
 import { X } from 'lucide-react';
@@ -47,55 +50,27 @@ const App: React.FC = () => {
     layoutMode: 'vertical',
     isCompact: false,
     chartType: 'descendant',
-    theme: 'modern',
+    theme: 'modern', // Default theme
     enableForcePhysics: true // Default enabled
   });
 
   // Local Preferences
-  const [language, setLanguage] = useState<Language>(() => 
-    (typeof window !== 'undefined' ? (localStorage.getItem('language') as Language) || 'ar' : 'ar')
-  );
-  const [darkMode, setDarkMode] = useState(() => 
-    typeof window !== 'undefined' ? (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) : false
-  );
+  const [language, setLanguage] = useState<Language>('ar'); // Initialized by hook
+  const [darkMode, setDarkMode] = useState(false); // Initialized by hook
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const activePerson = people[focusId];
   const t = getTranslation(language);
 
-  // --- Side Effects ---
+  // --- Custom Hooks for Side Effects ---
+  useThemeSync(darkMode, setDarkMode, treeSettings.theme); // Using new hook
+  useLanguageSync(language, setLanguage); // Using new hook
+  useKeyboardShortcuts(history.length > 0, undo, future.length > 0, redo, showWelcome, isPresentMode, setIsPresentMode); // Using new hook
+
   useEffect(() => {
     const hasData = Object.keys(people).length > 1 || people[INITIAL_ROOT_ID].firstName !== 'Me';
     if (hasData) setShowWelcome(false);
   }, []);
-
-  useEffect(() => {
-    const root = document.documentElement;
-    root.classList.toggle('dark', darkMode);
-    localStorage.setItem('theme', darkMode ? 'dark' : 'light');
-  }, [darkMode]);
-
-  useEffect(() => {
-    const root = document.documentElement;
-    const dir = language === 'ar' ? 'rtl' : 'ltr';
-    root.setAttribute('dir', dir);
-    root.setAttribute('lang', language);
-    localStorage.setItem('language', language);
-  }, [language]);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (showWelcome) return;
-      if (['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement).tagName)) return;
-      
-      const isCmd = e.ctrlKey || e.metaKey;
-      if (isCmd && e.key === 'z') { e.preventDefault(); e.shiftKey ? redo() : undo(); } 
-      else if (isCmd && e.key === 'y') { e.preventDefault(); redo(); }
-      if (e.key === 'Escape' && isPresentMode) setIsPresentMode(false);
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [undo, redo, showWelcome, isPresentMode]);
 
   // --- Action Handlers ---
 
@@ -124,7 +99,8 @@ const App: React.FC = () => {
 
   const onFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file && await handleImport(file)) setShowWelcome(false);
+    if (!file) return;
+    if (await handleImport(file)) setShowWelcome(false);
     e.target.value = '';
   };
 
@@ -139,7 +115,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen font-sans transition-colors duration-300 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 overflow-hidden" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+    <div className={`flex flex-col h-screen font-sans transition-colors duration-300 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 overflow-hidden theme-${treeSettings.theme}`} dir={language === 'ar' ? 'rtl' : 'ltr'}>
       
       <input ref={fileInputRef} type="file" accept=".json,.ged,.jozor,.zip" className="hidden" onChange={onFileUpload} />
 

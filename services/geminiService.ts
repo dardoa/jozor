@@ -1,4 +1,3 @@
-
 import { GoogleGenAI } from "@google/genai";
 import { Person, Message } from "../types";
 
@@ -120,7 +119,7 @@ export const startAncestorChat = async (person: Person, people: Record<string, P
         }
 
         const result = await chat.sendMessage({ message: newMessage });
-        return result.text;
+        return result.text || "I am having trouble remembering right now. (AI Error)"; // Added fallback
     } catch (error) {
         console.error("Gemini Chat Error", error);
         return "I am having trouble remembering right now. (API Error)";
@@ -228,7 +227,7 @@ export const generateFamilyStory = async (people: Record<string, Person>, rootId
             contents: prompt,
         });
 
-        return response.text || (language === 'ar' ? "لم يتم إنشاء القصة." : "Story could not be generated.");
+        return response.text || (language === 'ar' ? "<p>حدث خطأ أثناء كتابة القصة.</p>" : "<p>Error generating story.</p>");
     } catch (error) {
         console.error("Gemini Story Error", error);
         throw error;

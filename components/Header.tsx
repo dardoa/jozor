@@ -6,17 +6,17 @@ import { generateICS } from '../utils/calendarLogic';
 import { getTranslation } from '../utils/translations';
 import { 
   Undo, Redo, Search, Moon, Sun, X, Menu, ChevronDown, Share2,
-  Hammer, SlidersHorizontal // Ensure these are imported
+  Hammer, SlidersHorizontal
 } from 'lucide-react';
 import { Logo } from './Logo';
 import { LoginButton } from './LoginButton';
 
-// Import sub-components using aliases
-import { ExportMenu } from '@/components/header/ExportMenu';
-import { ToolsMenu } from '@/components/header/ToolsMenu';
-import { ViewSettingsMenu } from '@/components/header/ViewSettingsMenu';
-import { UserMenu } from '@/components/header/UserMenu';
-import { SearchResults } from '@/components/header/SearchResults';
+// Import sub-components
+import { ExportMenu } from './header/ExportMenu';
+import { ToolsMenu } from './header/ToolsMenu';
+import { ViewSettingsMenu } from './header/ViewSettingsMenu';
+import { UserMenu } from './header/UserMenu';
+import { SearchResults } from './header/SearchResults';
 
 // --- Main Header ---
 
@@ -161,7 +161,7 @@ export const Header: React.FC<HeaderProps> = ({
                     <ToolsMenu 
                         onClose={() => setActiveMenu('none')} 
                         onStats={() => { onOpenStats(); setActiveMenu('none'); }}
-                        onCalc={() => { onOpenCalculator(); setActiveMenu('none'); }} 
+                        onCalc={() => { onOpenCalculator(); setActiveMenu('none'); }}
                         onConsistency={() => { onOpenConsistency(); setActiveMenu('none'); }}
                         onTimeline={() => { onOpenTimeline(); setActiveMenu('none'); }}
                         onStory={() => { onOpenStory && onOpenStory(); setActiveMenu('none'); }}
