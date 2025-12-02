@@ -1,9 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { Person, Language } from '../types';
 import { generateFamilyStory } from '../services/geminiService';
 import { getTranslation } from '../utils/translations';
 import { X, BookOpen, Sparkles, Loader2, RefreshCw } from 'lucide-react';
+import DOMPurify from 'dompurify'; // Import DOMPurify
 
 interface StoryModalProps {
   isOpen: boolean;
@@ -29,7 +29,8 @@ export const StoryModal: React.FC<StoryModalProps> = ({ isOpen, onClose, people,
       setLoading(true);
       try {
           const text = await generateFamilyStory(people, rootId, language);
-          setStoryHtml(text);
+          // Sanitize the AI-generated HTML before setting it
+          setStoryHtml(DOMPurify.sanitize(text));
       } catch (e) {
           setStoryHtml(language === 'ar' ? "<p>حدث خطأ أثناء كتابة القصة.</p>" : "<p>Error generating story.</p>");
       } finally {
