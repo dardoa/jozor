@@ -2,7 +2,7 @@ import React from 'react';
 import { Person, RelationshipInfo } from '../../types';
 import { DateSelect } from '../DateSelect';
 import { ExternalLink, Heart, HeartCrack, Users, Gem, Calendar } from 'lucide-react';
-import { SmartInput } from '../ui/SmartInput';
+import { FormField } from '../ui/FormField'; // Using FormField
 
 interface PartnersTabProps {
   person: Person;
@@ -28,8 +28,6 @@ export const PartnersTab: React.FC<PartnersTabProps> = ({ person, people, isEdit
     };
     onUpdate(person.id, { partnerDetails: newDetails });
   };
-
-  const inputBaseClass = "flex-1 h-6 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded text-[10px] px-1 outline-none focus:border-blue-500 disabled:bg-transparent disabled:border-transparent disabled:px-0 disabled:text-gray-600 dark:disabled:text-gray-400 text-gray-900 dark:text-gray-100";
 
   return (
     <div className="bg-white dark:bg-gray-800 p-2 rounded border border-gray-200 dark:border-gray-700 shadow-sm space-y-3 animate-in slide-in-from-left-2 duration-200">
@@ -99,13 +97,14 @@ export const PartnersTab: React.FC<PartnersTabProps> = ({ person, people, isEdit
                                             </span>
                                             <DateSelect disabled={!isEditing} value={details.startDate} onChange={(val) => handlePartnerUpdate(spouseId, 'startDate', val)} />
                                     </div>
-                                        <SmartInput 
-                                            disabled={!isEditing}
-                                            type="text"
-                                            placeholder={t.place}
+                                        <FormField
+                                            label="" // Label is handled by the span above
                                             value={details.startPlace || ''}
                                             onCommit={(v) => handlePartnerUpdate(spouseId, 'startPlace', v)}
-                                            className={inputBaseClass}
+                                            disabled={!isEditing}
+                                            placeholder={t.place}
+                                            className="!h-6 !text-[10px]" // Override default FormField height/text size
+                                            labelWidthClass="hidden" // Hide label as it's handled by span
                                         />
                                     </div>
                             </div>
@@ -120,13 +119,14 @@ export const PartnersTab: React.FC<PartnersTabProps> = ({ person, people, isEdit
                                                 <span className="text-[9px] text-gray-500 w-10 shrink-0">{t.divorced}:</span>
                                                 <DateSelect disabled={!isEditing} value={details.endDate || ''} onChange={(val) => handlePartnerUpdate(spouseId, 'endDate', val)} />
                                         </div>
-                                            <SmartInput 
-                                                disabled={!isEditing}
-                                                type="text"
-                                                placeholder={t.place}
+                                            <FormField
+                                                label=""
                                                 value={details.endPlace || ''}
                                                 onCommit={(v) => handlePartnerUpdate(spouseId, 'endPlace', v)}
-                                                className={inputBaseClass}
+                                                disabled={!isEditing}
+                                                placeholder={t.place}
+                                                className="!h-6 !text-[10px]"
+                                                labelWidthClass="hidden"
                                             />
                                         </div>
                                 </div>

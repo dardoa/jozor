@@ -6,7 +6,6 @@ interface ContactTabProps {
   person: Person;
   isEditing: boolean;
   onUpdate: (id: string, updates: Partial<Person>) => void;
-  inputClass: string; // This prop will become less relevant for FormField usage
   t: any;
 }
 

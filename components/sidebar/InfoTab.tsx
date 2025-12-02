@@ -5,8 +5,7 @@ import { getDisplayDate } from '../../utils/familyLogic';
 import { User, Baby, ChevronRight, ArrowUp, Heart, ArrowDown, Camera, Sparkles, Loader2, X, Trash2, Plus, BookOpen, Ribbon } from 'lucide-react';
 import { processImageFile } from '../../utils/imageLogic';
 import { extractPersonData } from '../../services/geminiService';
-import { SmartInput } from '../ui/SmartInput';
-import { FormField } from '../ui/FormField'; // New import
+import { FormField } from '../ui/FormField'; // Using FormField
 
 // --- Optimized Sub-Components ---
 
@@ -133,7 +132,6 @@ interface InfoTabProps {
   isEditing: boolean;
   onUpdate: (id: string, updates: Partial<Person>) => void;
   onSelect: (id: string) => void;
-  inputClass: string; // This prop will become less relevant for FormField usage
   t: any;
   onAddParent: (gender: Gender) => void;
   onAddSpouse: (gender: Gender) => void;
@@ -358,31 +356,61 @@ export const InfoTab: React.FC<InfoTabProps> = ({
 
             <div className="grid grid-cols-3 gap-2 pt-6">
                 <div className="col-span-1">
-                    <label className="block text-[9px] text-gray-400 font-bold mb-1 uppercase">{t.firstName}</label>
-                    <SmartInput value={person.firstName} onCommit={(v) => handleChange('firstName', v)} className="w-full h-6 px-1.5 border border-gray-300 dark:border-gray-600 rounded text-[11px] focus:border-blue-500 outline-none transition-colors bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 disabled:bg-transparent disabled:border-transparent disabled:px-0 disabled:cursor-default disabled:font-medium disabled:text-gray-800 dark:disabled:text-gray-200" />
+                    <FormField
+                        label={t.firstName}
+                        value={person.firstName}
+                        onCommit={(v) => handleChange('firstName', v)}
+                        disabled={!isEditing}
+                        labelWidthClass="w-auto" // Adjust label width for grid layout
+                    />
                 </div>
                 <div className="col-span-1">
-                    <label className="block text-[9px] text-gray-400 font-bold mb-1 uppercase">{t.middleName}</label>
-                    <SmartInput value={person.middleName} onCommit={(v) => handleChange('middleName', v)} className="w-full h-6 px-1.5 border border-gray-300 dark:border-gray-600 rounded text-[11px] focus:border-blue-500 outline-none transition-colors bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 disabled:bg-transparent disabled:border-transparent disabled:px-0 disabled:cursor-default disabled:font-medium disabled:text-gray-800 dark:disabled:text-gray-200" />
+                    <FormField
+                        label={t.middleName}
+                        value={person.middleName}
+                        onCommit={(v) => handleChange('middleName', v)}
+                        disabled={!isEditing}
+                        labelWidthClass="w-auto"
+                    />
                 </div>
                 <div className="col-span-1">
-                    <label className="block text-[9px] text-gray-400 font-bold mb-1 uppercase">{t.lastName}</label>
-                    <SmartInput value={person.lastName} onCommit={(v) => handleChange('lastName', v)} className="w-full h-6 px-1.5 border border-gray-300 dark:border-gray-600 rounded text-[11px] focus:border-blue-500 outline-none transition-colors bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 disabled:bg-transparent disabled:border-transparent disabled:px-0 disabled:cursor-default disabled:font-medium disabled:text-gray-800 dark:disabled:text-gray-200" />
+                    <FormField
+                        label={t.lastName}
+                        value={person.lastName}
+                        onCommit={(v) => handleChange('lastName', v)}
+                        disabled={!isEditing}
+                        labelWidthClass="w-auto"
+                    />
                 </div>
             </div>
 
             <div className="grid grid-cols-3 gap-2">
                  <div>
-                    <label className="block text-[9px] text-gray-400 font-bold mb-1 uppercase">{t.title}</label>
-                    <SmartInput value={person.title} placeholder="" onCommit={(v) => handleChange('title', v)} className="w-full h-6 px-1.5 border border-gray-300 dark:border-gray-600 rounded text-[11px] focus:border-blue-500 outline-none transition-colors bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 disabled:bg-transparent disabled:border-transparent disabled:px-0 disabled:cursor-default disabled:font-medium disabled:text-gray-800 dark:disabled:text-gray-200" />
+                    <FormField
+                        label={t.title}
+                        value={person.title}
+                        onCommit={(v) => handleChange('title', v)}
+                        disabled={!isEditing}
+                        labelWidthClass="w-auto"
+                    />
                  </div>
                  <div>
-                    <label className="block text-[9px] text-gray-400 font-bold mb-1 uppercase">{t.suffix}</label>
-                    <SmartInput value={person.suffix} placeholder="" onCommit={(v) => handleChange('suffix', v)} className="w-full h-6 px-1.5 border border-gray-300 dark:border-gray-600 rounded text-[11px] focus:border-blue-500 outline-none transition-colors bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 disabled:bg-transparent disabled:border-transparent disabled:px-0 disabled:cursor-default disabled:font-medium disabled:text-gray-800 dark:disabled:text-gray-200" />
+                    <FormField
+                        label={t.suffix}
+                        value={person.suffix}
+                        onCommit={(v) => handleChange('suffix', v)}
+                        disabled={!isEditing}
+                        labelWidthClass="w-auto"
+                    />
                  </div>
                  <div>
-                    <label className="block text-[9px] text-gray-400 font-bold mb-1 uppercase">{t.nickName}</label>
-                    <SmartInput value={person.nickName} onCommit={(v) => handleChange('nickName', v)} className="w-full h-6 px-1.5 border border-gray-300 dark:border-gray-600 rounded text-[11px] focus:border-blue-500 outline-none transition-colors bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 disabled:bg-transparent disabled:border-transparent disabled:px-0 disabled:cursor-default disabled:font-medium disabled:text-gray-800 dark:disabled:text-gray-200" />
+                    <FormField
+                        label={t.nickName}
+                        value={person.nickName}
+                        onCommit={(v) => handleChange('nickName', v)}
+                        disabled={!isEditing}
+                        labelWidthClass="w-auto"
+                    />
                  </div>
             </div>
 
@@ -416,13 +444,26 @@ export const InfoTab: React.FC<InfoTabProps> = ({
                      <DateSelect value={person.birthDate} onChange={(val) => handleChange('birthDate', val)} />
                 </div>
                 <div>
-                     <label className="block text-[9px] text-gray-400 font-bold mb-1 uppercase">{t.birthPlace}</label>
-                     <SmartInput value={person.birthPlace} onCommit={(v) => handleChange('birthPlace', v)} className="w-full h-6 px-1.5 border border-gray-300 dark:border-gray-600 rounded text-[11px] focus:border-blue-500 outline-none transition-colors bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 disabled:bg-transparent disabled:border-transparent disabled:px-0 disabled:cursor-default disabled:font-medium disabled:text-gray-800 dark:disabled:text-gray-200" />
+                    <FormField
+                        label={t.birthPlace}
+                        value={person.birthPlace}
+                        onCommit={(v) => handleChange('birthPlace', v)}
+                        disabled={!isEditing}
+                        labelWidthClass="w-auto"
+                    />
                 </div>
                 <div className="col-span-2">
                      <div className="flex items-center gap-1.5">
                          <BookOpen className="w-3 h-3 text-gray-400" />
-                         <SmartInput placeholder={t.sourcePlaceholder} value={person.birthSource} onCommit={(v) => handleChange('birthSource', v)} className={`w-full h-6 px-1.5 border border-gray-300 dark:border-gray-600 rounded text-[11px] focus:border-blue-500 outline-none transition-colors bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 disabled:bg-transparent disabled:border-transparent disabled:px-0 disabled:cursor-default disabled:font-medium disabled:text-gray-800 dark:disabled:text-gray-200 !h-6 !text-[10px] placeholder:italic`} />
+                         <FormField
+                            label={t.source}
+                            value={person.birthSource}
+                            onCommit={(v) => handleChange('birthSource', v)}
+                            disabled={!isEditing}
+                            placeholder={t.sourcePlaceholder}
+                            className="!h-6 !text-[10px] placeholder:italic"
+                            labelWidthClass="w-auto"
+                         />
                      </div>
                 </div>
              </div>
@@ -434,13 +475,26 @@ export const InfoTab: React.FC<InfoTabProps> = ({
                          <DateSelect value={person.deathDate} onChange={(val) => handleChange('deathDate', val)} />
                     </div>
                     <div>
-                         <label className="block text-[9px] text-gray-400 font-bold mb-1 uppercase">{t.deathPlace}</label>
-                         <SmartInput value={person.deathPlace} onCommit={(v) => handleChange('deathPlace', v)} className="w-full h-6 px-1.5 border border-gray-300 dark:border-gray-600 rounded text-[11px] focus:border-blue-500 outline-none transition-colors bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 disabled:bg-transparent disabled:border-transparent disabled:px-0 disabled:cursor-default disabled:font-medium disabled:text-gray-800 dark:disabled:text-gray-200" />
-                </div>
+                        <FormField
+                            label={t.deathPlace}
+                            value={person.deathPlace}
+                            onCommit={(v) => handleChange('deathPlace', v)}
+                            disabled={!isEditing}
+                            labelWidthClass="w-auto"
+                        />
+                    </div>
                      <div className="col-span-2">
                          <div className="flex items-center gap-1.5">
                              <BookOpen className="w-3 h-3 text-gray-400" />
-                             <SmartInput placeholder={t.sourcePlaceholder} value={person.deathSource} onCommit={(v) => handleChange('deathSource', v)} className={`w-full h-6 px-1.5 border border-gray-300 dark:border-gray-600 rounded text-[11px] focus:border-blue-500 outline-none transition-colors bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 disabled:bg-transparent disabled:border-transparent disabled:px-0 disabled:cursor-default disabled:font-medium disabled:text-gray-800 dark:disabled:text-gray-200 !h-6 !text-[10px] placeholder:italic`} />
+                             <FormField
+                                label={t.source}
+                                value={person.deathSource}
+                                onCommit={(v) => handleChange('deathSource', v)}
+                                disabled={!isEditing}
+                                placeholder={t.sourcePlaceholder}
+                                className="!h-6 !text-[10px] placeholder:italic"
+                                labelWidthClass="w-auto"
+                             />
                          </div>
                     </div>
                  </div>

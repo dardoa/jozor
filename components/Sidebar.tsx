@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { Person, Gender, Language, UserProfile } from '../types';
 import { X, MessageCircle } from 'lucide-react';
@@ -52,8 +51,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'media', label: t.galleryTab, show: true }
   ], [person.spouses.length, t]);
 
-  const inputClass = "w-full h-6 px-1.5 border border-gray-300 dark:border-gray-600 rounded text-[11px] focus:border-blue-500 outline-none transition-colors bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 disabled:bg-transparent disabled:border-transparent disabled:px-0 disabled:cursor-default disabled:font-medium disabled:text-gray-800 dark:disabled:text-gray-200";
-
   return (
     <>
         {/* Mobile Overlay */}
@@ -100,13 +97,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
                 {activeTab === 'info' && (
                     <InfoTab 
-                        person={person} people={people} isEditing={isEditing} onUpdate={onUpdate} onSelect={onSelect} inputClass={inputClass} t={t}
+                        person={person} people={people} isEditing={isEditing} onUpdate={onUpdate} onSelect={onSelect} t={t}
                         onAddParent={onAddParent} onAddSpouse={onAddSpouse} onAddChild={onAddChild} onRemoveRelationship={onRemoveRelationship}
                     />
                 )}
                 {activeTab === 'partners' && <PartnersTab person={person} people={people} isEditing={isEditing} onUpdate={onUpdate} onSelect={onSelect} t={t} />}
-                {activeTab === 'contact' && <ContactTab person={person} isEditing={isEditing} onUpdate={onUpdate} inputClass={inputClass} t={t} />}
-                {activeTab === 'bio' && <BioTab person={person} people={people} isEditing={isEditing} onUpdate={onUpdate} inputClass={inputClass} t={t} />}
+                {activeTab === 'contact' && <ContactTab person={person} isEditing={isEditing} onUpdate={onUpdate} t={t} />}
+                {activeTab === 'bio' && <BioTab person={person} people={people} isEditing={isEditing} onUpdate={onUpdate} t={t} />}
                 {activeTab === 'media' && <MediaTab person={person} isEditing={isEditing} onUpdate={onUpdate} t={t} user={user} />}
             </div>
             
