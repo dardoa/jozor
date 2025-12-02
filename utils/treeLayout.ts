@@ -63,14 +63,22 @@ const calculateDescendantLayout = (
     // Track visited nodes to prevent cycles
     const visitedInHierarchy = new Set<string>();
     
-    const buildHierarchy = (id: string): d3.HierarchyNode<any> | null => { // Explicitly type return
+    // Define a custom type for the data within the hierarchy node to include groupIndex
+    interface CustomHierarchyDatum {
+        id: string;
+        person: Person;
+        children?: CustomHierarchyDatum[];
+        groupIndex?: number; // Custom property
+    }
+
+    const buildHierarchy = (id: string): CustomHierarchyDatum | null => {
         if (visitedInHierarchy.has(id)) return null; 
         visitedInHierarchy.add(id);
 
         const person = people[id];
         if (!person) return null;
 
-        const node: any = { id: person.id, person };
+        const node: CustomHierarchyDatum = { id: person.id, person };
         const spouses = person.spouses || [];
         
         // Helper: Get children for specific spouse
@@ -89,7 +97,7 @@ const calculateDescendantLayout = (
                     if (childNode) childNode.groupIndex = groupIndex;
                     return childNode;
                 })
-                .filter(Boolean);
+                .filter(Boolean) as CustomHierarchyDatum[]; // Cast to ensure type safety
         };
 
         // Helper: Get single parent children
@@ -108,12 +116,12 @@ const calculateDescendantLayout = (
                      if (childNode) childNode.groupIndex = 0;
                      return childNode;
                 })
-                .filter(Boolean);
+                .filter(Boolean) as CustomHierarchyDatum[]; // Cast to ensure type safety
         };
 
         // Distribute children branches around spouses
-        const leftChildren: any[] = [];
-        const rightChildren: any[] = [];
+        const leftChildren: CustomHierarchyDatum[] = [];
+        const rightChildren: CustomHierarchyDatum[] = [];
         
         spouses.forEach((spId, idx) => {
             if (idx === 0) { 
@@ -143,14 +151,14 @@ const calculateDescendantLayout = (
     if (!rootData) return { nodes: [], links: [], collapsePoints: [] };
 
     // D3 Layout Calculation
-    const root = d3.hierarchy(rootData);
+    const root = d3.hierarchy<CustomHierarchyDatum>(rootData);
     
     // Base unit size for a single person (without spouses)
     const nodeSpace = nodeW + siblingGap;
     
-    const treeLayout = d3.tree<any>()
+    const treeLayout = d3.tree<CustomHierarchyDatum>()
         .nodeSize(isVertical ? [nodeSpace, levelGap] : [levelGap, nodeSpace])
-        .separation((a: d3.HierarchyPointNode<any>, b: d3.HierarchyPointNode<any>) => { // Explicitly type a, b
+        .separation((a: d3.HierarchyPointNode<CustomHierarchyDatum>, b: d3.HierarchyPointNode<CustomHierarchyDatum>) => { // Explicitly type a, b
             const pA = a.data.person as Person;
             const pB = b.data.person as Person;
             
@@ -164,8 +172,8 @@ const calculateDescendantLayout = (
             let separation = (widthA + widthB) / 2;
             
             if (a.parent === b.parent) {
-                const groupA = (a as any).groupIndex || 0;
-                const groupB = (b as any).groupIndex || 0;
+                const groupA = a.data.groupIndex || 0;
+                const groupB = b.data.groupIndex || 0;
                 
                 // Extra separation between different marriage groups (half-siblings)
                 if (groupA !== groupB) {
@@ -189,12 +197,13 @@ const calculateDescendantLayout = (
     const links: TreeLink[] = [];
     const collapsePoints: CollapsePoint[] = [];
 
-    const getCoords = (d: d3.HierarchyPointNode<any>, offsetX = 0, offsetY = 0) => {
+    const getCoords = (d: d3.HierarchyPointNode<CustomHierarchyDatum>, offsetX = 0, offsetY = 0) => {
         if (isVertical) return { x: d.x + offsetX, y: d.y + offsetY };
         return { x: d.y + offsetY, y: d.x + offsetX };
     };
 
-    root.descendants().forEach((d: d3.HierarchyPointNode<any>) => { // Explicitly type d
+    // Cast to HierarchyPointNode[] because treeLayout mutates nodes to add x and y
+    (root.descendants() as d3.HierarchyPointNode<CustomHierarchyDatum>[]).forEach((d) => {
         const person = d.data.person as Person;
         const spouseIds = person.spouses || [];
         const hasMultipleSpouses = spouseIds.length > 1;
@@ -286,7 +295,7 @@ const calculateDescendantLayout = (
 
         // Add Parent-Child Links
         if (d.children) {
-            d.children.forEach((child: d3.HierarchyPointNode<any>) => { // Explicitly type child
+            d.children.forEach((child: d3.HierarchyPointNode<CustomHierarchyDatum>) => { // Explicitly type child
                 links.push({ source: person.id, target: child.data.id, type: 'parent-child' });
             });
         }

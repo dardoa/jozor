@@ -1,4 +1,3 @@
-
 export type Gender = 'male' | 'female';
 
 export type RelationshipStatus = 'married' | 'divorced' | 'engaged' | 'separated';
@@ -108,4 +107,16 @@ export interface TreeLink {
   source: any; // Allow object reference for D3 Force
   target: any;
   type: 'parent-child' | 'marriage';
+}
+
+export interface FanArc {
+  id: string;
+  person: Person;
+  startAngle: number;
+  endAngle: number;
+  innerRadius: number;
+  outerRadius: number;
+  depth: number;
+  value: number;
+  hasChildren: boolean;
 }

@@ -1,6 +1,6 @@
 import React, { useMemo, useRef, useEffect, useState, useCallback } from 'react';
 import * as d3 from 'd3';
-import { Person, TreeLink, TreeSettings, TreeNode } from '../types';
+import { Person, TreeLink, TreeSettings, TreeNode, FanArc } from '../types'; // Import FanArc
 import { getYears } from '../utils/familyLogic';
 import { calculateTreeLayout } from '../utils/treeLayout';
 import { User, Ribbon, ZoomIn, ZoomOut, Maximize, ChevronDown, ChevronUp, ChevronRight, ChevronLeft } from 'lucide-react';
@@ -11,17 +11,6 @@ interface FamilyTreeProps {
   onSelect: (id: string) => void;
   settings: TreeSettings;
 }
-
-// Common Styles (now using CSS variables defined in index.html)
-const COMMON_STYLES = `
-    .uiverse-card { transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); backdrop-filter: blur(8px); }
-    .card-content { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; height: 100%; width: 100%; padding: 12px 8px; gap: 6px; position: relative; overflow: hidden; }
-    .avatar-ring { position: relative; width: 68px; height: 68px; border-radius: 50%; flex-shrink: 0; padding: 3px; border-style: solid; border-width: 2px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); background: white; }
-    .dark .avatar-ring { background: #292524; }
-    .avatar-img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
-    .minimap { position: absolute; bottom: 20px; left: 20px; width: 150px; height: 100px; background: rgba(255,255,255,0.8); border: 1px solid #e5e5e5; border-radius: 12px; pointer-events: none; overflow: hidden; z-index: 20; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-    .dark .minimap { background: rgba(28,25,23,0.8); border-color: #44403c; }
-`;
 
 export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({ people, focusId, onSelect, settings }) => {
   const svgRef = useRef<SVGSVGElement>(null);
@@ -57,22 +46,30 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({ people, focus
                  }
              });
          });
-         return { nodes, links, collapsePoints: [], fanArcs: [] };
+         return { nodes, links, collapsePoints: [], fanArcs: [] as FanArc[] }; // Explicitly type fanArcs
      }
 
      if (isFanChart) {
          const depthLimit = 6;
-         const buildAncestry = (id: string, depth: number): d3.HierarchyNode<any> | null => { // Explicitly type return
+         // Define a custom datum type for the hierarchy nodes in the fan chart
+         interface FanChartDatum {
+             id: string;
+             person: Person;
+             depth: number;
+             children?: FanChartDatum[];
+         }
+
+         const buildAncestry = (id: string, depth: number): FanChartDatum | null => {
              if (depth > depthLimit) return null;
-             const p = people[id]; // Corrected: use 'p' as the person object
+             const p = people[id];
              if (!p) return null;
              
-             const node: any = { id: p.id, person: p, depth }; // Corrected: use 'p'
+             const node: FanChartDatum = { id: p.id, person: p, depth };
              
              const fatherId = p.parents.find(pid => people[pid]?.gender === 'male');
              const motherId = p.parents.find(pid => people[pid]?.gender === 'female');
              
-             const children = [];
+             const children: FanChartDatum[] = [];
              if (fatherId) {
                  const fNode = buildAncestry(fatherId, depth + 1);
                  if (fNode) children.push(fNode);
@@ -92,33 +89,44 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({ people, focus
          };
 
          const rootData = buildAncestry(focusId, 0);
-         if (!rootData) return { nodes: [], links: [], collapsePoints: [], fanArcs: [] };
+         if (!rootData) return { nodes: [], links: [], collapsePoints: [], fanArcs: [] as FanArc[] };
 
-         const hierarchy = d3.hierarchy(rootData).count();
+         // d3.hierarchy expects a Datum type, and count() adds a 'value' property.
+         // d3.partition then adds x0, x1, y0, y1.
+         const hierarchy = d3.hierarchy<FanChartDatum>(rootData).count();
          
          const radius = 900; 
-         const partition = d3.partition().size([2 * Math.PI, radius]); 
+         const partition = d3.partition<FanChartDatum>().size([2 * Math.PI, radius]); 
          partition(hierarchy);
          
-         const arcs: any[] = [];
+         const arcs: FanArc[] = []; // Use FanArc interface
          
          const centerRadius = 80;
          const ringWidth = 100;
 
-         hierarchy.descendants().forEach((d: d3.HierarchyPointNode<any>) => { // Explicitly type d
+         // Define a local interface for the properties added by d3.partition
+         interface D3PartitionArcDatum extends d3.HierarchyNode<FanChartDatum> {
+             x0: number;
+             x1: number;
+             y0: number;
+             y1: number;
+             value: number; // d.value is guaranteed to be number after .count()
+         }
+
+         hierarchy.descendants().forEach((d: D3PartitionArcDatum) => {
              const innerR = d.depth === 0 ? 0 : centerRadius + (d.depth - 1) * ringWidth;
              const outerR = d.depth === 0 ? centerRadius : centerRadius + d.depth * ringWidth;
 
              arcs.push({
-                 id: d.data.name,
+                 id: d.data.id,
                  person: d.data.person,
                  startAngle: d.x0,
                  endAngle: d.x1,
                  innerRadius: innerR,
                  outerRadius: outerR,
                  depth: d.depth,
-                 value: d.value,
-                 hasChildren: d.children && d.children.length > 0
+                 value: d.value, 
+                 hasChildren: !!d.children && d.children.length > 0 
              });
          });
 
@@ -126,7 +134,7 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({ people, focus
      } 
      
      // Default Descendant/Pedigree Layout
-     return { ...calculateTreeLayout(people, focusId, settings, collapsedIds), fanArcs: [] };
+     return { ...calculateTreeLayout(people, focusId, settings, collapsedIds), fanArcs: [] as FanArc[] }; // Explicitly type fanArcs
   }, [people, focusId, settings, collapsedIds, isFanChart, isForce]);
 
   // === FORCE SIMULATION ===
@@ -176,7 +184,7 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({ people, focus
     const zoom = d3.zoom<SVGSVGElement, unknown>()
       .scaleExtent([0.1, 4])
       .on('zoom', (event: d3.D3ZoomEvent<SVGSVGElement, unknown>) => { // Explicitly type event
-         if (gRef.current) d3.select(gRef.current).attr('transform', event.transform);
+         if (gRef.current) d3.select(gRef.current).attr('transform', event.transform.toString()); // Fix: Use .toString()
       });
 
     d3.select(svgRef.current).call(zoom).on("dblclick.zoom", null);
@@ -250,23 +258,23 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({ people, focus
       const r = CORNER_RADIUS;
       
       if (isVertical) {
-          const splitY = jointY + splitOffset;
-          const targetTopY = targetY - NODE_HEIGHT/2;
+          const startBottomY = startY + NODE_HEIGHT / 2; // Start from bottom of source node
+          const targetTopY = targetY - NODE_HEIGHT / 2; // Connect to top of target node
           
-          if (Math.abs(targetX - jointX) < 1) {
-              return `M ${startX} ${startY} V ${targetTopY}`;
+          if (Math.abs(targetX - jointX) < 1) { // Straight vertical line
+              return `M ${startX} ${startBottomY} V ${targetTopY}`;
           }
           const dirX = targetX > jointX ? 1 : -1;
-          return `M ${jointX} ${startY} V ${splitY - r} Q ${jointX} ${splitY} ${jointX + (r * dirX)} ${splitY} H ${targetX - (r * dirX)} Q ${targetX} ${splitY} ${targetX} ${splitY + r} V ${targetTopY}`;
+          return `M ${startX} ${startBottomY} V ${jointY + splitOffset - r} Q ${jointX} ${jointY + splitOffset} ${jointX + (r * dirX)} ${jointY + splitOffset} H ${targetX - (r * dirX)} Q ${targetX} ${jointY + splitOffset} ${targetX} ${jointY + splitOffset + r} V ${targetTopY}`;
       } else {
-          const splitX = jointX + splitOffset;
-          const targetLeftX = targetX - NODE_WIDTH/2; 
+          const startRightX = startX + NODE_WIDTH / 2; // Start from right of source node
+          const targetLeftX = targetX - NODE_WIDTH / 2; // Connect to left of target node
           
-          if (Math.abs(targetY - jointY) < 1) {
-              return `M ${startX} ${startY} H ${targetLeftX}`;
+          if (Math.abs(targetY - jointY) < 1) { // Straight horizontal line
+              return `M ${startRightX} ${startY} H ${targetLeftX}`;
           }
           const dirY = targetY > jointY ? 1 : -1;
-          return `M ${startX} ${jointY} H ${splitX - r} Q ${splitX} ${jointY} ${splitX} ${jointY + (r * dirY)} V ${targetY - (r * dirY)} Q ${splitX} ${targetY} ${splitX + r} ${targetY} H ${targetLeftX}`;
+          return `M ${startRightX} ${startY} H ${jointX + splitOffset - r} Q ${jointX + splitOffset} ${jointY} ${jointX + splitOffset} ${jointY + (r * dirY)} V ${targetY - (r * dirY)} Q ${jointX + splitOffset} ${targetY} ${jointX + splitOffset + r} ${targetY} H ${targetLeftX}`;
       }
   }, [isVertical, NODE_HEIGHT, NODE_WIDTH]);
 
@@ -277,9 +285,13 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({ people, focus
       const target = nodes.find(n => n.id === link.target);
       if (!source || !target) return '';
       
-      if (link.type === 'marriage') return `M ${source.x} ${source.y} L ${target.x} ${target.y}`;
+      if (link.type === 'marriage') {
+          // Marriage links connect centers
+          return `M ${source.x} ${source.y} L ${target.x} ${target.y}`;
+      }
       
       if (settings.chartType === 'pedigree') {
+          // Pedigree links connect right side of parent to left side of child
           const sX = source.x + NODE_WIDTH/2;
           const sY = source.y;
           const tX = target.x - NODE_WIDTH/2;
@@ -292,17 +304,31 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({ people, focus
       if (settings.chartType === 'descendant' && link.type === 'parent-child') {
           const childData = target.data as Person;
           let correctJoint = null;
+          // Find the correct collapse point for the parent-child link
           if (childData.parents.length > 1) {
              const otherParentId = childData.parents.find(id => people[id]?.id !== (source.data as Person).id); 
              if (otherParentId) {
                 correctJoint = collapsePoints.find(cp => cp.id === (source.data as Person).id && cp.spouseId === otherParentId);
              }
           }
+          // If no specific spouse joint, check for single parent joint
           if (!correctJoint) correctJoint = collapsePoints.find(cp => cp.id === (source.data as Person).id && cp.spouseId === 'single');
-          if (correctJoint) return drawRoundedPath(correctJoint.x, source.y, correctJoint.x, correctJoint.y, target.x, target.y);
+          
+          if (correctJoint) {
+              // Start from the bottom center of the source node
+              const startX = source.x;
+              const startY = source.y;
+              return drawRoundedPath(startX, startY, correctJoint.x, correctJoint.y, target.x, target.y);
+          }
+          // Fallback for direct parent-child link if no joint found (shouldn't happen with proper hierarchy)
+          const startBottomX = source.x;
+          const startBottomY = source.y + NODE_HEIGHT / 2;
+          const targetTopX = target.x;
+          const targetTopY = target.y - NODE_HEIGHT / 2;
+          return `M ${startBottomX} ${startBottomY} L ${targetTopX} ${targetTopY}`;
       }
       return `M ${source.x} ${source.y} L ${target.x} ${target.y}`;
-  }, [nodes, settings.chartType, collapsePoints, drawRoundedPath, NODE_WIDTH, isForce, people]);
+  }, [nodes, settings.chartType, collapsePoints, drawRoundedPath, NODE_WIDTH, NODE_HEIGHT, isForce, people]);
 
 
   const arcGen = d3.arc<any, d3.DefaultArcObject>() // Explicitly type arc generator
@@ -316,11 +342,9 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({ people, focus
   return (
     <div ref={wrapperRef} className="flex-1 h-full theme-bg overflow-hidden relative cursor-move select-none transition-colors duration-500">
       
-      <style>{COMMON_STYLES}</style>
-
       {/* Minimap */}
       {!isFanChart && !isForce && settings.showMinimap && nodes.length > 0 && (
-          <div className="minimap flex items-center justify-center">
+          <div className="absolute bottom-5 left-5 w-[150px] h-[100px] bg-white/80 dark:bg-stone-950/80 border border-stone-200/50 dark:border-stone-700/50 rounded-xl pointer-events-none overflow-hidden z-20 shadow-lg backdrop-blur-sm">
               <svg viewBox={`${Math.min(...nodes.map(n=>n.x))-100} ${Math.min(...nodes.map(n=>n.y))-100} ${Math.max(...nodes.map(n=>n.x))-Math.min(...nodes.map(n=>n.x))+200} ${Math.max(...nodes.map(n=>n.y))-Math.min(...nodes.map(n=>n.y))+200}`} className="w-full h-full opacity-50">
                   {nodes.map(n => (
                       <circle key={n.id} cx={n.x} cy={n.y} r={20} fill={n.id === focusId ? 'var(--focus-ring-color)' : 'var(--link-line-stroke)'} />
@@ -350,7 +374,7 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({ people, focus
           
           {isFanChart ? (
               <g>
-                  {fanArcs.map((d: any) => {
+                  {fanArcs.map((d: FanArc) => { // Use FanArc interface
                       const path = arcGen(d);
                       if (!path) return null;
                       const isRoot = d.depth === 0;
@@ -358,7 +382,6 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({ people, focus
                       const angle = (d.startAngle + d.endAngle) * 90 / Math.PI - 90;
                       const isFlipped = angle > 90 || angle < -90;
                       const rotate = isFlipped ? angle - 180 : angle;
-                      const textAnchor = "middle"; 
                       
                       let fillColor;
                       if (isRoot) {
@@ -391,27 +414,25 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({ people, focus
                                 }}
                               />
                               {!isRoot && showText && (
-                                <g transform={`translate(${arcGen.centroid(d)}) rotate(${rotate})`}>
-                                    <text 
-                                        textAnchor={textAnchor} 
-                                        dy="0.35em" 
-                                        className="text-[10px] font-bold fill-stone-800 dark:fill-stone-900 pointer-events-none select-none font-sans" 
-                                        style={{ fontSize: Math.max(8, 14 - d.depth * 1.5), fill: 'var(--card-text)' }}
-                                    >
-                                        {d.person.firstName}
-                                    </text>
-                                    
-                                    {arcWidth > 40 && d.depth < 4 && (
-                                        <text 
-                                            textAnchor={textAnchor} 
-                                            dy="1.6em" 
-                                            className="text-[7px] fill-stone-600 dark:fill-stone-700 pointer-events-none select-none opacity-80"
-                                            style={{ fill: 'var(--card-text)' }}
-                                        >
-                                            {d.person.birthDate ? d.person.birthDate.split('-')[0] : ''}
-                                        </text>
-                                    )}
-                                </g>
+                                <foreignObject 
+                                    x={arcGen.centroid(d)[0] - (d.outerRadius - d.innerRadius) / 2} 
+                                    y={arcGen.centroid(d)[1] - (d.outerRadius - d.innerRadius) / 2} 
+                                    width={d.outerRadius - d.innerRadius} 
+                                    height={d.outerRadius - d.innerRadius}
+                                    transform={`rotate(${rotate}, ${arcGen.centroid(d)[0]}, ${arcGen.centroid(d)[1]})`}
+                                    style={{ overflow: 'visible', pointerEvents: 'none' }}
+                                >
+                                    <div className="flex flex-col items-center justify-center h-full w-full text-center p-1">
+                                        <span className="text-[10px] font-bold leading-tight line-clamp-1" style={{ color: 'var(--card-text)' }}>
+                                            {d.person.firstName}
+                                        </span>
+                                        {arcWidth > 40 && d.depth < 4 && (
+                                            <span className="text-[7px] leading-none opacity-80 line-clamp-1" style={{ color: 'var(--card-text)' }}>
+                                                {d.person.birthDate ? d.person.birthDate.split('-')[0] : ''}
+                                            </span>
+                                        )}
+                                    </div>
+                                </foreignObject>
                               )}
                               {isRoot && (
                                   <foreignObject x={-50} y={-50} width={100} height={100} style={{pointerEvents: 'none'}}>
@@ -437,7 +458,7 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({ people, focus
               // === FORCE GRAPH RENDERING ===
               <g>
                   {links.map((link, i) => (
-                      <path key={i} className="force-link link-line" stroke="var(--link-line-stroke)" strokeWidth="2" fill="none" />
+                      <path key={i} className="force-link stroke-stone-400 dark:stroke-stone-500" strokeWidth="2" fill="none" />
                   ))}
                   {nodes.map((node) => (
                       <g key={node.id} className="force-node cursor-pointer" onClick={(e) => { e.stopPropagation(); onSelect(node.data.id); }}>
@@ -445,9 +466,9 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({ people, focus
                           {node.data.photoUrl ? (
                               <image href={node.data.photoUrl} x="-30" y="-30" height="60" width="60" clipPath="circle(30px at 30px 30px)" />
                           ) : (
-                              <text dy="5" textAnchor="middle" fill="var(--card-text)" fontSize="20">{node.data.firstName[0]}</text>
+                              <text dy="5" textAnchor="middle" className="text-stone-700 dark:text-stone-300 text-xl">{node.data.firstName[0]}</text>
                           )}
-                          <text dy="45" textAnchor="middle" className="text-xs font-bold fill-stone-700 dark:fill-stone-300 pointer-events-none" style={{ fill: 'var(--card-text)' }}>{node.data.firstName}</text>
+                          <text dy="45" textAnchor="middle" className="text-xs font-bold text-stone-700 dark:text-stone-300 pointer-events-none">{node.data.firstName}</text>
                       </g>
                   ))}
               </g>
@@ -465,7 +486,7 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({ people, focus
                         key={`${sId}-${tId}`} 
                         d={path} 
                         fill="none" 
-                        className={`link-line ${isMarriage ? "stroke-stone-300 dark:stroke-stone-600" : "stroke-stone-400 dark:stroke-stone-500"}`}
+                        className={`stroke-stone-400 dark:stroke-stone-500 ${isMarriage ? "stroke-stone-300 dark:stroke-stone-600" : ""}`}
                         strokeWidth={isMarriage ? 1.5 : 2} 
                         strokeDasharray={isMarriage ? "4,4" : "0"}
                         strokeLinecap="round"
@@ -478,7 +499,7 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({ people, focus
                     if (settings.chartType !== 'descendant') return null;
                     return (
                         <React.Fragment key={cp.uniqueKey}>
-                            <path d={`M ${cp.originX} ${cp.originY} L ${cp.x} ${cp.y}`} fill="none" className="link-line" strokeWidth={2} strokeLinecap="round" />
+                            <path d={`M ${cp.originX} ${cp.originY} L ${cp.x} ${cp.y}`} fill="none" className="stroke-stone-400 dark:stroke-stone-500" strokeWidth={2} strokeLinecap="round" />
                             <g transform={`translate(${cp.x}, ${cp.y})`} onClick={(e) => { e.stopPropagation(); toggleCollapse(cp.uniqueKey); }} className="cursor-pointer group">
                                 <circle r="12" className="fill-white dark:fill-stone-900 stroke-stone-200 dark:stroke-stone-700 stroke-2 shadow-sm transition-all group-hover:scale-110 group-hover:stroke-teal-400 group-hover:shadow-md" />
                                 {cp.isCollapsed ? (
@@ -493,7 +514,7 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({ people, focus
 
                 {nodes.map((node) => {
                     const isFocus = node.data.id === focusId;
-                    const years = getYears(node.data);
+                    const years = settings.showDates ? getYears(node.data) : '';
                     
                     // Logic for Name + Title
                     const titlePrefix = node.data.title ? `${node.data.title} ` : '';
@@ -511,16 +532,15 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({ people, focus
                         onClick={(e) => { e.stopPropagation(); onSelect(node.data.id); }}
                         className="cursor-pointer"
                     >
-                        <foreignObject x={-NODE_WIDTH/2} y={-NODE_HEIGHT/2} width={NODE_WIDTH} height={NODE_HEIGHT} style={{ overflow: 'visible' }}>
-                            <div className={`uiverse-card ${node.data.gender} ${isFocus ? 'focus-ring' : ''} h-full w-full flex flex-col items-center`}>
-                                <div className="card-overlay" />
-                                <div className="card-content">
+                        <foreignObject x={-NODE_WIDTH/2} y={-NODE_HEIGHT/2} width={NODE_WIDTH} height={NODE_HEIGHT}>
+                            <div className={`uiverse-card ${node.data.gender} ${isFocus ? 'focus-ring' : ''} h-full w-full flex flex-col items-center rounded-xl overflow-hidden bg-white/95 dark:bg-stone-900/95 border border-stone-200/50 dark:border-stone-700/50 shadow-card transition-all hover:border-teal-400 dark:hover:border-teal-600`} style={{ backdropFilter: 'blur(8px)' }}>
+                                <div className="flex flex-col items-center justify-center text-center h-full w-full p-3 gap-1.5 relative">
                                     {settings.showPhotos && (
-                                        <div className={`avatar-ring ${genderBorderClass} mb-2`}>
+                                        <div className={`relative w-16 h-16 rounded-full flex-shrink-0 p-0.5 border-2 shadow-sm bg-white dark:bg-stone-800 ${genderBorderClass}`}>
                                             {node.data.photoUrl ? (
-                                                <img src={node.data.photoUrl} className={`avatar-img ${node.data.isDeceased ? 'grayscale' : ''}`} />
+                                                <img src={node.data.photoUrl} className={`w-full h-full rounded-full object-cover ${node.data.isDeceased ? 'grayscale' : ''}`} />
                                             ) : (
-                                                <div className="avatar-img flex items-center justify-center bg-stone-50 dark:bg-stone-800">
+                                                <div className="w-full h-full rounded-full flex items-center justify-center bg-stone-50 dark:bg-stone-800">
                                                     <User className={`w-8 h-8`} style={{ color: node.data.gender === 'male' ? 'var(--gender-male-border)' : 'var(--gender-female-border)' }} />
                                                 </div>
                                             )}
