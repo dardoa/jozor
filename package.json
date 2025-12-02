@@ -20,6 +20,7 @@
     "react-dom": "^19.2.0"
   },
   "devDependencies": {
+    "@dyad-sh/react-vite-component-tagger": "^0.8.0",
     "@types/node": "latest",
     "@vitejs/plugin-react": "latest",
     "typescript": "~5.8.2",
