@@ -2,18 +2,19 @@ import React, { useState } from 'react';
 import { Person } from '../../types';
 import { generateBiography } from '../../services/geminiService';
 import { Wand2 } from 'lucide-react';
-import { SmartInput, SmartTextarea } from '../ui/SmartInput';
+import { SmartTextarea } from '../ui/SmartInput'; // Keep SmartTextarea for bio
+import { FormField } from '../ui/FormField'; // New import
 
 interface BioTabProps {
   person: Person;
   people: Record<string, Person>;
   isEditing: boolean;
   onUpdate: (id: string, updates: Partial<Person>) => void;
-  inputClass: string;
+  inputClass: string; // This prop will become less relevant for FormField usage
   t: any;
 }
 
-export const BioTab: React.FC<BioTabProps> = ({ person, people, isEditing, onUpdate, inputClass, t }) => {
+export const BioTab: React.FC<BioTabProps> = ({ person, people, isEditing, onUpdate, t }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [bioTone, setBioTone] = useState('Standard');
 
@@ -43,20 +44,27 @@ export const BioTab: React.FC<BioTabProps> = ({ person, people, isEditing, onUpd
                 {!isEditing && <span className="text-[9px] text-gray-400">{t.readOnly}</span>}
             </div>
             
-            <div className="flex items-center gap-1.5">
-                <label className="w-16 text-[10px] text-gray-600 dark:text-gray-400 font-medium">{t.profession}</label>
-                <SmartInput disabled={!isEditing} type="text" value={person.profession} onCommit={(v) => handleChange('profession', v)} className={inputClass} />
-            </div>
+            <FormField
+                label={t.profession}
+                value={person.profession}
+                onCommit={(v) => handleChange('profession', v)}
+                disabled={!isEditing}
+            />
 
-            <div className="flex items-center gap-1.5">
-                <label className="w-16 text-[10px] text-gray-600 dark:text-gray-400 font-medium">{t.company}</label>
-                <SmartInput disabled={!isEditing} type="text" value={person.company} onCommit={(v) => handleChange('company', v)} className={inputClass} />
-            </div>
+            <FormField
+                label={t.company}
+                value={person.company}
+                onCommit={(v) => handleChange('company', v)}
+                disabled={!isEditing}
+            />
 
-            <div className="flex items-center gap-1.5">
-                <label className="w-16 text-[10px] text-gray-600 dark:text-gray-400 font-medium">{t.interests}</label>
-                <SmartInput disabled={!isEditing} type="text" value={person.interests} placeholder={isEditing ? "e.g. Golf, Cooking" : ""} onCommit={(v) => handleChange('interests', v)} className={inputClass} />
-            </div>
+            <FormField
+                label={t.interests}
+                value={person.interests}
+                onCommit={(v) => handleChange('interests', v)}
+                disabled={!isEditing}
+                placeholder={isEditing ? "e.g. Golf, Cooking" : ""}
+            />
         </div>
 
         <div className="bg-white dark:bg-gray-800 p-2 rounded border border-gray-200 dark:border-gray-700 shadow-sm">

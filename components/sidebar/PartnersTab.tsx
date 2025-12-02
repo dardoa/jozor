@@ -29,6 +29,8 @@ export const PartnersTab: React.FC<PartnersTabProps> = ({ person, people, isEdit
     onUpdate(person.id, { partnerDetails: newDetails });
   };
 
+  const inputBaseClass = "flex-1 h-6 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded text-[10px] px-1 outline-none focus:border-blue-500 disabled:bg-transparent disabled:border-transparent disabled:px-0 disabled:text-gray-600 dark:disabled:text-gray-400 text-gray-900 dark:text-gray-100";
+
   return (
     <div className="bg-white dark:bg-gray-800 p-2 rounded border border-gray-200 dark:border-gray-700 shadow-sm space-y-3 animate-in slide-in-from-left-2 duration-200">
         <div className="flex justify-between items-center mb-0.5">
@@ -103,7 +105,7 @@ export const PartnersTab: React.FC<PartnersTabProps> = ({ person, people, isEdit
                                             placeholder={t.place}
                                             value={details.startPlace || ''}
                                             onCommit={(v) => handlePartnerUpdate(spouseId, 'startPlace', v)}
-                                            className="flex-1 h-6 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded text-[10px] px-1 outline-none focus:border-blue-500 disabled:bg-transparent disabled:border-transparent disabled:px-0 disabled:text-gray-600 dark:disabled:text-gray-400 text-gray-900 dark:text-gray-100"
+                                            className={inputBaseClass}
                                         />
                                     </div>
                             </div>
@@ -124,7 +126,7 @@ export const PartnersTab: React.FC<PartnersTabProps> = ({ person, people, isEdit
                                                 placeholder={t.place}
                                                 value={details.endPlace || ''}
                                                 onCommit={(v) => handlePartnerUpdate(spouseId, 'endPlace', v)}
-                                                className="flex-1 h-6 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded text-[10px] px-1 outline-none focus:border-blue-500 disabled:bg-transparent disabled:border-transparent disabled:px-0 disabled:text-gray-600 dark:disabled:text-gray-400 text-gray-900 dark:text-gray-100"
+                                                className={inputBaseClass}
                                             />
                                         </div>
                                 </div>

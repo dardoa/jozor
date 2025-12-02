@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, memo } from 'react';
 import { Person, Gender } from '../../types';
 import { DateSelect } from '../DateSelect';
@@ -7,6 +6,7 @@ import { User, Baby, ChevronRight, ArrowUp, Heart, ArrowDown, Camera, Sparkles, 
 import { processImageFile } from '../../utils/imageLogic';
 import { extractPersonData } from '../../services/geminiService';
 import { SmartInput } from '../ui/SmartInput';
+import { FormField } from '../ui/FormField'; // New import
 
 // --- Optimized Sub-Components ---
 
@@ -133,7 +133,7 @@ interface InfoTabProps {
   isEditing: boolean;
   onUpdate: (id: string, updates: Partial<Person>) => void;
   onSelect: (id: string) => void;
-  inputClass: string;
+  inputClass: string; // This prop will become less relevant for FormField usage
   t: any;
   onAddParent: (gender: Gender) => void;
   onAddSpouse: (gender: Gender) => void;
@@ -142,7 +142,7 @@ interface InfoTabProps {
 }
 
 export const InfoTab: React.FC<InfoTabProps> = ({ 
-    person, people, isEditing, onUpdate, onSelect, inputClass, t,
+    person, people, isEditing, onUpdate, onSelect, t,
     onAddParent, onAddSpouse, onAddChild, onRemoveRelationship
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -359,30 +359,30 @@ export const InfoTab: React.FC<InfoTabProps> = ({
             <div className="grid grid-cols-3 gap-2 pt-6">
                 <div className="col-span-1">
                     <label className="block text-[9px] text-gray-400 font-bold mb-1 uppercase">{t.firstName}</label>
-                    <SmartInput value={person.firstName} onCommit={(v) => handleChange('firstName', v)} className={inputClass} />
+                    <SmartInput value={person.firstName} onCommit={(v) => handleChange('firstName', v)} className="w-full h-6 px-1.5 border border-gray-300 dark:border-gray-600 rounded text-[11px] focus:border-blue-500 outline-none transition-colors bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 disabled:bg-transparent disabled:border-transparent disabled:px-0 disabled:cursor-default disabled:font-medium disabled:text-gray-800 dark:disabled:text-gray-200" />
                 </div>
                 <div className="col-span-1">
                     <label className="block text-[9px] text-gray-400 font-bold mb-1 uppercase">{t.middleName}</label>
-                    <SmartInput value={person.middleName} onCommit={(v) => handleChange('middleName', v)} className={inputClass} />
+                    <SmartInput value={person.middleName} onCommit={(v) => handleChange('middleName', v)} className="w-full h-6 px-1.5 border border-gray-300 dark:border-gray-600 rounded text-[11px] focus:border-blue-500 outline-none transition-colors bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 disabled:bg-transparent disabled:border-transparent disabled:px-0 disabled:cursor-default disabled:font-medium disabled:text-gray-800 dark:disabled:text-gray-200" />
                 </div>
                 <div className="col-span-1">
                     <label className="block text-[9px] text-gray-400 font-bold mb-1 uppercase">{t.lastName}</label>
-                    <SmartInput value={person.lastName} onCommit={(v) => handleChange('lastName', v)} className={inputClass} />
+                    <SmartInput value={person.lastName} onCommit={(v) => handleChange('lastName', v)} className="w-full h-6 px-1.5 border border-gray-300 dark:border-gray-600 rounded text-[11px] focus:border-blue-500 outline-none transition-colors bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 disabled:bg-transparent disabled:border-transparent disabled:px-0 disabled:cursor-default disabled:font-medium disabled:text-gray-800 dark:disabled:text-gray-200" />
                 </div>
             </div>
 
             <div className="grid grid-cols-3 gap-2">
                  <div>
                     <label className="block text-[9px] text-gray-400 font-bold mb-1 uppercase">{t.title}</label>
-                    <SmartInput value={person.title} placeholder="" onCommit={(v) => handleChange('title', v)} className={inputClass} />
+                    <SmartInput value={person.title} placeholder="" onCommit={(v) => handleChange('title', v)} className="w-full h-6 px-1.5 border border-gray-300 dark:border-gray-600 rounded text-[11px] focus:border-blue-500 outline-none transition-colors bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 disabled:bg-transparent disabled:border-transparent disabled:px-0 disabled:cursor-default disabled:font-medium disabled:text-gray-800 dark:disabled:text-gray-200" />
                  </div>
                  <div>
                     <label className="block text-[9px] text-gray-400 font-bold mb-1 uppercase">{t.suffix}</label>
-                    <SmartInput value={person.suffix} placeholder="" onCommit={(v) => handleChange('suffix', v)} className={inputClass} />
+                    <SmartInput value={person.suffix} placeholder="" onCommit={(v) => handleChange('suffix', v)} className="w-full h-6 px-1.5 border border-gray-300 dark:border-gray-600 rounded text-[11px] focus:border-blue-500 outline-none transition-colors bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 disabled:bg-transparent disabled:border-transparent disabled:px-0 disabled:cursor-default disabled:font-medium disabled:text-gray-800 dark:disabled:text-gray-200" />
                  </div>
                  <div>
                     <label className="block text-[9px] text-gray-400 font-bold mb-1 uppercase">{t.nickName}</label>
-                    <SmartInput value={person.nickName} onCommit={(v) => handleChange('nickName', v)} className={inputClass} />
+                    <SmartInput value={person.nickName} onCommit={(v) => handleChange('nickName', v)} className="w-full h-6 px-1.5 border border-gray-300 dark:border-gray-600 rounded text-[11px] focus:border-blue-500 outline-none transition-colors bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 disabled:bg-transparent disabled:border-transparent disabled:px-0 disabled:cursor-default disabled:font-medium disabled:text-gray-800 dark:disabled:text-gray-200" />
                  </div>
             </div>
 
@@ -417,12 +417,12 @@ export const InfoTab: React.FC<InfoTabProps> = ({
                 </div>
                 <div>
                      <label className="block text-[9px] text-gray-400 font-bold mb-1 uppercase">{t.birthPlace}</label>
-                     <SmartInput value={person.birthPlace} onCommit={(v) => handleChange('birthPlace', v)} className={inputClass} />
+                     <SmartInput value={person.birthPlace} onCommit={(v) => handleChange('birthPlace', v)} className="w-full h-6 px-1.5 border border-gray-300 dark:border-gray-600 rounded text-[11px] focus:border-blue-500 outline-none transition-colors bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 disabled:bg-transparent disabled:border-transparent disabled:px-0 disabled:cursor-default disabled:font-medium disabled:text-gray-800 dark:disabled:text-gray-200" />
                 </div>
                 <div className="col-span-2">
                      <div className="flex items-center gap-1.5">
                          <BookOpen className="w-3 h-3 text-gray-400" />
-                         <SmartInput placeholder={t.sourcePlaceholder} value={person.birthSource} onCommit={(v) => handleChange('birthSource', v)} className={`${inputClass} !h-6 !text-[10px] placeholder:italic`} />
+                         <SmartInput placeholder={t.sourcePlaceholder} value={person.birthSource} onCommit={(v) => handleChange('birthSource', v)} className={`w-full h-6 px-1.5 border border-gray-300 dark:border-gray-600 rounded text-[11px] focus:border-blue-500 outline-none transition-colors bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 disabled:bg-transparent disabled:border-transparent disabled:px-0 disabled:cursor-default disabled:font-medium disabled:text-gray-800 dark:disabled:text-gray-200 !h-6 !text-[10px] placeholder:italic`} />
                      </div>
                 </div>
              </div>
@@ -435,12 +435,12 @@ export const InfoTab: React.FC<InfoTabProps> = ({
                     </div>
                     <div>
                          <label className="block text-[9px] text-gray-400 font-bold mb-1 uppercase">{t.deathPlace}</label>
-                         <SmartInput value={person.deathPlace} onCommit={(v) => handleChange('deathPlace', v)} className={inputClass} />
-                    </div>
+                         <SmartInput value={person.deathPlace} onCommit={(v) => handleChange('deathPlace', v)} className="w-full h-6 px-1.5 border border-gray-300 dark:border-gray-600 rounded text-[11px] focus:border-blue-500 outline-none transition-colors bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 disabled:bg-transparent disabled:border-transparent disabled:px-0 disabled:cursor-default disabled:font-medium disabled:text-gray-800 dark:disabled:text-gray-200" />
+                </div>
                      <div className="col-span-2">
                          <div className="flex items-center gap-1.5">
                              <BookOpen className="w-3 h-3 text-gray-400" />
-                             <SmartInput placeholder={t.sourcePlaceholder} value={person.deathSource} onCommit={(v) => handleChange('deathSource', v)} className={`${inputClass} !h-6 !text-[10px] placeholder:italic`} />
+                             <SmartInput placeholder={t.sourcePlaceholder} value={person.deathSource} onCommit={(v) => handleChange('deathSource', v)} className={`w-full h-6 px-1.5 border border-gray-300 dark:border-gray-600 rounded text-[11px] focus:border-blue-500 outline-none transition-colors bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 disabled:bg-transparent disabled:border-transparent disabled:px-0 disabled:cursor-default disabled:font-medium disabled:text-gray-800 dark:disabled:text-gray-200 !h-6 !text-[10px] placeholder:italic`} />
                          </div>
                     </div>
                  </div>
