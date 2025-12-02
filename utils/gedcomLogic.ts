@@ -1,4 +1,3 @@
-
 import { Person, Gender, RelationshipStatus } from '../types';
 import { createPerson, getDisplayDate } from './familyLogic';
 
@@ -199,7 +198,8 @@ export const importFromGEDCOM = (gedcom: string): Record<string, Person> => {
         if (level === '0') {
             // --- SAVE PREVIOUS RECORD ---
             if (currentType === 'INDI' && currentPerson && currentId) {
-                people[currentId] = { ...createPerson(), ...currentPerson, id: currentId };
+                // Ensure currentPerson is treated as a valid object for spreading
+                people[currentId] = { ...createPerson(), ...(currentPerson as Person), id: currentId };
             }
             if (currentType === 'FAM' && currentFam && currentId) {
                 families[currentId] = currentFam;
@@ -293,7 +293,7 @@ export const importFromGEDCOM = (gedcom: string): Record<string, Person> => {
 
     // Save final record
     if (currentType === 'INDI' && currentPerson && currentId) {
-        people[currentId] = { ...createPerson(), ...currentPerson, id: currentId };
+        people[currentId] = { ...createPerson(), ...(currentPerson as Person), id: currentId };
     }
     if (currentType === 'FAM' && currentFam && currentId) {
         families[currentId] = currentFam;

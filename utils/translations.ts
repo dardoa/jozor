@@ -1,4 +1,3 @@
-
 import { Language } from '../types';
 
 export const translations = {
@@ -47,6 +46,8 @@ export const translations = {
     familyStatistics: "Family Statistics",
     consistencyChecker: "Consistency Checker",
     familyTimeline: "Family Timeline",
+    toggleSidebar: "Toggle Sidebar", // Added
+    clearSearch: "Clear Search", // Added
     
     // View Settings
     viewOptions: "View Options",
@@ -291,6 +292,8 @@ export const translations = {
     familyStatistics: "إحصائيات العائلة",
     consistencyChecker: "المدقق المنطقي",
     familyTimeline: "الجدول الزمني العائلي",
+    toggleSidebar: "تبديل الشريط الجانبي", // Added
+    clearSearch: "مسح البحث", // Added
     
     // View Settings
     viewOptions: "خيارات العرض",
