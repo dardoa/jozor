@@ -1,0 +1,121 @@
+
+import React, { useState, useEffect, useMemo } from 'react';
+import { Person, Gender, Language, UserProfile } from '../types';
+import { X, MessageCircle } from 'lucide-react';
+import { InfoTab } from './sidebar/InfoTab';
+import { PartnersTab } from './sidebar/PartnersTab';
+import { ContactTab } from './sidebar/ContactTab';
+import { BioTab } from './sidebar/BioTab';
+import { MediaTab } from './sidebar/MediaTab';
+import { SidebarFooter } from './sidebar/SidebarFooter';
+import { getTranslation } from '../utils/translations';
+
+interface SidebarProps {
+  person: Person;
+  people: Record<string, Person>;
+  onUpdate: (id: string, updates: Partial<Person>) => void;
+  onAddParent: (gender: Gender) => void;
+  onAddSpouse: (gender: Gender) => void;
+  onAddChild: (gender: Gender) => void;
+  onRemoveRelationship?: (targetId: string, relativeId: string, type: 'parent' | 'spouse' | 'child') => void;
+  onDelete: (id: string) => void;
+  onSelect: (id: string) => void;
+  language: Language;
+  isOpen: boolean; 
+  onClose: () => void;
+  onChat: () => void;
+  user: UserProfile | null;
+}
+
+export const Sidebar: React.FC<SidebarProps> = ({
+  person, people, onUpdate, onAddParent, onAddSpouse, onAddChild, onRemoveRelationship,
+  onDelete, onSelect, language, isOpen, onClose, onChat, user
+}) => {
+  const [activeTab, setActiveTab] = useState<'info' | 'partners' | 'bio' | 'contact' | 'media'>('info');
+  const [isEditing, setIsEditing] = useState(false);
+  const t = getTranslation(language);
+
+  // Reset editing state when person changes
+  useEffect(() => {
+    setIsEditing(false);
+    if (activeTab === 'partners' && person.spouses.length === 0) {
+        setActiveTab('info');
+    }
+  }, [person.id]);
+
+  // Tab definitions
+  const tabs = useMemo(() => [
+    { id: 'info', label: t.profile, show: true },
+    { id: 'partners', label: t.partners, show: person.spouses.length > 0 },
+    { id: 'contact', label: t.contact, show: true },
+    { id: 'bio', label: t.bio, show: true },
+    { id: 'media', label: t.galleryTab, show: true }
+  ], [person.spouses.length, t]);
+
+  const inputClass = "w-full h-6 px-1.5 border border-gray-300 dark:border-gray-600 rounded text-[11px] focus:border-blue-500 outline-none transition-colors bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 disabled:bg-transparent disabled:border-transparent disabled:px-0 disabled:cursor-default disabled:font-medium disabled:text-gray-800 dark:disabled:text-gray-200";
+
+  return (
+    <>
+        {/* Mobile Overlay */}
+        {isOpen && (
+            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-30 md:hidden animate-in fade-in" onClick={onClose} />
+        )}
+
+        {/* Sidebar Container */}
+        <div className={`
+            fixed md:relative inset-y-0 start-0 z-40
+            w-[340px] h-full
+            bg-white dark:bg-gray-900 border-e border-gray-200 dark:border-gray-800 
+            flex flex-col shadow-xl transition-transform duration-300 ease-in-out
+            ${isOpen ? 'translate-x-0' : 'translate-x-[-100%] rtl:translate-x-[100%]'} md:!transform-none
+        `}>
+        
+            {/* Header / Tabs */}
+            <div className="flex items-end justify-between border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 pt-3 px-3">
+                <div className="flex gap-1 overflow-x-auto scrollbar-hide">
+                    {tabs.filter(tab => tab.show).map(tab => (
+                        <button 
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id as any)} 
+                            className={`px-3 py-2 rounded-t-lg text-[11px] font-bold transition-all relative top-[1px]
+                            ${activeTab === tab.id 
+                                ? 'bg-white dark:bg-gray-900 text-blue-600 dark:text-blue-400 border-x border-t border-gray-200 dark:border-gray-800 z-10' 
+                                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}`}
+                        >
+                            {tab.label}
+                        </button>
+                    ))}
+                </div>
+                <button onClick={onClose} className="md:hidden p-2 text-gray-400 hover:text-gray-600"><X className="w-5 h-5" /></button>
+            </div>
+
+            {/* Scrollable Content */}
+            <div className="flex-1 overflow-y-auto p-4 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-700 bg-white dark:bg-gray-900">
+                {person.isDeceased && activeTab === 'info' && !isEditing && (
+                    <button onClick={onChat} className="w-full mb-4 py-2 bg-purple-50 dark:bg-purple-900/20 border border-purple-100 dark:border-purple-800/50 rounded-lg flex items-center justify-center gap-2 text-purple-700 dark:text-purple-300 text-xs font-bold hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-all">
+                        <MessageCircle className="w-3.5 h-3.5" />
+                        {t.chatWithAncestor}
+                    </button>
+                )}
+
+                {activeTab === 'info' && (
+                    <InfoTab 
+                        person={person} people={people} isEditing={isEditing} onUpdate={onUpdate} onSelect={onSelect} inputClass={inputClass} t={t}
+                        onAddParent={onAddParent} onAddSpouse={onAddSpouse} onAddChild={onAddChild} onRemoveRelationship={onRemoveRelationship}
+                    />
+                )}
+                {activeTab === 'partners' && <PartnersTab person={person} people={people} isEditing={isEditing} onUpdate={onUpdate} onSelect={onSelect} t={t} />}
+                {activeTab === 'contact' && <ContactTab person={person} isEditing={isEditing} onUpdate={onUpdate} inputClass={inputClass} t={t} />}
+                {activeTab === 'bio' && <BioTab person={person} people={people} isEditing={isEditing} onUpdate={onUpdate} inputClass={inputClass} t={t} />}
+                {activeTab === 'media' && <MediaTab person={person} isEditing={isEditing} onUpdate={onUpdate} t={t} user={user} />}
+            </div>
+            
+            <SidebarFooter 
+                person={person} isEditing={isEditing} setIsEditing={setIsEditing}
+                onAddParent={onAddParent} onAddSpouse={onAddSpouse} onAddChild={onAddChild}
+                onDelete={onDelete} t={t}
+            />
+        </div>
+    </>
+  );
+};
