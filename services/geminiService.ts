@@ -7,40 +7,55 @@ const getClient = () => {
   return new GoogleGenAI({ apiKey });
 };
 
+/**
+ * Basic sanitization for user-controlled text inputs to prevent prompt injection.
+ * Removes newline characters, backticks, and quotes that could break out of prompt structures.
+ */
+const sanitizePromptInput = (input: string): string => {
+  if (!input) return '';
+  // Replace characters that could be used for prompt injection or formatting disruption
+  // This is a basic sanitization. More advanced scenarios might need a dedicated library.
+  return input.replace(/[\n\r`"']/g, ' ').trim();
+};
+
 export const generateBiography = async (person: Person, people: Record<string, Person>, tone: string = 'Standard'): Promise<string> => {
   try {
     const ai = getClient();
     
-    // Resolve relative names for richer context
+    // Whitelist for allowed tones
+    const allowedTones = ['Standard', 'Formal', 'Storyteller', 'Humorous', 'Journalistic'];
+    const sanitizedTone = allowedTones.includes(tone) ? tone : 'Standard';
+
+    // Resolve relative names for richer context and sanitize them
     const parentNames = person.parents
       .map(id => people[id])
       .filter(Boolean)
-      .map(p => `${p.firstName} ${p.lastName}`)
+      .map(p => sanitizePromptInput(`${p.firstName} ${p.lastName}`))
       .join(' and ');
 
     const spouseNames = person.spouses
       .map(id => people[id])
       .filter(Boolean)
-      .map(p => `${p.firstName} ${p.lastName}`)
+      .map(p => sanitizePromptInput(`${p.firstName} ${p.lastName}`))
       .join(', ');
 
     const childCount = person.children.length;
 
-    // Construct a comprehensive list of details
+    // Construct a comprehensive list of details, sanitizing all string fields
     const details = [
-        `Name: ${person.title ? person.title + ' ' : ''}${person.firstName} ${person.middleName ? person.middleName + ' ' : ''}${person.lastName}${person.suffix ? ' ' + person.suffix : ''}`,
-        person.birthName ? `Birth Name (Maiden Name): ${person.birthName}` : null,
-        person.nickName ? `Nickname: ${person.nickName}` : null,
-        `Gender: ${person.gender}`,
-        `Born: ${person.birthDate || 'Unknown'}${person.birthPlace ? ` in ${person.birthPlace}` : ''}`,
+        `Name: ${sanitizePromptInput(person.title ? person.title + ' ' : '')}${sanitizePromptInput(person.firstName)} ${sanitizePromptInput(person.middleName ? person.middleName + ' ' : '')}${sanitizePromptInput(person.lastName)}${sanitizePromptInput(person.suffix ? ' ' + person.suffix : '')}`,
+        person.birthName ? `Birth Name (Maiden Name): ${sanitizePromptInput(person.birthName)}` : null,
+        person.nickName ? `Nickname: ${sanitizePromptInput(person.nickName)}` : null,
+        `Gender: ${person.gender}`, // Gender is an enum, no sanitization needed
+        `Born: ${sanitizePromptInput(person.birthDate || 'Unknown')}${person.birthPlace ? ` in ${sanitizePromptInput(person.birthPlace)}` : ''}`,
         person.isDeceased 
-            ? `Died: ${person.deathDate || 'Unknown'}${person.deathPlace ? ` in ${person.deathPlace}` : ''}` 
+            ? `Died: ${sanitizePromptInput(person.deathDate || 'Unknown')}${person.deathPlace ? ` in ${sanitizePromptInput(person.deathPlace)}` : ''}` 
             : 'Status: Currently living',
         
         // Biographical Data
-        person.profession ? `Profession/Occupation: ${person.profession}` : null,
-        person.company ? `Company/Organization: ${person.company}` : null,
-        person.interests ? `Interests/Hobbies: ${person.interests}` : null,
+        person.profession ? `Profession/Occupation: ${sanitizePromptInput(person.profession)}` : null,
+        person.company ? `Company/Organization: ${sanitizePromptInput(person.company)}` : null,
+        person.interests ? `Interests/Hobbies: ${sanitizePromptInput(person.interests)}` : null,
         
         // Family Context
         parentNames ? `Parents: ${parentNames}` : null,
@@ -51,7 +66,7 @@ export const generateBiography = async (person: Person, people: Record<string, P
     const prompt = `
       Write a short, engaging biography (approx 100-150 words) for a person in a family tree.
       
-      TONE: ${tone}
+      TONE: ${sanitizedTone}
       
       PERSON DETAILS:
       ${details}
@@ -84,20 +99,33 @@ export const startAncestorChat = async (person: Person, people: Record<string, P
     try {
         const ai = getClient();
         
+        // Sanitize person details for context
+        const sanitizedPersonFirstName = sanitizePromptInput(person.firstName);
+        const sanitizedPersonLastName = sanitizePromptInput(person.lastName);
+        const sanitizedBirthDate = sanitizePromptInput(person.birthDate || 'Unknown');
+        const sanitizedBirthPlace = sanitizePromptInput(person.birthPlace || 'Unknown');
+        const sanitizedDeathDate = sanitizePromptInput(person.deathDate || 'Unknown');
+        const sanitizedProfession = sanitizePromptInput(person.profession || 'Unknown');
+        const sanitizedInterests = sanitizePromptInput(person.interests || 'Unknown');
+        const sanitizedBio = sanitizePromptInput(person.bio || 'No specific bio provided.');
+
+        const sanitizedParentNames = person.parents.map(id => people[id]?.firstName).filter(Boolean).map(sanitizePromptInput).join(', ');
+        const sanitizedSpouseNames = person.spouses.map(id => people[id]?.firstName).filter(Boolean).map(sanitizePromptInput).join(', ');
+
         const context = `
-            You are playing the role of ${person.firstName} ${person.lastName}.
+            You are playing the role of ${sanitizedPersonFirstName} ${sanitizedPersonLastName}.
             You are part of a family tree.
             
             YOUR DETAILS:
-            Born: ${person.birthDate || 'Unknown'} in ${person.birthPlace || 'Unknown'}
-            Died: ${person.isDeceased ? (person.deathDate || 'Unknown') : 'Still living'}
-            Profession: ${person.profession || 'Unknown'}
-            Interests: ${person.interests || 'Unknown'}
-            Bio: ${person.bio || 'No specific bio provided.'}
+            Born: ${sanitizedBirthDate} in ${sanitizedBirthPlace}
+            Died: ${person.isDeceased ? sanitizedDeathDate : 'Still living'}
+            Profession: ${sanitizedProfession}
+            Interests: ${sanitizedInterests}
+            Bio: ${sanitizedBio}
             
             FAMILY:
-            Parents: ${person.parents.map(id => people[id]?.firstName).join(', ')}
-            Spouse: ${person.spouses.map(id => people[id]?.firstName).join(', ')}
+            Parents: ${sanitizedParentNames}
+            Spouse: ${sanitizedSpouseNames}
             Children: ${person.children.length}
             
             INSTRUCTIONS:
@@ -113,12 +141,13 @@ export const startAncestorChat = async (person: Person, people: Record<string, P
             config: { systemInstruction: context }
         });
 
-        // Replay history
+        // Replay history with sanitized messages
         for (const msg of history) {
-            await chat.sendMessage({ message: msg.text });
+            await chat.sendMessage({ message: sanitizePromptInput(msg.text) });
         }
 
-        const result = await chat.sendMessage({ message: newMessage });
+        // Send the new message after sanitization
+        const result = await chat.sendMessage({ message: sanitizePromptInput(newMessage) });
         return result.text || "I am having trouble remembering right now. (AI Error)"; // Added fallback
     } catch (error) {
         console.error("Gemini Chat Error", error);
@@ -145,7 +174,7 @@ export const extractPersonData = async (text: string): Promise<Partial<Person>> 
             - bio (a summary of the text)
 
             TEXT:
-            "${text}"
+            "${sanitizePromptInput(text)}"
         `;
 
         const response = await ai.models.generateContent({
@@ -192,16 +221,16 @@ export const generateFamilyStory = async (people: Record<string, Person>, rootId
     try {
         const ai = getClient();
         
-        // Prepare simplified data dump to save tokens
-        const simplifiedData = Object.values(people).map(p => ({
-            name: `${p.firstName} ${p.lastName}`,
+        // Prepare simplified data dump to save tokens, sanitizing relevant fields
+        const sanitizedSimplifiedData = Object.values(people).map(p => ({
+            name: sanitizePromptInput(`${p.firstName} ${p.lastName}`),
             id: p.id,
             parents: p.parents,
             spouses: p.spouses,
-            born: p.birthDate,
-            place: p.birthPlace,
-            died: p.deathDate,
-            bio: p.bio ? p.bio.substring(0, 100) : ''
+            born: sanitizePromptInput(p.birthDate),
+            place: sanitizePromptInput(p.birthPlace),
+            died: sanitizePromptInput(p.deathDate),
+            bio: sanitizePromptInput(p.bio ? p.bio.substring(0, 100) : '')
         }));
 
         const prompt = `
@@ -218,7 +247,7 @@ export const generateFamilyStory = async (people: Record<string, Person>, rootId
             6. Focus on the flow of generations. "The story begins with..."
             
             FAMILY DATA:
-            ${JSON.stringify(simplifiedData.slice(0, 50))} 
+            ${JSON.stringify(sanitizedSimplifiedData.slice(0, 50))} 
             (Data limited to 50 key members for brevity if tree is huge)
         `;
 
