@@ -9,8 +9,6 @@ import { HeaderRightSection } from './header/HeaderRightSection';
 
 // Update HeaderProps
 interface HeaderProps {
-  // Removed people: Record<string, Person>; // No longer directly used by Header
-  // Removed onFocusPerson: (id: string) => void; // No longer directly used by Header
   t: any; // Translations
   toggleSidebar: () => void;
   
@@ -27,7 +25,6 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = memo(({
-  // Removed people, onFocusPerson,
   t, toggleSidebar,
   historyControls, themeLanguage, auth, viewSettings, toolsActions, exportActions,
   peopleForSearch, onFocusPersonForSearch // Destructure new props
