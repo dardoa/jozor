@@ -166,12 +166,15 @@ export interface HeaderLeftSectionProps {
 }
 
 export interface HeaderRightSectionProps {
-  people: Record<string, Person>;
-  onFocusPerson: (id: string) => void;
+  // Removed people: Record<string, Person>;
+  // Removed onFocusPerson: (id: string) => void;
   t: any;
   themeLanguage: ThemeLanguageProps;
   auth: AuthProps;
   viewSettings: ViewSettingsProps;
   toolsActions: ToolsActionsProps;
   exportActions: ExportActionsProps;
+  // New props for SearchInputWithResults
+  peopleForSearch: Record<string, Person>;
+  onFocusPersonForSearch: (id: string) => void;
 }

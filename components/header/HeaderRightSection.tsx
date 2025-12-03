@@ -1,5 +1,5 @@
 import React, { useState, memo } from 'react';
-import { Person, HeaderRightSectionProps } from '../../types'; // Import HeaderRightSectionProps
+import { HeaderRightSectionProps } from '../../types'; // Import HeaderRightSectionProps
 import { 
   Search, X, Moon, Sun, ChevronDown, Share2, Hammer, SlidersHorizontal
 } from 'lucide-react';
@@ -11,15 +11,16 @@ import { UserMenu } from './UserMenu';
 import { SearchInputWithResults } from './SearchInputWithResults';
 
 export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(({
-  people, onFocusPerson, t,
-  themeLanguage, auth, viewSettings, toolsActions, exportActions
+  t,
+  themeLanguage, auth, viewSettings, toolsActions, exportActions,
+  peopleForSearch, onFocusPersonForSearch // Destructure new props
 }) => {
   const [activeMenu, setActiveMenu] = useState<'none' | 'export' | 'settings' | 'tools' | 'user'>('none');
 
   return (
     <div className="flex items-center gap-2 md:gap-3">
       {/* Search */}
-      <SearchInputWithResults people={people} onFocusPerson={onFocusPerson} t={t} />
+      <SearchInputWithResults people={peopleForSearch} onFocusPerson={onFocusPersonForSearch} t={t} />
 
       <div className="h-6 w-px bg-stone-200 dark:bg-stone-800 hidden md:block mx-1"></div>
 

@@ -39,14 +39,14 @@ export const Header: React.FC<HeaderProps> = memo(({
         
         {/* Right Section */}
         <HeaderRightSection
-          people={people}
-          onFocusPerson={onFocusPerson}
           t={t}
           themeLanguage={themeLanguage}
           auth={auth}
           viewSettings={viewSettings}
           toolsActions={toolsActions}
           exportActions={exportActions}
+          peopleForSearch={people} // Pass directly for search
+          onFocusPersonForSearch={onFocusPerson} // Pass directly for search
         />
       </header>
   );
