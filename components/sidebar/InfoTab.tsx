@@ -78,30 +78,32 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
       return (
         <div className="space-y-4 pb-4">
              <div className="flex gap-3 items-start animate-in fade-in duration-200">
-                {/* Image */}
-                <div className="shrink-0 relative group cursor-pointer" onClick={() => onSelect(person.id)}>
-                     <div className={`w-28 h-28 rounded-2xl border-2 border-white dark:border-stone-700 shadow-md flex items-center justify-center overflow-hidden bg-stone-50 dark:bg-stone-700 ${person.isDeceased ? 'grayscale' : ''}`}> {/* Increased size to w-28 h-28 */}
-                        {person.photoUrl ? (
-                            <img src={person.photoUrl} alt={person.firstName} className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-500" />
-                        ) : (
-                            // Increased icon size to w-10 h-10
-                            <User className={`w-10 h-10 ${person.gender === 'male' ? 'text-blue-300 dark:text-blue-800' : 'text-pink-300 dark:text-pink-800'}`} /> 
-                        )}
-                    </div>
-                    {person.isDeceased && (
-                        <>
+                {/* Image and Chat Button Wrapper */}
+                <div className="shrink-0 flex flex-col items-center gap-2">
+                    <div className="relative group cursor-pointer" onClick={() => onSelect(person.id)}>
+                         <div className={`w-28 h-28 rounded-2xl border-2 border-white dark:border-stone-700 shadow-md flex items-center justify-center overflow-hidden bg-stone-50 dark:bg-stone-700 ${person.isDeceased ? 'grayscale' : ''}`}> {/* Increased size to w-28 h-28 */}
+                            {person.photoUrl ? (
+                                <img src={person.photoUrl} alt={person.firstName} className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-500" />
+                            ) : (
+                                // Increased icon size to w-10 h-10
+                                <User className={`w-10 h-10 ${person.gender === 'male' ? 'text-blue-300 dark:text-blue-800' : 'text-pink-300 dark:text-pink-800'}`} /> 
+                            )}
+                        </div>
+                        {person.isDeceased && (
                             <div className="absolute -top-2 -end-2 bg-white dark:bg-stone-800 rounded-full p-1 shadow-sm border border-stone-100 dark:border-stone-700 z-10">
                                 <Ribbon className="w-4 h-4 text-stone-600 dark:text-stone-400 fill-current" />
                             </div>
-                            {/* Chat with Ancestor button */}
-                            <button 
-                                onClick={(e) => { e.stopPropagation(); onOpenModal('chat'); }} 
-                                className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1 p-1.5 bg-purple-600/90 hover:bg-purple-700 text-white rounded-full shadow-lg transition-all z-20 border border-white/20"
-                                title={t.chatWithAncestor}
-                            >
-                                <MessageCircle className="w-4 h-4" />
-                            </button>
-                        </>
+                        )}
+                    </div>
+                    {person.isDeceased && (
+                        /* Chat with Ancestor button - now a sibling to the image container */
+                        <button 
+                            onClick={(e) => { e.stopPropagation(); onOpenModal('chat'); }} 
+                            className="p-1.5 bg-purple-600/90 hover:bg-purple-700 text-white rounded-full shadow-lg transition-all z-20 border border-white/20"
+                            title={t.chatWithAncestor}
+                        >
+                            <MessageCircle className="w-4 h-4" />
+                        </button>
                     )}
                 </div>
 
