@@ -82,7 +82,8 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
                         {person.photoUrl ? (
                             <img src={person.photoUrl} alt={person.firstName} className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-500" />
                         ) : (
-                            <User className={`w-7 h-7 ${person.gender === 'male' ? 'text-blue-300 dark:text-blue-800' : 'text-pink-300 dark:text-pink-800'}`} /> {/* Reduced w-8 h-8 to w-7 h-7 */}
+                            /* Reduced w-8 h-8 to w-7 h-7 */
+                            <User className={`w-7 h-7 ${person.gender === 'male' ? 'text-blue-300 dark:text-blue-800' : 'text-pink-300 dark:text-pink-800'}`} />
                         )}
                     </div>
                     {person.isDeceased && (
@@ -173,7 +174,8 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
                             </button>
                         </>
                     ) : (
-                        <Camera className="w-7 h-7 text-stone-300 dark:text-stone-500 group-hover:text-teal-400 transition-colors" /> {/* Reduced w-8 h-8 to w-7 h-7 */}
+                        /* Reduced w-8 h-8 to w-7 h-7 */
+                        <Camera className="w-7 h-7 text-stone-300 dark:text-stone-500 group-hover:text-teal-400 transition-colors" />
                     )}
                     <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/20 transition-colors">
                         <span className="text-[9px] font-bold text-white bg-black/60 px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm">{t.changePhoto}</span> {/* Reduced text-[10px] to text-[9px] */}
