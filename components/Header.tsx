@@ -9,13 +9,9 @@ import { Logo } from './Logo';
 import { LoginButton } from './LoginButton';
 
 // Import sub-components
-import { ExportMenu } from './header/ExportMenu';
-import { ToolsMenu } from './header/ToolsMenu';
-import { ViewSettingsMenu } from './header/ViewSettingsMenu';
-import { UserMenu } from './header/UserMenu';
-import { SearchResults } from './header/SearchResults';
-import { HeaderLeftSection } from './header/HeaderLeftSection'; // New import
-import { HeaderRightSection } from './header/HeaderRightSection'; // New import
+// Removed: ExportMenu, ToolsMenu, ViewSettingsMenu, UserMenu, SearchResults
+import { HeaderLeftSection } from './header/HeaderLeftSection';
+import { HeaderRightSection } from './header/HeaderRightSection';
 
 // --- Main Header ---
 
@@ -39,7 +35,7 @@ interface HeaderProps {
   isDemoMode?: boolean;
   onLogin: () => Promise<void>;
   onLogout: () => Promise<void>;
-  handleExport: (type: 'jozor' | 'json' | 'gedcom' | 'ics' | 'print') => Promise<void>; // Added handleExport
+  handleExport: (type: 'jozor' | 'json' | 'gedcom' | 'ics' | 'print') => Promise<void>;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -48,7 +44,7 @@ export const Header: React.FC<HeaderProps> = ({
   treeSettings, setTreeSettings, toggleSidebar, 
   onOpenModal, onPresent,
   user, isDemoMode = false, onLogin, onLogout,
-  handleExport // Destructure handleExport
+  handleExport
 }) => {
   const t = getTranslation(language);
 
