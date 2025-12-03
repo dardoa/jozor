@@ -8,18 +8,21 @@ interface UseAppUIProps {
   startNewTree: () => void;
   stopSyncing: () => void;
   handleImport: (file: File) => Promise<boolean>;
-  handleLogin: () => Promise<boolean>; // Changed return type from Promise<void> to Promise<boolean>
-  handleLogout: () => Promise<void>; // Changed return type from Promise<boolean> to Promise<void>
+  handleLogin: () => Promise<boolean>;
+  handleLogout: () => Promise<void>;
   addParent: (gender: Gender) => void;
   addSpouse: (gender: Gender) => void;
   addChild: (gender: Gender) => void;
   linkPerson: (existingId: string, type: 'parent' | 'spouse' | 'child' | null) => void;
   setFocusId: (id: string) => void;
+  canUndo: boolean; // New prop
+  canRedo: boolean; // New prop
 }
 
 export const useAppUI = ({
   people, t, startNewTree, stopSyncing, handleImport, handleLogin, handleLogout,
-  addParent, addSpouse, addChild, linkPerson, setFocusId
+  addParent, addSpouse, addChild, linkPerson, setFocusId,
+  canUndo, canRedo // Destructure new props
 }: UseAppUIProps) => {
   const [showWelcome, setShowWelcome] = useState<boolean>(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -98,5 +101,7 @@ export const useAppUI = ({
     handleLoginWrapper,
     handleLogoutWrapper,
     handleOpenModal,
+    canUndo, // Return canUndo
+    canRedo, // Return canRedo
   };
 };

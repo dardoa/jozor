@@ -12,7 +12,7 @@ import { useThemeSync } from './hooks/useThemeSync';
 import { useLanguageSync } from './hooks/useLanguageSync';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useAppUI } from './hooks/useAppUI';
-import { useTreeSettings } from './hooks/useTreeSettings'; // New import
+import { useTreeSettings } from './hooks/useTreeSettings';
 
 import { INITIAL_ROOT_ID } from './constants';
 import { getTranslation } from './utils/translations';
@@ -31,11 +31,15 @@ const App: React.FC = () => {
 
   // --- UI State & Preferences ---
   const { language, setLanguage } = useLanguageSync();
-  const { treeSettings, setTreeSettings } = useTreeSettings(); // Using the new hook
-  const { darkMode, setDarkMode } = useThemeSync(treeSettings.theme); // Pass theme from treeSettings
+  const { treeSettings, setTreeSettings } = useTreeSettings();
+  const { darkMode, setDarkMode } = useThemeSync(treeSettings.theme);
 
   const t = getTranslation(language);
   const activePerson = people[focusId];
+
+  // Calculate canUndo/canRedo here
+  const canUndo = history.length > 0;
+  const canRedo = future.length > 0;
 
   // --- useAppUI Hook ---
   const {
@@ -57,11 +61,13 @@ const App: React.FC = () => {
     people, t, startNewTree, stopSyncing, handleImport, 
     handleLogin: handleLogin,
     handleLogout: handleLogout,
-    addParent, addSpouse, addChild, linkPerson, setFocusId
+    addParent, addSpouse, addChild, linkPerson, setFocusId,
+    canUndo, // Pass canUndo
+    canRedo, // Pass canRedo
   });
 
   // --- Custom Hooks for Side Effects ---
-  useKeyboardShortcuts(history.length > 0, undo, future.length > 0, redo, showWelcome, isPresentMode, setIsPresentMode);
+  useKeyboardShortcuts(canUndo, undo, canRedo, redo, showWelcome, isPresentMode, setIsPresentMode);
 
   return (
     <div className={`flex flex-col h-screen font-sans transition-colors duration-300 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 overflow-hidden theme-${treeSettings.theme}`} dir={language === 'ar' ? 'rtl' : 'ltr'}>
@@ -81,7 +87,7 @@ const App: React.FC = () => {
             {!isPresentMode && (
                 <Header 
                     people={people}
-                    onUndo={undo} onRedo={redo} canUndo={history.length > 0} canRedo={future.length > 0}
+                    onUndo={undo} onRedo={redo} canUndo={canUndo} canRedo={canRedo}
                     darkMode={darkMode} setDarkMode={setDarkMode}
                     onFocusPerson={setFocusId}
                     language={language} setLanguage={setLanguage}
