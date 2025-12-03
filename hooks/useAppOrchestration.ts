@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Person, Gender, Language, TreeSettings, UserProfile } from '../types';
+import { Person, Gender, Language, TreeSettings, UserProfile, HistoryControlsProps, ThemeLanguageProps, AuthProps, ViewSettingsProps, ToolsActionsProps, ExportActionsProps } from '../types';
 import { useFamilyTree } from './useFamilyTree';
 import { useGoogleSync } from './useGoogleSync';
 import { useThemeSync } from './useThemeSync';
@@ -84,18 +84,21 @@ export const useAppOrchestration = () => {
     }
   }, [people]);
 
+  // Grouped props for Header and other components
+  const historyControls: HistoryControlsProps = { onUndo: undo, onRedo: redo, canUndo, canRedo };
+  const themeLanguage: ThemeLanguageProps = { darkMode, setDarkMode, language, setLanguage };
+  const auth: AuthProps = { user, isDemoMode, isSyncing, onLogin: handleLoginWrapper, onLogout: handleLogoutWrapper };
+  const viewSettings: ViewSettingsProps = { treeSettings, setTreeSettings, onPresent: () => setIsPresentMode(true) };
+  const toolsActions: ToolsActionsProps = { onOpenModal: handleOpenModal };
+  const exportActions: ExportActionsProps = { handleExport };
+
   return {
     // Core Data
     people, focusId, setFocusId, updatePerson, deletePerson, removeRelationship, activePerson,
 
-    // History
-    undo, redo, canUndo, canRedo,
-
-    // Sync & Auth
-    user, isSyncing, isDemoMode, handleLoginWrapper, handleLogoutWrapper,
-
-    // UI Preferences
-    language, setLanguage, treeSettings, setTreeSettings, darkMode, setDarkMode, t,
+    // History (now part of historyControls)
+    // Sync & Auth (now part of auth)
+    // UI Preferences (now part of themeLanguage and viewSettings)
 
     // Welcome Screen
     showWelcome, fileInputRef, handleStartNewTree, onFileUpload,
@@ -105,7 +108,13 @@ export const useAppOrchestration = () => {
     linkModal, setLinkModal, handleOpenLinkModal, handleCreateNewRelative, handleSelectExistingRelative,
     handleOpenModal,
 
-    // Actions
-    handleExport,
+    // Grouped Props
+    historyControls,
+    themeLanguage,
+    auth,
+    viewSettings,
+    toolsActions,
+    exportActions,
+    t, // Return t for use in App.tsx
   };
 };

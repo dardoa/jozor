@@ -14,14 +14,9 @@ const App: React.FC = () => {
     // Core Data
     people, focusId, setFocusId, updatePerson, deletePerson, removeRelationship, activePerson,
 
-    // History
-    undo, redo, canUndo, canRedo,
-
-    // Sync & Auth
-    user, isSyncing, isDemoMode, handleLoginWrapper, handleLogoutWrapper,
-
-    // UI Preferences
-    language, setLanguage, treeSettings, setTreeSettings, darkMode, setDarkMode, t,
+    // History (now part of historyControls)
+    // Sync & Auth (now part of auth)
+    // UI Preferences (now part of themeLanguage and viewSettings)
 
     // Welcome Screen
     showWelcome, fileInputRef, handleStartNewTree, onFileUpload,
@@ -31,20 +26,18 @@ const App: React.FC = () => {
     linkModal, setLinkModal, handleOpenLinkModal, handleCreateNewRelative, handleSelectExistingRelative,
     handleOpenModal,
 
-    // Actions
-    handleExport,
+    // Grouped Props
+    historyControls,
+    themeLanguage,
+    auth,
+    viewSettings,
+    toolsActions,
+    exportActions,
+    t, // Destructure t here
   } = useAppOrchestration();
 
-  // Grouped props for Header
-  const historyControls = { onUndo: undo, onRedo: redo, canUndo, canRedo };
-  const themeLanguage = { darkMode, setDarkMode, language, setLanguage };
-  const auth = { user, isDemoMode, onLogin: handleLoginWrapper, onLogout: handleLogoutWrapper };
-  const viewSettings = { treeSettings, setTreeSettings, onPresent: () => setIsPresentMode(true) };
-  const toolsActions = { onOpenModal: handleOpenModal };
-  const exportActions = { handleExport };
-
   return (
-    <div className={`flex flex-col h-screen font-sans transition-colors duration-300 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 overflow-hidden theme-${treeSettings.theme}`} dir={language === 'ar' ? 'rtl' : 'ltr'}>
+    <div className={`flex flex-col h-screen font-sans transition-colors duration-300 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 overflow-hidden theme-${viewSettings.treeSettings.theme}`} dir={themeLanguage.language === 'ar' ? 'rtl' : 'ltr'}>
       
       <input ref={fileInputRef} type="file" accept=".json,.ged,.jozor,.zip" className="hidden" onChange={onFileUpload} />
 
@@ -52,9 +45,9 @@ const App: React.FC = () => {
           <WelcomeScreen 
               onStartNew={handleStartNewTree}
               onImport={() => fileInputRef.current?.click()}
-              onLogin={handleLoginWrapper}
-              language={language}
-              setLanguage={setLanguage}
+              onLogin={auth.onLogin}
+              language={themeLanguage.language}
+              setLanguage={themeLanguage.setLanguage}
           />
       ) : (
           <>
@@ -62,7 +55,7 @@ const App: React.FC = () => {
                 <Header 
                     people={people}
                     onFocusPerson={setFocusId}
-                    t={t}
+                    t={t} // Pass t to Header
                     toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
                     historyControls={historyControls}
                     themeLanguage={themeLanguage}
@@ -84,9 +77,9 @@ const App: React.FC = () => {
             )}
             
             {/* Cloud Status */}
-            {!isPresentMode && isSyncing && (
-                <div className={`absolute top-16 start-1/2 -translate-x-1/2 z-50 text-white text-xs px-3 py-1 rounded-b-lg shadow-lg flex items-center gap-2 ${isDemoMode ? 'bg-orange-500' : 'bg-blue-600 animate-pulse'}`}>
-                     {isDemoMode ? 'Saving locally...' : t.syncing}
+            {!isPresentMode && auth.isSyncing && ( // Access isSyncing from auth
+                <div className={`absolute top-16 start-1/2 -translate-x-1/2 z-50 text-white text-xs px-3 py-1 rounded-b-lg shadow-lg flex items-center gap-2 ${auth.isDemoMode ? 'bg-orange-500' : 'bg-blue-600 animate-pulse'}`}>
+                     {auth.isDemoMode ? 'Saving locally...' : t.syncing} // Use t for translation
                 </div>
             )}
 
@@ -104,11 +97,11 @@ const App: React.FC = () => {
                             onRemoveRelationship={removeRelationship}
                             onDelete={deletePerson}
                             onSelect={setFocusId}
-                            language={language}
+                            language={themeLanguage.language}
                             isOpen={sidebarOpen}
                             onClose={() => setSidebarOpen(false)}
                             onOpenModal={handleOpenModal}
-                            user={user}
+                            user={auth.user}
                         />
                     </div>
                 )}
@@ -118,18 +111,18 @@ const App: React.FC = () => {
                     people={people}
                     focusId={focusId}
                     onSelect={setFocusId}
-                    settings={treeSettings}
+                    settings={viewSettings.treeSettings}
                 />
 
                 {/* Modals Layer */}
                 <ModalManager 
                     activeModal={activeModal} setActiveModal={setActiveModal}
                     linkModal={linkModal} setLinkModal={setLinkModal}
-                    people={people} language={language}
+                    people={people} language={themeLanguage.language}
                     focusId={focusId} setFocusId={setFocusId} activePerson={activePerson}
                     handleCreateNewRelative={handleCreateNewRelative}
                     handleSelectExistingRelative={handleSelectExistingRelative}
-                    user={user}
+                    user={auth.user}
                 />
             </div>
           </>

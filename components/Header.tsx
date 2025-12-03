@@ -1,47 +1,11 @@
 import React, { memo } from 'react';
-import { Person, Language, TreeSettings, UserProfile } from '../types';
+import { Person, Language, TreeSettings, UserProfile, HistoryControlsProps, ThemeLanguageProps, AuthProps, ViewSettingsProps, ToolsActionsProps, ExportActionsProps } from '../types';
 import { getTranslation } from '../utils/translations';
 // Removed lucide-react imports as they are now handled by sub-components
 
 // Import sub-components
 import { HeaderLeftSection } from './header/HeaderLeftSection';
 import { HeaderRightSection } from './header/HeaderRightSection';
-
-// New interfaces for grouped props
-interface HistoryControlsProps {
-  onUndo: () => void;
-  onRedo: () => void;
-  canUndo: boolean;
-  canRedo: boolean;
-}
-
-interface ThemeLanguageProps {
-  darkMode: boolean;
-  setDarkMode: (v: boolean) => void;
-  language: Language;
-  setLanguage: (l: Language) => void;
-}
-
-interface AuthProps {
-  user: UserProfile | null;
-  isDemoMode: boolean;
-  onLogin: () => Promise<void>;
-  onLogout: () => Promise<void>;
-}
-
-interface ViewSettingsProps {
-  treeSettings: TreeSettings;
-  setTreeSettings: (s: TreeSettings) => void;
-  onPresent: () => void;
-}
-
-interface ToolsActionsProps {
-  onOpenModal: (modalType: 'calculator' | 'stats' | 'chat' | 'consistency' | 'timeline' | 'share' | 'story' | 'map') => void;
-}
-
-interface ExportActionsProps {
-  handleExport: (type: 'jozor' | 'json' | 'gedcom' | 'ics' | 'print') => Promise<void>;
-}
 
 // Update HeaderLeftSectionProps
 interface HeaderLeftSectionProps {

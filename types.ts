@@ -120,3 +120,40 @@ export interface FanArc {
   value: number;
   hasChildren: boolean;
 }
+
+// New interfaces for grouped props
+export interface HistoryControlsProps {
+  onUndo: () => void;
+  onRedo: () => void;
+  canUndo: boolean;
+  canRedo: boolean;
+}
+
+export interface ThemeLanguageProps {
+  darkMode: boolean;
+  setDarkMode: (v: boolean) => void;
+  language: Language;
+  setLanguage: (l: Language) => void;
+}
+
+export interface AuthProps {
+  user: UserProfile | null;
+  isDemoMode: boolean;
+  isSyncing: boolean; // Added isSyncing
+  onLogin: () => Promise<void>;
+  onLogout: () => Promise<void>;
+}
+
+export interface ViewSettingsProps {
+  treeSettings: TreeSettings;
+  setTreeSettings: (s: TreeSettings) => void;
+  onPresent: () => void;
+}
+
+export interface ToolsActionsProps {
+  onOpenModal: (modalType: 'calculator' | 'stats' | 'chat' | 'consistency' | 'timeline' | 'share' | 'story' | 'map') => void;
+}
+
+export interface ExportActionsProps {
+  handleExport: (type: 'jozor' | 'json' | 'gedcom' | 'ics' | 'print') => Promise<void>;
+}
