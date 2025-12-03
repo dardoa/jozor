@@ -122,9 +122,9 @@ export const DescendantPedigreeChart: React.FC<DescendantPedigreeChartProps> = m
             <g transform={`translate(${cp.x}, ${cp.y})`} onClick={(e) => { e.stopPropagation(); toggleCollapse(cp.uniqueKey); }} className="cursor-pointer group">
               <circle r="12" className="fill-white dark:fill-stone-900 stroke-stone-200 dark:stroke-stone-700 stroke-2 shadow-sm transition-all group-hover:scale-110 group-hover:stroke-teal-400 group-hover:shadow-md" />
               {cp.isCollapsed ? (
-                isVertical ? <ChevronDown x={-6} y={-6} className="w-3 h-3 text-stone-500 dark:text-stone-400 group-hover:text-teal-500" strokeWidth={3} /> : <ChevronRight x={-6} y={-6} className="w-3 h-3 text-stone-500 group-hover:text-teal-500" strokeWidth={3} />
+                isVertical ? <ChevronDown x={-8} y={-8} className="w-4 h-4 text-stone-500 dark:text-stone-400 group-hover:text-teal-500" strokeWidth={2} /> : <ChevronRight x={-8} y={-8} className="w-4 h-4 text-stone-500 group-hover:text-teal-500" strokeWidth={2} />
               ) : (
-                isVertical ? <ChevronUp x={-6} y={-6} className="w-3 h-3 text-stone-400 dark:text-stone-500 group-hover:text-teal-500" strokeWidth={3} /> : <ChevronLeft x={-6} y={-6} className="w-3 h-3 text-stone-500 group-hover:text-teal-500" strokeWidth={3} />
+                isVertical ? <ChevronUp x={-8} y={-8} className="w-4 h-4 text-stone-400 dark:text-stone-500 group-hover:text-teal-500" strokeWidth={2} /> : <ChevronLeft x={-8} y={-8} className="w-4 h-4 text-stone-500 group-hover:text-teal-500" strokeWidth={2} />
               )}
             </g>
           </React.Fragment>
