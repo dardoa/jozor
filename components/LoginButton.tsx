@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { Loader2 } from 'lucide-react';
 
 interface LoginButtonProps {
@@ -6,7 +6,7 @@ interface LoginButtonProps {
     label: string;
 }
 
-export const LoginButton: React.FC<LoginButtonProps> = ({ onLogin, label }) => {
+export const LoginButton: React.FC<LoginButtonProps> = memo(({ onLogin, label }) => {
     const [isLoading, setIsLoading] = useState(false);
 
     const handleClick = async () => {
@@ -34,4 +34,4 @@ export const LoginButton: React.FC<LoginButtonProps> = ({ onLogin, label }) => {
             <span>{label}</span>
         </button>
     );
-};
+});
