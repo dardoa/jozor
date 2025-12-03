@@ -1,4 +1,4 @@
-import React, { useState, memo } from 'react';
+import React, { useState, memo, useCallback } from 'react';
 import { Person, Language, TreeSettings, UserProfile } from '../types';
 import { exportToGEDCOM } from '../utils/gedcomLogic';
 import { exportToJozorArchive } from '../utils/archiveLogic';
@@ -49,7 +49,7 @@ export const Header: React.FC<HeaderProps> = ({
   people, onUndo, onRedo, canUndo, canRedo,
   darkMode, setDarkMode, onFocusPerson, language, setLanguage,
   treeSettings, setTreeSettings, toggleSidebar, 
-  onOpenModal, onPresent, // Only keep onOpenModal here
+  onOpenModal, onPresent,
   user, isDemoMode = false, onLogin, onLogout
 }) => {
   const [activeMenu, setActiveMenu] = useState<'none' | 'export' | 'settings' | 'tools' | 'search' | 'user'>('none');
@@ -67,6 +67,28 @@ export const Header: React.FC<HeaderProps> = ({
     setActiveMenu('none');
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
+
+  // Consolidated Export Handler
+  const handleExport = useCallback(async (type: 'jozor' | 'json' | 'gedcom' | 'ics' | 'print') => {
+    setActiveMenu('none'); // Close menu immediately
+    try {
+      if (type === 'jozor') {
+        downloadFile(await exportToJozorArchive(people), "family.jozor", "application/octet-stream");
+      } else if (type === 'json') {
+        downloadFile(JSON.stringify(people, null, 2), "tree.json", "application/json");
+      } else if (type === 'gedcom') {
+        downloadFile(exportToGEDCOM(people), "tree.ged", "application/octet-stream");
+      } else if (type === 'ics') {
+        downloadFile(generateICS(people), "family_calendar.ics", "text/calendar");
+      } else if (type === 'print') {
+        window.print();
+      }
+    } catch (e) {
+      console.error(`Export to ${type} failed`, e);
+      alert(`Export to ${type} failed`);
+    }
+  }, [people, downloadFile]);
+
 
   const handleSearch = (query: string) => {
       setSearchQuery(query);
@@ -210,14 +232,7 @@ export const Header: React.FC<HeaderProps> = ({
                 {activeMenu === 'export' && (
                     <ExportMenu 
                         onClose={() => setActiveMenu('none')}
-                        onExportJozor={async () => {
-                            try { downloadFile(await exportToJozorArchive(people), "family.jozor", "application/octet-stream"); } 
-                            catch(e) { alert("Archive creation failed"); }
-                        }}
-                        onExportICS={() => downloadFile(generateICS(people), "family_calendar.ics", "text/calendar")}
-                        onExportJSON={() => downloadFile(JSON.stringify(people, null, 2), "tree.json", "application/json")}
-                        onExportGEDCOM={() => downloadFile(exportToGEDCOM(people), "tree.ged", "application/octet-stream")}
-                        onPrint={() => { setActiveMenu('none'); window.print(); }}
+                        onExport={handleExport} // Pass the consolidated handler
                         t={t}
                     />
                 )}

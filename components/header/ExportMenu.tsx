@@ -11,14 +11,10 @@ const DIVIDER = "h-px bg-stone-100 dark:bg-stone-800 my-1 mx-2";
 const HEADER_LABEL = "px-3 py-1.5 text-[10px] font-bold text-stone-400 uppercase tracking-widest flex items-center gap-2";
 
 export const ExportMenu = memo(({
-    onClose, onExportJozor, onExportJSON, onExportGEDCOM, onExportICS, onPrint, t
+    onClose, onExport, t
 }: {
     onClose: () => void;
-    onExportJozor: () => void;
-    onExportJSON: () => void;
-    onExportGEDCOM: () => void;
-    onExportICS: () => void;
-    onPrint: () => void;
+    onExport: (type: 'jozor' | 'json' | 'gedcom' | 'ics' | 'print') => void;
     t: any;
 }) => (
     <>
@@ -26,7 +22,7 @@ export const ExportMenu = memo(({
         <div className={`${DROPDOWN_CONTAINER} end-0`}>
             <div className={HEADER_LABEL}><Download className="w-3 h-3" /> {t.downloadAs}</div>
             
-            <button onClick={onExportJozor} className={`${MENU_ITEM_BASE} bg-teal-50/50 dark:bg-teal-900/10 hover:!bg-teal-50 dark:hover:!bg-teal-900/30`}>
+            <button onClick={() => onExport('jozor')} className={`${MENU_ITEM_BASE} bg-teal-50/50 dark:bg-teal-900/10 hover:!bg-teal-50 dark:hover:!bg-teal-900/30`}>
                 <div className="p-1.5 rounded-lg bg-teal-100 dark:bg-teal-900/50 text-teal-600 dark:text-teal-400 shadow-sm">
                     <Archive className="w-4 h-4"/>
                 </div>
@@ -38,22 +34,22 @@ export const ExportMenu = memo(({
             
             <div className={DIVIDER}></div>
             
-            <button onClick={onExportICS} className={MENU_ITEM_BASE}>
+            <button onClick={() => onExport('ics')} className={MENU_ITEM_BASE}>
                 <div className={ICON_WRAPPER}><Calendar className="w-3.5 h-3.5"/></div>
                 {t.calendarExport}
             </button>
-            <button onClick={onExportJSON} className={MENU_ITEM_BASE}>
+            <button onClick={() => onExport('json')} className={MENU_ITEM_BASE}>
                 <div className={ICON_WRAPPER}><FileText className="w-3.5 h-3.5"/></div>
                 {t.jsonFile}
             </button>
-            <button onClick={onExportGEDCOM} className={MENU_ITEM_BASE}>
+            <button onClick={() => onExport('gedcom')} className={MENU_ITEM_BASE}>
                 <div className={ICON_WRAPPER}><FileText className="w-3.5 h-3.5"/></div>
                 {t.gedcomFile}
             </button>
             
             <div className={DIVIDER}></div>
             
-            <button onClick={onPrint} className={MENU_ITEM_BASE}>
+            <button onClick={() => onExport('print')} className={MENU_ITEM_BASE}>
                 <div className={ICON_WRAPPER}><Printer className="w-3.5 h-3.5"/></div>
                 {t.printPdf}
             </button>
