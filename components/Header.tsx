@@ -22,8 +22,7 @@ import { SearchResults } from './header/SearchResults';
 
 interface HeaderProps {
   people: Record<string, Person>;
-  onImport: () => void;
-  onImportFile: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  // Removed onImport and onImportFile as they are not used directly in Header
   onUndo: () => void;
   onRedo: () => void;
   canUndo: boolean;
