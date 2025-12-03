@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Mic, Square, Play, Trash2, Loader2 } from 'lucide-react';
 
@@ -71,7 +70,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onSave, t }) => {
                     className="flex items-center gap-2 px-3 py-1.5 bg-red-600 text-white rounded-full text-xs font-bold animate-pulse"
                 >
                     <Square className="w-3.5 h-3.5 fill-current" />
-                    {t.recording}
+                    {t.stopRecording}
                 </button>
             )}
         </div>
