@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
 import { Undo, Redo, Menu } from 'lucide-react';
-import { Logo } from '../Logo';
+import { Logo } from '../Logo'; // New import
 import { Language } from '../../types';
 
 interface HeaderLeftSectionProps {

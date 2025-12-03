@@ -5,11 +5,9 @@ import {
   Undo, Redo, Search, Moon, Sun, X, Menu, ChevronDown, Share2,
   Hammer, SlidersHorizontal
 } from 'lucide-react';
-import { Logo } from './Logo';
-import { LoginButton } from './LoginButton';
+// Removed: Logo, LoginButton
 
 // Import sub-components
-// Removed: ExportMenu, ToolsMenu, ViewSettingsMenu, UserMenu, SearchResults
 import { HeaderLeftSection } from './header/HeaderLeftSection';
 import { HeaderRightSection } from './header/HeaderRightSection';
 

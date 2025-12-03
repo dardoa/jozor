@@ -3,7 +3,7 @@ import { Person, Language, TreeSettings, UserProfile } from '../../types';
 import { 
   Search, X, Moon, Sun, ChevronDown, Share2, Hammer, SlidersHorizontal
 } from 'lucide-react';
-import { LoginButton } from '../LoginButton';
+import { LoginButton } from '../LoginButton'; // New import
 import { ExportMenu } from './ExportMenu';
 import { ToolsMenu } from './ToolsMenu';
 import { ViewSettingsMenu } from './ViewSettingsMenu';
