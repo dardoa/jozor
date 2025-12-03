@@ -22,13 +22,13 @@ interface SidebarProps {
   language: Language;
   isOpen: boolean; 
   onClose: () => void;
-  onChat: () => void;
+  onOpenModal: (modalType: 'calculator' | 'stats' | 'chat' | 'consistency' | 'timeline' | 'share' | 'story' | 'map') => void; // Updated prop
   user: UserProfile | null;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
   person, people, onUpdate, onAddParent, onAddSpouse, onAddChild, onRemoveRelationship,
-  onDelete, onSelect, language, isOpen, onClose, onChat, user
+  onDelete, onSelect, language, isOpen, onClose, onOpenModal, user
 }) => {
   const [activeTab, setActiveTab] = useState<'info' | 'partners' | 'bio' | 'contact' | 'media'>('info');
   const [isEditing, setIsEditing] = useState(false);
@@ -89,7 +89,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             {/* Scrollable Content */}
             <div className="flex-1 overflow-y-auto p-4 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-700 bg-white dark:bg-gray-900">
                 {person.isDeceased && activeTab === 'info' && !isEditing && (
-                    <button onClick={onChat} className="w-full mb-4 py-2 bg-purple-50 dark:bg-purple-900/20 border border-purple-100 dark:border-purple-800/50 rounded-lg flex items-center justify-center gap-2 text-purple-700 dark:text-purple-300 text-xs font-bold hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-all">
+                    <button onClick={() => onOpenModal('chat')} className="w-full mb-4 py-2 bg-purple-50 dark:bg-purple-900/20 border border-purple-100 dark:border-purple-800/50 rounded-lg flex items-center justify-center gap-2 text-purple-700 dark:text-purple-300 text-xs font-bold hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-all">
                         <MessageCircle className="w-3.5 h-3.5" />
                         {t.chatWithAncestor}
                     </button>

@@ -65,7 +65,7 @@ const App: React.FC = () => {
   // --- Custom Hooks for Side Effects ---
   useThemeSync(darkMode, setDarkMode, treeSettings.theme); // Using new hook
   useLanguageSync(language, setLanguage); // Using new hook
-  useKeyboardShortcuts(history.length > 0, undo, future.length > 0, redo, showWelcome, isPresentMode, setIsPresentMode); // Using new hook
+  useKeyboardShortcuts(history.length > 0, undo, redo, showWelcome, isPresentMode, setIsPresentMode); // Using new hook
 
   useEffect(() => {
     const hasData = Object.keys(people).length > 1 || people[INITIAL_ROOT_ID].firstName !== 'Me';
@@ -114,6 +114,11 @@ const App: React.FC = () => {
       setShowWelcome(true);
   };
 
+  // New consolidated modal opener
+  const handleOpenModal = useCallback((modalType: 'calculator' | 'stats' | 'chat' | 'consistency' | 'timeline' | 'share' | 'story' | 'map') => {
+      setActiveModal(modalType);
+  }, []);
+
   return (
     <div className={`flex flex-col h-screen font-sans transition-colors duration-300 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 overflow-hidden theme-${treeSettings.theme}`} dir={language === 'ar' ? 'rtl' : 'ltr'}>
       
@@ -140,13 +145,7 @@ const App: React.FC = () => {
                     language={language} setLanguage={setLanguage}
                     treeSettings={treeSettings} setTreeSettings={setTreeSettings}
                     toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-                    onOpenCalculator={() => setActiveModal('calculator')}
-                    onOpenStats={() => setActiveModal('stats')}
-                    onOpenConsistency={() => setActiveModal('consistency')}
-                    onOpenTimeline={() => setActiveModal('timeline')}
-                    onOpenShare={() => setActiveModal('share')}
-                    onOpenStory={() => setActiveModal('story')}
-                    onOpenMap={() => setActiveModal('map')}
+                    onOpenModal={handleOpenModal} // Consolidated modal opener
                     onPresent={() => setIsPresentMode(true)}
                     user={user} isDemoMode={isDemoMode}
                     onLogin={handleLoginWrapper} onLogout={handleLogoutWrapper}
@@ -187,7 +186,7 @@ const App: React.FC = () => {
                             language={language}
                             isOpen={sidebarOpen}
                             onClose={() => setSidebarOpen(false)}
-                            onChat={() => setActiveModal('chat')}
+                            onOpenModal={handleOpenModal} // Fixed: Changed from onChat to onOpenModal
                             user={user}
                         />
                     </div>

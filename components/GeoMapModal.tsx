@@ -106,8 +106,8 @@ export const GeoMapModal: React.FC<GeoMapModalProps> = ({ isOpen, onClose, peopl
       const zoom = d3.zoom()
           .scaleExtent([1, 8])
           .on("zoom", (event: d3.D3ZoomEvent<SVGSVGElement, unknown>) => { // Explicitly type event
-              svg.selectAll('g').attr("transform", event.transform);
-              svg.selectAll('circle').attr("transform", event.transform);
+              svg.selectAll('g').attr("transform", event.transform.toString()); // Fixed: Added .toString()
+              svg.selectAll('circle').attr("transform", event.transform.toString()); // Fixed: Added .toString()
           });
       svg.call(zoom as any);
 

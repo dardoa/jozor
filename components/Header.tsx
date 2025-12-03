@@ -36,13 +36,8 @@ interface HeaderProps {
   treeSettings: TreeSettings;
   setTreeSettings: (s: TreeSettings) => void;
   toggleSidebar: () => void;
-  onOpenCalculator: () => void;
-  onOpenStats: () => void;
-  onOpenConsistency: () => void;
-  onOpenTimeline: () => void;
-  onOpenShare: () => void;
-  onOpenStory: () => void;
-  onOpenMap: () => void;
+  // Consolidated modal opener
+  onOpenModal: (modalType: 'calculator' | 'stats' | 'chat' | 'consistency' | 'timeline' | 'share' | 'story' | 'map') => void;
   onPresent: () => void;
   user: UserProfile | null;
   isDemoMode?: boolean;
@@ -54,7 +49,7 @@ export const Header: React.FC<HeaderProps> = ({
   people, onUndo, onRedo, canUndo, canRedo,
   darkMode, setDarkMode, onFocusPerson, language, setLanguage,
   treeSettings, setTreeSettings, toggleSidebar, 
-  onOpenCalculator, onOpenStats, onOpenConsistency, onOpenTimeline, onOpenShare, onOpenStory, onOpenMap, onPresent,
+  onOpenModal, onPresent,
   user, isDemoMode = false, onLogin, onLogout
 }) => {
   const [activeMenu, setActiveMenu] = useState<'none' | 'export' | 'settings' | 'tools' | 'search' | 'user'>('none');
@@ -139,7 +134,7 @@ export const Header: React.FC<HeaderProps> = ({
            {/* Share Button */}
            {user && (
                <button 
-                onClick={onOpenShare}
+                onClick={() => onOpenModal('share')} // Use consolidated opener
                 className="w-9 h-9 rounded-full flex items-center justify-center transition-all bg-teal-50 dark:bg-teal-900/20 text-teal-600 dark:text-teal-400 hover:bg-teal-100 dark:hover:bg-teal-900/40"
                 title={t.shareTree}
                 aria-label={t.shareTree}
@@ -160,12 +155,7 @@ export const Header: React.FC<HeaderProps> = ({
                 {activeMenu === 'tools' && (
                     <ToolsMenu 
                         onClose={() => setActiveMenu('none')} 
-                        onStats={() => { onOpenStats(); setActiveMenu('none'); }}
-                        onCalc={() => { onOpenCalculator(); setActiveMenu('none'); }}
-                        onConsistency={() => { onOpenConsistency(); setActiveMenu('none'); }}
-                        onTimeline={() => { onOpenTimeline(); setActiveMenu('none'); }}
-                        onStory={() => { onOpenStory && onOpenStory(); setActiveMenu('none'); }}
-                        onMap={() => { onOpenMap && onOpenMap(); setActiveMenu('none'); }}
+                        onOpenModal={onOpenModal} // Pass consolidated opener
                         t={t}
                     />
                 )}
