@@ -84,49 +84,35 @@ export const PartnersTab: React.FC<PartnersTabProps> = memo(({ person, people, i
 
                         {/* Date Inputs */}
                         <div className="space-y-1.5 mt-1.5"> {/* Reduced space-y-2 to space-y-1.5 and mt-2 to mt-1.5 */}
-                            <div className="flex items-center gap-2"> {/* Reduced gap-3 to gap-2 */}
-                                    <div className="w-5 flex justify-center text-stone-400"> {/* Reduced w-6 to w-5 */}
-                                        <Calendar className="w-3.5 h-3.5" />
-                                    </div>
-                                    <div className="flex-1 flex flex-col gap-1.5"> {/* Reduced gap-2 to gap-1.5 */}
-                                    <div className="flex items-center gap-2">
-                                            <span className="text-[9px] text-stone-500 w-10 shrink-0"> {/* Reduced text-[10px] to text-[9px] and w-12 to w-10 */}
-                                            {isDivorced ? t.married : t.since}:
-                                            </span>
-                                            <DateSelect disabled={!isEditing} value={details.startDate} onChange={(val) => handlePartnerUpdate(spouseId, 'startDate', val)} />
-                                    </div>
-                                        <FormField
-                                            label=""
-                                            value={details.startPlace || ''}
-                                            onCommit={(v) => handlePartnerUpdate(spouseId, 'startPlace', v)}
-                                            disabled={!isEditing}
-                                            placeholder={t.place}
-                                            className="!h-7 !text-xs" /* Reduced !h-8 !text-sm to !h-7 !text-xs */
-                                            labelWidthClass="hidden"
-                                        />
-                                    </div>
+                            <div className="flex items-center gap-2">
+                                <label className="w-16 shrink-0 text-[9px] text-stone-600 dark:text-stone-400 font-medium">{isDivorced ? t.married : t.since}</label>
+                                <DateSelect disabled={!isEditing} value={details.startDate} onChange={(val) => handlePartnerUpdate(spouseId, 'startDate', val)} />
                             </div>
+                            <FormField
+                                label={t.place}
+                                value={details.startPlace || ''}
+                                onCommit={(v) => handlePartnerUpdate(spouseId, 'startPlace', v)}
+                                disabled={!isEditing}
+                                placeholder={t.place}
+                                className="!h-7 !text-xs"
+                                labelWidthClass="w-16"
+                            />
                             
                             {isDivorced && (
-                                <div className="flex items-center gap-2 animate-in slide-in-from-top-1"> {/* Reduced gap-3 to gap-2 */}
-                                        <div className="w-5 flex justify-center text-stone-400"> {/* Reduced w-6 to w-5 */}
-                                            <HeartCrack className="w-3.5 h-3.5" />
-                                        </div>
-                                        <div className="flex-1 flex flex-col gap-1.5"> {/* Reduced gap-2 to gap-1.5 */}
-                                        <div className="flex items-center gap-2">
-                                                <span className="text-[9px] text-stone-500 w-10 shrink-0">{t.divorced}:</span> {/* Reduced text-[10px] to text-[9px] and w-12 to w-10 */}
-                                                <DateSelect disabled={!isEditing} value={details.endDate || ''} onChange={(val) => handlePartnerUpdate(spouseId, 'endDate', val)} />
-                                        </div>
-                                            <FormField
-                                                label=""
-                                                value={details.endPlace || ''}
-                                                onCommit={(v) => handlePartnerUpdate(spouseId, 'endPlace', v)}
-                                                disabled={!isEditing}
-                                                placeholder={t.place}
-                                                className="!h-7 !text-xs" /* Reduced !h-8 !text-sm to !h-7 !text-xs */
-                                                labelWidthClass="hidden"
-                                            />
-                                        </div>
+                                <div className="space-y-1.5 mt-1.5 animate-in slide-in-from-top-1">
+                                    <div className="flex items-center gap-2">
+                                        <label className="w-16 shrink-0 text-[9px] text-stone-600 dark:text-stone-400 font-medium">{t.divorced}</label>
+                                        <DateSelect disabled={!isEditing} value={details.endDate || ''} onChange={(val) => handlePartnerUpdate(spouseId, 'endDate', val)} />
+                                    </div>
+                                    <FormField
+                                        label={t.place}
+                                        value={details.endPlace || ''}
+                                        onCommit={(v) => handlePartnerUpdate(spouseId, 'endPlace', v)}
+                                        disabled={!isEditing}
+                                        placeholder={t.place}
+                                        className="!h-7 !text-xs"
+                                        labelWidthClass="w-16"
+                                    />
                                 </div>
                             )}
                         </div>
