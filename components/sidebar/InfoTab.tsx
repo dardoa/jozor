@@ -82,7 +82,7 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
                         {person.photoUrl ? (
                             <img src={person.photoUrl} alt={person.firstName} className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-500" />
                         ) : (
-                            <User className={`w-7 h-7 ${person.gender === 'male' ? 'text-blue-300 dark:text-blue-800' : 'text-pink-300 dark:text-pink-800'}`} /> /* Reduced w-8 h-8 to w-7 h-7 */
+                            <User className={`w-7 h-7 ${person.gender === 'male' ? 'text-blue-300 dark:text-blue-800' : 'text-pink-300 dark:text-pink-800'}`} /> /* {Reduced w-8 h-8 to w-7 h-7} */
                         )}
                     </div>
                     {person.isDeceased && (
@@ -143,7 +143,7 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
             <div className="h-px bg-stone-100 dark:bg-stone-800"></div>
             
             <FamilyRelationshipsSection
-                person={person} people={people} isEditing={isEditing} onSelect={onSelect} t={t}
+                person={person} people={people} isEditing={isEditing} onUpdate={onUpdate} onSelect={onSelect} t={t}
                 onAddParent={onAddParent} onAddSpouse={onAddSpouse} onAddChild={onAddChild} onRemoveRelationship={onRemoveRelationship}
             />
         </div>
@@ -162,22 +162,24 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
                     className="w-20 h-20 rounded-xl border-2 border-dashed border-stone-300 dark:border-stone-600 hover:border-teal-400 dark:hover:border-teal-400 bg-stone-50 dark:bg-stone-800 flex flex-col items-center justify-center cursor-pointer relative overflow-hidden group transition-all"
                 > {/* Reduced w-24 h-24 to w-20 h-20 */}
                     {person.photoUrl ? (
-                        <img src={person.photoUrl} alt="" className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+                        <>
+                            <img src={person.photoUrl} alt="" className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+                            <button 
+                                onClick={(e) => { e.stopPropagation(); handleChange('photoUrl', ''); }}
+                                className="absolute top-1 right-1 p-0.5 bg-red-500/80 hover:bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                title={t.removePhoto}
+                            >
+                                <X className="w-3 h-3" />
+                            </button>
+                        </>
                     ) : (
-                        <Camera className="w-7 h-7 text-stone-300 dark:text-stone-500 group-hover:text-teal-400 transition-colors" /> /* Reduced w-8 h-8 to w-7 h-7 */
+                        <Camera className="w-7 h-7 text-stone-300 dark:text-stone-500 group-hover:text-teal-400 transition-colors" /> /* {Reduced w-8 h-8 to w-7 h-7} */
                     )}
                     <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/20 transition-colors">
                         <span className="text-[9px] font-bold text-white bg-black/60 px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm">{t.changePhoto}</span> {/* Reduced text-[10px] to text-[9px] */}
                     </div>
                 </div>
-                {person.photoUrl && (
-                    <button 
-                        onClick={() => handleChange('photoUrl', '')}
-                        className="text-xs font-bold text-red-500 hover:text-red-700 w-full text-center bg-red-50 dark:bg-red-900/10 py-0.5 rounded-lg hover:bg-red-100 transition-colors"
-                    > {/* Reduced py-1 to py-0.5 */}
-                        {t.removePhoto}
-                    </button>
-                )}
+                {/* Removed the separate "Remove Photo" button */}
                 <input 
                     ref={fileInputRef}
                     type="file" 
@@ -297,7 +299,7 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
         )}
         
         <FamilyRelationshipsSection
-            person={person} people={people} isEditing={isEditing} onSelect={onSelect} t={t}
+            person={person} people={people} isEditing={isEditing} onUpdate={onUpdate} onSelect={onSelect} t={t}
             onAddParent={onAddParent} onAddSpouse={onAddSpouse} onAddChild={onAddChild} onRemoveRelationship={onRemoveRelationship}
         />
     </div>

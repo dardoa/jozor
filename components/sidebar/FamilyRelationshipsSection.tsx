@@ -126,6 +126,7 @@ interface FamilyRelationshipsSectionProps {
   person: Person;
   people: Record<string, Person>;
   isEditing: boolean;
+  onUpdate: (id: string, updates: Partial<Person>) => void; // Added onUpdate prop
   onSelect: (id: string) => void;
   t: any;
   onAddParent: (gender: Gender) => void;
@@ -135,7 +136,7 @@ interface FamilyRelationshipsSectionProps {
 }
 
 export const FamilyRelationshipsSection: React.FC<FamilyRelationshipsSectionProps> = memo(({
-    person, people, isEditing, onSelect, t,
+    person, people, isEditing, onSelect, t, onUpdate, // Destructure onUpdate here
     onAddParent, onAddSpouse, onAddChild, onRemoveRelationship
 }) => {
     const handleRemoveParent = (id: string) => onRemoveRelationship?.(person.id, id, 'parent');
