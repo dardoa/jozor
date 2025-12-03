@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { Gender } from '../types';
 
-interface UseAppUIProps {
+interface UseModalAndSidebarLogicProps {
   addParent: (gender: Gender) => void;
   addSpouse: (gender: Gender) => void;
   addChild: (gender: Gender) => void;
@@ -11,10 +11,10 @@ interface UseAppUIProps {
   canRedo: boolean;
 }
 
-export const useAppUI = ({
+export const useModalAndSidebarLogic = ({
   addParent, addSpouse, addChild, linkPerson, setFocusId,
   canUndo, canRedo
-}: UseAppUIProps) => {
+}: UseModalAndSidebarLogicProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeModal, setActiveModal] = useState<'none' | 'calculator' | 'stats' | 'chat' | 'consistency' | 'timeline' | 'share' | 'story' | 'map'>('none');
   const [isPresentMode, setIsPresentMode] = useState(false);

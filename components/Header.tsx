@@ -43,6 +43,7 @@ interface HeaderProps {
   isDemoMode?: boolean;
   onLogin: () => Promise<void>;
   onLogout: () => Promise<void>;
+  handleExport: (type: 'jozor' | 'json' | 'gedcom' | 'ics' | 'print') => Promise<void>; // Added handleExport
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -50,30 +51,13 @@ export const Header: React.FC<HeaderProps> = ({
   darkMode, setDarkMode, onFocusPerson, language, setLanguage,
   treeSettings, setTreeSettings, toggleSidebar, 
   onOpenModal, onPresent,
-  user, isDemoMode = false, onLogin, onLogout
+  user, isDemoMode = false, onLogin, onLogout,
+  handleExport // Destructure handleExport
 }) => {
   const t = getTranslation(language);
 
-  // Consolidated Export Handler
-  const handleExport = useCallback(async (type: 'jozor' | 'json' | 'gedcom' | 'ics' | 'print') => {
-    try {
-      if (type === 'jozor') {
-        downloadFile(await exportToJozorArchive(people), "family.jozor", "application/octet-stream");
-      } else if (type === 'json') {
-        downloadFile(JSON.stringify(people, null, 2), "tree.json", "application/json");
-      } else if (type === 'gedcom') {
-        downloadFile(exportToGEDCOM(people), "tree.ged", "application/octet-stream");
-      } else if (type === 'ics') {
-        downloadFile(generateICS(people), "family_calendar.ics", "text/calendar");
-      } else if (type === 'print') {
-        window.print();
-      }
-    } catch (e) {
-      console.error(`Export to ${type} failed`, e);
-      alert(`Export to ${type} failed`);
-    }
-  }, [people]);
-
+  // Consolidated Export Handler (moved to useAppOrchestration, but kept here for type consistency)
+  // This function is now passed as a prop, so the local definition is removed.
 
   return (
       <header className="h-16 bg-white/80 dark:bg-stone-950/80 backdrop-blur-md flex items-center px-4 md:px-6 justify-between border-b border-stone-200/50 dark:border-stone-800/50 z-30 print:hidden transition-all shadow-sm sticky top-0">

@@ -1,73 +1,39 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React from 'react';
 import { Sidebar } from './components/Sidebar';
 import { FamilyTree } from './components/FamilyTree';
 import { WelcomeScreen } from './components/WelcomeScreen';
 import { Header } from './components/Header';
 import { ModalManager } from './components/ModalManager';
 
-import { Gender, Language, TreeSettings } from './types';
-import { useFamilyTree } from './hooks/useFamilyTree';
-import { useGoogleSync } from './hooks/useGoogleSync';
-import { useThemeSync } from './hooks/useThemeSync';
-import { useLanguageSync } from './hooks/useLanguageSync';
-import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
-import { useAppUI } from './hooks/useAppUI';
-import { useTreeSettings } from './hooks/useTreeSettings';
-import { useWelcomeScreenLogic } from './hooks/useWelcomeScreenLogic'; // New import
+import { useAppOrchestration } from './hooks/useAppOrchestration'; // New orchestration hook
 
-import { INITIAL_ROOT_ID } from './constants';
-import { getTranslation } from './utils/translations';
 import { X } from 'lucide-react';
 
 const App: React.FC = () => {
-  // --- Data & Logic ---
   const {
-    people, focusId, setFocusId, history, future, undo, redo,
-    updatePerson, deletePerson, addParent, addSpouse, addChild, removeRelationship, linkPerson,
-    handleImport, startNewTree, loadCloudData
-  } = useFamilyTree();
+    // Core Data
+    people, focusId, setFocusId, updatePerson, deletePerson, removeRelationship, activePerson,
 
-  // --- Sync & Auth ---
-  const { user, isSyncing, isDemoMode, handleLogin, handleLogout, stopSyncing } = useGoogleSync(people, loadCloudData);
+    // History
+    undo, redo, canUndo, canRedo,
 
-  // --- UI State & Preferences ---
-  const { language, setLanguage } = useLanguageSync();
-  const { treeSettings, setTreeSettings } = useTreeSettings();
-  const { darkMode, setDarkMode } = useThemeSync(treeSettings.theme);
+    // Sync & Auth
+    user, isSyncing, isDemoMode, handleLoginWrapper, handleLogoutWrapper,
 
-  const t = getTranslation(language);
-  const activePerson = people[focusId];
+    // UI Preferences
+    language, setLanguage, treeSettings, setTreeSettings, darkMode, setDarkMode, t,
 
-  // Calculate canUndo/canRedo here
-  const canUndo = history.length > 0;
-  const canRedo = future.length > 0;
+    // Welcome Screen
+    showWelcome, fileInputRef, handleStartNewTree, onFileUpload,
 
-  // --- Welcome Screen Logic ---
-  const {
-    showWelcome, fileInputRef,
-    handleStartNewTree, onFileUpload, handleLoginWrapper, handleLogoutWrapper
-  } = useWelcomeScreenLogic({
-    people, t, startNewTree, stopSyncing, handleImport, handleLogin, handleLogout
-  });
-
-  // --- App UI Logic (excluding welcome screen) ---
-  const {
-    sidebarOpen, setSidebarOpen,
-    activeModal, setActiveModal,
-    isPresentMode, setIsPresentMode,
-    linkModal, setLinkModal,
-    handleOpenLinkModal,
-    handleCreateNewRelative,
-    handleSelectExistingRelative,
+    // Modals & Sidebar
+    sidebarOpen, setSidebarOpen, activeModal, setActiveModal, isPresentMode, setIsPresentMode,
+    linkModal, setLinkModal, handleOpenLinkModal, handleCreateNewRelative, handleSelectExistingRelative,
     handleOpenModal,
-  } = useAppUI({
-    addParent, addSpouse, addChild, linkPerson, setFocusId,
-    canUndo,
-    canRedo,
-  });
 
-  // --- Custom Hooks for Side Effects ---
-  useKeyboardShortcuts(canUndo, undo, canRedo, redo, showWelcome, isPresentMode, setIsPresentMode);
+    // Actions
+    handleExport,
+  } = useAppOrchestration();
 
   return (
     <div className={`flex flex-col h-screen font-sans transition-colors duration-300 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 overflow-hidden theme-${treeSettings.theme}`} dir={language === 'ar' ? 'rtl' : 'ltr'}>
@@ -97,6 +63,7 @@ const App: React.FC = () => {
                     onPresent={() => setIsPresentMode(true)}
                     user={user} isDemoMode={isDemoMode}
                     onLogin={handleLoginWrapper} onLogout={handleLogoutWrapper}
+                    handleExport={handleExport}
                 />
             )}
             
