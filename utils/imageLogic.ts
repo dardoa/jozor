@@ -1,6 +1,3 @@
-
-import React from 'react';
-
 /**
  * Reads a file, resizes it to fit within maxWidth/maxHeight, 
  * compresses it to JPEG, and returns the Data URL.
