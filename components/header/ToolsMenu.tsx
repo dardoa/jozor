@@ -2,12 +2,7 @@ import React, { memo } from 'react';
 import { 
   Calculator, Hammer, Activity, ShieldCheck, Calendar, BookOpen, Map
 } from 'lucide-react';
-
-// --- Shared Styles ---
-const DROPDOWN_CONTAINER = "absolute top-full mt-2 w-64 p-1.5 bg-white/95 dark:bg-stone-950/95 backdrop-blur-xl border border-stone-200/50 dark:border-stone-700/50 rounded-2xl shadow-float z-50 animate-in fade-in zoom-in-95 duration-200 origin-top-right ring-1 ring-black/5";
-const MENU_ITEM_BASE = "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-all group relative overflow-hidden";
-const ICON_WRAPPER = "p-1.5 rounded-lg bg-stone-50 dark:bg-stone-800 group-hover:bg-white dark:group-hover:bg-stone-700 text-stone-500 group-hover:text-teal-600 dark:text-stone-400 dark:group-hover:text-teal-400 transition-colors shadow-sm";
-const DIVIDER = "h-px bg-stone-100 dark:bg-stone-800 my-1 mx-2";
+import { DropdownMenuContainer, DropdownMenuItem, DropdownMenuDivider } from '../ui/DropdownMenu';
 
 export const ToolsMenu = memo(({
     onClose, onOpenModal, t
@@ -18,36 +13,33 @@ export const ToolsMenu = memo(({
 }) => (
     <>
         <div className="fixed inset-0 z-10" onClick={onClose}></div>
-        <div className={`${DROPDOWN_CONTAINER} end-0`}>
-            <button onClick={() => { onOpenModal('story'); onClose(); }} className={`${MENU_ITEM_BASE} mb-1 !bg-amber-50 dark:!bg-amber-900/10 hover:!bg-amber-100 dark:hover:!bg-amber-900/30 !text-amber-800 dark:!text-amber-200`}>
-                <div className="p-1.5 rounded-lg bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400">
-                    <BookOpen className="w-3.5 h-3.5"/>
-                </div>
-                <span className="font-bold">{t.familyStory}</span>
-            </button>
+        <DropdownMenuContainer className="end-0 w-64">
+            <DropdownMenuItem 
+                onClick={() => { onOpenModal('story'); onClose(); }}
+                icon={<BookOpen className="w-3.5 h-3.5"/>}
+                label={t.familyStory}
+                colorClass="mb-1 !bg-amber-50 dark:!bg-amber-900/10 hover:!bg-amber-100 dark:hover:!bg-amber-900/30 !text-amber-800 dark:!text-amber-200"
+                iconBgClass="bg-amber-100 dark:bg-amber-900/50"
+                iconTextColorClass="text-amber-600 dark:text-amber-400"
+            />
             
-            <div className={DIVIDER}></div>
+            <DropdownMenuDivider />
             
-            <button onClick={() => { onOpenModal('map'); onClose(); }} className={MENU_ITEM_BASE}>
-                <div className={`${ICON_WRAPPER} !text-green-600 bg-green-50 dark:bg-green-900/20`}><Map className="w-3.5 h-3.5"/></div>
+            <DropdownMenuItem onClick={() => { onOpenModal('map'); onClose(); }} icon={<Map className="w-3.5 h-3.5"/>} iconBgClass="!bg-green-50 dark:!bg-green-900/20" iconTextColorClass="!text-green-600">
                 {t.viewOnMap}
-            </button>
-            <button onClick={() => { onOpenModal('timeline'); onClose(); }} className={MENU_ITEM_BASE}>
-                <div className={`${ICON_WRAPPER} !text-blue-500 bg-blue-50 dark:bg-blue-900/20`}><Calendar className="w-3.5 h-3.5"/></div>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => { onOpenModal('timeline'); onClose(); }} icon={<Calendar className="w-3.5 h-3.5"/>} iconBgClass="!bg-blue-50 dark:!bg-blue-900/20" iconTextColorClass="!text-blue-500">
                 {t.familyTimeline}
-            </button>
-            <button onClick={() => { onOpenModal('stats'); onClose(); }} className={MENU_ITEM_BASE}>
-                <div className={`${ICON_WRAPPER} !text-emerald-500 bg-emerald-50 dark:bg-emerald-900/20`}><Activity className="w-3.5 h-3.5"/></div>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => { onOpenModal('stats'); onClose(); }} icon={<Activity className="w-3.5 h-3.5"/>} iconBgClass="!bg-emerald-50 dark:!bg-emerald-900/20" iconTextColorClass="!text-emerald-500">
                 {t.familyStatistics}
-            </button>
-            <button onClick={() => { onOpenModal('consistency'); onClose(); }} className={MENU_ITEM_BASE}>
-                <div className={`${ICON_WRAPPER} !text-orange-500 bg-orange-50 dark:bg-orange-900/20`}><ShieldCheck className="w-3.5 h-3.5"/></div>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => { onOpenModal('consistency'); onClose(); }} icon={<ShieldCheck className="w-3.5 h-3.5"/>} iconBgClass="!bg-orange-50 dark:!bg-orange-900/20" iconTextColorClass="!text-orange-500">
                 {t.consistencyChecker}
-            </button>
-            <button onClick={() => { onOpenModal('calculator'); onClose(); }} className={MENU_ITEM_BASE}>
-                <div className={`${ICON_WRAPPER} !text-indigo-500 bg-indigo-50 dark:bg-indigo-900/20`}><Calculator className="w-3.5 h-3.5"/></div>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => { onOpenModal('calculator'); onClose(); }} icon={<Calculator className="w-3.5 h-3.5"/>} iconBgClass="!bg-indigo-50 dark:!bg-indigo-900/20" iconTextColorClass="!text-indigo-500">
                 {t.relationshipCalculator}
-            </button>
-        </div>
+            </DropdownMenuItem>
+        </DropdownMenuContainer>
     </>
 ));
