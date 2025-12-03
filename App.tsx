@@ -14,10 +14,6 @@ const App: React.FC = () => {
     // Core Data
     people, focusId, setFocusId, updatePerson, deletePerson, removeRelationship, activePerson,
 
-    // History (now part of historyControls)
-    // Sync & Auth (now part of auth)
-    // UI Preferences (now part of themeLanguage and viewSettings)
-
     // Welcome Screen
     showWelcome, fileInputRef, handleStartNewTree, onFileUpload,
 
@@ -53,7 +49,6 @@ const App: React.FC = () => {
           <>
             {!isPresentMode && (
                 <Header 
-                    // Removed people={people} and onFocusPerson={setFocusId}
                     t={t} // Pass t to Header
                     toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
                     historyControls={historyControls}
