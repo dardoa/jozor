@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, memo } from 'react';
 import { Person, UserProfile } from '../../types';
 import { processImageFile } from '../../utils/imageLogic';
 import { pickAndDownloadImage } from '../../services/googleService';
@@ -14,7 +14,7 @@ interface MediaTabProps {
   user: UserProfile | null;
 }
 
-export const MediaTab: React.FC<MediaTabProps> = ({ person, isEditing, onUpdate, t, user }) => {
+export const MediaTab: React.FC<MediaTabProps> = memo(({ person, isEditing, onUpdate, t, user }) => {
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isDriveLoading, setIsDriveLoading] = useState(false);
@@ -80,16 +80,16 @@ export const MediaTab: React.FC<MediaTabProps> = ({ person, isEditing, onUpdate,
   return (
     <div className="space-y-6">
         {/* --- PHOTOS SECTION --- */}
-        <div className="space-y-3">
+        <div className="bg-white dark:bg-stone-800 p-4 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-3">
             <div className="flex justify-between items-center mb-1">
-                <h3 className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">{t.gallery}</h3>
+                <h3 className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">{t.gallery}</h3>
                 {isEditing && (
                     <div className="flex gap-2">
                         {user && (
                             <button 
                                 onClick={handleDriveSelect}
                                 disabled={isDriveLoading}
-                                className="text-[9px] font-bold text-green-600 dark:text-green-400 hover:underline flex items-center gap-1 disabled:opacity-50"
+                                className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 disabled:opacity-50"
                                 title="Import from Google Drive"
                             >
                                 {isDriveLoading ? <Loader2 className="w-3 h-3 animate-spin"/> : <Cloud className="w-3 h-3"/>} 
@@ -98,7 +98,7 @@ export const MediaTab: React.FC<MediaTabProps> = ({ person, isEditing, onUpdate,
                         )}
                         <button 
                             onClick={() => galleryInputRef.current?.click()}
-                            className="text-[9px] font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+                            className="text-[10px] font-bold text-teal-600 dark:text-teal-400 hover:underline flex items-center gap-1"
                         >
                             <Plus className="w-3 h-3"/> {t.addPhoto}
                         </button>
@@ -114,20 +114,20 @@ export const MediaTab: React.FC<MediaTabProps> = ({ person, isEditing, onUpdate,
             </div>
 
             {(!person.gallery || person.gallery.length === 0) ? (
-                <div className="text-center py-6 text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-dashed border-gray-200 dark:border-gray-700 flex flex-col items-center">
-                    <ImageIcon className="w-6 h-6 mb-2 opacity-50" />
-                    <span className="text-[10px]">{t.noPhotos}</span>
+                <div className="text-center py-6 text-stone-400 dark:text-stone-500 bg-stone-50 dark:bg-stone-800/50 rounded-xl border border-dashed border-stone-200 dark:border-stone-700 flex flex-col items-center">
+                    <ImageIcon className="w-7 h-7 mb-2 opacity-50" />
+                    <span className="text-sm">{t.noPhotos}</span>
                 </div>
             ) : (
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-3">
                     {person.gallery.map((src, idx) => (
-                        <div key={idx} className="relative group rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 aspect-square bg-gray-100 dark:bg-gray-900">
+                        <div key={idx} className="relative group rounded-xl overflow-hidden border border-stone-200 dark:border-stone-700 aspect-square bg-stone-100 dark:bg-stone-900">
                             <img src={src} alt="" className="w-full h-full object-cover" />
                             
                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                                 <button
                                     onClick={() => handleAnalyzePhoto(idx, src)}
-                                    className="p-1.5 bg-white/20 hover:bg-white/40 backdrop-blur rounded-full text-white"
+                                    className="p-2 bg-white/20 hover:bg-white/40 backdrop-blur rounded-full text-white"
                                     title="AI Analyze"
                                 >
                                     {analyzingImgIndex === idx ? <Loader2 className="w-4 h-4 animate-spin"/> : <ScanEye className="w-4 h-4"/>}
@@ -139,7 +139,7 @@ export const MediaTab: React.FC<MediaTabProps> = ({ person, isEditing, onUpdate,
                                             newGallery.splice(idx, 1);
                                             onUpdate(person.id, { gallery: newGallery });
                                         }}
-                                        className="p-1.5 bg-red-500/80 hover:bg-red-600 text-white rounded-full"
+                                        className="p-2 bg-red-500/80 hover:bg-red-600 text-white rounded-full"
                                     >
                                         <X className="w-4 h-4" />
                                     </button>
@@ -152,27 +152,27 @@ export const MediaTab: React.FC<MediaTabProps> = ({ person, isEditing, onUpdate,
         </div>
 
         {/* --- AUDIO SECTION --- */}
-        <div className="space-y-3 border-t border-gray-100 dark:border-gray-800 pt-4">
+        <div className="bg-white dark:bg-stone-800 p-4 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-3">
             <div className="flex justify-between items-center mb-1">
-                <h3 className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">{t.voiceMemories}</h3>
+                <h3 className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">{t.voiceMemories}</h3>
                 {isEditing && <VoiceRecorder onSave={handleVoiceSave} t={t} />}
             </div>
 
             {(!person.voiceNotes || person.voiceNotes.length === 0) ? (
-                 <div className="text-center py-6 text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-dashed border-gray-200 dark:border-gray-700 flex flex-col items-center">
-                    <Mic className="w-6 h-6 mb-2 opacity-50" />
-                    <span className="text-[10px]">No recordings yet.</span>
+                 <div className="text-center py-6 text-stone-400 dark:text-stone-500 bg-stone-50 dark:bg-stone-800/50 rounded-xl border border-dashed border-stone-200 dark:border-stone-700 flex flex-col items-center">
+                    <Mic className="w-7 h-7 mb-2 opacity-50" />
+                    <span className="text-sm">No recordings yet.</span>
                 </div>
             ) : (
-                <div className="space-y-2">
+                <div className="space-y-3">
                     {person.voiceNotes.map((note, idx) => (
-                        <div key={idx} className="flex items-center gap-3 p-2 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-lg shadow-sm">
-                            <div className="w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600 dark:text-purple-400 shrink-0">
-                                <Mic className="w-4 h-4" />
+                        <div key={idx} className="flex items-center gap-3 p-3 bg-white dark:bg-stone-900 border border-stone-100 dark:border-stone-700 rounded-xl shadow-sm">
+                            <div className="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600 dark:text-purple-400 shrink-0">
+                                <Mic className="w-5 h-5" />
                             </div>
                             <div className="flex-1 min-w-0">
-                                <div className="text-[10px] font-bold text-gray-700 dark:text-gray-300">Recording #{idx + 1}</div>
-                                <audio ref={audioRef} src={note} controls className="w-full h-6 mt-1" />
+                                <div className="text-sm font-bold text-stone-700 dark:text-stone-300">Recording #{idx + 1}</div>
+                                <audio ref={audioRef} src={note} controls className="w-full h-8 mt-1" />
                             </div>
                             {isEditing && (
                                 <button 
@@ -181,7 +181,7 @@ export const MediaTab: React.FC<MediaTabProps> = ({ person, isEditing, onUpdate,
                                         newNotes.splice(idx, 1);
                                         onUpdate(person.id, { voiceNotes: newNotes });
                                     }}
-                                    className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                                    className="p-2 text-stone-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                                 >
                                     <Trash2 className="w-4 h-4" />
                                 </button>
@@ -193,4 +193,4 @@ export const MediaTab: React.FC<MediaTabProps> = ({ person, isEditing, onUpdate,
         </div>
     </div>
   );
-};
+});

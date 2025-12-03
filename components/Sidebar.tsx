@@ -61,36 +61,36 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Sidebar Container */}
         <div className={`
             fixed md:relative inset-y-0 start-0 z-40
-            w-[340px] h-full
-            bg-white dark:bg-gray-900 border-e border-gray-200 dark:border-gray-800 
+            w-[360px] h-full
+            bg-white dark:bg-stone-900 border-e border-stone-200/50 dark:border-stone-800/50 
             flex flex-col shadow-xl transition-transform duration-300 ease-in-out
             ${isOpen ? 'translate-x-0' : 'translate-x-[-100%] rtl:translate-x-[100%]'} md:!transform-none
         `}>
         
             {/* Header / Tabs */}
-            <div className="flex items-end justify-between border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 pt-3 px-3">
-                <div className="flex gap-1 overflow-x-auto scrollbar-hide">
+            <div className="flex items-end justify-between border-b border-stone-200/50 dark:border-stone-800/50 bg-stone-50/80 dark:bg-stone-900/80 backdrop-blur-sm pt-3 px-4">
+                <div className="flex gap-2 overflow-x-auto scrollbar-hide">
                     {tabs.filter(tab => tab.show).map(tab => (
                         <button 
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id as any)} 
-                            className={`px-3 py-2 rounded-t-lg text-[11px] font-bold transition-all relative top-[1px]
+                            className={`px-4 py-2.5 rounded-t-xl text-sm font-semibold transition-all relative top-[1px]
                             ${activeTab === tab.id 
-                                ? 'bg-white dark:bg-gray-900 text-blue-600 dark:text-blue-400 border-x border-t border-gray-200 dark:border-gray-800 z-10 shadow-t-sm' // Added shadow-t-sm
-                                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}`}
+                                ? 'bg-white dark:bg-stone-900 text-teal-600 dark:text-teal-400 border-x border-t border-stone-200/50 dark:border-stone-800/50 z-10 shadow-t-sm'
+                                : 'text-stone-500 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-300'}`}
                         >
                             {tab.label}
                         </button>
                     ))}
                 </div>
-                <button onClick={onClose} className="md:hidden p-2 text-gray-400 hover:text-gray-600"><X className="w-5 h-5" /></button>
+                <button onClick={onClose} className="md:hidden p-2 text-stone-400 hover:text-stone-600 dark:hover:text-stone-300"><X className="w-5 h-5" /></button>
             </div>
 
             {/* Scrollable Content */}
-            <div className="flex-1 overflow-y-auto p-4 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-700 bg-white dark:bg-gray-900">
+            <div className="flex-1 overflow-y-auto p-5 scrollbar-thin scrollbar-thumb-stone-200 dark:scrollbar-thumb-stone-700 bg-white dark:bg-stone-900">
                 {person.isDeceased && activeTab === 'info' && !isEditing && (
-                    <button onClick={() => onOpenModal('chat')} className="w-full mb-4 py-2 bg-purple-50 dark:bg-purple-900/20 border border-purple-100 dark:border-purple-800/50 rounded-lg flex items-center justify-center gap-2 text-purple-700 dark:text-purple-300 text-xs font-bold hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-all">
-                        <MessageCircle className="w-3.5 h-3.5" />
+                    <button onClick={() => onOpenModal('chat')} className="w-full mb-5 py-2.5 bg-purple-50 dark:bg-purple-900/20 border border-purple-100 dark:border-purple-800/50 rounded-xl flex items-center justify-center gap-2 text-purple-700 dark:text-purple-300 text-sm font-bold hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-all">
+                        <MessageCircle className="w-4 h-4" />
                         {t.chatWithAncestor}
                     </button>
                 )}

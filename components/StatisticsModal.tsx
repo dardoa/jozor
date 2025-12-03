@@ -130,7 +130,7 @@ export const StatisticsModal: React.FC<StatisticsModalProps> = ({ isOpen, onClos
          <div className="flex gap-1 p-2 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 overflow-x-auto">
              {[
                  { id: 'overview', label: t.overview, icon: <PieChart className="w-4 h-4"/> },
-                 { id: 'timeline', label: t.timeline, icon: <BarChart3 className="w-4 h-4"/> },
+                 { id: 'timeline', label: t.timelineTab, icon: <BarChart3 className="w-4 h-4"/> },
                  { id: 'geo', label: t.geography, icon: <MapPin className="w-4 h-4"/> },
                  { id: 'names', label: t.names, icon: <Baby className="w-4 h-4"/> },
              ].map(tab => (

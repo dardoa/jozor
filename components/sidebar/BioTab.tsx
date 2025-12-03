@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { Person } from '../../types';
 import { generateBiography } from '../../services/geminiService';
-import { Wand2 } from 'lucide-react';
-import { SmartTextarea } from '../ui/SmartInput'; // Keep SmartTextarea for bio
-import { FormField } from '../ui/FormField'; // New import
+import { Wand2, Sparkles, Loader2 } from 'lucide-react';
+import { SmartTextarea } from '../ui/SmartInput';
+import { FormField } from '../ui/FormField';
 
 interface BioTabProps {
   person: Person;
@@ -13,7 +13,7 @@ interface BioTabProps {
   t: any;
 }
 
-export const BioTab: React.FC<BioTabProps> = ({ person, people, isEditing, onUpdate, t }) => {
+export const BioTab: React.FC<BioTabProps> = memo(({ person, people, isEditing, onUpdate, t }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [bioTone, setBioTone] = useState('Standard');
 
@@ -33,14 +33,12 @@ export const BioTab: React.FC<BioTabProps> = ({ person, people, isEditing, onUpd
     }
   };
 
-  const textareaClass = `w-full px-1.5 py-1.5 border border-gray-300 dark:border-gray-600 rounded text-[10px] outline-none focus:border-blue-500 transition-colors bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 disabled:bg-transparent disabled:border-transparent disabled:px-0 disabled:cursor-default disabled:font-medium disabled:text-gray-800 dark:disabled:text-gray-200`;
-
   return (
-    <div className="space-y-3">
-        <div className="bg-white dark:bg-gray-800 p-2 rounded border border-gray-200 dark:border-gray-700 shadow-sm space-y-1">
+    <div className="space-y-5">
+        <div className="bg-white dark:bg-stone-800 p-4 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-3">
             <div className="flex justify-between items-center mb-1">
-                <h3 className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">{t.workInterests}</h3>
-                {!isEditing && <span className="text-[9px] text-gray-400">{t.readOnly}</span>}
+                <h3 className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">{t.workInterests}</h3>
+                {!isEditing && <span className="text-[10px] text-stone-400">{t.readOnly}</span>}
             </div>
             
             <FormField
@@ -48,6 +46,7 @@ export const BioTab: React.FC<BioTabProps> = ({ person, people, isEditing, onUpd
                 value={person.profession}
                 onCommit={(v) => handleChange('profession', v)}
                 disabled={!isEditing}
+                labelWidthClass="w-20"
             />
 
             <FormField
@@ -55,6 +54,7 @@ export const BioTab: React.FC<BioTabProps> = ({ person, people, isEditing, onUpd
                 value={person.company}
                 onCommit={(v) => handleChange('company', v)}
                 disabled={!isEditing}
+                labelWidthClass="w-20"
             />
 
             <FormField
@@ -63,19 +63,20 @@ export const BioTab: React.FC<BioTabProps> = ({ person, people, isEditing, onUpd
                 onCommit={(v) => handleChange('interests', v)}
                 disabled={!isEditing}
                 placeholder={isEditing ? "e.g. Golf, Cooking" : ""}
+                labelWidthClass="w-20"
             />
         </div>
 
-        <div className="bg-white dark:bg-gray-800 p-2 rounded border border-gray-200 dark:border-gray-700 shadow-sm">
-            <div className="flex justify-between items-center mb-1">
-                <h3 className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">{t.biography}</h3>
+        <div className="bg-white dark:bg-stone-800 p-4 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm">
+            <div className="flex justify-between items-center mb-3">
+                <h3 className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">{t.biography}</h3>
                 {isEditing && (
-                    <div className="flex items-center gap-1.5">
-                        <span className="text-[9px] text-gray-500">{t.tone}:</span>
+                    <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-stone-500">{t.tone}:</span>
                         <select 
                             value={bioTone}
                             onChange={(e) => setBioTone(e.target.value)}
-                            className="text-[9px] border border-gray-200 dark:border-gray-600 rounded px-1 py-0.5 bg-gray-50 dark:bg-gray-700 outline-none focus:border-purple-300 text-gray-600 dark:text-gray-200"
+                            className="text-[10px] border border-stone-200 dark:border-stone-600 rounded-lg px-2 py-1 bg-stone-50 dark:bg-stone-700 outline-none focus:border-purple-300 text-stone-600 dark:text-stone-200 h-8"
                         >
                             <option value="Standard">Standard</option>
                             <option value="Formal">Formal</option>
@@ -86,9 +87,9 @@ export const BioTab: React.FC<BioTabProps> = ({ person, people, isEditing, onUpd
                         <button
                             onClick={handleGenerateBio}
                             disabled={isGenerating}
-                            className="text-[9px] text-purple-600 dark:text-purple-300 hover:text-purple-700 flex items-center gap-1 bg-purple-50 dark:bg-purple-900/30 px-1.5 py-0.5 rounded-full border border-purple-100 dark:border-purple-800 transition-colors"
+                            className="text-[10px] text-purple-600 dark:text-purple-300 hover:text-purple-700 flex items-center gap-1 bg-purple-50 dark:bg-purple-900/30 px-2 py-1 rounded-full border border-purple-100 dark:border-purple-800 transition-colors font-bold"
                         >
-                            <Wand2 className="w-2.5 h-2.5" />
+                            {isGenerating ? <Loader2 className="w-3 h-3 animate-spin"/> : <Sparkles className="w-3 h-3" />}
                             {isGenerating ? '...' : t.generate}
                         </button>
                     </div>
@@ -99,10 +100,10 @@ export const BioTab: React.FC<BioTabProps> = ({ person, people, isEditing, onUpd
                 rows={12}
                 value={person.bio}
                 onCommit={(v) => handleChange('bio', v)}
-                className={textareaClass}
+                className="w-full px-3 py-2 border border-stone-300 dark:border-stone-600 rounded-lg text-sm outline-none focus:border-teal-500 transition-colors bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 disabled:bg-transparent disabled:border-transparent disabled:px-0 disabled:cursor-default disabled:font-medium disabled:text-stone-800 dark:disabled:text-stone-200"
                 placeholder={isEditing ? t.writeBio : t.noBio}
             />
         </div>
     </div>
   );
-};
+});

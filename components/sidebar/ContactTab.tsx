@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Person } from '../../types';
-import { FormField } from '../ui/FormField'; // New import
+import { FormField } from '../ui/FormField';
 
 interface ContactTabProps {
   person: Person;
@@ -9,16 +9,16 @@ interface ContactTabProps {
   t: any;
 }
 
-export const ContactTab: React.FC<ContactTabProps> = ({ person, isEditing, onUpdate, t }) => {
+export const ContactTab: React.FC<ContactTabProps> = memo(({ person, isEditing, onUpdate, t }) => {
   const handleChange = (field: keyof Person, value: any) => {
     onUpdate(person.id, { [field]: value });
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 p-2 rounded border border-gray-200 dark:border-gray-700 shadow-sm space-y-1">
+    <div className="bg-white dark:bg-stone-800 p-4 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-3">
         <div className="flex justify-between items-center mb-1">
-            <h3 className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">{t.contact}</h3>
-            {!isEditing && <span className="text-[9px] text-gray-400">{t.readOnly}</span>}
+            <h3 className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">{t.contact}</h3>
+            {!isEditing && <span className="text-[10px] text-stone-400">{t.readOnly}</span>}
         </div>
         
         <FormField
@@ -27,6 +27,7 @@ export const ContactTab: React.FC<ContactTabProps> = ({ person, isEditing, onUpd
             onCommit={(v) => handleChange('email', v)}
             disabled={!isEditing}
             type="email"
+            labelWidthClass="w-20"
         />
 
         <FormField
@@ -35,6 +36,7 @@ export const ContactTab: React.FC<ContactTabProps> = ({ person, isEditing, onUpd
             onCommit={(v) => handleChange('website', v)}
             disabled={!isEditing}
             type="url"
+            labelWidthClass="w-20"
         />
 
         <FormField
@@ -43,6 +45,7 @@ export const ContactTab: React.FC<ContactTabProps> = ({ person, isEditing, onUpd
             onCommit={(v) => handleChange('blog', v)}
             disabled={!isEditing}
             type="url"
+            labelWidthClass="w-20"
         />
 
         <FormField
@@ -52,7 +55,8 @@ export const ContactTab: React.FC<ContactTabProps> = ({ person, isEditing, onUpd
             disabled={!isEditing}
             isTextArea={true}
             rows={3}
+            labelWidthClass="w-20"
         />
     </div>
   );
-};
+});

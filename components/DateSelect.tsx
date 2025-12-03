@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, memo } from 'react';
 
 interface DateSelectProps {
   value: string;
@@ -7,7 +7,7 @@ interface DateSelectProps {
   placeholder?: string;
 }
 
-export const DateSelect: React.FC<DateSelectProps> = ({ value, onChange, disabled }) => {
+export const DateSelect: React.FC<DateSelectProps> = memo(({ value, onChange, disabled }) => {
   const [day, setDay] = useState('');
   const [month, setMonth] = useState('');
   const [year, setYear] = useState('');
@@ -73,8 +73,8 @@ export const DateSelect: React.FC<DateSelectProps> = ({ value, onChange, disable
     updateDate(day, month, val);
   };
 
-  const inputBaseClass = "h-7 border border-gray-300 dark:border-gray-600 rounded text-[11px] focus:border-blue-500 outline-none transition-colors bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100";
-  const disabledClass = "disabled:bg-gray-50 dark:disabled:bg-gray-800 disabled:text-gray-400 disabled:border-gray-200 dark:disabled:border-gray-700";
+  const inputBaseClass = "h-8 px-2 border border-stone-300 dark:border-stone-600 rounded-lg text-sm focus:border-teal-500 outline-none transition-colors bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100";
+  const disabledClass = "disabled:bg-stone-50 dark:disabled:bg-stone-700 disabled:text-stone-400 disabled:border-stone-200 dark:disabled:border-stone-700";
 
   const months = [
     { v: '01', l: 'Jan' }, { v: '02', l: 'Feb' }, { v: '03', l: 'Mar' },
@@ -89,13 +89,13 @@ export const DateSelect: React.FC<DateSelectProps> = ({ value, onChange, disable
   });
 
   return (
-    <div className="flex items-center gap-2"> {/* Increased gap from gap-1 to gap-2 */}
+    <div className="flex items-center gap-2 flex-1">
       {/* Day Select */}
       <select 
         value={day} 
         onChange={handleDayChange} 
         disabled={disabled || !month} // Disable day if no month selected
-        className={`w-14 px-1.5 ${inputBaseClass} ${disabledClass}`} 
+        className={`w-16 ${inputBaseClass} ${disabledClass}`} 
       >
         <option value="">DD</option>
         {days.map(d => (
@@ -108,7 +108,7 @@ export const DateSelect: React.FC<DateSelectProps> = ({ value, onChange, disable
         value={month} 
         onChange={handleMonthChange} 
         disabled={disabled}
-        className={`w-16 px-1.5 ${inputBaseClass} ${disabledClass}`} 
+        className={`w-20 ${inputBaseClass} ${disabledClass}`} 
       >
         <option value="">MM</option>
         {months.map(m => (
@@ -124,8 +124,8 @@ export const DateSelect: React.FC<DateSelectProps> = ({ value, onChange, disable
         disabled={disabled}
         placeholder="YYYY"
         maxLength={4}
-        className={`w-16 px-2 text-center ${inputBaseClass} ${disabledClass}`} 
+        className={`w-20 text-center ${inputBaseClass} ${disabledClass}`} 
       />
     </div>
   );
-};
+});

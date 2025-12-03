@@ -29,7 +29,7 @@ export const ToolsMenu = memo(({
                 {t.viewOnMap}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => { onOpenModal('timeline'); onClose(); }} icon={<Calendar className="w-3.5 h-3.5"/>} iconBgClass="!bg-blue-50 dark:!bg-blue-900/20" iconTextColorClass="!text-blue-500">
-                {t.familyTimeline}
+                {t.familyTimelineHeader}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => { onOpenModal('stats'); onClose(); }} icon={<Activity className="w-3.5 h-3.5"/>} iconBgClass="!bg-emerald-50 dark:!bg-emerald-900/20" iconTextColorClass="!text-emerald-500">
                 {t.familyStatistics}

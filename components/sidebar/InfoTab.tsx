@@ -2,16 +2,11 @@ import React, { useRef, useState, memo } from 'react';
 import { Person, Gender } from '../../types';
 import { DateSelect } from '../DateSelect';
 import { getDisplayDate } from '../../utils/familyLogic';
-import { User, Baby, ChevronRight, ArrowUp, Heart, ArrowDown, Camera, Sparkles, Loader2, X, Trash2, Plus, BookOpen, Ribbon } from 'lucide-react';
+import { User, Baby, BookOpen, Camera, Sparkles, Loader2, X, Ribbon } from 'lucide-react';
 import { processImageFile } from '../../utils/imageLogic';
 import { extractPersonData } from '../../services/geminiService';
-import { FormField } from '../ui/FormField'; // Using FormField
-import { FamilyRelationshipsSection } from './FamilyRelationshipsSection'; // New import
-
-// --- Optimized Sub-Components (moved to FamilyRelationshipsSection) ---
-// InlineAddBtn and FamilyMemberItem are now in FamilyRelationshipsSection.tsx
-
-// --- Main Component ---
+import { FormField } from '../ui/FormField';
+import { FamilyRelationshipsSection } from './FamilyRelationshipsSection';
 
 interface InfoTabProps {
   person: Person;
@@ -26,7 +21,7 @@ interface InfoTabProps {
   onRemoveRelationship?: (targetId: string, relativeId: string, type: 'parent' | 'spouse' | 'child') => void;
 }
 
-export const InfoTab: React.FC<InfoTabProps> = ({ 
+export const InfoTab: React.FC<InfoTabProps> = memo(({ 
     person, people, isEditing, onUpdate, onSelect, t,
     onAddParent, onAddSpouse, onAddChild, onRemoveRelationship
 }) => {
@@ -83,7 +78,7 @@ export const InfoTab: React.FC<InfoTabProps> = ({
              <div className="flex gap-4 items-start animate-in fade-in duration-200">
                 {/* Image */}
                 <div className="shrink-0 relative group cursor-pointer" onClick={() => onSelect(person.id)}>
-                     <div className={`w-20 h-20 rounded-2xl border-2 border-white dark:border-gray-700 shadow-md flex items-center justify-center overflow-hidden bg-gray-50 dark:bg-gray-700 ${person.isDeceased ? 'grayscale' : ''}`}>
+                     <div className={`w-20 h-20 rounded-2xl border-2 border-white dark:border-stone-700 shadow-md flex items-center justify-center overflow-hidden bg-stone-50 dark:bg-stone-700 ${person.isDeceased ? 'grayscale' : ''}`}>
                         {person.photoUrl ? (
                             <img src={person.photoUrl} alt={person.firstName} className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-500" />
                         ) : (
@@ -91,8 +86,8 @@ export const InfoTab: React.FC<InfoTabProps> = ({
                         )}
                     </div>
                     {person.isDeceased && (
-                        <div className="absolute -top-2 -end-2 bg-white dark:bg-gray-800 rounded-full p-1 shadow-sm border border-gray-100 dark:border-gray-700 z-10">
-                            <Ribbon className="w-4 h-4 text-black dark:text-gray-400 fill-current" />
+                        <div className="absolute -top-2 -end-2 bg-white dark:bg-stone-800 rounded-full p-1 shadow-sm border border-stone-100 dark:border-stone-700 z-10">
+                            <Ribbon className="w-4 h-4 text-stone-600 dark:text-stone-400 fill-current" />
                         </div>
                     )}
                 </div>
@@ -100,9 +95,9 @@ export const InfoTab: React.FC<InfoTabProps> = ({
                 {/* Info */}
                 <div className="flex-1 min-w-0 pt-0.5 space-y-2">
                     <div>
-                        <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 leading-tight">{fullName}</h2>
+                        <h2 className="text-lg font-bold text-stone-900 dark:text-stone-100 leading-tight">{fullName}</h2>
                         {(person.birthName || person.nickName) && (
-                            <p className="text-xs text-gray-500 dark:text-gray-400 italic mt-0.5">
+                            <p className="text-xs text-stone-500 dark:text-stone-400 italic mt-0.5">
                                 {person.nickName && `"${person.nickName}"`}
                                 {person.nickName && person.birthName && ' • '}
                                 {person.birthName && `${t.nee} ${person.birthName}`}
@@ -115,29 +110,29 @@ export const InfoTab: React.FC<InfoTabProps> = ({
                                 {person.gender === 'male' ? t.male : t.female}
                             </span>
                             {person.isDeceased && (
-                                <span className="px-2 py-0.5 rounded-md bg-gray-100 border border-gray-200 dark:bg-gray-800 dark:border-gray-700 text-gray-600 dark:text-gray-400 flex items-center gap-1">
+                                <span className="px-2 py-0.5 rounded-md bg-stone-100 border border-stone-200 dark:bg-stone-800 dark:border-stone-700 text-stone-600 dark:text-stone-400 flex items-center gap-1">
                                     <Ribbon className="w-2.5 h-2.5" />
                                     {t.deceased}
                                 </span>
                             )}
                          </div>
                          <div className="space-y-0.5">
-                            <div className="flex items-center gap-2 text-xs text-gray-700 dark:text-gray-300 group cursor-help" title={person.birthSource ? `${t.source}: ${person.birthSource}` : ''}>
-                                <Baby className="w-3.5 h-3.5 text-gray-400" />
+                            <div className="flex items-center gap-2 text-xs text-stone-700 dark:text-stone-300 group cursor-help" title={person.birthSource ? `${t.source}: ${person.birthSource}` : ''}>
+                                <Baby className="w-3.5 h-3.5 text-stone-400" />
                                 <span>
-                                    {t.born} <strong className="text-gray-900 dark:text-white">{displayBirth || '?'}</strong>
-                                    {person.birthPlace && <span className="text-gray-500 dark:text-gray-400"> • {person.birthPlace}</span>}
+                                    {t.born} <strong className="text-stone-900 dark:text-stone-100">{displayBirth || '?'}</strong>
+                                    {person.birthPlace && <span className="text-stone-500 dark:text-stone-400"> • {person.birthPlace}</span>}
                                 </span>
-                                {person.birthSource && <BookOpen className="w-3 h-3 text-blue-400 opacity-60 group-hover:opacity-100" />}
+                                {person.birthSource && <BookOpen className="w-3 h-3 text-teal-400 opacity-60 group-hover:opacity-100" />}
                             </div>
                             {person.isDeceased && (
-                                <div className="flex items-center gap-2 text-xs text-gray-700 dark:text-gray-300 group cursor-help" title={person.deathSource ? `${t.source}: ${person.deathSource}` : ''}>
-                                    <Ribbon className="w-3.5 h-3.5 text-gray-400 fill-current" />
+                                <div className="flex items-center gap-2 text-xs text-stone-700 dark:text-stone-300 group cursor-help" title={person.deathSource ? `${t.source}: ${person.deathSource}` : ''}>
+                                    <Ribbon className="w-3.5 h-3.5 text-stone-400 fill-current" />
                                     <span>
-                                        {t.died} <strong className="text-gray-900 dark:text-white">{displayDeath || '?'}</strong>
-                                        {person.deathPlace && <span className="text-gray-500 dark:text-gray-400"> • {person.deathPlace}</span>}
+                                        {t.died} <strong className="text-stone-900 dark:text-stone-100">{displayDeath || '?'}</strong>
+                                        {person.deathPlace && <span className="text-stone-500 dark:text-stone-400"> • {person.deathPlace}</span>}
                                     </span>
-                                    {person.deathSource && <BookOpen className="w-3 h-3 text-blue-400 opacity-60 group-hover:opacity-100" />}
+                                    {person.deathSource && <BookOpen className="w-3 h-3 text-teal-400 opacity-60 group-hover:opacity-100" />}
                                 </div>
                             )}
                          </div>
@@ -145,7 +140,7 @@ export const InfoTab: React.FC<InfoTabProps> = ({
                 </div>
              </div>
 
-            <div className="h-px bg-gray-100 dark:bg-gray-800"></div>
+            <div className="h-px bg-stone-100 dark:bg-stone-800"></div>
             
             <FamilyRelationshipsSection
                 person={person} people={people} isEditing={isEditing} onSelect={onSelect} t={t}
@@ -158,224 +153,178 @@ export const InfoTab: React.FC<InfoTabProps> = ({
   // --- EDIT MODE ---
   return (
     <>
-    <div className="flex gap-4 animate-in fade-in duration-200">
-         <div className="shrink-0 space-y-2">
-             <div 
-                onClick={() => fileInputRef.current?.click()}
-                className="w-20 h-20 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-400 bg-gray-50 dark:bg-gray-800 flex flex-col items-center justify-center cursor-pointer relative overflow-hidden group transition-all"
-            >
-                {person.photoUrl ? (
-                    <img src={person.photoUrl} alt="" className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
-                ) : (
-                    <Camera className="w-6 h-6 text-gray-300 dark:text-gray-500 group-hover:text-blue-400 transition-colors" />
-                )}
-                <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/20 transition-colors">
-                    <span className="text-[8px] font-bold text-white bg-black/60 px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm">{t.changePhoto}</span>
-                </div>
-            </div>
-             {person.photoUrl && (
-                <button 
-                    onClick={() => handleChange('photoUrl', '')}
-                    className="text-[9px] font-bold text-red-500 hover:text-red-700 w-full text-center bg-red-50 dark:bg-red-900/10 py-1 rounded hover:bg-red-100 transition-colors"
+    <div className="flex flex-col gap-5 animate-in fade-in duration-200">
+        {/* Profile Picture & Smart Fill */}
+        <div className="flex items-center gap-4 relative">
+            <div className="shrink-0 space-y-2">
+                <div 
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-24 h-24 rounded-2xl border-2 border-dashed border-stone-300 dark:border-stone-600 hover:border-teal-400 dark:hover:border-teal-400 bg-stone-50 dark:bg-stone-800 flex flex-col items-center justify-center cursor-pointer relative overflow-hidden group transition-all"
                 >
-                    {t.removePhoto}
+                    {person.photoUrl ? (
+                        <img src={person.photoUrl} alt="" className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+                    ) : (
+                        <Camera className="w-8 h-8 text-stone-300 dark:text-stone-500 group-hover:text-teal-400 transition-colors" />
+                    )}
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/20 transition-colors">
+                        <span className="text-[9px] font-bold text-white bg-black/60 px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm">{t.changePhoto}</span>
+                    </div>
+                </div>
+                {person.photoUrl && (
+                    <button 
+                        onClick={() => handleChange('photoUrl', '')}
+                        className="text-[10px] font-bold text-red-500 hover:text-red-700 w-full text-center bg-red-50 dark:bg-red-900/10 py-1.5 rounded-lg hover:bg-red-100 transition-colors"
+                    >
+                        {t.removePhoto}
+                    </button>
+                )}
+                <input 
+                    ref={fileInputRef}
+                    type="file" 
+                    accept="image/*" 
+                    className="hidden" 
+                    onChange={handleImageUpload}
+                />
+            </div>
+
+            <div className="flex-1">
+                <button 
+                    onClick={() => setShowSmartModal(true)}
+                    className="w-full py-2.5 bg-gradient-to-r from-purple-500 to-indigo-600 text-white text-sm font-bold rounded-xl shadow-md hover:shadow-lg hover:scale-[1.01] transition-all flex items-center justify-center gap-2"
+                >
+                    <Sparkles className="w-4 h-4" /> {t.smartFill}
                 </button>
-            )}
-            <input 
-                ref={fileInputRef}
-                type="file" 
-                accept="image/*" 
-                className="hidden" 
-                onChange={handleImageUpload}
-            />
+                <p className="text-[10px] text-stone-500 dark:text-stone-400 mt-2 text-center">{t.smartFillDescription}</p>
+            </div>
         </div>
 
-        <div className="flex-1 space-y-3 min-w-0 relative pt-1">
-            <button 
-                onClick={() => setShowSmartModal(true)}
-                className="absolute -top-1 end-0 z-10 flex items-center gap-1.5 px-2.5 py-1 bg-gradient-to-r from-purple-500 to-indigo-600 text-white text-[9px] font-bold rounded-full shadow-sm hover:shadow-md hover:scale-105 transition-all"
-            >
-                <Sparkles className="w-3 h-3" /> Smart Fill
-            </button>
-
-            <div className="grid grid-cols-3 gap-2 pt-6">
-                <div className="col-span-1">
-                    <FormField
-                        label={t.firstName}
-                        value={person.firstName}
-                        onCommit={(v) => handleChange('firstName', v)}
-                        disabled={!isEditing}
-                        labelWidthClass="w-auto" // Adjust label width for grid layout
-                    />
-                </div>
-                <div className="col-span-1">
-                    <FormField
-                        label={t.middleName}
-                        value={person.middleName}
-                        onCommit={(v) => handleChange('middleName', v)}
-                        disabled={!isEditing}
-                        labelWidthClass="w-auto"
-                    />
-                </div>
-                <div className="col-span-1">
-                    <FormField
-                        label={t.lastName}
-                        value={person.lastName}
-                        onCommit={(v) => handleChange('lastName', v)}
-                        disabled={!isEditing}
-                        labelWidthClass="w-auto"
-                    />
-                </div>
+        {/* Identity Section */}
+        <div className="bg-white dark:bg-stone-800 p-4 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-3">
+            <h3 className="text-[10px] font-bold text-stone-400 uppercase tracking-wider mb-3">{t.identity}</h3>
+            <div className="grid grid-cols-2 gap-3">
+                <FormField label={t.firstName} value={person.firstName} onCommit={(v) => handleChange('firstName', v)} disabled={!isEditing} labelWidthClass="w-20" />
+                <FormField label={t.middleName} value={person.middleName} onCommit={(v) => handleChange('middleName', v)} disabled={!isEditing} labelWidthClass="w-20" />
+                <FormField label={t.lastName} value={person.lastName} onCommit={(v) => handleChange('lastName', v)} disabled={!isEditing} labelWidthClass="w-20" />
+                <FormField label={t.birthName} value={person.birthName} onCommit={(v) => handleChange('birthName', v)} disabled={!isEditing} labelWidthClass="w-20" />
+                <FormField label={t.nickName} value={person.nickName} onCommit={(v) => handleChange('nickName', v)} disabled={!isEditing} labelWidthClass="w-20" />
+                <FormField label={t.title} value={person.title} onCommit={(v) => handleChange('title', v)} disabled={!isEditing} labelWidthClass="w-20" />
+                <FormField label={t.suffix} value={person.suffix} onCommit={(v) => handleChange('suffix', v)} disabled={!isEditing} labelWidthClass="w-20" />
             </div>
+        </div>
 
-            <div className="grid grid-cols-3 gap-2">
-                 <div>
-                    <FormField
-                        label={t.title}
-                        value={person.title}
-                        onCommit={(v) => handleChange('title', v)}
-                        disabled={!isEditing}
-                        labelWidthClass="w-auto"
-                    />
-                 </div>
-                 <div>
-                    <FormField
-                        label={t.suffix}
-                        value={person.suffix}
-                        onCommit={(v) => handleChange('suffix', v)}
-                        disabled={!isEditing}
-                        labelWidthClass="w-auto"
-                    />
-                 </div>
-                 <div>
-                    <FormField
-                        label={t.nickName}
-                        value={person.nickName}
-                        onCommit={(v) => handleChange('nickName', v)}
-                        disabled={!isEditing}
-                        labelWidthClass="w-auto"
-                    />
-                 </div>
-            </div>
-
-            <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-800/50 p-2 rounded-lg border border-gray-100 dark:border-gray-700">
+        {/* Gender & Status */}
+        <div className="bg-white dark:bg-stone-800 p-4 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-3">
+            <h3 className="text-[10px] font-bold text-stone-400 uppercase tracking-wider mb-3">{t.status}</h3>
+            <div className="flex items-center gap-4">
                 <div className="flex items-center gap-3">
-                    <label className="flex items-center gap-1.5 cursor-pointer group">
-                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center transition-colors ${person.gender === 'male' ? 'border-blue-500 bg-blue-500' : 'border-gray-300 bg-white dark:bg-gray-700'}`}>
-                            {person.gender === 'male' && <div className="w-1.5 h-1.5 bg-white rounded-full"></div>}
+                    <label className="flex items-center gap-2 cursor-pointer group">
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${person.gender === 'male' ? 'border-blue-500 bg-blue-500' : 'border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-700'}`}>
+                            {person.gender === 'male' && <div className="w-2 h-2 bg-white rounded-full"></div>}
                         </div>
                         <input type="radio" name="gender" value="male" checked={person.gender === 'male'} onChange={() => handleChange('gender', 'male')} className="hidden" />
-                        <span className="text-[10px] font-medium text-gray-700 dark:text-gray-300 group-hover:text-blue-600 transition-colors">{t.male}</span>
+                        <span className="text-sm font-medium text-stone-700 dark:text-stone-300 group-hover:text-blue-600 transition-colors">{t.male}</span>
                     </label>
-                    <label className="flex items-center gap-1.5 cursor-pointer group">
-                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center transition-colors ${person.gender === 'female' ? 'border-pink-500 bg-pink-500' : 'border-gray-300 bg-white dark:bg-gray-700'}`}>
-                            {person.gender === 'female' && <div className="w-1.5 h-1.5 bg-white rounded-full"></div>}
+                    <label className="flex items-center gap-2 cursor-pointer group">
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${person.gender === 'female' ? 'border-pink-500 bg-pink-500' : 'border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-700'}`}>
+                            {person.gender === 'female' && <div className="w-2 h-2 bg-white rounded-full"></div>}
                         </div>
                         <input type="radio" name="gender" value="female" checked={person.gender === 'female'} onChange={() => handleChange('gender', 'female')} className="hidden" />
-                        <span className="text-[10px] font-medium text-gray-700 dark:text-gray-300 group-hover:text-pink-600 transition-colors">{t.female}</span>
+                        <span className="text-sm font-medium text-stone-700 dark:text-stone-300 group-hover:text-pink-600 transition-colors">{t.female}</span>
                     </label>
                 </div>
-                <div className="h-4 w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
-                <label className="flex items-center gap-1.5 cursor-pointer">
-                    <input type="checkbox" checked={!person.isDeceased} onChange={(e) => handleChange('isDeceased', !e.target.checked)} className="w-3.5 h-3.5 rounded text-green-600 focus:ring-0 cursor-pointer" />
-                    <span className="text-[10px] font-medium text-gray-700 dark:text-gray-300">{person.isDeceased ? t.deceased : t.living}</span>
+                <div className="h-6 w-px bg-stone-300 dark:bg-stone-600 mx-2"></div>
+                <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={!person.isDeceased} onChange={(e) => handleChange('isDeceased', !e.target.checked)} className="w-4 h-4 rounded text-emerald-600 focus:ring-0 cursor-pointer border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-700" />
+                    <span className="text-sm font-medium text-stone-700 dark:text-stone-300">{person.isDeceased ? t.deceased : t.living}</span>
                 </label>
             </div>
+        </div>
 
-             <div className="grid grid-cols-2 gap-2 pt-1">
-                <div>
-                     <label className="block text-[9px] text-gray-400 font-bold mb-1 uppercase">{t.birthDate}</label>
-                     <DateSelect value={person.birthDate} onChange={(val) => handleChange('birthDate', val)} />
+        {/* Birth Details */}
+        <div className="bg-white dark:bg-stone-800 p-4 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-3">
+            <h3 className="text-[10px] font-bold text-stone-400 uppercase tracking-wider mb-3">{t.birthDetails}</h3>
+            <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                    <label className="w-20 shrink-0 text-[10px] text-stone-600 dark:text-stone-400 font-medium">{t.birthDate}</label>
+                    <DateSelect value={person.birthDate} onChange={(val) => handleChange('birthDate', val)} disabled={!isEditing} />
                 </div>
-                <div>
-                    <FormField
-                        label={t.birthPlace}
-                        value={person.birthPlace}
-                        onCommit={(v) => handleChange('birthPlace', v)}
-                        disabled={!isEditing}
-                        labelWidthClass="w-auto"
-                    />
-                </div>
-                <div className="col-span-2">
-                     <div className="flex items-center gap-1.5">
-                         <BookOpen className="w-3 h-3 text-gray-400" />
-                         {/* Updated height to !h-7 */}
-                         <FormField
-                            label={t.source}
+                <FormField label={t.birthPlace} value={person.birthPlace} onCommit={(v) => handleChange('birthPlace', v)} disabled={!isEditing} labelWidthClass="w-20" />
+                <div className="flex items-center gap-3">
+                    <label className="w-20 shrink-0 text-[10px] text-stone-600 dark:text-stone-400 font-medium">{t.source}</label>
+                    <div className="flex-1 flex items-center gap-1.5">
+                        <BookOpen className="w-4 h-4 text-stone-400" />
+                        <FormField
+                            label=""
                             value={person.birthSource}
                             onCommit={(v) => handleChange('birthSource', v)}
                             disabled={!isEditing}
                             placeholder={t.sourcePlaceholder}
-                            className="!h-7 !text-[10px] placeholder:italic" 
-                            labelWidthClass="w-auto"
-                         />
-                     </div>
-                </div>
-             </div>
-
-             {person.isDeceased && (
-                 <div className="grid grid-cols-2 gap-2 animate-in slide-in-from-top-2 pt-2 border-t border-gray-100 dark:border-gray-800">
-                    <div>
-                         <label className="block text-[9px] text-gray-400 font-bold mb-1 uppercase">{t.deathDate}</label>
-                         <DateSelect value={person.deathDate} onChange={(val) => handleChange('deathDate', val)} />
-                    </div>
-                    <div>
-                        <FormField
-                            label={t.deathPlace}
-                            value={person.deathPlace}
-                            onCommit={(v) => handleChange('deathPlace', v)}
-                            disabled={!isEditing}
-                            labelWidthClass="w-auto"
+                            className="!h-8 !text-sm placeholder:italic"
+                            labelWidthClass="hidden"
                         />
                     </div>
-                     <div className="col-span-2">
-                         <div className="flex items-center gap-1.5">
-                             <BookOpen className="w-3 h-3 text-gray-400" />
-                             {/* Updated height to !h-7 */}
-                             <FormField
-                                label={t.source}
+                </div>
+            </div>
+        </div>
+
+        {/* Death Details (Conditional) */}
+        {person.isDeceased && (
+            <div className="bg-white dark:bg-stone-800 p-4 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-3 animate-in slide-in-from-top-2">
+                <h3 className="text-[10px] font-bold text-stone-400 uppercase tracking-wider mb-3">{t.deathDetails}</h3>
+                <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                        <label className="w-20 shrink-0 text-[10px] text-stone-600 dark:text-stone-400 font-medium">{t.deathDate}</label>
+                        <DateSelect value={person.deathDate} onChange={(val) => handleChange('deathDate', val)} disabled={!isEditing} />
+                    </div>
+                    <FormField label={t.deathPlace} value={person.deathPlace} onCommit={(v) => handleChange('deathPlace', v)} disabled={!isEditing} labelWidthClass="w-20" />
+                    <div className="flex items-center gap-3">
+                        <label className="w-20 shrink-0 text-[10px] text-stone-600 dark:text-stone-400 font-medium">{t.source}</label>
+                        <div className="flex-1 flex items-center gap-1.5">
+                            <BookOpen className="w-4 h-4 text-stone-400" />
+                            <FormField
+                                label=""
                                 value={person.deathSource}
                                 onCommit={(v) => handleChange('deathSource', v)}
                                 disabled={!isEditing}
                                 placeholder={t.sourcePlaceholder}
-                                className="!h-7 !text-[10px] placeholder:italic" 
-                                labelWidthClass="w-auto"
-                             />
-                         </div>
+                                className="!h-8 !text-sm placeholder:italic"
+                                labelWidthClass="hidden"
+                            />
+                        </div>
                     </div>
-                 </div>
-             )}
-             
-            <FamilyRelationshipsSection
-                person={person} people={people} isEditing={isEditing} onSelect={onSelect} t={t}
-                onAddParent={onAddParent} onAddSpouse={onAddSpouse} onAddChild={onAddChild} onRemoveRelationship={onRemoveRelationship}
-            />
-        </div>
+                </div>
+            </div>
+        )}
+        
+        <FamilyRelationshipsSection
+            person={person} people={people} isEditing={isEditing} onSelect={onSelect} t={t}
+            onAddParent={onAddParent} onAddSpouse={onAddSpouse} onAddChild={onAddChild} onRemoveRelationship={onRemoveRelationship}
+        />
     </div>
 
     {/* Smart Extract Modal */}
     {showSmartModal && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full p-4 border border-gray-100 dark:border-gray-700 flex flex-col gap-3">
+            <div className="bg-white dark:bg-stone-800 rounded-2xl shadow-2xl max-w-md w-full p-4 border border-stone-100 dark:border-stone-700 flex flex-col gap-3">
                 <div className="flex justify-between items-center">
-                    <h3 className="font-bold flex items-center gap-2 text-gray-800 dark:text-white">
+                    <h3 className="font-bold flex items-center gap-2 text-stone-800 dark:text-white">
                         <Sparkles className="w-4 h-4 text-purple-500" />
                         AI Data Extractor
                     </h3>
-                    <button onClick={() => setShowSmartModal(false)} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full">
-                        <X className="w-4 h-4 text-gray-500" />
+                    <button onClick={() => setShowSmartModal(false)} className="p-1 hover:bg-stone-100 dark:hover:bg-stone-700 rounded-full">
+                        <X className="w-4 h-4 text-stone-500" />
                     </button>
                 </div>
                 <textarea 
                     value={smartText}
                     onChange={(e) => setSmartText(e.target.value)}
                     placeholder="Paste text here..."
-                    className="w-full h-32 p-3 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-xs focus:ring-2 focus:ring-purple-500/20 outline-none resize-none"
+                    className="w-full h-32 p-3 rounded-xl bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-700 text-sm focus:ring-2 focus:ring-purple-500/20 outline-none resize-none"
                 />
                 <button 
                     onClick={handleSmartExtract}
                     disabled={isExtracting || !smartText.trim()}
-                    className="w-full py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-300 text-white rounded-lg font-bold text-xs flex items-center justify-center gap-2 transition-all"
+                    className="w-full py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-300 text-white rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition-all"
                 >
                     {isExtracting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
                     {isExtracting ? 'Extracting...' : 'Autofill Details'}
@@ -385,4 +334,4 @@ export const InfoTab: React.FC<InfoTabProps> = ({
     )}
     </>
   );
-};
+});
