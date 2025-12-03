@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, memo } from 'react';
-import { X, MessageCircle } from 'lucide-react';
+import { X } from 'lucide-react'; // Removed MessageCircle as it's moved to InfoTab
 import { InfoTab } from './sidebar/InfoTab';
 import { PartnersTab } from './sidebar/PartnersTab';
 import { ContactTab } from './sidebar/ContactTab';
@@ -88,17 +88,13 @@ export const Sidebar: React.FC<SidebarProps> = memo(({
 
             {/* Scrollable Content */}
             <div className="flex-1 overflow-y-auto p-4 scrollbar-thin scrollbar-thumb-stone-200 dark:scrollbar-thumb-stone-700 bg-white dark:bg-stone-900"> {/* Reduced p-5 to p-4 */}
-                {person.isDeceased && activeTab === 'info' && !isEditing && (
-                    <button onClick={() => onOpenModal('chat')} className="w-full mb-4 py-1.5 bg-purple-50 dark:bg-purple-900/20 border border-purple-100 dark:border-purple-800/50 rounded-xl flex items-center justify-center gap-2 text-purple-700 dark:text-purple-300 text-sm font-bold hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-all"> {/* Reduced mb-5 py-2 to mb-4 py-1.5 */}
-                        <MessageCircle className="w-4 h-4" />
-                        {t.chatWithAncestor}
-                    </button>
-                )}
+                {/* Chat with Ancestor button moved to InfoTab */}
 
                 {activeTab === 'info' && (
                     <InfoTab 
                         person={person} people={people} isEditing={isEditing} onUpdate={onUpdate} onSelect={onSelect} t={t}
                         onAddParent={onAddParent} onAddSpouse={onAddSpouse} onAddChild={onAddChild} onRemoveRelationship={onRemoveRelationship}
+                        onOpenModal={onOpenModal} // Pass onOpenModal prop
                     />
                 )}
                 {activeTab === 'partners' && <PartnersTab person={person} people={people} isEditing={isEditing} onUpdate={onUpdate} onSelect={onSelect} t={t} />}
