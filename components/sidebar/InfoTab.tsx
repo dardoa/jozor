@@ -213,7 +213,7 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
         </div>
 
         {/* Gender & Status */}
-        <div className="bg-white dark:bg-stone-800 p-4 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-3">
+        <div className="bg-white dark:bg-stone-800 p-3 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-3">
             <h3 className="text-[10px] font-bold text-stone-400 uppercase tracking-wider mb-3">{t.status}</h3>
             <div className="flex items-center gap-4">
                 <div className="flex items-center gap-3">
