@@ -4,6 +4,7 @@ import { exportToGEDCOM } from '../utils/gedcomLogic';
 import { exportToJozorArchive } from '../utils/archiveLogic';
 import { generateICS } from '../utils/calendarLogic';
 import { getTranslation } from '../utils/translations';
+import { downloadFile } from '../utils/fileUtils'; // New import
 import { 
   Undo, Redo, Search, Moon, Sun, X, Menu, ChevronDown, Share2,
   Hammer, SlidersHorizontal
@@ -22,7 +23,6 @@ import { SearchResults } from './header/SearchResults';
 
 interface HeaderProps {
   people: Record<string, Person>;
-  // Removed onImport and onImportFile as they are not used directly in Header
   onUndo: () => void;
   onRedo: () => void;
   canUndo: boolean;
@@ -35,7 +35,6 @@ interface HeaderProps {
   treeSettings: TreeSettings;
   setTreeSettings: (s: TreeSettings) => void;
   toggleSidebar: () => void;
-  // Consolidated modal opener
   onOpenModal: (modalType: 'calculator' | 'stats' | 'chat' | 'consistency' | 'timeline' | 'share' | 'story' | 'map') => void;
   onPresent: () => void;
   user: UserProfile | null;
@@ -56,37 +55,26 @@ export const Header: React.FC<HeaderProps> = ({
   const [searchResults, setSearchResults] = useState<Person[]>([]);
   const t = getTranslation(language);
 
-  // File Download Helper
-  const downloadFile = (content: string | Blob, filename: string, type: string) => {
-    const url = URL.createObjectURL(content instanceof Blob ? content : new Blob([content], {type}));
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.click();
-    setActiveMenu('none');
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-  };
-
   // Consolidated Export Handler
   const handleExport = useCallback(async (type: 'jozor' | 'json' | 'gedcom' | 'ics' | 'print') => {
-    setActiveMenu('none'); // Close menu immediately
     try {
       if (type === 'jozor') {
-        downloadFile(await exportToJozorArchive(people), "family.jozor", "application/octet-stream");
+        downloadFile(await exportToJozorArchive(people), "family.jozor", "application/octet-stream", () => setActiveMenu('none'));
       } else if (type === 'json') {
-        downloadFile(JSON.stringify(people, null, 2), "tree.json", "application/json");
+        downloadFile(JSON.stringify(people, null, 2), "tree.json", "application/json", () => setActiveMenu('none'));
       } else if (type === 'gedcom') {
-        downloadFile(exportToGEDCOM(people), "tree.ged", "application/octet-stream");
+        downloadFile(exportToGEDCOM(people), "tree.ged", "application/octet-stream", () => setActiveMenu('none'));
       } else if (type === 'ics') {
-        downloadFile(generateICS(people), "family_calendar.ics", "text/calendar");
+        downloadFile(generateICS(people), "family_calendar.ics", "text/calendar", () => setActiveMenu('none'));
       } else if (type === 'print') {
+        setActiveMenu('none'); // Close menu before printing
         window.print();
       }
     } catch (e) {
       console.error(`Export to ${type} failed`, e);
       alert(`Export to ${type} failed`);
     }
-  }, [people, downloadFile]);
+  }, [people]);
 
 
   const handleSearch = (query: string) => {
