@@ -13,14 +13,14 @@ import { SearchInputWithResults } from './SearchInputWithResults';
 export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(({
   t,
   themeLanguage, auth, viewSettings, toolsActions, exportActions,
-  peopleForSearch, onFocusPersonForSearch // Destructure new props
+  searchProps // Destructure new grouped search props
 }) => {
   const [activeMenu, setActiveMenu] = useState<'none' | 'export' | 'settings' | 'tools' | 'user'>('none');
 
   return (
     <div className="flex items-center gap-2 md:gap-3">
       {/* Search */}
-      <SearchInputWithResults people={peopleForSearch} onFocusPerson={onFocusPersonForSearch} t={t} />
+      <SearchInputWithResults people={searchProps.people} onFocusPerson={searchProps.onFocusPerson} t={t} />
 
       <div className="h-6 w-px bg-stone-200 dark:bg-stone-800 hidden md:block mx-1"></div>
 

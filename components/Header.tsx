@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { Person, HistoryControlsProps, ThemeLanguageProps, AuthProps, ViewSettingsProps, ToolsActionsProps, ExportActionsProps } from '../types';
+import { Person, HistoryControlsProps, ThemeLanguageProps, AuthProps, ViewSettingsProps, ToolsActionsProps, ExportActionsProps, SearchProps } from '../types';
 
 // Import sub-components
 import { HeaderLeftSection } from './header/HeaderLeftSection';
@@ -27,6 +27,11 @@ export const Header: React.FC<HeaderProps> = memo(({
   historyControls, themeLanguage, auth, viewSettings, toolsActions, exportActions,
   peopleForSearch, onFocusPersonForSearch // Destructure new props
 }) => {
+  const searchProps: SearchProps = {
+    people: peopleForSearch,
+    onFocusPerson: onFocusPersonForSearch,
+  };
+
   return (
       <header className="h-16 bg-white/80 dark:bg-stone-950/80 backdrop-blur-md flex items-center px-4 md:px-6 justify-between border-b border-stone-200/50 dark:border-stone-800/50 z-30 print:hidden transition-all shadow-sm sticky top-0">
         
@@ -46,8 +51,7 @@ export const Header: React.FC<HeaderProps> = memo(({
           viewSettings={viewSettings}
           toolsActions={toolsActions}
           exportActions={exportActions}
-          peopleForSearch={peopleForSearch} // Pass directly for search
-          onFocusPersonForSearch={onFocusPersonForSearch} // Pass directly for search
+          searchProps={searchProps} // Pass grouped search props
         />
       </header>
   );

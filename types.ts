@@ -165,16 +165,18 @@ export interface HeaderLeftSectionProps {
   historyControls: HistoryControlsProps;
 }
 
+// New interface for search-related props
+export interface SearchProps {
+  people: Record<string, Person>;
+  onFocusPerson: (id: string) => void;
+}
+
 export interface HeaderRightSectionProps {
-  // Removed people: Record<string, Person>;
-  // Removed onFocusPerson: (id: string) => void;
   t: any;
   themeLanguage: ThemeLanguageProps;
   auth: AuthProps;
   viewSettings: ViewSettingsProps;
   toolsActions: ToolsActionsProps;
   exportActions: ExportActionsProps;
-  // New props for SearchInputWithResults
-  peopleForSearch: Record<string, Person>;
-  onFocusPersonForSearch: (id: string) => void;
+  searchProps: SearchProps; // Grouped search props
 }

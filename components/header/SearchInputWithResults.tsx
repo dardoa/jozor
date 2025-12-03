@@ -1,16 +1,14 @@
 import React, { useState, memo, useCallback } from 'react';
-import { Person } from '../../types';
+import { Person, SearchProps } from '../../types'; // Import SearchProps
 import { Search, X } from 'lucide-react';
 import { SearchResults } from './SearchResults';
 
-interface SearchInputWithResultsProps {
-  people: Record<string, Person>;
-  onFocusPerson: (id: string) => void;
+interface SearchInputWithResultsProps extends SearchProps { // Extend SearchProps
   t: any;
 }
 
 export const SearchInputWithResults: React.FC<SearchInputWithResultsProps> = memo(({
-  people, onFocusPerson, t
+  people, onFocusPerson, t // Destructure directly from props
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Person[]>([]);
