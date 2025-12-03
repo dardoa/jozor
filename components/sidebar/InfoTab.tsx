@@ -32,6 +32,7 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
   const [smartText, setSmartText] = useState('');
   const [isExtracting, setIsExtracting] = useState(false);
   const [showMoreIdentityFields, setShowMoreIdentityFields] = useState(false); // New state for collapsible fields
+  const [showFamilyRelationships, setShowFamilyRelationships] = useState(true); // New state for collapsible family section
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -332,10 +333,26 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
             </div>
         )}
         
-        <FamilyRelationshipsSection
-            person={person} people={people} isEditing={isEditing} onUpdate={onUpdate} onSelect={onSelect} t={t}
-            onAddParent={onAddParent} onAddSpouse={onAddSpouse} onAddChild={onAddChild} onRemoveRelationship={onRemoveRelationship}
-        />
+        {/* Collapsible Family Relationships Section */}
+        <div className="bg-white dark:bg-stone-800 pt-5 p-3 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm relative">
+            <h3 className="absolute top-[-12px] start-3 z-10 bg-white dark:bg-stone-800 px-2 text-[9px] font-bold text-stone-400 uppercase tracking-wider">{t.familyRelationships}</h3>
+            <button
+                onClick={() => setShowFamilyRelationships(!showFamilyRelationships)}
+                className="w-full flex items-center justify-between text-xs font-medium text-stone-600 dark:text-stone-400 hover:text-teal-600 dark:hover:text-teal-400 py-1 px-0.5 -mx-0.5 rounded-md transition-colors"
+            >
+                <span>{t.familyRelationships}</span>
+                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showFamilyRelationships ? 'rotate-180' : ''}`} />
+            </button>
+
+            {showFamilyRelationships && (
+                <div className="mt-2 animate-in fade-in slide-in-from-top-1 duration-200">
+                    <FamilyRelationshipsSection
+                        person={person} people={people} isEditing={isEditing} onUpdate={onUpdate} onSelect={onSelect} t={t}
+                        onAddParent={onAddParent} onAddSpouse={onAddSpouse} onAddChild={onAddChild} onRemoveRelationship={onRemoveRelationship}
+                    />
+                </div>
+            )}
+        </div>
     </div>
 
     {/* Smart Extract Modal */}

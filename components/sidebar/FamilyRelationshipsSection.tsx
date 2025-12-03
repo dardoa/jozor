@@ -144,8 +144,7 @@ export const FamilyRelationshipsSection: React.FC<FamilyRelationshipsSectionProp
     const handleRemoveChild = (id: string) => onRemoveRelationship?.(person.id, id, 'child');
 
     return (
-        <div className="pt-5 space-y-3 relative"> {/* Changed pt-3 to pt-5, added relative */}
-            <h3 className="absolute top-[-12px] start-3 z-10 bg-white dark:bg-stone-900 px-2 text-[9px] font-bold text-stone-400 uppercase tracking-wider">{t.familyRelationships}</h3>
+        <div className="space-y-3 relative"> {/* Removed pt-5, adjusted to space-y-3 */}
             
             <FamilyGroup 
                 title={t.parents} 
