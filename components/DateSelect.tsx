@@ -95,7 +95,7 @@ export const DateSelect: React.FC<DateSelectProps> = memo(({ value, onChange, di
         value={day} 
         onChange={handleDayChange} 
         disabled={disabled || !month} // Disable day if no month selected
-        className={`w-16 ${inputBaseClass} ${disabledClass}`} 
+        className={`w-14 ${inputBaseClass} ${disabledClass}`} 
       >
         <option value="">DD</option>
         {days.map(d => (

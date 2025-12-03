@@ -45,7 +45,7 @@ export const PartnersTab: React.FC<PartnersTabProps> = memo(({ person, people, i
                     {/* Partner Header */}
                     <div className="flex items-start justify-between mb-3">
                         <div className="flex items-center gap-3">
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shadow-sm overflow-hidden ${spouse.gender === 'male' ? 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300' : 'bg-pink-100 text-pink-600 dark:bg-pink-900 dark:text-pink-300'}`}>
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shadow-sm overflow-hidden ${spouse.gender === 'male' ? 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300' : 'bg-pink-100 text-pink-600 dark:bg-pink-900 dark:text-pink-300'}`}> {/* Reduced from w-10 h-10 to w-8 h-8 */}
                                 {spouse.photoUrl ? (
                                     <img src={spouse.photoUrl} alt="" className="w-full h-full object-cover" />
                                 ) : spouse.firstName[0]}

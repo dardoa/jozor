@@ -1,30 +1,30 @@
 import { Language } from './../types';
 
 // Import all English translation modules
-import { general as enGeneral } from './translations/en/general.ts';
-import { personFields as enPersonFields } from './translations/en/personFields.ts';
-import { relationships as enRelationships } from './translations/en/relationships.ts';
-import { sidebar as enSidebar } from './translations/en/sidebar.ts';
-import { header as enHeader } from './translations/en/header.ts';
-import { modals as enModals } from './translations/en/modals.ts';
-import { alerts as enAlerts } from './translations/en/alerts.ts';
-import { welcomeScreen as enWelcomeScreen } from './translations/en/welcomeScreen.ts';
-import { dateSelect as enDateSelect } from './translations/en/dateSelect.ts';
-import { smartInput as enSmartInput } from './translations/en/smartInput.ts';
-import { familyTree as enFamilyTree } from './translations/en/familyTree.ts';
+import { general as enGeneral } from './translations/en/general';
+import { personFields as enPersonFields } from './translations/en/personFields';
+import { relationships as enRelationships } from './translations/en/relationships';
+import { sidebar as enSidebar } from './translations/en/sidebar';
+import { header as enHeader } from './translations/en/header';
+import { modals as enModals } from './translations/en/modals';
+import { alerts as enAlerts } from './translations/en/alerts';
+import { welcomeScreen as enWelcomeScreen } from './translations/en/welcomeScreen';
+import { dateSelect as enDateSelect } from './translations/en/dateSelect';
+import { smartInput as enSmartInput } from './translations/en/smartInput';
+import { familyTree as enFamilyTree } from './translations/en/familyTree';
 
 // Import all Arabic translation modules
-import { general as arGeneral } from './translations/ar/general.ts';
-import { personFields as arPersonFields } from './translations/ar/personFields.ts';
-import { relationships as arRelationships } from './translations/ar/relationships.ts';
-import { sidebar as arSidebar } from './translations/ar/sidebar.ts';
-import { header as arHeader } from './translations/ar/header.ts';
-import { modals as arModals } from './translations/ar/modals.ts';
-import { alerts as arAlerts } from './translations/ar/alerts.ts';
-import { welcomeScreen as arWelcomeScreen } from './translations/ar/welcomeScreen.ts';
-import { dateSelect as arDateSelect } from './translations/ar/dateSelect.ts';
-import { smartInput as arSmartInput } from './translations/ar/smartInput.ts';
-import { familyTree as arFamilyTree } from './translations/ar/familyTree.ts';
+import { general as arGeneral } from './translations/ar/general';
+import { personFields as arPersonFields } from './translations/ar/personFields';
+import { relationships as arRelationships } from './translations/ar/relationships';
+import { sidebar as arSidebar } from './translations/ar/sidebar';
+import { header as arHeader } from './translations/ar/header';
+import { modals as arModals } from './translations/ar/modals';
+import { alerts as arAlerts } from './translations/ar/alerts';
+import { welcomeScreen as arWelcomeScreen } from './translations/ar/welcomeScreen';
+import { dateSelect as arDateSelect } from './translations/ar/dateSelect';
+import { smartInput as arSmartInput } from './translations/ar/smartInput';
+import { familyTree as arFamilyTree } from './translations/ar/familyTree';
 
 // Combine English translations
 const en = {

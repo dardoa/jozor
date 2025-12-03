@@ -27,7 +27,7 @@ export const FormField: React.FC<FormFieldProps> = ({
   labelWidthClass = 'w-20', // Default to w-20 for better alignment in grids
 }) => {
   const baseInputClass = "w-full h-8 px-3 py-1.5 border border-stone-300 dark:border-stone-600 rounded-lg text-sm focus:border-teal-500 outline-none transition-colors bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 disabled:bg-transparent disabled:border-transparent disabled:px-0 disabled:cursor-default disabled:font-medium disabled:text-stone-800 dark:disabled:text-stone-200";
-  const baseTextareaClass = "flex-1 px-3 py-2 border border-stone-300 dark:border-stone-600 rounded-lg text-sm focus:border-teal-500 outline-none resize-none transition-colors bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 disabled:bg-transparent disabled:border-transparent disabled:px-0 disabled:cursor-default disabled:font-medium disabled:text-stone-800 dark:disabled:text-stone-200";
+  const baseTextareaClass = "flex-1 px-3 py-1.5 border border-stone-300 dark:border-stone-600 rounded-lg text-sm focus:border-teal-500 outline-none resize-none transition-colors bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 disabled:bg-transparent disabled:border-transparent disabled:px-0 disabled:cursor-default disabled:font-medium disabled:text-stone-800 dark:disabled:text-stone-200"; // Adjusted py-2 to py-1.5
 
   const inputClasses = `${baseInputClass} ${className}`;
   const textareaClasses = `${baseTextareaClass} ${className}`;

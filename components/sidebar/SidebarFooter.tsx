@@ -22,7 +22,8 @@ export const SidebarFooter: React.FC<SidebarFooterProps> = memo(({
         <button 
             type="button"
             onClick={(e) => { e.stopPropagation(); onClick(); }}
-            className={`w-9 h-9 rounded-full flex items-center justify-center transition-all shadow-sm border border-transparent hover:shadow-md active:scale-95 ${color}`}
+            // Reduced from w-9 h-9 to w-8 h-8
+            className={`w-8 h-8 rounded-full flex items-center justify-center transition-all shadow-sm border border-transparent hover:shadow-md active:scale-95 ${color}`}
             title={label}
         >
             {icon}
@@ -42,49 +43,57 @@ export const SidebarFooter: React.FC<SidebarFooterProps> = memo(({
             {/* Quick Add Actions Bar */}
             <div className="flex justify-center gap-4 mb-4">
                 <div className="flex gap-2">
+                     {/* Reduced from w-4 h-4 to w-3.5 h-3.5 */}
                      <QuickAddButton 
                         onClick={() => onAddParent('male')} 
-                        icon={<ArrowUp className="w-4 h-4"/>}
+                        icon={<ArrowUp className="w-3.5 h-3.5"/>}
                         color="bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400"
                         label={t.addFather}
                      />
+                     {/* Reduced from w-4 h-4 to w-3.5 h-3.5 */}
                      <QuickAddButton 
                         onClick={() => onAddParent('female')} 
-                        icon={<ArrowUp className="w-4 h-4"/>}
+                        icon={<ArrowUp className="w-3.5 h-3.5"/>}
                         color="bg-pink-50 text-pink-600 hover:bg-pink-100 dark:bg-pink-900/30 dark:text-pink-400"
                         label={t.addMother}
                      />
                 </div>
 
-                <div className="w-px bg-stone-200 dark:bg-stone-700 h-9 mx-1"></div>
+                {/* Adjusted height */}
+                <div className="w-px bg-stone-200 dark:bg-stone-700 h-8 mx-1"></div>
 
                 <div className="flex gap-2">
+                     {/* Reduced from w-4 h-4 to w-3.5 h-3.5 */}
                      <QuickAddButton 
                         onClick={() => onAddSpouse('male')} 
-                        icon={<Heart className="w-4 h-4"/>}
+                        icon={<Heart className="w-3.5 h-3.5"/>}
                         color="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400"
                         label={t.addHusband}
                      />
+                     {/* Reduced from w-4 h-4 to w-3.5 h-3.5 */}
                      <QuickAddButton 
                         onClick={() => onAddSpouse('female')} 
-                        icon={<Heart className="w-4 h-4"/>}
+                        icon={<Heart className="w-3.5 h-3.5"/>}
                         color="bg-rose-50 text-rose-600 hover:bg-rose-100 dark:bg-rose-900/30 dark:text-rose-400"
                         label={t.addWife}
                      />
                 </div>
 
-                <div className="w-px bg-stone-200 dark:bg-stone-700 h-9 mx-1"></div>
+                {/* Adjusted height */}
+                <div className="w-px bg-stone-200 dark:bg-stone-700 h-8 mx-1"></div>
 
                 <div className="flex gap-2">
+                     {/* Reduced from w-4 h-4 to w-3.5 h-3.5 */}
                      <QuickAddButton 
                         onClick={() => onAddChild('male')} 
-                        icon={<Baby className="w-4 h-4"/>}
+                        icon={<Baby className="w-3.5 h-3.5"/>}
                         color="bg-teal-50 text-teal-600 hover:bg-teal-100 dark:bg-teal-900/30 dark:text-teal-400"
                         label={t.addSon}
                      />
+                     {/* Reduced from w-4 h-4 to w-3.5 h-3.5 */}
                      <QuickAddButton 
                         onClick={() => onAddChild('female')} 
-                        icon={<Baby className="w-4 h-4"/>}
+                        icon={<Baby className="w-3.5 h-3.5"/>}
                         color="bg-orange-50 text-orange-600 hover:bg-orange-100 dark:bg-orange-900/30 dark:text-orange-400"
                         label={t.addDaughter}
                      />
@@ -96,7 +105,8 @@ export const SidebarFooter: React.FC<SidebarFooterProps> = memo(({
                 <button
                     type="button"
                     onClick={handleDelete}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-sm font-bold"
+                    // Reduced padding
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-sm font-bold"
                 >
                     <Trash2 className="w-4 h-4" />
                     <span>{t.deletePerson}</span>
@@ -106,7 +116,8 @@ export const SidebarFooter: React.FC<SidebarFooterProps> = memo(({
                     <button
                         type="button"
                         onClick={() => setIsEditing(false)}
-                        className="flex items-center gap-2 px-6 py-2 bg-emerald-600 text-white rounded-full shadow-md hover:bg-emerald-700 transition-colors font-bold text-sm"
+                        // Reduced padding
+                        className="flex items-center gap-2 px-5 py-2 bg-emerald-600 text-white rounded-full shadow-md hover:bg-emerald-700 transition-colors font-bold text-sm"
                     >
                         <Check className="w-4 h-4 stroke-[3]" />
                         {t.saveChanges}
@@ -115,7 +126,8 @@ export const SidebarFooter: React.FC<SidebarFooterProps> = memo(({
                     <button
                         type="button"
                         onClick={() => setIsEditing(true)}
-                        className="flex items-center gap-2 px-6 py-2 bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 text-stone-700 dark:text-stone-200 rounded-full shadow-sm hover:border-teal-400 dark:hover:border-teal-500 hover:text-teal-600 dark:hover:text-teal-400 transition-colors font-bold text-sm"
+                        // Reduced padding
+                        className="flex items-center gap-2 px-5 py-2 bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 text-stone-700 dark:text-stone-200 rounded-full shadow-sm hover:border-teal-400 dark:hover:border-teal-500 hover:text-teal-600 dark:hover:text-teal-400 transition-colors font-bold text-sm"
                     >
                         <Edit2 className="w-3.5 h-3.5" />
                         {t.editDetails}

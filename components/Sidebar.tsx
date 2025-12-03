@@ -69,12 +69,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
         
             {/* Header / Tabs */}
             <div className="flex items-end justify-between border-b border-stone-200/50 dark:border-stone-800/50 bg-stone-50/80 dark:bg-stone-900/80 backdrop-blur-sm pt-3 px-4">
-                <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+                <div className="flex gap-1 overflow-x-auto scrollbar-hide"> {/* Reduced gap */}
                     {tabs.filter(tab => tab.show).map(tab => (
                         <button 
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id as any)} 
-                            className={`px-4 py-2.5 rounded-t-xl text-sm font-semibold transition-all relative top-[1px]
+                            className={`px-3 py-2 rounded-t-lg text-xs font-semibold transition-all relative top-[1px] {/* Reduced padding and font size */}
                             ${activeTab === tab.id 
                                 ? 'bg-white dark:bg-stone-900 text-teal-600 dark:text-teal-400 border-x border-t border-stone-200/50 dark:border-stone-800/50 z-10 shadow-t-sm'
                                 : 'text-stone-500 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-300'}`}
@@ -89,7 +89,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             {/* Scrollable Content */}
             <div className="flex-1 overflow-y-auto p-5 scrollbar-thin scrollbar-thumb-stone-200 dark:scrollbar-thumb-stone-700 bg-white dark:bg-stone-900">
                 {person.isDeceased && activeTab === 'info' && !isEditing && (
-                    <button onClick={() => onOpenModal('chat')} className="w-full mb-5 py-2.5 bg-purple-50 dark:bg-purple-900/20 border border-purple-100 dark:border-purple-800/50 rounded-xl flex items-center justify-center gap-2 text-purple-700 dark:text-purple-300 text-sm font-bold hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-all">
+                    <button onClick={() => onOpenModal('chat')} className="w-full mb-5 py-2 bg-purple-50 dark:bg-purple-900/20 border border-purple-100 dark:border-purple-800/50 rounded-xl flex items-center justify-center gap-2 text-purple-700 dark:text-purple-300 text-sm font-bold hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-all"> {/* Reduced padding */}
                         <MessageCircle className="w-4 h-4" />
                         {t.chatWithAncestor}
                     </button>

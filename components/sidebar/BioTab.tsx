@@ -73,10 +73,11 @@ export const BioTab: React.FC<BioTabProps> = memo(({ person, people, isEditing, 
                 {isEditing && (
                     <div className="flex items-center gap-2">
                         <span className="text-[10px] text-stone-500">{t.tone}:</span>
+                        {/* Reduced h-8 to h-7 and text-[10px] to text-[9px] */}
                         <select 
                             value={bioTone}
                             onChange={(e) => setBioTone(e.target.value)}
-                            className="text-[10px] border border-stone-200 dark:border-stone-600 rounded-lg px-2 py-1 bg-stone-50 dark:bg-stone-700 outline-none focus:border-purple-300 text-stone-600 dark:text-stone-200 h-8"
+                            className="text-[9px] border border-stone-200 dark:border-stone-600 rounded-lg px-2 py-1 bg-stone-50 dark:bg-stone-700 outline-none focus:border-purple-300 text-stone-600 dark:text-stone-200 h-7"
                         >
                             <option value="Standard">Standard</option>
                             <option value="Formal">Formal</option>
@@ -84,10 +85,11 @@ export const BioTab: React.FC<BioTabProps> = memo(({ person, people, isEditing, 
                             <option value="Humorous">Humorous</option>
                             <option value="Journalistic">Journalistic</option>
                         </select>
+                        {/* Reduced text-[10px] to text-[9px] */}
                         <button
                             onClick={handleGenerateBio}
                             disabled={isGenerating}
-                            className="text-[10px] text-purple-600 dark:text-purple-300 hover:text-purple-700 flex items-center gap-1 bg-purple-50 dark:bg-purple-900/30 px-2 py-1 rounded-full border border-purple-100 dark:border-purple-800 transition-colors font-bold"
+                            className="text-[9px] text-purple-600 dark:text-purple-300 hover:text-purple-700 flex items-center gap-1 bg-purple-50 dark:bg-purple-900/30 px-2 py-1 rounded-full border border-purple-100 dark:border-purple-800 transition-colors font-bold"
                         >
                             {isGenerating ? <Loader2 className="w-3 h-3 animate-spin"/> : <Sparkles className="w-3 h-3" />}
                             {isGenerating ? '...' : t.generate}

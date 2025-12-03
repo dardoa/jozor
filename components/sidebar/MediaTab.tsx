@@ -86,19 +86,21 @@ export const MediaTab: React.FC<MediaTabProps> = memo(({ person, isEditing, onUp
                 {isEditing && (
                     <div className="flex gap-2">
                         {user && (
+                            // Reduced padding and font size
                             <button 
                                 onClick={handleDriveSelect}
                                 disabled={isDriveLoading}
-                                className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 disabled:opacity-50"
+                                className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 disabled:opacity-50 px-2 py-1 rounded-full"
                                 title="Import from Google Drive"
                             >
                                 {isDriveLoading ? <Loader2 className="w-3 h-3 animate-spin"/> : <Cloud className="w-3 h-3"/>} 
                                 <span className="hidden sm:inline">Drive</span>
                             </button>
                         )}
+                        {/* Reduced padding and font size */}
                         <button 
                             onClick={() => galleryInputRef.current?.click()}
-                            className="text-[10px] font-bold text-teal-600 dark:text-teal-400 hover:underline flex items-center gap-1"
+                            className="text-[9px] font-bold text-teal-600 dark:text-teal-400 hover:underline flex items-center gap-1 px-2 py-1 rounded-full"
                         >
                             <Plus className="w-3 h-3"/> {t.addPhoto}
                         </button>
@@ -125,23 +127,25 @@ export const MediaTab: React.FC<MediaTabProps> = memo(({ person, isEditing, onUp
                             <img src={src} alt="" className="w-full h-full object-cover" />
                             
                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                {/* Reduced padding from p-2 to p-1.5 */}
                                 <button
                                     onClick={() => handleAnalyzePhoto(idx, src)}
-                                    className="p-2 bg-white/20 hover:bg-white/40 backdrop-blur rounded-full text-white"
+                                    className="p-1.5 bg-white/20 hover:bg-white/40 backdrop-blur rounded-full text-white"
                                     title="AI Analyze"
                                 >
-                                    {analyzingImgIndex === idx ? <Loader2 className="w-4 h-4 animate-spin"/> : <ScanEye className="w-4 h-4"/>}
+                                    {analyzingImgIndex === idx ? <Loader2 className="w-3.5 h-3.5 animate-spin"/> : <ScanEye className="w-3.5 h-3.5"/>} {/* Reduced icon size from w-4 h-4 to w-3.5 h-3.5 */}
                                 </button>
                                 {isEditing && (
+                                    // Reduced padding from p-2 to p-1.5
                                     <button 
                                         onClick={() => {
                                             const newGallery = [...(person.gallery || [])];
                                             newGallery.splice(idx, 1);
                                             onUpdate(person.id, { gallery: newGallery });
                                         }}
-                                        className="p-2 bg-red-500/80 hover:bg-red-600 text-white rounded-full"
+                                        className="p-1.5 bg-red-500/80 hover:bg-red-600 text-white rounded-full"
                                     >
-                                        <X className="w-4 h-4" />
+                                        <X className="w-3.5 h-3.5" /> {/* Reduced icon size from w-4 h-4 to w-3.5 h-3.5 */}
                                     </button>
                                 )}
                             </div>
@@ -167,8 +171,9 @@ export const MediaTab: React.FC<MediaTabProps> = memo(({ person, isEditing, onUp
                 <div className="space-y-3">
                     {person.voiceNotes.map((note, idx) => (
                         <div key={idx} className="flex items-center gap-3 p-3 bg-white dark:bg-stone-900 border border-stone-100 dark:border-stone-700 rounded-xl shadow-sm">
-                            <div className="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600 dark:text-purple-400 shrink-0">
-                                <Mic className="w-5 h-5" />
+                            {/* Reduced from w-10 h-10 to w-8 h-8 */}
+                            <div className="w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600 dark:text-purple-400 shrink-0">
+                                <Mic className="w-4 h-4" /> {/* Reduced from w-5 h-5 to w-4 h-4 */}
                             </div>
                             <div className="flex-1 min-w-0">
                                 <div className="text-sm font-bold text-stone-700 dark:text-stone-300">Recording #{idx + 1}</div>
