@@ -30,8 +30,8 @@ export const PartnersTab: React.FC<PartnersTabProps> = memo(({ person, people, i
   };
 
   return (
-    <div className="bg-white dark:bg-stone-900 p-2 rounded-xl border border-stone-200/50 dark:border-stone-800/50 shadow-sm space-y-4 animate-in slide-in-from-left-2 duration-200">
-        <h3 className="text-[10px] font-bold text-stone-400 uppercase tracking-wider mb-3">{t.spouses}</h3>
+    <div className="bg-white dark:bg-stone-900 pt-6 p-2 rounded-xl border border-stone-200/50 dark:border-stone-800/50 shadow-sm space-y-4 animate-in slide-in-from-left-2 duration-200 relative">
+        <h3 className="absolute top-0 start-3 z-10 bg-white dark:bg-stone-900 px-2 text-[10px] font-bold text-stone-400 uppercase tracking-wider">{t.spouses}</h3>
         
         {person.spouses.map((spouseId) => {
             const spouse = people[spouseId];

@@ -199,8 +199,8 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
         </div>
 
         {/* Identity Section */}
-        <div className="bg-white dark:bg-stone-800 p-4 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-3">
-            <h3 className="text-[10px] font-bold text-stone-400 uppercase tracking-wider mb-3">{t.identity}</h3>
+        <div className="bg-white dark:bg-stone-800 pt-6 p-4 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-3 relative">
+            <h3 className="absolute top-0 start-3 z-10 bg-white dark:bg-stone-800 px-2 text-[10px] font-bold text-stone-400 uppercase tracking-wider">{t.identity}</h3>
             <div className="grid grid-cols-2 gap-3">
                 <FormField label={t.firstName} value={person.firstName} onCommit={(v) => handleChange('firstName', v)} disabled={!isEditing} labelWidthClass="w-20" />
                 <FormField label={t.middleName} value={person.middleName} onCommit={(v) => handleChange('middleName', v)} disabled={!isEditing} labelWidthClass="w-20" />
@@ -213,8 +213,8 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
         </div>
 
         {/* Gender & Status */}
-        <div className="bg-white dark:bg-stone-800 p-3 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-3">
-            <h3 className="text-[10px] font-bold text-stone-400 uppercase tracking-wider mb-3">{t.status}</h3>
+        <div className="bg-white dark:bg-stone-800 pt-6 p-3 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-3 relative">
+            <h3 className="absolute top-0 start-3 z-10 bg-white dark:bg-stone-800 px-2 text-[10px] font-bold text-stone-400 uppercase tracking-wider">{t.status}</h3>
             <div className="flex items-center gap-4">
                 <div className="flex items-center gap-3">
                     <label className="flex items-center gap-2 cursor-pointer group">
@@ -241,8 +241,8 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
         </div>
 
         {/* Birth Details */}
-        <div className="bg-white dark:bg-stone-800 p-4 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-3">
-            <h3 className="text-[10px] font-bold text-stone-400 uppercase tracking-wider mb-3">{t.birthDetails}</h3>
+        <div className="bg-white dark:bg-stone-800 pt-6 p-4 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-3 relative">
+            <h3 className="absolute top-0 start-3 z-10 bg-white dark:bg-stone-800 px-2 text-[10px] font-bold text-stone-400 uppercase tracking-wider">{t.birthDetails}</h3>
             <div className="space-y-3">
                 <div className="flex items-center gap-3">
                     <label className="w-20 shrink-0 text-[10px] text-stone-600 dark:text-stone-400 font-medium">{t.birthDate}</label>
@@ -269,8 +269,8 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
 
         {/* Death Details (Conditional) */}
         {person.isDeceased && (
-            <div className="bg-white dark:bg-stone-800 p-4 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-3 animate-in slide-in-from-top-2">
-                <h3 className="text-[10px] font-bold text-stone-400 uppercase tracking-wider mb-3">{t.deathDetails}</h3>
+            <div className="bg-white dark:bg-stone-800 pt-6 p-4 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-3 animate-in slide-in-from-top-2 relative">
+                <h3 className="absolute top-0 start-3 z-10 bg-white dark:bg-stone-800 px-2 text-[10px] font-bold text-stone-400 uppercase tracking-wider">{t.deathDetails}</h3>
                 <div className="space-y-3">
                     <div className="flex items-center gap-3">
                         <label className="w-20 shrink-0 text-[10px] text-stone-600 dark:text-stone-400 font-medium">{t.deathDate}</label>

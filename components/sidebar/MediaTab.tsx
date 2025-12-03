@@ -80,8 +80,8 @@ export const MediaTab: React.FC<MediaTabProps> = memo(({ person, isEditing, onUp
   return (
     <div className="space-y-6">
         {/* --- PHOTOS SECTION --- */}
-        <div className="bg-white dark:bg-stone-800 p-4 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-3">
-            <div className="flex justify-between items-center mb-1">
+        <div className="bg-white dark:bg-stone-800 pt-6 p-4 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-3 relative">
+            <div className="absolute top-0 start-3 z-10 bg-white dark:bg-stone-800 px-2 flex justify-between items-center w-[calc(100%-24px)]">
                 <h3 className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">{t.gallery}</h3>
                 {isEditing && (
                     <div className="flex gap-2">
@@ -106,14 +106,14 @@ export const MediaTab: React.FC<MediaTabProps> = memo(({ person, isEditing, onUp
                         </button>
                     </div>
                 )}
-                <input 
-                    ref={galleryInputRef}
-                    type="file" 
-                    accept="image/*" 
-                    className="hidden" 
-                    onChange={handleImageUpload}
-                />
             </div>
+            <input 
+                ref={galleryInputRef}
+                type="file" 
+                accept="image/*" 
+                className="hidden" 
+                onChange={handleImageUpload}
+            />
 
             {(!person.gallery || person.gallery.length === 0) ? (
                 <div className="text-center py-6 text-stone-400 dark:text-stone-500 bg-stone-50 dark:bg-stone-800/50 rounded-xl border border-dashed border-stone-200 dark:border-stone-700 flex flex-col items-center">
@@ -156,8 +156,8 @@ export const MediaTab: React.FC<MediaTabProps> = memo(({ person, isEditing, onUp
         </div>
 
         {/* --- AUDIO SECTION --- */}
-        <div className="bg-white dark:bg-stone-800 p-4 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-3">
-            <div className="flex justify-between items-center mb-1">
+        <div className="bg-white dark:bg-stone-800 pt-6 p-4 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-3 relative">
+            <div className="absolute top-0 start-3 z-10 bg-white dark:bg-stone-800 px-2 flex justify-between items-center w-[calc(100%-24px)]">
                 <h3 className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">{t.voiceMemories}</h3>
                 {isEditing && <VoiceRecorder onSave={handleVoiceSave} t={t} />}
             </div>

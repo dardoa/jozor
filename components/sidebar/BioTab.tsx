@@ -35,10 +35,10 @@ export const BioTab: React.FC<BioTabProps> = memo(({ person, people, isEditing, 
 
   return (
     <div className="space-y-5">
-        <div className="bg-white dark:bg-stone-800 p-4 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-3">
-            <div className="flex justify-between items-center mb-1">
+        <div className="bg-white dark:bg-stone-800 pt-6 p-4 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-3 relative">
+            <div className="absolute top-0 start-3 z-10 bg-white dark:bg-stone-800 px-2 flex justify-between items-center">
                 <h3 className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">{t.workInterests}</h3>
-                {!isEditing && <span className="text-[10px] text-stone-400">{t.readOnly}</span>}
+                {!isEditing && <span className="text-[10px] text-stone-400 ms-2">{t.readOnly}</span>}
             </div>
             
             <FormField
@@ -67,8 +67,8 @@ export const BioTab: React.FC<BioTabProps> = memo(({ person, people, isEditing, 
             />
         </div>
 
-        <div className="bg-white dark:bg-stone-800 p-4 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm">
-            <div className="flex justify-between items-center mb-3">
+        <div className="bg-white dark:bg-stone-800 pt-6 p-4 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm relative">
+            <div className="absolute top-0 start-3 z-10 bg-white dark:bg-stone-800 px-2 flex justify-between items-center w-[calc(100%-24px)]">
                 <h3 className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">{t.biography}</h3>
                 {isEditing && (
                     <div className="flex items-center gap-2">
