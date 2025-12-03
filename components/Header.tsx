@@ -1,10 +1,6 @@
 import React, { useState, memo, useCallback } from 'react';
 import { Person, Language, TreeSettings, UserProfile } from '../types';
-import { exportToGEDCOM } from '../utils/gedcomLogic';
-import { exportToJozorArchive } from '../utils/archiveLogic';
-import { generateICS } from '../utils/calendarLogic';
 import { getTranslation } from '../utils/translations';
-import { downloadFile } from '../utils/fileUtils'; // New import
 import { 
   Undo, Redo, Search, Moon, Sun, X, Menu, ChevronDown, Share2,
   Hammer, SlidersHorizontal
@@ -55,9 +51,6 @@ export const Header: React.FC<HeaderProps> = ({
   handleExport // Destructure handleExport
 }) => {
   const t = getTranslation(language);
-
-  // Consolidated Export Handler (moved to useAppOrchestration, but kept here for type consistency)
-  // This function is now passed as a prop, so the local definition is removed.
 
   return (
       <header className="h-16 bg-white/80 dark:bg-stone-950/80 backdrop-blur-md flex items-center px-4 md:px-6 justify-between border-b border-stone-200/50 dark:border-stone-800/50 z-30 print:hidden transition-all shadow-sm sticky top-0">
