@@ -38,30 +38,49 @@ export const BioTab: React.FC<BioTabProps> = memo(({ person, people, isEditing, 
         <div className="bg-white dark:bg-stone-800 pt-5 p-3 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-2 relative">
             <h3 className="absolute top-[-12px] start-3 z-10 bg-white dark:bg-stone-800 px-2 text-[9px] font-bold text-stone-400 uppercase tracking-wider">{t.workInterests}</h3>
             
-            <FormField
-                label={t.profession}
-                value={person.profession}
-                onCommit={(v) => handleChange('profession', v)}
-                disabled={!isEditing}
-                labelWidthClass="w-16" /* Reduced w-20 to w-16 */
-            />
+            {isEditing ? (
+                <>
+                    <FormField
+                        label={t.profession}
+                        value={person.profession}
+                        onCommit={(v) => handleChange('profession', v)}
+                        disabled={!isEditing}
+                        labelWidthClass="w-16" /* Reduced w-20 to w-16 */
+                    />
 
-            <FormField
-                label={t.company}
-                value={person.company}
-                onCommit={(v) => handleChange('company', v)}
-                disabled={!isEditing}
-                labelWidthClass="w-16" /* Reduced w-20 to w-16 */
-            />
+                    <FormField
+                        label={t.company}
+                        value={person.company}
+                        onCommit={(v) => handleChange('company', v)}
+                        disabled={!isEditing}
+                        labelWidthClass="w-16" /* Reduced w-20 to w-16 */
+                    />
 
-            <FormField
-                label={t.interests}
-                value={person.interests}
-                onCommit={(v) => handleChange('interests', v)}
-                disabled={!isEditing}
-                placeholder={isEditing ? "e.g. Golf, Cooking" : ""}
-                labelWidthClass="w-16" /* Reduced w-20 to w-16 */
-            />
+                    <FormField
+                        label={t.interests}
+                        value={person.interests}
+                        onCommit={(v) => handleChange('interests', v)}
+                        disabled={!isEditing}
+                        placeholder={isEditing ? "e.g. Golf, Cooking" : ""}
+                        labelWidthClass="w-16" /* Reduced w-20 to w-16 */
+                    />
+                </>
+            ) : (
+                <div className="space-y-2 text-sm text-stone-700 dark:text-stone-300">
+                    <div className="flex items-center gap-2">
+                        <span className="w-16 shrink-0 text-[9px] text-stone-600 dark:text-stone-400 font-medium">{t.profession}:</span>
+                        <span className="font-medium">{person.profession || t.unknown}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <span className="w-16 shrink-0 text-[9px] text-stone-600 dark:text-stone-400 font-medium">{t.company}:</span>
+                        <span className="font-medium">{person.company || t.unknown}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <span className="w-16 shrink-0 text-[9px] text-stone-600 dark:text-stone-400 font-medium">{t.interests}:</span>
+                        <span className="font-medium">{person.interests || t.unknown}</span>
+                    </div>
+                </div>
+            )}
         </div>
 
         <div className="bg-white dark:bg-stone-800 pt-5 p-3 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm relative">
@@ -92,14 +111,20 @@ export const BioTab: React.FC<BioTabProps> = memo(({ person, people, isEditing, 
                     </div>
                 )}
             </div>
-            <SmartTextarea
-                disabled={!isEditing}
-                rows={8} /* Reduced rows from 12 to 8 */
-                value={person.bio}
-                onCommit={(v) => handleChange('bio', v)}
-                className="w-full px-2.5 py-1.5 border border-stone-300 dark:border-stone-600 rounded-lg text-xs outline-none focus:border-teal-500 transition-colors bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 disabled:bg-transparent disabled:border-transparent disabled:px-0 disabled:cursor-default disabled:font-medium disabled:text-stone-800 dark:disabled:text-stone-200"
-                placeholder={isEditing ? t.writeBio : t.noBio}
-            />
+            {isEditing ? (
+                <SmartTextarea
+                    disabled={!isEditing}
+                    rows={8} /* Reduced rows from 12 to 8 */
+                    value={person.bio}
+                    onCommit={(v) => handleChange('bio', v)}
+                    className="w-full px-2.5 py-1.5 border border-stone-300 dark:border-stone-600 rounded-lg text-xs outline-none focus:border-teal-500 transition-colors bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 disabled:bg-transparent disabled:border-transparent disabled:px-0 disabled:cursor-default disabled:font-medium disabled:text-stone-800 dark:disabled:text-stone-200"
+                    placeholder={isEditing ? t.writeBio : t.noBio}
+                />
+            ) : (
+                <div className="text-sm text-stone-700 dark:text-stone-300 leading-relaxed">
+                    {person.bio || <p className="text-stone-400 italic">{t.noBio}</p>}
+                </div>
+            )}
         </div>
     </div>
   );
