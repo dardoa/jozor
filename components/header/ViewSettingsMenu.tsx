@@ -110,8 +110,8 @@ export const ViewSettingsMenu = memo(({
                                 <div className="p-1 rounded-md bg-orange-100 text-orange-600"><Zap className="w-3.5 h-3.5"/></div>
                                 Physics
                             </span>
-                            <div className={`w-8 h-4 rounded-full p-0.5 relative transition-colors duration-300 ${settings.enableForcePhysics ? 'bg-orange-500' : 'bg-stone-300 dark:bg-stone-600'}`}>
-                                <div className={`w-3 h-3 bg-white rounded-full shadow-sm transition-transform duration-300 ${settings.enableForcePhysics ? 'translate-x-4 rtl:-translate-x-4' : ''}`}></div>
+                            <div className={`w-7 h-4 rounded-full p-0.5 relative transition-colors duration-300 ${settings.enableForcePhysics ? 'bg-orange-500' : 'bg-stone-300 dark:bg-stone-600'}`}>
+                                <div className={`w-3 h-3 bg-white rounded-full shadow-sm transition-transform duration-300 ${settings.enableForcePhysics ? 'translate-x-3 rtl:-translate-x-3' : ''}`}></div>
                             </div>
                         </button>
                         <div className={DIVIDER}></div>
