@@ -11,7 +11,8 @@ import { useGoogleSync } from './hooks/useGoogleSync';
 import { useThemeSync } from './hooks/useThemeSync';
 import { useLanguageSync } from './hooks/useLanguageSync';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
-import { useAppUI } from './hooks/useAppUI'; // New import
+import { useAppUI } from './hooks/useAppUI';
+import { useTreeSettings } from './hooks/useTreeSettings'; // New import
 
 import { INITIAL_ROOT_ID } from './constants';
 import { getTranslation } from './utils/translations';
@@ -28,24 +29,10 @@ const App: React.FC = () => {
   // --- Sync & Auth ---
   const { user, isSyncing, isDemoMode, handleLogin, handleLogout, stopSyncing } = useGoogleSync(people, loadCloudData);
 
-  // --- UI State (now managed by useAppUI) ---
-  // Settings State (still local to App as it's a global setting)
-  const [treeSettings, setTreeSettings] = useState<TreeSettings>({
-    showPhotos: true,
-    showDates: true,
-    showMiddleName: false,
-    showLastName: true,
-    showMinimap: true, // Default enabled
-    layoutMode: 'vertical',
-    isCompact: false,
-    chartType: 'descendant',
-    theme: 'modern', // Default theme
-    enableForcePhysics: true // Default enabled
-  });
-
-  // Local Preferences (now managed by their respective hooks)
+  // --- UI State & Preferences ---
   const { language, setLanguage } = useLanguageSync();
-  const { darkMode, setDarkMode } = useThemeSync(treeSettings.theme);
+  const { treeSettings, setTreeSettings } = useTreeSettings(); // Using the new hook
+  const { darkMode, setDarkMode } = useThemeSync(treeSettings.theme); // Pass theme from treeSettings
 
   const t = getTranslation(language);
   const activePerson = people[focusId];
@@ -68,13 +55,12 @@ const App: React.FC = () => {
     handleOpenModal,
   } = useAppUI({
     people, t, startNewTree, stopSyncing, handleImport, 
-    handleLogin: handleLogin, // Pass handleLogin from useGoogleSync
-    handleLogout: handleLogout, // Pass handleLogout from useGoogleSync
+    handleLogin: handleLogin,
+    handleLogout: handleLogout,
     addParent, addSpouse, addChild, linkPerson, setFocusId
   });
 
   // --- Custom Hooks for Side Effects ---
-  // Corrected: Use destructured values from useAppUI instead of calling it again
   useKeyboardShortcuts(history.length > 0, undo, future.length > 0, redo, showWelcome, isPresentMode, setIsPresentMode);
 
   return (
