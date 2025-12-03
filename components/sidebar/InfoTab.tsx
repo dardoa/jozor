@@ -305,7 +305,8 @@ export const InfoTab: React.FC<InfoTabProps> = ({
                             onCommit={(v) => handleChange('birthSource', v)}
                             disabled={!isEditing}
                             placeholder={t.sourcePlaceholder}
-                            className="!h-6 !text-[10px] placeholder:italic"
+                            {/* Updated height to !h-7 */}
+                            className="!h-7 !text-[10px] placeholder:italic" 
                             labelWidthClass="w-auto"
                          />
                      </div>
@@ -336,7 +337,8 @@ export const InfoTab: React.FC<InfoTabProps> = ({
                                 onCommit={(v) => handleChange('deathSource', v)}
                                 disabled={!isEditing}
                                 placeholder={t.sourcePlaceholder}
-                                className="!h-6 !text-[10px] placeholder:italic"
+                                {/* Updated height to !h-7 */}
+                                className="!h-7 !text-[10px] placeholder:italic" 
                                 labelWidthClass="w-auto"
                              />
                          </div>
