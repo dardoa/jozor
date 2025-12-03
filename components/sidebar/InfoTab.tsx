@@ -7,7 +7,7 @@ import { processImageFile } from '../../utils/imageLogic';
 import { extractPersonData } from '../../services/geminiService';
 import { FormField } from '../ui/FormField';
 import { FamilyRelationshipsSection } from './FamilyRelationshipsSection';
-import * as d3 from 'd3'; // Added d3 import
+import * as d3 from 'd3';
 
 interface InfoTabProps {
   person: Person;
@@ -71,7 +71,6 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
 
   const fullName = [person.title, person.firstName, person.middleName, person.lastName, person.suffix].filter(Boolean).join(' ') || "Unnamed Person";
   const displayBirth = getDisplayDate(person.birthDate);
-  // Corrected: Pass person.deathDate directly to getDisplayDate
   const displayDeath = getDisplayDate(person.deathDate); 
 
   if (!isEditing) {
@@ -97,7 +96,7 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
                             {/* Chat with Ancestor button */}
                             <button 
                                 onClick={(e) => { e.stopPropagation(); onOpenModal('chat'); }} 
-                                className="absolute -bottom-2 left-1/2 -translate-x-1/2 p-1 bg-purple-600 hover:bg-purple-700 text-white rounded-full shadow-md transition-all z-20"
+                                className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1 p-1.5 bg-purple-600/90 hover:bg-purple-700 text-white rounded-full shadow-lg transition-all z-20 border border-white/20"
                                 title={t.chatWithAncestor}
                             >
                                 <MessageCircle className="w-4 h-4" />
