@@ -2,7 +2,7 @@ import React, { useRef, useState, memo } from 'react';
 import { Person, Gender } from '../../types';
 import { DateSelect } from '../DateSelect';
 import { getDisplayDate } from '../../utils/familyLogic';
-import { User, Baby, BookOpen, Camera, Sparkles, Loader2, X, Ribbon, MessageCircle } from 'lucide-react';
+import { User, Baby, BookOpen, Camera, Sparkles, Loader2, X, Ribbon, MessageCircle, ChevronDown } from 'lucide-react';
 import { processImageFile } from '../../utils/imageLogic';
 import { extractPersonData } from '../../services/geminiService';
 import { FormField } from '../ui/FormField';
@@ -31,6 +31,7 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
   const [showSmartModal, setShowSmartModal] = useState(false);
   const [smartText, setSmartText] = useState('');
   const [isExtracting, setIsExtracting] = useState(false);
+  const [showMoreIdentityFields, setShowMoreIdentityFields] = useState(false); // New state for collapsible fields
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -215,19 +216,35 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
         {/* Identity Section */}
         <div className="bg-white dark:bg-stone-800 pt-5 p-3 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-2 relative">
             <h3 className="absolute top-[-12px] start-3 z-10 bg-white dark:bg-stone-800 px-2 text-[9px] font-bold text-stone-400 uppercase tracking-wider">{t.identity}</h3>
-            <div className="space-y-2"> {/* Changed from grid grid-cols-2 gap-2 to space-y-2 */}
+            <div className="space-y-2">
                 <FormField label={t.firstName} value={person.firstName} onCommit={(v) => handleChange('firstName', v)} disabled={!isEditing} labelWidthClass="w-20" />
                 <FormField label={t.middleName} value={person.middleName} onCommit={(v) => handleChange('middleName', v)} disabled={!isEditing} labelWidthClass="w-20" />
                 <FormField label={t.lastName} value={person.lastName} onCommit={(v) => handleChange('lastName', v)} disabled={!isEditing} labelWidthClass="w-20" />
-                <FormField label={t.birthName} value={person.birthName} onCommit={(v) => handleChange('birthName', v)} disabled={!isEditing} labelWidthClass="w-20" />
-                <FormField label={t.nickName} value={person.nickName} onCommit={(v) => handleChange('nickName', v)} disabled={!isEditing} labelWidthClass="w-20" />
-                <div className="flex gap-2"> {/* New div for title and suffix */}
-                    <div className="flex-1">
-                        <FormField label={t.title} value={person.title} onCommit={(v) => handleChange('title', v)} disabled={!isEditing} labelWidthClass="w-12" />
-                    </div>
-                    <div className="flex-1">
-                        <FormField label={t.suffix} value={person.suffix} onCommit={(v) => handleChange('suffix', v)} disabled={!isEditing} labelWidthClass="w-12" />
-                    </div>
+
+                {/* Collapsible section for more identity fields */}
+                <div className="border-t border-stone-100 dark:border-stone-700 pt-2 mt-2"> {/* Separator */}
+                    <button
+                        onClick={() => setShowMoreIdentityFields(!showMoreIdentityFields)}
+                        className="w-full flex items-center justify-between text-xs font-medium text-stone-600 dark:text-stone-400 hover:text-teal-600 dark:hover:text-teal-400 py-1 px-0.5 -mx-0.5 rounded-md transition-colors"
+                    >
+                        <span>{t.moreNames || 'More Names'}</span> {/* Placeholder for translation */}
+                        <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showMoreIdentityFields ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    {showMoreIdentityFields && (
+                        <div className="space-y-2 mt-2 animate-in fade-in slide-in-from-top-1 duration-200">
+                            <FormField label={t.birthName} value={person.birthName} onCommit={(v) => handleChange('birthName', v)} disabled={!isEditing} labelWidthClass="w-20" />
+                            <FormField label={t.nickName} value={person.nickName} onCommit={(v) => handleChange('nickName', v)} disabled={!isEditing} labelWidthClass="w-20" />
+                            <div className="flex gap-2">
+                                <div className="flex-1">
+                                    <FormField label={t.title} value={person.title} onCommit={(v) => handleChange('title', v)} disabled={!isEditing} labelWidthClass="w-12" />
+                                </div>
+                                <div className="flex-1">
+                                    <FormField label={t.suffix} value={person.suffix} onCommit={(v) => handleChange('suffix', v)} disabled={!isEditing} labelWidthClass="w-12" />
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
