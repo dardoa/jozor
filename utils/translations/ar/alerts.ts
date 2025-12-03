@@ -1,0 +1,18 @@
+export const alerts = {
+  personDeleteConfirm: 'هل أنت متأكد أنك تريد حذف هذا الشخص وجميع علاقاته؟',
+  googleDriveSyncSuccess: 'تمت المزامنة مع جوجل درايف بنجاح!',
+  googleDriveSyncError: 'فشل في المزامنة مع جوجل درايف.',
+  googleDriveFileSelect: 'اختر ملف جوزور من جوجل درايف',
+  googleDriveFileLoadError: 'فشل في تحميل الملف من جوجل درايف.',
+  googleDriveFileLoadSuccess: 'تم تحميل الملف بنجاح من جوجل درايف.',
+  googleDriveSaveNewFile: 'حفظ كملف جديد على جوجل درايف',
+  googleDriveSaveExistingFile: 'حفظ في ملف موجود على جوجل درايف',
+  googleDriveFileName: 'اسم ملف جوزور',
+  googleDriveSaveConfirm: 'هل أنت متأكد أنك تريد الكتابة فوق الملف الحالي؟',
+  googleDriveSaveSuccess: 'تم حفظ الملف في جوجل درايف بنجاح!',
+  googleDriveSaveError: 'فشل في حفظ الملف في جوجل درايف.',
+  gedcomImportSuccess: 'تم استيراد ملف GEDCOM بنجاح!',
+  gedcomImportError: 'فشل في استيراد ملف GEDCOM.',
+  jozorImportSuccess: 'تم استيراد ملف Jozor بنجاح!',
+  jozorImportError: 'فشل في استيراد ملف Jozor.',
+};

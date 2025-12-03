@@ -1,0 +1,16 @@
+export const general = {
+  appName: 'Jozor',
+  edit: 'Edit',
+  save: 'Save',
+  cancel: 'Cancel',
+  delete: 'Delete',
+  add: 'Add',
+  remove: 'Remove',
+  male: 'Male',
+  female: 'Female',
+  unknown: 'Unknown',
+  yes: 'Yes',
+  no: 'No',
+  or: 'OR',
+  readOnly: 'Read-Only',
+};

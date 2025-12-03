@@ -1,0 +1,18 @@
+export const alerts = {
+  personDeleteConfirm: 'Are you sure you want to delete this person and all their relationships?',
+  googleDriveSyncSuccess: 'Successfully synced with Google Drive!',
+  googleDriveSyncError: 'Failed to sync with Google Drive.',
+  googleDriveFileSelect: 'Select a Jozor file from Google Drive',
+  googleDriveFileLoadError: 'Failed to load file from Google Drive.',
+  googleDriveFileLoadSuccess: 'File loaded successfully from Google Drive.',
+  googleDriveSaveNewFile: 'Save as new file on Google Drive',
+  googleDriveSaveExistingFile: 'Save to existing file on Google Drive',
+  googleDriveFileName: 'Jozor File Name',
+  googleDriveSaveConfirm: 'Are you sure you want to overwrite the existing file?',
+  googleDriveSaveSuccess: 'File saved to Google Drive successfully!',
+  googleDriveSaveError: 'Failed to save file to Google Drive.',
+  gedcomImportSuccess: 'GEDCOM file imported successfully!',
+  gedcomImportError: 'Failed to import GEDCOM file.',
+  jozorImportSuccess: 'Jozor file imported successfully!',
+  jozorImportError: 'Failed to import Jozor file.',
+};

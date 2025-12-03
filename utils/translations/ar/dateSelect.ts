@@ -1,0 +1,7 @@
+export const dateSelect = {
+  day: 'يوم',
+  month: 'شهر',
+  year: 'سنة',
+  jan: 'يناير', feb: 'فبراير', mar: 'مارس', apr: 'أبريل', may: 'مايو', jun: 'يونيو',
+  jul: 'يوليو', aug: 'أغسطس', sep: 'سبتمبر', oct: 'أكتوبر', nov: 'نوفمبر', dec: 'ديسمبر',
+};
