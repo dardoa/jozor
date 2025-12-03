@@ -49,7 +49,7 @@ export const Header: React.FC<HeaderProps> = ({
   people, onUndo, onRedo, canUndo, canRedo,
   darkMode, setDarkMode, onFocusPerson, language, setLanguage,
   treeSettings, setTreeSettings, toggleSidebar, 
-  onOpenModal, onPresent,
+  onOpenModal, onPresent, // Only keep onOpenModal here
   user, isDemoMode = false, onLogin, onLogout
 }) => {
   const [activeMenu, setActiveMenu] = useState<'none' | 'export' | 'settings' | 'tools' | 'search' | 'user'>('none');
