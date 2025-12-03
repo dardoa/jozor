@@ -1,8 +1,8 @@
 import React, { useCallback, memo } from 'react';
 import { Person, TreeLink, TreeSettings, TreeNode } from '../../types';
-import { CollapsePoint } from '../../utils/treeLayout'; // Corrected import path
+import { CollapsePoint } from '../../utils/treeLayout';
 import { getYears } from '../../utils/familyLogic';
-import { User, Ribbon, ChevronDown, ChevronUp, ChevronRight, ChevronLeft, Plus, BookOpen, Baby, ArrowUp, Heart, ArrowDown, Camera, Sparkles, Loader2, X, Trash2 } from 'lucide-react';
+import { User, Ribbon, ChevronDown, ChevronUp, ChevronRight, ChevronLeft } from 'lucide-react';
 import * as d3 from 'd3';
 
 interface DescendantPedigreeChartProps {
@@ -21,33 +21,40 @@ export const DescendantPedigreeChart: React.FC<DescendantPedigreeChartProps> = m
 }) => {
   const NODE_WIDTH = settings.isCompact ? 130 : 160;
   const NODE_HEIGHT = settings.isCompact ? 170 : 210;
-  const CORNER_RADIUS = 20;
+  const CORNER_RADIUS = 20; // For node corners, not collapse circle
+  const COLLAPSE_CIRCLE_RADIUS = 12; // Radius of the collapse circle
   const isVertical = settings.layoutMode === 'vertical';
 
-  const drawRoundedPath = useCallback((startX: number, startY: number, jointX: number, jointY: number, targetX: number, targetY: number) => {
-    const splitOffset = 30; 
-    const r = CORNER_RADIUS;
-    
+  // New helper function to draw path from collapse point to child
+  const drawChildBranchPath = useCallback((collapsePointX: number, collapsePointY: number, targetX: number, targetY: number) => {
     if (isVertical) {
-        const startBottomY = startY + NODE_HEIGHT / 2; // Start from bottom of source node
-        const targetTopY = targetY - NODE_HEIGHT / 2; // Connect to top of target node
-        
-        if (Math.abs(targetX - jointX) < 1) { // Straight vertical line
-            return `M ${startX} ${startBottomY} V ${targetTopY}`;
+        const startY = collapsePointY + COLLAPSE_CIRCLE_RADIUS; // Start from bottom edge of collapse circle
+        const targetTopY = targetY - NODE_HEIGHT / 2; // Connect to top edge of target node
+
+        // If child is directly below collapse point, draw a straight vertical line
+        if (Math.abs(collapsePointX - targetX) < 1) {
+            return `M ${collapsePointX} ${startY} V ${targetTopY}`;
         }
-        const dirX = targetX > jointX ? 1 : -1;
-        return `M ${startX} ${startBottomY} V ${jointY + splitOffset - r} Q ${jointX} ${jointY + splitOffset} ${jointX + (r * dirX)} ${jointY + splitOffset} H ${targetX - (r * dirX)} Q ${targetX} ${jointY + splitOffset} ${targetX} ${jointY + splitOffset + r} V ${targetTopY}`;
-    } else {
-        const startRightX = startX + NODE_WIDTH / 2; // Start from right of source node
-        const targetLeftX = targetX - NODE_WIDTH / 2; // Connect to left of target node
-        
-        if (Math.abs(targetY - jointY) < 1) { // Straight horizontal line
-            return `M ${startRightX} ${startY} H ${targetLeftX}`;
+
+        // Otherwise, draw a path with a horizontal segment
+        const midY = startY + (targetTopY - startY) / 2; // Midpoint for the horizontal segment
+        return `M ${collapsePointX} ${startY} V ${midY} H ${targetX} V ${targetTopY}`;
+
+    } else { // Horizontal layout
+        const startX = collapsePointX + COLLAPSE_CIRCLE_RADIUS; // Start from right edge of collapse circle
+        const targetLeftX = targetX - NODE_WIDTH / 2; // Connect to left edge of target node
+
+        // If child is directly to the right of collapse point, draw a straight horizontal line
+        if (Math.abs(collapsePointY - targetY) < 1) {
+            return `M ${startX} ${collapsePointY} H ${targetLeftX}`;
         }
-        const dirY = targetY > jointY ? 1 : -1;
-        return `M ${startRightX} ${startY} H ${jointX + splitOffset - r} Q ${jointX + splitOffset} ${jointY} ${jointX + splitOffset} ${jointY + (r * dirY)} V ${targetY - (r * dirY)} Q ${jointX + splitOffset} ${targetY} ${jointX + splitOffset + r} ${targetY} H ${targetLeftX}`;
+
+        // Otherwise, draw a path with a vertical segment
+        const midX = startX + (targetLeftX - startX) / 2; // Midpoint for the vertical segment
+        return `M ${startX} ${collapsePointY} H ${midX} V ${targetY} H ${targetLeftX}`;
     }
   }, [isVertical, NODE_HEIGHT, NODE_WIDTH]);
+
 
   const getLinkPath = useCallback((link: TreeLink) => {
     const source = nodes.find(n => n.id === link.source);
@@ -70,19 +77,21 @@ export const DescendantPedigreeChart: React.FC<DescendantPedigreeChartProps> = m
     if (settings.chartType === 'descendant' && link.type === 'parent-child') {
         const childData = target.data as Person;
         let correctJoint = null;
+        // Find the correct collapse point for this parent-child relationship
         if (childData.parents.length > 1) {
            const otherParentId = childData.parents.find(id => people[id]?.id !== (source.data as Person).id); 
            if (otherParentId) {
               correctJoint = collapsePoints.find(cp => cp.id === (source.data as Person).id && cp.spouseId === otherParentId);
            }
         }
+        // If no specific spouse joint, check for single parent joint
         if (!correctJoint) correctJoint = collapsePoints.find(cp => cp.id === (source.data as Person).id && cp.spouseId === 'single');
         
         if (correctJoint) {
-            const startX = source.x;
-            const startY = source.y;
-            return drawRoundedPath(startX, startY, correctJoint.x, correctJoint.y, target.x, target.y);
+            // Use the new helper to draw the path from the collapse point to the child
+            return drawChildBranchPath(correctJoint.x, correctJoint.y, target.x, target.y);
         }
+        // Fallback if no collapse point is found (e.g., if the parent has no children in the current view)
         const startBottomX = source.x;
         const startBottomY = source.y + NODE_HEIGHT / 2;
         const targetTopX = target.x;
@@ -90,7 +99,7 @@ export const DescendantPedigreeChart: React.FC<DescendantPedigreeChartProps> = m
         return `M ${startBottomX} ${startBottomY} L ${targetTopX} ${targetTopY}`;
     }
     return `M ${source.x} ${source.y} L ${target.x} ${target.y}`;
-  }, [nodes, settings.chartType, collapsePoints, drawRoundedPath, NODE_WIDTH, NODE_HEIGHT, people]);
+  }, [nodes, settings.chartType, collapsePoints, drawChildBranchPath, NODE_WIDTH, NODE_HEIGHT, people]);
 
   return (
     <>
@@ -118,9 +127,10 @@ export const DescendantPedigreeChart: React.FC<DescendantPedigreeChartProps> = m
         if (settings.chartType !== 'descendant') return null;
         return (
           <React.Fragment key={cp.uniqueKey}>
+            {/* Line from parent(s) midpoint to the collapse circle */}
             <path d={`M ${cp.originX} ${cp.originY} L ${cp.x} ${cp.y}`} fill="none" className="stroke-stone-400 dark:stroke-stone-500" strokeWidth={2} strokeLinecap="round" />
             <g transform={`translate(${cp.x}, ${cp.y})`} onClick={(e) => { e.stopPropagation(); toggleCollapse(cp.uniqueKey); }} className="cursor-pointer group">
-              <circle r="12" className="fill-white dark:fill-stone-900 stroke-stone-200 dark:stroke-stone-700 stroke-2 shadow-sm transition-all group-hover:scale-110 group-hover:stroke-teal-400 group-hover:shadow-md" />
+              <circle r={COLLAPSE_CIRCLE_RADIUS} className="fill-white dark:fill-stone-900 stroke-stone-200 dark:stroke-stone-700 stroke-2 shadow-sm transition-all group-hover:scale-110 group-hover:stroke-teal-400 group-hover:shadow-md" />
               {cp.isCollapsed ? (
                 isVertical ? <ChevronDown x={-8} y={-8} className="w-4 h-4 text-stone-500 dark:text-stone-400 group-hover:text-teal-500" strokeWidth={2} /> : <ChevronRight x={-8} y={-8} className="w-4 h-4 text-stone-500 group-hover:text-teal-500" strokeWidth={2} />
               ) : (
