@@ -90,21 +90,21 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
                             )}
                         </div>
                         {person.isDeceased && (
-                            <div className="absolute -top-2 -end-2 bg-white dark:bg-stone-800 rounded-full p-1 shadow-sm border border-stone-100 dark:border-stone-700 z-10">
-                                <Ribbon className="w-4 h-4 text-stone-600 dark:text-stone-400 fill-current" />
-                            </div>
+                            <>
+                                <div className="absolute -top-2 -end-2 bg-white dark:bg-stone-800 rounded-full p-1 shadow-sm border border-stone-100 dark:border-stone-700 z-10">
+                                    <Ribbon className="w-4 h-4 text-stone-600 dark:text-stone-400 fill-current" />
+                                </div>
+                                {/* Chat with Ancestor button */}
+                                <button 
+                                    onClick={(e) => { e.stopPropagation(); onOpenModal('chat'); }} 
+                                    className="p-1.5 bg-purple-600/90 hover:bg-purple-700 text-white rounded-full shadow-lg transition-all z-20 border border-white/20"
+                                    title={t.chatWithAncestor}
+                                >
+                                    <MessageCircle className="w-4 h-4" />
+                                </button>
+                            </>
                         )}
                     </div>
-                    {person.isDeceased && (
-                        /* Chat with Ancestor button - now a sibling to the image container */
-                        <button 
-                            onClick={(e) => { e.stopPropagation(); onOpenModal('chat'); }} 
-                            className="p-1.5 bg-purple-600/90 hover:bg-purple-700 text-white rounded-full shadow-lg transition-all z-20 border border-white/20"
-                            title={t.chatWithAncestor}
-                        >
-                            <MessageCircle className="w-4 h-4" />
-                        </button>
-                    )}
                 </div>
 
                 {/* Info */}
@@ -170,12 +170,12 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
     <>
     <div className="flex flex-col gap-4 animate-in fade-in duration-200">
         {/* Profile Picture & Smart Fill */}
-        <div className="flex items-start gap-3 relative">
+        <div className="flex flex-col items-center gap-3 relative"> {/* Changed to flex-col items-center */}
             <div className="shrink-0 space-y-1.5">
                 <div 
                     onClick={() => fileInputRef.current?.click()}
-                    className="w-20 h-20 rounded-xl border-2 border-dashed border-stone-300 dark:border-stone-600 hover:border-teal-400 dark:hover:border-teal-400 bg-stone-50 dark:bg-stone-800 flex flex-col items-center justify-center cursor-pointer relative overflow-hidden group transition-all"
-                >
+                    className="w-24 h-24 rounded-xl border-2 border-dashed border-stone-300 dark:border-stone-600 hover:border-teal-400 dark:hover:border-teal-400 bg-stone-50 dark:bg-stone-800 flex flex-col items-center justify-center cursor-pointer relative overflow-hidden group transition-all"
+                > {/* Changed w-20 h-20 to w-24 h-24 */}
                     {person.photoUrl ? (
                         <>
                             <img src={person.photoUrl} alt="" className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
@@ -188,11 +188,9 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
                             </button>
                         </>
                     ) : (
-                        <Camera className="w-7 h-7 text-stone-300 dark:text-stone-500 group-hover:text-teal-400 transition-colors" />
+                        // Changed w-7 h-7 to w-8 h-8
+                        <Camera className="w-8 h-8 text-stone-300 dark:text-stone-500 group-hover:text-teal-400 transition-colors" /> 
                     )}
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/20 transition-colors">
-                        <span className="text-[9px] font-bold text-white bg-black/60 px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm">{t.changePhoto}</span>
-                    </div>
                 </div>
                 <input 
                     ref={fileInputRef}
@@ -203,14 +201,14 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
                 />
             </div>
 
-            <div className="flex-1 flex flex-col items-start gap-y-1">
+            <div className="flex flex-col items-center gap-y-1 w-full"> {/* Adjusted for vertical alignment */}
                 <button 
                     onClick={() => setShowSmartModal(true)}
                     className="py-1 px-4 bg-gradient-to-r from-purple-500 to-indigo-600 text-white text-xs font-bold rounded-xl shadow-md hover:shadow-lg hover:scale-[1.01] transition-all flex items-center justify-center gap-1.5"
                 >
                     <Sparkles className="w-3.5 h-3.5" /> {t.smartFill}
                 </button>
-                <p className="text-[9px] text-stone-500 dark:text-stone-400 mt-0.5 text-start">{t.smartFillDescription}</p>
+                <p className="text-[9px] text-stone-500 dark:text-stone-400 mt-0.5 text-center">{t.smartFillDescription}</p>
             </div>
         </div>
 
