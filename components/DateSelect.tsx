@@ -95,7 +95,6 @@ export const DateSelect: React.FC<DateSelectProps> = ({ value, onChange, disable
         value={day} 
         onChange={handleDayChange} 
         disabled={disabled || !month} // Disable day if no month selected
-        {/* Adjusted width and padding */}
         className={`w-14 px-1.5 ${inputBaseClass} ${disabledClass}`} 
       >
         <option value="">DD</option>
@@ -109,7 +108,6 @@ export const DateSelect: React.FC<DateSelectProps> = ({ value, onChange, disable
         value={month} 
         onChange={handleMonthChange} 
         disabled={disabled}
-        {/* Adjusted width and padding */}
         className={`w-16 px-1.5 ${inputBaseClass} ${disabledClass}`} 
       >
         <option value="">MM</option>
@@ -126,7 +124,6 @@ export const DateSelect: React.FC<DateSelectProps> = ({ value, onChange, disable
         disabled={disabled}
         placeholder="YYYY"
         maxLength={4}
-        {/* Adjusted width and padding */}
         className={`w-16 px-2 text-center ${inputBaseClass} ${disabledClass}`} 
       />
     </div>

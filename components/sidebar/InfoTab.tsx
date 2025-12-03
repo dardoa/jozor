@@ -299,13 +299,13 @@ export const InfoTab: React.FC<InfoTabProps> = ({
                 <div className="col-span-2">
                      <div className="flex items-center gap-1.5">
                          <BookOpen className="w-3 h-3 text-gray-400" />
+                         {/* Updated height to !h-7 */}
                          <FormField
                             label={t.source}
                             value={person.birthSource}
                             onCommit={(v) => handleChange('birthSource', v)}
                             disabled={!isEditing}
                             placeholder={t.sourcePlaceholder}
-                            {/* Updated height to !h-7 */}
                             className="!h-7 !text-[10px] placeholder:italic" 
                             labelWidthClass="w-auto"
                          />
@@ -331,13 +331,13 @@ export const InfoTab: React.FC<InfoTabProps> = ({
                      <div className="col-span-2">
                          <div className="flex items-center gap-1.5">
                              <BookOpen className="w-3 h-3 text-gray-400" />
+                             {/* Updated height to !h-7 */}
                              <FormField
                                 label={t.source}
                                 value={person.deathSource}
                                 onCommit={(v) => handleChange('deathSource', v)}
                                 disabled={!isEditing}
                                 placeholder={t.sourcePlaceholder}
-                                {/* Updated height to !h-7 */}
                                 className="!h-7 !text-[10px] placeholder:italic" 
                                 labelWidthClass="w-auto"
                              />
