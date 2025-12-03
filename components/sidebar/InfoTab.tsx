@@ -155,26 +155,26 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
     <>
     <div className="flex flex-col gap-5 animate-in fade-in duration-200">
         {/* Profile Picture & Smart Fill */}
-        <div className="flex items-start gap-4 relative"> {/* Changed items-center to items-start */}
+        <div className="flex items-start gap-4 relative">
             <div className="shrink-0 space-y-2">
                 <div 
                     onClick={() => fileInputRef.current?.click()}
                     className="w-24 h-24 rounded-xl border-2 border-dashed border-stone-300 dark:border-stone-600 hover:border-teal-400 dark:hover:border-teal-400 bg-stone-50 dark:bg-stone-800 flex flex-col items-center justify-center cursor-pointer relative overflow-hidden group transition-all"
-                > {/* Increased from w-20 h-20 to w-24 h-24 */}
+                >
                     {person.photoUrl ? (
                         <img src={person.photoUrl} alt="" className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
                     ) : (
                         <Camera className="w-8 h-8 text-stone-300 dark:text-stone-500 group-hover:text-teal-400 transition-colors" /> 
                     )}
                     <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/20 transition-colors">
-                        <span className="text-[10px] font-bold text-white bg-black/60 px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm">{t.changePhoto}</span> {/* Changed text-[9px] to text-[10px] */}
+                        <span className="text-[10px] font-bold text-white bg-black/60 px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm">{t.changePhoto}</span>
                     </div>
                 </div>
                 {person.photoUrl && (
                     <button 
                         onClick={() => handleChange('photoUrl', '')}
                         className="text-xs font-bold text-red-500 hover:text-red-700 w-full text-center bg-red-50 dark:bg-red-900/10 py-1 rounded-lg hover:bg-red-100 transition-colors"
-                    > {/* Changed text-[10px] to text-xs and py-1.5 to py-1 */}
+                    >
                         {t.removePhoto}
                     </button>
                 )}
@@ -187,14 +187,14 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
                 />
             </div>
 
-            <div className="flex-1 flex flex-col items-start gap-y-2"> {/* Changed items-center to items-start and added gap-y-2 */}
+            <div className="flex-1 flex flex-col items-start gap-y-2">
                 <button 
                     onClick={() => setShowSmartModal(true)}
                     className="py-1.5 px-4 bg-gradient-to-r from-purple-500 to-indigo-600 text-white text-xs font-bold rounded-xl shadow-md hover:shadow-lg hover:scale-[1.01] transition-all flex items-center justify-center gap-1.5"
                 >
                     <Sparkles className="w-3.5 h-3.5" /> {t.smartFill}
                 </button>
-                <p className="text-[10px] text-stone-500 dark:text-stone-400 mt-0.5 text-start">{t.smartFillDescription}</p> {/* Changed mt-1 to mt-0.5 and text-center to text-start */}
+                <p className="text-[10px] text-stone-500 dark:text-stone-400 mt-0.5 text-start">{t.smartFillDescription}</p>
             </div>
         </div>
 
@@ -218,24 +218,24 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
             <div className="flex items-center gap-4">
                 <div className="flex items-center gap-3">
                     <label className="flex items-center gap-2 cursor-pointer group">
-                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors ${person.gender === 'male' ? 'border-blue-500 bg-blue-500' : 'border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-700'}`}> {/* Reduced from w-5 h-5 to w-4 h-4 */}
-                            {person.gender === 'male' && <div className="w-1.5 h-1.5 bg-white rounded-full"></div>} {/* Adjusted inner dot */}
+                        <div className={`w-4.5 h-4.5 rounded-full border-2 flex items-center justify-center transition-colors ${person.gender === 'male' ? 'border-blue-500 bg-blue-500' : 'border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-700'}`}>
+                            {person.gender === 'male' && <div className="w-2 h-2 bg-white rounded-full"></div>}
                         </div>
                         <input type="radio" name="gender" value="male" checked={person.gender === 'male'} onChange={() => handleChange('gender', 'male')} className="hidden" />
-                        <span className="text-sm font-medium text-stone-700 dark:text-stone-300 group-hover:text-blue-600 transition-colors">{t.male}</span>
+                        <span className="text-base font-medium text-stone-700 dark:text-stone-300 group-hover:text-blue-600 transition-colors">{t.male}</span>
                     </label>
                     <label className="flex items-center gap-2 cursor-pointer group">
-                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors ${person.gender === 'female' ? 'border-pink-500 bg-pink-500' : 'border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-700'}`}> {/* Reduced from w-5 h-5 to w-4 h-4 */}
-                            {person.gender === 'female' && <div className="w-1.5 h-1.5 bg-white rounded-full"></div>} {/* Adjusted inner dot */}
+                        <div className={`w-4.5 h-4.5 rounded-full border-2 flex items-center justify-center transition-colors ${person.gender === 'female' ? 'border-pink-500 bg-pink-500' : 'border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-700'}`}>
+                            {person.gender === 'female' && <div className="w-2 h-2 bg-white rounded-full"></div>}
                         </div>
                         <input type="radio" name="gender" value="female" checked={person.gender === 'female'} onChange={() => handleChange('gender', 'female')} className="hidden" />
-                        <span className="text-sm font-medium text-stone-700 dark:text-stone-300 group-hover:text-pink-600 transition-colors">{t.female}</span>
+                        <span className="text-base font-medium text-stone-700 dark:text-stone-300 group-hover:text-pink-600 transition-colors">{t.female}</span>
                     </label>
                 </div>
-                <div className="h-6 w-px bg-stone-300 dark:bg-stone-600 mx-2"></div>
+                <div className="h-7 w-px bg-stone-300 dark:bg-stone-600 mx-2"></div>
                 <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={!person.isDeceased} onChange={(e) => handleChange('isDeceased', !e.target.checked)} className="w-3.5 h-3.5 rounded text-emerald-600 focus:ring-0 cursor-pointer border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-700" /> {/* Reduced from w-4 h-4 to w-3.5 h-3.5 */}
-                    <span className="text-sm font-medium text-stone-700 dark:text-stone-300">{person.isDeceased ? t.deceased : t.living}</span>
+                    <input type="checkbox" checked={!person.isDeceased} onChange={(e) => handleChange('isDeceased', !e.target.checked)} className="w-4.5 h-4.5 rounded text-emerald-600 focus:ring-0 cursor-pointer border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-700" />
+                    <span className="text-base font-medium text-stone-700 dark:text-stone-300">{person.isDeceased ? t.deceased : t.living}</span>
                 </label>
             </div>
         </div>
