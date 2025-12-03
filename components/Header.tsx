@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { Person, HistoryControlsProps, ThemeLanguageProps, AuthProps, ViewSettingsProps, ToolsActionsProps, ExportActionsProps, HeaderLeftSectionProps, HeaderRightSectionProps } from '../types';
+import { Person, HistoryControlsProps, ThemeLanguageProps, AuthProps, ViewSettingsProps, ToolsActionsProps, ExportActionsProps } from '../types';
 // Removed getTranslation import as it's not directly used in this file.
 // Removed lucide-react imports as they are now handled by sub-components
 
