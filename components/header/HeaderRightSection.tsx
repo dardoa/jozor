@@ -1,5 +1,5 @@
 import React, { useState, memo } from 'react';
-import { Person, Language, TreeSettings, UserProfile, ThemeLanguageProps, AuthProps, ViewSettingsProps, ToolsActionsProps, ExportActionsProps } from '../../types'; // Import grouped props
+import { Person, HeaderRightSectionProps } from '../../types'; // Import HeaderRightSectionProps
 import { 
   Search, X, Moon, Sun, ChevronDown, Share2, Hammer, SlidersHorizontal
 } from 'lucide-react';
@@ -9,17 +9,6 @@ import { ToolsMenu } from './ToolsMenu';
 import { ViewSettingsMenu } from './ViewSettingsMenu';
 import { UserMenu } from './UserMenu';
 import { SearchInputWithResults } from './SearchInputWithResults';
-
-interface HeaderRightSectionProps {
-  people: Record<string, Person>;
-  onFocusPerson: (id: string) => void;
-  t: any;
-  themeLanguage: ThemeLanguageProps;
-  auth: AuthProps;
-  viewSettings: ViewSettingsProps;
-  toolsActions: ToolsActionsProps;
-  exportActions: ExportActionsProps;
-}
 
 export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(({
   people, onFocusPerson, t,

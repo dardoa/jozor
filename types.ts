@@ -157,3 +157,21 @@ export interface ToolsActionsProps {
 export interface ExportActionsProps {
   handleExport: (type: 'jozor' | 'json' | 'gedcom' | 'ics' | 'print') => Promise<void>;
 }
+
+export interface HeaderLeftSectionProps {
+  language: Language;
+  t: any;
+  toggleSidebar: () => void;
+  historyControls: HistoryControlsProps;
+}
+
+export interface HeaderRightSectionProps {
+  people: Record<string, Person>;
+  onFocusPerson: (id: string) => void;
+  t: any;
+  themeLanguage: ThemeLanguageProps;
+  auth: AuthProps;
+  viewSettings: ViewSettingsProps;
+  toolsActions: ToolsActionsProps;
+  exportActions: ExportActionsProps;
+}

@@ -1,31 +1,11 @@
 import React, { memo } from 'react';
-import { Person, Language, TreeSettings, UserProfile, HistoryControlsProps, ThemeLanguageProps, AuthProps, ViewSettingsProps, ToolsActionsProps, ExportActionsProps } from '../types';
+import { Person, HistoryControlsProps, ThemeLanguageProps, AuthProps, ViewSettingsProps, ToolsActionsProps, ExportActionsProps, HeaderLeftSectionProps, HeaderRightSectionProps } from '../types';
 import { getTranslation } from '../utils/translations';
 // Removed lucide-react imports as they are now handled by sub-components
 
 // Import sub-components
 import { HeaderLeftSection } from './header/HeaderLeftSection';
 import { HeaderRightSection } from './header/HeaderRightSection';
-
-// Update HeaderLeftSectionProps
-interface HeaderLeftSectionProps {
-  language: Language; // Still needed for dir attribute
-  t: any;
-  toggleSidebar: () => void;
-  historyControls: HistoryControlsProps;
-}
-
-// Update HeaderRightSectionProps
-interface HeaderRightSectionProps {
-  people: Record<string, Person>;
-  onFocusPerson: (id: string) => void;
-  t: any;
-  themeLanguage: ThemeLanguageProps;
-  auth: AuthProps;
-  viewSettings: ViewSettingsProps;
-  toolsActions: ToolsActionsProps;
-  exportActions: ExportActionsProps;
-}
 
 // Update HeaderProps
 interface HeaderProps {

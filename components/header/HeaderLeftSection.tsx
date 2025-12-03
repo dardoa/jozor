@@ -1,14 +1,7 @@
 import React, { memo } from 'react';
 import { Undo, Redo, Menu } from 'lucide-react';
 import { Logo } from '../Logo';
-import { Language, HistoryControlsProps } from '../../types'; // Import HistoryControlsProps
-
-interface HeaderLeftSectionProps {
-  language: Language;
-  t: any;
-  toggleSidebar: () => void;
-  historyControls: HistoryControlsProps;
-}
+import { HeaderLeftSectionProps } from '../../types'; // Import HeaderLeftSectionProps
 
 export const HeaderLeftSection: React.FC<HeaderLeftSectionProps> = memo(({
   language, t, toggleSidebar, historyControls
