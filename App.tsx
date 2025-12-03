@@ -43,9 +43,9 @@ const App: React.FC = () => {
     enableForcePhysics: true // Default enabled
   });
 
-  // Local Preferences (still local to App as they are global settings)
-  const [language, setLanguage] = useState<Language>('ar');
-  const [darkMode, setDarkMode] = useState(false);
+  // Local Preferences (now managed by their respective hooks)
+  const { language, setLanguage } = useLanguageSync();
+  const { darkMode, setDarkMode } = useThemeSync(treeSettings.theme);
 
   const t = getTranslation(language);
   const activePerson = people[focusId];
@@ -74,8 +74,6 @@ const App: React.FC = () => {
   });
 
   // --- Custom Hooks for Side Effects ---
-  useThemeSync(darkMode, setDarkMode, treeSettings.theme);
-  useLanguageSync(language, setLanguage);
   // Corrected: Use destructured values from useAppUI instead of calling it again
   useKeyboardShortcuts(history.length > 0, undo, future.length > 0, redo, showWelcome, isPresentMode, setIsPresentMode);
 

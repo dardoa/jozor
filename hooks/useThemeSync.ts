@@ -1,7 +1,9 @@
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { AppTheme } from '../types';
 
-export const useThemeSync = (darkMode: boolean, setDarkMode: (v: boolean) => void, currentTheme: AppTheme) => {
+export const useThemeSync = (currentTheme: AppTheme) => {
+  const [darkMode, setDarkMode] = useState(false);
+
   useEffect(() => {
     const root = document.documentElement;
     root.classList.toggle('dark', darkMode);
@@ -27,5 +29,7 @@ export const useThemeSync = (darkMode: boolean, setDarkMode: (v: boolean) => voi
         setDarkMode(false);
       }
     }
-  }, [setDarkMode]);
+  }, []); // Empty dependency array for initialization
+
+  return { darkMode, setDarkMode };
 };

@@ -1,7 +1,9 @@
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Language } from '../types';
 
-export const useLanguageSync = (language: Language, setLanguage: (l: Language) => void) => {
+export const useLanguageSync = () => {
+  const [language, setLanguage] = useState<Language>('ar'); // Default to Arabic as per existing logic
+
   useEffect(() => {
     const root = document.documentElement;
     const dir = language === 'ar' ? 'rtl' : 'ltr';
@@ -21,5 +23,7 @@ export const useLanguageSync = (language: Language, setLanguage: (l: Language) =
         setLanguage('ar');
       }
     }
-  }, [setLanguage]);
+  }, []); // Empty dependency array for initialization
+
+  return { language, setLanguage };
 };
