@@ -76,8 +76,8 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, languag
         <div className="p-6 space-y-6">
             
             {/* Invite Section */}
-            <div>
-                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">{t.inviteCollaborator}</label>
+            <div className="bg-white dark:bg-gray-800 pt-5 p-3 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm space-y-2 relative">
+                <h3 className="absolute top-[-12px] start-3 z-10 bg-white dark:bg-gray-800 px-2 text-[9px] font-bold text-gray-400 uppercase tracking-wider">{t.inviteCollaborator}</h3>
                 <form onSubmit={handleInvite} className="flex gap-2">
                     <div className="flex-1 relative">
                         <Mail className="absolute start-3 top-2.5 w-4 h-4 text-gray-400" />
@@ -121,8 +121,8 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, languag
             </div>
 
             {/* Collaborators List */}
-            <div>
-                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">{t.collaborators}</label>
+            <div className="bg-white dark:bg-gray-800 pt-5 p-3 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm space-y-2 relative">
+                <h3 className="absolute top-[-12px] start-3 z-10 bg-white dark:bg-gray-800 px-2 text-[9px] font-bold text-gray-400 uppercase tracking-wider">{t.collaborators}</h3>
                 <div className="border border-gray-100 dark:border-gray-700 rounded-xl overflow-hidden">
                     {collaborators.map((c, idx) => (
                         <div key={idx} className="flex items-center justify-between p-3 border-b border-gray-50 dark:border-gray-800 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">

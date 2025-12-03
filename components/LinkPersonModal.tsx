@@ -65,8 +65,8 @@ export const LinkPersonModal: React.FC<LinkPersonModalProps> = ({
         <div className="p-6 space-y-6 overflow-y-auto bg-white dark:bg-gray-800">
           
           {/* Option 1: New Person */}
-          <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">{t.createNewProfile}</label>
+          <div className="bg-white dark:bg-gray-800 pt-5 p-3 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm space-y-2 relative">
+              <h3 className="absolute top-[-12px] start-3 z-10 bg-white dark:bg-gray-800 px-2 text-[9px] font-bold text-gray-400 uppercase tracking-wider">{t.createNewProfile}</h3>
               <button 
                 onClick={onCreateNew}
                 className="w-full flex items-center gap-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900/40 hover:border-blue-200 dark:hover:border-blue-700 transition-all group text-start"
@@ -88,8 +88,8 @@ export const LinkPersonModal: React.FC<LinkPersonModalProps> = ({
           </div>
 
           {/* Option 2: Existing Person */}
-          <div className="space-y-3">
-             <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">{t.selectExisting}</label>
+          <div className="bg-white dark:bg-gray-800 pt-5 p-3 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm space-y-3 relative">
+             <h3 className="absolute top-[-12px] start-3 z-10 bg-white dark:bg-gray-800 px-2 text-[9px] font-bold text-gray-400 uppercase tracking-wider">{t.selectExisting}</h3>
             
              <div className="relative">
                 <Search className="absolute start-3 top-2.5 w-4 h-4 text-gray-400" />
