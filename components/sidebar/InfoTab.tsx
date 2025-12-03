@@ -215,14 +215,14 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
         {/* Identity Section */}
         <div className="bg-white dark:bg-stone-800 pt-5 p-3 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-2 relative">
             <h3 className="absolute top-[-12px] start-3 z-10 bg-white dark:bg-stone-800 px-2 text-[9px] font-bold text-stone-400 uppercase tracking-wider">{t.identity}</h3>
-            <div className="grid grid-cols-2 gap-2">
-                <FormField label={t.firstName} value={person.firstName} onCommit={(v) => handleChange('firstName', v)} disabled={!isEditing} labelWidthClass="w-16" />
-                <FormField label={t.middleName} value={person.middleName} onCommit={(v) => handleChange('middleName', v)} disabled={!isEditing} labelWidthClass="w-16" />
-                <FormField label={t.lastName} value={person.lastName} onCommit={(v) => handleChange('lastName', v)} disabled={!isEditing} labelWidthClass="w-16" />
-                <FormField label={t.birthName} value={person.birthName} onCommit={(v) => handleChange('birthName', v)} disabled={!isEditing} labelWidthClass="w-16" />
-                <FormField label={t.nickName} value={person.nickName} onCommit={(v) => handleChange('nickName', v)} disabled={!isEditing} labelWidthClass="w-16" />
-                <FormField label={t.title} value={person.title} onCommit={(v) => handleChange('title', v)} disabled={!isEditing} labelWidthClass="w-16" />
-                <FormField label={t.suffix} value={person.suffix} onCommit={(v) => handleChange('suffix', v)} disabled={!isEditing} labelWidthClass="w-16" />
+            <div className="space-y-2"> {/* Changed from grid grid-cols-2 gap-2 to space-y-2 */}
+                <FormField label={t.firstName} value={person.firstName} onCommit={(v) => handleChange('firstName', v)} disabled={!isEditing} labelWidthClass="w-20" />
+                <FormField label={t.middleName} value={person.middleName} onCommit={(v) => handleChange('middleName', v)} disabled={!isEditing} labelWidthClass="w-20" />
+                <FormField label={t.lastName} value={person.lastName} onCommit={(v) => handleChange('lastName', v)} disabled={!isEditing} labelWidthClass="w-20" />
+                <FormField label={t.birthName} value={person.birthName} onCommit={(v) => handleChange('birthName', v)} disabled={!isEditing} labelWidthClass="w-20" />
+                <FormField label={t.nickName} value={person.nickName} onCommit={(v) => handleChange('nickName', v)} disabled={!isEditing} labelWidthClass="w-20" />
+                <FormField label={t.title} value={person.title} onCommit={(v) => handleChange('title', v)} disabled={!isEditing} labelWidthClass="w-20" />
+                <FormField label={t.suffix} value={person.suffix} onCommit={(v) => handleChange('suffix', v)} disabled={!isEditing} labelWidthClass="w-20" />
             </div>
         </div>
 
