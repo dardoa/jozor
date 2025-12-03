@@ -8,9 +8,10 @@ import { ModalManager } from './components/ModalManager';
 import { Gender, Language, TreeSettings } from './types';
 import { useFamilyTree } from './hooks/useFamilyTree';
 import { useGoogleSync } from './hooks/useGoogleSync';
-import { useThemeSync } from './hooks/useThemeSync'; // New import
-import { useLanguageSync } from './hooks/useLanguageSync'; // New import
-import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts'; // New import
+import { useThemeSync } from './hooks/useThemeSync';
+import { useLanguageSync } from './hooks/useLanguageSync';
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
+import { useAppUI } from './hooks/useAppUI'; // New import
 
 import { INITIAL_ROOT_ID } from './constants';
 import { getTranslation } from './utils/translations';
@@ -27,20 +28,8 @@ const App: React.FC = () => {
   // --- Sync & Auth ---
   const { user, isSyncing, isDemoMode, handleLogin, handleLogout, stopSyncing } = useGoogleSync(people, loadCloudData);
 
-  // --- UI State ---
-  const [showWelcome, setShowWelcome] = useState<boolean>(true);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [activeModal, setActiveModal] = useState<'none' | 'calculator' | 'stats' | 'chat' | 'consistency' | 'timeline' | 'share' | 'story' | 'map'>('none');
-  const [isPresentMode, setIsPresentMode] = useState(false);
-  
-  // Link Person Modal State
-  const [linkModal, setLinkModal] = useState<{
-    isOpen: boolean;
-    type: 'parent' | 'spouse' | 'child' | null;
-    gender: Gender | null;
-  }>({ isOpen: false, type: null, gender: null });
-
-  // Settings State
+  // --- UI State (now managed by useAppUI) ---
+  // Settings State (still local to App as it's a global setting)
   const [treeSettings, setTreeSettings] = useState<TreeSettings>({
     showPhotos: true,
     showDates: true,
@@ -54,70 +43,41 @@ const App: React.FC = () => {
     enableForcePhysics: true // Default enabled
   });
 
-  // Local Preferences
-  const [language, setLanguage] = useState<Language>('ar'); // Initialized by hook
-  const [darkMode, setDarkMode] = useState(false); // Initialized by hook
+  // Local Preferences (still local to App as they are global settings)
+  const [language, setLanguage] = useState<Language>('ar');
+  const [darkMode, setDarkMode] = useState(false);
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const activePerson = people[focusId];
   const t = getTranslation(language);
+  const activePerson = people[focusId];
+
+  // --- useAppUI Hook ---
+  const {
+    showWelcome,
+    sidebarOpen, setSidebarOpen,
+    activeModal, setActiveModal,
+    isPresentMode, setIsPresentMode,
+    linkModal, setLinkModal,
+    fileInputRef,
+    handleOpenLinkModal,
+    handleCreateNewRelative,
+    handleSelectExistingRelative,
+    handleStartNewTree,
+    onFileUpload,
+    handleLoginWrapper,
+    handleLogoutWrapper,
+    handleOpenModal,
+  } = useAppUI({
+    people, t, startNewTree, stopSyncing, handleImport, 
+    handleLogin: handleLogin, // Pass handleLogin from useGoogleSync
+    handleLogout: handleLogout, // Pass handleLogout from useGoogleSync
+    addParent, addSpouse, addChild, linkPerson, setFocusId
+  });
 
   // --- Custom Hooks for Side Effects ---
-  useThemeSync(darkMode, setDarkMode, treeSettings.theme); // Using new hook
-  useLanguageSync(language, setLanguage); // Using new hook
-  useKeyboardShortcuts(history.length > 0, undo, future.length > 0, redo, showWelcome, isPresentMode, setIsPresentMode); // Using new hook
-
-  useEffect(() => {
-    const hasData = Object.keys(people).length > 1 || people[INITIAL_ROOT_ID].firstName !== 'Me';
-    if (hasData) setShowWelcome(false);
-  }, []);
-
-  // --- Action Handlers ---
-
-  const handleOpenLinkModal = useCallback((type: 'parent' | 'spouse' | 'child', gender: Gender) => {
-    setLinkModal({ isOpen: true, type, gender });
-  }, []);
-
-  const handleCreateNewRelative = useCallback(() => {
-     if (!linkModal.type || !linkModal.gender) return;
-     const actions = { parent: addParent, spouse: addSpouse, child: addChild };
-     actions[linkModal.type](linkModal.gender);
-     setLinkModal({ isOpen: false, type: null, gender: null });
-  }, [linkModal, addParent, addSpouse, addChild]);
-
-  const handleSelectExistingRelative = useCallback((id: string) => {
-    linkPerson(id, linkModal.type);
-    setLinkModal({ isOpen: false, type: null, gender: null });
-  }, [linkModal, linkPerson]);
-
-  const handleStartNewTree = useCallback(() => {
-    if (Object.keys(people).length > 2 && !confirm(t.newTreeConfirm)) return;
-    startNewTree();
-    stopSyncing();
-    setShowWelcome(false);
-  }, [people, t, startNewTree, stopSyncing]);
-
-  const onFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (await handleImport(file)) setShowWelcome(false);
-    e.target.value = '';
-  };
-
-  const handleLoginWrapper = async () => {
-      const success = await handleLogin();
-      if (success) setShowWelcome(false);
-  };
-
-  const handleLogoutWrapper = async () => {
-      await handleLogout();
-      setShowWelcome(true);
-  };
-
-  // New consolidated modal opener
-  const handleOpenModal = useCallback((modalType: 'calculator' | 'stats' | 'chat' | 'consistency' | 'timeline' | 'share' | 'story' | 'map') => {
-      setActiveModal(modalType);
-  }, []);
+  useThemeSync(darkMode, setDarkMode, treeSettings.theme);
+  useLanguageSync(language, setLanguage);
+  // Corrected: Use destructured values from useAppUI instead of calling it again
+  useKeyboardShortcuts(history.length > 0, undo, future.length > 0, redo, showWelcome, isPresentMode, setIsPresentMode);
 
   return (
     <div className={`flex flex-col h-screen font-sans transition-colors duration-300 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 overflow-hidden theme-${treeSettings.theme}`} dir={language === 'ar' ? 'rtl' : 'ltr'}>
@@ -143,7 +103,7 @@ const App: React.FC = () => {
                     language={language} setLanguage={setLanguage}
                     treeSettings={treeSettings} setTreeSettings={setTreeSettings}
                     toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-                    onOpenModal={handleOpenModal} // Consolidated modal opener
+                    onOpenModal={handleOpenModal}
                     onPresent={() => setIsPresentMode(true)}
                     user={user} isDemoMode={isDemoMode}
                     onLogin={handleLoginWrapper} onLogout={handleLogoutWrapper}
@@ -184,7 +144,7 @@ const App: React.FC = () => {
                             language={language}
                             isOpen={sidebarOpen}
                             onClose={() => setSidebarOpen(false)}
-                            onOpenModal={handleOpenModal} // Fixed: Changed from onChat to onOpenModal
+                            onOpenModal={handleOpenModal}
                             user={user}
                         />
                     </div>
