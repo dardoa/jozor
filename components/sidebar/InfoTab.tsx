@@ -203,8 +203,8 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
         </div>
 
         {/* Identity Section */}
-        <div className="bg-white dark:bg-stone-800 pt-4 p-3 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-2 relative"> {/* Changed pt-5 to pt-4 */}
-            <h3 className="absolute top-[-3] start-3 z-10 bg-white dark:bg-stone-800 px-2 text-[9px] font-bold text-stone-400 uppercase tracking-wider">{t.identity}</h3> {/* Changed top-0 to top-[-3] */}
+        <div className="bg-white dark:bg-stone-800 pt-5 p-3 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-2 relative">
+            <h3 className="mb-3 ps-3 border-s-4 border-teal-500 text-sm font-bold text-stone-900 dark:text-stone-100 uppercase tracking-wider">{t.identity}</h3>
             <div className="grid grid-cols-2 gap-2"> {/* Reduced gap-3 to gap-2 */}
                 <FormField label={t.firstName} value={person.firstName} onCommit={(v) => handleChange('firstName', v)} disabled={!isEditing} labelWidthClass="w-16" /> {/* Reduced w-20 to w-16 */}
                 <FormField label={t.middleName} value={person.middleName} onCommit={(v) => handleChange('middleName', v)} disabled={!isEditing} labelWidthClass="w-16" /> {/* Reduced w-20 to w-16 */}
@@ -217,8 +217,8 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
         </div>
 
         {/* Gender & Status */}
-        <div className="bg-white dark:bg-stone-800 pt-4 p-3 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-2 relative"> {/* Changed pt-5 to pt-4 */}
-            <h3 className="absolute top-[-3] start-3 z-10 bg-white dark:bg-stone-800 px-2 text-[9px] font-bold text-stone-400 uppercase tracking-wider">{t.status}</h3> {/* Changed top-0 to top-[-3] */}
+        <div className="bg-white dark:bg-stone-800 pt-5 p-3 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-2 relative">
+            <h3 className="mb-3 ps-3 border-s-4 border-teal-500 text-sm font-bold text-stone-900 dark:text-stone-100 uppercase tracking-wider">{t.status}</h3>
             <div className="flex items-center gap-3"> {/* Reduced gap-4 to gap-3 */}
                 <div className="flex items-center gap-2">
                     <label className="flex items-center gap-1.5 cursor-pointer group"> {/* Reduced gap-2 to gap-1.5 */}
@@ -245,8 +245,8 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
         </div>
 
         {/* Birth Details */}
-        <div className="bg-white dark:bg-stone-800 pt-4 p-3 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-2 relative"> {/* Changed pt-5 to pt-4 */}
-            <h3 className="absolute top-[-3] start-3 z-10 bg-white dark:bg-stone-800 px-2 text-[9px] font-bold text-stone-400 uppercase tracking-wider">{t.birthDetails}</h3> {/* Changed top-0 to top-[-3] */}
+        <div className="bg-white dark:bg-stone-800 pt-5 p-3 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-2 relative">
+            <h3 className="mb-3 ps-3 border-s-4 border-teal-500 text-sm font-bold text-stone-900 dark:text-stone-100 uppercase tracking-wider">{t.birthDetails}</h3>
             <div className="space-y-2"> {/* Reduced space-y-3 to space-y-2 */}
                 <div className="flex items-center gap-2"> {/* Reduced gap-3 to gap-2 */}
                     <label className="w-16 shrink-0 text-[9px] text-stone-600 dark:text-stone-400 font-medium">{t.birthDate}</label> {/* Reduced w-20 to w-16 and text-[10px] to text-[9px] */}
@@ -273,8 +273,8 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
 
         {/* Death Details (Conditional) */}
         {person.isDeceased && (
-            <div className="bg-white dark:bg-stone-800 pt-4 p-3 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-2 animate-in slide-in-from-top-2 relative"> {/* Changed pt-5 to pt-4 */}
-                <h3 className="absolute top-[-3] start-3 z-10 bg-white dark:bg-stone-800 px-2 text-[9px] font-bold text-stone-400 uppercase tracking-wider">{t.deathDetails}</h3> {/* Changed top-0 to top-[-3] */}
+            <div className="bg-white dark:bg-stone-800 pt-5 p-3 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-2 animate-in slide-in-from-top-2 relative">
+                <h3 className="mb-3 ps-3 border-s-4 border-teal-500 text-sm font-bold text-stone-900 dark:text-stone-100 uppercase tracking-wider">{t.deathDetails}</h3>
                 <div className="space-y-2"> {/* Reduced space-y-3 to space-y-2 */}
                     <div className="flex items-center gap-2"> {/* Reduced gap-3 to gap-2 */}
                         <label className="w-16 shrink-0 text-[9px] text-stone-600 dark:text-stone-400 font-medium">{t.deathDate}</label> {/* Reduced w-20 to w-16 and text-[10px] to text-[9px] */}

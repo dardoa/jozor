@@ -80,9 +80,9 @@ export const MediaTab: React.FC<MediaTabProps> = memo(({ person, isEditing, onUp
   return (
     <div className="space-y-5"> {/* Reduced space-y-6 to space-y-5 */}
         {/* --- PHOTOS SECTION --- */}
-        <div className="bg-white dark:bg-stone-800 pt-4 p-3 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-2 relative"> {/* Changed pt-5 to pt-4 */}
-            <div className="absolute top-[-3] start-3 z-10 bg-white dark:bg-stone-800 px-2 flex justify-between items-center w-[calc(100%-24px)]"> {/* Changed top-0 to top-[-3] */}
-                <h3 className="text-[9px] font-bold text-stone-400 uppercase tracking-wider">{t.gallery}</h3> {/* Reduced text-[10px] to text-[9px] */}
+        <div className="bg-white dark:bg-stone-800 pt-5 p-3 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-2 relative">
+            <div className="flex justify-between items-center mb-3 ps-3 border-s-4 border-teal-500">
+                <h3 className="text-sm font-bold text-stone-900 dark:text-stone-100 uppercase tracking-wider">{t.gallery}</h3>
                 {isEditing && (
                     <div className="flex gap-1.5"> {/* Reduced gap-2 to gap-1.5 */}
                         {user && (
@@ -152,9 +152,9 @@ export const MediaTab: React.FC<MediaTabProps> = memo(({ person, isEditing, onUp
         </div>
 
         {/* --- AUDIO SECTION --- */}
-        <div className="bg-white dark:bg-stone-800 pt-4 p-3 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-2 relative"> {/* Changed pt-5 to pt-4 */}
-            <div className="absolute top-[-3] start-3 z-10 bg-white dark:bg-stone-800 px-2 flex justify-between items-center w-[calc(100%-24px)]"> {/* Changed top-0 to top-[-3] */}
-                <h3 className="text-[9px] font-bold text-stone-400 uppercase tracking-wider">{t.voiceMemories}</h3> {/* Reduced text-[10px] to text-[9px] */}
+        <div className="bg-white dark:bg-stone-800 pt-5 p-3 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-2 relative">
+            <div className="flex justify-between items-center mb-3 ps-3 border-s-4 border-teal-500">
+                <h3 className="text-sm font-bold text-stone-900 dark:text-stone-100 uppercase tracking-wider">{t.voiceMemories}</h3>
                 {isEditing && <VoiceRecorder onSave={handleVoiceSave} t={t} />}
             </div>
 

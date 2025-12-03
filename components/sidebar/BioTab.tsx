@@ -35,11 +35,8 @@ export const BioTab: React.FC<BioTabProps> = memo(({ person, people, isEditing, 
 
   return (
     <div className="space-y-4"> {/* Reduced space-y-5 to space-y-4 */}
-        <div className="bg-white dark:bg-stone-800 pt-4 p-3 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-2 relative"> {/* Changed pt-5 to pt-4 */}
-            <div className="absolute top-[-3] start-3 z-10 bg-white dark:bg-stone-800 px-2 flex justify-between items-center"> {/* Changed top-0 to top-[-3] */}
-                <h3 className="text-[9px] font-bold text-stone-400 uppercase tracking-wider">{t.workInterests}</h3> {/* Reduced text-[10px] to text-[9px] */}
-                {!isEditing && <span className="text-[9px] text-stone-400 ms-2">{t.readOnly}</span>} {/* Reduced text-[10px] to text-[9px] */}
-            </div>
+        <div className="bg-white dark:bg-stone-800 pt-5 p-3 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-2 relative">
+            <h3 className="mb-3 ps-3 border-s-4 border-teal-500 text-sm font-bold text-stone-900 dark:text-stone-100 uppercase tracking-wider">{t.workInterests}</h3>
             
             <FormField
                 label={t.profession}
@@ -67,9 +64,9 @@ export const BioTab: React.FC<BioTabProps> = memo(({ person, people, isEditing, 
             />
         </div>
 
-        <div className="bg-white dark:bg-stone-800 pt-4 p-3 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm relative"> {/* Changed pt-5 to pt-4 */}
-            <div className="absolute top-[-3] start-3 z-10 bg-white dark:bg-stone-800 px-2 flex justify-between items-center w-[calc(100%-24px)]"> {/* Changed top-0 to top-[-3] */}
-                <h3 className="text-[9px] font-bold text-stone-400 uppercase tracking-wider">{t.biography}</h3> {/* Reduced text-[10px] to text-[9px] */}
+        <div className="bg-white dark:bg-stone-800 pt-5 p-3 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm relative">
+            <div className="flex justify-between items-center mb-3 ps-3 border-s-4 border-teal-500">
+                <h3 className="text-sm font-bold text-stone-900 dark:text-stone-100 uppercase tracking-wider">{t.biography}</h3>
                 {isEditing && (
                     <div className="flex items-center gap-2">
                         <span className="text-[9px] text-stone-500">{t.tone}:</span> {/* Reduced text-[10px] to text-[9px] */}

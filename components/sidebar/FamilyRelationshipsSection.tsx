@@ -145,9 +145,8 @@ export const FamilyRelationshipsSection: React.FC<FamilyRelationshipsSectionProp
 
     return (
         <div className="pt-3 space-y-3"> {/* Reduced pt-4 space-y-4 to pt-3 space-y-3 */}
-            <div className="flex items-center gap-2">
-                <span className="text-[9px] font-bold text-gray-900 dark:text-gray-100 uppercase tracking-widest bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-md">{t.familyRelationships}</span> {/* Reduced text-[10px] to text-[9px] */}
-                <div className="h-px flex-1 bg-gray-100 dark:bg-gray-800"></div>
+            <div className="flex items-center gap-2 mb-3 ps-3 border-s-4 border-teal-500">
+                <span className="text-sm font-bold text-gray-900 dark:text-gray-100 uppercase tracking-widest">{t.familyRelationships}</span>
             </div>
             
             <FamilyGroup 
