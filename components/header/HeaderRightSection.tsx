@@ -9,6 +9,7 @@ import { ToolsMenu } from './ToolsMenu';
 import { ViewSettingsMenu } from './ViewSettingsMenu';
 import { UserMenu } from './UserMenu';
 import { SearchResults } from './SearchResults';
+import { SearchInputWithResults } from './SearchInputWithResults'; // New import
 
 interface HeaderRightSectionProps {
   people: Record<string, Person>;
@@ -34,43 +35,12 @@ export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(({
   treeSettings, setTreeSettings, onOpenModal, onPresent,
   user, isDemoMode = false, onLogin, onLogout, t, handleExport
 }) => {
-  const [activeMenu, setActiveMenu] = useState<'none' | 'export' | 'settings' | 'tools' | 'search' | 'user'>('none');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<Person[]>([]);
-
-  const handleSearch = (query: string) => {
-      setSearchQuery(query);
-      if (!query.trim()) { setSearchResults([]); return; }
-      const q = query.toLowerCase();
-      const results = (Object.values(people) as Person[]).filter(p => 
-          `${p.firstName} ${p.middleName} ${p.lastName} ${p.birthName}`.toLowerCase().includes(q)
-      ).slice(0, 10);
-      setSearchResults(results);
-      setActiveMenu('search');
-  };
+  const [activeMenu, setActiveMenu] = useState<'none' | 'export' | 'settings' | 'tools' | 'user'>('none'); // Removed 'search'
 
   return (
     <div className="flex items-center gap-2 md:gap-3">
       {/* Search */}
-      <div className="relative group hidden lg:block">
-        <div className={`flex items-center gap-2.5 bg-stone-100/50 dark:bg-stone-800/50 border border-stone-200/50 dark:border-stone-700/50 focus-within:bg-white dark:focus-within:bg-stone-900 focus-within:border-teal-500/50 focus-within:ring-4 focus-within:ring-teal-500/5 rounded-full px-4 py-2 transition-all w-64 hover:bg-stone-100 dark:hover:bg-stone-800`}>
-          <Search className="w-4 h-4 text-stone-400 group-focus-within:text-teal-500" />
-          <input 
-            type="text" 
-            placeholder={t.searchPlaceholder} 
-            value={searchQuery} 
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleSearch(e.target.value)} 
-            onFocus={() => setActiveMenu('search')} 
-            onBlur={() => setTimeout(() => setActiveMenu('none'), 200)} 
-            className="bg-transparent border-none outline-none text-xs font-medium text-stone-700 dark:text-stone-200 placeholder-stone-400 w-full" 
-            aria-label={t.searchPlaceholder}
-          />
-          {searchQuery && (<button onClick={() => handleSearch('')} className="text-stone-400 hover:text-stone-600" aria-label={t.clearSearch}><X className="w-3 h-3" /></button>)}
-        </div>
-        {activeMenu === 'search' && searchResults.length > 0 && (
-          <SearchResults results={searchResults} onFocus={onFocusPerson} onClose={() => handleSearch('')} />
-        )}
-      </div>
+      <SearchInputWithResults people={people} onFocusPerson={onFocusPerson} t={t} />
 
       <div className="h-6 w-px bg-stone-200 dark:bg-stone-800 hidden md:block mx-1"></div>
 
