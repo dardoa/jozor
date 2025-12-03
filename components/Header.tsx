@@ -1,11 +1,7 @@
-import React, { useState, memo, useCallback } from 'react';
+import React, { memo } from 'react';
 import { Person, Language, TreeSettings, UserProfile } from '../types';
 import { getTranslation } from '../utils/translations';
-import { 
-  Undo, Redo, Search, Moon, Sun, X, Menu, ChevronDown, Share2,
-  Hammer, SlidersHorizontal
-} from 'lucide-react';
-// Removed: Logo, LoginButton
+// Removed lucide-react imports as they are now handled by sub-components
 
 // Import sub-components
 import { HeaderLeftSection } from './header/HeaderLeftSection';
@@ -36,7 +32,7 @@ interface HeaderProps {
   handleExport: (type: 'jozor' | 'json' | 'gedcom' | 'ics' | 'print') => Promise<void>;
 }
 
-export const Header: React.FC<HeaderProps> = ({
+export const Header: React.FC<HeaderProps> = memo(({
   people, onUndo, onRedo, canUndo, canRedo,
   darkMode, setDarkMode, onFocusPerson, language, setLanguage,
   treeSettings, setTreeSettings, toggleSidebar, 
@@ -81,4 +77,4 @@ export const Header: React.FC<HeaderProps> = ({
         />
       </header>
   );
-};
+});
