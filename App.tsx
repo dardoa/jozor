@@ -65,7 +65,7 @@ const App: React.FC = () => {
   // --- Custom Hooks for Side Effects ---
   useThemeSync(darkMode, setDarkMode, treeSettings.theme); // Using new hook
   useLanguageSync(language, setLanguage); // Using new hook
-  useKeyboardShortcuts(history.length > 0, undo, redo, showWelcome, isPresentMode, setIsPresentMode); // Using new hook
+  useKeyboardShortcuts(history.length > 0, undo, future.length > 0, redo, showWelcome, isPresentMode, setIsPresentMode); // Using new hook
 
   useEffect(() => {
     const hasData = Object.keys(people).length > 1 || people[INITIAL_ROOT_ID].firstName !== 'Me';
@@ -137,8 +137,6 @@ const App: React.FC = () => {
             {!isPresentMode && (
                 <Header 
                     people={people}
-                    onImport={() => fileInputRef.current?.click()}
-                    onImportFile={onFileUpload}
                     onUndo={undo} onRedo={redo} canUndo={history.length > 0} canRedo={future.length > 0}
                     darkMode={darkMode} setDarkMode={setDarkMode}
                     onFocusPerson={setFocusId}
