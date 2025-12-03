@@ -53,8 +53,7 @@ const App: React.FC = () => {
           <>
             {!isPresentMode && (
                 <Header 
-                    people={people}
-                    onFocusPerson={setFocusId}
+                    // Removed people={people} and onFocusPerson={setFocusId}
                     t={t} // Pass t to Header
                     toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
                     historyControls={historyControls}
@@ -63,6 +62,8 @@ const App: React.FC = () => {
                     viewSettings={viewSettings}
                     toolsActions={toolsActions}
                     exportActions={exportActions}
+                    peopleForSearch={people} // Pass directly for search
+                    onFocusPersonForSearch={setFocusId} // Pass directly for search
                 />
             )}
             
