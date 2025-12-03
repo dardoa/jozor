@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Person, Message, Language } from '../types';
 import { startAncestorChat } from '../services/geminiService';

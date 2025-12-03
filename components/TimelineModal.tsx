@@ -1,6 +1,5 @@
-
 import React, { useMemo, useState } from 'react';
-import { Person, Language } from '../types';
+import { Person, Language, TimelineEvent } from '../types'; // Added TimelineEvent import
 import { getTranslation } from '../utils/translations';
 import { X, Calendar, Baby, Heart, Ribbon } from 'lucide-react';
 import { getDisplayDate } from '../utils/familyLogic';
@@ -11,16 +10,6 @@ interface TimelineModalProps {
   people: Record<string, Person>;
   onSelectPerson: (id: string) => void;
   language: Language;
-}
-
-interface TimelineEvent {
-  year: number;
-  dateStr: string;
-  type: 'birth' | 'death' | 'marriage';
-  personId: string;
-  relatedId?: string;
-  label: string;
-  subLabel?: string;
 }
 
 export const TimelineModal: React.FC<TimelineModalProps> = ({ 

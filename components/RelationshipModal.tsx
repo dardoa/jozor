@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Person, Language } from '../types';
 import { getTranslation } from '../utils/translations';

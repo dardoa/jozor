@@ -35,7 +35,7 @@ export const SearchInputWithResults: React.FC<SearchInputWithResultsProps> = mem
 
   return (
     <div className="relative group hidden lg:block">
-      <div className={`flex items-center gap-2.5 bg-stone-100/50 dark:bg-stone-800/50 border border-stone-200/50 dark:border-stone-700/50 focus-within:bg-white dark:focus-within:bg-stone-900 focus-within:border-teal-500/50 focus-within:ring-4 focus-within:ring-teal-500/5 rounded-full px-4 py-2 transition-all w-64 hover:bg-stone-100 dark:hover:bg-stone-800`}>
+      <div className={`flex items-center gap-2.5 bg-stone-100/50 dark:bg-stone-800/50 border border-stone-200/50 dark:border-stone-700/50 focus-within:bg-white dark:focus-within:bg-stone-900 focus-within:border-teal-500 focus-within:ring-4 focus-within:ring-teal-500/10 rounded-full px-4 py-2 transition-all w-64 hover:bg-stone-100 dark:hover:bg-stone-800`}>
         <Search className="w-4 h-4 text-stone-400 group-focus-within:text-teal-500" />
         <input
           type="text"

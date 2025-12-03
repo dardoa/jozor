@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Language, UserProfile } from '../types';
 import { getTranslation } from '../utils/translations';

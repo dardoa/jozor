@@ -1,4 +1,3 @@
-
 import React, { useMemo, useState } from 'react';
 import { Person, Language } from '../types';
 import { calculateStatistics } from '../utils/statisticsLogic';

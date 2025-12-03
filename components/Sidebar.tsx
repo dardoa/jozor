@@ -76,7 +76,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                             onClick={() => setActiveTab(tab.id as any)} 
                             className={`px-3 py-2 rounded-t-lg text-[11px] font-bold transition-all relative top-[1px]
                             ${activeTab === tab.id 
-                                ? 'bg-white dark:bg-gray-900 text-blue-600 dark:text-blue-400 border-x border-t border-gray-200 dark:border-gray-800 z-10' 
+                                ? 'bg-white dark:bg-gray-900 text-blue-600 dark:text-blue-400 border-x border-t border-gray-200 dark:border-gray-800 z-10 shadow-t-sm' // Added shadow-t-sm
                                 : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}`}
                         >
                             {tab.label}

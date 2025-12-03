@@ -139,8 +139,8 @@ export const DescendantPedigreeChart: React.FC<DescendantPedigreeChartProps> = m
         const displayName = `${titlePrefix}${node.data.firstName} ${settings.showLastName ? node.data.lastName : ''}`;
         const hasCollapsedBranch = Array.from(collapsePoints).some((cp) => cp.uniqueKey.startsWith(`${node.data.id}:`) && cp.isCollapsed);
         
-        const genderBorderClass = node.data.gender === 'male' ? 'gender-border-male' : 'gender-border-female';
-        const genderTextClass = node.data.gender === 'male' ? 'gender-text-male' : 'gender-text-female';
+        const genderBorderClass = node.data.gender === 'male' ? 'border-[var(--gender-male-border)]' : 'border-[var(--gender-female-border)]';
+        const genderTextClass = node.data.gender === 'male' ? 'text-[var(--gender-male-text)]' : 'text-[var(--gender-female-text)]';
 
         return (
           <g 
@@ -150,14 +150,14 @@ export const DescendantPedigreeChart: React.FC<DescendantPedigreeChartProps> = m
             className="cursor-pointer"
           >
             <foreignObject x={-NODE_WIDTH/2} y={-NODE_HEIGHT/2} width={NODE_WIDTH} height={NODE_HEIGHT}>
-              <div className={`uiverse-card ${node.data.gender} ${isFocus ? 'focus-ring' : ''} h-full w-full flex flex-col items-center rounded-xl overflow-hidden bg-white/95 dark:bg-stone-900/95 border border-stone-200/50 dark:border-stone-700/50 shadow-card transition-all hover:border-teal-400 dark:hover:border-teal-600`} style={{ backdropFilter: 'blur(8px)' }}>
+              <div className={`uiverse-card ${node.data.gender} ${isFocus ? 'focus-ring' : ''} h-full w-full flex flex-col items-center rounded-xl overflow-hidden bg-[var(--card-bg)] border-[var(--card-border)] border shadow-card transition-all hover:border-[var(--focus-ring-color)] dark:hover:border-[var(--focus-ring-color)]`} style={{ backdropFilter: 'blur(8px)' }}>
                 <div className="flex flex-col items-center justify-center text-center h-full w-full p-3 gap-1.5 relative">
                   {settings.showPhotos && (
                     <div className={`relative w-16 h-16 rounded-full flex-shrink-0 p-0.5 border-2 shadow-sm bg-white dark:bg-stone-800 ${genderBorderClass}`}>
                       {node.data.photoUrl ? (
                         <img src={node.data.photoUrl} className={`w-full h-full rounded-full object-cover ${node.data.isDeceased ? 'grayscale' : ''}`} />
                       ) : (
-                        <div className="w-full h-full rounded-full flex items-center justify-center bg-stone-50 dark:bg-stone-800">
+                        <div className="w-full h-full rounded-full bg-stone-50 dark:bg-stone-800">
                           <User className={`w-8 h-8`} style={{ color: node.data.gender === 'male' ? 'var(--gender-male-border)' : 'var(--gender-female-border)' }} />
                         </div>
                       )}

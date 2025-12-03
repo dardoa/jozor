@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Logo } from './Logo';
 import { Plus, Upload, Languages } from 'lucide-react';
@@ -64,7 +63,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStartNew, onImpo
         <div className="flex flex-col gap-3 w-full">
             <button 
                 onClick={onStartNew}
-                className="group relative w-full py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-bold text-sm shadow-lg hover:shadow-blue-500/25 transition-all active:scale-[0.98] flex items-center justify-center gap-2 overflow-hidden"
+                className="group relative w-full py-3 bg-[var(--primary-button-bg)] hover:bg-[var(--primary-button-hover-bg)] text-[var(--primary-button-text)] rounded-lg font-bold text-sm shadow-lg hover:shadow-blue-500/25 transition-all active:scale-[0.98] flex items-center justify-center gap-2 overflow-hidden"
             >
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 rtl:-scale-x-100" />
                 <Plus className="w-4 h-4" />

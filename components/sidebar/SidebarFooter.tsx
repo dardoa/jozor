@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Person, Gender } from '../../types';
 import { Heart, Baby, Trash2, Check, Edit2, UserPlus } from 'lucide-react';

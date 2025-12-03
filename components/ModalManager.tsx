@@ -1,4 +1,3 @@
-
 import React, { Suspense } from 'react';
 import { Person, Gender, Language, UserProfile } from '../types';
 import { LoadingSpinner } from './LoadingSpinner';

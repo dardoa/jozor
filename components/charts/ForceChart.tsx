@@ -14,7 +14,7 @@ export const ForceChart: React.FC<ForceChartProps> = memo(({ nodes, links, focus
   return (
     <g>
       {links.map((link, i) => (
-        <path key={i} className="force-link stroke-stone-400 dark:stroke-stone-500" strokeWidth="2" fill="none" />
+        <path key={i} className="force-link stroke-[var(--link-line-stroke)]" strokeWidth="2" fill="none" />
       ))}
       {nodes.map((node) => (
         <g key={node.id} className="force-node cursor-pointer" onClick={(e) => { e.stopPropagation(); onSelect(node.data.id); }}>
@@ -22,9 +22,9 @@ export const ForceChart: React.FC<ForceChartProps> = memo(({ nodes, links, focus
           {node.data.photoUrl ? (
             <image href={node.data.photoUrl} x="-30" y="-30" height="60" width="60" clipPath="circle(30px at 30px 30px)" />
           ) : (
-            <text dy="5" textAnchor="middle" className="text-stone-700 dark:text-stone-300 text-xl">{node.data.firstName[0]}</text>
+            <text dy="5" textAnchor="middle" className="text-[var(--card-text)] text-xl">{node.data.firstName[0]}</text>
           )}
-          <text dy="45" textAnchor="middle" className="text-xs font-bold text-stone-700 dark:text-stone-300 pointer-events-none">{node.data.firstName}</text>
+          <text dy="45" textAnchor="middle" className="text-xs font-bold text-[var(--card-text)] pointer-events-none">{node.data.firstName}</text>
         </g>
       ))}
     </g>

@@ -121,6 +121,17 @@ export interface FanArc {
   hasChildren: boolean;
 }
 
+// New interface for timeline events
+export interface TimelineEvent {
+  year: number;
+  dateStr: string;
+  type: 'birth' | 'death' | 'marriage';
+  personId: string;
+  relatedId?: string; // For marriage events, the spouse's ID
+  label: string;
+  subLabel?: string;
+}
+
 // New interfaces for grouped props
 export interface HistoryControlsProps {
   onUndo: () => void;

@@ -1,4 +1,3 @@
-
 import React, { useRef, useState } from 'react';
 import { Person, UserProfile } from '../../types';
 import { processImageFile } from '../../utils/imageLogic';

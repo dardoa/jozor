@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import { Person, Language } from '../types';
 import { checkConsistency, ConsistencyIssue } from '../utils/consistencyLogic';
