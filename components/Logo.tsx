@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 
-export const Logo: React.FC<{ className?: string }> = ({ className }) => {
+export const Logo: React.FC<{ className?: string }> = memo(({ className }) => {
   const [imgError, setImgError] = useState(false);
 
   // إذا حدث خطأ في تحميل ملف SVG الخارجي، نعرض الشعار البرمجي كبديل
@@ -31,4 +31,4 @@ export const Logo: React.FC<{ className?: string }> = ({ className }) => {
       onError={() => setImgError(true)}
     />
   );
-};
+});
