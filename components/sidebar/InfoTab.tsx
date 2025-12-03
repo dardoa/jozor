@@ -187,14 +187,14 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
                 />
             </div>
 
-            <div className="flex-1">
+            <div className="flex-1 flex flex-col items-center">
                 <button 
                     onClick={() => setShowSmartModal(true)}
-                    className="w-full py-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white text-sm font-bold rounded-xl shadow-md hover:shadow-lg hover:scale-[1.01] transition-all flex items-center justify-center gap-2"
-                > {/* Reduced padding from py-2.5 to py-2 */}
-                    <Sparkles className="w-4 h-4" /> {t.smartFill}
+                    className="py-1.5 px-4 bg-gradient-to-r from-purple-500 to-indigo-600 text-white text-xs font-bold rounded-xl shadow-md hover:shadow-lg hover:scale-[1.01] transition-all flex items-center justify-center gap-1.5"
+                >
+                    <Sparkles className="w-3.5 h-3.5" /> {t.smartFill}
                 </button>
-                <p className="text-[10px] text-stone-500 dark:text-stone-400 mt-2 text-center">{t.smartFillDescription}</p>
+                <p className="text-[10px] text-stone-500 dark:text-stone-400 mt-1 text-center">{t.smartFillDescription}</p>
             </div>
         </div>
 
