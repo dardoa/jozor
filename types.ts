@@ -171,6 +171,19 @@ export interface SearchProps {
   onFocusPerson: (id: string) => void;
 }
 
+export interface HeaderProps { // Updated HeaderProps
+  t: any; // Translations
+  toggleSidebar: () => void;
+  
+  historyControls: HistoryControlsProps;
+  themeLanguage: ThemeLanguageProps;
+  auth: AuthProps;
+  viewSettings: ViewSettingsProps;
+  toolsActions: ToolsActionsProps;
+  exportActions: ExportActionsProps;
+  searchProps: SearchProps; // Directly include searchProps
+}
+
 export interface HeaderRightSectionProps {
   t: any;
   themeLanguage: ThemeLanguageProps;
