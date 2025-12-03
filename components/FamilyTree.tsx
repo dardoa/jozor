@@ -4,11 +4,11 @@ import { Person, TreeLink, TreeSettings, TreeNode, FanArc } from '../types';
 import { calculateTreeLayout } from '../utils/treeLayout';
 
 // Import new sub-components
-import { DescendantPedigreeChart } from './charts/DescendantPedigreeChart.tsx';
-import { FanChart } from './charts/FanChart.tsx';
-import { ForceChart } from './charts/ForceChart.tsx';
-import { ZoomControls } from './ui/ZoomControls.tsx';
-import { Minimap } from './ui/Minimap.tsx';
+import { DescendantPedigreeChart } from './charts/DescendantPedigreeChart';
+import { FanChart } from './charts/FanChart';
+import { ForceChart } from './charts/ForceChart';
+import { ZoomControls } from './ui/ZoomControls';
+import { Minimap } from './ui/Minimap';
 
 interface FamilyTreeProps {
   people: Record<string, Person>;
