@@ -3,18 +3,22 @@ import { Undo, Redo, Menu } from 'lucide-react';
 import { Logo } from '../Logo'; // New import
 import { Language } from '../../types';
 
-interface HeaderLeftSectionProps {
-  language: Language;
-  t: any;
-  toggleSidebar: () => void;
+interface HistoryControlsProps {
   onUndo: () => void;
   onRedo: () => void;
   canUndo: boolean;
   canRedo: boolean;
 }
 
+interface HeaderLeftSectionProps {
+  language: Language;
+  t: any;
+  toggleSidebar: () => void;
+  historyControls: HistoryControlsProps;
+}
+
 export const HeaderLeftSection: React.FC<HeaderLeftSectionProps> = memo(({
-  language, t, toggleSidebar, onUndo, onRedo, canUndo, canRedo
+  language, t, toggleSidebar, historyControls
 }) => (
   <div className="flex items-center gap-3 md:gap-6">
     <button onClick={toggleSidebar} className="md:hidden p-2 text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-xl transition-colors" aria-label={t.toggleSidebar}>
@@ -29,11 +33,11 @@ export const HeaderLeftSection: React.FC<HeaderLeftSectionProps> = memo(({
     
     {/* History Controls */}
     <div className="hidden sm:flex items-center p-1 bg-stone-100/50 dark:bg-stone-800/50 rounded-full border border-stone-200/50 dark:border-stone-700/50 backdrop-blur-sm">
-      <button onClick={onUndo} disabled={!canUndo} className="p-1.5 text-stone-500 hover:text-stone-900 dark:text-stone-400 dark:hover:text-white hover:bg-white dark:hover:bg-stone-700 rounded-full transition-all disabled:opacity-30 disabled:hover:bg-transparent" dir="ltr" aria-label={t.undo}>
+      <button onClick={historyControls.onUndo} disabled={!historyControls.canUndo} className="p-1.5 text-stone-500 hover:text-stone-900 dark:text-stone-400 dark:hover:text-white hover:bg-white dark:hover:bg-stone-700 rounded-full transition-all disabled:opacity-30 disabled:hover:bg-transparent" dir="ltr" aria-label={t.undo}>
         <Undo className={`w-4 h-4 ${language === 'ar' ? 'scale-x-[-1]' : ''}`} />
       </button>
       <div className="w-px h-3 bg-stone-300 dark:bg-stone-600 mx-0.5"></div>
-      <button onClick={onRedo} disabled={!canRedo} className="p-1.5 text-stone-500 hover:text-stone-900 dark:text-stone-400 dark:hover:text-white hover:bg-white dark:hover:bg-stone-700 rounded-full transition-all disabled:opacity-30 disabled:hover:bg-transparent" dir="ltr" aria-label={t.redo}>
+      <button onClick={historyControls.onRedo} disabled={!historyControls.canRedo} className="p-1.5 text-stone-500 hover:text-stone-900 dark:text-stone-400 dark:hover:text-white hover:bg-white dark:hover:bg-stone-700 rounded-full transition-all disabled:opacity-30 disabled:hover:bg-transparent" dir="ltr" aria-label={t.redo}>
         <Redo className={`w-4 h-4 ${language === 'ar' ? 'scale-x-[-1]' : ''}`} />
       </button>
     </div>

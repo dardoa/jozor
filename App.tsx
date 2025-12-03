@@ -35,6 +35,14 @@ const App: React.FC = () => {
     handleExport,
   } = useAppOrchestration();
 
+  // Grouped props for Header
+  const historyControls = { onUndo: undo, onRedo: redo, canUndo, canRedo };
+  const themeLanguage = { darkMode, setDarkMode, language, setLanguage };
+  const auth = { user, isDemoMode, onLogin: handleLoginWrapper, onLogout: handleLogoutWrapper };
+  const viewSettings = { treeSettings, setTreeSettings, onPresent: () => setIsPresentMode(true) };
+  const toolsActions = { onOpenModal: handleOpenModal };
+  const exportActions = { handleExport };
+
   return (
     <div className={`flex flex-col h-screen font-sans transition-colors duration-300 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 overflow-hidden theme-${treeSettings.theme}`} dir={language === 'ar' ? 'rtl' : 'ltr'}>
       
@@ -53,17 +61,15 @@ const App: React.FC = () => {
             {!isPresentMode && (
                 <Header 
                     people={people}
-                    onUndo={undo} onRedo={redo} canUndo={canUndo} canRedo={canRedo}
-                    darkMode={darkMode} setDarkMode={setDarkMode}
                     onFocusPerson={setFocusId}
-                    language={language} setLanguage={setLanguage}
-                    treeSettings={treeSettings} setTreeSettings={setTreeSettings}
+                    t={t}
                     toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-                    onOpenModal={handleOpenModal}
-                    onPresent={() => setIsPresentMode(true)}
-                    user={user} isDemoMode={isDemoMode}
-                    onLogin={handleLoginWrapper} onLogout={handleLogoutWrapper}
-                    handleExport={handleExport}
+                    historyControls={historyControls}
+                    themeLanguage={themeLanguage}
+                    auth={auth}
+                    viewSettings={viewSettings}
+                    toolsActions={toolsActions}
+                    exportActions={exportActions}
                 />
             )}
             

@@ -11,31 +11,50 @@ import { UserMenu } from './UserMenu';
 import { SearchResults } from './SearchResults';
 import { SearchInputWithResults } from './SearchInputWithResults'; // New import
 
-interface HeaderRightSectionProps {
-  people: Record<string, Person>;
+interface ThemeLanguageProps {
   darkMode: boolean;
   setDarkMode: (v: boolean) => void;
-  onFocusPerson: (id: string) => void;
   language: Language;
   setLanguage: (l: Language) => void;
-  treeSettings: TreeSettings;
-  setTreeSettings: (s: TreeSettings) => void;
-  onOpenModal: (modalType: 'calculator' | 'stats' | 'chat' | 'consistency' | 'timeline' | 'share' | 'story' | 'map') => void;
-  onPresent: () => void;
+}
+
+interface AuthProps {
   user: UserProfile | null;
-  isDemoMode?: boolean;
+  isDemoMode: boolean;
   onLogin: () => Promise<void>;
   onLogout: () => Promise<void>;
+}
+
+interface ViewSettingsProps {
+  treeSettings: TreeSettings;
+  setTreeSettings: (s: TreeSettings) => void;
+  onPresent: () => void;
+}
+
+interface ToolsActionsProps {
+  onOpenModal: (modalType: 'calculator' | 'stats' | 'chat' | 'consistency' | 'timeline' | 'share' | 'story' | 'map') => void;
+}
+
+interface ExportActionsProps {
+  handleExport: (type: 'jozor' | 'json' | 'gedcom' | 'ics' | 'print') => Promise<void>;
+}
+
+interface HeaderRightSectionProps {
+  people: Record<string, Person>;
+  onFocusPerson: (id: string) => void;
   t: any;
-  handleExport: (type: 'jozor' | 'json' | 'gedcom' | 'ics' | 'print') => void;
+  themeLanguage: ThemeLanguageProps;
+  auth: AuthProps;
+  viewSettings: ViewSettingsProps;
+  toolsActions: ToolsActionsProps;
+  exportActions: ExportActionsProps;
 }
 
 export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(({
-  people, darkMode, setDarkMode, onFocusPerson, language, setLanguage,
-  treeSettings, setTreeSettings, onOpenModal, onPresent,
-  user, isDemoMode = false, onLogin, onLogout, t, handleExport
+  people, onFocusPerson, t,
+  themeLanguage, auth, viewSettings, toolsActions, exportActions
 }) => {
-  const [activeMenu, setActiveMenu] = useState<'none' | 'export' | 'settings' | 'tools' | 'user'>('none'); // Removed 'search'
+  const [activeMenu, setActiveMenu] = useState<'none' | 'export' | 'settings' | 'tools' | 'user'>('none');
 
   return (
     <div className="flex items-center gap-2 md:gap-3">
@@ -45,9 +64,9 @@ export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(({
       <div className="h-6 w-px bg-stone-200 dark:bg-stone-800 hidden md:block mx-1"></div>
 
       {/* Share Button */}
-      {user && (
+      {auth.user && (
         <button 
-          onClick={() => onOpenModal('share')}
+          onClick={() => toolsActions.onOpenModal('share')}
           className="w-9 h-9 rounded-full flex items-center justify-center transition-all bg-teal-50 dark:bg-teal-900/20 text-teal-600 dark:text-teal-400 hover:bg-teal-100 dark:hover:bg-teal-900/40"
           title={t.shareTree}
           aria-label={t.shareTree}
@@ -68,7 +87,7 @@ export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(({
         {activeMenu === 'tools' && (
           <ToolsMenu 
             onClose={() => setActiveMenu('none')} 
-            onOpenModal={onOpenModal}
+            onOpenModal={toolsActions.onOpenModal}
             t={t}
           />
         )}
@@ -85,33 +104,33 @@ export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(({
         </button>
         {activeMenu === 'settings' && (
           <ViewSettingsMenu 
-            settings={treeSettings} 
-            onUpdate={setTreeSettings} 
+            settings={viewSettings.treeSettings} 
+            onUpdate={viewSettings.setTreeSettings} 
             onClose={() => setActiveMenu('none')} 
-            onPresent={() => { onPresent(); setActiveMenu('none'); }}
+            onPresent={() => { viewSettings.onPresent(); setActiveMenu('none'); }}
             t={t}
           />
         )}
       </div>
 
       <div className="hidden sm:flex items-center gap-1">
-        <button onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')} className="w-9 h-9 rounded-full hover:bg-stone-100 dark:hover:bg-stone-800 text-stone-500 flex items-center justify-center font-bold text-[10px]" aria-label={language === 'en' ? 'Switch to Arabic' : 'Switch to English'}>{language === 'en' ? 'AR' : 'EN'}</button>
-        <button onClick={() => setDarkMode(!darkMode)} className="w-9 h-9 rounded-full hover:bg-stone-100 dark:hover:bg-stone-800 text-stone-500 flex items-center justify-center" aria-label={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}>{darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}</button>
+        <button onClick={() => themeLanguage.setLanguage(themeLanguage.language === 'en' ? 'ar' : 'en')} className="w-9 h-9 rounded-full hover:bg-stone-100 dark:hover:bg-stone-800 text-stone-500 flex items-center justify-center font-bold text-[10px]" aria-label={themeLanguage.language === 'en' ? 'Switch to Arabic' : 'Switch to English'}>{themeLanguage.language === 'en' ? 'AR' : 'EN'}</button>
+        <button onClick={() => themeLanguage.setDarkMode(!themeLanguage.darkMode)} className="w-9 h-9 rounded-full hover:bg-stone-100 dark:hover:bg-stone-800 text-stone-500 flex items-center justify-center" aria-label={themeLanguage.darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}>{themeLanguage.darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}</button>
       </div>
 
       {/* Auth Section */}
       <div className="hidden sm:block">
-        {user ? (
+        {auth.user ? (
           <div className="relative">
             <button onClick={() => setActiveMenu(activeMenu === 'user' ? 'none' : 'user')} className="flex items-center gap-2 pl-1 pr-2 py-1 rounded-full hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors border border-transparent hover:border-stone-200 dark:hover:border-stone-700" aria-label={t.welcomeUser}>
-              <img src={user.photoURL} alt={user.displayName} className="w-7 h-7 rounded-full object-cover border border-stone-200 dark:border-stone-600" />
+              <img src={auth.user.photoURL} alt={auth.user.displayName} className="w-7 h-7 rounded-full object-cover border border-stone-200 dark:border-stone-600" />
             </button>
             {activeMenu === 'user' && (
-              <UserMenu user={user} isDemoMode={isDemoMode} onLogout={onLogout} onClose={() => setActiveMenu('none')} t={t} />
+              <UserMenu user={auth.user} isDemoMode={auth.isDemoMode} onLogout={auth.onLogout} onClose={() => setActiveMenu('none')} t={t} />
             )}
           </div>
         ) : (
-          <LoginButton onLogin={onLogin} label={t.loginGoogle} />
+          <LoginButton onLogin={auth.onLogin} label={t.loginGoogle} />
         )}
       </div>
 
@@ -123,7 +142,7 @@ export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(({
         {activeMenu === 'export' && (
           <ExportMenu 
             onClose={() => setActiveMenu('none')}
-            onExport={handleExport}
+            onExport={exportActions.handleExport}
             t={t}
           />
         )}
