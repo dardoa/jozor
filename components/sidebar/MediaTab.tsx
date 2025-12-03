@@ -81,10 +81,10 @@ export const MediaTab: React.FC<MediaTabProps> = memo(({ person, isEditing, onUp
     <div className="space-y-5"> {/* Reduced space-y-6 to space-y-5 */}
         {/* --- PHOTOS SECTION --- */}
         <div className="bg-white dark:bg-stone-800 pt-5 p-3 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-2 relative">
-            <div className="flex justify-between items-center mb-3 ps-3 border-s-4 border-teal-500">
-                <h3 className="text-sm font-bold text-stone-900 dark:text-stone-100 uppercase tracking-wider">{t.gallery}</h3>
+            <div className="flex justify-between items-center relative z-10 mb-3">
+                <h3 className="absolute top-[-12px] start-3 z-10 bg-white dark:bg-stone-800 px-2 text-[9px] font-bold text-stone-400 uppercase tracking-wider">{t.gallery}</h3>
                 {isEditing && (
-                    <div className="flex gap-1.5"> {/* Reduced gap-2 to gap-1.5 */}
+                    <div className="flex gap-1.5 ms-auto"> {/* Added ms-auto to push to right */}
                         {user && (
                             <button 
                                 onClick={handleDriveSelect}
@@ -153,8 +153,8 @@ export const MediaTab: React.FC<MediaTabProps> = memo(({ person, isEditing, onUp
 
         {/* --- AUDIO SECTION --- */}
         <div className="bg-white dark:bg-stone-800 pt-5 p-3 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-2 relative">
-            <div className="flex justify-between items-center mb-3 ps-3 border-s-4 border-teal-500">
-                <h3 className="text-sm font-bold text-stone-900 dark:text-stone-100 uppercase tracking-wider">{t.voiceMemories}</h3>
+            <div className="flex justify-between items-center relative z-10 mb-3">
+                <h3 className="absolute top-[-12px] start-3 z-10 bg-white dark:bg-stone-800 px-2 text-[9px] font-bold text-stone-400 uppercase tracking-wider">{t.voiceMemories}</h3>
                 {isEditing && <VoiceRecorder onSave={handleVoiceSave} t={t} />}
             </div>
 
