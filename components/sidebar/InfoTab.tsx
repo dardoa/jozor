@@ -221,8 +221,14 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
                 <FormField label={t.lastName} value={person.lastName} onCommit={(v) => handleChange('lastName', v)} disabled={!isEditing} labelWidthClass="w-20" />
                 <FormField label={t.birthName} value={person.birthName} onCommit={(v) => handleChange('birthName', v)} disabled={!isEditing} labelWidthClass="w-20" />
                 <FormField label={t.nickName} value={person.nickName} onCommit={(v) => handleChange('nickName', v)} disabled={!isEditing} labelWidthClass="w-20" />
-                <FormField label={t.title} value={person.title} onCommit={(v) => handleChange('title', v)} disabled={!isEditing} labelWidthClass="w-20" />
-                <FormField label={t.suffix} value={person.suffix} onCommit={(v) => handleChange('suffix', v)} disabled={!isEditing} labelWidthClass="w-20" />
+                <div className="flex gap-2"> {/* New div for title and suffix */}
+                    <div className="flex-1">
+                        <FormField label={t.title} value={person.title} onCommit={(v) => handleChange('title', v)} disabled={!isEditing} labelWidthClass="w-12" />
+                    </div>
+                    <div className="flex-1">
+                        <FormField label={t.suffix} value={person.suffix} onCommit={(v) => handleChange('suffix', v)} disabled={!isEditing} labelWidthClass="w-12" />
+                    </div>
+                </div>
             </div>
         </div>
 
