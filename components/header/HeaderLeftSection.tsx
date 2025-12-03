@@ -21,7 +21,7 @@ export const HeaderLeftSection: React.FC<HeaderLeftSectionProps> = memo(({
       <Menu className="w-5 h-5" />
     </button>
     <div className="flex items-center gap-3 select-none cursor-pointer group" onClick={() => window.location.reload()}>
-      <div className="bg-gradient-to-br from-teal-50 to-teal-100 dark:from-teal-900/30 dark:to-teal-800/30 p-2 rounded-xl border border-teal-200/50 dark:border-teal-700/30 shadow-sm hidden md:block group-hover:scale-105 transition-transform">
+      <div className="bg-gradient-to-br from-teal-50 to-teal-100 dark:from-teal-900/30 dark:to-teal-800/30 p-2 rounded-xl border border-teal-200/50 dark:border-teal-700/50 shadow-sm hidden md:block group-hover:scale-105 transition-transform">
         <Logo className="w-6 h-6 text-teal-600 dark:text-teal-400" />
       </div>
       <h1 className="text-xl font-bold tracking-tight font-sans text-stone-900 dark:text-stone-100">{t.appTitle}</h1>
