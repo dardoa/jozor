@@ -1,43 +1,14 @@
 import React, { useState, memo } from 'react';
-import { Person, Language, TreeSettings, UserProfile } from '../../types';
+import { Person, Language, TreeSettings, UserProfile, ThemeLanguageProps, AuthProps, ViewSettingsProps, ToolsActionsProps, ExportActionsProps } from '../../types'; // Import grouped props
 import { 
   Search, X, Moon, Sun, ChevronDown, Share2, Hammer, SlidersHorizontal
 } from 'lucide-react';
-import { LoginButton } from '../LoginButton'; // New import
+import { LoginButton } from '../LoginButton';
 import { ExportMenu } from './ExportMenu';
 import { ToolsMenu } from './ToolsMenu';
 import { ViewSettingsMenu } from './ViewSettingsMenu';
 import { UserMenu } from './UserMenu';
-import { SearchResults } from './SearchResults';
-import { SearchInputWithResults } from './SearchInputWithResults'; // New import
-
-interface ThemeLanguageProps {
-  darkMode: boolean;
-  setDarkMode: (v: boolean) => void;
-  language: Language;
-  setLanguage: (l: Language) => void;
-}
-
-interface AuthProps {
-  user: UserProfile | null;
-  isDemoMode: boolean;
-  onLogin: () => Promise<void>;
-  onLogout: () => Promise<void>;
-}
-
-interface ViewSettingsProps {
-  treeSettings: TreeSettings;
-  setTreeSettings: (s: TreeSettings) => void;
-  onPresent: () => void;
-}
-
-interface ToolsActionsProps {
-  onOpenModal: (modalType: 'calculator' | 'stats' | 'chat' | 'consistency' | 'timeline' | 'share' | 'story' | 'map') => void;
-}
-
-interface ExportActionsProps {
-  handleExport: (type: 'jozor' | 'json' | 'gedcom' | 'ics' | 'print') => Promise<void>;
-}
+import { SearchInputWithResults } from './SearchInputWithResults';
 
 interface HeaderRightSectionProps {
   people: Record<string, Person>;

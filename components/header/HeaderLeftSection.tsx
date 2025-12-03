@@ -1,14 +1,7 @@
 import React, { memo } from 'react';
 import { Undo, Redo, Menu } from 'lucide-react';
-import { Logo } from '../Logo'; // New import
-import { Language } from '../../types';
-
-interface HistoryControlsProps {
-  onUndo: () => void;
-  onRedo: () => void;
-  canUndo: boolean;
-  canRedo: boolean;
-}
+import { Logo } from '../Logo';
+import { Language, HistoryControlsProps } from '../../types'; // Import HistoryControlsProps
 
 interface HeaderLeftSectionProps {
   language: Language;
