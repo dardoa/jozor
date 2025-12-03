@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Person, Gender, Language, TreeSettings, UserProfile, HistoryControlsProps, ThemeLanguageProps, AuthProps, ViewSettingsProps, ToolsActionsProps, ExportActionsProps } from '../types';
+import { Person, Gender, Language, TreeSettings, UserProfile, HistoryControlsProps, ThemeLanguageProps, AuthProps, ViewSettingsProps, ToolsActionsProps, ExportActionsProps, SearchProps } from '../types';
 import { useFamilyTree } from './useFamilyTree';
 import { useGoogleSync } from './useGoogleSync';
 import { useThemeSync } from './useThemeSync';
@@ -91,6 +91,7 @@ export const useAppOrchestration = () => {
   const viewSettings: ViewSettingsProps = { treeSettings, setTreeSettings, onPresent: () => setIsPresentMode(true) };
   const toolsActions: ToolsActionsProps = { onOpenModal: handleOpenModal };
   const exportActions: ExportActionsProps = { handleExport };
+  const searchProps: SearchProps = { people, onFocusPerson: setFocusId }; // Construct searchProps here
 
   return {
     // Core Data
@@ -115,6 +116,7 @@ export const useAppOrchestration = () => {
     viewSettings,
     toolsActions,
     exportActions,
+    searchProps, // Return searchProps
     t, // Return t for use in App.tsx
   };
 };

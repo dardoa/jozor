@@ -29,6 +29,7 @@ const App: React.FC = () => {
     viewSettings,
     toolsActions,
     exportActions,
+    searchProps, // Destructure searchProps here
     t, // Destructure t here
   } = useAppOrchestration();
 
@@ -57,8 +58,7 @@ const App: React.FC = () => {
                     viewSettings={viewSettings}
                     toolsActions={toolsActions}
                     exportActions={exportActions}
-                    peopleForSearch={people} // Pass directly for search
-                    onFocusPersonForSearch={setFocusId} // Pass directly for search
+                    searchProps={searchProps} // Pass searchProps directly
                 />
             )}
             
