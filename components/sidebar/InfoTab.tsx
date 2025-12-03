@@ -83,11 +83,10 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
                 {/* Image and Chat Button Wrapper */}
                 <div className="shrink-0 flex flex-col items-center gap-2">
                     <div className="relative group cursor-pointer" onClick={() => onSelect(person.id)}>
-                         <div className={`w-28 h-28 rounded-2xl border-2 border-white dark:border-stone-700 shadow-md flex items-center justify-center overflow-hidden bg-stone-50 dark:bg-stone-700 ${person.isDeceased ? 'grayscale' : ''}`}> {/* Increased size to w-28 h-28 */}
+                         <div className={`w-28 h-28 rounded-2xl border-2 border-white dark:border-stone-700 shadow-md flex items-center justify-center overflow-hidden bg-stone-50 dark:bg-stone-700 ${person.isDeceased ? 'grayscale' : ''}`}>
                             {person.photoUrl ? (
                                 <img src={person.photoUrl} alt={person.firstName} className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-500" />
                             ) : (
-                                // Increased icon size to w-10 h-10
                                 <User className={`w-10 h-10 ${person.gender === 'male' ? 'text-blue-300 dark:text-blue-800' : 'text-pink-300 dark:text-pink-800'}`} /> 
                             )}
                         </div>
@@ -172,7 +171,7 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
     <>
     <div className="flex flex-col gap-4 animate-in fade-in duration-200">
         {/* Profile Picture & Smart Fill */}
-        <div className="flex items-start gap-4 relative"> {/* Changed to flex-row items-start and gap-4 */}
+        <div className="flex items-start gap-4 relative">
             <div className="shrink-0 space-y-1.5">
                 <div 
                     onClick={() => fileInputRef.current?.click()}
@@ -202,7 +201,7 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
                 />
             </div>
 
-            <div className="flex flex-col items-start gap-y-1"> {/* Removed w-full, changed items-center to items-start */}
+            <div className="flex flex-col items-start gap-y-1">
                 <button 
                     onClick={() => setShowSmartModal(true)}
                     className="py-1 px-4 bg-gradient-to-r from-purple-500 to-indigo-600 text-white text-xs font-bold rounded-xl shadow-md hover:shadow-lg hover:scale-[1.01] transition-all flex items-center justify-center gap-1.5"
@@ -222,12 +221,12 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
                 <FormField label={t.lastName} value={person.lastName} onCommit={(v) => handleChange('lastName', v)} disabled={!isEditing} labelWidthClass="w-20" />
 
                 {/* Collapsible section for more identity fields */}
-                <div className="border-t border-stone-100 dark:border-stone-700 pt-2 mt-2"> {/* Separator */}
+                <div className="border-t border-stone-100 dark:border-stone-700 pt-2 mt-2">
                     <button
                         onClick={() => setShowMoreIdentityFields(!showMoreIdentityFields)}
                         className="w-full flex items-center justify-between text-xs font-medium text-stone-600 dark:text-stone-400 hover:text-teal-600 dark:hover:text-teal-400 py-1 px-0.5 -mx-0.5 rounded-md transition-colors"
                     >
-                        <span>{t.moreNames || 'More Names'}</span> {/* Placeholder for translation */}
+                        <span>{t.moreNames || 'More Names'}</span>
                         <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showMoreIdentityFields ? 'rotate-180' : ''}`} />
                     </button>
 
