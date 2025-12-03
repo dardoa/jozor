@@ -171,12 +171,12 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
     <>
     <div className="flex flex-col gap-4 animate-in fade-in duration-200">
         {/* Profile Picture & Smart Fill */}
-        <div className="flex flex-col items-center gap-3 relative"> {/* Changed to flex-col items-center */}
+        <div className="flex items-start gap-4 relative"> {/* Changed to flex-row items-start and gap-4 */}
             <div className="shrink-0 space-y-1.5">
                 <div 
                     onClick={() => fileInputRef.current?.click()}
                     className="w-24 h-24 rounded-xl border-2 border-dashed border-stone-300 dark:border-stone-600 hover:border-teal-400 dark:hover:border-teal-400 bg-stone-50 dark:bg-stone-800 flex flex-col items-center justify-center cursor-pointer relative overflow-hidden group transition-all"
-                > {/* Changed w-20 h-20 to w-24 h-24 */}
+                >
                     {person.photoUrl ? (
                         <>
                             <img src={person.photoUrl} alt="" className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
@@ -189,7 +189,6 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
                             </button>
                         </>
                     ) : (
-                        // Changed w-7 h-7 to w-8 h-8
                         <Camera className="w-8 h-8 text-stone-300 dark:text-stone-500 group-hover:text-teal-400 transition-colors" /> 
                     )}
                 </div>
@@ -202,14 +201,14 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
                 />
             </div>
 
-            <div className="flex flex-col items-center gap-y-1 w-full"> {/* Adjusted for vertical alignment */}
+            <div className="flex flex-col items-start gap-y-1"> {/* Removed w-full, changed items-center to items-start */}
                 <button 
                     onClick={() => setShowSmartModal(true)}
                     className="py-1 px-4 bg-gradient-to-r from-purple-500 to-indigo-600 text-white text-xs font-bold rounded-xl shadow-md hover:shadow-lg hover:scale-[1.01] transition-all flex items-center justify-center gap-1.5"
                 >
                     <Sparkles className="w-3.5 h-3.5" /> {t.smartFill}
                 </button>
-                <p className="text-[9px] text-stone-500 dark:text-stone-400 mt-0.5 text-center">{t.smartFillDescription}</p>
+                <p className="text-[9px] text-stone-500 dark:text-stone-400 mt-0.5">{t.smartFillDescription}</p>
             </div>
         </div>
 
