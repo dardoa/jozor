@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Person, Gender, Language, UserProfile } from '../types';
+import React, { useState, useEffect, useMemo, memo } from 'react';
 import { X, MessageCircle } from 'lucide-react';
 import { InfoTab } from './sidebar/InfoTab';
 import { PartnersTab } from './sidebar/PartnersTab';
@@ -8,6 +7,7 @@ import { BioTab } from './sidebar/BioTab';
 import { MediaTab } from './sidebar/MediaTab';
 import { SidebarFooter } from './sidebar/SidebarFooter';
 import { getTranslation } from '../utils/translations';
+import { Person, Gender, Language, UserProfile } from '../types';
 
 interface SidebarProps {
   person: Person;
@@ -26,7 +26,7 @@ interface SidebarProps {
   user: UserProfile | null;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({
+export const Sidebar: React.FC<SidebarProps> = memo(({
   person, people, onUpdate, onAddParent, onAddSpouse, onAddChild, onRemoveRelationship,
   onDelete, onSelect, language, isOpen, onClose, onOpenModal, user
 }) => {
@@ -69,16 +69,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
         
             {/* Header / Tabs */}
             <div className="flex items-end justify-between border-b border-stone-200/50 dark:border-stone-800/50 bg-stone-50/80 dark:bg-stone-900/80 backdrop-blur-sm pt-3 px-4">
-                <div className="flex gap-1 overflow-x-auto scrollbar-hide"> {/* Reduced gap */}
+                <div className="flex gap-0.5 overflow-x-auto scrollbar-hide"> {/* Reduced gap from 1 to 0.5 */}
                     {tabs.filter(tab => tab.show).map(tab => (
                         <button 
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id as any)} 
-                            className={`px-3 py-2 rounded-t-lg text-xs font-semibold transition-all relative top-[1px] {/* Reduced padding and font size */}
+                            className={`px-2.5 py-1.5 rounded-t-lg text-xs font-semibold transition-all relative top-[1px] 
                             ${activeTab === tab.id 
                                 ? 'bg-white dark:bg-stone-900 text-teal-600 dark:text-teal-400 border-x border-t border-stone-200/50 dark:border-stone-800/50 z-10 shadow-t-sm'
                                 : 'text-stone-500 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-300'}`}
-                        >
+                        > {/* Reduced px-3 py-2 to px-2.5 py-1.5 */}
                             {tab.label}
                         </button>
                     ))}
@@ -87,9 +87,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
 
             {/* Scrollable Content */}
-            <div className="flex-1 overflow-y-auto p-5 scrollbar-thin scrollbar-thumb-stone-200 dark:scrollbar-thumb-stone-700 bg-white dark:bg-stone-900">
+            <div className="flex-1 overflow-y-auto p-4 scrollbar-thin scrollbar-thumb-stone-200 dark:scrollbar-thumb-stone-700 bg-white dark:bg-stone-900"> {/* Reduced p-5 to p-4 */}
                 {person.isDeceased && activeTab === 'info' && !isEditing && (
-                    <button onClick={() => onOpenModal('chat')} className="w-full mb-5 py-2 bg-purple-50 dark:bg-purple-900/20 border border-purple-100 dark:border-purple-800/50 rounded-xl flex items-center justify-center gap-2 text-purple-700 dark:text-purple-300 text-sm font-bold hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-all"> {/* Reduced padding */}
+                    <button onClick={() => onOpenModal('chat')} className="w-full mb-4 py-1.5 bg-purple-50 dark:bg-purple-900/20 border border-purple-100 dark:border-purple-800/50 rounded-xl flex items-center justify-center gap-2 text-purple-700 dark:text-purple-300 text-sm font-bold hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-all"> {/* Reduced mb-5 py-2 to mb-4 py-1.5 */}
                         <MessageCircle className="w-4 h-4" />
                         {t.chatWithAncestor}
                     </button>
@@ -115,4 +115,4 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
     </>
   );
-};
+});

@@ -22,19 +22,19 @@ export const FormField: React.FC<FormFieldProps> = ({
   type = 'text',
   placeholder,
   isTextArea = false,
-  rows = 3,
+  rows = 2, // Reduced rows from 3 to 2
   className = '',
-  labelWidthClass = 'w-20', // Default to w-20 for better alignment in grids
+  labelWidthClass = 'w-16', // Reduced w-20 to w-16
 }) => {
-  const baseInputClass = "w-full h-8 px-3 py-1.5 border border-stone-300 dark:border-stone-600 rounded-lg text-sm focus:border-teal-500 outline-none transition-colors bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 disabled:bg-transparent disabled:border-transparent disabled:px-0 disabled:cursor-default disabled:font-medium disabled:text-stone-800 dark:disabled:text-stone-200";
-  const baseTextareaClass = "flex-1 px-3 py-1.5 border border-stone-300 dark:border-stone-600 rounded-lg text-sm focus:border-teal-500 outline-none resize-none transition-colors bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 disabled:bg-transparent disabled:border-transparent disabled:px-0 disabled:cursor-default disabled:font-medium disabled:text-stone-800 dark:disabled:text-stone-200"; // Adjusted py-2 to py-1.5
+  const baseInputClass = "w-full h-7 px-2.5 py-1 border border-stone-300 dark:border-stone-600 rounded-lg text-xs focus:border-teal-500 outline-none transition-colors bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 disabled:bg-transparent disabled:border-transparent disabled:px-0 disabled:cursor-default disabled:font-medium disabled:text-stone-800 dark:disabled:text-stone-200"; // Reduced h-8 to h-7, px-3 py-1.5 to px-2.5 py-1, text-sm to text-xs
+  const baseTextareaClass = "flex-1 px-2.5 py-1 border border-stone-300 dark:border-stone-600 rounded-lg text-xs focus:border-teal-500 outline-none resize-none transition-colors bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 disabled:bg-transparent disabled:border-transparent disabled:px-0 disabled:cursor-default disabled:font-medium disabled:text-stone-800 dark:disabled:text-stone-200"; // Adjusted py-1.5 to py-1, text-sm to text-xs
 
   const inputClasses = `${baseInputClass} ${className}`;
   const textareaClasses = `${baseTextareaClass} ${className}`;
 
   return (
     <div className={`flex items-center gap-3 ${isTextArea ? 'items-start' : ''}`}>
-      <label className={`${labelWidthClass} text-[10px] text-stone-600 dark:text-stone-400 font-medium ${isTextArea ? 'mt-2' : ''}`}>
+      <label className={`${labelWidthClass} text-[9px] text-stone-600 dark:text-stone-400 font-medium ${isTextArea ? 'mt-2' : ''}`}> {/* Reduced text-[10px] to text-[9px] */}
         {label}
       </label>
       {isTextArea ? (

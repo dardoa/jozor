@@ -34,11 +34,11 @@ export const BioTab: React.FC<BioTabProps> = memo(({ person, people, isEditing, 
   };
 
   return (
-    <div className="space-y-5">
-        <div className="bg-white dark:bg-stone-800 pt-6 p-4 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-3 relative">
+    <div className="space-y-4"> {/* Reduced space-y-5 to space-y-4 */}
+        <div className="bg-white dark:bg-stone-800 pt-5 p-3 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-2 relative"> {/* Reduced pt-6 p-4 to pt-5 p-3 and space-y-3 to space-y-2 */}
             <div className="absolute top-0 start-3 z-10 bg-white dark:bg-stone-800 px-2 flex justify-between items-center">
-                <h3 className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">{t.workInterests}</h3>
-                {!isEditing && <span className="text-[10px] text-stone-400 ms-2">{t.readOnly}</span>}
+                <h3 className="text-[9px] font-bold text-stone-400 uppercase tracking-wider">{t.workInterests}</h3> {/* Reduced text-[10px] to text-[9px] */}
+                {!isEditing && <span className="text-[9px] text-stone-400 ms-2">{t.readOnly}</span>} {/* Reduced text-[10px] to text-[9px] */}
             </div>
             
             <FormField
@@ -46,7 +46,7 @@ export const BioTab: React.FC<BioTabProps> = memo(({ person, people, isEditing, 
                 value={person.profession}
                 onCommit={(v) => handleChange('profession', v)}
                 disabled={!isEditing}
-                labelWidthClass="w-20"
+                labelWidthClass="w-16" /* Reduced w-20 to w-16 */
             />
 
             <FormField
@@ -54,7 +54,7 @@ export const BioTab: React.FC<BioTabProps> = memo(({ person, people, isEditing, 
                 value={person.company}
                 onCommit={(v) => handleChange('company', v)}
                 disabled={!isEditing}
-                labelWidthClass="w-20"
+                labelWidthClass="w-16" /* Reduced w-20 to w-16 */
             />
 
             <FormField
@@ -63,35 +63,33 @@ export const BioTab: React.FC<BioTabProps> = memo(({ person, people, isEditing, 
                 onCommit={(v) => handleChange('interests', v)}
                 disabled={!isEditing}
                 placeholder={isEditing ? "e.g. Golf, Cooking" : ""}
-                labelWidthClass="w-20"
+                labelWidthClass="w-16" /* Reduced w-20 to w-16 */
             />
         </div>
 
-        <div className="bg-white dark:bg-stone-800 pt-6 p-4 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm relative">
+        <div className="bg-white dark:bg-stone-800 pt-5 p-3 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm relative"> {/* Reduced pt-6 p-4 to pt-5 p-3 */}
             <div className="absolute top-0 start-3 z-10 bg-white dark:bg-stone-800 px-2 flex justify-between items-center w-[calc(100%-24px)]">
-                <h3 className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">{t.biography}</h3>
+                <h3 className="text-[9px] font-bold text-stone-400 uppercase tracking-wider">{t.biography}</h3> {/* Reduced text-[10px] to text-[9px] */}
                 {isEditing && (
                     <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-stone-500">{t.tone}:</span>
-                        {/* Reduced h-8 to h-7 and text-[10px] to text-[9px] */}
+                        <span className="text-[9px] text-stone-500">{t.tone}:</span> {/* Reduced text-[10px] to text-[9px] */}
                         <select 
                             value={bioTone}
                             onChange={(e) => setBioTone(e.target.value)}
-                            className="text-[9px] border border-stone-200 dark:border-stone-600 rounded-lg px-2 py-1 bg-stone-50 dark:bg-stone-700 outline-none focus:border-purple-300 text-stone-600 dark:text-stone-200 h-7"
-                        >
+                            className="text-[8px] border border-stone-200 dark:border-stone-600 rounded-lg px-2 py-0.5 bg-stone-50 dark:bg-stone-700 outline-none focus:border-purple-300 text-stone-600 dark:text-stone-200 h-6"
+                        > {/* Reduced text-[9px] to text-[8px], py-1 to py-0.5, h-7 to h-6 */}
                             <option value="Standard">Standard</option>
                             <option value="Formal">Formal</option>
                             <option value="Storyteller">Storyteller</option>
                             <option value="Humorous">Humorous</option>
                             <option value="Journalistic">Journalistic</option>
                         </select>
-                        {/* Reduced text-[10px] to text-[9px] */}
                         <button
                             onClick={handleGenerateBio}
                             disabled={isGenerating}
-                            className="text-[9px] text-purple-600 dark:text-purple-300 hover:text-purple-700 flex items-center gap-1 bg-purple-50 dark:bg-purple-900/30 px-2 py-1 rounded-full border border-purple-100 dark:border-purple-800 transition-colors font-bold"
-                        >
-                            {isGenerating ? <Loader2 className="w-3 h-3 animate-spin"/> : <Sparkles className="w-3 h-3" />}
+                            className="text-[8px] text-purple-600 dark:text-purple-300 hover:text-purple-700 flex items-center gap-1 bg-purple-50 dark:bg-purple-900/30 px-1.5 py-0.5 rounded-full border border-purple-100 dark:border-purple-800 transition-colors font-bold"
+                        > {/* Reduced text-[9px] to text-[8px], px-2 py-1 to px-1.5 py-0.5 */}
+                            {isGenerating ? <Loader2 className="w-2.5 h-2.5 animate-spin"/> : <Sparkles className="w-2.5 h-2.5" />} {/* Reduced w-3 h-3 to w-2.5 h-2.5 */}
                             {isGenerating ? '...' : t.generate}
                         </button>
                     </div>
@@ -99,10 +97,10 @@ export const BioTab: React.FC<BioTabProps> = memo(({ person, people, isEditing, 
             </div>
             <SmartTextarea
                 disabled={!isEditing}
-                rows={12}
+                rows={8} /* Reduced rows from 12 to 8 */
                 value={person.bio}
                 onCommit={(v) => handleChange('bio', v)}
-                className="w-full px-3 py-2 border border-stone-300 dark:border-stone-600 rounded-lg text-sm outline-none focus:border-teal-500 transition-colors bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 disabled:bg-transparent disabled:border-transparent disabled:px-0 disabled:cursor-default disabled:font-medium disabled:text-stone-800 dark:disabled:text-stone-200"
+                className="w-full px-2.5 py-1.5 border border-stone-300 dark:border-stone-600 rounded-lg text-xs outline-none focus:border-teal-500 transition-colors bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 disabled:bg-transparent disabled:border-transparent disabled:px-0 disabled:cursor-default disabled:font-medium disabled:text-stone-800 dark:disabled:text-stone-200"
                 placeholder={isEditing ? t.writeBio : t.noBio}
             />
         </div>

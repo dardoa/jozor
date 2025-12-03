@@ -30,8 +30,8 @@ export const PartnersTab: React.FC<PartnersTabProps> = memo(({ person, people, i
   };
 
   return (
-    <div className="bg-white dark:bg-stone-900 pt-6 p-2 rounded-xl border border-stone-200/50 dark:border-stone-800/50 shadow-sm space-y-4 animate-in slide-in-from-left-2 duration-200 relative">
-        <h3 className="absolute top-0 start-3 z-10 bg-white dark:bg-stone-900 px-2 text-[10px] font-bold text-stone-400 uppercase tracking-wider">{t.spouses}</h3>
+    <div className="bg-white dark:bg-stone-900 pt-5 p-3 rounded-xl border border-stone-200/50 dark:border-stone-800/50 shadow-sm space-y-3 animate-in slide-in-from-left-2 duration-200 relative"> {/* Reduced pt-6 p-2 to pt-5 p-3 and space-y-4 to space-y-3 */}
+        <h3 className="absolute top-0 start-3 z-10 bg-white dark:bg-stone-900 px-2 text-[9px] font-bold text-stone-400 uppercase tracking-wider">{t.spouses}</h3> {/* Reduced text-[10px] to text-[9px] */}
         
         {person.spouses.map((spouseId) => {
             const spouse = people[spouseId];
@@ -41,18 +41,18 @@ export const PartnersTab: React.FC<PartnersTabProps> = memo(({ person, people, i
             const isDivorced = details.type === 'divorced';
 
             return (
-                <div key={spouseId} className="border border-stone-100 dark:border-stone-700 rounded-xl p-3 bg-stone-50/80 dark:bg-stone-800/30 hover:border-teal-200 dark:hover:border-teal-800 transition-colors">
+                <div key={spouseId} className="border border-stone-100 dark:border-stone-700 rounded-xl p-2 bg-stone-50/80 dark:bg-stone-800/30 hover:border-teal-200 dark:hover:border-teal-800 transition-colors"> {/* Reduced p-3 to p-2 */}
                     {/* Partner Header */}
-                    <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center gap-3">
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shadow-sm overflow-hidden ${spouse.gender === 'male' ? 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300' : 'bg-pink-100 text-pink-600 dark:bg-pink-900 dark:text-pink-300'}`}> {/* Reduced from w-10 h-10 to w-8 h-8 */}
+                    <div className="flex items-start justify-between mb-2"> {/* Reduced mb-3 to mb-2 */}
+                        <div className="flex items-center gap-2"> {/* Reduced gap-3 to gap-2 */}
+                            <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shadow-sm overflow-hidden ${spouse.gender === 'male' ? 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300' : 'bg-pink-100 text-pink-600 dark:bg-pink-900 dark:text-pink-300'}`}> {/* Reduced w-8 h-8 to w-7 h-7 */}
                                 {spouse.photoUrl ? (
                                     <img src={spouse.photoUrl} alt="" className="w-full h-full object-cover" />
                                 ) : spouse.firstName[0]}
                             </div>
                             <div>
-                                <h4 className="font-bold text-stone-800 dark:text-stone-200 text-sm leading-tight mb-0.5">{spouse.firstName} {spouse.lastName}</h4>
-                                <button onClick={() => onSelect(spouseId)} className="text-[10px] text-teal-500 hover:underline flex items-center gap-1">
+                                <h4 className="font-bold text-stone-800 dark:text-stone-200 text-xs leading-tight mb-0.5">{spouse.firstName} {spouse.lastName}</h4> {/* Reduced text-sm to text-xs */}
+                                <button onClick={() => onSelect(spouseId)} className="text-[9px] text-teal-500 hover:underline flex items-center gap-1"> {/* Reduced text-[10px] to text-[9px] */}
                                     {t.viewProfile} <ExternalLink className="w-2.5 h-2.5" />
                                 </button>
                             </div>
@@ -60,21 +60,21 @@ export const PartnersTab: React.FC<PartnersTabProps> = memo(({ person, people, i
                     </div>
                     
                     {/* Edit Controls */}
-                    <div className="space-y-2 pt-3 border-t border-stone-200/60 dark:border-stone-700">
+                    <div className="space-y-1.5 pt-2 border-t border-stone-200/60 dark:border-stone-700"> {/* Reduced space-y-2 to space-y-1.5 and pt-3 to pt-2 */}
                         {/* Status Selector */}
-                        <div className="flex items-center gap-3">
-                                <div className="w-6 flex justify-center text-stone-400">
-                                    {details.type === 'married' ? <Heart className="w-4 h-4 text-rose-500" /> : 
-                                    details.type === 'engaged' ? <Gem className="w-4 h-4 text-yellow-500" /> :
-                                    details.type === 'divorced' ? <HeartCrack className="w-4 h-4 text-stone-500" /> :
-                                    <Users className="w-4 h-4" />}
+                        <div className="flex items-center gap-2"> {/* Reduced gap-3 to gap-2 */}
+                                <div className="w-5 flex justify-center text-stone-400"> {/* Reduced w-6 to w-5 */}
+                                    {details.type === 'married' ? <Heart className="w-3.5 h-3.5 text-rose-500" /> : 
+                                    details.type === 'engaged' ? <Gem className="w-3.5 h-3.5 text-yellow-500" /> :
+                                    details.type === 'divorced' ? <HeartCrack className="w-3.5 h-3.5 text-stone-500" /> :
+                                    <Users className="w-3.5 h-3.5" />}
                                 </div>
                                 <select 
                                 disabled={!isEditing}
                                 value={details.type}
                                 onChange={(e) => handlePartnerUpdate(spouseId, 'type', e.target.value)}
-                                className="flex-1 h-8 bg-white dark:bg-stone-700 border border-stone-200 dark:border-stone-600 rounded-lg text-sm px-2 outline-none focus:border-teal-500 disabled:bg-transparent disabled:border-transparent disabled:px-0 disabled:font-medium disabled:text-stone-700 dark:disabled:text-stone-300 text-stone-900 dark:text-stone-100"
-                                >
+                                className="flex-1 h-7 bg-white dark:bg-stone-700 border border-stone-200 dark:border-stone-600 rounded-lg text-xs px-2 outline-none focus:border-teal-500 disabled:bg-transparent disabled:border-transparent disabled:px-0 disabled:font-medium disabled:text-stone-700 dark:disabled:text-stone-300 text-stone-900 dark:text-stone-100"
+                                > {/* Reduced h-8 to h-7 and text-sm to text-xs */}
                                     <option value="married">{t.married}</option>
                                     <option value="engaged">{t.engaged}</option>
                                     <option value="divorced">{t.divorced}</option>
@@ -83,14 +83,14 @@ export const PartnersTab: React.FC<PartnersTabProps> = memo(({ person, people, i
                         </div>
 
                         {/* Date Inputs */}
-                        <div className="space-y-2 mt-2">
-                            <div className="flex items-center gap-3">
-                                    <div className="w-6 flex justify-center text-stone-400">
-                                        <Calendar className="w-4 h-4" />
+                        <div className="space-y-1.5 mt-1.5"> {/* Reduced space-y-2 to space-y-1.5 and mt-2 to mt-1.5 */}
+                            <div className="flex items-center gap-2"> {/* Reduced gap-3 to gap-2 */}
+                                    <div className="w-5 flex justify-center text-stone-400"> {/* Reduced w-6 to w-5 */}
+                                        <Calendar className="w-3.5 h-3.5" />
                                     </div>
-                                    <div className="flex-1 flex flex-col gap-2">
+                                    <div className="flex-1 flex flex-col gap-1.5"> {/* Reduced gap-2 to gap-1.5 */}
                                     <div className="flex items-center gap-2">
-                                            <span className="text-[10px] text-stone-500 w-12 shrink-0">
+                                            <span className="text-[9px] text-stone-500 w-10 shrink-0"> {/* Reduced text-[10px] to text-[9px] and w-12 to w-10 */}
                                             {isDivorced ? t.married : t.since}:
                                             </span>
                                             <DateSelect disabled={!isEditing} value={details.startDate} onChange={(val) => handlePartnerUpdate(spouseId, 'startDate', val)} />
@@ -101,20 +101,20 @@ export const PartnersTab: React.FC<PartnersTabProps> = memo(({ person, people, i
                                             onCommit={(v) => handlePartnerUpdate(spouseId, 'startPlace', v)}
                                             disabled={!isEditing}
                                             placeholder={t.place}
-                                            className="!h-8 !text-sm"
+                                            className="!h-7 !text-xs" /* Reduced !h-8 !text-sm to !h-7 !text-xs */
                                             labelWidthClass="hidden"
                                         />
                                     </div>
                             </div>
                             
                             {isDivorced && (
-                                <div className="flex items-center gap-3 animate-in slide-in-from-top-1">
-                                        <div className="w-6 flex justify-center text-stone-400">
-                                            <HeartCrack className="w-4 h-4" />
+                                <div className="flex items-center gap-2 animate-in slide-in-from-top-1"> {/* Reduced gap-3 to gap-2 */}
+                                        <div className="w-5 flex justify-center text-stone-400"> {/* Reduced w-6 to w-5 */}
+                                            <HeartCrack className="w-3.5 h-3.5" />
                                         </div>
-                                        <div className="flex-1 flex flex-col gap-2">
+                                        <div className="flex-1 flex flex-col gap-1.5"> {/* Reduced gap-2 to gap-1.5 */}
                                         <div className="flex items-center gap-2">
-                                                <span className="text-[10px] text-stone-500 w-12 shrink-0">{t.divorced}:</span>
+                                                <span className="text-[9px] text-stone-500 w-10 shrink-0">{t.divorced}:</span> {/* Reduced text-[10px] to text-[9px] and w-12 to w-10 */}
                                                 <DateSelect disabled={!isEditing} value={details.endDate || ''} onChange={(val) => handlePartnerUpdate(spouseId, 'endDate', val)} />
                                         </div>
                                             <FormField
@@ -123,7 +123,7 @@ export const PartnersTab: React.FC<PartnersTabProps> = memo(({ person, people, i
                                                 onCommit={(v) => handlePartnerUpdate(spouseId, 'endPlace', v)}
                                                 disabled={!isEditing}
                                                 placeholder={t.place}
-                                                className="!h-8 !text-sm"
+                                                className="!h-7 !text-xs" /* Reduced !h-8 !text-sm to !h-7 !text-xs */
                                                 labelWidthClass="hidden"
                                             />
                                         </div>
