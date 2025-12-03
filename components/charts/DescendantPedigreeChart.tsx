@@ -69,62 +69,28 @@ export const DescendantPedigreeChart: React.FC<DescendantPedigreeChartProps> = m
 
     if (settings.chartType === 'descendant' && link.type === 'parent-child') {
         const childData = target.data as Person;
-        let collapsePointForThisChild: CollapsePoint | undefined;
-
-        // Determine which collapse point this child should connect to
-        // If the child has two parents, find the collapse point for the marriage of these two parents.
-        if (childData.parents.length === 2) {
-            const parent1Id = childData.parents[0];
-            const parent2Id = childData.parents[1];
-            const otherParentId = (source.data as Person).id === parent1Id ? parent2Id : parent1Id;
-            collapsePointForThisChild = collapsePoints.find(cp => 
-                (cp.id === (source.data as Person).id && cp.spouseId === otherParentId) ||
-                (cp.id === otherParentId && cp.spouseId === (source.data as Person).id)
-            );
+        let correctJoint = null;
+        if (childData.parents.length > 1) {
+           const otherParentId = childData.parents.find(id => people[id]?.id !== (source.data as Person).id); 
+           if (otherParentId) {
+              correctJoint = collapsePoints.find(cp => cp.id === (source.data as Person).id && cp.spouseId === otherParentId);
+           }
         }
+        if (!correctJoint) correctJoint = collapsePoints.find(cp => cp.id === (source.data as Person).id && cp.spouseId === 'single');
         
-        // If no marriage collapse point, or if single parent, look for single collapse point
-        if (!collapsePointForThisChild && childData.parents.length === 1) {
-            collapsePointForThisChild = collapsePoints.find(cp => cp.id === (source.data as Person).id && cp.spouseId === 'single');
+        if (correctJoint) {
+            const startX = source.x;
+            const startY = source.y;
+            return drawRoundedPath(startX, startY, correctJoint.x, correctJoint.y, target.x, target.y);
         }
-
-        if (collapsePointForThisChild) {
-            // If a collapse point exists for this child's parent(s), the line should originate from the collapse point.
-            const startX = collapsePointForThisChild.x;
-            const startY = collapsePointForThisChild.y;
-            const targetX = target.x;
-            const targetY = target.y;
-
-            const cpRadius = 12; // Radius of the collapse circle
-            if (isVertical) {
-                const cpBottomY = startY + cpRadius; 
-                const childTopY = targetY - NODE_HEIGHT / 2;
-                return `M ${startX} ${cpBottomY} L ${targetX} ${childTopY}`;
-            } else {
-                const cpRightX = startX + cpRadius; 
-                const childLeftX = targetX - NODE_WIDTH / 2;
-                return `M ${cpRightX} ${startY} L ${childLeftX} ${targetY}`;
-            }
-        }
-        // Fallback for direct parent-child link without a collapse point (e.g., if children are not collapsed)
-        const startX = source.x;
-        const startY = source.y;
-        const targetX = target.x;
-        const targetY = target.y;
-
-        let jointX, jointY;
-        if (isVertical) {
-            jointX = startX; 
-            jointY = (startY + NODE_HEIGHT / 2 + targetY - NODE_HEIGHT / 2) / 2; 
-        } else {
-            jointX = (startX + NODE_WIDTH / 2 + targetX - NODE_WIDTH / 2) / 2; 
-            jointY = startY; 
-        }
-        
-        return drawRoundedPath(startX, startY, jointX, jointY, targetX, targetY);
+        const startBottomX = source.x;
+        const startBottomY = source.y + NODE_HEIGHT / 2;
+        const targetTopX = target.x;
+        const targetTopY = target.y - NODE_HEIGHT / 2;
+        return `M ${startBottomX} ${startBottomY} L ${targetTopX} ${targetTopY}`;
     }
     return `M ${source.x} ${source.y} L ${target.x} ${target.y}`;
-  }, [nodes, settings.chartType, collapsePoints, isVertical, NODE_WIDTH, NODE_HEIGHT, people, drawRoundedPath]);
+  }, [nodes, settings.chartType, collapsePoints, drawRoundedPath, NODE_WIDTH, NODE_HEIGHT, people]);
 
   return (
     <>
