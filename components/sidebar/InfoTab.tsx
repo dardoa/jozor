@@ -155,26 +155,26 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
     <>
     <div className="flex flex-col gap-5 animate-in fade-in duration-200">
         {/* Profile Picture & Smart Fill */}
-        <div className="flex items-center gap-4 relative">
+        <div className="flex items-start gap-4 relative"> {/* Changed items-center to items-start */}
             <div className="shrink-0 space-y-2">
                 <div 
                     onClick={() => fileInputRef.current?.click()}
-                    className="w-20 h-20 rounded-xl border-2 border-dashed border-stone-300 dark:border-stone-600 hover:border-teal-400 dark:hover:border-teal-400 bg-stone-50 dark:bg-stone-800 flex flex-col items-center justify-center cursor-pointer relative overflow-hidden group transition-all"
-                > {/* Reduced from w-24 h-24 to w-20 h-20 */}
+                    className="w-24 h-24 rounded-xl border-2 border-dashed border-stone-300 dark:border-stone-600 hover:border-teal-400 dark:hover:border-teal-400 bg-stone-50 dark:bg-stone-800 flex flex-col items-center justify-center cursor-pointer relative overflow-hidden group transition-all"
+                > {/* Increased from w-20 h-20 to w-24 h-24 */}
                     {person.photoUrl ? (
                         <img src={person.photoUrl} alt="" className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
                     ) : (
-                        <Camera className="w-7 h-7 text-stone-300 dark:text-stone-500 group-hover:text-teal-400 transition-colors" />
+                        <Camera className="w-8 h-8 text-stone-300 dark:text-stone-500 group-hover:text-teal-400 transition-colors" /> {/* Increased from w-7 h-7 to w-8 h-8 */}
                     )}
                     <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/20 transition-colors">
-                        <span className="text-[9px] font-bold text-white bg-black/60 px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm">{t.changePhoto}</span>
+                        <span className="text-[10px] font-bold text-white bg-black/60 px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm">{t.changePhoto}</span> {/* Changed text-[9px] to text-[10px] */}
                     </div>
                 </div>
                 {person.photoUrl && (
                     <button 
                         onClick={() => handleChange('photoUrl', '')}
-                        className="text-[10px] font-bold text-red-500 hover:text-red-700 w-full text-center bg-red-50 dark:bg-red-900/10 py-1.5 rounded-lg hover:bg-red-100 transition-colors"
-                    >
+                        className="text-xs font-bold text-red-500 hover:text-red-700 w-full text-center bg-red-50 dark:bg-red-900/10 py-1 rounded-lg hover:bg-red-100 transition-colors"
+                    > {/* Changed text-[10px] to text-xs and py-1.5 to py-1 */}
                         {t.removePhoto}
                     </button>
                 )}
@@ -187,14 +187,14 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
                 />
             </div>
 
-            <div className="flex-1 flex flex-col items-center">
+            <div className="flex-1 flex flex-col items-start gap-y-2"> {/* Changed items-center to items-start and added gap-y-2 */}
                 <button 
                     onClick={() => setShowSmartModal(true)}
                     className="py-1.5 px-4 bg-gradient-to-r from-purple-500 to-indigo-600 text-white text-xs font-bold rounded-xl shadow-md hover:shadow-lg hover:scale-[1.01] transition-all flex items-center justify-center gap-1.5"
                 >
                     <Sparkles className="w-3.5 h-3.5" /> {t.smartFill}
                 </button>
-                <p className="text-[10px] text-stone-500 dark:text-stone-400 mt-1 text-center">{t.smartFillDescription}</p>
+                <p className="text-[10px] text-stone-500 dark:text-stone-400 mt-0.5 text-start">{t.smartFillDescription}</p> {/* Changed mt-1 to mt-0.5 and text-center to text-start */}
             </div>
         </div>
 
