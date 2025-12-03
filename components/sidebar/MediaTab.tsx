@@ -89,18 +89,18 @@ export const MediaTab: React.FC<MediaTabProps> = memo(({ person, isEditing, onUp
                             <button 
                                 onClick={handleDriveSelect}
                                 disabled={isDriveLoading}
-                                className="text-[8px] font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 disabled:opacity-50 px-1.5 py-0.5 rounded-full"
+                                className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 disabled:opacity-50 px-2 py-1 rounded-full"
                                 title="Import from Google Drive"
-                            > {/* Reduced text-[9px] to text-[8px], px-2 py-1 to px-1.5 py-0.5 */}
-                                {isDriveLoading ? <Loader2 className="w-2.5 h-2.5 animate-spin"/> : <Cloud className="w-2.5 h-2.5"/>} {/* Reduced w-3 h-3 to w-2.5 h-2.5 */}
+                            > {/* Increased text-[8px] to text-xs, px-1.5 py-0.5 to px-2 py-1 */}
+                                {isDriveLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin"/> : <Cloud className="w-3.5 h-3.5"/>} {/* Increased w-2.5 h-2.5 to w-3.5 h-3.5 */}
                                 <span className="hidden sm:inline">Drive</span>
                             </button>
                         )}
                         <button 
                             onClick={() => galleryInputRef.current?.click()}
-                            className="text-[8px] font-bold text-teal-600 dark:text-teal-400 hover:underline flex items-center gap-1 px-1.5 py-0.5 rounded-full"
-                        > {/* Reduced text-[9px] to text-[8px], px-2 py-1 to px-1.5 py-0.5 */}
-                            <Plus className="w-2.5 h-2.5"/> {t.addPhoto} {/* Reduced w-3 h-3 to w-2.5 h-2.5 */}
+                            className="text-xs font-bold text-teal-600 dark:text-teal-400 hover:underline flex items-center gap-1 px-2 py-1 rounded-full"
+                        > {/* Increased text-[8px] to text-xs, px-1.5 py-0.5 to px-2 py-1 */}
+                            <Plus className="w-3.5 h-3.5"/> {t.addPhoto} {/* Increased w-2.5 h-2.5 to w-3.5 h-3.5 */}
                         </button>
                     </div>
                 )}
@@ -115,7 +115,7 @@ export const MediaTab: React.FC<MediaTabProps> = memo(({ person, isEditing, onUp
 
             {(!person.gallery || person.gallery.length === 0) ? (
                 <div className="text-center py-4 text-stone-400 dark:text-stone-500 bg-stone-50 dark:bg-stone-800/50 rounded-xl border border-dashed border-stone-200 dark:border-stone-700 flex flex-col items-center"> {/* Reduced py-6 to py-4 */}
-                    <ImageIcon className="w-6 h-6 mb-2 opacity-50" /> {/* Reduced w-7 h-7 to w-6 h-6 */}
+                    <ImageIcon className="w-8 h-8 mb-2 opacity-50" /> {/* Increased w-6 h-6 to w-8 h-8 */}
                     <span className="text-sm">{t.noPhotos}</span>
                 </div>
             ) : (
@@ -127,10 +127,10 @@ export const MediaTab: React.FC<MediaTabProps> = memo(({ person, isEditing, onUp
                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5"> {/* Reduced gap-2 to gap-1.5 */}
                                 <button
                                     onClick={() => handleAnalyzePhoto(idx, src)}
-                                    className="p-1 bg-white/20 hover:bg-white/40 backdrop-blur rounded-full text-white"
+                                    className="p-1.5 bg-white/20 hover:bg-white/40 backdrop-blur rounded-full text-white"
                                     title="AI Analyze"
-                                > {/* Reduced p-1.5 to p-1 */}
-                                    {analyzingImgIndex === idx ? <Loader2 className="w-3 h-3 animate-spin"/> : <ScanEye className="w-3 h-3"/>} {/* Reduced w-3.5 h-3.5 to w-3 h-3 */}
+                                > {/* Increased p-1 to p-1.5 */}
+                                    {analyzingImgIndex === idx ? <Loader2 className="w-4 h-4 animate-spin"/> : <ScanEye className="w-4 h-4"/>} {/* Increased w-3 h-3 to w-4 h-4 */}
                                 </button>
                                 {isEditing && (
                                     <button 
@@ -139,9 +139,9 @@ export const MediaTab: React.FC<MediaTabProps> = memo(({ person, isEditing, onUp
                                             newGallery.splice(idx, 1);
                                             onUpdate(person.id, { gallery: newGallery });
                                         }}
-                                        className="p-1 bg-red-500/80 hover:bg-red-600 text-white rounded-full"
-                                    > {/* Reduced p-1.5 to p-1 */}
-                                        <X className="w-3 h-3" /> {/* Reduced w-3.5 h-3.5 to w-3 h-3 */}
+                                        className="p-1.5 bg-red-500/80 hover:bg-red-600 text-white rounded-full"
+                                    > {/* Increased p-1 to p-1.5 */}
+                                        <X className="w-4 h-4" /> {/* Increased w-3 h-3 to w-4 h-4 */}
                                     </button>
                                 )}
                             </div>
@@ -160,19 +160,19 @@ export const MediaTab: React.FC<MediaTabProps> = memo(({ person, isEditing, onUp
 
             {(!person.voiceNotes || person.voiceNotes.length === 0) ? (
                  <div className="text-center py-4 text-stone-400 dark:text-stone-500 bg-stone-50 dark:bg-stone-800/50 rounded-xl border border-dashed border-stone-200 dark:border-stone-700 flex flex-col items-center"> {/* Reduced py-6 to py-4 */}
-                    <Mic className="w-6 h-6 mb-2 opacity-50" /> {/* Reduced w-7 h-7 to w-6 h-6 */}
+                    <Mic className="w-8 h-8 mb-2 opacity-50" /> {/* Increased w-6 h-6 to w-8 h-8 */}
                     <span className="text-sm">No recordings yet.</span>
                 </div>
             ) : (
                 <div className="space-y-2"> {/* Reduced space-y-3 to space-y-2 */}
                     {person.voiceNotes.map((note, idx) => (
                         <div key={idx} className="flex items-center gap-2 p-2 bg-white dark:bg-stone-900 border border-stone-100 dark:border-stone-700 rounded-xl shadow-sm"> {/* Reduced p-3 to p-2 and gap-3 to gap-2 */}
-                            <div className="w-7 h-7 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600 dark:text-purple-400 shrink-0"> {/* Reduced w-8 h-8 to w-7 h-7 */}
-                                <Mic className="w-3.5 h-3.5" /> {/* Reduced w-4 h-4 to w-3.5 h-3.5 */}
+                            <div className="w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600 dark:text-purple-400 shrink-0"> {/* Increased w-7 h-7 to w-8 h-8 */}
+                                <Mic className="w-4 h-4" /> {/* Increased w-3.5 h-3.5 to w-4 h-4 */}
                             </div>
                             <div className="flex-1 min-w-0">
                                 <div className="text-sm font-bold text-stone-700 dark:text-stone-300">Recording #{idx + 1}</div>
-                                <audio ref={audioRef} src={note} controls className="w-full h-7 mt-1" /> {/* Reduced h-8 to h-7 */}
+                                <audio ref={audioRef} src={note} controls className="w-full h-8 mt-1" /> {/* Increased h-7 to h-8 */}
                             </div>
                             {isEditing && (
                                 <button 
@@ -181,9 +181,9 @@ export const MediaTab: React.FC<MediaTabProps> = memo(({ person, isEditing, onUp
                                         newNotes.splice(idx, 1);
                                         onUpdate(person.id, { voiceNotes: newNotes });
                                     }}
-                                    className="p-1.5 text-stone-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                                > {/* Reduced p-2 to p-1.5 */}
-                                    <Trash2 className="w-3.5 h-3.5" /> {/* Reduced w-4 h-4 to w-3.5 h-3.5 */}
+                                    className="p-2 text-stone-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                                > {/* Increased p-1.5 to p-2 */}
+                                    <Trash2 className="w-4 h-4" /> {/* Increased w-3.5 h-3.5 to w-4 h-4 */}
                                 </button>
                             )}
                         </div>
