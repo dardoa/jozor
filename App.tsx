@@ -13,6 +13,7 @@ import { useLanguageSync } from './hooks/useLanguageSync';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useAppUI } from './hooks/useAppUI';
 import { useTreeSettings } from './hooks/useTreeSettings';
+import { useWelcomeScreenLogic } from './hooks/useWelcomeScreenLogic'; // New import
 
 import { INITIAL_ROOT_ID } from './constants';
 import { getTranslation } from './utils/translations';
@@ -41,29 +42,28 @@ const App: React.FC = () => {
   const canUndo = history.length > 0;
   const canRedo = future.length > 0;
 
-  // --- useAppUI Hook ---
+  // --- Welcome Screen Logic ---
   const {
-    showWelcome,
+    showWelcome, fileInputRef,
+    handleStartNewTree, onFileUpload, handleLoginWrapper, handleLogoutWrapper
+  } = useWelcomeScreenLogic({
+    people, t, startNewTree, stopSyncing, handleImport, handleLogin, handleLogout
+  });
+
+  // --- App UI Logic (excluding welcome screen) ---
+  const {
     sidebarOpen, setSidebarOpen,
     activeModal, setActiveModal,
     isPresentMode, setIsPresentMode,
     linkModal, setLinkModal,
-    fileInputRef,
     handleOpenLinkModal,
     handleCreateNewRelative,
     handleSelectExistingRelative,
-    handleStartNewTree,
-    onFileUpload,
-    handleLoginWrapper,
-    handleLogoutWrapper,
     handleOpenModal,
   } = useAppUI({
-    people, t, startNewTree, stopSyncing, handleImport, 
-    handleLogin: handleLogin,
-    handleLogout: handleLogout,
     addParent, addSpouse, addChild, linkPerson, setFocusId,
-    canUndo, // Pass canUndo
-    canRedo, // Pass canRedo
+    canUndo,
+    canRedo,
   });
 
   // --- Custom Hooks for Side Effects ---
