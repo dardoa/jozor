@@ -284,8 +284,13 @@ export const InfoTab: React.FC<InfoTabProps> = ({
 
              <div className="grid grid-cols-2 gap-2 pt-1">
                 <div>
-                     <label className="block text-[9px] text-gray-400 font-bold mb-1 uppercase">{t.birthDate}</label>
-                     <DateSelect value={person.birthDate} onChange={(val) => handleChange('birthDate', val)} />
+                     <FormField
+                        label={t.birthDate}
+                        disabled={!isEditing}
+                        labelWidthClass="w-auto"
+                     >
+                        <DateSelect value={person.birthDate} onChange={(val) => handleChange('birthDate', val)} disabled={!isEditing} />
+                     </FormField>
                 </div>
                 <div>
                     <FormField
@@ -299,7 +304,6 @@ export const InfoTab: React.FC<InfoTabProps> = ({
                 <div className="col-span-2">
                      <div className="flex items-center gap-1.5">
                          <BookOpen className="w-3 h-3 text-gray-400" />
-                         {/* Updated height to !h-7 */}
                          <FormField
                             label={t.source}
                             value={person.birthSource}
@@ -316,8 +320,13 @@ export const InfoTab: React.FC<InfoTabProps> = ({
              {person.isDeceased && (
                  <div className="grid grid-cols-2 gap-2 animate-in slide-in-from-top-2 pt-2 border-t border-gray-100 dark:border-gray-800">
                     <div>
-                         <label className="block text-[9px] text-gray-400 font-bold mb-1 uppercase">{t.deathDate}</label>
-                         <DateSelect value={person.deathDate} onChange={(val) => handleChange('deathDate', val)} />
+                         <FormField
+                            label={t.deathDate}
+                            disabled={!isEditing}
+                            labelWidthClass="w-auto"
+                         >
+                            <DateSelect value={person.deathDate} onChange={(val) => handleChange('deathDate', val)} disabled={!isEditing} />
+                         </FormField>
                     </div>
                     <div>
                         <FormField
@@ -331,7 +340,6 @@ export const InfoTab: React.FC<InfoTabProps> = ({
                      <div className="col-span-2">
                          <div className="flex items-center gap-1.5">
                              <BookOpen className="w-3 h-3 text-gray-400" />
-                             {/* Updated height to !h-7 */}
                              <FormField
                                 label={t.source}
                                 value={person.deathSource}
