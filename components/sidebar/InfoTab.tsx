@@ -164,7 +164,7 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
                     {person.photoUrl ? (
                         <img src={person.photoUrl} alt="" className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
                     ) : (
-                        <Camera className="w-8 h-8 text-stone-300 dark:text-stone-500 group-hover:text-teal-400 transition-colors" /> {/* Increased from w-7 h-7 to w-8 h-8 */}
+                        <Camera className="w-8 h-8 text-stone-300 dark:text-stone-500 group-hover:text-teal-400 transition-colors" /> 
                     )}
                     <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/20 transition-colors">
                         <span className="text-[10px] font-bold text-white bg-black/60 px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm">{t.changePhoto}</span> {/* Changed text-[9px] to text-[10px] */}
