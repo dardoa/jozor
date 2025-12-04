@@ -36,6 +36,7 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
   const [showIdentityFields, setShowIdentityFields] = useState(true); // New state for collapsible identity section
   const [showBirthDetails, setShowBirthDetails] = useState(true); // New state for collapsible birth details
   const [showDeathDetails, setShowDeathDetails] = useState(true); // New state for collapsible death details
+  const [showActionsSection, setShowActionsSection] = useState(true); // New state for collapsible actions section
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -151,31 +152,41 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
 
             <div className="h-px bg-stone-100 dark:bg-stone-800"></div>
             
-            {/* Actions Section */}
+            {/* Collapsible Actions Section */}
             <div className="bg-white dark:bg-stone-800 pt-5 p-3 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-2 relative">
                 <h3 className="absolute top-[-12px] start-3 z-10 bg-white dark:bg-stone-800 px-2 text-[9px] font-bold text-stone-400 uppercase tracking-wider">{t.actions}</h3>
-                <div className="grid grid-cols-2 gap-2">
-                    {person.isDeceased && (
+                <button
+                    onClick={() => setShowActionsSection(!showActionsSection)}
+                    className="w-full flex items-center justify-between text-xs font-medium text-stone-600 dark:text-stone-400 hover:text-teal-600 dark:hover:text-teal-400 py-1 px-0.5 -mx-0.5 rounded-md transition-colors"
+                >
+                    <span>{t.actions}</span>
+                    <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showActionsSection ? 'rotate-180' : ''}`} />
+                </button>
+
+                {showActionsSection && (
+                    <div className="grid grid-cols-2 gap-2 mt-2 animate-in fade-in slide-in-from-top-1 duration-200">
+                        {person.isDeceased && (
+                            <button 
+                                onClick={() => onOpenModal('chat')} 
+                                className="flex items-center justify-center gap-2 px-3 py-2 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 rounded-lg text-xs font-bold hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-colors"
+                            >
+                                <MessageCircle className="w-4 h-4" /> {t.chatWithAncestor}
+                            </button>
+                        )}
                         <button 
-                            onClick={() => onOpenModal('chat')} 
-                            className="flex items-center justify-center gap-2 px-3 py-2 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 rounded-lg text-xs font-bold hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-colors"
+                            onClick={() => onOpenModal('map')} 
+                            className="flex items-center justify-center gap-2 px-3 py-2 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 rounded-lg text-xs font-bold hover:bg-green-100 dark:hover:bg-green-900/40 transition-colors"
                         >
-                            <MessageCircle className="w-4 h-4" /> {t.chatWithAncestor}
+                            <MapPin className="w-4 h-4" /> {t.viewOnMap}
                         </button>
-                    )}
-                    <button 
-                        onClick={() => onOpenModal('map')} 
-                        className="flex items-center justify-center gap-2 px-3 py-2 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 rounded-lg text-xs font-bold hover:bg-green-100 dark:hover:bg-green-900/40 transition-colors"
-                    >
-                        <MapPin className="w-4 h-4" /> {t.viewOnMap}
-                    </button>
-                    <button 
-                        onClick={() => onOpenModal('timeline')} 
-                        className="flex items-center justify-center gap-2 px-3 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg text-xs font-bold hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors"
-                    >
-                        <CalendarDays className="w-4 h-4" /> {t.familyTimelineHeader}
-                    </button>
-                </div>
+                        <button 
+                            onClick={() => onOpenModal('timeline')} 
+                            className="flex items-center justify-center gap-2 px-3 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg text-xs font-bold hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors"
+                        >
+                            <CalendarDays className="w-4 h-4" /> {t.familyTimelineHeader}
+                        </button>
+                    </div>
+                )}
             </div>
 
             {/* Collapsible Family Relationships Section */}
