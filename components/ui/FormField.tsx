@@ -6,7 +6,7 @@ interface FormFieldProps {
   value: string | number;
   onCommit: (value: any) => void;
   disabled?: boolean;
-  type?: 'text' | 'email' | 'url';
+  type?: 'text' | 'email' | 'url' | 'number'; // Added 'number' type
   placeholder?: string;
   isTextArea?: boolean;
   rows?: number;

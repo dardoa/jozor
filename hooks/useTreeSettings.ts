@@ -13,6 +13,7 @@ const DEFAULT_TREE_SETTINGS: TreeSettings = {
   theme: 'modern',
   enableForcePhysics: true,
   enableTimeOffset: false, // New default setting
+  timeScaleFactor: 5, // New default for time scale factor
 };
 
 export const useTreeSettings = () => {

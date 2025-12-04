@@ -5,6 +5,7 @@ import {
   CircleDashed, Share2, Network, GitGraph, MonitorPlay, Palette, Zap, LayoutGrid, Clock
 } from 'lucide-react';
 import { DropdownMenuContainer, DropdownMenuItem, DropdownMenuDivider, DropdownMenuHeader } from '../ui/DropdownMenu';
+import { FormField } from '../ui/FormField'; // Import FormField
 
 export const ViewSettingsMenu = memo(({
     settings, onUpdate, onClose, onPresent, t
@@ -27,13 +28,6 @@ export const ViewSettingsMenu = memo(({
         { id: 'vintage', label: 'Vintage', colorClass: 'bg-[#f4e4bc]', borderClass: 'border-[#d4c5a3]' },
         { id: 'blueprint', label: 'Blueprint', colorClass: 'bg-[#1e3a8a]', borderClass: 'border-blue-400' },
     ];
-
-    // Removed debugging log as the issue is identified
-    // useEffect(() => {
-    //     chartOptions.forEach(option => {
-    //         console.log(`Chart Option Label for ${option.id}:`, option.label);
-    //     });
-    // }, [chartOptions]);
 
     return (
         <>
@@ -126,17 +120,31 @@ export const ViewSettingsMenu = memo(({
                     ))}
                     {/* New toggle for Time Offset */}
                     {settings.chartType === 'descendant' && (
-                        <button onClick={() => onUpdate({ ...settings, enableTimeOffset: !settings.enableTimeOffset })} 
-                            className="flex items-center justify-between w-full px-3 py-2 hover:bg-stone-50 dark:hover:bg-stone-800 rounded-lg group transition-colors"
-                        >
-                            <span className="text-xs font-medium text-stone-600 dark:text-stone-300">
-                                <Clock className="w-3.5 h-3.5 inline-block me-2 text-blue-500"/>
-                                {t.enableTimeOffset}
-                            </span>
-                            <div className={`w-7 h-4 rounded-full p-0.5 relative transition-colors duration-300 ${settings.enableTimeOffset ? 'bg-blue-500' : 'bg-stone-200 dark:bg-stone-700'}`}>
-                                <div className={`w-3 h-3 bg-white rounded-full shadow-sm transition-transform duration-300 ${settings.enableTimeOffset ? 'translate-x-3 rtl:-translate-x-3' : ''}`}></div>
-                            </div>
-                        </button>
+                        <>
+                            <button onClick={() => onUpdate({ ...settings, enableTimeOffset: !settings.enableTimeOffset })} 
+                                className="flex items-center justify-between w-full px-3 py-2 hover:bg-stone-50 dark:hover:bg-stone-800 rounded-lg group transition-colors"
+                            >
+                                <span className="text-xs font-medium text-stone-600 dark:text-stone-300">
+                                    <Clock className="w-3.5 h-3.5 inline-block me-2 text-blue-500"/>
+                                    {t.enableTimeOffset}
+                                </span>
+                                <div className={`w-7 h-4 rounded-full p-0.5 relative transition-colors duration-300 ${settings.enableTimeOffset ? 'bg-blue-500' : 'bg-stone-200 dark:bg-stone-700'}`}>
+                                    <div className={`w-3 h-3 bg-white rounded-full shadow-sm transition-transform duration-300 ${settings.enableTimeOffset ? 'translate-x-3 rtl:-translate-x-3' : ''}`}></div>
+                                </div>
+                            </button>
+                            {settings.enableTimeOffset && (
+                                <div className="px-3 py-2">
+                                    <FormField
+                                        label={t.timeScaleFactor}
+                                        value={settings.timeScaleFactor || 5}
+                                        onCommit={(val) => onUpdate({ ...settings, timeScaleFactor: Number(val) })}
+                                        type="number"
+                                        className="!h-7 !text-xs"
+                                        labelWidthClass="w-28"
+                                    />
+                                </div>
+                            )}
+                        </>
                     )}
                 </div>
 
@@ -145,7 +153,6 @@ export const ViewSettingsMenu = memo(({
                     onClick={onPresent} 
                     icon={<MonitorPlay className="w-3.5 h-3.5"/>}
                     label="Present Mode"
-                    // Removed colorClass, iconBgClass, iconTextColorClass to use default debugging styles
                 />
             </DropdownMenuContainer>
         </>

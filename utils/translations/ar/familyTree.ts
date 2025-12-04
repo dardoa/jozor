@@ -18,5 +18,6 @@ export const familyTree = {
   force: 'مخطط شامل (الكل في واحد)',      // Updated to match image
   enableForcePhysics: 'تمكين الفيزياء',
   enableTimeOffset: 'تمكين إزاحة الوقت', // New translation
+  timeScaleFactor: 'عامل مقياس الوقت', // New translation for time scale factor
   noResults: 'لا توجد نتائج.',
 };

@@ -10,8 +10,8 @@ const LEVEL_SEP_DEFAULT = 280;
 const LEVEL_SEP_COMPACT = 240;
 const SPOUSE_GAP = 20; 
 
-// New constant for time offset
-const TIME_SCALE_FACTOR = 5; // Adjust this value to control the vertical spread based on time
+// New constant for time offset (now dynamic from settings)
+// const TIME_SCALE_FACTOR = 5; // This constant is now replaced by settings.timeScaleFactor
 
 export interface CollapsePoint {
     id: string; 
@@ -197,6 +197,8 @@ const calculateDescendantLayout = (
 
     // --- Time Offset Logic ---
     let oldestBirthYear = Infinity;
+    const timeScaleFactor = settings.timeScaleFactor || 5; // Use from settings, fallback to 5
+    
     if (settings.enableTimeOffset) {
         Object.values(people).forEach(p => {
             const year = getBirthYear(p);
@@ -219,7 +221,7 @@ const calculateDescendantLayout = (
         if (settings.enableTimeOffset && isVertical) {
             const personBirthYear = getBirthYear(d.data.person);
             if (personBirthYear !== 9999 && oldestBirthYear !== Infinity) {
-                const timeOffset = (personBirthYear - oldestBirthYear) * TIME_SCALE_FACTOR;
+                const timeOffset = (personBirthYear - oldestBirthYear) * timeScaleFactor;
                 finalY += timeOffset;
             }
         }
@@ -227,7 +229,7 @@ const calculateDescendantLayout = (
         else if (settings.enableTimeOffset && !isVertical) {
             const personBirthYear = getBirthYear(d.data.person);
             if (personBirthYear !== 9999 && oldestBirthYear !== Infinity) {
-                const timeOffset = (personBirthYear - oldestBirthYear) * TIME_SCALE_FACTOR;
+                const timeOffset = (personBirthYear - oldestBirthYear) * timeScaleFactor;
                 finalX += timeOffset;
             }
         }

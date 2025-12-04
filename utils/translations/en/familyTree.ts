@@ -18,5 +18,6 @@ export const familyTree = {
   force: 'Comprehensive Diagram (All-in-One)',  // Updated to match image
   enableForcePhysics: 'Enable Physics',
   enableTimeOffset: 'Enable Time Offset', // New translation
+  timeScaleFactor: 'Time Scale Factor', // New translation for time scale factor
   noResults: 'No results found.',
 };
