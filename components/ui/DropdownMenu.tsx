@@ -12,48 +12,48 @@ export const DropdownMenuContainer: React.FC<DropdownMenuContainerProps> = ({ ch
 );
 
 interface DropdownMenuItemProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  children?: React.ReactNode; // جعل خاصية children اختيارية
+  children?: React.ReactNode;
   icon?: React.ReactNode;
   label?: string;
   subLabel?: string;
   isActive?: boolean;
-  colorClass?: string; // For specific item background/text colors
-  iconBgClass?: string; // For specific icon background color
-  iconTextColorClass?: string; // For specific icon text color
+  colorClass?: string;
+  iconBgClass?: string;
+  iconTextColorClass?: string;
+  className?: string;
 }
 
+// TEMPORARY: Simplified DropdownMenuItem for debugging
 export const DropdownMenuItem: React.FC<DropdownMenuItemProps> = ({
   children,
   icon,
   label,
   subLabel,
   isActive = false,
-  colorClass = 'text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800',
-  iconBgClass = 'bg-stone-50 dark:bg-stone-800',
-  iconTextColorClass = 'text-stone-500 group-hover:text-teal-600 dark:text-stone-400 dark:group-hover:text-teal-400',
   className = '',
   ...props
-}) => (
-  <button
-    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium transition-all group relative overflow-hidden ${colorClass} ${isActive ? 'bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 ring-1 ring-teal-200 dark:ring-teal-800' : ''} ${className}`}
-    {...props}
-  >
-    {icon && (
-      <div className={`p-1.5 rounded-lg shadow-sm ${iconBgClass} ${iconTextColorClass}`}>
-        {icon}
-      </div>
-    )}
-    {/* Render label and subLabel directly as spans with strong debugging styles */}
-    {label && (
-      <span className="font-bold text-red-500 text-lg flex-grow min-w-0">
-        {label}
-        {subLabel && <span className="text-[9px] opacity-70 ms-2">{subLabel}</span>}
-      </span>
-    )}
-    {/* Always render children, which will be the checkmark in this case */}
-    {children}
-  </button>
-);
+}) => {
+  // console.log("DropdownMenuItem rendering:", { label, subLabel, isActive }); // Debugging log
+  return (
+    <button
+      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium transition-all group relative overflow-hidden bg-red-200 text-red-800 border border-red-400 ${className}`} // Strong debugging styles
+      {...props}
+    >
+      {icon && (
+        <div className="p-1.5 rounded-lg shadow-sm bg-red-100 text-red-600">
+          {icon}
+        </div>
+      )}
+      {(label || subLabel) && (
+        <div className="flex flex-col items-start flex-grow min-w-0">
+          {label && <span className="font-bold text-lg">{label}</span>} {/* Larger text for visibility */}
+          {subLabel && <span className="text-[9px] opacity-70">{subLabel}</span>}
+        </div>
+      )}
+      {children}
+    </button>
+  );
+};
 
 export const DropdownMenuDivider: React.FC = () => (
   <div className="h-px bg-stone-100 dark:bg-stone-800 my-1 mx-2"></div>

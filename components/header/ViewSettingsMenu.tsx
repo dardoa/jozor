@@ -1,10 +1,10 @@
-import React, { memo } from 'react';
+import React, { memo, useEffect } from 'react'; // Added useEffect
 import { TreeSettings, ChartType, AppTheme } from '../../types';
 import { 
   SlidersHorizontal, Eye, Check, ArrowRightLeft, ArrowUpDown, 
   CircleDashed, Share2, Network, GitGraph, MonitorPlay, Palette, Zap, LayoutGrid
 } from 'lucide-react';
-import { DropdownMenuContainer, DropdownMenuItem, DropdownMenuDivider, DropdownMenuHeader } from '../ui/DropdownMenu';
+import { DropdownMenuItem, DropdownMenuDivider, DropdownMenuHeader } from '../ui/DropdownMenu'; // Removed DropdownMenuContainer
 
 export const ViewSettingsMenu = memo(({
     settings, onUpdate, onClose, onPresent, t
@@ -28,10 +28,18 @@ export const ViewSettingsMenu = memo(({
         { id: 'blueprint', label: 'Blueprint', colorClass: 'bg-[#1e3a8a]', borderClass: 'border-blue-400' },
     ];
 
+    // Debugging log to check label values
+    useEffect(() => {
+        chartOptions.forEach(option => {
+            console.log(`Chart Option Label for ${option.id}:`, option.label);
+        });
+    }, [chartOptions]);
+
     return (
         <>
             <div className="fixed inset-0 z-10" onClick={onClose}></div>
-            <DropdownMenuContainer className="w-72 end-0">
+            {/* TEMPORARY: Replaced DropdownMenuContainer with a simple div for debugging */}
+            <div className="absolute top-full mt-2 p-1.5 bg-white/95 dark:bg-stone-950/95 backdrop-blur-xl border border-stone-200/50 dark:border-stone-700/50 rounded-2xl shadow-float z-50 animate-in fade-in zoom-in-95 duration-200 origin-top-right ring-1 ring-black/5 w-72 end-0">
                 <DropdownMenuHeader icon={<Eye className="w-3 h-3" />} label={t.chartType} />
                 <div className="grid grid-cols-1 gap-1 px-1">
                     {chartOptions.map((type) => (
@@ -97,8 +105,7 @@ export const ViewSettingsMenu = memo(({
                             icon={<Zap className="w-3.5 h-3.5"/>}
                             label="Physics"
                             className="justify-between"
-                            iconBgClass="bg-orange-100"
-                            iconTextColorClass="text-orange-600"
+                            // Removed colorClass, iconBgClass, iconTextColorClass to use default debugging styles
                         >
                             <div className={`w-7 h-4 rounded-full p-0.5 relative transition-colors duration-300 ${settings.enableForcePhysics ? 'bg-orange-500' : 'bg-stone-300 dark:bg-stone-600'}`}>
                                 <div className={`w-3 h-3 bg-white rounded-full shadow-sm transition-transform duration-300 ${settings.enableForcePhysics ? 'translate-x-3 rtl:-translate-x-3' : ''}`}></div>
@@ -126,11 +133,9 @@ export const ViewSettingsMenu = memo(({
                     onClick={onPresent} 
                     icon={<MonitorPlay className="w-3.5 h-3.5"/>}
                     label="Present Mode"
-                    colorClass="!text-purple-600 hover:!bg-purple-50 dark:!text-purple-300 dark:hover:!bg-purple-900/20"
-                    iconBgClass="bg-purple-100 dark:bg-purple-900/50"
-                    iconTextColorClass="text-purple-600 dark:text-purple-300"
+                    // Removed colorClass, iconBgClass, iconTextColorClass to use default debugging styles
                 />
-            </DropdownMenuContainer>
+            </div>
         </>
     );
 });
