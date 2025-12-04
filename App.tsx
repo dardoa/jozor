@@ -5,7 +5,7 @@ import { WelcomeScreen } from './components/WelcomeScreen';
 import { Header } from './components/Header';
 import { ModalManager } from './components/ModalManager';
 
-import { useAppOrchestration } from './hooks/useAppOrchestration'; // New orchestration hook
+import { useAppOrchestration } from './hooks/useAppOrchestration';
 
 import { X } from 'lucide-react';
 
@@ -30,14 +30,26 @@ const App: React.FC = () => {
     toolsActions,
     exportActions,
     searchProps,
-    familyActions, // Destructure new grouped prop
-    t, // Destructure t here
+    familyActions,
+    t,
   } = useAppOrchestration();
 
-  // Apply theme class to the html element
+  // Centralized application of theme class, dark mode class, and language attributes to the html element
   useEffect(() => {
-    document.documentElement.className = `theme-${viewSettings.treeSettings.theme}`;
-  }, [viewSettings.treeSettings.theme]);
+    const root = document.documentElement;
+
+    // Handle theme class
+    root.classList.remove('theme-modern', 'theme-vintage', 'theme-blueprint');
+    root.classList.add(`theme-${viewSettings.treeSettings.theme}`);
+
+    // Handle dark mode class (useThemeSync already toggles 'dark' class, ensure it's consistent)
+    root.classList.toggle('dark', themeLanguage.darkMode);
+
+    // Handle language attributes
+    const dir = themeLanguage.language === 'ar' ? 'rtl' : 'ltr';
+    root.setAttribute('dir', dir);
+    root.setAttribute('lang', themeLanguage.language);
+  }, [viewSettings.treeSettings.theme, themeLanguage.darkMode, themeLanguage.language]);
 
   return (
     <div className={`flex flex-col h-screen font-sans transition-colors duration-300 bg-[var(--theme-bg)] text-[var(--card-text)] overflow-hidden`} >

@@ -10,14 +10,6 @@ export const useThemeSync = (currentTheme: AppTheme) => {
     localStorage.setItem('theme', darkMode ? 'dark' : 'light');
   }, [darkMode]);
 
-  // Apply the current app theme class to the document element
-  useEffect(() => {
-    const root = document.documentElement;
-    // Remove all theme classes first to ensure only one is active
-    root.classList.remove('theme-modern', 'theme-vintage', 'theme-blueprint');
-    root.classList.add(`theme-${currentTheme}`);
-  }, [currentTheme]);
-
   // Initialize dark mode from localStorage or system preference
   useEffect(() => {
     if (typeof window !== 'undefined') {

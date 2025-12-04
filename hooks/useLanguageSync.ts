@@ -4,14 +4,6 @@ import { Language } from '../types';
 export const useLanguageSync = () => {
   const [language, setLanguage] = useState<Language>('ar'); // Default to Arabic as per existing logic
 
-  useEffect(() => {
-    const root = document.documentElement;
-    const dir = language === 'ar' ? 'rtl' : 'ltr';
-    root.setAttribute('dir', dir);
-    root.setAttribute('lang', language);
-    localStorage.setItem('language', language);
-  }, [language]);
-
   // Initialize language from localStorage
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -24,6 +16,13 @@ export const useLanguageSync = () => {
       }
     }
   }, []); // Empty dependency array for initialization
+
+  // Persist language to localStorage whenever it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('language', language);
+    }
+  }, [language]);
 
   return { language, setLanguage };
 };
