@@ -13,5 +13,11 @@ export const general = {
   no: 'No',
   or: 'OR',
   readOnly: 'Read-Only',
-  quickAdd: 'Quick Add', // New translation
+  quickAdd: 'Quick Add',
+  details: 'Details', // New translation
+  editDetailsPrompt: 'Edit the person\'s details below.', // New translation
+  viewDetailsPrompt: 'View the person\'s details.', // New translation
+  firstName: 'First Name', // New translation
+  lastName: 'Last Name', // New translation
+  birthDate: 'Birth Date', // New translation
 };

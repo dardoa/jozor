@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useMemo, memo } from 'react';
-import { Person, Gender, FamilyActionsProps } from '../../types'; // Added FamilyActionsProps
-import { InfoTabView } from './InfoTabView'; // New import
-import { InfoTabEdit } from './InfoTabEdit'; // New import
-import { useTranslation } from '../../context/TranslationContext'; // Import useTranslation
+import React, { memo } from 'react';
+import { Person, UserProfile, FamilyActionsProps } from '../../types'; // Import FamilyActionsProps
+import { PersonHeaderView } from './PersonHeaderView';
+import { PersonDetailsForm } from './PersonDetailsForm';
+import { useTranslation } from '../../context/TranslationContext';
 
 interface InfoTabProps {
   person: Person;
@@ -10,33 +10,29 @@ interface InfoTabProps {
   isEditing: boolean;
   onUpdate: (id: string, updates: Partial<Person>) => void;
   onSelect: (id: string) => void;
-  // Removed t: any;
   onOpenModal: (modalType: 'calculator' | 'stats' | 'chat' | 'consistency' | 'timeline' | 'share' | 'story' | 'map') => void;
-  familyActions: FamilyActionsProps; // New grouped prop
+  familyActions: FamilyActionsProps; // Add familyActions prop
 }
 
-export const InfoTab: React.FC<InfoTabProps> = memo(({
-    person, people, isEditing, onUpdate, onSelect,
-    onOpenModal, familyActions // Destructure new grouped prop
-}) => {
-  const { t } = useTranslation(); // Use useTranslation hook directly
-
-  if (!isEditing) {
-      return (
-        <InfoTabView
-            person={person} people={people} onSelect={onSelect}
-            onOpenModal={onOpenModal}
-            familyActions={familyActions} // Pass new grouped prop
-            // Removed t={t}
-        />
-      );
-  }
+export const InfoTab: React.FC<InfoTabProps> = memo(({ person, people, isEditing, onUpdate, onSelect, onOpenModal, familyActions }) => {
+  const { t } = useTranslation();
 
   return (
-    <InfoTabEdit
-        person={person} people={people} onUpdate={onUpdate} onSelect={onSelect}
-        familyActions={familyActions} // Pass new grouped prop
+    <div className="space-y-6">
+      <PersonHeaderView 
+        person={person} 
+        onSelect={onSelect} 
+        onOpenModal={onOpenModal} 
+        familyActions={familyActions} // Pass familyActions
+      />
+      <PersonDetailsForm 
+        person={person} 
+        people={people} 
+        isEditing={isEditing} 
+        onUpdate={onUpdate} 
+        onSelect={onSelect} 
         // Removed t={t}
-    />
+      />
+    </div>
   );
 });

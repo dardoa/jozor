@@ -13,5 +13,11 @@ export const general = {
   no: 'لا',
   or: 'أو',
   readOnly: 'للقراءة فقط',
-  quickAdd: 'إضافة سريعة', // New translation
+  quickAdd: 'إضافة سريعة',
+  details: 'التفاصيل', // New translation
+  editDetailsPrompt: 'عدّل تفاصيل الشخص أدناه.', // New translation
+  viewDetailsPrompt: 'عرض تفاصيل الشخص.', // New translation
+  firstName: 'الاسم الأول', // New translation
+  lastName: 'اسم العائلة', // New translation
+  birthDate: 'تاريخ الميلاد', // New translation
 };
