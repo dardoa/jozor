@@ -52,7 +52,8 @@ export const useAppOrchestration = () => {
     isPresentMode, setIsPresentMode,
     linkModal, setLinkModal,
     handleOpenLinkModal,
-    // Removed handleCreateNewRelative and handleSelectExistingRelative from here
+    // Removed handleCreateNewRelative,
+    // Removed handleSelectExistingRelative,
     handleOpenModal,
   } = useModalAndSidebarLogic({
     addParent, addSpouse, addChild, linkPerson, setFocusId,

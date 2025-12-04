@@ -29,17 +29,8 @@ export const useModalAndSidebarLogic = ({
     setLinkModal({ isOpen: true, type, gender });
   }, []);
 
-  const handleCreateNewRelative = useCallback(() => {
-     if (!linkModal.type || !linkModal.gender) return;
-     const actions = { parent: addParent, spouse: addSpouse, child: addChild };
-     actions[linkModal.type](linkModal.gender);
-     setLinkModal({ isOpen: false, type: null, gender: null });
-  }, [linkModal, addParent, addSpouse, addChild]);
-
-  const handleSelectExistingRelative = useCallback((id: string) => {
-    linkPerson(id, linkModal.type);
-    setLinkModal({ isOpen: false, type: null, gender: null });
-  }, [linkModal, linkPerson]);
+  // Removed handleCreateNewRelative and handleSelectExistingRelative as their logic is now handled by familyActions
+  // and the LinkPersonModal directly uses familyActions.
 
   const handleOpenModal = useCallback((modalType: 'calculator' | 'stats' | 'chat' | 'consistency' | 'timeline' | 'share' | 'story' | 'map') => {
       setActiveModal(modalType);
@@ -51,8 +42,8 @@ export const useModalAndSidebarLogic = ({
     isPresentMode, setIsPresentMode,
     linkModal, setLinkModal,
     handleOpenLinkModal,
-    handleCreateNewRelative,
-    handleSelectExistingRelative,
+    // Removed handleCreateNewRelative,
+    // Removed handleSelectExistingRelative,
     handleOpenModal,
     canUndo,
     canRedo,
