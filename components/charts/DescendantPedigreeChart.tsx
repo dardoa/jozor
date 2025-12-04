@@ -148,11 +148,11 @@ export const DescendantPedigreeChart: React.FC<DescendantPedigreeChartProps> = m
             {/* Line from parent(s) midpoint to the collapse circle */}
             <path d={`M ${cp.originX} ${cp.originY} L ${cp.x} ${cp.y}`} fill="none" className="stroke-stone-400 dark:stroke-stone-500" strokeWidth={2} strokeLinecap="round" />
             <g transform={`translate(${cp.x}, ${cp.y})`} onClick={(e) => { e.stopPropagation(); toggleCollapse(cp.uniqueKey); }} className="cursor-pointer group">
-              <circle r={COLLAPSE_CIRCLE_RADIUS} className="fill-white dark:fill-stone-900 stroke-stone-200 dark:stroke-stone-700 stroke-2 shadow-sm transition-all group-hover:scale-110 group-hover:stroke-teal-400 group-hover:shadow-md" />
+              <circle r={COLLAPSE_CIRCLE_RADIUS} className="fill-[var(--card-bg)] stroke-[var(--card-border)] stroke-2 shadow-sm transition-all group-hover:scale-110 group-hover:stroke-[var(--focus-ring-color)] group-hover:shadow-md" />
               {cp.isCollapsed ? (
-                isVertical ? <ChevronDown x={-8} y={-8} className="w-4 h-4 text-stone-500 dark:text-stone-400 group-hover:text-teal-500" strokeWidth={2} /> : <ChevronRight x={-8} y={-8} className="w-4 h-4 text-stone-500 group-hover:text-teal-500" strokeWidth={2} />
+                isVertical ? <ChevronDown x={-8} y={-8} className="w-4 h-4 text-[var(--card-text)] opacity-70 group-hover:text-[var(--focus-ring-color)]" strokeWidth={2} /> : <ChevronRight x={-8} y={-8} className="w-4 h-4 text-[var(--card-text)] opacity-70 group-hover:text-[var(--focus-ring-color)]" strokeWidth={2} />
               ) : (
-                isVertical ? <ChevronUp x={-8} y={-8} className="w-4 h-4 text-stone-400 dark:text-stone-500 group-hover:text-teal-500" strokeWidth={2} /> : <ChevronLeft x={-8} y={-8} className="w-4 h-4 text-stone-500 group-hover:text-teal-500" strokeWidth={2} />
+                isVertical ? <ChevronUp x={-8} y={-8} className="w-4 h-4 text-[var(--card-text)] opacity-70 group-hover:text-[var(--focus-ring-color)]" strokeWidth={2} /> : <ChevronLeft x={-8} y={-8} className="w-4 h-4 text-[var(--card-text)] opacity-70 group-hover:text-[var(--focus-ring-color)]" strokeWidth={2} />
               )}
             </g>
           </React.Fragment>
@@ -226,12 +226,12 @@ export const DescendantPedigreeChart: React.FC<DescendantPedigreeChartProps> = m
                   </div>
                   {node.data.isDeceased && (
                     <div className={`absolute ${ribbonPosition} opacity-80`}>
-                      <Ribbon className={`${ribbonSize} text-stone-600 dark:text-stone-400 fill-current`} />
+                      <Ribbon className={`${ribbonSize} text-[var(--card-text)] fill-current`} />
                     </div>
                   )}
                 </div>
                 {hasCollapsedBranch && (
-                  <div className={`absolute ${collapsedBranchPosition} h-2 bg-white dark:bg-stone-700 border border-stone-200 dark:border-stone-600 rounded-b-xl -z-10 shadow-sm opacity-90`}></div>
+                  <div className={`absolute ${collapsedBranchPosition} h-2 bg-[var(--card-bg)] border-[var(--card-border)] rounded-b-xl -z-10 shadow-sm opacity-90`}></div>
                 )}
               </div>
             </foreignObject>

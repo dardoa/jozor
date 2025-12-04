@@ -181,7 +181,7 @@
         --link-line-stroke: #b8a280;
         --focus-ring-color: #b8a280;
         --primary-button-bg: #b8a280;
-        --primary-button-hover-bg: #a39070;
+        --primary-button-hover-bg: #7a654d;
         --primary-button-text: #3a3020;
       }
 
@@ -224,6 +224,11 @@
         --primary-button-bg: #93c5fd;
         --primary-button-hover-bg: #60a5fa;
         --primary-button-text: #1e3a8a;
+      }
+
+      .focus-ring {
+        box-shadow: 0 0 0 3px var(--focus-ring-color), var(--card-shadow); /* Add a focus ring effect */
+        border-color: var(--focus-ring-color) !important;
       }
     </style>
   <script type="importmap">
