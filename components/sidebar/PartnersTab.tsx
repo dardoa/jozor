@@ -45,7 +45,7 @@ export const PartnersTab: React.FC<PartnersTabProps> = memo(({ person, people, i
     <div className="bg-white dark:bg-stone-900 pt-5 p-3 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-3 animate-in slide-in-from-left-2 duration-200 relative">
         <h3 className="mb-3 ps-3 border-s-4 border-teal-500 text-sm font-bold text-stone-900 dark:text-stone-100 uppercase tracking-wider">{t.spouses}</h3>
         
-        {person.spouses.length === 0 && !isEditing ? (
+        {(!person.spouses.length && !isEditing) ? (
             <div className="text-center py-4 text-stone-400 dark:text-stone-500 bg-stone-50 dark:bg-stone-800/50 rounded-xl border border-dashed border-stone-200 dark:border-stone-700 flex flex-col items-center">
                 <Users className="w-8 h-8 mb-2 opacity-50" />
                 <span className="text-sm">{t.noPartners}</span>
@@ -63,7 +63,7 @@ export const PartnersTab: React.FC<PartnersTabProps> = memo(({ person, people, i
                         {/* Partner Header */}
                         <div className="flex items-start justify-between mb-2">
                             <div className="flex items-center gap-2">
-                                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shadow-sm overflow-hidden ${spouse.gender === 'male' ? 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300' : 'bg-pink-100 text-pink-600 dark:bg-pink-900 dark:text-pink-300'}`}>
+                                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shadow-sm overflow-hidden ${spouse.gender === 'male' ? 'bg-blue-100 dark:bg-blue-900 dark:text-blue-300' : 'bg-pink-100 dark:bg-pink-900 dark:text-pink-300'}`}>
                                     {spouse.photoUrl ? (
                                         <img src={spouse.photoUrl} alt="" className="w-full h-full object-cover" />
                                     ) : spouse.firstName[0]}
