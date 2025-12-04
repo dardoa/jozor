@@ -40,7 +40,7 @@ export const useAppOrchestration = () => {
     showWelcome, setShowWelcome, fileInputRef,
     handleStartNewTree, onFileUpload
   } = useWelcomeScreenLogic({
-    people, language, startNewTree, stopSyncing, handleImport // Removed handleLogin, handleLogout
+    people, startNewTree, stopSyncing, handleImport // Removed handleLogin, handleLogout
   });
 
   // --- Login/Logout Wrappers (now defined here) ---

@@ -9,11 +9,11 @@ interface UseWelcomeScreenLogicProps {
   handleImport: (file: File) => Promise<boolean>;
   // Removed handleLogin: () => Promise<boolean>;
   // Removed handleLogout: () => Promise<void>;
-  language: Language;
+  // Removed language: Language;
 }
 
 export const useWelcomeScreenLogic = ({
-  people, startNewTree, stopSyncing, handleImport, language
+  people, startNewTree, stopSyncing, handleImport // Removed language
 }: UseWelcomeScreenLogicProps) => {
   const [showWelcome, setShowWelcome] = useState<boolean>(true);
   const fileInputRef = useRef<HTMLInputElement>(null);

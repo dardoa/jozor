@@ -63,6 +63,8 @@ const App: React.FC = () => {
               onStartNew={handleStartNewTree}
               onImport={() => fileInputRef.current?.click()}
               onLogin={auth.onLogin}
+              // Removed language={language}
+              // Removed setLanguage={setLanguage}
           />
       ) : (
           <>
