@@ -33,10 +33,10 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
   const [isExtracting, setIsExtracting] = useState(false);
   const [showMoreIdentityFields, setShowMoreIdentityFields] = useState(false); // New state for collapsible fields
   const [showFamilyRelationships, setShowFamilyRelationships] = useState(true); // Re-introduced state for collapsible family section
-  const [showIdentityFields, setShowIdentityFields] = useState(true); // New state for collapsible identity section
-  const [showBirthDetails, setShowBirthDetails] = useState(true); // New state for collapsible birth details
+  // Removed showIdentityFields state
+  // Removed showBirthDetails state
   const [showDeathDetails, setShowDeathDetails] = useState(true); // New state for collapsible death details
-  const [showActionsSection, setShowActionsSection] = useState(true); // New state for collapsible actions section
+  // Removed showActionsSection state
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -242,47 +242,37 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
         {/* Identity Section */}
         <div className="bg-white dark:bg-stone-800 pt-5 p-3 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-2 relative">
             <h3 className="absolute top-[-12px] start-3 z-10 bg-white dark:bg-stone-800 px-2 text-[9px] font-bold text-stone-400 uppercase tracking-wider">{t.identity}</h3>
-            <button
-                onClick={() => setShowIdentityFields(!showIdentityFields)}
-                className="w-full flex items-center justify-between text-xs font-medium text-stone-600 dark:text-stone-400 hover:text-teal-600 dark:hover:text-teal-400 py-1 px-0.5 -mx-0.5 rounded-md transition-colors"
-            >
-                {/* Removed redundant span for identity */}
-                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showIdentityFields ? 'rotate-180' : ''}`} />
-            </button>
+            {/* Removed the toggle button for Identity section */}
+            <div className="space-y-2 mt-2 animate-in fade-in slide-in-from-top-1 duration-200">
+                <FormField label={t.firstName} value={person.firstName} onCommit={(v) => handleChange('firstName', v)} disabled={!isEditing} labelWidthClass="w-20" />
+                <FormField label={t.middleName} value={person.middleName} onCommit={(v) => handleChange('middleName', v)} disabled={!isEditing} labelWidthClass="w-20" />
+                <FormField label={t.lastName} value={person.lastName} onCommit={(v) => handleChange('lastName', v)} disabled={!isEditing} labelWidthClass="w-20" />
 
-            {showIdentityFields && (
-                <div className="space-y-2 mt-2 animate-in fade-in slide-in-from-top-1 duration-200">
-                    <FormField label={t.firstName} value={person.firstName} onCommit={(v) => handleChange('firstName', v)} disabled={!isEditing} labelWidthClass="w-20" />
-                    <FormField label={t.middleName} value={person.middleName} onCommit={(v) => handleChange('middleName', v)} disabled={!isEditing} labelWidthClass="w-20" />
-                    <FormField label={t.lastName} value={person.lastName} onCommit={(v) => handleChange('lastName', v)} disabled={!isEditing} labelWidthClass="w-20" />
+                {/* Collapsible section for more identity fields */}
+                <div className="border-t border-stone-100 dark:border-stone-700 pt-2 mt-2">
+                    <button
+                        onClick={() => setShowMoreIdentityFields(!showMoreIdentityFields)}
+                        className="w-full flex items-center justify-between text-xs font-medium text-stone-600 dark:text-stone-400 hover:text-teal-600 dark:hover:text-teal-400 py-1 px-0.5 -mx-0.5 rounded-md transition-colors"
+                    >
+                        <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showMoreIdentityFields ? 'rotate-180' : ''}`} />
+                    </button>
 
-                    {/* Collapsible section for more identity fields */}
-                    <div className="border-t border-stone-100 dark:border-stone-700 pt-2 mt-2">
-                        <button
-                            onClick={() => setShowMoreIdentityFields(!showMoreIdentityFields)}
-                            className="w-full flex items-center justify-between text-xs font-medium text-stone-600 dark:text-stone-400 hover:text-teal-600 dark:hover:text-teal-400 py-1 px-0.5 -mx-0.5 rounded-md transition-colors"
-                        >
-                            {/* Removed redundant span for more names */}
-                            <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showMoreIdentityFields ? 'rotate-180' : ''}`} />
-                        </button>
-
-                        {showMoreIdentityFields && (
-                            <div className="space-y-2 mt-2 animate-in fade-in slide-in-from-top-1 duration-200">
-                                <FormField label={t.birthName} value={person.birthName} onCommit={(v) => handleChange('birthName', v)} disabled={!isEditing} labelWidthClass="w-20" />
-                                <FormField label={t.nickName} value={person.nickName} onCommit={(v) => handleChange('nickName', v)} disabled={!isEditing} labelWidthClass="w-20" />
-                                <div className="flex gap-2">
-                                    <div className="flex-1">
-                                        <FormField label={t.title} value={person.title} onCommit={(v) => handleChange('title', v)} disabled={!isEditing} labelWidthClass="w-12" />
-                                    </div>
-                                    <div className="flex-1">
-                                        <FormField label={t.suffix} value={person.suffix} onCommit={(v) => handleChange('suffix', v)} disabled={!isEditing} labelWidthClass="w-12" />
-                                    </div>
+                    {showMoreIdentityFields && (
+                        <div className="space-y-2 mt-2 animate-in fade-in slide-in-from-top-1 duration-200">
+                            <FormField label={t.birthName} value={person.birthName} onCommit={(v) => handleChange('birthName', v)} disabled={!isEditing} labelWidthClass="w-20" />
+                            <FormField label={t.nickName} value={person.nickName} onCommit={(v) => handleChange('nickName', v)} disabled={!isEditing} labelWidthClass="w-20" />
+                            <div className="flex gap-2">
+                                <div className="flex-1">
+                                    <FormField label={t.title} value={person.title} onCommit={(v) => handleChange('title', v)} disabled={!isEditing} labelWidthClass="w-12" />
+                                </div>
+                                <div className="flex-1">
+                                    <FormField label={t.suffix} value={person.suffix} onCommit={(v) => handleChange('suffix', v)} disabled={!isEditing} labelWidthClass="w-12" />
                                 </div>
                             </div>
-                        )}
-                    </div>
+                        </div>
+                    )}
                 </div>
-            )}
+            </div>
         </div>
 
         {/* Gender & Status */}
@@ -316,37 +306,29 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
         {/* Birth Details */}
         <div className="bg-white dark:bg-stone-800 pt-5 p-3 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-2 relative">
             <h3 className="absolute top-[-12px] start-3 z-10 bg-white dark:bg-stone-800 px-2 text-[9px] font-bold text-stone-400 uppercase tracking-wider">{t.birthDetails}</h3>
-            <button
-                onClick={() => setShowBirthDetails(!showBirthDetails)}
-                className="w-full flex items-center justify-between text-xs font-medium text-stone-600 dark:text-stone-400 hover:text-teal-600 dark:hover:text-teal-400 py-1 px-0.5 -mx-0.5 rounded-md transition-colors"
-            >
-                {/* Removed redundant span for birth details */}
-                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showBirthDetails ? 'rotate-180' : ''}`} />
-            </button>
-            {showBirthDetails && (
-                <div className="space-y-2 mt-2 animate-in fade-in slide-in-from-top-1 duration-200">
-                    <div className="flex items-center gap-2">
-                        <label className="w-16 shrink-0 text-[9px] text-stone-600 dark:text-stone-400 font-medium">{t.birthDate}</label>
-                        <DateSelect value={person.birthDate} onChange={(val) => handleChange('birthDate', val)} disabled={!isEditing} />
-                    </div>
-                    <FormField label={t.birthPlace} value={person.birthPlace} onCommit={(v) => handleChange('birthPlace', v)} disabled={!isEditing} labelWidthClass="w-16" />
-                    <div className="flex items-center gap-2">
-                        <label className="w-16 shrink-0 text-[9px] text-stone-600 dark:text-stone-400 font-medium">{t.source}</label>
-                        <div className="flex-1 flex items-center gap-1.5">
-                            <BookOpen className="w-3.5 h-3.5 text-stone-400" />
-                            <FormField
-                                label=""
-                                value={person.birthSource}
-                                onCommit={(v) => handleChange('birthSource', v)}
-                                disabled={!isEditing}
-                                placeholder={t.sourcePlaceholder}
-                                className="!h-7 !text-xs placeholder:italic"
-                                labelWidthClass="hidden"
-                            />
-                        </div>
+            {/* Removed the toggle button for Birth Details section */}
+            <div className="space-y-2 mt-2 animate-in fade-in slide-in-from-top-1 duration-200">
+                <div className="flex items-center gap-2">
+                    <label className="w-16 shrink-0 text-[9px] text-stone-600 dark:text-stone-400 font-medium">{t.birthDate}</label>
+                    <DateSelect value={person.birthDate} onChange={(val) => handleChange('birthDate', val)} disabled={!isEditing} />
+                </div>
+                <FormField label={t.birthPlace} value={person.birthPlace} onCommit={(v) => handleChange('birthPlace', v)} disabled={!isEditing} labelWidthClass="w-16" />
+                <div className="flex items-center gap-2">
+                    <label className="w-16 shrink-0 text-[9px] text-stone-600 dark:text-stone-400 font-medium">{t.source}</label>
+                    <div className="flex-1 flex items-center gap-1.5">
+                        <BookOpen className="w-3.5 h-3.5 text-stone-400" />
+                        <FormField
+                            label=""
+                            value={person.birthSource}
+                            onCommit={(v) => handleChange('birthSource', v)}
+                            disabled={!isEditing}
+                            placeholder={t.sourcePlaceholder}
+                            className="!h-7 !text-xs placeholder:italic"
+                            labelWidthClass="hidden"
+                        />
                     </div>
                 </div>
-            )}
+            </div>
         </div>
 
         {/* Death Details (Conditional) */}
@@ -357,7 +339,6 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
                     onClick={() => setShowDeathDetails(!showDeathDetails)}
                     className="w-full flex items-center justify-between text-xs font-medium text-stone-600 dark:text-stone-400 hover:text-teal-600 dark:hover:text-teal-400 py-1 px-0.5 -mx-0.5 rounded-md transition-colors"
                 >
-                    {/* Removed redundant span for death details */}
                     <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showDeathDetails ? 'rotate-180' : ''}`} />
                 </button>
                 {showDeathDetails && (
@@ -394,7 +375,6 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
                 onClick={() => setShowFamilyRelationships(!showFamilyRelationships)}
                 className="w-full flex items-center justify-between text-xs font-medium text-stone-600 dark:text-stone-400 hover:text-teal-600 dark:hover:text-teal-400 py-1 px-0.5 -mx-0.5 rounded-md transition-colors"
             >
-                {/* Removed redundant span for family relationships */}
                 <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showFamilyRelationships ? 'rotate-180' : ''}`} />
             </button>
 
