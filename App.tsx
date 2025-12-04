@@ -2,11 +2,10 @@ import React, { useEffect } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { FamilyTree } from './components/FamilyTree';
 import { WelcomeScreen } from './components/WelcomeScreen';
-import { HeaderContainer } from './components/HeaderContainer';
 import { ModalManagerContainer } from './components/ModalManagerContainer';
+import { Header } from './components/Header'; // Direct import of Header
 
 import { useAppOrchestration } from './hooks/useAppOrchestration';
-// Removed: import { useTranslation } from './context/TranslationContext';
 
 import { X } from 'lucide-react';
 
@@ -33,8 +32,6 @@ const App: React.FC = () => {
     searchProps,
     familyActions,
   } = useAppOrchestration();
-
-  // Removed: const { t, language, setLanguage } = useTranslation();
 
   // Centralized application of theme class, dark mode class, and language attributes to the html element
   useEffect(() => {
@@ -67,7 +64,7 @@ const App: React.FC = () => {
       ) : (
           <>
             {!isPresentMode && (
-                <HeaderContainer 
+                <Header 
                     toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
                     historyControls={historyControls}
                     themeLanguage={themeLanguage}
