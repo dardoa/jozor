@@ -200,58 +200,34 @@ export const calculateDescendantLayout = (
         let finalX = x;
         let finalY = y;
 
-        const numSpouses = personData.spouses.length;
-        const totalItemsInGroup = 1 + numSpouses; // Main person + all spouses
-
         if (isVertical) {
-            // Calculate total width needed for the group (main person + spouses)
-            // Each item (person or spouse) takes nodeW width + SPOUSE_GAP (except the last one)
-            const groupWidth = totalItemsInGroup * nodeW + (totalItemsInGroup - 1) * SPOUSE_GAP;
-            // Calculate the starting X for the leftmost item in the group, centered around d.x
-            const groupStartX = x - groupWidth / 2;
-
-            if (!isSpouse) {
-                // Main person's X position (center of their node)
-                finalX = groupStartX + nodeW / 2;
-            } else {
-                // Spouse's X position (center of their node)
-                // The spouseIndex is 0-based for the spouses array.
-                // Their position in the overall group is (spouseIndex + 1)
-                finalX = groupStartX + (spouseIndex + 1) * (nodeW + SPOUSE_GAP) + nodeW / 2;
+            // Main person is at d.x
+            // Spouses alternate left/right
+            if (isSpouse) {
+                const offsetMultiplier = Math.floor(spouseIndex / 2) + 1; // 1, 1, 2, 2, ...
+                const direction = (spouseIndex % 2 === 0) ? 1 : -1; // Right, Left, Right, Left...
+                finalX = x + direction * offsetMultiplier * (nodeW + SPOUSE_GAP);
             }
+            // No change to Y for vertical layout
         } else if (!isRadial) { // Horizontal
-            // Calculate total height needed for the group (main person + spouses)
-            const groupHeight = totalItemsInGroup * nodeH + (totalItemsInGroup - 1) * SPOUSE_GAP;
-            // Calculate the starting Y for the topmost item in the group, centered around d.y
-            const groupStartY = y - groupHeight / 2;
-
-            if (!isSpouse) {
-                // Main person's Y position
-                finalY = groupStartY + nodeH / 2;
-            } else {
-                // Spouse's Y position
-                finalY = groupStartY + (spouseIndex + 1) * (nodeH + SPOUSE_GAP) + nodeH / 2;
+            // Main person is at d.y
+            // Spouses alternate up/down
+            if (isSpouse) {
+                const offsetMultiplier = Math.floor(spouseIndex / 2) + 1;
+                const direction = (spouseIndex % 2 === 0) ? 1 : -1; // Down, Up, Down, Up...
+                finalY = y + direction * offsetMultiplier * (nodeH + SPOUSE_GAP);
             }
             // Swap x and y for horizontal display
             [finalX, finalY] = [finalY, finalX];
         } else { // Radial
-            // Distribute items evenly around the main person's angle
-            const anglePerItem = 10; // Degrees per person/spouse slot
-            const totalAngleSpan = totalItemsInGroup * anglePerItem;
-            
-            // Calculate the starting angle for the leftmost item in the group, centered around d.x
-            const groupStartAngle = x - totalAngleSpan / 2;
-
-            let currentAngle;
-            if (!isSpouse) {
-                // Main person's angle
-                currentAngle = groupStartAngle + anglePerItem / 2;
-            } else {
-                // Spouse's angle
-                currentAngle = groupStartAngle + (spouseIndex + 1) * anglePerItem + anglePerItem / 2;
+            // Main person is at d.x (angle)
+            // Spouses alternate around the main person's angle
+            if (isSpouse) {
+                const angleOffsetMultiplier = Math.floor(spouseIndex / 2) + 1;
+                const angleDirection = (spouseIndex % 2 === 0) ? 1 : -1; // Clockwise, Counter-clockwise
+                x = d.x + angleDirection * angleOffsetMultiplier * 15; // 15 degrees offset
             }
-
-            const angleRad = currentAngle * (Math.PI / 180); // Convert to radians
+            const angleRad = x * (Math.PI / 180); // Convert to radians
             const radius = y;
             finalX = radius * Math.cos(angleRad);
             finalY = radius * Math.sin(angleRad);
