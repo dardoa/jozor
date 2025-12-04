@@ -175,7 +175,7 @@ export interface ExportActionsProps {
 
 export interface HeaderLeftSectionProps {
   language: Language;
-  t: any;
+  // Removed t: any;
   toggleSidebar: () => void;
   historyControls: HistoryControlsProps;
 }
@@ -195,7 +195,7 @@ export interface FamilyActionsProps { // New interface
 }
 
 export interface HeaderProps { // Updated HeaderProps
-  t: any; // Translations
+  // Removed t: any; // Translations
   toggleSidebar: () => void;
   
   historyControls: HistoryControlsProps;
@@ -208,13 +208,52 @@ export interface HeaderProps { // Updated HeaderProps
 }
 
 export interface HeaderRightSectionProps {
-  t: any;
+  // Removed t: any;
   themeLanguage: ThemeLanguageProps;
   auth: AuthProps;
   viewSettings: ViewSettingsProps;
   toolsActions: ToolsActionsProps;
   exportActions: ExportActionsProps;
   searchProps: SearchProps; // Grouped search props
+}
+
+export interface SearchInputWithResultsProps extends SearchProps { // Extend SearchProps
+  // Removed t: any;
+}
+
+export interface ToolsMenuProps {
+    onClose?: () => void; // This onClose will be passed from Dropdown
+    onOpenModal: (modalType: 'calculator' | 'stats' | 'chat' | 'consistency' | 'timeline' | 'share' | 'story' | 'map') => void;
+    // Removed t: any;
+}
+
+export interface ViewSettingsMenuProps {
+    settings: TreeSettings;
+    onUpdate: (s: TreeSettings) => void;
+    onClose?: () => void; // This onClose will be passed from Dropdown
+    onPresent: () => void;
+    // Removed t: any;
+}
+
+export interface UserMenuProps {
+    user: UserProfile;
+    isDemoMode: boolean;
+    onLogout: () => void;
+    onClose?: () => void; // This onClose will be passed from Dropdown
+    // Removed t: any;
+}
+
+export interface ExportMenuProps {
+    onClose?: () => void; // This onClose will be passed from Dropdown
+    onExport: (type: 'jozor' | 'json' | 'gedcom' | 'ics' | 'print') => void;
+    // Removed t: any;
+}
+
+export interface SearchResultsProps {
+    results: Person[], 
+    onFocus: (id: string) => void, 
+    onClose: () => void
+    // Removed t: any;
 }
 
 export interface ModalManagerProps { // Updated ModalManagerProps

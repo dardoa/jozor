@@ -1,21 +1,18 @@
 import React, { memo } from 'react';
-import { TreeSettings, ChartType, AppTheme } from '../../types';
+import { TreeSettings, ChartType, AppTheme, ViewSettingsMenuProps } from '../../types';
 import { 
   SlidersHorizontal, Eye, Check, ArrowRightLeft, ArrowUpDown, 
   CircleDashed, Share2, Network, GitGraph, MonitorPlay, Palette, Zap, LayoutGrid, Clock
 } from 'lucide-react';
 import { DropdownContent, DropdownMenuItem, DropdownMenuDivider, DropdownMenuHeader } from '../ui/DropdownMenu'; // Changed import
 import { FormField } from '../ui/FormField';
+import { useTranslation } from '../../context/TranslationContext'; // Import useTranslation
 
 export const ViewSettingsMenu = memo(({
-    settings, onUpdate, onClose, onPresent, t
-}: {
-    settings: TreeSettings;
-    onUpdate: (s: TreeSettings) => void;
-    onClose?: () => void; // This onClose will be passed from Dropdown
-    onPresent: () => void;
-    t: any;
-}) => {
+    settings, onUpdate, onClose, onPresent // Removed t
+}: ViewSettingsMenuProps) => {
+    const { t } = useTranslation(); // Use useTranslation hook directly
+
     const chartOptions = [
         { id: 'descendant', label: t.descendant, icon: <GitGraph className="w-3.5 h-3.5"/> },
         { id: 'fan', label: t.fan, icon: <CircleDashed className="w-3.5 h-3.5"/> },

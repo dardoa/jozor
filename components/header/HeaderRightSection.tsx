@@ -10,18 +10,19 @@ import { ViewSettingsMenu } from './ViewSettingsMenu';
 import { UserMenu } from './UserMenu';
 import { SearchInputWithResults } from './SearchInputWithResults';
 import { Dropdown } from '../ui/Dropdown'; // New import
+import { useTranslation } from '../../context/TranslationContext'; // Import useTranslation
 
 export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(({
-  t,
+  // Removed t,
   themeLanguage, auth, viewSettings, toolsActions, exportActions,
   searchProps
 }) => {
-  // Removed activeMenu state
+  const { t } = useTranslation(); // Use useTranslation hook directly
 
   return (
     <div className="flex items-center gap-2 md:gap-3">
       {/* Search */}
-      <SearchInputWithResults people={searchProps.people} onFocusPerson={searchProps.onFocusPerson} t={t} />
+      <SearchInputWithResults people={searchProps.people} onFocusPerson={searchProps.onFocusPerson} />
 
       <div className="h-6 w-px bg-stone-200 dark:bg-stone-800 hidden md:block mx-1"></div>
 
@@ -51,7 +52,7 @@ export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(({
       >
         <ToolsMenu
           onOpenModal={toolsActions.onOpenModal}
-          t={t}
+          // Removed t={t}
         />
       </Dropdown>
 
@@ -71,7 +72,7 @@ export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(({
           settings={viewSettings.treeSettings}
           onUpdate={viewSettings.setTreeSettings}
           onPresent={() => { viewSettings.onPresent(); }}
-          t={t}
+          // Removed t={t}
         />
       </Dropdown>
 
@@ -91,7 +92,7 @@ export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(({
             }
             align="end"
           >
-            <UserMenu user={auth.user} isDemoMode={auth.isDemoMode} onLogout={auth.onLogout} t={t} />
+            <UserMenu user={auth.user} isDemoMode={auth.isDemoMode} onLogout={auth.onLogout} />
           </Dropdown>
         ) : (
           <LoginButton onLogin={auth.onLogin} label={t.loginGoogle} />
@@ -110,7 +111,7 @@ export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(({
         >
           <ExportMenu
             onExport={exportActions.handleExport}
-            t={t}
+            // Removed t={t}
           />
         </Dropdown>
       </div>

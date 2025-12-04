@@ -6,7 +6,8 @@ import { HeaderLeftSection } from './header/HeaderLeftSection';
 import { HeaderRightSection } from './header/HeaderRightSection';
 
 export const Header: React.FC<HeaderProps> = memo(({
-  t, toggleSidebar,
+  // Removed t,
+  toggleSidebar,
   historyControls, themeLanguage, auth, viewSettings, toolsActions, exportActions,
   searchProps // Destructure searchProps directly
 }) => {
@@ -16,14 +17,14 @@ export const Header: React.FC<HeaderProps> = memo(({
         {/* Left Section */}
         <HeaderLeftSection 
           language={themeLanguage.language} // Pass language from grouped props
-          t={t}
+          // Removed t={t}
           toggleSidebar={toggleSidebar}
           historyControls={historyControls}
         />
         
         {/* Right Section */}
         <HeaderRightSection
-          t={t}
+          // Removed t={t}
           themeLanguage={themeLanguage}
           auth={auth}
           viewSettings={viewSettings}

@@ -63,14 +63,12 @@ const App: React.FC = () => {
               onStartNew={handleStartNewTree}
               onImport={() => fileInputRef.current?.click()}
               onLogin={auth.onLogin}
-              // Removed language={language}
-              // Removed setLanguage={setLanguage}
           />
       ) : (
           <>
             {!isPresentMode && (
                 <Header 
-                    t={t}
+                    // Removed t={t}
                     toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
                     historyControls={historyControls}
                     themeLanguage={themeLanguage}
