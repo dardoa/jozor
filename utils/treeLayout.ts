@@ -7,6 +7,7 @@ export const NODE_WIDTH_DEFAULT = 160;
 export const NODE_WIDTH_COMPACT = 130;
 export const NODE_HEIGHT_DEFAULT = 210;
 export const NODE_HEIGHT_COMPACT = 170;
+export const FORCE_NODE_RADIUS = 30; // New constant for force chart node radius
 
 // Layout Constants
 const LEVEL_SEP_DEFAULT = 280; 
