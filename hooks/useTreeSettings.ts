@@ -6,7 +6,7 @@ const DEFAULT_TREE_SETTINGS: TreeSettings = {
   showDates: true,
   showMiddleName: false,
   showLastName: true,
-  showMinimap: true,
+  showMinimap: false, // Changed to false
   layoutMode: 'vertical',
   isCompact: false,
   chartType: 'descendant',
