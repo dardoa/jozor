@@ -66,5 +66,6 @@ export const modals = {
   searchByName: 'Search by name...',
   noMatches: 'No matching people found.',
   noWorkInterests: 'No work or interests information available.',
-  actions: 'Actions', // Added this line
+  actions: 'Actions',
+  identity: 'Identity', // Added this line
 };

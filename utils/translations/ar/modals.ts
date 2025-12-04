@@ -66,5 +66,6 @@ export const modals = {
   searchByName: 'البحث بالاسم...',
   noMatches: 'لا توجد نتائج مطابقة.',
   noWorkInterests: 'لا توجد معلومات عن العمل أو الاهتمامات.',
-  actions: 'الإجراءات', // Added this line
+  actions: 'الإجراءات',
+  identity: 'الهوية', // Added this line
 };
