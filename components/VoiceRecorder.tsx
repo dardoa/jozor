@@ -1,12 +1,14 @@
 import React, { useState, useRef } from 'react';
 import { Mic, Square, Play, Trash2, Loader2 } from 'lucide-react';
+import { useTranslation } from '../context/TranslationContext'; // Import useTranslation
 
 interface VoiceRecorderProps {
   onSave: (base64Audio: string) => void;
-  t: any;
+  // Removed t: any;
 }
 
-export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onSave, t }) => {
+export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onSave }) => {
+    const { t } = useTranslation(); // Use useTranslation hook directly
     const [isRecording, setIsRecording] = useState(false);
     const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);

@@ -5,6 +5,7 @@ import { ExternalLink, Heart, HeartCrack, Users, Gem, Calendar, MapPin } from 'l
 import { FormField } from '../ui/FormField';
 import { getDisplayDate } from '../../utils/familyLogic';
 import { Card } from '../ui/Card'; // Import Card component
+import { useTranslation } from '../../context/TranslationContext'; // Import useTranslation
 
 interface PartnersTabProps {
   person: Person;
@@ -12,10 +13,11 @@ interface PartnersTabProps {
   isEditing: boolean;
   onUpdate: (id: string, updates: Partial<Person>) => void;
   onSelect: (id: string) => void;
-  t: any;
+  // Removed t: any;
 }
 
-export const PartnersTab: React.FC<PartnersTabProps> = memo(({ person, people, isEditing, onUpdate, onSelect, t }) => {
+export const PartnersTab: React.FC<PartnersTabProps> = memo(({ person, people, isEditing, onUpdate, onSelect }) => {
+  const { t } = useTranslation(); // Use useTranslation hook directly
   
   const handlePartnerUpdate = (spouseId: string, field: keyof RelationshipInfo, value: any) => {
     const currentDetails = person.partnerDetails || {};

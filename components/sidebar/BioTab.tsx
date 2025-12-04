@@ -5,16 +5,18 @@ import { Wand2, Sparkles, Loader2, Info } from 'lucide-react';
 import { SmartTextarea } from '../ui/SmartInput';
 import { FormField } from '../ui/FormField';
 import { Card } from '../ui/Card'; // Import Card component
+import { useTranslation } from '../../context/TranslationContext'; // Import useTranslation
 
 interface BioTabProps {
   person: Person;
   people: Record<string, Person>;
   isEditing: boolean;
   onUpdate: (id: string, updates: Partial<Person>) => void;
-  t: any;
+  // Removed t: any;
 }
 
-export const BioTab: React.FC<BioTabProps> = memo(({ person, people, isEditing, onUpdate, t }) => {
+export const BioTab: React.FC<BioTabProps> = memo(({ person, people, isEditing, onUpdate }) => {
+  const { t } = useTranslation(); // Use useTranslation hook directly
   const [isGenerating, setIsGenerating] = useState(false);
   const [bioTone, setBioTone] = useState('Standard');
 

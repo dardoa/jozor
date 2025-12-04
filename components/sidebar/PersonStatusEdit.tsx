@@ -2,14 +2,16 @@ import React, { memo } from 'react';
 import { Person } from '../../types';
 import { Card } from '../ui/Card';
 import { Ribbon } from 'lucide-react';
+import { useTranslation } from '../../context/TranslationContext'; // Import useTranslation
 
 interface PersonStatusEditProps {
   person: Person;
   onUpdate: (id: string, updates: Partial<Person>) => void;
-  t: any;
+  // Removed t: any;
 }
 
-export const PersonStatusEdit: React.FC<PersonStatusEditProps> = memo(({ person, onUpdate, t }) => {
+export const PersonStatusEdit: React.FC<PersonStatusEditProps> = memo(({ person, onUpdate }) => {
+  const { t } = useTranslation(); // Use useTranslation hook directly
   const handleChange = (field: keyof Person, value: any) => {
     onUpdate(person.id, { [field]: value });
   };

@@ -9,6 +9,7 @@ import { SidebarFooter } from './sidebar/SidebarFooter';
 import { SidebarTabs } from './sidebar/SidebarTabs';
 import { getTranslation } from '../utils/translations';
 import { Person, Language, UserProfile, FamilyActionsProps } from '../types';
+import { useTranslation } from '../context/TranslationContext'; // Import useTranslation
 
 interface SidebarProps {
   person: Person;
@@ -28,9 +29,10 @@ export const Sidebar: React.FC<SidebarProps> = memo(({
   person, people, onUpdate, onDelete, onSelect, language, isOpen, onClose, onOpenModal, user,
   familyActions // Destructure new grouped prop
 }) => {
+  const { t } = useTranslation(); // Use useTranslation hook directly
   const [activeTab, setActiveTab] = useState<'info' | 'partners' | 'bio' | 'contact' | 'media'>('info');
   const [isEditing, setIsEditing] = useState(false);
-  const t = getTranslation(language);
+  // Removed t = getTranslation(language);
 
   // Reset editing state when person changes
   useEffect(() => {
@@ -77,21 +79,23 @@ export const Sidebar: React.FC<SidebarProps> = memo(({
             <div className="flex-1 overflow-y-auto p-4 scrollbar-thin scrollbar-thumb-stone-200 dark:scrollbar-thumb-stone-700 bg-white dark:bg-stone-900">
                 {activeTab === 'info' && (
                     <InfoTab 
-                        person={person} people={people} isEditing={isEditing} onUpdate={onUpdate} onSelect={onSelect} t={t}
+                        person={person} people={people} isEditing={isEditing} onUpdate={onUpdate} onSelect={onSelect}
                         onOpenModal={onOpenModal}
                         familyActions={familyActions} // Pass new grouped prop
+                        // Removed t={t}
                     />
                 )}
-                {activeTab === 'partners' && <PartnersTab person={person} people={people} isEditing={isEditing} onUpdate={onUpdate} onSelect={onSelect} t={t} />}
-                {activeTab === 'contact' && <ContactTab person={person} isEditing={isEditing} onUpdate={onUpdate} t={t} />}
-                {activeTab === 'bio' && <BioTab person={person} people={people} isEditing={isEditing} onUpdate={onUpdate} t={t} />}
-                {activeTab === 'media' && <MediaTab person={person} isEditing={isEditing} onUpdate={onUpdate} t={t} user={user} />}
+                {activeTab === 'partners' && <PartnersTab person={person} people={people} isEditing={isEditing} onUpdate={onUpdate} onSelect={onSelect} />}
+                {activeTab === 'contact' && <ContactTab person={person} isEditing={isEditing} onUpdate={onUpdate} />}
+                {activeTab === 'bio' && <BioTab person={person} people={people} isEditing={isEditing} onUpdate={onUpdate} />}
+                {activeTab === 'media' && <MediaTab person={person} isEditing={isEditing} onUpdate={onUpdate} user={user} />}
             </div>
             
             <SidebarFooter 
                 person={person} isEditing={isEditing} setIsEditing={setIsEditing}
-                onDelete={onDelete} t={t}
+                onDelete={onDelete}
                 familyActions={familyActions} // Pass new grouped prop
+                // Removed t={t}
             />
         </div>
     </>

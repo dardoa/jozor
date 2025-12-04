@@ -5,14 +5,16 @@ import { Card } from '../ui/Card';
 import { Camera, X, Sparkles, Loader2, ChevronDown } from 'lucide-react';
 import { processImageFile } from '../../utils/imageLogic';
 import { extractPersonData } from '../../services/geminiService';
+import { useTranslation } from '../../context/TranslationContext'; // Import useTranslation
 
 interface PersonIdentityEditProps {
   person: Person;
   onUpdate: (id: string, updates: Partial<Person>) => void;
-  t: any;
+  // Removed t: any;
 }
 
-export const PersonIdentityEdit: React.FC<PersonIdentityEditProps> = memo(({ person, onUpdate, t }) => {
+export const PersonIdentityEdit: React.FC<PersonIdentityEditProps> = memo(({ person, onUpdate }) => {
+  const { t } = useTranslation(); // Use useTranslation hook directly
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showSmartModal, setShowSmartModal] = useState(false);
   const [smartText, setSmartText] = useState('');

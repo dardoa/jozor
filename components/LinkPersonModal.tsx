@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Person, Gender, Language, FamilyActionsProps } from '../types';
 import { getTranslation } from '../utils/translations';
 import { X, UserPlus, Search, User } from 'lucide-react';
+import { useTranslation } from '../context/TranslationContext'; // Import useTranslation
 
 interface LinkPersonModalProps {
   isOpen: boolean;
@@ -24,8 +25,9 @@ export const LinkPersonModal: React.FC<LinkPersonModalProps> = ({
   language,
   familyActions // Destructure new grouped prop
 }) => {
+  const { t } = useTranslation(); // Use useTranslation hook directly
   const [searchTerm, setSearchTerm] = useState('');
-  const t = getTranslation(language);
+  // Removed t = getTranslation(language);
 
   if (!isOpen) return null;
 

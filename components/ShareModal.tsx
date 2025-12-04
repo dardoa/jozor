@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Language, UserProfile } from '../types';
 import { getTranslation } from '../utils/translations';
 import { X, UserPlus, Mail, Shield, Check, Trash2, Share2, Copy, Globe } from 'lucide-react';
+import { useTranslation } from '../context/TranslationContext'; // Import useTranslation
 
 interface ShareModalProps {
   isOpen: boolean;
@@ -18,7 +19,7 @@ interface Collaborator {
 }
 
 export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, language, user }) => {
-  const t = getTranslation(language);
+  const { t } = useTranslation(); // Use useTranslation hook directly
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<'editor' | 'viewer'>('editor');
   const [isCopied, setIsCopied] = useState(false);

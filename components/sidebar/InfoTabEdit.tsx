@@ -6,20 +6,22 @@ import { PersonBirthDeathEdit } from './PersonBirthDeathEdit';
 import { FamilyRelationshipsSection } from './FamilyRelationshipsSection';
 import { Card } from '../ui/Card';
 import { ChevronDown } from 'lucide-react';
+import { useTranslation } from '../../context/TranslationContext'; // Import useTranslation
 
 interface InfoTabEditProps {
   person: Person;
   people: Record<string, Person>;
   onUpdate: (id: string, updates: Partial<Person>) => void;
   onSelect: (id: string) => void;
-  t: any;
+  // Removed t: any;
   familyActions: FamilyActionsProps; // New grouped prop
 }
 
 export const InfoTabEdit: React.FC<InfoTabEditProps> = memo(({
-  person, people, onUpdate, onSelect, t,
+  person, people, onUpdate, onSelect,
   familyActions // Destructure new grouped prop
 }) => {
+  const { t } = useTranslation(); // Use useTranslation hook directly
   const [showFamilyRelationships, setShowFamilyRelationships] = useState(true);
 
   return (
@@ -27,19 +29,19 @@ export const InfoTabEdit: React.FC<InfoTabEditProps> = memo(({
       <PersonIdentityEdit
         person={person}
         onUpdate={onUpdate}
-        t={t}
+        // Removed t={t}
       />
 
       <PersonStatusEdit
         person={person}
         onUpdate={onUpdate}
-        t={t}
+        // Removed t={t}
       />
 
       <PersonBirthDeathEdit
         person={person}
         onUpdate={onUpdate}
-        t={t}
+        // Removed t={t}
       />
       
       <Card title={t.familyRelationships}>
@@ -53,8 +55,9 @@ export const InfoTabEdit: React.FC<InfoTabEditProps> = memo(({
         {showFamilyRelationships && (
           <div className="mt-2 animate-in fade-in slide-in-from-top-1 duration-200">
             <FamilyRelationshipsSection
-              person={person} people={people} isEditing={true} onUpdate={onUpdate} onSelect={onSelect} t={t}
+              person={person} people={people} isEditing={true} onUpdate={onUpdate} onSelect={onSelect}
               familyActions={familyActions} // Pass new grouped prop
+              // Removed t={t}
             />
           </div>
         )}

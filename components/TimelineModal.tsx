@@ -3,6 +3,7 @@ import { Person, Language, TimelineEvent } from '../types'; // Added TimelineEve
 import { getTranslation } from '../utils/translations';
 import { X, Calendar, Baby, Heart, Ribbon } from 'lucide-react';
 import { getDisplayDate } from '../utils/familyLogic';
+import { useTranslation } from '../context/TranslationContext'; // Import useTranslation
 
 interface TimelineModalProps {
   isOpen: boolean;
@@ -15,7 +16,8 @@ interface TimelineModalProps {
 export const TimelineModal: React.FC<TimelineModalProps> = ({ 
     isOpen, onClose, people, onSelectPerson, language 
 }) => {
-  const t = getTranslation(language);
+  const { t } = useTranslation(); // Use useTranslation hook directly
+  // Removed t = getTranslation(language);
   const [sortAsc, setSortAsc] = useState(true);
 
   const events = useMemo(() => {

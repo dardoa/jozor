@@ -4,14 +4,16 @@ import { DateSelect } from '../DateSelect';
 import { FormField } from '../ui/FormField';
 import { Card } from '../ui/Card';
 import { BookOpen, ChevronDown } from 'lucide-react';
+import { useTranslation } from '../../context/TranslationContext'; // Import useTranslation
 
 interface PersonBirthDeathEditProps {
   person: Person;
   onUpdate: (id: string, updates: Partial<Person>) => void;
-  t: any;
+  // Removed t: any;
 }
 
-export const PersonBirthDeathEdit: React.FC<PersonBirthDeathEditProps> = memo(({ person, onUpdate, t }) => {
+export const PersonBirthDeathEdit: React.FC<PersonBirthDeathEditProps> = memo(({ person, onUpdate }) => {
+  const { t } = useTranslation(); // Use useTranslation hook directly
   const [showDeathDetails, setShowDeathDetails] = useState(true);
 
   const handleChange = (field: keyof Person, value: any) => {

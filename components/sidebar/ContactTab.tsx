@@ -3,15 +3,17 @@ import { Person } from '../../types';
 import { FormField } from '../ui/FormField';
 import { Info } from 'lucide-react';
 import { Card } from '../ui/Card'; // Import Card component
+import { useTranslation } from '../../context/TranslationContext'; // Import useTranslation
 
 interface ContactTabProps {
   person: Person;
   isEditing: boolean;
   onUpdate: (id: string, updates: Partial<Person>) => void;
-  t: any;
+  // Removed t: any;
 }
 
-export const ContactTab: React.FC<ContactTabProps> = memo(({ person, isEditing, onUpdate, t }) => {
+export const ContactTab: React.FC<ContactTabProps> = memo(({ person, isEditing, onUpdate }) => {
+  const { t } = useTranslation(); // Use useTranslation hook directly
   const handleChange = (field: keyof Person, value: any) => {
     onUpdate(person.id, { [field]: value });
   };

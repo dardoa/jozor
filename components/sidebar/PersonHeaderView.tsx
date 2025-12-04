@@ -2,15 +2,17 @@ import React, { memo } from 'react';
 import { Person } from '../../types';
 import { getDisplayDate } from '../../utils/familyLogic';
 import { User, Baby, Ribbon, MessageCircle, MapPin, CalendarDays, BookOpen } from 'lucide-react';
+import { useTranslation } from '../../context/TranslationContext'; // Import useTranslation
 
 interface PersonHeaderViewProps {
   person: Person;
   onSelect: (id: string) => void;
   onOpenModal: (modalType: 'calculator' | 'stats' | 'chat' | 'consistency' | 'timeline' | 'share' | 'story' | 'map') => void;
-  t: any;
+  // Removed t: any;
 }
 
-export const PersonHeaderView: React.FC<PersonHeaderViewProps> = memo(({ person, onSelect, onOpenModal, t }) => {
+export const PersonHeaderView: React.FC<PersonHeaderViewProps> = memo(({ person, onSelect, onOpenModal }) => {
+  const { t } = useTranslation(); // Use useTranslation hook directly
   const fullName = [person.title, person.firstName, person.middleName, person.lastName, person.suffix].filter(Boolean).join(' ') || "Unnamed Person";
   const displayBirth = getDisplayDate(person.birthDate);
   const displayDeath = getDisplayDate(person.deathDate);

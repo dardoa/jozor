@@ -1,20 +1,22 @@
 import React, { memo } from 'react';
 import { Person, Gender, FamilyActionsProps } from '../../types'; // Added FamilyActionsProps
 import { Heart, Baby, Trash2, Check, Edit2, UserPlus, ArrowUp, ArrowDown } from 'lucide-react';
+import { useTranslation } from '../../context/TranslationContext'; // Import useTranslation
 
 interface SidebarFooterProps {
     person: Person;
     isEditing: boolean;
     setIsEditing: (v: boolean) => void;
     onDelete: (id: string) => void;
-    t: any;
+    // Removed t: any;
     familyActions: FamilyActionsProps; // New grouped prop
 }
 
 export const SidebarFooter: React.FC<SidebarFooterProps> = memo(({ 
-    person, isEditing, setIsEditing, onDelete, t,
+    person, isEditing, setIsEditing, onDelete,
     familyActions // Destructure new grouped prop
 }) => {
+    const { t } = useTranslation(); // Use useTranslation hook directly
     
     // Helper for circular add buttons
     const QuickAddButton = ({ onClick, icon, color, label }: { onClick: () => void, icon: React.ReactNode, color: string, label: string }) => (

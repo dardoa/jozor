@@ -6,16 +6,18 @@ import { analyzeImage } from '../../services/geminiService';
 import { Plus, Image as ImageIcon, X, Mic, Play, Trash2, Cloud, Loader2, Sparkles, ScanEye, Info } from 'lucide-react';
 import { VoiceRecorder } from '../VoiceRecorder';
 import { Card } from '../ui/Card'; // Import Card component
+import { useTranslation } from '../../context/TranslationContext'; // Import useTranslation
 
 interface MediaTabProps {
   person: Person;
   isEditing: boolean;
   onUpdate: (id: string, updates: Partial<Person>) => void;
-  t: any;
+  // Removed t: any;
   user: UserProfile | null;
 }
 
-export const MediaTab: React.FC<MediaTabProps> = memo(({ person, isEditing, onUpdate, t, user }) => {
+export const MediaTab: React.FC<MediaTabProps> = memo(({ person, isEditing, onUpdate, user }) => {
+  const { t } = useTranslation(); // Use useTranslation hook directly
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isDriveLoading, setIsDriveLoading] = useState(false);
@@ -157,7 +159,7 @@ export const MediaTab: React.FC<MediaTabProps> = memo(({ person, isEditing, onUp
         {/* --- AUDIO SECTION --- */}
         <Card title={t.voiceMemories}>
             <div className="flex justify-between items-center relative z-10 mb-3">
-                {isEditing && <VoiceRecorder onSave={handleVoiceSave} t={t} />}
+                {isEditing && <VoiceRecorder onSave={handleVoiceSave} />}
             </div>
 
             {(!hasVoiceNotes && !isEditing) ? (
