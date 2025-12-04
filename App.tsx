@@ -12,14 +12,14 @@ import { X } from 'lucide-react';
 const App: React.FC = () => {
   const {
     // Core Data
-    people, focusId, setFocusId, updatePerson, deletePerson, removeRelationship, activePerson,
-
+    people, focusId, setFocusId, updatePerson, deletePerson, activePerson, // Removed removeRelationship
+    
     // Welcome Screen
     showWelcome, fileInputRef, handleStartNewTree, onFileUpload,
 
     // Modals & Sidebar
     sidebarOpen, setSidebarOpen, activeModal, setActiveModal, isPresentMode, setIsPresentMode,
-    linkModal, setLinkModal, handleOpenLinkModal, handleCreateNewRelative, handleSelectExistingRelative,
+    linkModal, setLinkModal, handleCreateNewRelative, handleSelectExistingRelative, // Added these back to destructuring
     handleOpenModal,
 
     // Grouped Props
@@ -29,7 +29,8 @@ const App: React.FC = () => {
     viewSettings,
     toolsActions,
     exportActions,
-    searchProps, // Destructure searchProps here
+    searchProps,
+    familyActions, // Destructure new grouped prop
     t, // Destructure t here
   } = useAppOrchestration();
 
@@ -58,7 +59,7 @@ const App: React.FC = () => {
                     viewSettings={viewSettings}
                     toolsActions={toolsActions}
                     exportActions={exportActions}
-                    searchProps={searchProps} // Pass searchProps directly
+                    searchProps={searchProps}
                 />
             )}
             
@@ -87,10 +88,6 @@ const App: React.FC = () => {
                             person={activePerson}
                             people={people}
                             onUpdate={updatePerson}
-                            onAddParent={(g) => handleOpenLinkModal('parent', g)}
-                            onAddSpouse={(g) => handleOpenLinkModal('spouse', g)}
-                            onAddChild={(g) => handleOpenLinkModal('child', g)}
-                            onRemoveRelationship={removeRelationship}
                             onDelete={deletePerson}
                             onSelect={setFocusId}
                             language={themeLanguage.language}
@@ -98,6 +95,7 @@ const App: React.FC = () => {
                             onClose={() => setSidebarOpen(false)}
                             onOpenModal={handleOpenModal}
                             user={auth.user}
+                            familyActions={familyActions} // Pass new grouped prop
                         />
                     </div>
                 )}
@@ -119,6 +117,7 @@ const App: React.FC = () => {
                     handleCreateNewRelative={handleCreateNewRelative}
                     handleSelectExistingRelative={handleSelectExistingRelative}
                     user={auth.user}
+                    familyActions={familyActions} // Pass new grouped prop
                 />
             </div>
           </>

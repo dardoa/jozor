@@ -184,6 +184,14 @@ export interface SearchProps {
   onFocusPerson: (id: string) => void;
 }
 
+export interface FamilyActionsProps { // New interface
+  onAddParent: (gender: Gender) => void;
+  onAddSpouse: (gender: Gender) => void;
+  onAddChild: (gender: Gender) => void;
+  onRemoveRelationship?: (targetId: string, relativeId: string, type: 'parent' | 'spouse' | 'child') => void;
+  onLinkPerson: (existingId: string, type: 'parent' | 'spouse' | 'child' | null) => void; // Added for LinkPersonModal
+}
+
 export interface HeaderProps { // Updated HeaderProps
   t: any; // Translations
   toggleSidebar: () => void;

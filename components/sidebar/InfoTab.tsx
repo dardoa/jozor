@@ -1,5 +1,5 @@
 import React, { memo, useState } from 'react';
-import { Person, Gender } from '../../types';
+import { Person, Gender, FamilyActionsProps } from '../../types'; // Added FamilyActionsProps
 import { InfoTabView } from './InfoTabView'; // New import
 import { InfoTabEdit } from './InfoTabEdit'; // New import
 
@@ -10,23 +10,20 @@ interface InfoTabProps {
   onUpdate: (id: string, updates: Partial<Person>) => void;
   onSelect: (id: string) => void;
   t: any;
-  onAddParent: (gender: Gender) => void;
-  onAddSpouse: (gender: Gender) => void;
-  onAddChild: (gender: Gender) => void;
-  onRemoveRelationship?: (targetId: string, relativeId: string, type: 'parent' | 'spouse' | 'child') => void;
   onOpenModal: (modalType: 'calculator' | 'stats' | 'chat' | 'consistency' | 'timeline' | 'share' | 'story' | 'map') => void;
+  familyActions: FamilyActionsProps; // New grouped prop
 }
 
 export const InfoTab: React.FC<InfoTabProps> = memo(({
     person, people, isEditing, onUpdate, onSelect, t,
-    onAddParent, onAddSpouse, onAddChild, onRemoveRelationship, onOpenModal
+    onOpenModal, familyActions // Destructure new grouped prop
 }) => {
   if (!isEditing) {
       return (
         <InfoTabView
             person={person} people={people} onSelect={onSelect} t={t}
-            onAddParent={onAddParent} onAddSpouse={onAddSpouse} onAddChild={onAddChild} onRemoveRelationship={onRemoveRelationship}
             onOpenModal={onOpenModal}
+            familyActions={familyActions} // Pass new grouped prop
         />
       );
   }
@@ -34,7 +31,7 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
   return (
     <InfoTabEdit
         person={person} people={people} onUpdate={onUpdate} onSelect={onSelect} t={t}
-        onAddParent={onAddParent} onAddSpouse={onAddSpouse} onAddChild={onAddChild} onRemoveRelationship={onRemoveRelationship}
+        familyActions={familyActions} // Pass new grouped prop
     />
   );
 });

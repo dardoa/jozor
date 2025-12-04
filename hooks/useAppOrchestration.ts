@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Person, Gender, Language, TreeSettings, UserProfile, HistoryControlsProps, ThemeLanguageProps, AuthProps, ViewSettingsProps, ToolsActionsProps, ExportActionsProps, SearchProps } from '../types';
+import { Person, Gender, Language, TreeSettings, UserProfile, HistoryControlsProps, ThemeLanguageProps, AuthProps, ViewSettingsProps, ToolsActionsProps, ExportActionsProps, SearchProps, FamilyActionsProps } from '../types';
 import { useFamilyTree } from './useFamilyTree';
 import { useGoogleSync } from './useGoogleSync';
 import { useThemeSync } from './useThemeSync';
@@ -92,21 +92,24 @@ export const useAppOrchestration = () => {
   const toolsActions: ToolsActionsProps = { onOpenModal: handleOpenModal };
   const exportActions: ExportActionsProps = { handleExport };
   const searchProps: SearchProps = { people, onFocusPerson: setFocusId }; // Construct searchProps here
+  const familyActions: FamilyActionsProps = { // New grouped prop
+    onAddParent: (g) => handleOpenLinkModal('parent', g),
+    onAddSpouse: (g) => handleOpenLinkModal('spouse', g),
+    onAddChild: (g) => handleOpenLinkModal('child', g),
+    onRemoveRelationship: removeRelationship,
+    onLinkPerson: linkPerson,
+  };
 
   return {
     // Core Data
-    people, focusId, setFocusId, updatePerson, deletePerson, removeRelationship, activePerson,
-
-    // History (now part of historyControls)
-    // Sync & Auth (now part of auth)
-    // UI Preferences (now part of themeLanguage and viewSettings)
+    people, focusId, setFocusId, updatePerson, deletePerson, activePerson,
 
     // Welcome Screen
     showWelcome, fileInputRef, handleStartNewTree, onFileUpload,
 
     // Modals & Sidebar
     sidebarOpen, setSidebarOpen, activeModal, setActiveModal, isPresentMode, setIsPresentMode,
-    linkModal, setLinkModal, handleOpenLinkModal, handleCreateNewRelative, handleSelectExistingRelative,
+    linkModal, setLinkModal, handleCreateNewRelative, handleSelectExistingRelative,
     handleOpenModal,
 
     // Grouped Props
@@ -116,7 +119,8 @@ export const useAppOrchestration = () => {
     viewSettings,
     toolsActions,
     exportActions,
-    searchProps, // Return searchProps
+    searchProps,
+    familyActions, // Return new grouped prop
     t, // Return t for use in App.tsx
   };
 };

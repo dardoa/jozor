@@ -1,20 +1,19 @@
 import React, { memo } from 'react';
-import { Person, Gender } from '../../types';
+import { Person, Gender, FamilyActionsProps } from '../../types'; // Added FamilyActionsProps
 import { Heart, Baby, Trash2, Check, Edit2, UserPlus, ArrowUp, ArrowDown } from 'lucide-react';
 
 interface SidebarFooterProps {
     person: Person;
     isEditing: boolean;
     setIsEditing: (v: boolean) => void;
-    onAddParent: (g: Gender) => void;
-    onAddSpouse: (g: Gender) => void;
-    onAddChild: (g: Gender) => void;
     onDelete: (id: string) => void;
     t: any;
+    familyActions: FamilyActionsProps; // New grouped prop
 }
 
 export const SidebarFooter: React.FC<SidebarFooterProps> = memo(({ 
-    person, isEditing, setIsEditing, onAddParent, onAddSpouse, onAddChild, onDelete, t 
+    person, isEditing, setIsEditing, onDelete, t,
+    familyActions // Destructure new grouped prop
 }) => {
     
     // Helper for circular add buttons
@@ -43,13 +42,13 @@ export const SidebarFooter: React.FC<SidebarFooterProps> = memo(({
             <div className="flex justify-center gap-3 mb-3"> {/* Reduced gap-4 to gap-3 and mb-4 to mb-3 */}
                 <div className="flex gap-2"> {/* Reduced gap-2 to gap-1.5 */}
                      <QuickAddButton 
-                        onClick={() => onAddParent('male')} 
+                        onClick={() => familyActions.onAddParent('male')} 
                         icon={<ArrowUp className="w-3 h-3"/>}
                         color="bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400"
                         label={t.addFather}
                      />
                      <QuickAddButton 
-                        onClick={() => onAddParent('female')} 
+                        onClick={() => familyActions.onAddParent('female')} 
                         icon={<ArrowUp className="w-3 h-3"/>}
                         color="bg-pink-50 text-pink-600 hover:bg-pink-100 dark:bg-pink-900/30 dark:text-pink-400"
                         label={t.addMother}
@@ -60,13 +59,13 @@ export const SidebarFooter: React.FC<SidebarFooterProps> = memo(({
 
                 <div className="flex gap-2"> {/* Reduced gap-2 to gap-1.5 */}
                      <QuickAddButton 
-                        onClick={() => onAddSpouse('male')} 
+                        onClick={() => familyActions.onAddSpouse('male')} 
                         icon={<Heart className="w-3 h-3"/>}
                         color="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400"
                         label={t.addHusband}
                      />
                      <QuickAddButton 
-                        onClick={() => onAddSpouse('female')} 
+                        onClick={() => familyActions.onAddSpouse('female')} 
                         icon={<Heart className="w-3 h-3"/>}
                         color="bg-rose-50 text-rose-600 hover:bg-rose-100 dark:bg-rose-900/30 dark:text-rose-400"
                         label={t.addWife}
@@ -77,13 +76,13 @@ export const SidebarFooter: React.FC<SidebarFooterProps> = memo(({
 
                 <div className="flex gap-2"> {/* Reduced gap-2 to gap-1.5 */}
                      <QuickAddButton 
-                        onClick={() => onAddChild('male')} 
+                        onClick={() => familyActions.onAddChild('male')} 
                         icon={<Baby className="w-3 h-3"/>}
                         color="bg-teal-50 text-teal-600 hover:bg-teal-100 dark:bg-teal-900/30 dark:text-teal-400"
                         label={t.addSon}
                      />
                      <QuickAddButton 
-                        onClick={() => onAddChild('female')} 
+                        onClick={() => familyActions.onAddChild('female')} 
                         icon={<Baby className="w-3 h-3"/>}
                         color="bg-orange-50 text-orange-600 hover:bg-orange-100 dark:bg-orange-900/30 dark:text-orange-400"
                         label={t.addDaughter}

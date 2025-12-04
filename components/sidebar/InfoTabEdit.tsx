@@ -1,5 +1,5 @@
 import React, { memo, useState } from 'react';
-import { Person, Gender } from '../../types';
+import { Person, Gender, FamilyActionsProps } from '../../types'; // Added FamilyActionsProps
 import { PersonIdentityEdit } from './PersonIdentityEdit';
 import { PersonStatusEdit } from './PersonStatusEdit';
 import { PersonBirthDeathEdit } from './PersonBirthDeathEdit';
@@ -13,15 +13,12 @@ interface InfoTabEditProps {
   onUpdate: (id: string, updates: Partial<Person>) => void;
   onSelect: (id: string) => void;
   t: any;
-  onAddParent: (gender: Gender) => void;
-  onAddSpouse: (gender: Gender) => void;
-  onAddChild: (gender: Gender) => void;
-  onRemoveRelationship?: (targetId: string, relativeId: string, type: 'parent' | 'spouse' | 'child') => void;
+  familyActions: FamilyActionsProps; // New grouped prop
 }
 
 export const InfoTabEdit: React.FC<InfoTabEditProps> = memo(({
   person, people, onUpdate, onSelect, t,
-  onAddParent, onAddSpouse, onAddChild, onRemoveRelationship
+  familyActions // Destructure new grouped prop
 }) => {
   const [showFamilyRelationships, setShowFamilyRelationships] = useState(true);
 
@@ -57,7 +54,7 @@ export const InfoTabEdit: React.FC<InfoTabEditProps> = memo(({
           <div className="mt-2 animate-in fade-in slide-in-from-top-1 duration-200">
             <FamilyRelationshipsSection
               person={person} people={people} isEditing={true} onUpdate={onUpdate} onSelect={onSelect} t={t}
-              onAddParent={onAddParent} onAddSpouse={onAddSpouse} onAddChild={onAddChild} onRemoveRelationship={onRemoveRelationship}
+              familyActions={familyActions} // Pass new grouped prop
             />
           </div>
         )}

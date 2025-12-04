@@ -1,5 +1,5 @@
 import React, { Suspense } from 'react';
-import { Person, Gender, Language, UserProfile } from '../types';
+import { Person, Gender, Language, UserProfile, FamilyActionsProps } from '../types';
 import { LoadingSpinner } from './LoadingSpinner';
 import { LinkPersonModal } from './LinkPersonModal';
 
@@ -26,12 +26,14 @@ interface ModalManagerProps {
     handleCreateNewRelative: () => void;
     handleSelectExistingRelative: (id: string) => void;
     user: UserProfile | null;
+    familyActions: FamilyActionsProps; // Added familyActions prop
 }
 
 export const ModalManager: React.FC<ModalManagerProps> = ({
     activeModal, setActiveModal, linkModal, setLinkModal,
     people, language, focusId, setFocusId, activePerson,
-    handleCreateNewRelative, handleSelectExistingRelative, user
+    handleCreateNewRelative, handleSelectExistingRelative, user,
+    familyActions // Destructure new grouped prop
 }) => {
     const closeModal = () => setActiveModal('none');
 
@@ -40,13 +42,14 @@ export const ModalManager: React.FC<ModalManagerProps> = ({
             <LinkPersonModal 
                 isOpen={linkModal.isOpen}
                 onClose={() => setLinkModal({ ...linkModal, isOpen: false })}
-                onCreateNew={handleCreateNewRelative}
-                onSelectExisting={handleSelectExistingRelative}
+                // Removed onCreateNew={handleCreateNewRelative}
+                // Removed onSelectExisting={handleSelectExistingRelative}
                 people={people}
                 type={linkModal.type}
                 gender={linkModal.gender}
                 currentPersonId={focusId}
                 language={language}
+                familyActions={familyActions} // Pass new grouped prop
             />
             
             {activeModal === 'calculator' && (

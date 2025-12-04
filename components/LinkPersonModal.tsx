@@ -1,30 +1,32 @@
 import React, { useState } from 'react';
-import { Person, Gender, Language } from '../types';
+import { Person, Gender, Language, FamilyActionsProps } from '../types'; // Added FamilyActionsProps
 import { getTranslation } from '../utils/translations';
 import { X, UserPlus, Search, User } from 'lucide-react';
 
 interface LinkPersonModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onCreateNew: () => void;
-  onSelectExisting: (id: string) => void;
+  // Removed onCreateNew: () => void;
+  // Removed onSelectExisting: (id: string) => void;
   people: Record<string, Person>;
   type: 'parent' | 'spouse' | 'child' | null;
   gender: Gender | null;
   currentPersonId: string;
   language: Language;
+  familyActions: FamilyActionsProps; // New grouped prop
 }
 
 export const LinkPersonModal: React.FC<LinkPersonModalProps> = ({
   isOpen,
   onClose,
-  onCreateNew,
-  onSelectExisting,
+  // Removed onCreateNew,
+  // Removed onSelectExisting,
   people,
   type,
   gender,
   currentPersonId,
-  language
+  language,
+  familyActions // Destructure new grouped prop
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const t = getTranslation(language);
@@ -68,7 +70,12 @@ export const LinkPersonModal: React.FC<LinkPersonModalProps> = ({
           <div className="bg-white dark:bg-stone-800 pt-5 p-3 rounded-xl border border-stone-200 dark:border-stone-700 shadow-sm space-y-2 relative">
               <h3 className="absolute top-[-12px] start-3 z-10 bg-white dark:bg-stone-800 px-2 text-[9px] font-bold text-stone-400 uppercase tracking-wider">{t.createNewProfile}</h3>
               <button 
-                onClick={onCreateNew}
+                onClick={() => {
+                    if (type === 'parent' && gender) familyActions.onAddParent(gender);
+                    else if (type === 'spouse' && gender) familyActions.onAddSpouse(gender);
+                    else if (type === 'child' && gender) familyActions.onAddChild(gender);
+                    onClose();
+                }}
                 className="w-full flex items-center gap-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900/40 hover:border-blue-200 dark:hover:border-blue-700 transition-all group text-start"
               >
                 <div className="w-10 h-10 bg-white dark:bg-blue-800 rounded-full flex items-center justify-center shadow-sm text-blue-600 dark:text-blue-200 group-hover:scale-110 transition-transform">
@@ -112,7 +119,7 @@ export const LinkPersonModal: React.FC<LinkPersonModalProps> = ({
                     candidates.map(p => (
                         <button 
                             key={p.id}
-                            onClick={() => onSelectExisting(p.id)}
+                            onClick={() => { familyActions.onLinkPerson(p.id, type); onClose(); }}
                             className="w-full flex items-center gap-3 p-3 hover:bg-stone-50 dark:hover:bg-stone-700 text-start transition-colors group"
                         >
                             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shadow-sm ${p.gender === 'male' ? 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300' : 'bg-pink-100 text-pink-600 dark:bg-pink-900 dark:text-pink-300'}`}>

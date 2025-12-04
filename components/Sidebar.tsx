@@ -8,16 +8,12 @@ import { MediaTab } from './sidebar/MediaTab';
 import { SidebarFooter } from './sidebar/SidebarFooter';
 import { SidebarTabs } from './sidebar/SidebarTabs'; // New import
 import { getTranslation } from '../utils/translations';
-import { Person, Gender, Language, UserProfile } from '../types';
+import { Person, Gender, Language, UserProfile, FamilyActionsProps } from '../types'; // Added FamilyActionsProps
 
 interface SidebarProps {
   person: Person;
   people: Record<string, Person>;
   onUpdate: (id: string, updates: Partial<Person>) => void;
-  onAddParent: (gender: Gender) => void;
-  onAddSpouse: (gender: Gender) => void;
-  onAddChild: (gender: Gender) => void;
-  onRemoveRelationship?: (targetId: string, relativeId: string, type: 'parent' | 'spouse' | 'child') => void;
   onDelete: (id: string) => void;
   onSelect: (id: string) => void;
   language: Language;
@@ -25,11 +21,12 @@ interface SidebarProps {
   onClose: () => void;
   onOpenModal: (modalType: 'calculator' | 'stats' | 'chat' | 'consistency' | 'timeline' | 'share' | 'story' | 'map') => void; // Updated prop
   user: UserProfile | null;
+  familyActions: FamilyActionsProps; // New grouped prop
 }
 
 export const Sidebar: React.FC<SidebarProps> = memo(({
-  person, people, onUpdate, onAddParent, onAddSpouse, onAddChild, onRemoveRelationship,
-  onDelete, onSelect, language, isOpen, onClose, onOpenModal, user
+  person, people, onUpdate, onDelete, onSelect, language, isOpen, onClose, onOpenModal, user,
+  familyActions // Destructure new grouped prop
 }) => {
   const [activeTab, setActiveTab] = useState<'info' | 'partners' | 'bio' | 'contact' | 'media'>('info');
   const [isEditing, setIsEditing] = useState(false);
@@ -83,8 +80,8 @@ export const Sidebar: React.FC<SidebarProps> = memo(({
                 {activeTab === 'info' && (
                     <InfoTab 
                         person={person} people={people} isEditing={isEditing} onUpdate={onUpdate} onSelect={onSelect} t={t}
-                        onAddParent={onAddParent} onAddSpouse={onAddSpouse} onAddChild={onAddChild} onRemoveRelationship={onRemoveRelationship}
                         onOpenModal={onOpenModal} // Pass onOpenModal prop
+                        familyActions={familyActions} // Pass new grouped prop
                     />
                 )}
                 {activeTab === 'partners' && <PartnersTab person={person} people={people} isEditing={isEditing} onUpdate={onUpdate} onSelect={onSelect} t={t} />}
@@ -95,8 +92,8 @@ export const Sidebar: React.FC<SidebarProps> = memo(({
             
             <SidebarFooter 
                 person={person} isEditing={isEditing} setIsEditing={setIsEditing}
-                onAddParent={onAddParent} onAddSpouse={onAddSpouse} onAddChild={onAddChild}
                 onDelete={onDelete} t={t}
+                familyActions={familyActions} // Pass new grouped prop
             />
         </div>
     </>

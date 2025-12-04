@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { Person, Gender } from '../../types';
+import { Person, Gender, FamilyActionsProps } from '../../types'; // Added FamilyActionsProps
 import { getDisplayDate } from '../../utils/familyLogic';
 import { User, Ribbon, ChevronRight, Plus, BookOpen, Baby, ArrowUp, Heart, ArrowDown, Trash2 } from 'lucide-react';
 
@@ -129,19 +129,16 @@ interface FamilyRelationshipsSectionProps {
   onUpdate: (id: string, updates: Partial<Person>) => void; // Added onUpdate prop
   onSelect: (id: string) => void;
   t: any;
-  onAddParent: (gender: Gender) => void;
-  onAddSpouse: (gender: Gender) => void;
-  onAddChild: (gender: Gender) => void;
-  onRemoveRelationship?: (targetId: string, relativeId: string, type: 'parent' | 'spouse' | 'child') => void;
+  familyActions: FamilyActionsProps; // New grouped prop
 }
 
 export const FamilyRelationshipsSection: React.FC<FamilyRelationshipsSectionProps> = memo(({
     person, people, isEditing, onSelect, t, onUpdate, // Destructure onUpdate here
-    onAddParent, onAddSpouse, onAddChild, onRemoveRelationship
+    familyActions // Destructure new grouped prop
 }) => {
-    const handleRemoveParent = (id: string) => onRemoveRelationship?.(person.id, id, 'parent');
-    const handleRemoveSpouse = (id: string) => onRemoveRelationship?.(person.id, id, 'spouse');
-    const handleRemoveChild = (id: string) => onRemoveRelationship?.(person.id, id, 'child');
+    const handleRemoveParent = (id: string) => familyActions.onRemoveRelationship?.(person.id, id, 'parent');
+    const handleRemoveSpouse = (id: string) => familyActions.onRemoveRelationship?.(person.id, id, 'spouse');
+    const handleRemoveChild = (id: string) => familyActions.onRemoveRelationship?.(person.id, id, 'child');
 
     return (
         <div className="space-y-3 relative"> {/* Removed pt-5, adjusted to space-y-3 */}
@@ -151,7 +148,7 @@ export const FamilyRelationshipsSection: React.FC<FamilyRelationshipsSectionProp
                 icon={<ArrowUp className="w-3.5 h-3.5 text-gray-500" />} 
                 ids={person.parents} 
                 people={people}
-                onAdd={onAddParent}
+                onAdd={(g) => familyActions.onAddParent(g)}
                 onRemove={handleRemoveParent}
                 onSelect={onSelect}
                 placeholder={t.noRelatives}
@@ -164,7 +161,7 @@ export const FamilyRelationshipsSection: React.FC<FamilyRelationshipsSectionProp
                 icon={<Heart className="w-3.5 h-3.5 text-gray-500" />} 
                 ids={person.spouses} 
                 people={people}
-                onAdd={onAddSpouse}
+                onAdd={(g) => familyActions.onAddSpouse(g)}
                 onRemove={handleRemoveSpouse}
                 onSelect={onSelect}
                 placeholder={t.noRelatives}
@@ -177,7 +174,7 @@ export const FamilyRelationshipsSection: React.FC<FamilyRelationshipsSectionProp
                 icon={<ArrowDown className="w-3.5 h-3.5 text-gray-500" />} 
                 ids={person.children} 
                 people={people}
-                onAdd={onAddChild}
+                onAdd={(g) => familyActions.onAddChild(g)}
                 onRemove={handleRemoveChild}
                 onSelect={onSelect}
                 placeholder={t.noRelatives}
