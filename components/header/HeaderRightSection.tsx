@@ -79,7 +79,6 @@ export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(({
       <div className="hidden sm:flex items-center gap-1">
         <button onClick={() => {
             const newLanguage = themeLanguage.language === 'en' ? 'ar' : 'en';
-            console.log('HeaderRightSection: Toggling language. Current:', themeLanguage.language, 'New:', newLanguage); // Updated log
             themeLanguage.setLanguage(newLanguage);
           }} className="w-9 h-9 rounded-full hover:bg-stone-100 dark:hover:bg-stone-800 text-stone-500 flex items-center justify-center font-bold text-[10px]" aria-label={themeLanguage.language === 'en' ? 'Switch to Arabic' : 'Switch to English'}>{themeLanguage.language === 'en' ? 'AR' : 'EN'}</button>
         <button onClick={() => themeLanguage.setDarkMode(!themeLanguage.darkMode)} className="w-9 h-9 rounded-full hover:bg-stone-100 dark:hover:bg-stone-800 text-stone-500 flex items-center justify-center" aria-label={themeLanguage.darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}>{themeLanguage.darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}</button>
