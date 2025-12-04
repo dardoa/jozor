@@ -1,14 +1,14 @@
 import React, { memo } from 'react';
 import { Person } from '../../types';
 import { ArrowRightLeft } from 'lucide-react';
-import { DropdownMenuContainer, DropdownMenuItem } from '../ui/DropdownMenu';
+import { DropdownContent, DropdownMenuItem } from '../ui/DropdownMenu';
 
 export const SearchResults = memo(({
     results, onFocus, onClose
 }: {
     results: Person[], onFocus: (id: string) => void, onClose: () => void
 }) => (
-    <DropdownMenuContainer className="w-80 start-0 max-h-96 overflow-y-auto scrollbar-thin">
+    <DropdownContent className="w-80 start-0 max-h-96 overflow-y-auto scrollbar-thin">
         {results.length === 0 && <div className="p-4 text-center text-xs text-stone-400 italic">No results found</div>}
         {results.map(p => (
             <DropdownMenuItem key={p.id} onClick={() => { onFocus(p.id); onClose(); }} className="group text-start">
@@ -26,5 +26,5 @@ export const SearchResults = memo(({
                 </div>
             </DropdownMenuItem>
         ))}
-    </DropdownMenuContainer>
+    </DropdownContent>
 ));
