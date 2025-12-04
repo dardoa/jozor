@@ -80,55 +80,62 @@ export const DescendantPedigreeChart: React.FC<DescendantPedigreeChartProps> = m
 
 
   const getLinkPath = useCallback((link: TreeLink) => {
-    const source = nodes.find(n => n.id === link.source);
-    const target = nodes.find(n => n.id === link.target);
-    if (!source || !target) return '';
+    const sourceNode = nodes.find(n => n.id === link.source);
+    const targetNode = nodes.find(n => n.id === link.target);
+    if (!sourceNode || !targetNode) return '';
     
     if (link.type === 'marriage') {
-        return `M ${source.x} ${source.y} L ${target.x} ${target.y}`;
+        return `M ${sourceNode.x} ${sourceNode.y} L ${targetNode.x} ${targetNode.y}`;
     }
     
     if (settings.chartType === 'pedigree') {
-        const sX = source.x + NODE_WIDTH/2;
-        const sY = source.y;
-        const tX = target.x - NODE_WIDTH/2;
-        const tY = target.y;
+        const sX = sourceNode.x + NODE_WIDTH/2;
+        const sY = sourceNode.y;
+        const tX = targetNode.x - NODE_WIDTH/2;
+        const tY = targetNode.y;
         const midX = (sX + tX) / 2;
         return `M ${sX} ${sY} C ${midX} ${sY}, ${midX} ${tY}, ${tX} ${tY}`;
     }
 
     if (settings.chartType === 'descendant' && link.type === 'parent-child') {
-        const childData = target.data as Person;
-        let correctJoint = null;
-        // Find the correct collapse point for this parent-child relationship
-        if (childData.parents.length > 1) {
-           const otherParentId = childData.parents.find(id => people[id]?.id !== (source.data as Person).id); 
-           if (otherParentId) {
-              correctJoint = collapsePoints.find(cp => cp.id === (source.data as Person).id && cp.spouseId === otherParentId);
-           }
+        const childPerson = targetNode.data as Person;
+        const parent1Person = sourceNode.data as Person; // The parent from whom the link originates
+
+        let correctJoint: CollapsePoint | undefined;
+
+        // Find the other parent of the child, if any
+        const otherParentId = childPerson.parents.find(pId => pId !== parent1Person.id);
+
+        if (otherParentId) {
+            // Child has two parents. Find the collapse point for this couple.
+            // We need to find the one where `id` is one parent and `spouseId` is the other.
+            // Check both possibilities for robustness, as the order in `collapsePoints` might vary.
+            correctJoint = collapsePoints.find(cp => 
+                (cp.id === parent1Person.id && cp.spouseId === otherParentId) ||
+                (cp.id === otherParentId && cp.spouseId === parent1Person.id)
+            );
+        } else {
+            // Child has only one parent (or only one parent is in the current view).
+            // Look for the 'single' collapse point for this parent.
+            correctJoint = collapsePoints.find(cp => cp.id === parent1Person.id && cp.spouseId === 'single');
         }
-        // If no specific spouse joint, check for single parent joint
-        if (!correctJoint) correctJoint = collapsePoints.find(cp => cp.id === (source.data as Person).id && cp.spouseId === 'single');
         
-        if (correctJoint) {
-            // Use the new helper to draw the path from the collapse point to the child
-            return drawChildBranchPath(correctJoint.x, correctJoint.y, target.x, target.y);
+        // Only draw the link if a correct joint is found AND it's not collapsed
+        if (correctJoint && !correctJoint.isCollapsed) {
+            return drawChildBranchPath(correctJoint.x, correctJoint.y, targetNode.x, targetNode.y);
         }
-        // Fallback if no collapse point is found (e.g., if the parent has no children in the current view)
-        const startBottomX = source.x;
-        const startBottomY = source.y + NODE_HEIGHT / 2;
-        const targetTopX = target.x;
-        const targetTopY = target.y - NODE_HEIGHT / 2;
-        return `M ${startBottomX} ${startBottomY} L ${targetTopX} ${targetTopY}`;
+        
+        // If no correct joint is found, or if it's collapsed, return empty string to not draw the link.
+        return '';
     }
-    return `M ${source.x} ${source.y} L ${target.x} ${target.y}`;
+    return `M ${sourceNode.x} ${sourceNode.y} L ${targetNode.x} ${targetNode.y}`;
   }, [nodes, settings.chartType, collapsePoints, drawChildBranchPath, NODE_WIDTH, NODE_HEIGHT, people]);
 
   return (
     <>
       {links.map((link) => {
         const path = getLinkPath(link);
-        if (!path) return null;
+        if (!path) return null; // Do not render if path is empty (e.g., collapsed children)
         const isMarriage = link.type === 'marriage';
         const sId = typeof link.source === 'object' ? (link.source as any).id : link.source;
         const tId = typeof link.target === 'object' ? (link.target as any).id : link.target;

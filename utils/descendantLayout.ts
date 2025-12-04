@@ -218,7 +218,7 @@ export const calculateDescendantLayout = (
                 finalY = y + direction * offsetMultiplier * (nodeH + SPOUSE_GAP);
             }
             // Swap x and y for horizontal display
-            [finalX, finalY] = [finalY, finalX];
+            [finalX, finalY] = [finalY, x]; // Corrected: swap x and y for horizontal
         } else { // Radial
             // Main person is at d.x (angle)
             // Spouses alternate around the main person's angle
@@ -246,12 +246,12 @@ export const calculateDescendantLayout = (
         const person = d.data.person as Person;
         const spouseIds = person.spouses || [];
 
-        const coords = getTransformedCoords(d, person, false); // Main person coords
+        const personCoords = getTransformedCoords(d, person, false); // Main person coords
 
         let type: TreeNode['type'] = 'descendant';
         if (person.id === focusId) type = 'focus';
 
-        nodes.push({ id: person.id, x: coords.x, y: coords.y, data: person, type });
+        nodes.push({ id: person.id, x: personCoords.x, y: personCoords.y, data: person, type });
 
         // Add Spouses
         spouseIds.forEach((spouseId, index) => {
@@ -259,15 +259,13 @@ export const calculateDescendantLayout = (
             if (!spouse) return;
 
             const visualSpouseId = `spouse-${person.id}-${spouseId}`;
-            const spouseCoords = getTransformedCoords(d, person, true, index); // Spouse coords
+            const currentSpouseCoords = getTransformedCoords(d, person, true, index); // Spouse coords
 
-            nodes.push({ id: visualSpouseId, x: spouseCoords.x, y: spouseCoords.y, data: spouse, type: 'spouse' });
+            nodes.push({ id: visualSpouseId, x: currentSpouseCoords.x, y: currentSpouseCoords.y, data: spouse, type: 'spouse' });
 
             links.push({ source: person.id, target: visualSpouseId, type: 'marriage' });
 
-            // Calculate Collapse/Branching Joints
-            const midX = (coords.x + spouseCoords.x) / 2;
-            const midY = (coords.y + coords.y) / 2; // Use main person's Y for midpoint in vertical/horizontal
+            // Calculate Collapse/Branching Joints for each couple
             const dropDistance = settings.isCompact ? 90 : 120;
 
             const coupleHasChildren = person.children.some(childId => {
@@ -277,6 +275,11 @@ export const calculateDescendantLayout = (
 
             if (coupleHasChildren) {
                 const uniqueKey = `${person.id}:${spouseId}`;
+                
+                // Calculate midpoint between personCoords and currentSpouseCoords
+                const midX = (personCoords.x + currentSpouseCoords.x) / 2;
+                const midY = (personCoords.y + currentSpouseCoords.y) / 2;
+
                 let cpX = midX;
                 let cpY = midY;
 
@@ -297,7 +300,7 @@ export const calculateDescendantLayout = (
                     uniqueKey: uniqueKey,
                     x: cpX,
                     y: cpY,
-                    originX: midX,
+                    originX: midX, // Store the actual midpoint for the line to the circle
                     originY: midY,
                     isCollapsed: collapsedIds.has(uniqueKey)
                 });
@@ -314,16 +317,16 @@ export const calculateDescendantLayout = (
             const dropDistance = settings.isCompact ? 90 : 120;
             const uniqueKey = `${person.id}:single`;
             
-            let cpX = coords.x;
-            let cpY = coords.y;
+            let cpX = personCoords.x; // Single parent joint originates from the person's own coords
+            let cpY = personCoords.y;
 
             if (isVertical) {
-                cpY = coords.y + dropDistance;
+                cpY = personCoords.y + dropDistance;
             } else if (!isRadial) { // Horizontal
-                cpX = coords.x + dropDistance;
+                cpX = personCoords.x + dropDistance;
             } else { // Radial
-                const angle = Math.atan2(coords.y, coords.x);
-                const currentRadius = Math.sqrt(coords.x*coords.x + coords.y*coords.y);
+                const angle = Math.atan2(personCoords.y, personCoords.x);
+                const currentRadius = Math.sqrt(personCoords.x*personCoords.x + personCoords.y*personCoords.y);
                 cpX = (currentRadius + dropDistance) * Math.cos(angle);
                 cpY = (currentRadius + dropDistance) * Math.sin(angle);
             }
@@ -334,8 +337,8 @@ export const calculateDescendantLayout = (
                 uniqueKey: uniqueKey,
                 x: cpX,
                 y: cpY,
-                originX: coords.x,
-                originY: coords.y,
+                originX: personCoords.x,
+                originY: personCoords.y,
                 isCollapsed: collapsedIds.has(uniqueKey)
             });
         }
@@ -343,7 +346,17 @@ export const calculateDescendantLayout = (
         // Add Parent-Child Links
         if (d.children) {
             d.children.forEach((child: d3.HierarchyPointNode<CustomHierarchyDatum>) => {
-                links.push({ source: person.id, target: child.data.id, type: 'parent-child' });
+                // Only add link if the child is not collapsed
+                const childPerson = child.data.person;
+                const otherParentId = childPerson.parents.find(pId => pId !== person.id);
+                const collapseKey = otherParentId ? `${person.id}:${otherParentId}` : `${person.id}:single`;
+                
+                // Ensure the collapse point exists and is not collapsed
+                const relevantCollapsePoint = collapsePoints.find(cp => cp.uniqueKey === collapseKey);
+                
+                if (!relevantCollapsePoint || !relevantCollapsePoint.isCollapsed) {
+                    links.push({ source: person.id, target: child.data.id, type: 'parent-child' });
+                }
             });
         }
     });
