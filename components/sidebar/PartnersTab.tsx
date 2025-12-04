@@ -103,7 +103,7 @@ export const PartnersTab: React.FC<PartnersTabProps> = memo(({ person, people, i
                                 {/* Date Inputs */}
                                 <div className="space-y-1.5 mt-1.5">
                                     <div className="flex items-center gap-2">
-                                        <label className="w-16 shrink-0 text-[9px] text-stone-600 dark:text-stone-400 font-medium">{isDivorced ? t.married : t.since}</label>
+                                        <label className="w-16 shrink-0 text-xs text-stone-600 dark:text-stone-400 font-medium">{isDivorced ? t.married : t.since}</label>
                                         <DateSelect disabled={!isEditing} value={details.startDate} onChange={(val) => handlePartnerUpdate(spouseId, 'startDate', val)} />
                                     </div>
                                     <FormField
@@ -119,7 +119,7 @@ export const PartnersTab: React.FC<PartnersTabProps> = memo(({ person, people, i
                                     {isDivorced && (
                                         <div className="space-y-1.5 mt-1.5 animate-in slide-in-from-top-1">
                                             <div className="flex items-center gap-2">
-                                                <label className="w-16 shrink-0 text-[9px] text-stone-600 dark:text-stone-400 font-medium">{t.divorced}</label>
+                                                <label className="w-16 shrink-0 text-xs text-stone-600 dark:text-stone-400 font-medium">{t.divorced}</label>
                                                 <DateSelect disabled={!isEditing} value={details.endDate || ''} onChange={(val) => handlePartnerUpdate(spouseId, 'endDate', val)} />
                                             </div>
                                             <FormField

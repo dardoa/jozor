@@ -22,19 +22,22 @@ export const FormField: React.FC<FormFieldProps> = ({
   type = 'text',
   placeholder,
   isTextArea = false,
-  rows = 2, // Reduced rows from 3 to 2
+  rows = 2,
   className = '',
-  labelWidthClass = 'w-24', // Changed default from w-16 to w-24
+  labelWidthClass = 'w-24',
 }) => {
-  const baseInputClass = "w-full h-7 px-2.5 py-1 border border-stone-300 dark:border-stone-600 rounded-lg text-xs focus:border-teal-500 outline-none transition-colors bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 disabled:bg-transparent disabled:border-transparent disabled:px-0 disabled:cursor-default disabled:font-medium disabled:text-stone-800 dark:disabled:text-stone-200";
-  const baseTextareaClass = "flex-1 px-2.5 py-1 border border-stone-300 dark:border-stone-600 rounded-lg text-xs focus:border-teal-500 outline-none resize-none transition-colors bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 disabled:bg-transparent disabled:border-transparent disabled:px-0 disabled:cursor-default disabled:font-medium disabled:text-stone-800 dark:disabled:text-stone-200";
+  const baseInputClass = "w-full h-7 px-2.5 py-1 border border-stone-300 dark:border-stone-600 rounded-lg text-xs focus:border-teal-500 outline-none transition-colors bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100";
+  const baseTextareaClass = "flex-1 px-2.5 py-1 border border-stone-300 dark:border-stone-600 rounded-lg text-xs focus:border-teal-500 outline-none resize-none transition-colors bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100";
 
-  const inputClasses = `${baseInputClass} ${className}`;
-  const textareaClasses = `${baseTextareaClass} ${className}`;
+  const disabledInputClass = "disabled:bg-transparent disabled:border-transparent disabled:px-0 disabled:cursor-default disabled:font-medium disabled:text-stone-800 dark:disabled:text-stone-200";
+  const disabledTextareaClass = "disabled:bg-transparent disabled:border-transparent disabled:px-0 disabled:cursor-default disabled:font-medium disabled:text-stone-800 dark:disabled:text-stone-200";
+
+  const inputClasses = `${baseInputClass} ${disabled ? disabledInputClass : ''} ${className}`;
+  const textareaClasses = `${baseTextareaClass} ${disabled ? disabledTextareaClass : ''} ${className}`;
 
   return (
     <div className={`flex items-center gap-3 ${isTextArea ? 'items-start' : ''}`}>
-      <label className={`${labelWidthClass} text-xs text-stone-600 dark:text-stone-400 font-medium ${isTextArea ? 'mt-2' : ''}`}> {/* Changed text-[9px] to text-xs */}
+      <label className={`${labelWidthClass} text-xs text-stone-600 dark:text-stone-400 font-medium ${isTextArea ? 'mt-2' : ''}`}>
         {label}
       </label>
       {isTextArea ? (

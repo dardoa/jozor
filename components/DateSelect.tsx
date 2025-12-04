@@ -73,8 +73,8 @@ export const DateSelect: React.FC<DateSelectProps> = memo(({ value, onChange, di
     updateDate(day, month, val);
   };
 
-  const inputBaseClass = "h-7 px-2 border border-stone-300 dark:border-stone-600 rounded-lg text-xs focus:border-teal-500 outline-none transition-colors bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100"; // Reduced h-8 to h-7 and text-sm to text-xs
-  const disabledClass = "disabled:bg-stone-50 dark:disabled:bg-stone-700 disabled:text-stone-400 disabled:border-stone-200 dark:disabled:border-stone-700";
+  const inputBaseClass = "h-7 px-2.5 py-1 border border-stone-300 dark:border-stone-600 rounded-lg text-xs focus:border-teal-500 outline-none transition-colors bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100";
+  const disabledClass = "disabled:bg-transparent disabled:border-transparent disabled:px-0 disabled:cursor-default disabled:font-medium disabled:text-stone-800 dark:disabled:text-stone-200";
 
   const months = [
     { v: '01', l: 'Jan' }, { v: '02', l: 'Feb' }, { v: '03', l: 'Mar' },
@@ -95,7 +95,7 @@ export const DateSelect: React.FC<DateSelectProps> = memo(({ value, onChange, di
         value={day} 
         onChange={handleDayChange} 
         disabled={disabled || !month} // Disable day if no month selected
-        className={`w-12 ${inputBaseClass} ${disabledClass}`} // Reduced w-14 to w-12
+        className={`w-12 ${inputBaseClass} ${disabledClass}`}
       >
         <option value="">DD</option>
         {days.map(d => (
@@ -108,7 +108,7 @@ export const DateSelect: React.FC<DateSelectProps> = memo(({ value, onChange, di
         value={month} 
         onChange={handleMonthChange} 
         disabled={disabled}
-        className={`w-16 ${inputBaseClass} ${disabledClass}`} // Reduced w-20 to w-16
+        className={`w-16 ${inputBaseClass} ${disabledClass}`}
       >
         <option value="">MM</option>
         {months.map(m => (
@@ -124,7 +124,7 @@ export const DateSelect: React.FC<DateSelectProps> = memo(({ value, onChange, di
         disabled={disabled}
         placeholder="YYYY"
         maxLength={4}
-        className={`w-16 text-center ${inputBaseClass} ${disabledClass}`} // Reduced w-20 to w-16
+        className={`w-16 text-center ${inputBaseClass} ${disabledClass}`}
       />
     </div>
   );
