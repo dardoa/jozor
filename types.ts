@@ -193,18 +193,6 @@ export interface FamilyActionsProps { // New interface
   onLinkPerson: (existingId: string, type: 'parent' | 'spouse' | 'child' | null) => void; // Added for LinkPersonModal
 }
 
-export interface HeaderProps { // Updated HeaderProps
-  toggleSidebar: () => void;
-  
-  historyControls: HistoryControlsProps;
-  themeLanguage: ThemeLanguageProps;
-  auth: AuthProps;
-  viewSettings: ViewSettingsProps;
-  toolsActions: ToolsActionsProps;
-  exportActions: ExportActionsProps;
-  searchProps: SearchProps; // Directly include searchProps
-}
-
 export interface HeaderRightSectionProps {
   themeLanguage: ThemeLanguageProps;
   auth: AuthProps;

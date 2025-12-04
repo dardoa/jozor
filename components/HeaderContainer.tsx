@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { Header } from './Header';
+import { Header } from './Header'; // Corrected import path
 import { HistoryControlsProps, ThemeLanguageProps, AuthProps, ViewSettingsProps, ToolsActionsProps, ExportActionsProps, SearchProps } from '../types';
 
 interface HeaderContainerProps {
