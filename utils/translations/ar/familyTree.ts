@@ -12,10 +12,10 @@ export const familyTree = {
   radial: 'شعاعي',
   isCompact: 'عرض مضغوط',
   chartType: 'نوع الرسم البياني',
-  descendant: 'النسل',
+  descendant: 'مخطط النسل', // Updated
   fan: 'مخطط المروحة',
-  pedigree: 'شجرة النسب',
-  force: 'تخطيط القوة',
+  pedigree: 'مخطط النسب',   // Updated
+  force: 'مخطط القوة',      // Updated
   enableForcePhysics: 'تمكين الفيزياء',
   noResults: 'لا توجد نتائج.',
 };

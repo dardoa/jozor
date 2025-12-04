@@ -12,10 +12,10 @@ export const familyTree = {
   radial: 'Radial',
   isCompact: 'Compact View',
   chartType: 'Chart Type',
-  descendant: 'Descendant',
+  descendant: 'Descendant Chart', // Updated
   fan: 'Fan Chart',
-  pedigree: 'Pedigree',
-  force: 'Force Layout',
+  pedigree: 'Pedigree Chart',   // Updated
+  force: 'Force Layout Chart',  // Updated
   enableForcePhysics: 'Enable Physics',
   noResults: 'No results found.',
 };
