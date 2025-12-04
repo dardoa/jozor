@@ -34,6 +34,8 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
   const [showMoreIdentityFields, setShowMoreIdentityFields] = useState(false); // New state for collapsible fields
   const [showFamilyRelationships, setShowFamilyRelationships] = useState(true); // New state for collapsible family section
   const [showIdentityFields, setShowIdentityFields] = useState(true); // New state for collapsible identity section
+  const [showBirthDetails, setShowBirthDetails] = useState(true); // New state for collapsible birth details
+  const [showDeathDetails, setShowDeathDetails] = useState(true); // New state for collapsible death details
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -323,48 +325,28 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
         {/* Birth Details */}
         <div className="bg-white dark:bg-stone-800 pt-5 p-3 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-2 relative">
             <h3 className="absolute top-[-12px] start-3 z-10 bg-white dark:bg-stone-800 px-2 text-[9px] font-bold text-stone-400 uppercase tracking-wider">{t.birthDetails}</h3>
-            <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                    <label className="w-16 shrink-0 text-[9px] text-stone-600 dark:text-stone-400 font-medium">{t.birthDate}</label>
-                    <DateSelect value={person.birthDate} onChange={(val) => handleChange('birthDate', val)} disabled={!isEditing} />
-                </div>
-                <FormField label={t.birthPlace} value={person.birthPlace} onCommit={(v) => handleChange('birthPlace', v)} disabled={!isEditing} labelWidthClass="w-16" />
-                <div className="flex items-center gap-2">
-                    <label className="w-16 shrink-0 text-[9px] text-stone-600 dark:text-stone-400 font-medium">{t.source}</label>
-                    <div className="flex-1 flex items-center gap-1.5">
-                        <BookOpen className="w-3.5 h-3.5 text-stone-400" />
-                        <FormField
-                            label=""
-                            value={person.birthSource}
-                            onCommit={(v) => handleChange('birthSource', v)}
-                            disabled={!isEditing}
-                            placeholder={t.sourcePlaceholder}
-                            className="!h-7 !text-xs placeholder:italic"
-                            labelWidthClass="hidden"
-                        />
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {/* Death Details (Conditional) */}
-        {person.isDeceased && (
-            <div className="bg-white dark:bg-stone-800 pt-5 p-3 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-2 animate-in slide-in-from-top-2 relative">
-                <h3 className="absolute top-[-12px] start-3 z-10 bg-white dark:bg-stone-800 px-2 text-[9px] font-bold text-stone-400 uppercase tracking-wider">{t.deathDetails}</h3>
-                <div className="space-y-2">
+            <button
+                onClick={() => setShowBirthDetails(!showBirthDetails)}
+                className="w-full flex items-center justify-between text-xs font-medium text-stone-600 dark:text-stone-400 hover:text-teal-600 dark:hover:text-teal-400 py-1 px-0.5 -mx-0.5 rounded-md transition-colors"
+            >
+                <span>{t.birthDetails}</span>
+                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showBirthDetails ? 'rotate-180' : ''}`} />
+            </button>
+            {showBirthDetails && (
+                <div className="space-y-2 mt-2 animate-in fade-in slide-in-from-top-1 duration-200">
                     <div className="flex items-center gap-2">
-                        <label className="w-16 shrink-0 text-[9px] text-stone-600 dark:text-stone-400 font-medium">{t.deathDate}</label>
-                        <DateSelect value={person.deathDate} onChange={(val) => handleChange('deathDate', val)} disabled={!isEditing} />
+                        <label className="w-16 shrink-0 text-[9px] text-stone-600 dark:text-stone-400 font-medium">{t.birthDate}</label>
+                        <DateSelect value={person.birthDate} onChange={(val) => handleChange('birthDate', val)} disabled={!isEditing} />
                     </div>
-                    <FormField label={t.deathPlace} value={person.deathPlace} onCommit={(v) => handleChange('deathPlace', v)} disabled={!isEditing} labelWidthClass="w-16" />
+                    <FormField label={t.birthPlace} value={person.birthPlace} onCommit={(v) => handleChange('birthPlace', v)} disabled={!isEditing} labelWidthClass="w-16" />
                     <div className="flex items-center gap-2">
                         <label className="w-16 shrink-0 text-[9px] text-stone-600 dark:text-stone-400 font-medium">{t.source}</label>
                         <div className="flex-1 flex items-center gap-1.5">
                             <BookOpen className="w-3.5 h-3.5 text-stone-400" />
                             <FormField
                                 label=""
-                                value={person.deathSource}
-                                onCommit={(v) => handleChange('deathSource', v)}
+                                value={person.birthSource}
+                                onCommit={(v) => handleChange('birthSource', v)}
                                 disabled={!isEditing}
                                 placeholder={t.sourcePlaceholder}
                                 className="!h-7 !text-xs placeholder:italic"
@@ -373,6 +355,44 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
                         </div>
                     </div>
                 </div>
+            )}
+        </div>
+
+        {/* Death Details (Conditional) */}
+        {person.isDeceased && (
+            <div className="bg-white dark:bg-stone-800 pt-5 p-3 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-2 animate-in slide-in-from-top-2 relative">
+                <h3 className="absolute top-[-12px] start-3 z-10 bg-white dark:bg-stone-800 px-2 text-[9px] font-bold text-stone-400 uppercase tracking-wider">{t.deathDetails}</h3>
+                <button
+                    onClick={() => setShowDeathDetails(!showDeathDetails)}
+                    className="w-full flex items-center justify-between text-xs font-medium text-stone-600 dark:text-stone-400 hover:text-teal-600 dark:hover:text-teal-400 py-1 px-0.5 -mx-0.5 rounded-md transition-colors"
+                >
+                    <span>{t.deathDetails}</span>
+                    <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showDeathDetails ? 'rotate-180' : ''}`} />
+                </button>
+                {showDeathDetails && (
+                    <div className="space-y-2 mt-2 animate-in fade-in slide-in-from-top-1 duration-200">
+                        <div className="flex items-center gap-2">
+                            <label className="w-16 shrink-0 text-[9px] text-stone-600 dark:text-stone-400 font-medium">{t.deathDate}</label>
+                            <DateSelect value={person.deathDate} onChange={(val) => handleChange('deathDate', val)} disabled={!isEditing} />
+                        </div>
+                        <FormField label={t.deathPlace} value={person.deathPlace} onCommit={(v) => handleChange('deathPlace', v)} disabled={!isEditing} labelWidthClass="w-16" />
+                        <div className="flex items-center gap-2">
+                            <label className="w-16 shrink-0 text-[9px] text-stone-600 dark:text-stone-400 font-medium">{t.source}</label>
+                            <div className="flex-1 flex items-center gap-1.5">
+                                <BookOpen className="w-3.5 h-3.5 text-stone-400" />
+                                <FormField
+                                    label=""
+                                    value={person.deathSource}
+                                    onCommit={(v) => handleChange('deathSource', v)}
+                                    disabled={!isEditing}
+                                    placeholder={t.sourcePlaceholder}
+                                    className="!h-7 !text-xs placeholder:italic"
+                                    labelWidthClass="hidden"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         )}
         
