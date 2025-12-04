@@ -4,7 +4,7 @@ import { Person, TreeLink, TreeSettings, TreeNode, FanArc } from '../types';
 import { calculateTreeLayout } from '../utils/treeLayout';
 
 // Import new sub-components
-import { DescendantPedigreeChart } from './charts/DescendantPedendantChart';
+import { DescendantPedigreeChart } from './charts/DescendantPedigreeChart';
 import { FanChart } from './charts/FanChart';
 import { ForceChart } from './charts/ForceChart';
 import { ZoomControls } from './ui/ZoomControls';
@@ -130,7 +130,7 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({ people, focus
             });
         });
 
-        return { nodes: [], links: [], collapsePoints: [], fanArcs: arcs };
+        return { nodes: [], links: [], collapsePoints: [], fanArcs: [] as FanArc[] };
     } 
     
     return { ...calculateTreeLayout(people, focusId, settings, collapsedIds), fanArcs: [] as FanArc[] };
@@ -254,7 +254,7 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({ people, focus
       
       {/* Minimap */}
       {!isFanChart && !isForce && settings.showMinimap && (
-          <Minimap nodes={nodes} links={links} focusId={focusId} isRadial={isRadialLayout} /> {/* Pass isRadial prop */}
+          <Minimap nodes={nodes} links={links} focusId={focusId} isRadial={isRadialLayout} />
       )}
 
       {/* Zoom Controls */}
