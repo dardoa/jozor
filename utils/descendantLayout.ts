@@ -181,12 +181,12 @@ export const calculateDescendantLayout = (
         d: d3.HierarchyPointNode<CustomHierarchyDatum>, 
         personData: Person, 
         isSpouse: boolean = false, 
-        spouseIndex: number = 0
+        spouseIndex: number = 0 // Index of the spouse in personData.spouses array
     ) => {
         let x = d.x;
         let y = d.y;
 
-        // Apply time offset
+        // Apply time offset (existing logic)
         if (settings.enableTimeOffset) {
             const personBirthYear = getBirthYear(personData);
             if (personBirthYear !== 9999 && oldestBirthYear !== Infinity) {
@@ -200,61 +200,58 @@ export const calculateDescendantLayout = (
         let finalX = x;
         let finalY = y;
 
+        const numSpouses = personData.spouses.length;
+        const totalItemsInGroup = 1 + numSpouses; // Main person + all spouses
+
         if (isVertical) {
-            // d.x is breadth, d.y is depth
-            let totalShiftX = 0;
-            if (personData.spouses.length === 1) {
-                totalShiftX = -(nodeW / 2 + SPOUSE_GAP / 2); // Shift main person left
-            }
-            if (isSpouse) {
-                if (personData.spouses.length === 1) {
-                    totalShiftX = (nodeW / 2 + SPOUSE_GAP / 2); // Shift spouse right
-                } else {
-                    // For multiple spouses, distribute them
-                    // This logic needs to be more robust for multiple spouses to avoid overlap
-                    // For simplicity, let's just place them relative to the main person
-                    totalShiftX = (nodeW + SPOUSE_GAP) * (spouseIndex + 1); // Place spouses to the right
-                    if (spouseIndex % 2 === 0) { // Alternate sides for better spread
-                        totalShiftX = (nodeW / 2 + SPOUSE_GAP / 2) + (nodeW + SPOUSE_GAP) * (spouseIndex / 2);
-                    } else {
-                        totalShiftX = -(nodeW / 2 + SPOUSE_GAP / 2) - (nodeW + SPOUSE_GAP) * ((spouseIndex - 1) / 2);
-                    }
-                }
-            }
-            finalX += totalShiftX;
+            // Calculate total width needed for the group (main person + spouses)
+            // Each item (person or spouse) takes nodeW width + SPOUSE_GAP (except the last one)
+            const groupWidth = totalItemsInGroup * nodeW + (totalItemsInGroup - 1) * SPOUSE_GAP;
+            // Calculate the starting X for the leftmost item in the group, centered around d.x
+            const groupStartX = x - groupWidth / 2;
 
+            if (!isSpouse) {
+                // Main person's X position (center of their node)
+                finalX = groupStartX + nodeW / 2;
+            } else {
+                // Spouse's X position (center of their node)
+                // The spouseIndex is 0-based for the spouses array.
+                // Their position in the overall group is (spouseIndex + 1)
+                finalX = groupStartX + (spouseIndex + 1) * (nodeW + SPOUSE_GAP) + nodeW / 2;
+            }
         } else if (!isRadial) { // Horizontal
-            // d.x is depth, d.y is breadth
-            let totalShiftY = 0;
-            if (personData.spouses.length === 1) {
-                totalShiftY = -(nodeH / 2 + SPOUSE_GAP / 2); // Shift main person up
-            }
-            if (isSpouse) {
-                if (personData.spouses.length === 1) {
-                    totalShiftY = (nodeH / 2 + SPOUSE_GAP / 2); // Shift spouse down
-                } else {
-                    // Similar to vertical, distribute spouses vertically
-                    totalShiftY = (nodeH + SPOUSE_GAP) * (spouseIndex + 1);
-                    if (spouseIndex % 2 === 0) {
-                        totalShiftY = (nodeH / 2 + SPOUSE_GAP / 2) + (nodeH + SPOUSE_GAP) * (spouseIndex / 2);
-                    } else {
-                        totalShiftY = -(nodeH / 2 + SPOUSE_GAP / 2) - (nodeH + SPOUSE_GAP) * ((spouseIndex - 1) / 2);
-                    }
-                }
-            }
-            finalY += totalShiftY;
+            // Calculate total height needed for the group (main person + spouses)
+            const groupHeight = totalItemsInGroup * nodeH + (totalItemsInGroup - 1) * SPOUSE_GAP;
+            // Calculate the starting Y for the topmost item in the group, centered around d.y
+            const groupStartY = y - groupHeight / 2;
 
+            if (!isSpouse) {
+                // Main person's Y position
+                finalY = groupStartY + nodeH / 2;
+            } else {
+                // Spouse's Y position
+                finalY = groupStartY + (spouseIndex + 1) * (nodeH + SPOUSE_GAP) + nodeH / 2;
+            }
             // Swap x and y for horizontal display
             [finalX, finalY] = [finalY, finalX];
-
         } else { // Radial
-            // d.x is angle (0-360), d.y is radius
-            let angleOffset = 0; // Offset in degrees
-            if (isSpouse) {
-                // Distribute spouses around the main person's angle
-                angleOffset = (spouseIndex % 2 === 0 ? 1 : -1) * (5 + Math.floor(spouseIndex / 2) * 5);
+            // Distribute items evenly around the main person's angle
+            const anglePerItem = 10; // Degrees per person/spouse slot
+            const totalAngleSpan = totalItemsInGroup * anglePerItem;
+            
+            // Calculate the starting angle for the leftmost item in the group, centered around d.x
+            const groupStartAngle = x - totalAngleSpan / 2;
+
+            let currentAngle;
+            if (!isSpouse) {
+                // Main person's angle
+                currentAngle = groupStartAngle + anglePerItem / 2;
+            } else {
+                // Spouse's angle
+                currentAngle = groupStartAngle + (spouseIndex + 1) * anglePerItem + anglePerItem / 2;
             }
-            const angleRad = (x + angleOffset) * (Math.PI / 180); // Convert to radians
+
+            const angleRad = currentAngle * (Math.PI / 180); // Convert to radians
             const radius = y;
             finalX = radius * Math.cos(angleRad);
             finalY = radius * Math.sin(angleRad);
