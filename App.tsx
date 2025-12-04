@@ -2,8 +2,8 @@ import React, { useEffect } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { FamilyTree } from './components/FamilyTree';
 import { WelcomeScreen } from './components/WelcomeScreen';
-import { Header } from './components/Header';
-import { ModalManager } from './components/ModalManager';
+import { HeaderContainer } from './components/HeaderContainer'; // New import
+import { ModalManagerContainer } from './components/ModalManagerContainer'; // New import
 
 import { useAppOrchestration } from './hooks/useAppOrchestration';
 import { useTranslation } from './context/TranslationContext';
@@ -69,8 +69,7 @@ const App: React.FC = () => {
       ) : (
           <>
             {!isPresentMode && (
-                <Header 
-                    // Removed t={t}
+                <HeaderContainer 
                     toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
                     historyControls={historyControls}
                     themeLanguage={themeLanguage}
@@ -128,7 +127,7 @@ const App: React.FC = () => {
                 />
 
                 {/* Modals Layer */}
-                <ModalManager 
+                <ModalManagerContainer 
                     activeModal={activeModal} setActiveModal={setActiveModal}
                     linkModal={linkModal} setLinkModal={setLinkModal}
                     people={people} language={language}

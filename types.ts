@@ -247,6 +247,18 @@ export interface SearchResultsProps {
     onClose: () => void
 }
 
+// New interfaces for HeaderContainer and ModalManagerContainer
+export interface HeaderContainerProps {
+  toggleSidebar: () => void;
+  historyControls: HistoryControlsProps;
+  themeLanguage: ThemeLanguageProps;
+  auth: AuthProps;
+  viewSettings: ViewSettingsProps;
+  toolsActions: ToolsActionsProps;
+  exportActions: ExportActionsProps;
+  searchProps: SearchProps;
+}
+
 export interface ModalManagerProps { // Updated ModalManagerProps
     activeModal: 'none' | 'calculator' | 'stats' | 'chat' | 'consistency' | 'timeline' | 'share' | 'story' | 'map';
     setActiveModal: (m: any) => void;
