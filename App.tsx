@@ -6,6 +6,7 @@ import { Header } from './components/Header';
 import { ModalManager } from './components/ModalManager';
 
 import { useAppOrchestration } from './hooks/useAppOrchestration';
+import { useTranslation } from '../context/TranslationContext'; // Corrected import path
 
 import { X } from 'lucide-react';
 
@@ -31,8 +32,10 @@ const App: React.FC = () => {
     exportActions,
     searchProps,
     familyActions,
-    t,
+    // t, // Removed t from here
   } = useAppOrchestration();
+
+  const { t, language, setLanguage } = useTranslation(); // Get t, language, setLanguage from context
 
   // Centralized application of theme class, dark mode class, and language attributes to the html element
   useEffect(() => {
@@ -46,10 +49,10 @@ const App: React.FC = () => {
     root.classList.toggle('dark', themeLanguage.darkMode);
 
     // Handle language attributes
-    const dir = themeLanguage.language === 'ar' ? 'rtl' : 'ltr';
+    const dir = language === 'ar' ? 'rtl' : 'ltr';
     root.setAttribute('dir', dir);
-    root.setAttribute('lang', themeLanguage.language);
-  }, [viewSettings.treeSettings.theme, themeLanguage.darkMode, themeLanguage.language]);
+    root.setAttribute('lang', language);
+  }, [viewSettings.treeSettings.theme, themeLanguage.darkMode, language]);
 
   return (
     <div className={`flex flex-col h-screen font-sans transition-colors duration-300 bg-[var(--theme-bg)] text-[var(--card-text)] overflow-hidden`} >
@@ -61,8 +64,8 @@ const App: React.FC = () => {
               onStartNew={handleStartNewTree}
               onImport={() => fileInputRef.current?.click()}
               onLogin={auth.onLogin}
-              language={themeLanguage.language}
-              setLanguage={themeLanguage.setLanguage}
+              language={language} // Pass language from context
+              setLanguage={setLanguage} // Pass setLanguage from context
           />
       ) : (
           <>
@@ -71,7 +74,7 @@ const App: React.FC = () => {
                     t={t}
                     toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
                     historyControls={historyControls}
-                    themeLanguage={themeLanguage}
+                    themeLanguage={themeLanguage} // themeLanguage now only contains darkMode and setDarkMode
                     auth={auth}
                     viewSettings={viewSettings}
                     toolsActions={toolsActions}
@@ -107,7 +110,7 @@ const App: React.FC = () => {
                             onUpdate={updatePerson}
                             onDelete={deletePerson}
                             onSelect={setFocusId}
-                            language={themeLanguage.language}
+                            language={language} // Pass language from context
                             isOpen={sidebarOpen}
                             onClose={() => setSidebarOpen(false)}
                             onOpenModal={handleOpenModal}
@@ -129,7 +132,7 @@ const App: React.FC = () => {
                 <ModalManager 
                     activeModal={activeModal} setActiveModal={setActiveModal}
                     linkModal={linkModal} setLinkModal={setLinkModal}
-                    people={people} language={themeLanguage.language}
+                    people={people} language={language} // Pass language from context
                     focusId={focusId} setFocusId={setFocusId} activePerson={activePerson}
                     user={auth.user}
                     familyActions={familyActions}

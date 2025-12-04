@@ -3,12 +3,12 @@ import { Person, Gender, Language, TreeSettings, UserProfile, HistoryControlsPro
 import { useFamilyTree } from './useFamilyTree';
 import { useGoogleSync } from './useGoogleSync';
 import { useThemeSync } from './useThemeSync';
-import { useLanguageSync } from './useLanguageSync';
+import { useLanguageSync } from './useLanguageSync'; // Keep useLanguageSync for internal state
 import { useKeyboardShortcuts } from './useKeyboardShortcuts';
 import { useModalAndSidebarLogic } from './useModalAndSidebarLogic';
 import { useTreeSettings } from './useTreeSettings';
 import { useWelcomeScreenLogic } from './useWelcomeScreenLogic';
-import { getTranslation } from '../utils/translations';
+import { getTranslation } from '../utils/translations'; // Keep getTranslation for internal use if needed
 import { exportToGEDCOM } from '../utils/gedcomLogic';
 import { exportToJozorArchive } from '../utils/archiveLogic';
 import { generateICS } from '../utils/calendarLogic';
@@ -26,11 +26,12 @@ export const useAppOrchestration = () => {
   const { user, isSyncing, isDemoMode, handleLogin, handleLogout, stopSyncing } = useGoogleSync(people, loadCloudData);
 
   // --- UI Preferences ---
-  const { language, setLanguage } = useLanguageSync();
+  const { language, setLanguage } = useLanguageSync(); // Keep for internal state management
   const { treeSettings, setTreeSettings } = useTreeSettings();
   const { darkMode, setDarkMode } = useThemeSync(treeSettings.theme);
 
-  const t = getTranslation(language);
+  // `t` will now be accessed via TranslationContext in components
+  // const t = getTranslation(language); 
   const activePerson = people[focusId];
 
   // Calculate canUndo/canRedo
@@ -42,7 +43,7 @@ export const useAppOrchestration = () => {
     showWelcome, fileInputRef,
     handleStartNewTree, onFileUpload, handleLoginWrapper, handleLogoutWrapper
   } = useWelcomeScreenLogic({
-    people, t, startNewTree, stopSyncing, handleImport, handleLogin, handleLogout
+    people, t: getTranslation(language), startNewTree, stopSyncing, handleImport, handleLogin, handleLogout // Pass t directly here
   });
 
   // --- Modal & Sidebar Logic ---
@@ -52,8 +53,6 @@ export const useAppOrchestration = () => {
     isPresentMode, setIsPresentMode,
     linkModal, setLinkModal,
     handleOpenLinkModal,
-    // Removed handleCreateNewRelative,
-    // Removed handleSelectExistingRelative,
     handleOpenModal,
   } = useModalAndSidebarLogic({
     addParent, addSpouse, addChild, linkPerson, setFocusId,
@@ -86,7 +85,7 @@ export const useAppOrchestration = () => {
 
   // Grouped props for Header and other components
   const historyControls: HistoryControlsProps = { onUndo: undo, onRedo: redo, canUndo, canRedo };
-  const themeLanguage: ThemeLanguageProps = { darkMode, setDarkMode, language, setLanguage };
+  const themeLanguage: ThemeLanguageProps = { darkMode, setDarkMode }; // Removed language, setLanguage
   const auth: AuthProps = { user, isDemoMode, isSyncing, onLogin: handleLoginWrapper, onLogout: handleLogoutWrapper };
   const viewSettings: ViewSettingsProps = { treeSettings, setTreeSettings, onPresent: () => setIsPresentMode(true) };
   const toolsActions: ToolsActionsProps = { onOpenModal: handleOpenModal };
@@ -110,7 +109,6 @@ export const useAppOrchestration = () => {
     // Modals & Sidebar
     sidebarOpen, setSidebarOpen, activeModal, setActiveModal, isPresentMode, setIsPresentMode,
     linkModal, setLinkModal, handleOpenModal,
-    // Removed handleCreateNewRelative and handleSelectExistingRelative from here
     
     // Grouped Props
     historyControls,
@@ -121,6 +119,6 @@ export const useAppOrchestration = () => {
     exportActions,
     searchProps,
     familyActions, // Return new grouped prop
-    t, // Return t for use in App.tsx
+    // t, // Removed t from here
   };
 };
