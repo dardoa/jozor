@@ -9,8 +9,6 @@ interface WelcomeScreenProps {
   onStartNew: () => void;
   onImport: () => void;
   onLogin: () => Promise<void>;
-  // Removed language: Language;
-  // Removed setLanguage: (l: Language) => void;
 }
 
 export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStartNew, onImport, onLogin }) => {

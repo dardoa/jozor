@@ -40,19 +40,19 @@ export const useAppOrchestration = () => {
     showWelcome, setShowWelcome, fileInputRef,
     handleStartNewTree, onFileUpload
   } = useWelcomeScreenLogic({
-    people, startNewTree, stopSyncing, handleImport // Removed handleLogin, handleLogout
+    people, startNewTree, stopSyncing, handleImport
   });
 
-  // --- Login/Logout Wrappers (now defined here) ---
-  const handleLoginWrapper = async () => {
+  // --- Login/Logout Handlers (now directly from useGoogleSync) ---
+  const onLogin = useCallback(async () => {
       const success = await handleLogin();
       if (success) setShowWelcome(false);
-  };
+  }, [handleLogin, setShowWelcome]);
 
-  const handleLogoutWrapper = async () => {
+  const onLogout = useCallback(async () => {
       await handleLogout();
       setShowWelcome(true);
-  };
+  }, [handleLogout, setShowWelcome]);
 
   // --- Modal & Sidebar Logic ---
   const {
@@ -94,7 +94,7 @@ export const useAppOrchestration = () => {
   // Grouped props for Header and other components
   const historyControls: HistoryControlsProps = { onUndo: undo, onRedo: redo, canUndo, canRedo };
   const themeLanguage: ThemeLanguageProps = { darkMode, setDarkMode, language, setLanguage };
-  const auth: AuthProps = { user, isDemoMode, isSyncing, onLogin: handleLoginWrapper, onLogout: handleLogoutWrapper };
+  const auth: AuthProps = { user, isDemoMode, isSyncing, onLogin, onLogout };
   const viewSettings: ViewSettingsProps = { treeSettings, setTreeSettings, onPresent: () => setIsPresentMode(true) };
   const toolsActions: ToolsActionsProps = { onOpenModal: handleOpenModal };
   const exportActions: ExportActionsProps = { handleExport };

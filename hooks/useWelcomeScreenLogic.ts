@@ -7,13 +7,10 @@ interface UseWelcomeScreenLogicProps {
   startNewTree: () => void;
   stopSyncing: () => void;
   handleImport: (file: File) => Promise<boolean>;
-  // Removed handleLogin: () => Promise<boolean>;
-  // Removed handleLogout: () => Promise<void>;
-  // Removed language: Language;
 }
 
 export const useWelcomeScreenLogic = ({
-  people, startNewTree, stopSyncing, handleImport // Removed language
+  people, startNewTree, stopSyncing, handleImport
 }: UseWelcomeScreenLogicProps) => {
   const [showWelcome, setShowWelcome] = useState<boolean>(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -36,15 +33,11 @@ export const useWelcomeScreenLogic = ({
     e.target.value = '';
   };
 
-  // Removed handleLoginWrapper and handleLogoutWrapper from here
-
   return {
     showWelcome,
     setShowWelcome,
     fileInputRef,
     handleStartNewTree,
     onFileUpload,
-    // Removed handleLoginWrapper,
-    // Removed handleLogoutWrapper,
   };
 };
