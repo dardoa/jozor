@@ -40,7 +40,7 @@ export const ViewSettingsMenu = memo(({
                             onClick={() => onUpdate({ ...settings, chartType: type.id as ChartType })}
                             isActive={settings.chartType === type.id}
                             icon={type.icon}
-                            label={type.label}
+                            label={type.label} {/* Added label here */}
                             className="justify-between"
                         >
                             {settings.chartType === type.id && <Check className="w-3 h-3 text-teal-600"/>}
