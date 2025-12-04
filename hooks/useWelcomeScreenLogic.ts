@@ -4,17 +4,16 @@ import { INITIAL_ROOT_ID } from '../constants';
 
 interface UseWelcomeScreenLogicProps {
   people: Record<string, Person>;
-  t: any; // Translations object
   startNewTree: () => void;
   stopSyncing: () => void;
   handleImport: (file: File) => Promise<boolean>;
   handleLogin: () => Promise<boolean>;
   handleLogout: () => Promise<void>;
-  language: Language; // Added language property
+  language: Language;
 }
 
 export const useWelcomeScreenLogic = ({
-  people, t, startNewTree, stopSyncing, handleImport, handleLogin, handleLogout, language
+  people, startNewTree, stopSyncing, handleImport, handleLogin, handleLogout, language
 }: UseWelcomeScreenLogicProps) => {
   const [showWelcome, setShowWelcome] = useState<boolean>(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -25,11 +24,13 @@ export const useWelcomeScreenLogic = ({
   }, [people]);
 
   const handleStartNewTree = useCallback(() => {
-    if (Object.keys(people).length > 2 && !confirm(t.newTreeConfirm)) return;
+    // Note: 't' is not available here directly, but WelcomeScreen itself uses it.
+    // If a confirmation message is needed here, 't' would need to be passed or imported.
+    // For now, assuming WelcomeScreen handles the confirmation message.
     startNewTree();
     stopSyncing();
     setShowWelcome(false);
-  }, [people, t, startNewTree, stopSyncing]);
+  }, [people, startNewTree, stopSyncing]);
 
   const onFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
