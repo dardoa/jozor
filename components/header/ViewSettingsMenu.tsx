@@ -1,10 +1,10 @@
-import React, { memo, useEffect } from 'react'; // Added useEffect
+import React, { memo, useEffect } from 'react';
 import { TreeSettings, ChartType, AppTheme } from '../../types';
 import { 
   SlidersHorizontal, Eye, Check, ArrowRightLeft, ArrowUpDown, 
   CircleDashed, Share2, Network, GitGraph, MonitorPlay, Palette, Zap, LayoutGrid
 } from 'lucide-react';
-import { DropdownMenuItem, DropdownMenuDivider, DropdownMenuHeader } from '../ui/DropdownMenu'; // Removed DropdownMenuContainer
+import { DropdownMenuContainer, DropdownMenuItem, DropdownMenuDivider, DropdownMenuHeader } from '../ui/DropdownMenu';
 
 export const ViewSettingsMenu = memo(({
     settings, onUpdate, onClose, onPresent, t
@@ -16,10 +16,10 @@ export const ViewSettingsMenu = memo(({
     t: any;
 }) => {
     const chartOptions = [
-        { id: 'descendant', label: t.descendantChart, icon: <GitGraph className="w-3.5 h-3.5"/> },
-        { id: 'fan', label: t.fanChart, icon: <CircleDashed className="w-3.5 h-3.5"/> },
-        { id: 'pedigree', label: t.pedigreeChart, icon: <Share2 className="w-3.5 h-3.5 rotate-90"/> },
-        { id: 'force', label: t.forceChart, icon: <Network className="w-3.5 h-3.5"/> },
+        { id: 'descendant', label: t.descendant, icon: <GitGraph className="w-3.5 h-3.5"/> }, // Corrected key
+        { id: 'fan', label: t.fan, icon: <CircleDashed className="w-3.5 h-3.5"/> },             // Corrected key
+        { id: 'pedigree', label: t.pedigree, icon: <Share2 className="w-3.5 h-3.5 rotate-90"/> }, // Corrected key
+        { id: 'force', label: t.force, icon: <Network className="w-3.5 h-3.5"/> },               // Corrected key
     ];
 
     const themes: {id: AppTheme, label: string, colorClass: string, borderClass: string}[] = [
@@ -28,18 +28,17 @@ export const ViewSettingsMenu = memo(({
         { id: 'blueprint', label: 'Blueprint', colorClass: 'bg-[#1e3a8a]', borderClass: 'border-blue-400' },
     ];
 
-    // Debugging log to check label values
-    useEffect(() => {
-        chartOptions.forEach(option => {
-            console.log(`Chart Option Label for ${option.id}:`, option.label);
-        });
-    }, [chartOptions]);
+    // Removed debugging log as the issue is identified
+    // useEffect(() => {
+    //     chartOptions.forEach(option => {
+    //         console.log(`Chart Option Label for ${option.id}:`, option.label);
+    //     });
+    // }, [chartOptions]);
 
     return (
         <>
             <div className="fixed inset-0 z-10" onClick={onClose}></div>
-            {/* TEMPORARY: Replaced DropdownMenuContainer with a simple div for debugging */}
-            <div className="absolute top-full mt-2 p-1.5 bg-white/95 dark:bg-stone-950/95 backdrop-blur-xl border border-stone-200/50 dark:border-stone-700/50 rounded-2xl shadow-float z-50 animate-in fade-in zoom-in-95 duration-200 origin-top-right ring-1 ring-black/5 w-72 end-0">
+            <DropdownMenuContainer className="end-0 w-72"> {/* Reverted to DropdownMenuContainer */}
                 <DropdownMenuHeader icon={<Eye className="w-3 h-3" />} label={t.chartType} />
                 <div className="grid grid-cols-1 gap-1 px-1">
                     {chartOptions.map((type) => (
@@ -104,7 +103,6 @@ export const ViewSettingsMenu = memo(({
                             onClick={() => onUpdate({ ...settings, enableForcePhysics: !settings.enableForcePhysics })} 
                             icon={<Zap className="w-3.5 h-3.5"/>}
                             label="Physics"
-                            className="justify-between"
                             // Removed colorClass, iconBgClass, iconTextColorClass to use default debugging styles
                         >
                             <div className={`w-7 h-4 rounded-full p-0.5 relative transition-colors duration-300 ${settings.enableForcePhysics ? 'bg-orange-500' : 'bg-stone-300 dark:bg-stone-600'}`}>
@@ -135,7 +133,7 @@ export const ViewSettingsMenu = memo(({
                     label="Present Mode"
                     // Removed colorClass, iconBgClass, iconTextColorClass to use default debugging styles
                 />
-            </div>
+            </DropdownMenuContainer>
         </>
     );
 });
