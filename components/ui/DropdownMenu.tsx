@@ -43,12 +43,12 @@ export const DropdownMenuItem: React.FC<DropdownMenuItemProps> = ({
         {icon}
       </div>
     )}
-    {/* Render label and subLabel if they exist */}
+    {/* Render label and subLabel directly as spans with strong debugging styles */}
     {label && (
-      <div className="flex flex-col items-start gap-0.5 flex-grow min-w-0"> {/* Added flex-grow and min-w-0 */}
-        <span className="font-bold">{label}</span>
-        {subLabel && <span className="text-[9px] opacity-70">{subLabel}</span>}
-      </div>
+      <span className="font-bold text-red-500 text-lg flex-grow min-w-0">
+        {label}
+        {subLabel && <span className="text-[9px] opacity-70 ms-2">{subLabel}</span>}
+      </span>
     )}
     {/* Always render children, which will be the checkmark in this case */}
     {children}
