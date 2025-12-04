@@ -27,12 +27,12 @@ const FamilyGroup = memo(({
                 )}
             </div>
             
-            {ids.length === 0 && !isEditing ? (
+            {ids.length === 0 && isEditing ? ( // Only show placeholder if editing and no IDs
                  <div className="text-[9px] text-stone-400 italic px-2 py-2 bg-stone-50/50 dark:bg-stone-800/30 rounded-lg border border-dashed border-stone-100 dark:border-stone-700 text-center">
                     {placeholder}
                  </div>
             ) : (
-                <div className="grid grid-cols-2 gap-2"> {/* Changed to grid layout */}
+                <div className="grid grid-cols-2 gap-2">
                     {ids.map(id => (
                         <FamilyMemberItem 
                             key={id} 
@@ -73,41 +73,47 @@ export const FamilyRelationshipsSection: React.FC<FamilyRelationshipsSectionProp
     return (
         <div className="space-y-3 relative">
             
-            <FamilyGroup 
-                title={t.parents} 
-                icon={<ArrowUp className="w-3.5 h-3.5 text-stone-500" />} 
-                ids={person.parents} 
-                people={people}
-                onAdd={(g) => familyActions.onAddParent(g)}
-                onRemove={handleRemoveParent}
-                onSelect={onSelect}
-                placeholder={t.noRelatives}
-                isEditing={isEditing}
-            />
+            {(person.parents.length > 0 || isEditing) && (
+                <FamilyGroup 
+                    title={t.parents} 
+                    icon={<ArrowUp className="w-3.5 h-3.5 text-stone-500" />} 
+                    ids={person.parents} 
+                    people={people}
+                    onAdd={(g) => familyActions.onAddParent(g)}
+                    onRemove={handleRemoveParent}
+                    onSelect={onSelect}
+                    placeholder={t.noParents}
+                    isEditing={isEditing}
+                />
+            )}
             
-            <FamilyGroup 
-                title={t.spouses} 
-                icon={<Heart className="w-3.5 h-3.5 text-stone-500" />} 
-                ids={person.spouses} 
-                people={people}
-                onAdd={(g) => familyActions.onAddSpouse(g)}
-                onRemove={handleRemoveSpouse}
-                onSelect={onSelect}
-                placeholder={t.noRelatives}
-                isEditing={isEditing}
-            />
+            {(person.spouses.length > 0 || isEditing) && (
+                <FamilyGroup 
+                    title={t.spouses} 
+                    icon={<Heart className="w-3.5 h-3.5 text-stone-500" />} 
+                    ids={person.spouses} 
+                    people={people}
+                    onAdd={(g) => familyActions.onAddSpouse(g)}
+                    onRemove={handleRemoveSpouse}
+                    onSelect={onSelect}
+                    placeholder={t.noPartners}
+                    isEditing={isEditing}
+                />
+            )}
             
-            <FamilyGroup 
-                title={t.children} 
-                icon={<ArrowDown className="w-3.5 h-3.5 text-stone-500" />} 
-                ids={person.children} 
-                people={people}
-                onAdd={(g) => familyActions.onAddChild(g)}
-                onRemove={handleRemoveChild}
-                onSelect={onSelect}
-                placeholder={t.noRelatives}
-                isEditing={isEditing}
-            />
+            {(person.children.length > 0 || isEditing) && (
+                <FamilyGroup 
+                    title={t.children} 
+                    icon={<ArrowDown className="w-3.5 h-3.5 text-stone-500" />} 
+                    ids={person.children} 
+                    people={people}
+                    onAdd={(g) => familyActions.onAddChild(g)}
+                    onRemove={handleRemoveChild}
+                    onSelect={onSelect}
+                    placeholder={t.noChildren}
+                    isEditing={isEditing}
+                />
+            )}
         </div>
     );
 });
