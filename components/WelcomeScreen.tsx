@@ -2,19 +2,19 @@ import React, { useEffect, useState } from 'react';
 import { Logo } from './Logo';
 import { Plus, Upload, Languages } from 'lucide-react';
 import { Language } from '../types';
-import { getTranslation } from '../utils/translations';
+import { useTranslation } from '../context/TranslationContext'; // Import useTranslation
 import { LoginButton } from './LoginButton';
 
 interface WelcomeScreenProps {
   onStartNew: () => void;
   onImport: () => void;
   onLogin: () => Promise<void>;
-  language: Language;
-  setLanguage: (l: Language) => void;
+  // Removed language: Language;
+  // Removed setLanguage: (l: Language) => void;
 }
 
-export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStartNew, onImport, onLogin, language, setLanguage }) => {
-  const t = getTranslation(language);
+export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStartNew, onImport, onLogin }) => {
+  const { t, language, setLanguage } = useTranslation(); // Use useTranslation hook
   const [currentOrigin, setCurrentOrigin] = useState('');
 
   useEffect(() => {
