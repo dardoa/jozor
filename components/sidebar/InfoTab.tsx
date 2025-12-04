@@ -89,7 +89,7 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
                             {person.photoUrl ? (
                                 <img src={person.photoUrl} alt={person.firstName} className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-500" />
                             ) : (
-                                <User className={`w-10 h-10 ${person.gender === 'male' ? 'text-blue-300 dark:text-blue-800' : 'text-pink-300 dark:text-pink-800'}`} /> 
+                                <User className={`w-12 h-12 ${person.gender === 'male' ? 'text-blue-300 dark:text-blue-800' : 'text-pink-300 dark:text-pink-800'}`} /> 
                             )}
                         </div>
                         {person.isDeceased && (
