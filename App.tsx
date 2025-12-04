@@ -35,7 +35,7 @@ const App: React.FC = () => {
   } = useAppOrchestration();
 
   return (
-    <div className={`flex flex-col h-screen font-sans transition-colors duration-300 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 overflow-hidden theme-${viewSettings.treeSettings.theme}`} dir={themeLanguage.language === 'ar' ? 'rtl' : 'ltr'}>
+    <div className={`flex flex-col h-screen font-sans transition-colors duration-300 bg-[var(--theme-bg)] text-[var(--card-text)] overflow-hidden theme-${viewSettings.treeSettings.theme}`} dir={themeLanguage.language === 'ar' ? 'rtl' : 'ltr'}>
       
       <input ref={fileInputRef} type="file" accept=".json,.ged,.jozor,.zip" className="hidden" onChange={onFileUpload} />
 
