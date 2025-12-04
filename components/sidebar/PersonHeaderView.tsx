@@ -19,7 +19,7 @@ export const PersonHeaderView: React.FC<PersonHeaderViewProps> = memo(({ person,
   const displayDeath = getDisplayDate(person.deathDate);
 
   // Define common button classes for consistency
-  const baseButtonClasses = "flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors active:scale-95";
+  const baseButtonClasses = "flex items-center justify-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold transition-colors active:scale-95";
 
   const quickAddActions = [
     {
