@@ -11,7 +11,7 @@ const LEVEL_SEP_COMPACT = 240;
 const SPOUSE_GAP = 20; 
 
 // New constant for time offset
-const TIME_SCALE_FACTOR = 0.8; // Adjust this value to control the vertical spread based on time
+const TIME_SCALE_FACTOR = 5; // Adjust this value to control the vertical spread based on time
 
 export interface CollapsePoint {
     id: string; 
