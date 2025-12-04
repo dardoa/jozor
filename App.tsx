@@ -47,9 +47,11 @@ const App: React.FC = () => {
     // Handle language attributes
     const dir = themeLanguage.language === 'ar' ? 'rtl' : 'ltr';
     root.setAttribute('dir', dir);
-    root.setAttribute('lang', themeLanguage.language);
+    root.setAttribute('lang', themeLanguage.language); // This line sets the lang attribute
     console.log(`App.tsx useEffect: Setting lang='${themeLanguage.language}' and dir='${dir}' on <html>`);
   }, [viewSettings.treeSettings.theme, themeLanguage.darkMode, themeLanguage.language]);
+
+  console.log('App.tsx render: Current language from themeLanguage:', themeLanguage.language); // Add this log
 
   return (
     <div className={`flex flex-col h-screen font-sans transition-colors duration-300 bg-[var(--theme-bg)] text-[var(--card-text)] overflow-hidden`} >

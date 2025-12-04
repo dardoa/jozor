@@ -10,9 +10,11 @@ export const useLanguageSync = () => {
       const savedLanguage = (localStorage.getItem('language') as Language);
       if (savedLanguage && (savedLanguage === 'en' || savedLanguage === 'ar')) { // Validate saved language
         setLanguage(savedLanguage);
+        console.log('useLanguageSync: Initializing language from localStorage:', savedLanguage);
       } else {
         // Default to Arabic if no preference is found or saved language is invalid
         setLanguage('ar'); 
+        console.log('useLanguageSync: Initializing language to default (ar)');
       }
     }
   }, []); // Empty dependency array for initialization
@@ -21,6 +23,7 @@ export const useLanguageSync = () => {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       localStorage.setItem('language', language);
+      console.log('useLanguageSync: Language state changed and saved to localStorage:', language);
     }
   }, [language]);
 
