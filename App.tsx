@@ -19,7 +19,7 @@ const App: React.FC = () => {
 
     // Modals & Sidebar
     sidebarOpen, setSidebarOpen, activeModal, setActiveModal, isPresentMode, setIsPresentMode,
-    linkModal, setLinkModal, // Removed handleCreateNewRelative, handleSelectExistingRelative
+    linkModal, setLinkModal, 
     handleOpenModal,
 
     // Grouped Props
@@ -114,8 +114,6 @@ const App: React.FC = () => {
                     linkModal={linkModal} setLinkModal={setLinkModal}
                     people={people} language={themeLanguage.language}
                     focusId={focusId} setFocusId={setFocusId} activePerson={activePerson}
-                    // Removed handleCreateNewRelative={handleCreateNewRelative}
-                    // Removed handleSelectExistingRelative={handleSelectExistingRelative}
                     user={auth.user}
                     familyActions={familyActions}
                 />

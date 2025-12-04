@@ -1,5 +1,5 @@
 import React, { Suspense } from 'react';
-import { Person, Gender, Language, UserProfile, FamilyActionsProps } from '../types';
+import { Person, Gender, Language, UserProfile, FamilyActionsProps, ModalManagerProps } from '../types'; // Import ModalManagerProps
 import { LoadingSpinner } from './LoadingSpinner';
 import { LinkPersonModal } from './LinkPersonModal';
 
@@ -13,26 +13,9 @@ const ShareModal = React.lazy(() => import('./ShareModal').then(module => ({ def
 const StoryModal = React.lazy(() => import('./StoryModal').then(module => ({ default: module.StoryModal })));
 const GeoMapModal = React.lazy(() => import('./GeoMapModal').then(module => ({ default: module.GeoMapModal })));
 
-interface ModalManagerProps {
-    activeModal: 'none' | 'calculator' | 'stats' | 'chat' | 'consistency' | 'timeline' | 'share' | 'story' | 'map';
-    setActiveModal: (m: any) => void;
-    linkModal: { isOpen: boolean; type: 'parent' | 'spouse' | 'child' | null; gender: Gender | null; };
-    setLinkModal: (val: any) => void;
-    people: Record<string, Person>;
-    language: Language;
-    focusId: string;
-    setFocusId: (id: string) => void;
-    activePerson?: Person;
-    // Removed handleCreateNewRelative: () => void;
-    // Removed handleSelectExistingRelative: (id: string) => void;
-    user: UserProfile | null;
-    familyActions: FamilyActionsProps; // Added familyActions prop
-}
-
 export const ModalManager: React.FC<ModalManagerProps> = ({
     activeModal, setActiveModal, linkModal, setLinkModal,
     people, language, focusId, setFocusId, activePerson,
-    // Removed handleCreateNewRelative, handleSelectExistingRelative,
     user,
     familyActions // Destructure new grouped prop
 }) => {
