@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react'; // Import useEffect
 import { Sidebar } from './components/Sidebar';
 import { FamilyTree } from './components/FamilyTree';
 import { WelcomeScreen } from './components/WelcomeScreen';
@@ -34,8 +34,13 @@ const App: React.FC = () => {
     t, // Destructure t here
   } = useAppOrchestration();
 
+  // Apply theme class to the html element
+  useEffect(() => {
+    document.documentElement.className = `theme-${viewSettings.treeSettings.theme}`;
+  }, [viewSettings.treeSettings.theme]);
+
   return (
-    <div className={`flex flex-col h-screen font-sans transition-colors duration-300 bg-[var(--theme-bg)] text-[var(--card-text)] overflow-hidden theme-${viewSettings.treeSettings.theme}`} dir={themeLanguage.language === 'ar' ? 'rtl' : 'ltr'}>
+    <div className={`flex flex-col h-screen font-sans transition-colors duration-300 bg-[var(--theme-bg)] text-[var(--card-text)] overflow-hidden`} dir={themeLanguage.language === 'ar' ? 'rtl' : 'ltr'}>
       
       <input ref={fileInputRef} type="file" accept=".json,.ged,.jozor,.zip" className="hidden" onChange={onFileUpload} />
 
