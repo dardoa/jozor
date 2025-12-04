@@ -36,7 +36,7 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
   const [showIdentityFields, setShowIdentityFields] = useState(true); // New state for collapsible identity section
   const [showBirthDetails, setShowBirthDetails] = useState(true); // New state for collapsible birth details
   const [showDeathDetails, setShowDeathDetails] = useState(true); // New state for collapsible death details
-  // Removed showActionsSection state
+  const [showActionsSection, setShowActionsSection] = useState(true); // New state for collapsible actions section
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -246,7 +246,7 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
                 onClick={() => setShowIdentityFields(!showIdentityFields)}
                 className="w-full flex items-center justify-between text-xs font-medium text-stone-600 dark:text-stone-400 hover:text-teal-600 dark:hover:text-teal-400 py-1 px-0.5 -mx-0.5 rounded-md transition-colors"
             >
-                <span>{t.identity}</span>
+                {/* Removed redundant span for identity */}
                 <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showIdentityFields ? 'rotate-180' : ''}`} />
             </button>
 
@@ -262,7 +262,7 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
                             onClick={() => setShowMoreIdentityFields(!showMoreIdentityFields)}
                             className="w-full flex items-center justify-between text-xs font-medium text-stone-600 dark:text-stone-400 hover:text-teal-600 dark:hover:text-teal-400 py-1 px-0.5 -mx-0.5 rounded-md transition-colors"
                         >
-                            <span>{t.moreNames || 'More Names'}</span>
+                            {/* Removed redundant span for more names */}
                             <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showMoreIdentityFields ? 'rotate-180' : ''}`} />
                         </button>
 
@@ -320,7 +320,7 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
                 onClick={() => setShowBirthDetails(!showBirthDetails)}
                 className="w-full flex items-center justify-between text-xs font-medium text-stone-600 dark:text-stone-400 hover:text-teal-600 dark:hover:text-teal-400 py-1 px-0.5 -mx-0.5 rounded-md transition-colors"
             >
-                <span>{t.birthDetails}</span>
+                {/* Removed redundant span for birth details */}
                 <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showBirthDetails ? 'rotate-180' : ''}`} />
             </button>
             {showBirthDetails && (
@@ -357,7 +357,7 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
                     onClick={() => setShowDeathDetails(!showDeathDetails)}
                     className="w-full flex items-center justify-between text-xs font-medium text-stone-600 dark:text-stone-400 hover:text-teal-600 dark:hover:text-teal-400 py-1 px-0.5 -mx-0.5 rounded-md transition-colors"
                 >
-                    <span>{t.deathDetails}</span>
+                    {/* Removed redundant span for death details */}
                     <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showDeathDetails ? 'rotate-180' : ''}`} />
                 </button>
                 {showDeathDetails && (
@@ -394,7 +394,7 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
                 onClick={() => setShowFamilyRelationships(!showFamilyRelationships)}
                 className="w-full flex items-center justify-between text-xs font-medium text-stone-600 dark:text-stone-400 hover:text-teal-600 dark:hover:text-teal-400 py-1 px-0.5 -mx-0.5 rounded-md transition-colors"
             >
-                <span>{t.familyRelationships}</span>
+                {/* Removed redundant span for family relationships */}
                 <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showFamilyRelationships ? 'rotate-180' : ''}`} />
             </button>
 
