@@ -5,7 +5,7 @@ import { useGoogleSync } from './useGoogleSync';
 import { useThemeSync } from './useThemeSync';
 import { useLanguageSync } from './useLanguageSync';
 import { useKeyboardShortcuts } from './useKeyboardShortcuts';
-import { useModalAndSidebarLogic } from './useModalAndSidebarLogic'; // Renamed import
+import { useModalAndSidebarLogic } from './useModalAndSidebarLogic';
 import { useTreeSettings } from './useTreeSettings';
 import { useWelcomeScreenLogic } from './useWelcomeScreenLogic';
 import { getTranslation } from '../utils/translations';
@@ -52,8 +52,7 @@ export const useAppOrchestration = () => {
     isPresentMode, setIsPresentMode,
     linkModal, setLinkModal,
     handleOpenLinkModal,
-    handleCreateNewRelative,
-    handleSelectExistingRelative,
+    // Removed handleCreateNewRelative and handleSelectExistingRelative from here
     handleOpenModal,
   } = useModalAndSidebarLogic({
     addParent, addSpouse, addChild, linkPerson, setFocusId,
@@ -91,8 +90,8 @@ export const useAppOrchestration = () => {
   const viewSettings: ViewSettingsProps = { treeSettings, setTreeSettings, onPresent: () => setIsPresentMode(true) };
   const toolsActions: ToolsActionsProps = { onOpenModal: handleOpenModal };
   const exportActions: ExportActionsProps = { handleExport };
-  const searchProps: SearchProps = { people, onFocusPerson: setFocusId }; // Construct searchProps here
-  const familyActions: FamilyActionsProps = { // New grouped prop
+  const searchProps: SearchProps = { people, onFocusPerson: setFocusId };
+  const familyActions: FamilyActionsProps = {
     onAddParent: (g) => handleOpenLinkModal('parent', g),
     onAddSpouse: (g) => handleOpenLinkModal('spouse', g),
     onAddChild: (g) => handleOpenLinkModal('child', g),
@@ -109,9 +108,9 @@ export const useAppOrchestration = () => {
 
     // Modals & Sidebar
     sidebarOpen, setSidebarOpen, activeModal, setActiveModal, isPresentMode, setIsPresentMode,
-    linkModal, setLinkModal, handleCreateNewRelative, handleSelectExistingRelative,
-    handleOpenModal,
-
+    linkModal, setLinkModal, handleOpenModal,
+    // Removed handleCreateNewRelative and handleSelectExistingRelative from here
+    
     // Grouped Props
     historyControls,
     themeLanguage,

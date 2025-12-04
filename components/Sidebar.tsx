@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useMemo, memo } from 'react';
-import { X } from 'lucide-react'; // Removed MessageCircle as it's moved to InfoTab
+import { X } from 'lucide-react';
 import { InfoTab } from './sidebar/InfoTab';
 import { PartnersTab } from './sidebar/PartnersTab';
 import { ContactTab } from './sidebar/ContactTab';
 import { BioTab } from './sidebar/BioTab';
 import { MediaTab } from './sidebar/MediaTab';
 import { SidebarFooter } from './sidebar/SidebarFooter';
-import { SidebarTabs } from './sidebar/SidebarTabs'; // New import
+import { SidebarTabs } from './sidebar/SidebarTabs';
 import { getTranslation } from '../utils/translations';
-import { Person, Gender, Language, UserProfile, FamilyActionsProps } from '../types'; // Added FamilyActionsProps
+import { Person, Language, UserProfile, FamilyActionsProps } from '../types';
 
 interface SidebarProps {
   person: Person;
@@ -19,7 +19,7 @@ interface SidebarProps {
   language: Language;
   isOpen: boolean; 
   onClose: () => void;
-  onOpenModal: (modalType: 'calculator' | 'stats' | 'chat' | 'consistency' | 'timeline' | 'share' | 'story' | 'map') => void; // Updated prop
+  onOpenModal: (modalType: 'calculator' | 'stats' | 'chat' | 'consistency' | 'timeline' | 'share' | 'story' | 'map') => void;
   user: UserProfile | null;
   familyActions: FamilyActionsProps; // New grouped prop
 }
@@ -74,13 +74,11 @@ export const Sidebar: React.FC<SidebarProps> = memo(({
             />
 
             {/* Scrollable Content */}
-            <div className="flex-1 overflow-y-auto p-4 scrollbar-thin scrollbar-thumb-stone-200 dark:scrollbar-thumb-stone-700 bg-white dark:bg-stone-900"> {/* Reduced p-5 to p-4 */}
-                {/* Chat with Ancestor button moved to InfoTab */}
-
+            <div className="flex-1 overflow-y-auto p-4 scrollbar-thin scrollbar-thumb-stone-200 dark:scrollbar-thumb-stone-700 bg-white dark:bg-stone-900">
                 {activeTab === 'info' && (
                     <InfoTab 
                         person={person} people={people} isEditing={isEditing} onUpdate={onUpdate} onSelect={onSelect} t={t}
-                        onOpenModal={onOpenModal} // Pass onOpenModal prop
+                        onOpenModal={onOpenModal}
                         familyActions={familyActions} // Pass new grouped prop
                     />
                 )}

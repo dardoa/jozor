@@ -12,14 +12,14 @@ import { X } from 'lucide-react';
 const App: React.FC = () => {
   const {
     // Core Data
-    people, focusId, setFocusId, updatePerson, deletePerson, activePerson, // Removed removeRelationship
+    people, focusId, setFocusId, updatePerson, deletePerson, activePerson,
     
     // Welcome Screen
     showWelcome, fileInputRef, handleStartNewTree, onFileUpload,
 
     // Modals & Sidebar
     sidebarOpen, setSidebarOpen, activeModal, setActiveModal, isPresentMode, setIsPresentMode,
-    linkModal, setLinkModal, handleCreateNewRelative, handleSelectExistingRelative, // Added these back to destructuring
+    linkModal, setLinkModal, // Removed handleCreateNewRelative, handleSelectExistingRelative
     handleOpenModal,
 
     // Grouped Props
@@ -51,7 +51,7 @@ const App: React.FC = () => {
           <>
             {!isPresentMode && (
                 <Header 
-                    t={t} // Pass t to Header
+                    t={t}
                     toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
                     historyControls={historyControls}
                     themeLanguage={themeLanguage}
@@ -74,9 +74,9 @@ const App: React.FC = () => {
             )}
             
             {/* Cloud Status */}
-            {!isPresentMode && auth.isSyncing && ( // Access isSyncing from auth
+            {!isPresentMode && auth.isSyncing && (
                 <div className={`absolute top-16 start-1/2 -translate-x-1/2 z-50 text-white text-xs px-3 py-1 rounded-b-lg shadow-lg flex items-center gap-2 ${auth.isDemoMode ? 'bg-orange-500' : 'bg-blue-600 animate-pulse'}`}>
-                     {auth.isDemoMode ? 'Saving locally...' : t.syncing} // Use t for translation
+                     {auth.isDemoMode ? 'Saving locally...' : t.syncing}
                 </div>
             )}
 
@@ -95,7 +95,7 @@ const App: React.FC = () => {
                             onClose={() => setSidebarOpen(false)}
                             onOpenModal={handleOpenModal}
                             user={auth.user}
-                            familyActions={familyActions} // Pass new grouped prop
+                            familyActions={familyActions}
                         />
                     </div>
                 )}
@@ -114,10 +114,10 @@ const App: React.FC = () => {
                     linkModal={linkModal} setLinkModal={setLinkModal}
                     people={people} language={themeLanguage.language}
                     focusId={focusId} setFocusId={setFocusId} activePerson={activePerson}
-                    handleCreateNewRelative={handleCreateNewRelative}
-                    handleSelectExistingRelative={handleSelectExistingRelative}
+                    // Removed handleCreateNewRelative={handleCreateNewRelative}
+                    // Removed handleSelectExistingRelative={handleSelectExistingRelative}
                     user={auth.user}
-                    familyActions={familyActions} // Pass new grouped prop
+                    familyActions={familyActions}
                 />
             </div>
           </>

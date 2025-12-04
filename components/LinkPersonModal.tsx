@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
-import { Person, Gender, Language, FamilyActionsProps } from '../types'; // Added FamilyActionsProps
+import { Person, Gender, Language, FamilyActionsProps } from '../types';
 import { getTranslation } from '../utils/translations';
 import { X, UserPlus, Search, User } from 'lucide-react';
 
 interface LinkPersonModalProps {
   isOpen: boolean;
   onClose: () => void;
-  // Removed onCreateNew: () => void;
-  // Removed onSelectExisting: (id: string) => void;
   people: Record<string, Person>;
   type: 'parent' | 'spouse' | 'child' | null;
   gender: Gender | null;
@@ -19,8 +17,6 @@ interface LinkPersonModalProps {
 export const LinkPersonModal: React.FC<LinkPersonModalProps> = ({
   isOpen,
   onClose,
-  // Removed onCreateNew,
-  // Removed onSelectExisting,
   people,
   type,
   gender,
@@ -109,7 +105,7 @@ export const LinkPersonModal: React.FC<LinkPersonModalProps> = ({
                 />
             </div>
             
-            <div className="border border-stone-200 dark:border-stone-700 rounded-lg max-h-48 overflow-y-auto divide-y divide-stone-50 dark:divide-stone-700 bg-white dark:bg-stone-800 scrollbar-thin scrollbar-thumb-stone-200 dark:scrollbar-thumb-stone-600">
+            <div className="border border-stone-200 dark:border-stone-700 rounded-lg max-h-48 overflow-y-auto divide-y divide-stone-50 dark:divide-stone-700 bg-white dark:bg-stone-800 scrollbar-thin scrollbar-thumb-stone-200 dark:scrollbar-thumb-600">
                 {candidates.length === 0 ? (
                     <div className="p-4 text-center">
                         <User className="w-8 h-8 text-stone-200 dark:text-stone-600 mx-auto mb-2" />

@@ -23,8 +23,8 @@ interface ModalManagerProps {
     focusId: string;
     setFocusId: (id: string) => void;
     activePerson?: Person;
-    handleCreateNewRelative: () => void;
-    handleSelectExistingRelative: (id: string) => void;
+    // Removed handleCreateNewRelative: () => void;
+    // Removed handleSelectExistingRelative: (id: string) => void;
     user: UserProfile | null;
     familyActions: FamilyActionsProps; // Added familyActions prop
 }
@@ -32,7 +32,8 @@ interface ModalManagerProps {
 export const ModalManager: React.FC<ModalManagerProps> = ({
     activeModal, setActiveModal, linkModal, setLinkModal,
     people, language, focusId, setFocusId, activePerson,
-    handleCreateNewRelative, handleSelectExistingRelative, user,
+    // Removed handleCreateNewRelative, handleSelectExistingRelative,
+    user,
     familyActions // Destructure new grouped prop
 }) => {
     const closeModal = () => setActiveModal('none');
@@ -42,8 +43,6 @@ export const ModalManager: React.FC<ModalManagerProps> = ({
             <LinkPersonModal 
                 isOpen={linkModal.isOpen}
                 onClose={() => setLinkModal({ ...linkModal, isOpen: false })}
-                // Removed onCreateNew={handleCreateNewRelative}
-                // Removed onSelectExisting={handleSelectExistingRelative}
                 people={people}
                 type={linkModal.type}
                 gender={linkModal.gender}
