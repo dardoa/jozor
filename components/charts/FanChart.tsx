@@ -35,9 +35,11 @@ export const FanChart: React.FC<FanChartProps> = memo(({ fanArcs, focusId, onSel
             fillColor = "var(--card-bg)";
         } else {
             if (d.person.gender === 'male') {
-                fillColor = d.depth % 2 === 0 ? 'var(--gender-male-border)' : 'var(--brand-100)';
+                // Use theme variables for male colors
+                fillColor = d.depth % 2 === 0 ? 'var(--gender-male-bg-alt)' : 'var(--gender-male-bg)';
             } else {
-                fillColor = d.depth % 2 === 0 ? 'var(--gender-female-border)' : 'var(--pink-100)'; 
+                // Use theme variables for female colors
+                fillColor = d.depth % 2 === 0 ? 'var(--gender-female-bg-alt)' : 'var(--gender-female-bg)'; 
             }
         }
 
@@ -83,7 +85,7 @@ export const FanChart: React.FC<FanChartProps> = memo(({ fanArcs, focusId, onSel
             )}
             {isRoot && (
                 <foreignObject x={-50} y={-50} width={100} height={100} style={{pointerEvents: 'none'}}>
-                    <div className={`w-full h-full rounded-full overflow-hidden border-4 flex items-center justify-center bg-stone-50`} style={{ borderColor: d.person.gender === 'male' ? 'var(--gender-male-border)' : 'var(--gender-female-border)' }}>
+                    <div className={`w-full h-full rounded-full overflow-hidden border-4 flex items-center justify-center`} style={{ borderColor: d.person.gender === 'male' ? 'var(--gender-male-border)' : 'var(--gender-female-border)', backgroundColor: 'var(--card-bg)' }}>
                         {d.person.photoUrl ? (
                             <img src={d.person.photoUrl} className="w-full h-full object-cover" />
                         ) : (
@@ -91,7 +93,7 @@ export const FanChart: React.FC<FanChartProps> = memo(({ fanArcs, focusId, onSel
                         )}
                     </div>
                     <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 translate-y-10 text-center">
-                        <span className={`text-[10px] font-bold bg-white/90 dark:bg-stone-900/90 px-2 py-0.5 rounded-full shadow-sm whitespace-nowrap`} style={{ color: d.person.gender === 'male' ? 'var(--gender-male-text)' : 'var(--gender-female-text)' }}>
+                        <span className={`text-[10px] font-bold bg-[var(--card-bg)] px-2 py-0.5 rounded-full shadow-sm whitespace-nowrap`} style={{ color: d.person.gender === 'male' ? 'var(--gender-male-text)' : 'var(--gender-female-text)' }}>
                             {d.person.firstName}
                         </span>
                     </div>
