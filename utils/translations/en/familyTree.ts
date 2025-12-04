@@ -12,10 +12,10 @@ export const familyTree = {
   radial: 'Radial',
   isCompact: 'Compact View',
   chartType: 'Chart Type',
-  descendant: 'Descendant Chart', // Updated
-  fan: 'Fan Chart',
-  pedigree: 'Pedigree Chart',   // Updated
-  force: 'Force Layout Chart',  // Updated
+  descendant: 'Interactive Descendant', // Updated to match image
+  fan: 'Ancestry Fan Chart', // Updated to match image
+  pedigree: 'Pedigree Chart',   // Updated to match image
+  force: 'Comprehensive Diagram (All-in-One)',  // Updated to match image
   enableForcePhysics: 'Enable Physics',
   noResults: 'No results found.',
 };
