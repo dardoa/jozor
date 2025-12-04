@@ -1,9 +1,9 @@
 import React, { memo } from 'react';
 import { Person, Gender, FamilyActionsProps } from '../../types';
 import { ArrowUp, Heart, ArrowDown } from 'lucide-react';
-import { InlineAddButton } from './InlineAddButton'; // New import
-import { FamilyMemberItem } from './FamilyMemberItem'; // New import
-import { useTranslation } from '../../context/TranslationContext'; // New import
+import { InlineAddButton } from './InlineAddButton';
+import { FamilyMemberItem } from './FamilyMemberItem';
+import { useTranslation } from '../../context/TranslationContext';
 
 // --- Family Group Component (now internal to this file, or could be moved to its own file if needed elsewhere) ---
 const FamilyGroup = memo(({ 
@@ -11,7 +11,7 @@ const FamilyGroup = memo(({
 }: { 
     title: string, icon: React.ReactNode, ids: string[], people: Record<string, Person>, onAdd: (g: Gender) => void, onRemove?: (id: string) => void, onSelect: (id: string) => void, placeholder: string, isEditing: boolean
 }) => {
-    const { t } = useTranslation(); // Use useTranslation hook directly
+    const { t } = useTranslation();
     return (
         <div className="mb-3 last:mb-0">
              <div className="flex items-center justify-between mb-2 px-1">
@@ -32,7 +32,7 @@ const FamilyGroup = memo(({
                     {placeholder}
                  </div>
             ) : (
-                <div className="space-y-0.5">
+                <div className="grid grid-cols-2 gap-2"> {/* Changed to grid layout */}
                     {ids.map(id => (
                         <FamilyMemberItem 
                             key={id} 
@@ -61,10 +61,10 @@ interface FamilyRelationshipsSectionProps {
 }
 
 export const FamilyRelationshipsSection: React.FC<FamilyRelationshipsSectionProps> = memo(({
-    person, people, isEditing, onSelect, onUpdate, // Destructure onUpdate here
+    person, people, isEditing, onSelect, onUpdate,
     familyActions
 }) => {
-    const { t } = useTranslation(); // Use useTranslation hook directly
+    const { t } = useTranslation();
 
     const handleRemoveParent = (id: string) => familyActions.onRemoveRelationship?.(person.id, id, 'parent');
     const handleRemoveSpouse = (id: string) => familyActions.onRemoveRelationship?.(person.id, id, 'spouse');
