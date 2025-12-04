@@ -1,11 +1,11 @@
-import React, { memo } from 'react'; // Removed useEffect as it's no longer needed
+import React, { memo } from 'react';
 import { TreeSettings, ChartType, AppTheme } from '../../types';
 import { 
   SlidersHorizontal, Eye, Check, ArrowRightLeft, ArrowUpDown, 
   CircleDashed, Share2, Network, GitGraph, MonitorPlay, Palette, Zap, LayoutGrid, Clock
 } from 'lucide-react';
 import { DropdownMenuContainer, DropdownMenuItem, DropdownMenuDivider, DropdownMenuHeader } from '../ui/DropdownMenu';
-import { FormField } from '../ui/FormField'; // Import FormField
+import { FormField } from '../ui/FormField';
 
 export const ViewSettingsMenu = memo(({
     settings, onUpdate, onClose, onPresent, t
@@ -17,10 +17,10 @@ export const ViewSettingsMenu = memo(({
     t: any;
 }) => {
     const chartOptions = [
-        { id: 'descendant', label: t.descendant, icon: <GitGraph className="w-3.5 h-3.5"/> }, // Corrected key
-        { id: 'fan', label: t.fan, icon: <CircleDashed className="w-3.5 h-3.5"/> },             // Corrected key
-        { id: 'pedigree', label: t.pedigree, icon: <Share2 className="w-3.5 h-3.5 rotate-90"/> }, // Corrected key
-        { id: 'force', label: t.force, icon: <Network className="w-3.5 h-3.5"/> },               // Corrected key
+        { id: 'descendant', label: t.descendant, icon: <GitGraph className="w-3.5 h-3.5"/> },
+        { id: 'fan', label: t.fan, icon: <CircleDashed className="w-3.5 h-3.5"/> },
+        { id: 'pedigree', label: t.pedigree, icon: <Share2 className="w-3.5 h-3.5 rotate-90"/> },
+        { id: 'force', label: t.force, icon: <Network className="w-3.5 h-3.5"/> },
     ];
 
     const themes: {id: AppTheme, label: string, colorClass: string, borderClass: string}[] = [
@@ -118,7 +118,6 @@ export const ViewSettingsMenu = memo(({
                             </div>
                         </button>
                     ))}
-                    {/* New toggle for Time Offset */}
                     {settings.chartType === 'descendant' && (
                         <>
                             <button onClick={() => onUpdate({ ...settings, enableTimeOffset: !settings.enableTimeOffset })} 
