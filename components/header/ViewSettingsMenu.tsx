@@ -43,7 +43,7 @@ export const ViewSettingsMenu = memo(({
                             label={type.label} 
                             className="justify-between"
                         >
-                            {settings.chartType === type.id && <Check className="w-3 h-3 text-teal-600"/>}
+                            {/* The Check icon is now handled internally by DropdownMenuItem based on isActive */}
                         </DropdownMenuItem>
                     ))}
                 </div>

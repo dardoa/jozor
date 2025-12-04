@@ -1,4 +1,5 @@
 import React from 'react';
+import { Check } from 'lucide-react'; // Import Check icon
 
 interface DropdownMenuContainerProps {
   children: React.ReactNode;
@@ -12,7 +13,6 @@ export const DropdownMenuContainer: React.FC<DropdownMenuContainerProps> = ({ ch
 );
 
 interface DropdownMenuItemProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  children?: React.ReactNode; // جعل خاصية children اختيارية
   icon?: React.ReactNode;
   label?: string;
   subLabel?: string;
@@ -23,7 +23,6 @@ interface DropdownMenuItemProps extends React.ButtonHTMLAttributes<HTMLButtonEle
 }
 
 export const DropdownMenuItem: React.FC<DropdownMenuItemProps> = ({
-  children,
   icon,
   label,
   subLabel,
@@ -45,13 +44,13 @@ export const DropdownMenuItem: React.FC<DropdownMenuItemProps> = ({
     )}
     {/* Render label and subLabel if they exist */}
     {label && (
-      <div className="flex flex-col items-start gap-0.5 flex-1"> {/* Added flex-1 here */}
+      <div className="flex flex-col items-start gap-0.5 flex-1 min-w-0">
         <span className="font-bold">{label}</span>
         {subLabel && <span className="text-[9px] opacity-70">{subLabel}</span>}
       </div>
     )}
-    {/* Always render children, which will be the checkmark in this case */}
-    {children}
+    {/* Explicitly render Check icon if isActive */}
+    {isActive && <Check className="w-3 h-3 text-teal-600 ms-auto" />}
   </button>
 );
 
