@@ -2,11 +2,11 @@ import React, { useEffect } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { FamilyTree } from './components/FamilyTree';
 import { WelcomeScreen } from './components/WelcomeScreen';
-import { HeaderContainer } from './components/HeaderContainer'; // New import
-import { ModalManagerContainer } from './components/ModalManagerContainer'; // New import
+import { HeaderContainer } from './components/HeaderContainer';
+import { ModalManagerContainer } from './components/ModalManagerContainer';
 
 import { useAppOrchestration } from './hooks/useAppOrchestration';
-import { useTranslation } from './context/TranslationContext';
+// Removed: import { useTranslation } from './context/TranslationContext';
 
 import { X } from 'lucide-react';
 
@@ -25,7 +25,7 @@ const App: React.FC = () => {
 
     // Grouped Props
     historyControls,
-    themeLanguage,
+    themeLanguage, // Contains darkMode, setDarkMode, language, setLanguage
     auth,
     viewSettings,
     toolsActions,
@@ -34,7 +34,7 @@ const App: React.FC = () => {
     familyActions,
   } = useAppOrchestration();
 
-  const { t, language, setLanguage } = useTranslation();
+  // Removed: const { t, language, setLanguage } = useTranslation();
 
   // Centralized application of theme class, dark mode class, and language attributes to the html element
   useEffect(() => {
@@ -48,10 +48,10 @@ const App: React.FC = () => {
     root.classList.toggle('dark', themeLanguage.darkMode);
 
     // Handle language attributes
-    const dir = language === 'ar' ? 'rtl' : 'ltr';
+    const dir = themeLanguage.language === 'ar' ? 'rtl' : 'ltr';
     root.setAttribute('dir', dir);
-    root.setAttribute('lang', language);
-  }, [viewSettings.treeSettings.theme, themeLanguage.darkMode, language]);
+    root.setAttribute('lang', themeLanguage.language);
+  }, [viewSettings.treeSettings.theme, themeLanguage.darkMode, themeLanguage.language]);
 
   return (
     <div className={`flex flex-col h-screen font-sans transition-colors duration-300 bg-[var(--theme-bg)] text-[var(--card-text)] overflow-hidden`} >
@@ -63,8 +63,6 @@ const App: React.FC = () => {
               onStartNew={handleStartNewTree}
               onImport={() => fileInputRef.current?.click()}
               onLogin={auth.onLogin}
-              // Removed language={language}
-              // Removed setLanguage={setLanguage}
           />
       ) : (
           <>
@@ -94,7 +92,7 @@ const App: React.FC = () => {
             {/* Cloud Status */}
             {!isPresentMode && auth.isSyncing && (
                 <div className={`absolute top-16 start-1/2 -translate-x-1/2 z-50 text-white text-xs px-3 py-1 rounded-b-lg shadow-lg flex items-center gap-2 ${auth.isDemoMode ? 'bg-orange-500' : 'bg-blue-600 animate-pulse'}`}>
-                     {auth.isDemoMode ? 'Saving locally...' : t.syncing}
+                     {auth.isDemoMode ? 'Saving locally...' : (themeLanguage.language === 'ar' ? 'جاري المزامنة...' : 'Syncing...')}
                 </div>
             )}
 
@@ -108,7 +106,7 @@ const App: React.FC = () => {
                             onUpdate={updatePerson}
                             onDelete={deletePerson}
                             onSelect={setFocusId}
-                            language={language}
+                            language={themeLanguage.language} // Use language from themeLanguage
                             isOpen={sidebarOpen}
                             onClose={() => setSidebarOpen(false)}
                             onOpenModal={handleOpenModal}
@@ -130,7 +128,7 @@ const App: React.FC = () => {
                 <ModalManagerContainer 
                     activeModal={activeModal} setActiveModal={setActiveModal}
                     linkModal={linkModal} setLinkModal={setLinkModal}
-                    people={people} language={language}
+                    people={people} language={themeLanguage.language} // Use language from themeLanguage
                     focusId={focusId} setFocusId={setFocusId} activePerson={activePerson}
                     user={auth.user}
                     familyActions={familyActions}
