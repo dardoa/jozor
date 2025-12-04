@@ -1,61 +1,21 @@
 import React, { memo } from 'react';
-import { Person, FamilyActionsProps } from '../../types'; // Import FamilyActionsProps
+import { Person } from '../../types';
 import { getDisplayDate } from '../../utils/familyLogic';
-import { User, Baby, Ribbon, MessageCircle, MapPin, CalendarDays, BookOpen, Heart, ArrowUp } from 'lucide-react'; // Add Heart, ArrowUp
-import { useTranslation } from '../../context/TranslationContext';
-import { QuickAddSpeedDial } from '../../components/ui/QuickAddSpeedDial'; // Import QuickAddSpeedDial
+import { User, Baby, Ribbon, MessageCircle, MapPin, CalendarDays, BookOpen } from 'lucide-react';
+import { useTranslation } from '../../context/TranslationContext'; // Import useTranslation
 
 interface PersonHeaderViewProps {
   person: Person;
   onSelect: (id: string) => void;
   onOpenModal: (modalType: 'calculator' | 'stats' | 'chat' | 'consistency' | 'timeline' | 'share' | 'story' | 'map') => void;
-  familyActions: FamilyActionsProps; // Add familyActions prop
+  // Removed t: any;
 }
 
-export const PersonHeaderView: React.FC<PersonHeaderViewProps> = memo(({ person, onSelect, onOpenModal, familyActions }) => {
-  const { t } = useTranslation();
+export const PersonHeaderView: React.FC<PersonHeaderViewProps> = memo(({ person, onSelect, onOpenModal }) => {
+  const { t } = useTranslation(); // Use useTranslation hook directly
   const fullName = [person.title, person.firstName, person.middleName, person.lastName, person.suffix].filter(Boolean).join(' ') || "Unnamed Person";
   const displayBirth = getDisplayDate(person.birthDate);
   const displayDeath = getDisplayDate(person.deathDate);
-
-  const quickAddActions = [
-    {
-        onClick: () => familyActions.onAddParent('male'),
-        icon: <ArrowUp className="w-3 h-3"/>,
-        colorClasses: "bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400",
-        label: t.addFather
-    },
-    {
-        onClick: () => familyActions.onAddParent('female'),
-        icon: <ArrowUp className="w-3 h-3"/>,
-        colorClasses: "bg-pink-50 text-pink-600 hover:bg-pink-100 dark:bg-pink-900/30 dark:text-pink-400",
-        label: t.addMother
-    },
-    {
-        onClick: () => familyActions.onAddSpouse('male'),
-        icon: <Heart className="w-3 h-3"/>,
-        colorClasses: "bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400",
-        label: t.addHusband
-    },
-    {
-        onClick: () => familyActions.onAddSpouse('female'),
-        icon: <Heart className="w-3 h-3"/>,
-        colorClasses: "bg-rose-50 text-rose-600 hover:bg-rose-100 dark:bg-rose-900/30 dark:text-rose-400",
-        label: t.addWife
-    },
-    {
-        onClick: () => familyActions.onAddChild('male'),
-        icon: <Baby className="w-3 h-3"/>,
-        colorClasses: "bg-teal-50 text-teal-600 hover:bg-teal-100 dark:bg-teal-900/30 dark:text-teal-400",
-        label: t.addSon
-    },
-    {
-        onClick: () => familyActions.onAddChild('female'),
-        icon: <Baby className="w-3 h-3"/>,
-        colorClasses: "bg-orange-50 text-orange-600 hover:bg-orange-100 dark:bg-orange-900/30 dark:text-orange-400",
-        label: t.addDaughter
-    },
-  ];
 
   return (
     <div className="space-y-4 pb-4">
@@ -150,8 +110,6 @@ export const PersonHeaderView: React.FC<PersonHeaderViewProps> = memo(({ person,
         >
           <CalendarDays className="w-3.5 h-3.5" /> {t.familyTimelineHeader}
         </button>
-        {/* Quick Add Speed Dial */}
-        <QuickAddSpeedDial actions={quickAddActions} />
       </div>
     </div>
   );
