@@ -27,6 +27,7 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({ people, focus
 
   const isForce = settings.chartType === 'force';
   const isFanChart = settings.chartType === 'fan';
+  const isRadialLayout = settings.layoutMode === 'radial' && settings.chartType === 'descendant'; // New flag
 
   // --- Data Calculation for all chart types ---
   const { nodes, links, collapsePoints, fanArcs } = useMemo(() => {
@@ -195,10 +196,10 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({ people, focus
         
         let tX = 0, tY = 0, scale = 1;
 
-        if (isFanChart || isForce) {
+        if (isFanChart || isForce || isRadialLayout) { // Added isRadialLayout
             tX = width / 2;
             tY = height / 2;
-            scale = isForce ? 0.6 : isFanChart ? 0.8 : 1;
+            scale = isForce ? 0.6 : isFanChart ? 0.8 : isRadialLayout ? 0.8 : 1; // Adjusted scale for radial
         } else if (nodes.length > 0) {
              const focusNode = nodes.find(n => n.id === focusId) || nodes[0];
              if (focusNode) {
@@ -214,7 +215,7 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({ people, focus
             .ease(d3.easeCubicOut)
             .call(zoomBehavior.current.transform, d3.zoomIdentity.translate(tX, tY).scale(scale));
     }
-  }, [focusId, nodes, isFanChart, isForce]);
+  }, [focusId, nodes, isFanChart, isForce, isRadialLayout]); // Added isRadialLayout to dependencies
 
   const handleZoomIn = useCallback(() => {
       if (svgRef.current && zoomBehavior.current) {
@@ -231,13 +232,13 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({ people, focus
   const handleResetZoom = useCallback(() => {
       if(zoomBehavior.current && wrapperRef.current && svgRef.current) {
          const { width, height } = wrapperRef.current.getBoundingClientRect();
-         const transform = (isFanChart || isForce)
-            ? d3.zoomIdentity.translate(width/2, height/2).scale(isForce ? 0.6 : 0.8)
+         const transform = (isFanChart || isForce || isRadialLayout) // Added isRadialLayout
+            ? d3.zoomIdentity.translate(width/2, height/2).scale(isForce ? 0.6 : isFanChart ? 0.8 : isRadialLayout ? 0.8 : 1) // Adjusted scale for radial
             : d3.zoomIdentity.translate(width/2 - (nodes[0]?.x||0), height/2 - (nodes[0]?.y||0)).scale(0.85);
          
          d3.select(svgRef.current).transition().duration(500).call(zoomBehavior.current.transform, transform);
       }
-  }, [isFanChart, isForce, nodes]);
+  }, [isFanChart, isForce, isRadialLayout, nodes]); // Added isRadialLayout to dependencies
 
   const toggleCollapse = useCallback((uniqueKey: string) => {
     setCollapsedIds(prev => {
@@ -253,7 +254,7 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({ people, focus
       
       {/* Minimap */}
       {!isFanChart && !isForce && settings.showMinimap && (
-          <Minimap nodes={nodes} links={links} focusId={focusId} />
+          <Minimap nodes={nodes} links={links} focusId={focusId} isRadial={isRadialLayout} /> {/* Pass isRadial prop */}
       )}
 
       {/* Zoom Controls */}

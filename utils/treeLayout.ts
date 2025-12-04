@@ -60,6 +60,7 @@ const calculateDescendantLayout = (
 ): { nodes: TreeNode[], links: TreeLink[], collapsePoints: CollapsePoint[] } => {
     
     const isVertical = settings.layoutMode === 'vertical';
+    const isRadial = settings.layoutMode === 'radial'; // New flag
     const nodeW = settings.isCompact ? NODE_WIDTH_COMPACT : NODE_WIDTH_DEFAULT;
     const nodeH = settings.isCompact ? NODE_HEIGHT_COMPACT : NODE_HEIGHT_DEFAULT;
     const levelGap = settings.isCompact ? LEVEL_SEP_COMPACT : LEVEL_SEP_DEFAULT;
@@ -164,7 +165,6 @@ const calculateDescendantLayout = (
     const nodeSpace = nodeW + siblingGap;
     
     const treeLayout = d3.tree<CustomHierarchyDatum>()
-        .nodeSize(isVertical ? [nodeSpace, levelGap] : [levelGap, nodeSpace])
         .separation((a: d3.HierarchyPointNode<CustomHierarchyDatum>, b: d3.HierarchyPointNode<CustomHierarchyDatum>) => { // Explicitly type a, b
             const pA = a.data.person as Person;
             const pB = b.data.person as Person;
@@ -197,6 +197,18 @@ const calculateDescendantLayout = (
             return separation; 
         });
 
+    if (isRadial) {
+        // Determine max depth for radial layout radius
+        let maxDepth = 0;
+        root.each((d) => {
+            if (d.depth > maxDepth) maxDepth = d.depth;
+        });
+        const radialRadius = (maxDepth + 1) * levelGap; // Scale radius based on depth
+        treeLayout.size([360, radialRadius]); // Angle in degrees, radius
+    } else {
+        treeLayout.nodeSize(isVertical ? [nodeSpace, levelGap] : [levelGap, nodeSpace]);
+    }
+
     treeLayout(root);
 
     // --- Time Offset Logic ---
@@ -218,25 +230,51 @@ const calculateDescendantLayout = (
     const collapsePoints: CollapsePoint[] = [];
 
     const getCoords = (d: d3.HierarchyPointNode<CustomHierarchyDatum>, offsetX = 0, offsetY = 0) => {
-        let finalX = d.x + offsetX;
-        let finalY = d.y + offsetY;
+        let finalX = d.x;
+        let finalY = d.y;
 
-        // Apply time offset if enabled and vertical layout
-        if (settings.enableTimeOffset && isVertical) {
+        // Apply time offset if enabled and vertical/horizontal layout
+        if (settings.enableTimeOffset && !isRadial) {
             const personBirthYear = getBirthYear(d.data.person);
             if (personBirthYear !== 9999 && oldestBirthYear !== Infinity) {
                 const timeOffset = (personBirthYear - oldestBirthYear) * timeScaleFactor;
-                finalY += timeOffset;
+                if (isVertical) finalY += timeOffset;
+                else finalX += timeOffset;
             }
         }
-        // Apply time offset if enabled and horizontal layout
-        else if (settings.enableTimeOffset && !isVertical) {
-            const personBirthYear = getBirthYear(d.data.person);
-            if (personBirthYear !== 9999 && oldestBirthYear !== Infinity) {
-                const timeOffset = (personBirthYear - oldestBirthYear) * timeScaleFactor;
-                finalX += timeOffset;
-            }
+
+        // Apply mainShift and spouseOffsetX
+        if (isVertical) {
+            finalX += offsetX;
+            finalY += offsetY;
+        } else if (!isRadial) { // Horizontal
+            finalX += offsetY; // Breadth is now Y, depth is X
+            finalY += offsetX;
         }
+        // For radial, offsetX/offsetY are handled differently below
+
+        // --- Radial Transformation ---
+        if (isRadial) {
+            const angle = (d.x + offsetX) * (Math.PI / 180); // d.x is angle from treeLayout.size([360, ...])
+            const radius = d.y + offsetY; // d.y is radius from treeLayout.size([..., radialRadius])
+
+            // Apply time offset to radius for radial layout
+            if (settings.enableTimeOffset) {
+                const personBirthYear = getBirthYear(d.data.person);
+                if (personBirthYear !== 9999 && oldestBirthYear !== Infinity) {
+                    const timeOffset = (personBirthYear - oldestBirthYear) * timeScaleFactor;
+                    finalY = radius + timeOffset; // Add to radius
+                }
+            } else {
+                finalY = radius;
+            }
+
+            return {
+                x: finalY * Math.cos(angle), // radius * cos(angle)
+                y: finalY * Math.sin(angle)  // radius * sin(angle)
+            };
+        }
+        // --- End Radial Transformation ---
 
         return { x: finalX, y: finalY };
     };
@@ -253,7 +291,7 @@ const calculateDescendantLayout = (
             mainShift = -(nodeW / 2 + SPOUSE_GAP / 2);
         }
 
-        const coords = getCoords(d, isVertical ? mainShift : 0, isVertical ? 0 : mainShift);
+        let coords = getCoords(d, isVertical ? mainShift : 0, isVertical ? 0 : mainShift);
 
         let type: TreeNode['type'] = 'descendant';
         if (person.id === focusId) type = 'focus';
@@ -266,21 +304,36 @@ const calculateDescendantLayout = (
             if (!spouse) return;
 
             const visualSpouseId = `spouse-${person.id}-${spouseId}`;
-            let spouseOffsetX = 0;
-
+            let spouseOffset = 0; // Unified offset for spouse
             if (!hasMultipleSpouses) {
-                spouseOffsetX = nodeW + SPOUSE_GAP;
+                spouseOffset = nodeW + SPOUSE_GAP;
             } else {
-                // Complex spacing for multiple spouses
-                if (index === 0) spouseOffsetX = (nodeW / 2) + SPOUSE_GAP + (nodeW / 2);
-                else if (index === 1) spouseOffsetX = -((nodeW / 2) + SPOUSE_GAP + (nodeW / 2));
-                else spouseOffsetX = ((nodeW / 2) + SPOUSE_GAP + (nodeW / 2)) + (nodeW + 10) * (index - 1); 
+                if (index === 0) spouseOffset = (nodeW / 2) + SPOUSE_GAP + (nodeW / 2);
+                else if (index === 1) spouseOffset = -((nodeW / 2) + SPOUSE_GAP + (nodeW / 2));
+                else spouseOffset = ((nodeW / 2) + SPOUSE_GAP + (nodeW / 2)) + (nodeW + 10) * (index - 1); 
             }
 
-            const spouseCoords = getCoords(d, 
-                isVertical ? mainShift + spouseOffsetX : 0, 
-                isVertical ? 0 : mainShift + spouseOffsetX
-            );
+            let spouseCoords;
+            if (isVertical) {
+                spouseCoords = getCoords(d, mainShift + spouseOffset, 0);
+            } else if (!isRadial) { // Horizontal
+                spouseCoords = getCoords(d, 0, mainShift + spouseOffset);
+            } else { // Radial
+                // For radial, spouse offset affects angle
+                const angle = (d.x + mainShift + spouseOffset) * (Math.PI / 180);
+                const radius = d.y;
+                let finalRadius = radius;
+                if (settings.enableTimeOffset) {
+                    const spouseBirthYear = getBirthYear(spouse);
+                    if (spouseBirthYear !== 9999 && oldestBirthYear !== Infinity) {
+                        finalRadius = radius + (spouseBirthYear - oldestBirthYear) * timeScaleFactor;
+                    }
+                }
+                spouseCoords = {
+                    x: finalRadius * Math.cos(angle),
+                    y: finalRadius * Math.sin(angle)
+                };
+            }
 
             nodes.push({ id: visualSpouseId, x: spouseCoords.x, y: spouseCoords.y, data: spouse, type: 'spouse' });
 
@@ -289,7 +342,7 @@ const calculateDescendantLayout = (
             // Calculate Collapse/Branching Joints
             const midX = (coords.x + spouseCoords.x) / 2;
             const midY = (coords.y + spouseCoords.y) / 2;
-            const dropDistance = settings.isCompact ? 90 : 120; // Reduced slightly as cards are taller
+            const dropDistance = settings.isCompact ? 90 : 120;
 
             const coupleHasChildren = person.children.some(childId => {
                 const child = people[childId];
@@ -298,12 +351,27 @@ const calculateDescendantLayout = (
 
             if (coupleHasChildren) {
                 const uniqueKey = `${person.id}:${spouseId}`;
+                let cpX = midX;
+                let cpY = midY;
+
+                if (isVertical) {
+                    cpY = midY + dropDistance;
+                } else if (!isRadial) { // Horizontal
+                    cpX = midX + dropDistance;
+                } else { // Radial
+                    // For radial, drop point should be further out along the bisector of the angle
+                    const angle = Math.atan2(midY, midX);
+                    const currentRadius = Math.sqrt(midX*midX + midY*midY);
+                    cpX = (currentRadius + dropDistance) * Math.cos(angle);
+                    cpY = (currentRadius + dropDistance) * Math.sin(angle);
+                }
+
                 collapsePoints.push({
                     id: person.id,
                     spouseId: spouseId, 
                     uniqueKey: uniqueKey,
-                    x: isVertical ? midX : midX + dropDistance,
-                    y: isVertical ? midY + dropDistance : midY,
+                    x: cpX,
+                    y: cpY,
                     originX: midX,
                     originY: midY,
                     isCollapsed: collapsedIds.has(uniqueKey)
@@ -320,12 +388,27 @@ const calculateDescendantLayout = (
         if (singleChildren.length > 0) {
             const dropDistance = settings.isCompact ? 90 : 120;
             const uniqueKey = `${person.id}:single`;
+            
+            let cpX = coords.x;
+            let cpY = coords.y;
+
+            if (isVertical) {
+                cpY = coords.y + dropDistance;
+            } else if (!isRadial) { // Horizontal
+                cpX = coords.x + dropDistance;
+            } else { // Radial
+                const angle = Math.atan2(coords.y, coords.x);
+                const currentRadius = Math.sqrt(coords.x*coords.x + coords.y*coords.y);
+                cpX = (currentRadius + dropDistance) * Math.cos(angle);
+                cpY = (currentRadius + dropDistance) * Math.sin(angle);
+            }
+
              collapsePoints.push({
                 id: person.id,
                 spouseId: 'single', 
                 uniqueKey: uniqueKey,
-                x: isVertical ? coords.x : coords.x + dropDistance,
-                y: isVertical ? coords.y + dropDistance : coords.y,
+                x: cpX,
+                y: cpY,
                 originX: coords.x,
                 originY: coords.y,
                 isCollapsed: collapsedIds.has(uniqueKey)

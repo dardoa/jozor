@@ -5,10 +5,11 @@ interface MinimapProps {
   nodes: TreeNode[];
   links: TreeLink[];
   focusId: string;
+  isRadial?: boolean; // New prop
 }
 
-export const Minimap: React.FC<MinimapProps> = ({ nodes, links, focusId }) => {
-  if (nodes.length === 0) return null;
+export const Minimap: React.FC<MinimapProps> = ({ nodes, links, focusId, isRadial }) => {
+  if (nodes.length === 0 || isRadial) return null; // Do not show minimap for radial layout
 
   const minX = Math.min(...nodes.map(n => n.x));
   const minY = Math.min(...nodes.map(n => n.y));
