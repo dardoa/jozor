@@ -65,5 +65,6 @@ export const modals = {
   selectExisting: 'اختر شخص موجود',
   searchByName: 'البحث بالاسم...',
   noMatches: 'لا توجد نتائج مطابقة.',
-  noWorkInterests: 'لا توجد معلومات عن العمل أو الاهتمامات.', // Added this line
+  noWorkInterests: 'لا توجد معلومات عن العمل أو الاهتمامات.',
+  actions: 'الإجراءات', // Added this line
 };

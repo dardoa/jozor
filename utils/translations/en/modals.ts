@@ -65,5 +65,6 @@ export const modals = {
   selectExisting: 'Select Existing Person',
   searchByName: 'Search by name...',
   noMatches: 'No matching people found.',
-  noWorkInterests: 'No work or interests information available.', // Added this line
+  noWorkInterests: 'No work or interests information available.',
+  actions: 'Actions', // Added this line
 };

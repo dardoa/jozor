@@ -2,7 +2,7 @@ import React, { useRef, useState, memo } from 'react';
 import { Person, Gender } from '../../types';
 import { DateSelect } from '../DateSelect';
 import { getDisplayDate } from '../../utils/familyLogic';
-import { User, Baby, BookOpen, Camera, Sparkles, Loader2, X, Ribbon, MessageCircle, ChevronDown } from 'lucide-react';
+import { User, Baby, BookOpen, Camera, Sparkles, Loader2, X, Ribbon, MessageCircle, ChevronDown, MapPin, CalendarDays } from 'lucide-react'; // Added MapPin, CalendarDays
 import { processImageFile } from '../../utils/imageLogic';
 import { extractPersonData } from '../../services/geminiService';
 import { FormField } from '../ui/FormField';
@@ -80,7 +80,7 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
       return (
         <div className="space-y-4 pb-4">
              <div className="flex gap-3 items-start animate-in fade-in duration-200">
-                {/* Image and Chat Button Wrapper */}
+                {/* Image */}
                 <div className="shrink-0 flex flex-col items-center gap-2">
                     <div className="relative group cursor-pointer" onClick={() => onSelect(person.id)}>
                          <div className={`w-28 h-28 rounded-2xl border-2 border-white dark:border-stone-700 shadow-md flex items-center justify-center overflow-hidden bg-stone-50 dark:bg-stone-700 ${person.isDeceased ? 'grayscale' : ''}`}>
@@ -91,19 +91,9 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
                             )}
                         </div>
                         {person.isDeceased && (
-                            <>
-                                <div className="absolute -top-2 -end-2 bg-white dark:bg-stone-800 rounded-full p-1 shadow-sm border border-stone-100 dark:border-stone-700 z-10">
-                                    <Ribbon className="w-4 h-4 text-stone-600 dark:text-stone-400 fill-current" />
-                                </div>
-                                {/* Chat with Ancestor button */}
-                                <button 
-                                    onClick={(e) => { e.stopPropagation(); onOpenModal('chat'); }} 
-                                    className="p-1.5 bg-purple-600/90 hover:bg-purple-700 text-white rounded-full shadow-lg transition-all z-20 border border-white/20"
-                                    title={t.chatWithAncestor}
-                                >
-                                    <MessageCircle className="w-4 h-4" />
-                                </button>
-                            </>
+                            <div className="absolute -top-2 -end-2 bg-white dark:bg-stone-800 rounded-full p-1 shadow-sm border border-stone-100 dark:border-stone-700 z-10">
+                                <Ribbon className="w-4 h-4 text-stone-600 dark:text-stone-400 fill-current" />
+                            </div>
                         )}
                     </div>
                 </div>
@@ -158,10 +148,53 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
 
             <div className="h-px bg-stone-100 dark:bg-stone-800"></div>
             
-            <FamilyRelationshipsSection
-                person={person} people={people} isEditing={isEditing} onUpdate={onUpdate} onSelect={onSelect} t={t}
-                onAddParent={onAddParent} onAddSpouse={onAddSpouse} onAddChild={onAddChild} onRemoveRelationship={onRemoveRelationship}
-            />
+            {/* Actions Section */}
+            <div className="bg-white dark:bg-stone-800 pt-5 p-3 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-2 relative">
+                <h3 className="absolute top-[-12px] start-3 z-10 bg-white dark:bg-stone-800 px-2 text-[9px] font-bold text-stone-400 uppercase tracking-wider">{t.actions}</h3>
+                <div className="grid grid-cols-2 gap-2">
+                    {person.isDeceased && (
+                        <button 
+                            onClick={() => onOpenModal('chat')} 
+                            className="flex items-center justify-center gap-2 px-3 py-2 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 rounded-lg text-xs font-bold hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-colors"
+                        >
+                            <MessageCircle className="w-4 h-4" /> {t.chatWithAncestor}
+                        </button>
+                    )}
+                    <button 
+                        onClick={() => onOpenModal('map')} 
+                        className="flex items-center justify-center gap-2 px-3 py-2 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 rounded-lg text-xs font-bold hover:bg-green-100 dark:hover:bg-green-900/40 transition-colors"
+                    >
+                        <MapPin className="w-4 h-4" /> {t.viewOnMap}
+                    </button>
+                    <button 
+                        onClick={() => onOpenModal('timeline')} 
+                        className="flex items-center justify-center gap-2 px-3 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg text-xs font-bold hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors"
+                    >
+                        <CalendarDays className="w-4 h-4" /> {t.familyTimelineHeader}
+                    </button>
+                </div>
+            </div>
+
+            {/* Collapsible Family Relationships Section */}
+            <div className="bg-white dark:bg-stone-800 pt-5 p-3 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm relative">
+                <h3 className="absolute top-[-12px] start-3 z-10 bg-white dark:bg-stone-800 px-2 text-[9px] font-bold text-stone-400 uppercase tracking-wider">{t.familyRelationships}</h3>
+                <button
+                    onClick={() => setShowFamilyRelationships(!showFamilyRelationships)}
+                    className="w-full flex items-center justify-between text-xs font-medium text-stone-600 dark:text-stone-400 hover:text-teal-600 dark:hover:text-teal-400 py-1 px-0.5 -mx-0.5 rounded-md transition-colors"
+                >
+                    <span>{t.familyRelationships}</span>
+                    <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showFamilyRelationships ? 'rotate-180' : ''}`} />
+                </button>
+
+                {showFamilyRelationships && (
+                    <div className="mt-2 animate-in fade-in slide-in-from-top-1 duration-200">
+                        <FamilyRelationshipsSection
+                            person={person} people={people} isEditing={isEditing} onUpdate={onUpdate} onSelect={onSelect} t={t}
+                            onAddParent={onAddParent} onAddSpouse={onAddSpouse} onAddChild={onAddChild} onRemoveRelationship={onRemoveRelationship}
+                        />
+                    </div>
+                )}
+            </div>
         </div>
       );
   }
