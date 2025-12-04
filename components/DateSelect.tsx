@@ -1,4 +1,5 @@
 import React, { useEffect, useState, memo } from 'react';
+import { useTranslation } from '../context/TranslationContext'; // Import useTranslation
 
 interface DateSelectProps {
   value: string;
@@ -8,6 +9,7 @@ interface DateSelectProps {
 }
 
 export const DateSelect: React.FC<DateSelectProps> = memo(({ value, onChange, disabled }) => {
+  const { t } = useTranslation(); // Use useTranslation hook
   const [day, setDay] = useState('');
   const [month, setMonth] = useState('');
   const [year, setYear] = useState('');
@@ -77,10 +79,10 @@ export const DateSelect: React.FC<DateSelectProps> = memo(({ value, onChange, di
   const disabledClass = "disabled:bg-transparent disabled:border-transparent disabled:px-0 disabled:cursor-default disabled:font-medium disabled:text-stone-800 dark:disabled:text-stone-200";
 
   const months = [
-    { v: '01', l: 'Jan' }, { v: '02', l: 'Feb' }, { v: '03', l: 'Mar' },
-    { v: '04', l: 'Apr' }, { v: '05', l: 'May' }, { v: '06', l: 'Jun' },
-    { v: '07', l: 'Jul' }, { v: '08', l: 'Aug' }, { v: '09', l: 'Sep' },
-    { v: '10', l: 'Oct' }, { v: '11', l: 'Nov' }, { v: '12', l: 'Dec' }
+    { v: '01', l: t.jan }, { v: '02', l: t.feb }, { v: '03', l: t.mar },
+    { v: '04', l: t.apr }, { v: '05', l: t.may }, { v: '06', l: t.jun },
+    { v: '07', l: t.jul }, { v: '08', l: t.aug }, { v: '09', l: t.sep },
+    { v: '10', l: t.oct }, { v: '11', l: t.nov }, { v: '12', l: t.dec }
   ];
 
   const days = Array.from({ length: 31 }, (_, i) => {
