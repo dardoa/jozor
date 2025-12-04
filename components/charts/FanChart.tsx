@@ -55,7 +55,7 @@ export const FanChart: React.FC<FanChartProps> = memo(({ fanArcs, focusId, onSel
             <path 
               d={path} 
               fill={fillColor}
-              stroke="white"
+              stroke="var(--card-border)" // Use theme variable for stroke
               strokeWidth="1.5"
               className="dark:stroke-stone-900"
               style={{
