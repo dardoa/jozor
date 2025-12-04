@@ -1,4 +1,3 @@
-
 import { Person } from './types';
 
 export const INITIAL_ROOT_ID = 'root-1';
@@ -8,12 +7,12 @@ export const CHILD_ID = 'child-1';
 // Google Client ID for OAuth authentication
 export const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "507220731712-kaiu4s8vsaf72bb7s11pgj9vs936rd01.apps.googleusercontent.com";
 
-export const INITIAL_PERSON: Person = {
-  id: INITIAL_ROOT_ID,
+// Template for a new person, without an ID
+export const DEFAULT_PERSON_TEMPLATE: Omit<Person, 'id'> = {
   title: '',
-  firstName: 'Me',
+  firstName: 'New',
   middleName: '',
-  lastName: '',
+  lastName: 'Person',
   birthName: '',
   nickName: '',
   suffix: '',
@@ -40,6 +39,15 @@ export const INITIAL_PERSON: Person = {
   spouses: [],
   children: [],
   partnerDetails: {}
+};
+
+// Initial root person, using the template
+export const INITIAL_PERSON: Person = {
+  id: INITIAL_ROOT_ID,
+  ...DEFAULT_PERSON_TEMPLATE,
+  firstName: 'Me',
+  lastName: '',
+  gender: 'male',
 };
 
 // Clean slate family (Just the root user)

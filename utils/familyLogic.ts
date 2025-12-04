@@ -1,37 +1,12 @@
-
 import { Person } from '../types';
+import { DEFAULT_PERSON_TEMPLATE } from '../constants'; // Import the new template
 
 export const createPerson = (gender: 'male' | 'female' = 'male'): Person => ({
   id: crypto.randomUUID(),
-  title: '',
-  firstName: 'New',
-  middleName: '',
-  lastName: 'Person',
-  birthName: '',
-  nickName: '',
-  suffix: '',
-  gender,
-  birthDate: '',
-  birthPlace: '',
-  birthSource: '',
-  deathDate: '',
-  deathPlace: '',
-  deathSource: '',
-  isDeceased: false,
-  profession: '',
-  company: '',
-  interests: '',
-  bio: '',
-  photoUrl: '',
-  gallery: [],
-  email: '',
-  website: '',
-  blog: '',
-  address: '',
-  parents: [],
-  spouses: [],
-  children: [],
-  partnerDetails: {}
+  ...DEFAULT_PERSON_TEMPLATE, // Use the template for default values
+  gender, // Override gender if provided
+  firstName: 'New', // Default first name for new person
+  lastName: 'Person', // Default last name for new person
 });
 
 // Ensures a person object has all required fields (useful for imported data)
