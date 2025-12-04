@@ -3,7 +3,7 @@ import { Person, UserProfile } from '../../types';
 import { processImageFile } from '../../utils/imageLogic';
 import { pickAndDownloadImage } from '../../services/googleService';
 import { analyzeImage } from '../../services/geminiService';
-import { Plus, Image as ImageIcon, X, Mic, Play, Trash2, Cloud, Loader2, Sparkles, ScanEye } from 'lucide-react';
+import { Plus, Image as ImageIcon, X, Mic, Play, Trash2, Cloud, Loader2, Sparkles, ScanEye, Info } from 'lucide-react';
 import { VoiceRecorder } from '../VoiceRecorder';
 
 interface MediaTabProps {
@@ -77,12 +77,15 @@ export const MediaTab: React.FC<MediaTabProps> = memo(({ person, isEditing, onUp
       onUpdate(person.id, { voiceNotes: [...currentNotes, base64] });
   };
 
+  const hasPhotos = person.gallery && person.gallery.length > 0;
+  const hasVoiceNotes = person.voiceNotes && person.voiceNotes.length > 0;
+
   return (
     <div className="space-y-5"> {/* Reduced space-y-6 to space-y-5 */}
         {/* --- PHOTOS SECTION --- */}
         <div className="bg-white dark:bg-stone-800 pt-5 p-3 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-2 relative">
             <div className="flex justify-between items-center relative z-10 mb-3">
-                <h3 className="absolute top-[-12px] start-3 z-10 bg-white dark:bg-stone-800 px-2 text-[9px] font-bold text-stone-400 uppercase tracking-wider">{t.gallery}</h3>
+                <h3 className="absolute top-[-12px] start-3 z-10 bg-white dark:bg-stone-800 px-2 text-[9px] font-bold text-stone-400 uppercase tracking-wider">{t.galleryTab}</h3>
                 {isEditing && (
                     <div className="flex gap-1.5 ms-auto"> {/* Added ms-auto to push to right */}
                         {user && (
@@ -113,7 +116,7 @@ export const MediaTab: React.FC<MediaTabProps> = memo(({ person, isEditing, onUp
                 onChange={handleImageUpload}
             />
 
-            {(!person.gallery || person.gallery.length === 0) ? (
+            {(!hasPhotos && !isEditing) ? (
                 <div className="text-center py-4 text-stone-400 dark:text-stone-500 bg-stone-50 dark:bg-stone-800/50 rounded-xl border border-dashed border-stone-200 dark:border-stone-700 flex flex-col items-center"> {/* Reduced py-6 to py-4 */}
                     <ImageIcon className="w-8 h-8 mb-2 opacity-50" /> {/* Increased w-6 h-6 to w-8 h-8 */}
                     <span className="text-sm">{t.noPhotos}</span>
@@ -158,14 +161,14 @@ export const MediaTab: React.FC<MediaTabProps> = memo(({ person, isEditing, onUp
                 {isEditing && <VoiceRecorder onSave={handleVoiceSave} t={t} />}
             </div>
 
-            {(!person.voiceNotes || person.voiceNotes.length === 0) ? (
+            {(!hasVoiceNotes && !isEditing) ? (
                  <div className="text-center py-4 text-stone-400 dark:text-stone-500 bg-stone-50 dark:bg-stone-800/50 rounded-xl border border-dashed border-stone-200 dark:border-stone-700 flex flex-col items-center"> {/* Reduced py-6 to py-4 */}
                     <Mic className="w-8 h-8 mb-2 opacity-50" /> {/* Increased w-6 h-6 to w-8 h-8 */}
-                    <span className="text-sm">No recordings yet.</span>
+                    <span className="text-sm">{t.noRecordings}</span>
                 </div>
             ) : (
                 <div className="space-y-2"> {/* Reduced space-y-3 to space-y-2 */}
-                    {person.voiceNotes.map((note, idx) => (
+                    {person.voiceNotes?.map((note, idx) => (
                         <div key={idx} className="flex items-center gap-2 p-2 bg-white dark:bg-stone-900 border border-stone-100 dark:border-stone-700 rounded-xl shadow-sm"> {/* Reduced p-3 to p-2 and gap-3 to gap-2 */}
                             <div className="w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600 dark:text-purple-400 shrink-0"> {/* Increased w-7 h-7 to w-8 h-8 */}
                                 <Mic className="w-4 h-4" /> {/* Increased w-3.5 h-3.5 to w-4 h-4 */}
