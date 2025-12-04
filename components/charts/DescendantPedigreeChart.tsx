@@ -51,12 +51,12 @@ export const DescendantPedigreeChart: React.FC<DescendantPedigreeChartProps> = m
                `Q ${targetPointX} ${midY}, ${targetPointX} ${midY + r}` + // Second curve
                `V ${targetPointY}`; // Vertical segment to target
     } else { // Horizontal layout
-        const startPointX = collapsePointX + COLLAPSE_CIRCLE_RADIUS; // Start from right edge of collapse circle
-        const targetPointX = targetX - NODE_WIDTH / 2; // Connect to left edge of target node
-        const targetPointY = targetY;
+        const startPointX = collapsePointY + COLLAPSE_CIRCLE_RADIUS; // Start from right edge of collapse circle
+        const targetPointX = targetY - NODE_WIDTH / 2; // Connect to left edge of target node
+        const targetPointY = targetX;
 
         // If child is directly to the right of collapse point, draw a straight horizontal line
-        if (Math.abs(collapsePointY - targetPointY) < 1) {
+        if (Math.abs(collapsePointX - targetPointX) < 1) {
             return `M ${startPointX} ${collapsePointY} H ${targetPointX}`;
         }
 
@@ -170,6 +170,19 @@ export const DescendantPedigreeChart: React.FC<DescendantPedigreeChartProps> = m
         const genderBorderClass = node.data.gender === 'male' ? 'border-[var(--gender-male-border)]' : 'border-[var(--gender-female-border)]';
         const genderTextClass = node.data.gender === 'male' ? 'text-[var(--gender-male-text)]' : 'text-[var(--gender-female-text)]';
 
+        // Dynamic classes based on isCompact
+        const cardPadding = settings.isCompact ? 'p-2' : 'p-3';
+        const photoSize = settings.isCompact ? 'w-12 h-12' : 'w-16 h-16';
+        const userIconSize = settings.isCompact ? 'w-6 h-6' : 'w-8 h-8';
+        const nameTextSize = settings.isCompact ? 'text-xs' : 'text-sm';
+        const nicknameTextSize = settings.isCompact ? 'text-[9px]' : 'text-[10px]';
+        const yearsTextSize = settings.isCompact ? 'text-[9px]' : 'text-[10px]';
+        const middleNameTextSize = settings.isCompact ? 'text-[8px]' : 'text-[9px]';
+        const ribbonPosition = settings.isCompact ? 'top-2 right-2' : 'top-3 right-3';
+        const ribbonSize = settings.isCompact ? 'w-3 h-3' : 'w-3.5 h-3.5';
+        const collapsedBranchPosition = settings.isCompact ? '-bottom-1.5 inset-x-6' : '-bottom-2 inset-x-8';
+
+
         return (
           <g 
             key={node.id} 
@@ -178,47 +191,47 @@ export const DescendantPedigreeChart: React.FC<DescendantPedigreeChartProps> = m
             className="cursor-pointer"
           >
             <foreignObject x={-NODE_WIDTH/2} y={-NODE_HEIGHT/2} width={NODE_WIDTH} height={NODE_HEIGHT}>
-              <div className={`uiverse-card ${node.data.gender} ${isFocus ? 'focus-ring' : ''} h-full w-full flex flex-col items-center rounded-xl overflow-hidden bg-[var(--card-bg)] border-[var(--card-border)] border shadow-card transition-all hover:border-[var(--focus-ring-color)] dark:hover:border-[var(--focus-ring-color)]`} style={{ backdropFilter: 'blur(8px)' }}>
-                <div className="flex flex-col items-center justify-center text-center h-full w-full p-3 gap-1.5 relative">
+              <div className={`h-full w-full flex flex-col items-center rounded-xl overflow-hidden bg-[var(--card-bg)] border-[var(--card-border)] border shadow-card transition-all hover:border-[var(--focus-ring-color)] dark:hover:border-[var(--focus-ring-color)] ${isFocus ? 'focus-ring' : ''}`} style={{ backdropFilter: 'blur(8px)' }}>
+                <div className={`flex flex-col items-center justify-center text-center h-full w-full ${cardPadding} gap-1.5 relative`}>
                   {settings.showPhotos && (
-                    <div className={`relative w-16 h-16 rounded-full flex-shrink-0 p-0.5 border-2 shadow-sm bg-white dark:bg-stone-800 ${genderBorderClass}`}>
+                    <div className={`relative ${photoSize} rounded-full flex-shrink-0 p-0.5 border-2 shadow-sm bg-white dark:bg-stone-800 ${genderBorderClass}`}>
                       {node.data.photoUrl ? (
                         <img src={node.data.photoUrl} className={`w-full h-full rounded-full object-cover ${node.data.isDeceased ? 'grayscale' : ''}`} />
                       ) : (
                         <div className="w-full h-full rounded-full bg-stone-50 dark:bg-stone-800 flex items-center justify-center">
-                          <User className={`w-8 h-8`} style={{ color: node.data.gender === 'male' ? 'var(--gender-male-border)' : 'var(--gender-female-border)' }} />
+                          <User className={`${userIconSize}`} style={{ color: node.data.gender === 'male' ? 'var(--gender-male-border)' : 'var(--gender-female-border)' }} />
                         </div>
                       )}
                     </div>
                   )}
                   <div className="flex-1 w-full min-h-0 flex flex-col justify-start items-center">
-                    <div className={`font-bold text-sm leading-tight break-words line-clamp-2 ${genderTextClass}`}>
+                    <div className={`font-bold ${nameTextSize} leading-tight break-words line-clamp-2 ${genderTextClass}`}>
                       {displayName}
                     </div>
                     {node.data.nickName && (
-                      <div className="text-[10px] text-stone-500 dark:text-stone-400 italic mt-0.5 opacity-90 truncate w-full" style={{ color: 'var(--card-text)' }}>
+                      <div className={`${nicknameTextSize} text-stone-500 dark:text-stone-400 italic mt-0.5 opacity-90 truncate w-full`} style={{ color: 'var(--card-text)' }}>
                         "{node.data.nickName}"
                       </div>
                     )}
                     {settings.showDates && (
-                      <div className="text-[10px] text-stone-500 dark:text-stone-400 font-medium mt-1 tracking-wide" style={{ color: 'var(--card-text)' }}>
+                      <div className={`${yearsTextSize} text-stone-500 dark:text-stone-400 font-medium mt-1 tracking-wide`} style={{ color: 'var(--card-text)' }}>
                         {years}
                       </div>
                     )}
                     {settings.showMiddleName && node.data.middleName && (
-                      <div className="text-[9px] text-stone-400 mt-0.5 opacity-80 truncate w-full" style={{ color: 'var(--card-text)' }}>
+                      <div className={`${middleNameTextSize} text-stone-400 mt-0.5 opacity-80 truncate w-full`} style={{ color: 'var(--card-text)' }}>
                         {node.data.middleName}
                       </div>
                     )}
                   </div>
                   {node.data.isDeceased && (
-                    <div className="absolute top-3 right-3 opacity-80">
-                      <Ribbon className="w-3.5 h-3.5 text-stone-600 dark:text-stone-400 fill-current" />
+                    <div className={`absolute ${ribbonPosition} opacity-80`}>
+                      <Ribbon className={`${ribbonSize} text-stone-600 dark:text-stone-400 fill-current`} />
                     </div>
                   )}
                 </div>
                 {hasCollapsedBranch && (
-                  <div className="absolute -bottom-2 inset-x-8 h-2 bg-white dark:bg-stone-700 border border-stone-200 dark:border-stone-600 rounded-b-xl -z-10 shadow-sm opacity-90"></div>
+                  <div className={`absolute ${collapsedBranchPosition} h-2 bg-white dark:bg-stone-700 border border-stone-200 dark:border-stone-600 rounded-b-xl -z-10 shadow-sm opacity-90`}></div>
                 )}
               </div>
             </foreignObject>
