@@ -6,6 +6,7 @@ import { ContactTab } from './sidebar/ContactTab';
 import { BioTab } from './sidebar/BioTab';
 import { MediaTab } from './sidebar/MediaTab';
 import { SidebarFooter } from './sidebar/SidebarFooter';
+import { SidebarTabs } from './sidebar/SidebarTabs'; // New import
 import { getTranslation } from '../utils/translations';
 import { Person, Gender, Language, UserProfile } from '../types';
 
@@ -68,23 +69,12 @@ export const Sidebar: React.FC<SidebarProps> = memo(({
         `}>
         
             {/* Header / Tabs */}
-            <div className="flex items-end justify-between border-b border-stone-200/50 dark:border-stone-800/50 bg-stone-50/80 dark:bg-stone-900/80 backdrop-blur-sm pt-3 px-4">
-                <div className="flex gap-0.5 overflow-x-auto scrollbar-hide"> {/* Reduced gap from 1 to 0.5 */}
-                    {tabs.filter(tab => tab.show).map(tab => (
-                        <button 
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id as any)} 
-                            className={`px-2.5 py-1.5 rounded-t-lg text-xs font-semibold transition-all relative top-[1px] 
-                            ${activeTab === tab.id 
-                                ? 'bg-white dark:bg-stone-900 text-teal-600 dark:text-teal-400 border-x border-t border-stone-200/50 dark:border-stone-800/50 z-10 shadow-t-sm'
-                                : 'text-stone-500 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-300'}`}
-                        > {/* Reduced px-3 py-2 to px-2.5 py-1.5 */}
-                            {tab.label}
-                        </button>
-                    ))}
-                </div>
-                <button onClick={onClose} className="md:hidden p-2 text-stone-400 hover:text-stone-600 dark:hover:text-stone-300"><X className="w-5 h-5" /></button>
-            </div>
+            <SidebarTabs 
+                activeTab={activeTab} 
+                setActiveTab={setActiveTab} 
+                tabs={tabs} 
+                onClose={onClose} 
+            />
 
             {/* Scrollable Content */}
             <div className="flex-1 overflow-y-auto p-4 scrollbar-thin scrollbar-thumb-stone-200 dark:scrollbar-thumb-stone-700 bg-white dark:bg-stone-900"> {/* Reduced p-5 to p-4 */}
