@@ -40,4 +40,10 @@ export const header = {
   presentMode: 'وضع العرض التقديمي',
   toggleSidebar: 'تبديل الشريط الجانبي',
   appTitle: 'جذور',
+  // New export-related translations
+  jozorArchive: 'أرشيف جذور (.jozor)',
+  photosData: 'يتضمن الصور والبيانات',
+  jsonFile: 'ملف JSON (.json)',
+  gedcomFile: 'ملف GEDCOM (.ged)',
+  printPdf: 'طباعة / PDF',
 };

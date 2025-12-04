@@ -21,7 +21,7 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({ people, focus
   const svgRef = useRef<SVGSVGElement>(null);
   const gRef = useRef<SVGGElement>(null); 
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const simulationRef = useRef<d3.Simulation<any, any> | null>(null);
+  const simulationRef = useRef<d3.Simulation<TreeNode, TreeLink> | null>(null); // Updated type
   
   const [collapsedIds, setCollapsedIds] = useState<Set<string>>(new Set());
 
@@ -139,18 +139,18 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({ people, focus
   useEffect(() => {
       if (!isForce || !svgRef.current) return;
       
-      const simulation = d3.forceSimulation(nodes as any)
-          .force("link", d3.forceLink(links).id((d: any) => d.id).distance(150))
-          .force("charge", d3.forceManyBody().strength(-500))
-          .force("center", d3.forceCenter(0, 0))
-          .force("collide", d3.forceCollide(80));
+      const simulation = d3.forceSimulation<TreeNode, TreeLink>(nodes) // Removed 'as any'
+          .force("link", d3.forceLink<TreeNode, TreeLink>(links).id((d: TreeNode) => d.id).distance(150)) // Explicitly type d
+          .force("charge", d3.forceManyBody<TreeNode>().strength(-500))
+          .force("center", d3.forceCenter<TreeNode>(0, 0))
+          .force("collide", d3.forceCollide<TreeNode>(80));
 
       simulation.on("tick", () => {
           const uNodes = d3.select(gRef.current).selectAll('.force-node').data(nodes);
-          uNodes.attr('transform', (d: any) => `translate(${d.x},${d.y})`);
+          uNodes.attr('transform', (d: TreeNode) => `translate(${d.x},${d.y})`); // Explicitly type d
 
           const uLinks = d3.select(gRef.current).selectAll('.force-link').data(links);
-          uLinks.attr('d', (d: any) => `M ${d.source.x} ${d.source.y} L ${d.target.x} ${d.target.y}`);
+          uLinks.attr('d', (d: TreeLink) => `M ${(d.source as TreeNode).x} ${(d.source as TreeNode).y} L ${(d.target as TreeNode).x} ${(d.target as TreeNode).y}`); // Explicitly type d.source and d.target
       });
 
       simulationRef.current = simulation;

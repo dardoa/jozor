@@ -97,6 +97,8 @@ export interface TreeNode {
   id: string;
   x: number;
   y: number;
+  vx?: number; // Added for D3 force simulation compatibility
+  vy?: number; // Added for D3 force simulation compatibility
   data: Person;
   type: 'focus' | 'spouse' | 'parent' | 'child' | 'sibling' | 'ancestor' | 'descendant';
   // Props for Fan Chart

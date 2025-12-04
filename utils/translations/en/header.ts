@@ -40,4 +40,10 @@ export const header = {
   presentMode: 'Present Mode',
   toggleSidebar: 'Toggle Sidebar',
   appTitle: 'Jozor',
+  // New export-related translations
+  jozorArchive: 'Jozor Archive (.jozor)',
+  photosData: 'Includes photos & data',
+  jsonFile: 'JSON File (.json)',
+  gedcomFile: 'GEDCOM File (.ged)',
+  printPdf: 'Print / PDF',
 };
