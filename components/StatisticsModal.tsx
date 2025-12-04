@@ -19,14 +19,14 @@ export const StatisticsModal: React.FC<StatisticsModalProps> = ({ isOpen, onClos
   if (!isOpen) return null;
 
   const StatCard = ({ icon, title, value, subtext, color }: any) => (
-      <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm flex items-start gap-4">
+      <div className="bg-white dark:bg-stone-800 p-4 rounded-xl border border-stone-200 dark:border-stone-700 shadow-sm flex items-start gap-4">
           <div className={`p-3 rounded-lg ${color}`}>
               {icon}
           </div>
           <div>
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">{title}</p>
-              <h4 className="text-2xl font-bold text-gray-900 dark:text-white mt-0.5">{value}</h4>
-              {subtext && <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{subtext}</p>}
+              <p className="text-xs font-bold text-stone-400 uppercase tracking-wider">{title}</p>
+              <h4 className="text-2xl font-bold text-stone-900 dark:text-white mt-0.5">{value}</h4>
+              {subtext && <p className="text-xs text-stone-500 dark:text-stone-400 mt-1">{subtext}</p>}
           </div>
       </div>
   );
@@ -35,15 +35,15 @@ export const StatisticsModal: React.FC<StatisticsModalProps> = ({ isOpen, onClos
   const renderTimeline = () => {
       // Explicitly map string keys to numbers to avoid TS type issues with Number constructor
       const decades = Object.keys(stats.birthsPerDecade).map((d: string) => Number(d)).sort((a: number, b: number) => a - b);
-      if (decades.length === 0) return <div className="text-center text-gray-400 py-10">No date data available.</div>;
+      if (decades.length === 0) return <div className="text-center text-stone-400 py-10">No date data available.</div>;
       
       const counts = Object.values(stats.birthsPerDecade) as number[];
       const maxVal = counts.length > 0 ? Math.max(...counts) : 0;
       
       return (
           <div className="space-y-6">
-              <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-100 dark:border-gray-700">
-                  <h4 className="text-sm font-bold text-gray-700 dark:text-gray-200 mb-6 flex items-center gap-2">
+              <div className="bg-white dark:bg-stone-800 p-6 rounded-xl border border-stone-200 dark:border-stone-700">
+                  <h4 className="text-sm font-bold text-stone-700 dark:text-stone-200 mb-6 flex items-center gap-2">
                       <Calendar className="w-4 h-4 text-blue-500"/> {t.birthsPerDecade}
                   </h4>
                   <div className="flex items-end gap-2 md:gap-4 h-64 w-full">
@@ -52,14 +52,14 @@ export const StatisticsModal: React.FC<StatisticsModalProps> = ({ isOpen, onClos
                           const heightPct = maxVal > 0 ? (count / maxVal) * 100 : 0;
                           return (
                               <div key={decade} className="flex-1 flex flex-col items-center gap-2 group">
-                                  <div className="text-xs font-bold text-gray-600 dark:text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity mb-1">{count}</div>
+                                  <div className="text-xs font-bold text-stone-600 dark:text-stone-300 opacity-0 group-hover:opacity-100 transition-opacity mb-1">{count}</div>
                                   <div 
                                     style={{ height: `${heightPct}%` }} 
                                     className="w-full bg-blue-100 dark:bg-blue-900/40 rounded-t-lg group-hover:bg-blue-500 dark:group-hover:bg-blue-500 transition-colors relative"
                                   >
                                       <div className="absolute inset-x-0 bottom-0 bg-blue-200 dark:bg-blue-800/50 h-1"></div>
                                   </div>
-                                  <div className="text-[10px] text-gray-400 font-mono rotate-0 sm:rotate-0">{decade}s</div>
+                                  <div className="text-[10px] text-stone-400 font-mono rotate-0 sm:rotate-0">{decade}s</div>
                               </div>
                           );
                       })}
@@ -72,16 +72,16 @@ export const StatisticsModal: React.FC<StatisticsModalProps> = ({ isOpen, onClos
   // Render Lists for Names/Geo
   const renderList = (title: string, data: {name: string, count: number}[], icon: React.ReactNode, colorClass: string, isMap: boolean = false) => {
       return (
-          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 overflow-hidden">
-               <div className="p-4 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/50 flex items-center gap-2">
-                   {icon} <h4 className="text-sm font-bold text-gray-800 dark:text-gray-200">{title}</h4>
+          <div className="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 overflow-hidden">
+               <div className="p-4 border-b border-stone-200 dark:border-stone-700 bg-stone-50/50 dark:bg-stone-900/50 flex items-center gap-2">
+                   {icon} <h4 className="text-sm font-bold text-stone-800 dark:text-stone-200">{title}</h4>
                </div>
-               <div className="divide-y divide-gray-50 dark:divide-gray-700">
+               <div className="divide-y divide-stone-50 dark:divide-stone-700">
                    {data.length === 0 ? (
-                       <div className="p-4 text-center text-xs text-gray-400 italic">No data</div>
+                       <div className="p-4 text-center text-xs text-stone-400 italic">No data</div>
                    ) : (
                        data.map((item, i) => (
-                           <div key={i} className="flex items-center justify-between p-3 px-4 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                           <div key={i} className="flex items-center justify-between p-3 px-4 hover:bg-stone-50 dark:hover:bg-stone-700/50">
                                <div className="flex items-center gap-3">
                                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${colorClass}`}>
                                        {i + 1}
@@ -97,10 +97,10 @@ export const StatisticsModal: React.FC<StatisticsModalProps> = ({ isOpen, onClos
                                            {item.name} <ExternalLink className="w-3 h-3"/>
                                        </a>
                                    ) : (
-                                       <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{item.name}</span>
+                                       <span className="text-sm font-medium text-stone-700 dark:text-stone-300">{item.name}</span>
                                    )}
                                </div>
-                               <span className="text-xs font-bold text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-full">{item.count}</span>
+                               <span className="text-xs font-bold text-stone-400 bg-stone-100 dark:bg-stone-800 px-2 py-0.5 rounded-full">{item.count}</span>
                            </div>
                        ))
                    )}
@@ -111,23 +111,23 @@ export const StatisticsModal: React.FC<StatisticsModalProps> = ({ isOpen, onClos
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-      <div className="bg-gray-50 dark:bg-gray-900 rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] flex flex-col border border-gray-200 dark:border-gray-800">
+      <div className="bg-stone-50 dark:bg-stone-900 rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] flex flex-col border border-stone-200 dark:border-stone-800">
          
          {/* Header */}
-         <div className="flex items-center justify-between p-4 px-6 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+         <div className="flex items-center justify-between p-4 px-6 border-b border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900">
             <div className="flex items-center gap-3">
                 <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg text-indigo-600 dark:text-indigo-400">
                     <Activity className="w-5 h-5" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white">{t.familyStatistics}</h3>
+                <h3 className="text-xl font-bold text-stone-900 dark:text-white">{t.familyStatistics}</h3>
             </div>
-            <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
-                <X className="w-5 h-5 text-gray-500" />
+            <button onClick={onClose} className="p-2 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-full transition-colors">
+                <X className="w-5 h-5 text-stone-500" />
             </button>
          </div>
 
          {/* Tabs */}
-         <div className="flex gap-1 p-2 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 overflow-x-auto">
+         <div className="flex gap-1 p-2 bg-white dark:bg-stone-900 border-b border-stone-200 dark:border-stone-800 overflow-x-auto">
              {[
                  { id: 'overview', label: t.overview, icon: <PieChart className="w-4 h-4"/> },
                  { id: 'timeline', label: t.timelineTab, icon: <BarChart3 className="w-4 h-4"/> },
@@ -140,7 +140,7 @@ export const StatisticsModal: React.FC<StatisticsModalProps> = ({ isOpen, onClos
                     className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
                         activeTab === tab.id 
                         ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-300' 
-                        : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                        : 'text-stone-500 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800'
                     }`}
                  >
                      {tab.icon} {tab.label}
@@ -169,13 +169,13 @@ export const StatisticsModal: React.FC<StatisticsModalProps> = ({ isOpen, onClos
                      />
 
                      {/* Gender Chart */}
-                     <div className="col-span-1 md:col-span-2 bg-white dark:bg-gray-800 p-5 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm">
-                        <h4 className="text-sm font-bold text-gray-700 dark:text-gray-200 mb-4">{t.genderRatio}</h4>
+                     <div className="col-span-1 md:col-span-2 bg-white dark:bg-stone-800 p-5 rounded-xl border border-stone-200 dark:border-stone-700 shadow-sm">
+                        <h4 className="text-sm font-bold text-stone-700 dark:text-stone-200 mb-4">{t.genderRatio}</h4>
                         <div className="flex h-6 rounded-full overflow-hidden mb-2">
                             <div style={{ width: `${(stats.maleCount / stats.totalMembers) * 100}%` }} className="bg-blue-500 flex items-center justify-center text-[10px] text-white font-bold">{Math.round((stats.maleCount / stats.totalMembers) * 100)}%</div>
                             <div style={{ width: `${(stats.femaleCount / stats.totalMembers) * 100}%` }} className="bg-pink-500 flex items-center justify-center text-[10px] text-white font-bold">{Math.round((stats.femaleCount / stats.totalMembers) * 100)}%</div>
                         </div>
-                        <div className="flex justify-between text-xs text-gray-500 font-medium mt-2">
+                        <div className="flex justify-between text-xs text-stone-500 font-medium mt-2">
                             <span className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-blue-500"></div> {stats.maleCount} {t.male}</span>
                             <span className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-pink-500"></div> {stats.femaleCount} {t.female}</span>
                         </div>

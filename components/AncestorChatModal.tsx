@@ -49,10 +49,10 @@ export const AncestorChatModal: React.FC<AncestorChatModalProps> = ({ isOpen, on
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-lg w-full h-[600px] flex flex-col overflow-hidden border border-gray-200 dark:border-gray-800">
+      <div className="bg-white dark:bg-stone-900 rounded-2xl shadow-2xl max-w-lg w-full h-[600px] flex flex-col overflow-hidden border border-stone-200 dark:border-stone-800">
         
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-800 bg-gray-50/80 dark:bg-gray-900/80 backdrop-blur">
+        <div className="flex items-center justify-between p-4 border-b border-stone-200 dark:border-stone-800 bg-stone-50/80 dark:bg-stone-900/80 backdrop-blur">
           <div className="flex items-center gap-3">
              <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-purple-200 dark:border-purple-800">
                  {person.photoUrl ? (
@@ -62,21 +62,21 @@ export const AncestorChatModal: React.FC<AncestorChatModalProps> = ({ isOpen, on
                  )}
              </div>
              <div>
-                 <h3 className="font-bold text-gray-900 dark:text-white">{person.firstName} {person.lastName}</h3>
+                 <h3 className="font-bold text-stone-900 dark:text-white">{person.firstName} {person.lastName}</h3>
                  <span className="text-xs text-purple-600 dark:text-purple-400 font-medium">AI Ancestor Persona</span>
              </div>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-full transition-colors">
-            <X className="w-5 h-5 text-gray-500" />
+          <button onClick={onClose} className="p-2 hover:bg-stone-200 dark:hover:bg-stone-800 rounded-full transition-colors">
+            <X className="w-5 h-5 text-stone-500" />
           </button>
         </div>
 
         {/* Chat Area */}
-        <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 dark:bg-gray-950/50">
+        <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4 bg-stone-50 dark:bg-stone-950/50">
             {messages.length === 0 && (
                 <div className="text-center py-10 opacity-50">
                     <Bot className="w-12 h-12 mx-auto mb-3 text-purple-400" />
-                    <p className="text-sm text-gray-500">{t.chatPlaceholder}</p>
+                    <p className="text-sm text-stone-500">{t.chatPlaceholder}</p>
                 </div>
             )}
             
@@ -85,7 +85,7 @@ export const AncestorChatModal: React.FC<AncestorChatModalProps> = ({ isOpen, on
                     <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
                         msg.role === 'user' 
                         ? 'bg-blue-600 text-white rounded-br-none shadow-md' 
-                        : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-bl-none shadow-sm border border-gray-100 dark:border-gray-700'
+                        : 'bg-white dark:bg-stone-800 text-stone-800 dark:text-stone-200 rounded-bl-none shadow-sm border border-stone-100 dark:border-stone-700'
                     }`}>
                         {msg.text}
                     </div>
@@ -94,7 +94,7 @@ export const AncestorChatModal: React.FC<AncestorChatModalProps> = ({ isOpen, on
             
             {loading && (
                 <div className="flex justify-start">
-                    <div className="bg-white dark:bg-gray-800 rounded-2xl rounded-bl-none px-4 py-3 shadow-sm border border-gray-100 dark:border-gray-700">
+                    <div className="bg-white dark:bg-stone-800 rounded-2xl rounded-bl-none px-4 py-3 shadow-sm border border-stone-100 dark:border-stone-700">
                         <Loader2 className="w-5 h-5 animate-spin text-purple-500" />
                     </div>
                 </div>
@@ -102,20 +102,20 @@ export const AncestorChatModal: React.FC<AncestorChatModalProps> = ({ isOpen, on
         </div>
 
         {/* Input */}
-        <div className="p-4 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800">
-            <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 rounded-full px-4 py-2 focus-within:ring-2 ring-purple-500/20 transition-all">
+        <div className="p-4 bg-white dark:bg-stone-900 border-t border-stone-200 dark:border-stone-800">
+            <div className="flex items-center gap-2 bg-stone-100 dark:bg-stone-800 rounded-full px-4 py-2 focus-within:ring-2 ring-purple-500/20 transition-all">
                 <input 
                     type="text" 
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                     placeholder="Type a message..."
-                    className="flex-1 bg-transparent border-none outline-none text-sm text-gray-900 dark:text-white placeholder-gray-400"
+                    className="flex-1 bg-transparent border-none outline-none text-sm text-stone-900 dark:text-white placeholder-stone-400"
                 />
                 <button 
                     onClick={handleSend}
                     disabled={!input.trim() || loading}
-                    className="p-1.5 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-300 dark:disabled:bg-gray-700 text-white rounded-full transition-colors"
+                    className="p-1.5 bg-purple-600 hover:bg-purple-700 disabled:bg-stone-300 dark:disabled:bg-stone-700 text-white rounded-full transition-colors"
                 >
                     <Send className="w-4 h-4" />
                 </button>

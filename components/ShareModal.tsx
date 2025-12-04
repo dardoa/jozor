@@ -58,17 +58,17 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, languag
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-lg w-full overflow-hidden flex flex-col border border-gray-100 dark:border-gray-700">
+      <div className="bg-white dark:bg-stone-800 rounded-xl shadow-2xl max-w-lg w-full overflow-hidden flex flex-col border border-stone-200 dark:border-stone-700">
         
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/50">
+        <div className="flex items-center justify-between p-4 border-b border-stone-200 dark:border-stone-700 bg-stone-50/50 dark:bg-stone-900/50">
           <div className="flex items-center gap-2">
              <div className="p-1.5 bg-blue-100 dark:bg-blue-900/30 rounded-lg text-blue-600 dark:text-blue-400">
                  <Share2 className="w-5 h-5" />
              </div>
-             <h3 className="text-lg font-bold text-gray-800 dark:text-white">{t.shareTree}</h3>
+             <h3 className="text-lg font-bold text-stone-800 dark:text-white">{t.shareTree}</h3>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+          <button onClick={onClose} className="p-2 hover:bg-stone-100 dark:hover:bg-stone-700 rounded-full transition-colors text-stone-400 hover:text-stone-600 dark:hover:text-stone-300">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -76,24 +76,24 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, languag
         <div className="p-6 space-y-6">
             
             {/* Invite Section */}
-            <div className="bg-white dark:bg-gray-800 pt-5 p-3 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm space-y-2 relative">
-                <h3 className="absolute top-[-12px] start-3 z-10 bg-white dark:bg-gray-800 px-2 text-[9px] font-bold text-gray-400 uppercase tracking-wider">{t.inviteCollaborator}</h3>
+            <div className="bg-white dark:bg-stone-800 pt-5 p-3 rounded-xl border border-stone-200 dark:border-stone-700 shadow-sm space-y-2 relative">
+                <h3 className="absolute top-[-12px] start-3 z-10 bg-white dark:bg-stone-800 px-2 text-[9px] font-bold text-stone-400 uppercase tracking-wider">{t.inviteCollaborator}</h3>
                 <form onSubmit={handleInvite} className="flex gap-2">
                     <div className="flex-1 relative">
-                        <Mail className="absolute start-3 top-2.5 w-4 h-4 text-gray-400" />
+                        <Mail className="absolute start-3 top-2.5 w-4 h-4 text-stone-400" />
                         <input 
                             type="email" 
                             required
                             placeholder={t.emailPlaceholder}
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className="w-full ps-10 pe-3 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-gray-900 dark:text-gray-100"
+                            className="w-full ps-10 pe-3 py-2 bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-stone-900 dark:text-stone-100"
                         />
                     </div>
                     <select 
                         value={role}
                         onChange={(e) => setRole(e.target.value as any)}
-                        className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-sm px-3 text-gray-700 dark:text-gray-200 outline-none focus:border-blue-500"
+                        className="bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-lg text-sm px-3 text-stone-700 dark:text-stone-200 outline-none focus:border-blue-500"
                     >
                         <option value="editor">{t.editor}</option>
                         <option value="viewer">{t.viewer}</option>
@@ -109,8 +109,8 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, languag
             </div>
 
             {/* Link Sharing */}
-            <div className="p-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-dashed border-gray-200 dark:border-gray-700 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 overflow-hidden">
+            <div className="p-3 bg-stone-50 dark:bg-stone-900/50 rounded-lg border border-dashed border-stone-200 dark:border-stone-700 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2 text-sm text-stone-600 dark:text-stone-400 overflow-hidden">
                     <Globe className="w-4 h-4 shrink-0" />
                     <span className="truncate">https://jozor.app/tree/{user?.uid?.substring(0,8) || 'demo'}</span>
                 </div>
@@ -121,18 +121,18 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, languag
             </div>
 
             {/* Collaborators List */}
-            <div className="bg-white dark:bg-gray-800 pt-5 p-3 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm space-y-2 relative">
-                <h3 className="absolute top-[-12px] start-3 z-10 bg-white dark:bg-gray-800 px-2 text-[9px] font-bold text-gray-400 uppercase tracking-wider">{t.collaborators}</h3>
-                <div className="border border-gray-100 dark:border-gray-700 rounded-xl overflow-hidden">
+            <div className="bg-white dark:bg-stone-800 pt-5 p-3 rounded-xl border border-stone-200 dark:border-stone-700 shadow-sm space-y-2 relative">
+                <h3 className="absolute top-[-12px] start-3 z-10 bg-white dark:bg-stone-800 px-2 text-[9px] font-bold text-stone-400 uppercase tracking-wider">{t.collaborators}</h3>
+                <div className="border border-stone-200 dark:border-stone-700 rounded-xl overflow-hidden">
                     {collaborators.map((c, idx) => (
-                        <div key={idx} className="flex items-center justify-between p-3 border-b border-gray-50 dark:border-gray-800 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                        <div key={idx} className="flex items-center justify-between p-3 border-b border-stone-50 dark:border-stone-800 last:border-0 hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors">
                             <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center text-xs font-bold text-gray-600 dark:text-gray-300">
+                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-stone-100 to-stone-200 dark:from-stone-700 dark:to-stone-800 flex items-center justify-center text-xs font-bold text-stone-600 dark:text-stone-300">
                                     {c.avatar ? <img src={c.avatar} className="w-full h-full rounded-full" /> : c.email[0].toUpperCase()}
                                 </div>
                                 <div>
-                                    <div className="text-sm font-medium text-gray-800 dark:text-gray-200">{c.email} {c.email === user?.email && <span className="text-gray-400 text-xs">({t.you})</span>}</div>
-                                    <div className="text-[10px] text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                                    <div className="text-sm font-medium text-stone-800 dark:text-stone-200">{c.email} {c.email === user?.email && <span className="text-stone-400 text-xs">({t.you})</span>}</div>
+                                    <div className="text-[10px] text-stone-500 dark:text-stone-400 flex items-center gap-1">
                                         {c.role === 'owner' ? <Shield className="w-3 h-3 text-amber-500" /> : <div className="w-1.5 h-1.5 rounded-full bg-blue-400"></div>}
                                         {c.role === 'owner' ? t.owner : c.role === 'editor' ? t.editor : t.viewer}
                                         {c.status === 'pending' && <span className="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 px-1.5 rounded text-[9px]">{t.pending}</span>}
@@ -141,7 +141,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, languag
                             </div>
                             
                             {c.role !== 'owner' && (
-                                <button onClick={() => handleRemove(c.email)} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full transition-colors" title={t.remove}>
+                                <button onClick={() => handleRemove(c.email)} className="p-2 text-stone-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full transition-colors" title={t.remove}>
                                     <Trash2 className="w-4 h-4" />
                                 </button>
                             )}

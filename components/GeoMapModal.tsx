@@ -117,12 +117,12 @@ export const GeoMapModal: React.FC<GeoMapModalProps> = ({ isOpen, onClose, peopl
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-4xl w-full flex flex-col border border-gray-200 dark:border-gray-800">
-        <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-800">
-          <h3 className="text-lg font-bold flex items-center gap-2 text-gray-800 dark:text-white">
+      <div className="bg-white dark:bg-stone-900 rounded-2xl shadow-2xl max-w-4xl w-full flex flex-col border border-stone-200 dark:border-stone-800">
+        <div className="flex items-center justify-between p-4 border-b border-stone-200 dark:border-stone-800">
+          <h3 className="text-lg font-bold flex items-center gap-2 text-stone-800 dark:text-white">
               <Globe className="w-5 h-5 text-blue-500"/> {t.geography}
           </h3>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full">
+          <button onClick={onClose} className="p-2 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-full">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -130,7 +130,7 @@ export const GeoMapModal: React.FC<GeoMapModalProps> = ({ isOpen, onClose, peopl
         <div className="p-4 bg-blue-50/50 dark:bg-blue-900/10 min-h-[400px] flex items-center justify-center overflow-hidden relative">
             {loading && <Loader2 className="w-8 h-8 animate-spin text-blue-500 absolute" />}
             <svg ref={svgRef} width="100%" height="450" className="w-full h-full cursor-move"></svg>
-            <div className="absolute bottom-4 left-4 bg-white/80 dark:bg-gray-800/80 p-3 rounded-lg text-xs backdrop-blur border border-gray-200 dark:border-gray-700 max-w-xs max-h-40 overflow-y-auto">
+            <div className="absolute bottom-4 left-4 bg-white/80 dark:bg-stone-800/80 p-3 rounded-lg text-xs backdrop-blur border border-stone-200 dark:border-stone-700 max-w-xs max-h-40 overflow-y-auto">
                 <h4 className="font-bold mb-2 flex items-center gap-1"><MapPin className="w-3 h-3"/> Top Locations</h4>
                 {locations.slice(0, 5).map(l => (
                     <div key={l.name} className="flex justify-between gap-4 mb-1">
