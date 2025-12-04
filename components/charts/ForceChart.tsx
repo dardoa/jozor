@@ -1,7 +1,6 @@
 import React, { memo } from 'react';
 import { Person, TreeLink, TreeSettings, TreeNode } from '../../types';
-import { User } from 'lucide-react';
-import { FORCE_NODE_RADIUS } from '../../utils/treeLayout'; // Import FORCE_NODE_RADIUS
+import { FORCE_NODE_RADIUS } from '../../utils/layoutConstants'; // Import FORCE_NODE_RADIUS from layoutConstants
 
 interface ForceChartProps {
   nodes: TreeNode[];
