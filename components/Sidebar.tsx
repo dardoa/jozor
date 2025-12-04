@@ -7,7 +7,7 @@ import { BioTab } from './sidebar/BioTab';
 import { MediaTab } from './sidebar/MediaTab';
 import { SidebarFooter } from './sidebar/SidebarFooter';
 import { SidebarTabs } from './sidebar/SidebarTabs';
-import { SidebarActions } from './sidebar/SidebarActions'; // New import
+// import { SidebarActions } from './sidebar/SidebarActions'; // Removed import
 import { getTranslation } from '../utils/translations';
 import { Person, Language, UserProfile, FamilyActionsProps } from '../types';
 import { useTranslation } from '../context/TranslationContext'; // Import useTranslation
@@ -92,8 +92,7 @@ export const Sidebar: React.FC<SidebarProps> = memo(({
                 {activeTab === 'media' && <MediaTab person={person} isEditing={isEditing} onUpdate={onUpdate} user={user} />}
             </div>
             
-            {/* Sidebar Actions (Quick Add Speed Dial) */}
-            <SidebarActions familyActions={familyActions} /> {/* New: Render SidebarActions here */}
+            {/* Sidebar Actions (Quick Add Speed Dial) - REMOVED FROM HERE */}
 
             <SidebarFooter 
                 person={person} isEditing={isEditing} setIsEditing={setIsEditing}

@@ -1,21 +1,61 @@
 import React, { memo } from 'react';
-import { Person } from '../../types';
+import { Person, FamilyActionsProps } from '../../types';
 import { getDisplayDate } from '../../utils/familyLogic';
-import { User, Baby, Ribbon, MessageCircle, MapPin, CalendarDays, BookOpen } from 'lucide-react';
-import { useTranslation } from '../../context/TranslationContext'; // Import useTranslation
+import { User, Baby, Ribbon, MessageCircle, MapPin, CalendarDays, BookOpen, ArrowUp, Heart } from 'lucide-react';
+import { useTranslation } from '../../context/TranslationContext';
+import { QuickAddSpeedDial } from '../ui/QuickAddSpeedDial'; // New import
 
 interface PersonHeaderViewProps {
   person: Person;
   onSelect: (id: string) => void;
   onOpenModal: (modalType: 'calculator' | 'stats' | 'chat' | 'consistency' | 'timeline' | 'share' | 'story' | 'map') => void;
-  // Removed t: any;
+  familyActions: FamilyActionsProps; // NEW PROP
 }
 
-export const PersonHeaderView: React.FC<PersonHeaderViewProps> = memo(({ person, onSelect, onOpenModal }) => {
-  const { t } = useTranslation(); // Use useTranslation hook directly
+export const PersonHeaderView: React.FC<PersonHeaderViewProps> = memo(({ person, onSelect, onOpenModal, familyActions }) => {
+  const { t } = useTranslation();
   const fullName = [person.title, person.firstName, person.middleName, person.lastName, person.suffix].filter(Boolean).join(' ') || "Unnamed Person";
   const displayBirth = getDisplayDate(person.birthDate);
   const displayDeath = getDisplayDate(person.deathDate);
+
+  const quickAddActions = [
+    {
+        onClick: () => familyActions.onAddParent('male'),
+        icon: <ArrowUp className="w-3 h-3"/>,
+        colorClasses: "bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400",
+        label: t.addFather
+    },
+    {
+        onClick: () => familyActions.onAddParent('female'),
+        icon: <ArrowUp className="w-3 h-3"/>,
+        colorClasses: "bg-pink-50 text-pink-600 hover:bg-pink-100 dark:bg-pink-900/30 dark:text-pink-400",
+        label: t.addMother
+    },
+    {
+        onClick: () => familyActions.onAddSpouse('male'),
+        icon: <Heart className="w-3 h-3"/>,
+        colorClasses: "bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400",
+        label: t.addHusband
+    },
+    {
+        onClick: () => familyActions.onAddSpouse('female'),
+        icon: <Heart className="w-3 h-3"/>,
+        colorClasses: "bg-rose-50 text-rose-600 hover:bg-rose-100 dark:bg-rose-900/30 dark:text-rose-400",
+        label: t.addWife
+    },
+    {
+        onClick: () => familyActions.onAddChild('male'),
+        icon: <Baby className="w-3 h-3"/>,
+        colorClasses: "bg-teal-50 text-teal-600 hover:bg-teal-100 dark:bg-teal-900/30 dark:text-teal-400",
+        label: t.addSon
+    },
+    {
+        onClick: () => familyActions.onAddChild('female'),
+        icon: <Baby className="w-3 h-3"/>,
+        colorClasses: "bg-orange-50 text-orange-600 hover:bg-orange-100 dark:bg-orange-900/30 dark:text-orange-400",
+        label: t.addDaughter
+    },
+  ];
 
   return (
     <div className="space-y-4 pb-4">
@@ -88,8 +128,8 @@ export const PersonHeaderView: React.FC<PersonHeaderViewProps> = memo(({ person,
 
       <div className="h-px bg-stone-100 dark:bg-stone-800"></div>
 
-      {/* Actions Section */}
-      <div className="grid grid-cols-2 gap-2 mt-2 animate-in fade-in slide-in-from-top-1 duration-200">
+      {/* Actions Section - Consolidated */}
+      <div className="flex flex-wrap items-center justify-center gap-2 mt-2 animate-in fade-in slide-in-from-top-1 duration-200">
         {person.isDeceased && (
           <button
             onClick={() => onOpenModal('chat')}
@@ -98,6 +138,10 @@ export const PersonHeaderView: React.FC<PersonHeaderViewProps> = memo(({ person,
             <MessageCircle className="w-3.5 h-3.5" /> {t.chatWithAncestor}
           </button>
         )}
+        
+        {/* Quick Add Speed Dial */}
+        <QuickAddSpeedDial actions={quickAddActions} />
+
         <button
           onClick={() => onOpenModal('map')}
           className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 rounded-lg text-xs font-bold hover:bg-green-100 dark:hover:bg-green-900/40 transition-colors"

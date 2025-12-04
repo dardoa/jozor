@@ -25,6 +25,7 @@ export const InfoTabView: React.FC<InfoTabViewProps> = memo(({
         person={person}
         onSelect={onSelect}
         onOpenModal={onOpenModal}
+        familyActions={familyActions} // Pass new grouped prop
         // Removed t={t}
       />
 
