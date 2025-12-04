@@ -10,11 +10,7 @@ export const HeaderLeftSection: React.FC<HeaderLeftSectionProps> = memo(({
 }) => {
   const { t } = useTranslation(); // Use useTranslation hook directly
 
-  const handleLanguageToggle = () => {
-    const newLanguage = themeLanguage.language === 'en' ? 'ar' : 'en';
-    console.log('Toggling language. Current:', themeLanguage.language, 'New:', newLanguage);
-    themeLanguage.setLanguage(newLanguage);
-  };
+  // Removed handleLanguageToggle as it's no longer used here.
 
   return (
     <div className="flex items-center gap-3 md:gap-6">
