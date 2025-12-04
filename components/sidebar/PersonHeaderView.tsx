@@ -93,22 +93,22 @@ export const PersonHeaderView: React.FC<PersonHeaderViewProps> = memo(({ person,
         {person.isDeceased && (
           <button
             onClick={() => onOpenModal('chat')}
-            className="flex items-center justify-center gap-2 px-3 py-2 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 rounded-lg text-xs font-bold hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-colors"
+            className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 rounded-lg text-xs font-bold hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-colors"
           >
-            <MessageCircle className="w-4 h-4" /> {t.chatWithAncestor}
+            <MessageCircle className="w-3.5 h-3.5" /> {t.chatWithAncestor}
           </button>
         )}
         <button
           onClick={() => onOpenModal('map')}
-          className="flex items-center justify-center gap-2 px-3 py-2 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 rounded-lg text-xs font-bold hover:bg-green-100 dark:hover:bg-green-900/40 transition-colors"
+          className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 rounded-lg text-xs font-bold hover:bg-green-100 dark:hover:bg-green-900/40 transition-colors"
         >
-          <MapPin className="w-4 h-4" /> {t.viewOnMap}
+          <MapPin className="w-3.5 h-3.5" /> {t.viewOnMap}
         </button>
         <button
           onClick={() => onOpenModal('timeline')}
-          className="flex items-center justify-center gap-2 px-3 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg text-xs font-bold hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors"
+          className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg text-xs font-bold hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors"
         >
-          <CalendarDays className="w-4 h-4" /> {t.familyTimelineHeader}
+          <CalendarDays className="w-3.5 h-3.5" /> {t.familyTimelineHeader}
         </button>
       </div>
     </div>
