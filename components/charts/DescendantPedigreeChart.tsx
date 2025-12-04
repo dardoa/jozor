@@ -1,6 +1,6 @@
 import React, { useCallback, memo } from 'react';
 import { Person, TreeLink, TreeSettings, TreeNode } from '../../types';
-import { CollapsePoint, NODE_WIDTH_DEFAULT, NODE_WIDTH_COMPACT, NODE_HEIGHT_DEFAULT, NODE_HEIGHT_COMPACT } from '../../utils/treeLayout'; // Import new constants
+import { CollapsePoint, NODE_WIDTH_DEFAULT, NODE_WIDTH_COMPACT, NODE_HEIGHT_DEFAULT, NODE_HEIGHT_COMPACT } from '../../utils/layoutConstants'; // Import new constants
 import { getYears } from '../../utils/familyLogic';
 import { User, Ribbon, ChevronDown, ChevronUp, ChevronRight, ChevronLeft } from 'lucide-react';
 import * as d3 from 'd3';

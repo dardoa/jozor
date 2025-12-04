@@ -5,7 +5,7 @@ import {
     NODE_WIDTH_DEFAULT, NODE_WIDTH_COMPACT, NODE_HEIGHT_DEFAULT, NODE_HEIGHT_COMPACT,
     LEVEL_SEP_DEFAULT, LEVEL_SEP_COMPACT, SIBLING_GAP_DEFAULT, SIBLING_GAP_COMPACT, SPOUSE_GAP,
     CollapsePoint
-} from './treeLayout'; // Import constants and CollapsePoint from treeLayout
+} from './layoutConstants'; // Import constants and CollapsePoint from layoutConstants
 
 // Define a custom type for the data within the hierarchy node to include groupIndex
 interface CustomHierarchyDatum {

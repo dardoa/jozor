@@ -2,7 +2,7 @@ import * as d3 from 'd3';
 import { Person, TreeNode, TreeLink, TreeSettings } from '../types';
 import { 
     NODE_WIDTH_DEFAULT, NODE_WIDTH_COMPACT,
-} from './treeLayout'; // Import constants from treeLayout
+} from './layoutConstants'; // Import constants from layoutConstants
 
 /**
  * Calculates the layout for a pedigree chart (ancestors only).
