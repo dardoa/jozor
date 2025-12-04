@@ -8,11 +8,11 @@ export const useLanguageSync = () => {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedLanguage = (localStorage.getItem('language') as Language);
-      if (savedLanguage) {
+      if (savedLanguage && (savedLanguage === 'en' || savedLanguage === 'ar')) { // Validate saved language
         setLanguage(savedLanguage);
       } else {
-        // Default to Arabic if no preference is found
-        setLanguage('ar');
+        // Default to Arabic if no preference is found or saved language is invalid
+        setLanguage('ar'); 
       }
     }
   }, []); // Empty dependency array for initialization

@@ -10,6 +10,12 @@ export const HeaderLeftSection: React.FC<HeaderLeftSectionProps> = memo(({
 }) => {
   const { t } = useTranslation(); // Use useTranslation hook directly
 
+  const handleLanguageToggle = () => {
+    const newLanguage = themeLanguage.language === 'en' ? 'ar' : 'en';
+    console.log('Toggling language. Current:', themeLanguage.language, 'New:', newLanguage);
+    themeLanguage.setLanguage(newLanguage);
+  };
+
   return (
     <div className="flex items-center gap-3 md:gap-6">
       <button onClick={toggleSidebar} className="md:hidden p-2 text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-xl transition-colors" aria-label={t.toggleSidebar}>
