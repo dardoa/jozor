@@ -13,4 +13,5 @@ export const general = {
   no: 'لا',
   or: 'أو',
   readOnly: 'للقراءة فقط',
+  quickAdd: 'إضافة سريعة', // New translation
 };

@@ -51,7 +51,7 @@ export const SidebarActions: React.FC<SidebarActionsProps> = memo(({ familyActio
     ];
 
     return (
-        <div className="flex justify-center mb-3">
+        <div className="flex justify-center mb-3 p-2 bg-yellow-100 dark:bg-yellow-900/20 border-t border-b border-yellow-200 dark:border-yellow-800"> {/* Added temporary styling */}
             <QuickAddSpeedDial actions={quickAddActions} />
         </div>
     );
