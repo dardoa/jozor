@@ -37,11 +37,22 @@ export const useAppOrchestration = () => {
 
   // --- Welcome Screen Logic ---
   const {
-    showWelcome, fileInputRef,
-    handleStartNewTree, onFileUpload, handleLoginWrapper, handleLogoutWrapper
+    showWelcome, setShowWelcome, fileInputRef,
+    handleStartNewTree, onFileUpload
   } = useWelcomeScreenLogic({
-    people, language, startNewTree, stopSyncing, handleImport, handleLogin, handleLogout // Removed t: getTranslation(language)
+    people, language, startNewTree, stopSyncing, handleImport // Removed handleLogin, handleLogout
   });
+
+  // --- Login/Logout Wrappers (now defined here) ---
+  const handleLoginWrapper = async () => {
+      const success = await handleLogin();
+      if (success) setShowWelcome(false);
+  };
+
+  const handleLogoutWrapper = async () => {
+      await handleLogout();
+      setShowWelcome(true);
+  };
 
   // --- Modal & Sidebar Logic ---
   const {
@@ -82,7 +93,7 @@ export const useAppOrchestration = () => {
 
   // Grouped props for Header and other components
   const historyControls: HistoryControlsProps = { onUndo: undo, onRedo: redo, canUndo, canRedo };
-  const themeLanguage: ThemeLanguageProps = { darkMode, setDarkMode, language, setLanguage }; // Added language, setLanguage back
+  const themeLanguage: ThemeLanguageProps = { darkMode, setDarkMode, language, setLanguage };
   const auth: AuthProps = { user, isDemoMode, isSyncing, onLogin: handleLoginWrapper, onLogout: handleLogoutWrapper };
   const viewSettings: ViewSettingsProps = { treeSettings, setTreeSettings, onPresent: () => setIsPresentMode(true) };
   const toolsActions: ToolsActionsProps = { onOpenModal: handleOpenModal };

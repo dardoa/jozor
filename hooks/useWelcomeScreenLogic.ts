@@ -7,13 +7,13 @@ interface UseWelcomeScreenLogicProps {
   startNewTree: () => void;
   stopSyncing: () => void;
   handleImport: (file: File) => Promise<boolean>;
-  handleLogin: () => Promise<boolean>;
-  handleLogout: () => Promise<void>;
+  // Removed handleLogin: () => Promise<boolean>;
+  // Removed handleLogout: () => Promise<void>;
   language: Language;
 }
 
 export const useWelcomeScreenLogic = ({
-  people, startNewTree, stopSyncing, handleImport, handleLogin, handleLogout, language
+  people, startNewTree, stopSyncing, handleImport, language
 }: UseWelcomeScreenLogicProps) => {
   const [showWelcome, setShowWelcome] = useState<boolean>(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -24,9 +24,6 @@ export const useWelcomeScreenLogic = ({
   }, [people]);
 
   const handleStartNewTree = useCallback(() => {
-    // Note: 't' is not available here directly, but WelcomeScreen itself uses it.
-    // If a confirmation message is needed here, 't' would need to be passed or imported.
-    // For now, assuming WelcomeScreen handles the confirmation message.
     startNewTree();
     stopSyncing();
     setShowWelcome(false);
@@ -39,15 +36,7 @@ export const useWelcomeScreenLogic = ({
     e.target.value = '';
   };
 
-  const handleLoginWrapper = async () => {
-      const success = await handleLogin();
-      if (success) setShowWelcome(false);
-  };
-
-  const handleLogoutWrapper = async () => {
-      await handleLogout();
-      setShowWelcome(true);
-  };
+  // Removed handleLoginWrapper and handleLogoutWrapper from here
 
   return {
     showWelcome,
@@ -55,7 +44,7 @@ export const useWelcomeScreenLogic = ({
     fileInputRef,
     handleStartNewTree,
     onFileUpload,
-    handleLoginWrapper,
-    handleLogoutWrapper,
+    // Removed handleLoginWrapper,
+    // Removed handleLogoutWrapper,
   };
 };
