@@ -59,6 +59,7 @@
         /* Default (English) fonts */
         --font-family-sans: 'Inter', sans-serif;
         --font-family-serif: 'Merriweather', serif;
+        --app-bg-color: #f0f8ff; /* Light blue for English */
         direction: ltr; /* Default direction */
         text-align: left; /* Default text alignment */
       }
@@ -67,21 +68,17 @@
         /* Arabic fonts */
         --font-family-sans: 'Cairo', 'Noto Naskh Arabic', sans-serif;
         --font-family-serif: 'Noto Naskh Arabic', 'Cairo', serif;
+        --app-bg-color: #fffafa; /* Light pink for Arabic */
         direction: rtl; /* Arabic direction */
         text-align: right; /* Arabic text alignment */
       }
 
-      /* Apply base styles to body, including temporary background color for visual check */
+      /* Apply base styles to body */
       body { 
         margin: 0; 
         -webkit-font-smoothing: antialiased;
-        background-color: #f0f8ff !important; /* Temporary: Light blue for English */
       }
       
-      html[lang="ar"] body { 
-        background-color: #fffafa !important; /* Temporary: Light pink for Arabic */
-      }
-
       /* Ensure all elements inherit font, direction, and text-align from html/body */
       * {
         font-family: inherit !important;

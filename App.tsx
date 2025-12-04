@@ -54,7 +54,10 @@ const App: React.FC = () => {
   console.log('App.tsx render: Current language from themeLanguage:', themeLanguage.language); // Add this log
 
   return (
-    <div className={`flex flex-col h-screen font-sans transition-colors duration-300 bg-[var(--theme-bg)] text-[var(--card-text)] overflow-hidden`} >
+    <div 
+      className={`flex flex-col h-screen font-sans transition-colors duration-300 text-[var(--card-text)] overflow-hidden`} 
+      style={{ backgroundColor: 'var(--app-bg-color)' }} // Use the new CSS variable here
+    >
       
       <input ref={fileInputRef} type="file" accept=".json,.ged,.jozor,.zip" className="hidden" onChange={onFileUpload} />
 
