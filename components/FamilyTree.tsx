@@ -4,7 +4,7 @@ import { Person, TreeLink, TreeSettings, TreeNode, FanArc } from '../types';
 import { calculateTreeLayout } from '../utils/treeLayout';
 
 // Import new sub-components
-import { DescendantPedigreeChart } from './charts/DescendantPedigreeChart';
+import { DescendantPedigreeChart } from './charts/DescendantPedendantChart';
 import { FanChart } from './charts/FanChart';
 import { ForceChart } from './charts/ForceChart';
 import { ZoomControls } from './ui/ZoomControls';
