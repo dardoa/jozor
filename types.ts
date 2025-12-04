@@ -34,6 +34,7 @@ export interface TreeSettings {
   chartType: ChartType;
   theme: AppTheme;
   enableForcePhysics?: boolean; // New: Toggle physics simulation
+  enableTimeOffset?: boolean; // New: Enable vertical offset based on birth year
 }
 
 export interface Person {

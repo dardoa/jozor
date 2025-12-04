@@ -17,5 +17,6 @@ export const familyTree = {
   pedigree: 'مخطط النسب',   // Updated to match image
   force: 'مخطط شامل (الكل في واحد)',      // Updated to match image
   enableForcePhysics: 'تمكين الفيزياء',
+  enableTimeOffset: 'تمكين إزاحة الوقت', // New translation
   noResults: 'لا توجد نتائج.',
 };

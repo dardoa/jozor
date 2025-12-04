@@ -12,6 +12,7 @@ const DEFAULT_TREE_SETTINGS: TreeSettings = {
   chartType: 'descendant',
   theme: 'modern',
   enableForcePhysics: true,
+  enableTimeOffset: false, // New default setting
 };
 
 export const useTreeSettings = () => {

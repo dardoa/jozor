@@ -10,6 +10,9 @@ const LEVEL_SEP_DEFAULT = 280;
 const LEVEL_SEP_COMPACT = 240;
 const SPOUSE_GAP = 20; 
 
+// New constant for time offset
+const TIME_SCALE_FACTOR = 0.8; // Adjust this value to control the vertical spread based on time
+
 export interface CollapsePoint {
     id: string; 
     spouseId: string; 
@@ -192,14 +195,44 @@ const calculateDescendantLayout = (
 
     treeLayout(root);
 
+    // --- Time Offset Logic ---
+    let oldestBirthYear = Infinity;
+    if (settings.enableTimeOffset) {
+        Object.values(people).forEach(p => {
+            const year = getBirthYear(p);
+            if (year !== 9999 && year < oldestBirthYear) {
+                oldestBirthYear = year;
+            }
+        });
+    }
+
     // Transform results to app structure
     const nodes: TreeNode[] = [];
     const links: TreeLink[] = [];
     const collapsePoints: CollapsePoint[] = [];
 
     const getCoords = (d: d3.HierarchyPointNode<CustomHierarchyDatum>, offsetX = 0, offsetY = 0) => {
-        if (isVertical) return { x: d.x + offsetX, y: d.y + offsetY };
-        return { x: d.y + offsetY, y: d.x + offsetX };
+        let finalX = d.x + offsetX;
+        let finalY = d.y + offsetY;
+
+        // Apply time offset if enabled and vertical layout
+        if (settings.enableTimeOffset && isVertical) {
+            const personBirthYear = getBirthYear(d.data.person);
+            if (personBirthYear !== 9999 && oldestBirthYear !== Infinity) {
+                const timeOffset = (personBirthYear - oldestBirthYear) * TIME_SCALE_FACTOR;
+                finalY += timeOffset;
+            }
+        }
+        // Apply time offset if enabled and horizontal layout
+        else if (settings.enableTimeOffset && !isVertical) {
+            const personBirthYear = getBirthYear(d.data.person);
+            if (personBirthYear !== 9999 && oldestBirthYear !== Infinity) {
+                const timeOffset = (personBirthYear - oldestBirthYear) * TIME_SCALE_FACTOR;
+                finalX += timeOffset;
+            }
+        }
+
+        return { x: finalX, y: finalY };
     };
 
     // Cast to HierarchyPointNode[] because treeLayout mutates nodes to add x and y

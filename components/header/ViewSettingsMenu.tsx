@@ -2,7 +2,7 @@ import React, { memo } from 'react'; // Removed useEffect as it's no longer need
 import { TreeSettings, ChartType, AppTheme } from '../../types';
 import { 
   SlidersHorizontal, Eye, Check, ArrowRightLeft, ArrowUpDown, 
-  CircleDashed, Share2, Network, GitGraph, MonitorPlay, Palette, Zap, LayoutGrid
+  CircleDashed, Share2, Network, GitGraph, MonitorPlay, Palette, Zap, LayoutGrid, Clock
 } from 'lucide-react';
 import { DropdownMenuContainer, DropdownMenuItem, DropdownMenuDivider, DropdownMenuHeader } from '../ui/DropdownMenu';
 
@@ -102,8 +102,8 @@ export const ViewSettingsMenu = memo(({
                         <DropdownMenuItem 
                             onClick={() => onUpdate({ ...settings, enableForcePhysics: !settings.enableForcePhysics })} 
                             icon={<Zap className="w-3.5 h-3.5"/>}
-                            label="Physics"
-                            // Removed colorClass, iconBgClass, iconTextColorClass to use default debugging styles
+                            label={t.enableForcePhysics}
+                            className="justify-between"
                         >
                             <div className={`w-7 h-4 rounded-full p-0.5 relative transition-colors duration-300 ${settings.enableForcePhysics ? 'bg-orange-500' : 'bg-stone-300 dark:bg-stone-600'}`}>
                                 <div className={`w-3 h-3 bg-white rounded-full shadow-sm transition-transform duration-300 ${settings.enableForcePhysics ? 'translate-x-3 rtl:-translate-x-3' : ''}`}></div>
@@ -124,6 +124,20 @@ export const ViewSettingsMenu = memo(({
                             </div>
                         </button>
                     ))}
+                    {/* New toggle for Time Offset */}
+                    {settings.chartType === 'descendant' && (
+                        <button onClick={() => onUpdate({ ...settings, enableTimeOffset: !settings.enableTimeOffset })} 
+                            className="flex items-center justify-between w-full px-3 py-2 hover:bg-stone-50 dark:hover:bg-stone-800 rounded-lg group transition-colors"
+                        >
+                            <span className="text-xs font-medium text-stone-600 dark:text-stone-300">
+                                <Clock className="w-3.5 h-3.5 inline-block me-2 text-blue-500"/>
+                                {t.enableTimeOffset}
+                            </span>
+                            <div className={`w-7 h-4 rounded-full p-0.5 relative transition-colors duration-300 ${settings.enableTimeOffset ? 'bg-blue-500' : 'bg-stone-200 dark:bg-stone-700'}`}>
+                                <div className={`w-3 h-3 bg-white rounded-full shadow-sm transition-transform duration-300 ${settings.enableTimeOffset ? 'translate-x-3 rtl:-translate-x-3' : ''}`}></div>
+                            </div>
+                        </button>
+                    )}
                 </div>
 
                 <DropdownMenuDivider />

@@ -17,5 +17,6 @@ export const familyTree = {
   pedigree: 'Pedigree Chart',   // Updated to match image
   force: 'Comprehensive Diagram (All-in-One)',  // Updated to match image
   enableForcePhysics: 'Enable Physics',
+  enableTimeOffset: 'Enable Time Offset', // New translation
   noResults: 'No results found.',
 };
