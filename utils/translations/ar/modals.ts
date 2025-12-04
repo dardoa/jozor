@@ -67,5 +67,6 @@ export const modals = {
   noMatches: 'لا توجد نتائج مطابقة.',
   noWorkInterests: 'لا توجد معلومات عن العمل أو الاهتمامات.',
   actions: 'الإجراءات',
-  identity: 'الهوية', // Added this line
+  identity: 'الهوية',
+  moreNames: 'المزيد من الأسماء',
 };
