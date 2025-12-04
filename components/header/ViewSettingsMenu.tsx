@@ -1,4 +1,4 @@
-import React, { memo, useEffect } from 'react';
+import React, { memo } from 'react'; // Removed useEffect as it's no longer needed
 import { TreeSettings, ChartType, AppTheme } from '../../types';
 import { 
   SlidersHorizontal, Eye, Check, ArrowRightLeft, ArrowUpDown, 
@@ -38,7 +38,7 @@ export const ViewSettingsMenu = memo(({
     return (
         <>
             <div className="fixed inset-0 z-10" onClick={onClose}></div>
-            <DropdownMenuContainer className="end-0 w-72"> {/* Reverted to DropdownMenuContainer */}
+            <DropdownMenuContainer className="end-0 w-72">
                 <DropdownMenuHeader icon={<Eye className="w-3 h-3" />} label={t.chartType} />
                 <div className="grid grid-cols-1 gap-1 px-1">
                     {chartOptions.map((type) => (
