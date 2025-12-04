@@ -43,14 +43,15 @@ export const DropdownMenuItem: React.FC<DropdownMenuItemProps> = ({
         {icon}
       </div>
     )}
-    {label ? (
+    {/* Render label and subLabel if they exist */}
+    {label && (
       <div className="flex flex-col items-start gap-0.5">
         <span className="font-bold">{label}</span>
         {subLabel && <span className="text-[9px] opacity-70">{subLabel}</span>}
       </div>
-    ) : (
-      children
     )}
+    {/* Always render children, which will be the checkmark in this case */}
+    {children}
   </button>
 );
 
