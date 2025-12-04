@@ -147,8 +147,8 @@ export interface HistoryControlsProps {
 export interface ThemeLanguageProps {
   darkMode: boolean;
   setDarkMode: (v: boolean) => void;
-  // Removed language: Language;
-  // Removed setLanguage: (l: Language) => void;
+  language: Language; // Added language
+  setLanguage: (l: Language) => void; // Added setLanguage
 }
 
 export interface AuthProps {

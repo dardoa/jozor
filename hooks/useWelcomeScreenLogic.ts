@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Person } from '../types';
+import { Person, Language } from '../types';
 import { INITIAL_ROOT_ID } from '../constants';
 
 interface UseWelcomeScreenLogicProps {
@@ -10,10 +10,11 @@ interface UseWelcomeScreenLogicProps {
   handleImport: (file: File) => Promise<boolean>;
   handleLogin: () => Promise<boolean>;
   handleLogout: () => Promise<void>;
+  language: Language; // Added language property
 }
 
 export const useWelcomeScreenLogic = ({
-  people, t, startNewTree, stopSyncing, handleImport, handleLogin, handleLogout
+  people, t, startNewTree, stopSyncing, handleImport, handleLogin, handleLogout, language
 }: UseWelcomeScreenLogicProps) => {
   const [showWelcome, setShowWelcome] = useState<boolean>(true);
   const fileInputRef = useRef<HTMLInputElement>(null);

@@ -3,12 +3,11 @@ import { Person, Gender, Language, TreeSettings, UserProfile, HistoryControlsPro
 import { useFamilyTree } from './useFamilyTree';
 import { useGoogleSync } from './useGoogleSync';
 import { useThemeSync } from './useThemeSync';
-import { useLanguageSync } from './useLanguageSync'; // Keep useLanguageSync for internal state
+import { useLanguageSync } from './useLanguageSync';
 import { useKeyboardShortcuts } from './useKeyboardShortcuts';
 import { useModalAndSidebarLogic } from './useModalAndSidebarLogic';
 import { useTreeSettings } from './useTreeSettings';
 import { useWelcomeScreenLogic } from './useWelcomeScreenLogic';
-import { getTranslation } from '../utils/translations'; // Keep getTranslation for internal use if needed
 import { exportToGEDCOM } from '../utils/gedcomLogic';
 import { exportToJozorArchive } from '../utils/archiveLogic';
 import { generateICS } from '../utils/calendarLogic';
@@ -26,12 +25,10 @@ export const useAppOrchestration = () => {
   const { user, isSyncing, isDemoMode, handleLogin, handleLogout, stopSyncing } = useGoogleSync(people, loadCloudData);
 
   // --- UI Preferences ---
-  const { language, setLanguage } = useLanguageSync(); // Keep for internal state management
+  const { language, setLanguage } = useLanguageSync();
   const { treeSettings, setTreeSettings } = useTreeSettings();
   const { darkMode, setDarkMode } = useThemeSync(treeSettings.theme);
 
-  // `t` will now be accessed via TranslationContext in components
-  // const t = getTranslation(language); 
   const activePerson = people[focusId];
 
   // Calculate canUndo/canRedo
@@ -43,7 +40,7 @@ export const useAppOrchestration = () => {
     showWelcome, fileInputRef,
     handleStartNewTree, onFileUpload, handleLoginWrapper, handleLogoutWrapper
   } = useWelcomeScreenLogic({
-    people, t: getTranslation(language), startNewTree, stopSyncing, handleImport, handleLogin, handleLogout // Pass t directly here
+    people, language, startNewTree, stopSyncing, handleImport, handleLogin, handleLogout // Removed t: getTranslation(language)
   });
 
   // --- Modal & Sidebar Logic ---
@@ -85,7 +82,7 @@ export const useAppOrchestration = () => {
 
   // Grouped props for Header and other components
   const historyControls: HistoryControlsProps = { onUndo: undo, onRedo: redo, canUndo, canRedo };
-  const themeLanguage: ThemeLanguageProps = { darkMode, setDarkMode }; // Removed language, setLanguage
+  const themeLanguage: ThemeLanguageProps = { darkMode, setDarkMode, language, setLanguage }; // Added language, setLanguage back
   const auth: AuthProps = { user, isDemoMode, isSyncing, onLogin: handleLoginWrapper, onLogout: handleLogoutWrapper };
   const viewSettings: ViewSettingsProps = { treeSettings, setTreeSettings, onPresent: () => setIsPresentMode(true) };
   const toolsActions: ToolsActionsProps = { onOpenModal: handleOpenModal };
@@ -118,7 +115,6 @@ export const useAppOrchestration = () => {
     toolsActions,
     exportActions,
     searchProps,
-    familyActions, // Return new grouped prop
-    // t, // Removed t from here
+    familyActions,
   };
 };
