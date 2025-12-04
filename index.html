@@ -37,7 +37,16 @@
                 900: '#1c1917',
               }
             },
-            // Removed fontFamily definitions from here
+            fontFamily: {
+              // Use CSS variables for dynamic font switching
+              sans: ['var(--font-family-sans)', 'sans-serif'],
+              serif: ['var(--font-family-serif)', 'serif'],
+            },
+            boxShadow: {
+              'soft': '0 10px 40px -10px rgba(0,0,0,0.08)',
+              'card': '0 2px 8px -2px rgba(0,0,0,0.05), 0 0 1px rgba(0,0,0,0.1)',
+              'float': '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+            }
           }
         }
       }
@@ -45,30 +54,36 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;800&family=Inter:wght@300;400;500;600;700&family=Merriweather:300;400;700&family=Noto+Naskh+Arabic:400;700&display=swap" rel="stylesheet">
     
     <style>
+      /* Define CSS variables for font families on the html element */
+      html {
+        /* Default (English) fonts */
+        --font-family-sans: 'Inter', sans-serif;
+        --font-family-serif: 'Merriweather', serif;
+        direction: ltr; /* Default direction */
+        text-align: left; /* Default text alignment */
+      }
+
+      html[lang="ar"] {
+        /* Arabic fonts */
+        --font-family-sans: 'Cairo', 'Noto Naskh Arabic', sans-serif;
+        --font-family-serif: 'Noto Naskh Arabic', 'Cairo', serif;
+        direction: rtl; /* Arabic direction */
+        text-align: right; /* Arabic text alignment */
+      }
+
+      /* Apply base styles to body, including temporary background color for visual check */
       body { 
         margin: 0; 
-        font-family: 'Inter', sans-serif !important; /* Default to Inter for English */
-        direction: ltr !important; /* Explicit default direction */
-        text-align: left !important; /* Explicit default text alignment */
         -webkit-font-smoothing: antialiased;
-        background-color: #f0f8ff; /* Temporary: Light blue for English */
+        background-color: #f0f8ff !important; /* Temporary: Light blue for English */
       }
       
       html[lang="ar"] body { 
-        font-family: 'Cairo', 'Noto Naskh Arabic', sans-serif !important; /* Ensure Arabic fonts are applied */
-        line-height: 1.7;
-        direction: rtl !important; /* Explicit RTL direction */
-        text-align: right !important; /* Explicit right alignment */
-        background-color: #fffafa; /* Temporary: Light pink for Arabic */
+        background-color: #fffafa !important; /* Temporary: Light pink for Arabic */
       }
 
-      /* Ensure all elements inherit font, direction, and text-align from body */
-      html[lang="ar"] * {
-        font-family: inherit !important;
-        direction: inherit !important;
-        text-align: inherit !important;
-      }
-      html[lang="en"] * {
+      /* Ensure all elements inherit font, direction, and text-align from html/body */
+      * {
         font-family: inherit !important;
         direction: inherit !important;
         text-align: inherit !important;
