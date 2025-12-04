@@ -23,7 +23,7 @@ export const ForceChart: React.FC<ForceChartProps> = memo(({ nodes, links, focus
         <g key={node.id} className="force-node cursor-pointer" onClick={(e) => { e.stopPropagation(); onSelect(node.data.id); }}>
           <circle 
             r={nodeRadius} 
-            fill={node.data.gender === 'male' ? 'var(--brand-100)' : 'var(--pink-100)'} 
+            fill={node.data.gender === 'male' ? 'var(--gender-male-bg)' : 'var(--gender-female-bg)'} 
             stroke={node.data.gender === 'male' ? 'var(--gender-male-border)' : 'var(--gender-female-border)'} 
             strokeWidth="2" 
           />
@@ -35,13 +35,17 @@ export const ForceChart: React.FC<ForceChartProps> = memo(({ nodes, links, focus
               height={nodeRadius * 2} 
               width={nodeRadius * 2} 
               clipPath={`circle(${nodeRadius}px at ${nodeRadius}px ${nodeRadius}px)`} 
+              className={node.data.isDeceased ? 'grayscale' : ''}
             />
           ) : (
             <text 
               dy={nodeRadius / 6} // Adjust vertical position to center
               textAnchor="middle" 
-              className="text-[var(--card-text)] font-bold" // Use card text color
-              style={{ fontSize: `${nodeRadius * 0.8}px` }} // Dynamic font size
+              className="font-bold" // Use card text color
+              style={{ 
+                fontSize: `${nodeRadius * 0.8}px`,
+                fill: node.data.gender === 'male' ? 'var(--gender-male-text)' : 'var(--gender-female-text)'
+              }} 
             >
               {node.data.firstName[0]}
             </text>
@@ -49,8 +53,11 @@ export const ForceChart: React.FC<ForceChartProps> = memo(({ nodes, links, focus
           <text 
             dy={nodeRadius + 15} // Position below the circle
             textAnchor="middle" 
-            className="text-[var(--card-text)] font-bold" // Use card text color
-            style={{ fontSize: `${nodeRadius * 0.4}px` }} // Dynamic font size
+            className="font-bold" // Use card text color
+            style={{ 
+                fontSize: `${nodeRadius * 0.4}px`,
+                fill: 'var(--card-text)'
+            }} 
           >
             {node.data.firstName}
           </text>
