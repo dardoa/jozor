@@ -1,7 +1,7 @@
 import React, { memo } from 'react';
 import { Person, FamilyActionsProps } from '../../types';
 import { getDisplayDate } from '../../utils/familyLogic';
-import { User, Baby, Ribbon, MessageCircle, MapPin, CalendarDays, BookOpen, ArrowUp, Heart } from 'lucide-react';
+import { User, Baby, Ribbon, MessageCircle, MapPin, CalendarDays, BookOpen, UserRound, Heart } from 'lucide-react'; // Changed ArrowUp to UserRound
 import { useTranslation } from '../../context/TranslationContext';
 import { QuickAddSpeedDial } from '../ui/QuickAddSpeedDial'; // New import
 
@@ -24,13 +24,13 @@ export const PersonHeaderView: React.FC<PersonHeaderViewProps> = memo(({ person,
   const quickAddActions = [
     {
         onClick: () => familyActions.onAddParent('male'),
-        icon: <ArrowUp className="w-3 h-3"/>,
+        icon: <UserRound className="w-3 h-3"/>, // Changed icon
         colorClasses: "bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400",
         label: t.addFather
     },
     {
         onClick: () => familyActions.onAddParent('female'),
-        icon: <ArrowUp className="w-3 h-3"/>,
+        icon: <UserRound className="w-3 h-3"/>, // Changed icon
         colorClasses: "bg-pink-50 text-pink-600 hover:bg-pink-100 dark:bg-pink-900/30 dark:text-pink-400",
         label: t.addMother
     },
