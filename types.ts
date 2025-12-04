@@ -260,3 +260,11 @@ export interface HeaderProps {
   exportActions: ExportActionsProps;
   searchProps: SearchProps;
 }
+
+export interface QuickAddAction {
+  icon: React.ReactNode;
+  label: string;
+  onClick: () => void;
+  colorClasses: string; // Tailwind classes for background/text color
+  buttonClassName?: string; // Optional: for styling the main trigger button
+}

@@ -18,6 +18,9 @@ export const PersonHeaderView: React.FC<PersonHeaderViewProps> = memo(({ person,
   const displayBirth = getDisplayDate(person.birthDate);
   const displayDeath = getDisplayDate(person.deathDate);
 
+  // Define common button classes for consistency
+  const baseButtonClasses = "flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors active:scale-95";
+
   const quickAddActions = [
     {
         onClick: () => familyActions.onAddParent('male'),
@@ -133,24 +136,27 @@ export const PersonHeaderView: React.FC<PersonHeaderViewProps> = memo(({ person,
         {person.isDeceased && (
           <button
             onClick={() => onOpenModal('chat')}
-            className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 rounded-lg text-xs font-bold hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-colors"
+            className={`${baseButtonClasses} bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-900/40`}
           >
             <MessageCircle className="w-3.5 h-3.5" /> {t.chatWithAncestor}
           </button>
         )}
         
         {/* Quick Add Speed Dial */}
-        <QuickAddSpeedDial actions={quickAddActions} />
+        <QuickAddSpeedDial 
+            actions={quickAddActions} 
+            buttonClassName={`${baseButtonClasses} bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/40`}
+        />
 
         <button
           onClick={() => onOpenModal('map')}
-          className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 rounded-lg text-xs font-bold hover:bg-green-100 dark:hover:bg-green-900/40 transition-colors"
+          className={`${baseButtonClasses} bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/40`}
         >
           <MapPin className="w-3.5 h-3.5" /> {t.viewOnMap}
         </button>
         <button
           onClick={() => onOpenModal('timeline')}
-          className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg text-xs font-bold hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors"
+          className={`${baseButtonClasses} bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/40`}
         >
           <CalendarDays className="w-3.5 h-3.5" /> {t.familyTimelineHeader}
         </button>

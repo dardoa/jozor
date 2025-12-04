@@ -1,19 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Plus, UserPlus } from 'lucide-react';
 import { useTranslation } from '../../context/TranslationContext';
-
-interface QuickAddAction {
-  icon: React.ReactNode;
-  label: string;
-  onClick: () => void;
-  colorClasses: string; // Tailwind classes for background/text color
-}
+import { QuickAddAction } from '../../types'; // Import QuickAddAction from types
 
 interface QuickAddSpeedDialProps {
   actions: QuickAddAction[];
+  buttonClassName?: string; // New prop for the main trigger button's class
 }
 
-export const QuickAddSpeedDial: React.FC<QuickAddSpeedDialProps> = ({ actions }) => {
+export const QuickAddSpeedDial: React.FC<QuickAddSpeedDialProps> = ({ actions, buttonClassName = '' }) => {
   const [isOpen, setIsOpen] = useState(false);
   const { t } = useTranslation();
   const ref = useRef<HTMLDivElement>(null);
@@ -38,10 +33,11 @@ export const QuickAddSpeedDial: React.FC<QuickAddSpeedDialProps> = ({ actions })
         <button
           type="button"
           onClick={() => setIsOpen(true)}
-          className="w-7 h-7 rounded-full flex items-center justify-center bg-blue-600 text-white shadow-sm hover:shadow-md active:scale-95 transition-all"
+          className={`flex items-center justify-center shadow-sm hover:shadow-md active:scale-95 transition-all ${buttonClassName}`}
           title={t.quickAdd || 'Quick Add'}
         >
-          <UserPlus className="w-3 h-3" />
+          <UserPlus className="w-3.5 h-3.5" /> {/* Adjusted icon size */}
+          <span className="ms-1">{t.quickAdd}</span> {/* Added text label */}
         </button>
       ) : (
         // Action Buttons (when open)
