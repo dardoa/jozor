@@ -45,28 +45,37 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;800&family=Inter:wght@300;400;500;600;700&family=Merriweather:300;400;700&family=Noto+Naskh+Arabic:400;700&display=swap" rel="stylesheet">
     
     <style>
-      /* Base styles for all elements, primarily for LTR/English */
-      * { 
+      body { 
+        margin: 0; 
         font-family: 'Inter', sans-serif !important; /* Default to Inter for English */
         direction: ltr !important; /* Explicit default direction */
         text-align: left !important; /* Explicit default text alignment */
         -webkit-font-smoothing: antialiased;
+        background-color: #f0f8ff; /* Temporary: Light blue for English */
       }
       
-      /* Styles specifically for Arabic language, applied to all elements */
-      html[lang="ar"] * { 
+      html[lang="ar"] body { 
         font-family: 'Cairo', 'Noto Naskh Arabic', sans-serif !important; /* Ensure Arabic fonts are applied */
         line-height: 1.7;
         direction: rtl !important; /* Explicit RTL direction */
         text-align: right !important; /* Explicit right alignment */
+        background-color: #fffafa; /* Temporary: Light pink for Arabic */
+      }
+
+      /* Ensure all elements inherit font, direction, and text-align from body */
+      html[lang="ar"] * {
+        font-family: inherit !important;
+        direction: inherit !important;
+        text-align: inherit !important;
+      }
+      html[lang="en"] * {
+        font-family: inherit !important;
+        direction: inherit !important;
+        text-align: inherit !important;
       }
       
       h1, h2, h3, h4, h5, h6 {
         font-weight: 700 !important; /* Extra bold for headings */
-      }
-
-      body {
-        margin: 0;
       }
 
       @media print {
