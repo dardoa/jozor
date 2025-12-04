@@ -36,7 +36,8 @@ export const DropdownMenuItem: React.FC<DropdownMenuItemProps> = ({
   // console.log("DropdownMenuItem rendering:", { label, subLabel, isActive }); // Debugging log
   return (
     <button
-      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium transition-all group relative overflow-hidden bg-red-200 text-red-800 border border-red-400 ${className}`} // Strong debugging styles
+      // Removed overflow-hidden from here
+      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium transition-all group relative bg-red-200 text-red-800 border border-red-400 ${className}`} // Strong debugging styles
       {...props}
     >
       {icon && (
@@ -45,10 +46,10 @@ export const DropdownMenuItem: React.FC<DropdownMenuItemProps> = ({
         </div>
       )}
       {(label || subLabel) && (
-        <div className="flex flex-col items-start flex-grow min-w-0">
-          {label && <span className="font-bold text-lg">{label}</span>} {/* Larger text for visibility */}
-          {subLabel && <span className="text-[9px] opacity-70">{subLabel}</span>}
-        </div>
+        <span className="font-bold text-red-500 text-lg flex-grow min-w-0 bg-yellow-100 p-1" style={{ whiteSpace: 'normal' }}> {/* Added bg-yellow-100 and whiteSpace: 'normal' */}
+          {label}
+          {subLabel && <span className="text-[9px] opacity-70 ms-2">{subLabel}</span>}
+        </span>
       )}
       {children}
     </button>
