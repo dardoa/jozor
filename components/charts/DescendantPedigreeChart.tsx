@@ -184,7 +184,7 @@ export const DescendantPedigreeChart: React.FC<DescendantPedigreeChartProps> = m
                       {node.data.photoUrl ? (
                         <img src={node.data.photoUrl} className={`w-full h-full rounded-full object-cover ${node.data.isDeceased ? 'grayscale' : ''}`} />
                       ) : (
-                        <div className="w-full h-full rounded-full bg-stone-50 dark:bg-stone-800">
+                        <div className="w-full h-full rounded-full bg-stone-50 dark:bg-stone-800 flex items-center justify-center">
                           <User className={`w-8 h-8`} style={{ color: node.data.gender === 'male' ? 'var(--gender-male-border)' : 'var(--gender-female-border)' }} />
                         </div>
                       )}
