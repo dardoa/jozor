@@ -66,7 +66,7 @@ export interface Person {
   bio: string;
   photoUrl?: string;
   gallery: string[];
-  voiceNotes?: string[];
+  voiceNotes: string[];
 
   // Contact
   email: string;
@@ -175,7 +175,6 @@ export interface ExportActionsProps {
 
 export interface HeaderLeftSectionProps {
   language: Language;
-  // Removed t: any;
   toggleSidebar: () => void;
   historyControls: HistoryControlsProps;
 }
@@ -195,7 +194,6 @@ export interface FamilyActionsProps { // New interface
 }
 
 export interface HeaderProps { // Updated HeaderProps
-  // Removed t: any; // Translations
   toggleSidebar: () => void;
   
   historyControls: HistoryControlsProps;
@@ -208,7 +206,6 @@ export interface HeaderProps { // Updated HeaderProps
 }
 
 export interface HeaderRightSectionProps {
-  // Removed t: any;
   themeLanguage: ThemeLanguageProps;
   auth: AuthProps;
   viewSettings: ViewSettingsProps;
@@ -218,13 +215,11 @@ export interface HeaderRightSectionProps {
 }
 
 export interface SearchInputWithResultsProps extends SearchProps { // Extend SearchProps
-  // Removed t: any;
 }
 
 export interface ToolsMenuProps {
     onClose?: () => void; // This onClose will be passed from Dropdown
     onOpenModal: (modalType: 'calculator' | 'stats' | 'chat' | 'consistency' | 'timeline' | 'share' | 'story' | 'map') => void;
-    // Removed t: any;
 }
 
 export interface ViewSettingsMenuProps {
@@ -232,7 +227,6 @@ export interface ViewSettingsMenuProps {
     onUpdate: (s: TreeSettings) => void;
     onClose?: () => void; // This onClose will be passed from Dropdown
     onPresent: () => void;
-    // Removed t: any;
 }
 
 export interface UserMenuProps {
@@ -240,20 +234,17 @@ export interface UserMenuProps {
     isDemoMode: boolean;
     onLogout: () => void;
     onClose?: () => void; // This onClose will be passed from Dropdown
-    // Removed t: any;
 }
 
 export interface ExportMenuProps {
     onClose?: () => void; // This onClose will be passed from Dropdown
     onExport: (type: 'jozor' | 'json' | 'gedcom' | 'ics' | 'print') => void;
-    // Removed t: any;
 }
 
 export interface SearchResultsProps {
     results: Person[], 
     onFocus: (id: string) => void, 
     onClose: () => void
-    // Removed t: any;
 }
 
 export interface ModalManagerProps { // Updated ModalManagerProps
