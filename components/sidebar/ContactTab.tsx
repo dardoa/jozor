@@ -34,7 +34,7 @@ export const ContactTab: React.FC<ContactTabProps> = memo(({ person, isEditing, 
                     onCommit={(v) => handleChange('email', v)}
                     disabled={!isEditing}
                     type="email"
-                    labelWidthClass="w-16" /* Reduced w-20 to w-16 */
+                    labelWidthClass="w-24" /* Changed w-16 to w-24 */
                 />
 
                 <FormField
@@ -43,7 +43,7 @@ export const ContactTab: React.FC<ContactTabProps> = memo(({ person, isEditing, 
                     onCommit={(v) => handleChange('website', v)}
                     disabled={!isEditing}
                     type="url"
-                    labelWidthClass="w-16" /* Reduced w-20 to w-16 */
+                    labelWidthClass="w-24" /* Changed w-16 to w-24 */
                 />
 
                 <FormField
@@ -52,7 +52,7 @@ export const ContactTab: React.FC<ContactTabProps> = memo(({ person, isEditing, 
                     onCommit={(v) => handleChange('blog', v)}
                     disabled={!isEditing}
                     type="url"
-                    labelWidthClass="w-16" /* Reduced w-20 to w-16 */
+                    labelWidthClass="w-24" /* Changed w-16 to w-24 */
                 />
 
                 <FormField
@@ -61,8 +61,8 @@ export const ContactTab: React.FC<ContactTabProps> = memo(({ person, isEditing, 
                     onCommit={(v) => handleChange('address', v)}
                     disabled={!isEditing}
                     isTextArea={true}
-                    rows={2} /* Reduced rows from 3 to 2 */
-                    labelWidthClass="w-16" /* Reduced w-20 to w-16 */
+                    rows={2}
+                    labelWidthClass="w-24" /* Changed w-16 to w-24 */
                 />
             </>
         )}
