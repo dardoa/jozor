@@ -7,6 +7,7 @@ import { processImageFile } from '../../utils/imageLogic';
 import { extractPersonData } from '../../services/geminiService';
 import { FormField } from '../ui/FormField';
 import { FamilyRelationshipsSection } from './FamilyRelationshipsSection';
+import { Card } from '../ui/Card'; // Import Card component
 import * as d3 from 'd3';
 
 interface InfoTabProps {
@@ -150,8 +151,7 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
             <div className="h-px bg-stone-100 dark:bg-stone-800"></div>
             
             {/* Actions Section (No longer collapsible in view mode) */}
-            <div className="bg-white dark:bg-stone-800 pt-5 p-3 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-2 relative">
-                <h3 className="absolute top-[-12px] start-3 z-10 bg-white dark:bg-stone-800 px-2 text-[9px] font-bold text-stone-400 uppercase tracking-wider">{t.actions}</h3>
+            <Card title={t.actions} contentClassName="p-3 space-y-2">
                 <div className="grid grid-cols-2 gap-2 mt-2 animate-in fade-in slide-in-from-top-1 duration-200">
                     {person.isDeceased && (
                         <button 
@@ -174,18 +174,17 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
                         <CalendarDays className="w-4 h-4" /> {t.familyTimelineHeader}
                     </button>
                 </div>
-            </div>
+            </Card>
 
             {/* Family Relationships Section (No longer collapsible in view mode) */}
-            <div className="bg-white dark:bg-stone-800 pt-5 p-3 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm relative">
-                <h3 className="absolute top-[-12px] start-3 z-10 bg-white dark:bg-stone-800 px-2 text-[9px] font-bold text-stone-400 uppercase tracking-wider">{t.familyRelationships}</h3>
+            <Card title={t.familyRelationships} contentClassName="p-3 space-y-2">
                 <div className="mt-2 animate-in fade-in slide-in-from-top-1 duration-200">
                     <FamilyRelationshipsSection
                         person={person} people={people} isEditing={isEditing} onUpdate={onUpdate} onSelect={onSelect} t={t}
                         onAddParent={onAddParent} onAddSpouse={onAddSpouse} onAddChild={onAddChild} onRemoveRelationship={onRemoveRelationship}
                     />
                 </div>
-            </div>
+            </Card>
         </div>
       );
   }
@@ -237,8 +236,7 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
         </div>
 
         {/* Identity Section */}
-        <div className="bg-white dark:bg-stone-800 pt-5 p-3 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-2 relative">
-            <h3 className="absolute top-[-12px] start-3 z-10 bg-white dark:bg-stone-800 px-2 text-[9px] font-bold text-stone-400 uppercase tracking-wider">{t.identity}</h3>
+        <Card title={t.identity}>
             <div className="space-y-2 mt-2 animate-in fade-in slide-in-from-top-1 duration-200">
                 <FormField label={t.firstName} value={person.firstName} onCommit={(v) => handleChange('firstName', v)} disabled={!isEditing} labelWidthClass="w-24" />
                 <FormField label={t.middleName} value={person.middleName} onCommit={(v) => handleChange('middleName', v)} disabled={!isEditing} labelWidthClass="w-24" />
@@ -272,11 +270,10 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
                     </div>
                 )}
             </div>
-        </div>
+        </Card>
 
         {/* Gender & Status */}
-        <div className="bg-white dark:bg-stone-800 pt-5 p-3 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-2 relative">
-            <h3 className="absolute top-[-12px] start-3 z-10 bg-white dark:bg-stone-800 px-2 text-[9px] font-bold text-stone-400 uppercase tracking-wider">{t.status}</h3>
+        <Card title={t.status}>
             <div className="flex items-center gap-3">
                 <div className="flex items-center gap-2">
                     <label className="flex items-center gap-1.5 cursor-pointer group">
@@ -300,11 +297,10 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
                     <span className="text-sm font-medium text-stone-700 dark:text-stone-300">{person.isDeceased ? t.deceased : t.living}</span>
                 </label>
             </div>
-        </div>
+        </Card>
 
         {/* Birth Details */}
-        <div className="bg-white dark:bg-stone-800 pt-5 p-3 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-2 relative">
-            <h3 className="absolute top-[-12px] start-3 z-10 bg-white dark:bg-stone-800 px-2 text-[9px] font-bold text-stone-400 uppercase tracking-wider">{t.birthDetails}</h3>
+        <Card title={t.birthDetails}>
             <div className="space-y-2 mt-2 animate-in fade-in slide-in-from-top-1 duration-200">
                 <div className="flex items-center gap-2">
                     <label className="w-24 shrink-0 text-xs text-stone-600 dark:text-stone-400 font-medium">{t.birthDate}</label>
@@ -327,12 +323,11 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
                     </div>
                 </div>
             </div>
-        </div>
+        </Card>
 
         {/* Death Details (Conditional) */}
         {person.isDeceased && (
-            <div className="bg-white dark:bg-stone-800 pt-5 p-3 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-2 animate-in slide-in-from-top-2 relative">
-                <h3 className="absolute top-[-12px] start-3 z-10 bg-white dark:bg-stone-800 px-2 text-[9px] font-bold text-stone-400 uppercase tracking-wider">{t.deathDetails}</h3>
+            <Card title={t.deathDetails}>
                 <button
                     onClick={() => setShowDeathDetails(!showDeathDetails)}
                     className="w-full flex items-center justify-between text-xs font-medium text-stone-600 dark:text-stone-400 hover:text-teal-600 dark:hover:text-teal-400 py-1 px-0.5 -mx-0.5 rounded-md transition-colors"
@@ -363,12 +358,11 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
                         </div>
                     </div>
                 )}
-            </div>
+            </Card>
         )}
         
         {/* Collapsible Family Relationships Section */}
-        <div className="bg-white dark:bg-stone-800 pt-5 p-3 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm relative">
-            <h3 className="absolute top-[-12px] start-3 z-10 bg-white dark:bg-stone-800 px-2 text-[9px] font-bold text-stone-400 uppercase tracking-wider">{t.familyRelationships}</h3>
+        <Card title={t.familyRelationships}>
             <button
                 onClick={() => setShowFamilyRelationships(!showFamilyRelationships)}
                 className="w-full flex items-center justify-between text-xs font-medium text-stone-600 dark:text-stone-400 hover:text-teal-600 dark:hover:text-teal-400 py-1 px-0.5 -mx-0.5 rounded-md transition-colors"
@@ -384,7 +378,7 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
                     />
                 </div>
             )}
-        </div>
+        </Card>
     </div>
 
     {/* Smart Extract Modal */}

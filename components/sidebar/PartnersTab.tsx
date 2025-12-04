@@ -1,9 +1,10 @@
 import React, { memo } from 'react';
 import { Person, RelationshipInfo } from '../../types';
 import { DateSelect } from '../DateSelect';
-import { ExternalLink, Heart, HeartCrack, Users, Gem, Calendar, MapPin } from 'lucide-react'; // Added MapPin
+import { ExternalLink, Heart, HeartCrack, Users, Gem, Calendar, MapPin } from 'lucide-react';
 import { FormField } from '../ui/FormField';
-import { getDisplayDate } from '../../utils/familyLogic'; // Import getDisplayDate
+import { getDisplayDate } from '../../utils/familyLogic';
+import { Card } from '../ui/Card'; // Import Card component
 
 interface PartnersTabProps {
   person: Person;
@@ -42,9 +43,7 @@ export const PartnersTab: React.FC<PartnersTabProps> = memo(({ person, people, i
   };
 
   return (
-    <div className="bg-white dark:bg-stone-900 pt-5 p-3 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-3 animate-in slide-in-from-left-2 duration-200 relative">
-        <h3 className="mb-3 ps-3 border-s-4 border-teal-500 text-sm font-bold text-stone-900 dark:text-stone-100 uppercase tracking-wider">{t.spouses}</h3>
-        
+    <Card title={t.spouses} contentClassName="p-3 space-y-3 animate-in slide-in-from-left-2 duration-200">
         {(!person.spouses.length && !isEditing) ? (
             <div className="text-center py-4 text-stone-400 dark:text-stone-500 bg-stone-50 dark:bg-stone-800/50 rounded-xl border border-dashed border-stone-200 dark:border-stone-700 flex flex-col items-center">
                 <Users className="w-8 h-8 mb-2 opacity-50" />
@@ -164,6 +163,6 @@ export const PartnersTab: React.FC<PartnersTabProps> = memo(({ person, people, i
                 );
             })
         )}
-    </div>
+    </Card>
   );
 });

@@ -1,7 +1,8 @@
 import React, { memo } from 'react';
 import { Person } from '../../types';
 import { FormField } from '../ui/FormField';
-import { Info } from 'lucide-react'; // Added Info icon for placeholder
+import { Info } from 'lucide-react';
+import { Card } from '../ui/Card'; // Import Card component
 
 interface ContactTabProps {
   person: Person;
@@ -18,9 +19,7 @@ export const ContactTab: React.FC<ContactTabProps> = memo(({ person, isEditing, 
   const hasContactInfo = person.email || person.website || person.blog || person.address;
 
   return (
-    <div className="bg-white dark:bg-stone-800 pt-5 p-3 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-2 relative">
-        <h3 className="mb-3 ps-3 border-s-4 border-teal-500 text-sm font-bold text-stone-900 dark:text-stone-100 uppercase tracking-wider">{t.contact}</h3>
-        
+    <Card title={t.contact}>
         {(!hasContactInfo && !isEditing) ? (
             <div className="text-center py-4 text-stone-400 dark:text-stone-500 bg-stone-50 dark:bg-stone-800/50 rounded-xl border border-dashed border-stone-200 dark:border-stone-700 flex flex-col items-center">
                 <Info className="w-8 h-8 mb-2 opacity-50" />
@@ -34,7 +33,7 @@ export const ContactTab: React.FC<ContactTabProps> = memo(({ person, isEditing, 
                     onCommit={(v) => handleChange('email', v)}
                     disabled={!isEditing}
                     type="email"
-                    labelWidthClass="w-24" /* Changed w-16 to w-24 */
+                    labelWidthClass="w-24"
                 />
 
                 <FormField
@@ -43,7 +42,7 @@ export const ContactTab: React.FC<ContactTabProps> = memo(({ person, isEditing, 
                     onCommit={(v) => handleChange('website', v)}
                     disabled={!isEditing}
                     type="url"
-                    labelWidthClass="w-24" /* Changed w-16 to w-24 */
+                    labelWidthClass="w-24"
                 />
 
                 <FormField
@@ -52,7 +51,7 @@ export const ContactTab: React.FC<ContactTabProps> = memo(({ person, isEditing, 
                     onCommit={(v) => handleChange('blog', v)}
                     disabled={!isEditing}
                     type="url"
-                    labelWidthClass="w-24" /* Changed w-16 to w-24 */
+                    labelWidthClass="w-24"
                 />
 
                 <FormField
@@ -62,10 +61,10 @@ export const ContactTab: React.FC<ContactTabProps> = memo(({ person, isEditing, 
                     disabled={!isEditing}
                     isTextArea={true}
                     rows={2}
-                    labelWidthClass="w-24" /* Changed w-16 to w-24 */
+                    labelWidthClass="w-24"
                 />
             </>
         )}
-    </div>
+    </Card>
   );
 });

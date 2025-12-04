@@ -1,9 +1,10 @@
 import React, { useState, memo } from 'react';
 import { Person } from '../../types';
 import { generateBiography } from '../../services/geminiService';
-import { Wand2, Sparkles, Loader2, Info } from 'lucide-react'; // Added Info icon
+import { Wand2, Sparkles, Loader2, Info } from 'lucide-react';
 import { SmartTextarea } from '../ui/SmartInput';
 import { FormField } from '../ui/FormField';
+import { Card } from '../ui/Card'; // Import Card component
 
 interface BioTabProps {
   person: Person;
@@ -37,9 +38,7 @@ export const BioTab: React.FC<BioTabProps> = memo(({ person, people, isEditing, 
 
   return (
     <div className="space-y-4">
-        <div className="bg-white dark:bg-stone-800 pt-5 p-3 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm space-y-2 relative">
-            <h3 className="absolute top-[-12px] start-3 z-10 bg-white dark:bg-stone-800 px-2 text-[9px] font-bold text-stone-400 uppercase tracking-wider">{t.workInterests}</h3>
-            
+        <Card title={t.workInterests}>
             {(!hasWorkInterests && !isEditing) ? (
                 <div className="text-center py-4 text-stone-400 dark:text-stone-500 bg-stone-50 dark:bg-stone-800/50 rounded-xl border border-dashed border-stone-200 dark:border-stone-700 flex flex-col items-center">
                     <Info className="w-8 h-8 mb-2 opacity-50" />
@@ -52,7 +51,7 @@ export const BioTab: React.FC<BioTabProps> = memo(({ person, people, isEditing, 
                         value={person.profession}
                         onCommit={(v) => handleChange('profession', v)}
                         disabled={!isEditing}
-                        labelWidthClass="w-16"
+                        labelWidthClass="w-24"
                     />
 
                     <FormField
@@ -60,7 +59,7 @@ export const BioTab: React.FC<BioTabProps> = memo(({ person, people, isEditing, 
                         value={person.company}
                         onCommit={(v) => handleChange('company', v)}
                         disabled={!isEditing}
-                        labelWidthClass="w-16"
+                        labelWidthClass="w-24"
                     />
 
                     <FormField
@@ -69,15 +68,14 @@ export const BioTab: React.FC<BioTabProps> = memo(({ person, people, isEditing, 
                         onCommit={(v) => handleChange('interests', v)}
                         disabled={!isEditing}
                         placeholder={isEditing ? "e.g. Golf, Cooking" : ""}
-                        labelWidthClass="w-16"
+                        labelWidthClass="w-24"
                     />
                 </>
             )}
-        </div>
+        </Card>
 
-        <div className="bg-white dark:bg-stone-800 pt-5 p-3 rounded-xl border border-stone-200/50 dark:border-stone-700/50 shadow-sm relative">
+        <Card title={t.biography}>
             <div className="flex justify-between items-center relative z-10 mb-3">
-                <h3 className="absolute top-[-12px] start-3 z-10 bg-white dark:bg-stone-800 px-2 text-[9px] font-bold text-stone-400 uppercase tracking-wider">{t.biography}</h3>
                 {isEditing && (
                     <div className="flex items-center gap-2 ms-auto">
                         <span className="text-[9px] text-stone-500">{t.tone}:</span>
@@ -117,7 +115,7 @@ export const BioTab: React.FC<BioTabProps> = memo(({ person, people, isEditing, 
                     {person.bio || <p className="text-stone-400 italic">{t.noBio}</p>}
                 </div>
             )}
-        </div>
+        </Card>
     </div>
   );
 });
