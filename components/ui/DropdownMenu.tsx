@@ -45,8 +45,8 @@ export const DropdownMenuItem: React.FC<DropdownMenuItemProps> = ({
     )}
     {/* Render label and subLabel if they exist */}
     {label && (
-      <div className="flex flex-col items-start gap-0.5"> {/* Removed flex-1 here */}
-        <span className="font-bold">{label}</span> 
+      <div className="flex flex-col items-start gap-0.5 flex-grow min-w-0"> {/* Added flex-grow and min-w-0 */}
+        <span className="font-bold">{label}</span>
         {subLabel && <span className="text-[9px] opacity-70">{subLabel}</span>}
       </div>
     )}
