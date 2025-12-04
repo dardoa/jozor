@@ -2,16 +2,18 @@ import * as d3 from 'd3';
 import { Person, TreeNode, TreeLink, TreeSettings } from '../types';
 import { getDisplayDate } from './familyLogic';
 
-// Updated Dimensions for Portrait Cards
-const DEFAULT_NODE_WIDTH = 150;
-const COMPACT_NODE_WIDTH = 120;
-// Increased level separation because nodes are taller now (200px)
+// Exported Node Dimensions
+export const NODE_WIDTH_DEFAULT = 160;
+export const NODE_WIDTH_COMPACT = 130;
+export const NODE_HEIGHT_DEFAULT = 210;
+export const NODE_HEIGHT_COMPACT = 170;
+
+// Layout Constants
 const LEVEL_SEP_DEFAULT = 280; 
 const LEVEL_SEP_COMPACT = 240;
+const SIBLING_GAP_DEFAULT = 60;
+const SIBLING_GAP_COMPACT = 30;
 const SPOUSE_GAP = 20; 
-
-// New constant for time offset (now dynamic from settings)
-// const TIME_SCALE_FACTOR = 5; // This constant is now replaced by settings.timeScaleFactor
 
 export interface CollapsePoint {
     id: string; 
@@ -57,9 +59,10 @@ const calculateDescendantLayout = (
 ): { nodes: TreeNode[], links: TreeLink[], collapsePoints: CollapsePoint[] } => {
     
     const isVertical = settings.layoutMode === 'vertical';
-    const nodeW = settings.isCompact ? COMPACT_NODE_WIDTH : DEFAULT_NODE_WIDTH;
+    const nodeW = settings.isCompact ? NODE_WIDTH_COMPACT : NODE_WIDTH_DEFAULT;
+    const nodeH = settings.isCompact ? NODE_HEIGHT_COMPACT : NODE_HEIGHT_DEFAULT;
     const levelGap = settings.isCompact ? LEVEL_SEP_COMPACT : LEVEL_SEP_DEFAULT;
-    const siblingGap = settings.isCompact ? 30 : 60; // Slightly increased base gap
+    const siblingGap = settings.isCompact ? SIBLING_GAP_COMPACT : SIBLING_GAP_DEFAULT;
 
     const rootId = findRootAncestor(people, focusId);
     

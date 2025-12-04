@@ -1,6 +1,6 @@
 import React, { useCallback, memo } from 'react';
 import { Person, TreeLink, TreeSettings, TreeNode } from '../../types';
-import { CollapsePoint } from '../../utils/treeLayout';
+import { CollapsePoint, NODE_WIDTH_DEFAULT, NODE_WIDTH_COMPACT, NODE_HEIGHT_DEFAULT, NODE_HEIGHT_COMPACT } from '../../utils/treeLayout'; // Import new constants
 import { getYears } from '../../utils/familyLogic';
 import { User, Ribbon, ChevronDown, ChevronUp, ChevronRight, ChevronLeft } from 'lucide-react';
 import * as d3 from 'd3';
@@ -19,8 +19,9 @@ interface DescendantPedigreeChartProps {
 export const DescendantPedigreeChart: React.FC<DescendantPedigreeChartProps> = memo(({
   nodes, links, collapsePoints, focusId, onSelect, settings, toggleCollapse, people
 }) => {
-  const NODE_WIDTH = settings.isCompact ? 130 : 160;
-  const NODE_HEIGHT = settings.isCompact ? 170 : 210;
+  // Use centralized constants
+  const NODE_WIDTH = settings.isCompact ? NODE_WIDTH_COMPACT : NODE_WIDTH_DEFAULT;
+  const NODE_HEIGHT = settings.isCompact ? NODE_HEIGHT_COMPACT : NODE_HEIGHT_DEFAULT;
   const COLLAPSE_CIRCLE_RADIUS = 12; // Radius of the collapse circle
   const LINE_CORNER_RADIUS = 10; // Radius for line corners
   const isVertical = settings.layoutMode === 'vertical';
@@ -66,8 +67,8 @@ export const DescendantPedigreeChart: React.FC<DescendantPedigreeChartProps> = m
         return `M ${startPointX} ${collapsePointY}` +
                `H ${midX - r}` + // Horizontal segment before first curve
                `Q ${midX} ${collapsePointY}, ${midX} ${collapsePointY + dirY * r}` + // First curve
-               `V ${targetPointY - dirY * r}` + // Vertical segment
-               `Q ${midX} ${targetPointY}, ${midX + r} ${targetPointY}` + // Second curve
+               `V ${targetY - dirY * r}` + // Vertical segment
+               `Q ${midX} ${targetY}, ${midX + r} ${targetY}` + // Second curve
                `H ${targetPointX}`; // Horizontal segment to target
     }
   }, [isVertical, NODE_HEIGHT, NODE_WIDTH]);
