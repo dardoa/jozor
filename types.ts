@@ -174,7 +174,7 @@ export interface ExportActionsProps {
 }
 
 export interface HeaderLeftSectionProps {
-  language: Language;
+  themeLanguage: ThemeLanguageProps; // Changed to grouped prop
   toggleSidebar: () => void;
   historyControls: HistoryControlsProps;
 }

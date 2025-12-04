@@ -5,7 +5,7 @@ import { HeaderLeftSectionProps } from '../../types'; // Import HeaderLeftSectio
 import { useTranslation } from '../../context/TranslationContext'; // Import useTranslation
 
 export const HeaderLeftSection: React.FC<HeaderLeftSectionProps> = memo(({
-  language, // Removed t,
+  themeLanguage, // Changed to grouped prop
   toggleSidebar, historyControls
 }) => {
   const { t } = useTranslation(); // Use useTranslation hook directly
@@ -25,11 +25,11 @@ export const HeaderLeftSection: React.FC<HeaderLeftSectionProps> = memo(({
       {/* History Controls */}
       <div className="hidden sm:flex items-center p-1 bg-stone-100/50 dark:bg-stone-800/50 rounded-full border border-stone-200/50 dark:border-stone-700/50 backdrop-blur-sm">
         <button onClick={historyControls.onUndo} disabled={!historyControls.canUndo} className="p-1.5 text-stone-500 hover:text-stone-900 dark:text-stone-400 dark:hover:text-white hover:bg-white dark:hover:bg-stone-700 rounded-full transition-all disabled:opacity-30 disabled:hover:bg-transparent" dir="ltr" aria-label={t.undo}>
-          <Undo className={`w-4 h-4 ${language === 'ar' ? 'scale-x-[-1]' : ''}`} />
+          <Undo className={`w-4 h-4 ${themeLanguage.language === 'ar' ? 'scale-x-[-1]' : ''}`} />
         </button>
         <div className="w-px h-3 bg-stone-300 dark:bg-stone-600 mx-0.5"></div>
         <button onClick={historyControls.onRedo} disabled={!historyControls.canRedo} className="p-1.5 text-stone-500 hover:text-stone-900 dark:text-stone-400 dark:hover:text-white hover:bg-white dark:hover:bg-stone-700 rounded-full transition-all disabled:opacity-30 disabled:hover:bg-transparent" dir="ltr" aria-label={t.redo}>
-          <Redo className={`w-4 h-4 ${language === 'ar' ? 'scale-x-[-1]' : ''}`} />
+          <Redo className={`w-4 h-4 ${themeLanguage.language === 'ar' ? 'scale-x-[-1]' : ''}`} />
         </button>
       </div>
     </div>
