@@ -1,22 +1,22 @@
 import React, { memo } from 'react';
-// Removed: import { HeaderProps } from '../types'; // Import HeaderProps
+import { HeaderProps } from '../types'; // Import HeaderProps
 
 // Import sub-components
 import { HeaderLeftSection } from './header/HeaderLeftSection';
 import { HeaderRightSection } from './header/HeaderRightSection';
-import { HistoryControlsProps, ThemeLanguageProps, AuthProps, ViewSettingsProps, ToolsActionsProps, ExportActionsProps, SearchProps } from '../types'; // Import necessary types
+// Removed: import { HistoryControlsProps, ThemeLanguageProps, AuthProps, ViewSettingsProps, ToolsActionsProps, ExportActionsProps, SearchProps } from '../types'; // Import necessary types
 
-// Define HeaderProps directly here
-interface HeaderProps {
-  toggleSidebar: () => void;
-  historyControls: HistoryControlsProps;
-  themeLanguage: ThemeLanguageProps;
-  auth: AuthProps;
-  viewSettings: ViewSettingsProps;
-  toolsActions: ToolsActionsProps;
-  exportActions: ExportActionsProps;
-  searchProps: SearchProps;
-}
+// Removed: Define HeaderProps directly here
+// interface HeaderProps {
+//   toggleSidebar: () => void;
+//   historyControls: HistoryControlsProps;
+//   themeLanguage: ThemeLanguageProps;
+//   auth: AuthProps;
+//   viewSettings: ViewSettingsProps;
+//   toolsActions: ToolsActionsProps;
+//   exportActions: ExportActionsProps;
+//   searchProps: SearchProps;
+// }
 
 export const Header: React.FC<HeaderProps> = memo(({
   // Removed t,

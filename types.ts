@@ -248,3 +248,15 @@ export interface ModalManagerProps { // Updated ModalManagerProps
     user: UserProfile | null;
     familyActions: FamilyActionsProps;
 }
+
+// Define HeaderProps directly here
+export interface HeaderProps {
+  toggleSidebar: () => void;
+  historyControls: HistoryControlsProps;
+  themeLanguage: ThemeLanguageProps;
+  auth: AuthProps;
+  viewSettings: ViewSettingsProps;
+  toolsActions: ToolsActionsProps;
+  exportActions: ExportActionsProps;
+  searchProps: SearchProps;
+}
