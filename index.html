@@ -77,13 +77,18 @@
       body { 
         margin: 0; 
         -webkit-font-smoothing: antialiased;
+        /* Ensure body inherits direction, text-align, and font-family from html */
+        direction: inherit;
+        text-align: inherit;
+        font-family: inherit;
       }
       
-      /* Ensure all elements inherit font, direction, and text-align from html/body */
-      * {
-        font-family: inherit !important;
-        direction: inherit !important;
-        text-align: inherit !important;
+      /* The #root div is where React mounts, ensure it also inherits */
+      #root {
+        direction: inherit;
+        text-align: inherit;
+        font-family: inherit;
+        height: 100%; /* Ensure it takes full height */
       }
       
       h1, h2, h3, h4, h5, h6 {
