@@ -20,8 +20,8 @@ const FamilyGroup = memo(({
         <div className="mb-3 last:mb-0">
              <div className="flex items-center justify-between mb-2 px-1">
                 <div className="flex items-center gap-2 text-stone-500 dark:text-stone-400">
-                    <div className={`p-1 rounded ${iconBgClass} ${iconTextColorClass}`}>{icon}</div> {/* Using new color props */}
-                    <span className="text-[9px] font-bold uppercase tracking-wider">{title} <span className="opacity-60">({ids.length})</span></span>
+                    <div className={`p-1 rounded ${iconBgClass} ${iconTextColorClass}`}>{icon}</div>
+                    <span className="text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300">{title} <span className="opacity-60">({ids.length})</span></span> {/* Increased font size and boldness */}
                 </div>
                 {isEditing && onAdd && (
                     <div className="flex gap-1">
@@ -113,7 +113,6 @@ export const FamilyRelationshipsSection: React.FC<FamilyRelationshipsSectionProp
                 />
             )}
 
-            {/* Moved Children section before Siblings section */}
             {(person.children.length > 0 || isEditing) && (
                 <FamilyGroup 
                     title={t.children} 
