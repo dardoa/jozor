@@ -11,10 +11,7 @@ export default defineConfig(({ mode }) => {
         host: '0.0.0.0',
       },
       plugins: [dyadComponentTagger(), react()],
-      define: {
-        'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-        'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
-      },
+      // Removed the define block as environment variables are now accessed via import.meta.env
       resolve: {
         alias: {
           '@': path.resolve(__dirname, './src'), // Updated alias to point to src folder
