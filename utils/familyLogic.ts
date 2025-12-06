@@ -64,3 +64,19 @@ export const getYears = (p: Person) => {
   }
   return b ? `(b. ${b})` : '';
 };
+
+// New helper to get birth year for sorting, handling missing dates
+const getBirthYearForSort = (person: Person): number => {
+  if (!person.birthDate) return Infinity; // Treat missing birth date as very "young" for sorting (put at end)
+  const year = parseInt(getDisplayDate(person.birthDate));
+  return isNaN(year) ? Infinity : year;
+};
+
+// New utility function to sort people by birth date (oldest first)
+export const sortPeopleByBirthDate = (peopleList: Person[]): Person[] => {
+  return [...peopleList].sort((a, b) => {
+    const yearA = getBirthYearForSort(a);
+    const yearB = getBirthYearForSort(b);
+    return yearA - yearB;
+  });
+};

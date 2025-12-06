@@ -4,6 +4,7 @@ import { ArrowUp, Heart, ArrowDown, Users, UserRound, Baby } from 'lucide-react'
 import { InlineAddButton } from './InlineAddButton';
 import { FamilyMemberItem } from './FamilyMemberItem';
 import { useTranslation } from '../../context/TranslationContext';
+import { sortPeopleByBirthDate } from '../../utils/familyLogic'; // Import the new sorting utility
 
 // --- Family Group Component (now internal to this file, or could be moved to its own file if needed elsewhere) ---
 const FamilyGroup = memo(({ 
@@ -78,6 +79,15 @@ export const FamilyRelationshipsSection: React.FC<FamilyRelationshipsSectionProp
         .filter(p => p.id !== person.id && p.parents.some(parentId => person.parents.includes(parentId)))
         .map(p => p.id);
 
+    // Sort children and siblings by birth date if not in editing mode
+    const sortedChildrenIds = isEditing 
+        ? person.children 
+        : sortPeopleByBirthDate(person.children.map(id => people[id]).filter(Boolean) as Person[]).map(p => p.id);
+
+    const sortedSiblingIds = isEditing 
+        ? siblingIds 
+        : sortPeopleByBirthDate(siblingIds.map(id => people[id]).filter(Boolean) as Person[]).map(p => p.id);
+
     return (
         <div className="space-y-3 relative">
             
@@ -113,11 +123,11 @@ export const FamilyRelationshipsSection: React.FC<FamilyRelationshipsSectionProp
                 />
             )}
 
-            {(person.children.length > 0 || isEditing) && (
+            {(sortedChildrenIds.length > 0 || isEditing) && (
                 <FamilyGroup 
                     title={t.children} 
                     icon={<Baby className="w-3.5 h-3.5" />} 
-                    ids={person.children} 
+                    ids={sortedChildrenIds} 
                     people={people}
                     onAdd={(g) => familyActions.onAddChild(g)}
                     onRemove={handleRemoveChild}
@@ -129,11 +139,11 @@ export const FamilyRelationshipsSection: React.FC<FamilyRelationshipsSectionProp
                 />
             )}
 
-            {(siblingIds.length > 0 || isEditing) && (
+            {(sortedSiblingIds.length > 0 || isEditing) && (
                 <FamilyGroup 
                     title={t.siblings} 
                     icon={<Users className="w-3.5 h-3.5" />} 
-                    ids={siblingIds} 
+                    ids={sortedSiblingIds} 
                     people={people}
                     onRemove={isEditing ? handleRemoveChild : undefined}
                     onSelect={onSelect}
