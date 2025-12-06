@@ -6,6 +6,7 @@ import { ModalManagerContainer } from './components/ModalManagerContainer';
 import { Header } from './components/Header'; // Direct import of Header
 
 import { useAppOrchestration } from './hooks/useAppOrchestration';
+import { useTranslation } from './context/TranslationContext'; // Import useTranslation
 
 import { X } from 'lucide-react';
 
@@ -35,7 +36,9 @@ const App: React.FC = () => {
     onTriggerImportFile, // Destructure onTriggerImportFile
   } = useAppOrchestration();
 
-  // Centralized application of theme class, dark mode class, and language attributes to the html element
+  const { themeLanguage: contextThemeLanguage } = useTranslation(); // Get themeLanguage from context
+
+  // Centralized application of theme class and dark mode class to the html element
   useEffect(() => {
     const root = document.documentElement;
 
@@ -43,19 +46,13 @@ const App: React.FC = () => {
     root.classList.remove('theme-modern', 'theme-vintage', 'theme-blueprint');
     root.classList.add(`theme-${viewSettings.treeSettings.theme}`);
 
-    // Handle dark mode class
-    root.classList.toggle('dark', themeLanguage.darkMode);
-
-    // Handle language attributes
-    const dir = themeLanguage.language === 'ar' ? 'rtl' : 'ltr';
-    root.setAttribute('dir', dir);
-    root.setAttribute('lang', themeLanguage.language); // This line sets the lang attribute
-  }, [viewSettings.treeSettings.theme, themeLanguage.darkMode, themeLanguage.language]);
+    // The 'dark' class and 'lang'/'dir' attributes are now managed by TranslationContext.tsx
+    // No need to duplicate logic here.
+  }, [viewSettings.treeSettings.theme]); // Only depend on theme setting here
 
   return (
     <div 
-      className={`flex flex-col h-screen font-sans transition-colors duration-300 text-[var(--card-text)] overflow-hidden`} 
-      style={{ backgroundColor: 'var(--app-bg-color)' }} // Use the new CSS variable here
+      className={`flex flex-col h-screen font-sans transition-colors duration-300 text-[var(--card-text)] overflow-hidden bg-[var(--theme-bg)]`} // Use theme-bg here
     >
       
       <input ref={fileInputRef} type="file" accept=".json,.ged,.jozor,.zip" className="hidden" onChange={onFileUpload} />
@@ -94,7 +91,7 @@ const App: React.FC = () => {
             {/* Cloud Status */}
             {!isPresentMode && auth.isSyncing && (
                 <div className={`absolute top-16 start-1/2 -translate-x-1/2 z-50 text-white text-xs px-3 py-1 rounded-b-lg shadow-lg flex items-center gap-2 ${auth.isDemoMode ? 'bg-orange-500' : 'bg-blue-600 animate-pulse'}`}>
-                     {auth.isDemoMode ? 'Saving locally...' : (themeLanguage.language === 'ar' ? 'جاري المزامنة...' : 'Syncing...')}
+                     {auth.isDemoMode ? 'Saving locally...' : (contextThemeLanguage.language === 'ar' ? 'جاري المزامنة...' : 'Syncing...')}
                 </div>
             )}
 
