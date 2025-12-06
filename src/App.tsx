@@ -45,6 +45,7 @@ const App: React.FC = () => {
     // Handle theme class
     root.classList.remove('theme-modern', 'theme-vintage', 'theme-blueprint');
     root.classList.add(`theme-${viewSettings.treeSettings.theme}`);
+    console.log(`[App] Theme set to: theme-${viewSettings.treeSettings.theme}. HTML classList:`, root.classList.value);
 
     // The 'dark' class and 'lang'/'dir' attributes are now managed by TranslationContext.tsx
     // No need to duplicate logic here.

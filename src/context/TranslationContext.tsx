@@ -39,6 +39,7 @@ export const TranslationProvider: React.FC<{ children: React.ReactNode }> = ({ c
     localStorage.setItem('language', language);
     document.documentElement.lang = language;
     document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
+    console.log(`[TranslationContext] Language set to: ${language}, dir: ${document.documentElement.dir}`);
   }, [language]);
 
   // Effect to apply/remove 'dark' class to the HTML element
@@ -46,8 +47,10 @@ export const TranslationProvider: React.FC<{ children: React.ReactNode }> = ({ c
     localStorage.setItem('darkMode', JSON.stringify(darkMode));
     if (darkMode) {
       document.documentElement.classList.add('dark');
+      console.log('[TranslationContext] Dark mode ON. HTML classList:', document.documentElement.classList.value);
     } else {
       document.documentElement.classList.remove('dark');
+      console.log('[TranslationContext] Dark mode OFF. HTML classList:', document.documentElement.classList.value);
     }
   }, [darkMode]);
 
