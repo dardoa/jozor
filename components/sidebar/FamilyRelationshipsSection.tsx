@@ -113,21 +113,7 @@ export const FamilyRelationshipsSection: React.FC<FamilyRelationshipsSectionProp
                 />
             )}
 
-            {(siblingIds.length > 0 || isEditing) && (
-                <FamilyGroup 
-                    title={t.siblings} 
-                    icon={<Users className="w-3.5 h-3.5" />} 
-                    ids={siblingIds} 
-                    people={people}
-                    onRemove={isEditing ? handleRemoveChild : undefined}
-                    onSelect={onSelect}
-                    placeholder={t.noSiblings}
-                    isEditing={isEditing}
-                    iconBgClass="bg-indigo-100 dark:bg-indigo-900/20"
-                    iconTextColorClass="text-indigo-600 dark:text-indigo-400"
-                />
-            )}
-            
+            {/* Moved Children section before Siblings section */}
             {(person.children.length > 0 || isEditing) && (
                 <FamilyGroup 
                     title={t.children} 
@@ -141,6 +127,21 @@ export const FamilyRelationshipsSection: React.FC<FamilyRelationshipsSectionProp
                     isEditing={isEditing}
                     iconBgClass="bg-emerald-100 dark:bg-emerald-900/20"
                     iconTextColorClass="text-emerald-600 dark:text-emerald-400"
+                />
+            )}
+
+            {(siblingIds.length > 0 || isEditing) && (
+                <FamilyGroup 
+                    title={t.siblings} 
+                    icon={<Users className="w-3.5 h-3.5" />} 
+                    ids={siblingIds} 
+                    people={people}
+                    onRemove={isEditing ? handleRemoveChild : undefined}
+                    onSelect={onSelect}
+                    placeholder={t.noSiblings}
+                    isEditing={isEditing}
+                    iconBgClass="bg-indigo-100 dark:bg-indigo-900/20"
+                    iconTextColorClass="text-indigo-600 dark:text-indigo-400"
                 />
             )}
         </div>
