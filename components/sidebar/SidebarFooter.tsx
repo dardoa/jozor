@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
 import { Person } from '../../types';
-import { Trash2, Check, Edit2, Eraser } from 'lucide-react'; // Changed FileX to Eraser
+import { Trash2, Check, Edit2, Eraser } from 'lucide-react';
 import { useTranslation } from '../../context/TranslationContext';
 
 interface SidebarFooterProps {
@@ -29,27 +29,30 @@ export const SidebarFooter: React.FC<SidebarFooterProps> = memo(({
     return (
         <div className="bg-white dark:bg-stone-900 border-t border-stone-200/50 dark:border-stone-800/50 flex items-center justify-between shadow-sm relative z-10 p-3">
 
-            {/* Delete Person Button */}
-            <button
-                type="button"
-                onClick={handleDelete}
-                className="w-10 h-10 flex items-center justify-center rounded-full text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors active:scale-95"
-                title={t.deletePerson}
-                aria-label={t.deletePerson}
-            >
-                <Trash2 className="w-5 h-5" />
-            </button>
+            {/* Group for Delete Person and Clean Tree Buttons */}
+            <div className="flex items-center gap-2">
+                {/* Delete Person Button */}
+                <button
+                    type="button"
+                    onClick={handleDelete}
+                    className="w-10 h-10 flex items-center justify-center rounded-full text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors active:scale-95"
+                    title={t.deletePerson}
+                    aria-label={t.deletePerson}
+                >
+                    <Trash2 className="w-5 h-5" />
+                </button>
 
-            {/* Clean Tree Button - Moved next to Delete */}
-            <button
-                type="button"
-                onClick={handleCleanTree}
-                className="w-10 h-10 flex items-center justify-center rounded-full text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-colors active:scale-95"
-                title={t.cleanTree}
-                aria-label={t.cleanTree}
-            >
-                <Eraser className="w-5 h-5" /> {/* Changed icon to Eraser */}
-            </button>
+                {/* Clean Tree Button */}
+                <button
+                    type="button"
+                    onClick={handleCleanTree}
+                    className="w-10 h-10 flex items-center justify-center rounded-full text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-colors active:scale-95"
+                    title={t.cleanTree}
+                    aria-label={t.cleanTree}
+                >
+                    <Eraser className="w-5 h-5" />
+                </button>
+            </div>
 
             {/* Edit / Save Buttons */}
             {isEditing ? (
