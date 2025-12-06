@@ -2,7 +2,12 @@ import { useState, useEffect } from 'react';
 import { AppTheme } from '../types';
 
 export const useThemeSync = (currentTheme: AppTheme) => {
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(() => {
+    if (typeof window === 'undefined') return false; // Safety for server-side rendering
+    const savedTheme = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    return savedTheme === 'dark' || (!savedTheme && prefersDark);
+  });
 
   useEffect(() => {
     const root = document.documentElement;
@@ -10,18 +15,7 @@ export const useThemeSync = (currentTheme: AppTheme) => {
     localStorage.setItem('theme', darkMode ? 'dark' : 'light');
   }, [darkMode]);
 
-  // Initialize dark mode from localStorage or system preference
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedTheme = localStorage.getItem('theme');
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
-        setDarkMode(true);
-      } else {
-        setDarkMode(false);
-      }
-    }
-  }, []); // Empty dependency array for initialization
+  // Removed the old initialization useEffect as it's now handled by useState directly.
 
   return { darkMode, setDarkMode };
 };
