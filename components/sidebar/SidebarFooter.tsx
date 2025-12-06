@@ -23,6 +23,7 @@ export const SidebarFooter: React.FC<SidebarFooterProps> = memo(({
     };
 
     const handleCleanTree = () => {
+        console.log('Clean Tree button clicked!'); // Debug log
         onOpenCleanTreeOptions(); // Open the new modal
     };
 
@@ -56,7 +57,7 @@ export const SidebarFooter: React.FC<SidebarFooterProps> = memo(({
                 <button
                     type="button"
                     onClick={() => setIsEditing(false)}
-                    className="w-10 h-10 flex items-center justify-center bg-emerald-600 text-white rounded-full shadow-md hover:bg-emerald-700 transition-colors active:scale-95"
+                    className="w-10 h-10 flex items-center justify-center bg-emerald-600  text-white rounded-full shadow-md hover:bg-emerald-700 transition-colors active:scale-95"
                     title={t.saveChanges}
                     aria-label={t.saveChanges}
                 >

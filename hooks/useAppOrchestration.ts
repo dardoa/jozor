@@ -72,7 +72,10 @@ export const useAppOrchestration = () => {
 
   // New state for CleanTreeOptionsModal
   const [cleanTreeOptionsModal, setCleanTreeOptionsModal] = useState<{ isOpen: boolean }>({ isOpen: false });
-  const onOpenCleanTreeOptions = useCallback(() => setCleanTreeOptionsModal({ isOpen: true }), []);
+  const onOpenCleanTreeOptions = useCallback(() => {
+    console.log('onOpenCleanTreeOptions called, setting modal isOpen to true'); // Debug log
+    setCleanTreeOptionsModal({ isOpen: true });
+  }, []);
 
   // Adjusted onTriggerImportFile to directly trigger file input
   const onTriggerImportFile = useCallback(() => {

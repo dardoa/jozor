@@ -11,6 +11,8 @@ export const CleanTreeOptionsModal: React.FC<CleanTreeOptionsModalProps> = memo(
 }) => {
   const { t } = useTranslation();
 
+  console.log('CleanTreeOptionsModal rendered, isOpen:', isOpen); // Debug log
+
   if (!isOpen) return null;
 
   const handleStartNew = () => {
