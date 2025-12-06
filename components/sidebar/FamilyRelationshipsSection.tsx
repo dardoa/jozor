@@ -31,7 +31,7 @@ const FamilyGroup = memo(({
                 )}
             </div>
             
-            {ids.length === 0 ? ( {/* Changed condition: removed && isEditing */}
+            {ids.length === 0 && isEditing ? (
                  <div className="text-[9px] text-stone-400 italic px-2 py-2 bg-stone-50/50 dark:bg-stone-800/30 rounded-lg border border-dashed border-stone-100 dark:border-stone-700 text-center">
                     {placeholder}
                  </div>
