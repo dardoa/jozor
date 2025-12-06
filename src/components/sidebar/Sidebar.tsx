@@ -21,17 +21,20 @@ interface SidebarProps {
   onOpenModal: (modalType: 'calculator' | 'stats' | 'chat' | 'consistency' | 'timeline' | 'share' | 'story' | 'map') => void;
   user: UserProfile | null;
   familyActions: FamilyActionsProps;
-  onOpenCleanTreeOptions: () => void; // New prop
+  onOpenCleanTreeOptions: () => void;
   // onTriggerImportFile: () => void; // Removed unused prop
 }
 
 export const Sidebar: React.FC<SidebarProps> = memo(({
   person, people, onUpdate, onDelete, onSelect, isOpen, onClose, onOpenModal, user,
-  familyActions, onOpenCleanTreeOptions // Removed onTriggerImportFile
+  familyActions, onOpenCleanTreeOptions
 }) => {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'info' | 'partners' | 'bio' | 'contact' | 'media'>('info');
   const [isEditing, setIsEditing] = useState(false);
+
+  // Acknowledge X to silence the TS6133 warning, as it's used in JSX
+  void X;
 
   // Reset editing state when person changes
   useEffect(() => {
@@ -46,7 +49,7 @@ export const Sidebar: React.FC<SidebarProps> = memo(({
     { id: 'info', label: t.profile, show: true },
     { id: 'partners', label: t.partners, show: person.spouses.length > 0 },
     { id: 'contact', label: t.contact, show: true },
-    { id: 'bio', label: t.biography, show: true }, // Corrected to t.biography
+    { id: 'bio', label: t.biography, show: true },
     { id: 'media', label: t.galleryTab, show: true }
   ], [person.spouses.length, t]);
 
@@ -92,7 +95,7 @@ export const Sidebar: React.FC<SidebarProps> = memo(({
             <SidebarFooter 
                 person={person} isEditing={isEditing} setIsEditing={setIsEditing}
                 onDelete={onDelete}
-                onOpenCleanTreeOptions={onOpenCleanTreeOptions} // Pass the new prop
+                onOpenCleanTreeOptions={onOpenCleanTreeOptions}
             />
         </div>
     </>

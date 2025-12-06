@@ -1,12 +1,12 @@
 import React, { useEffect } from 'react';
-import { Sidebar } from './components/Sidebar'; // Corrected import path
+import { Sidebar } from './components/sidebar/Sidebar'; // Updated import path for explicit resolution
 import { FamilyTree } from './components/FamilyTree';
 import { WelcomeScreen } from './components/WelcomeScreen';
 import { ModalManagerContainer } from './components/ModalManagerContainer';
 import { Header } from './Header'; // Direct import of Header
 
 import { useAppOrchestration } from './hooks/useAppOrchestration';
-import { useTranslation } from './context/TranslationContext'; // Import useTranslation
+import { useTranslation } from './context/TranslationContext';
 
 import { X } from 'lucide-react';
 
@@ -62,7 +62,7 @@ const App: React.FC = () => {
       {showWelcome ? (
           <WelcomeScreen 
               onStartNew={handleStartNewTree}
-              onImport={onTriggerImportFile} // Use onTriggerImportFile here
+              onImport={onTriggerImportFile}
               onLogin={auth.onLogin}
           />
       ) : (
@@ -112,8 +112,7 @@ const App: React.FC = () => {
                             onOpenModal={handleOpenModal}
                             user={auth.user}
                             familyActions={familyActions}
-                            onOpenCleanTreeOptions={onOpenCleanTreeOptions} // Pass new prop
-                            // onTriggerImportFile={onTriggerImportFile} // Removed unused prop
+                            onOpenCleanTreeOptions={onOpenCleanTreeOptions}
                         />
                     </div>
                 )}
@@ -130,14 +129,14 @@ const App: React.FC = () => {
                 <ModalManagerContainer 
                     activeModal={activeModal} setActiveModal={setActiveModal}
                     linkModal={linkModal} setLinkModal={setLinkModal}
-                    cleanTreeOptionsModal={cleanTreeOptionsModal} setCleanTreeOptionsModal={setCleanTreeOptionsModal} // Pass new modal state
+                    cleanTreeOptionsModal={cleanTreeOptionsModal} setCleanTreeOptionsModal={setCleanTreeOptionsModal}
                     people={people} 
                     focusId={focusId} setFocusId={setFocusId} activePerson={activePerson}
                     user={auth.user}
                     familyActions={familyActions}
                     language={themeLanguage.language}
-                    onStartNewTree={handleStartNewTree} // Pass to CleanTreeOptionsModal
-                    onTriggerImportFile={onTriggerImportFile} // Pass to CleanTreeOptionsModal
+                    onStartNewTree={handleStartNewTree}
+                    onTriggerImportFile={onTriggerImportFile}
                 />
             </div>
           </>
