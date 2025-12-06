@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
 import { Person } from '../../types';
-import { Trash2, Check, Edit2, FileX } from 'lucide-react'; // Import FileX icon
+import { Trash2, Check, Edit2, Eraser } from 'lucide-react'; // Changed FileX to Eraser
 import { useTranslation } from '../../context/TranslationContext';
 
 interface SidebarFooterProps {
@@ -8,7 +8,7 @@ interface SidebarFooterProps {
     isEditing: boolean;
     setIsEditing: (v: boolean) => void;
     onDelete: (id: string) => void;
-    onOpenCleanTreeOptions: () => void; // Changed from onStartNewTree
+    onOpenCleanTreeOptions: () => void;
 }
 
 export const SidebarFooter: React.FC<SidebarFooterProps> = memo(({
@@ -23,8 +23,7 @@ export const SidebarFooter: React.FC<SidebarFooterProps> = memo(({
     };
 
     const handleCleanTree = () => {
-        console.log('Clean Tree button clicked!'); // Debug log
-        onOpenCleanTreeOptions(); // Open the new modal
+        onOpenCleanTreeOptions();
     };
 
     return (
@@ -41,7 +40,7 @@ export const SidebarFooter: React.FC<SidebarFooterProps> = memo(({
                 <Trash2 className="w-5 h-5" />
             </button>
 
-            {/* Clean Tree Button */}
+            {/* Clean Tree Button - Moved next to Delete */}
             <button
                 type="button"
                 onClick={handleCleanTree}
@@ -49,7 +48,7 @@ export const SidebarFooter: React.FC<SidebarFooterProps> = memo(({
                 title={t.cleanTree}
                 aria-label={t.cleanTree}
             >
-                <FileX className="w-5 h-5" />
+                <Eraser className="w-5 h-5" /> {/* Changed icon to Eraser */}
             </button>
 
             {/* Edit / Save Buttons */}
