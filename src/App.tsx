@@ -3,7 +3,7 @@ import { Sidebar } from './components/Sidebar';
 import { FamilyTree } from './components/FamilyTree';
 import { WelcomeScreen } from './components/WelcomeScreen';
 import { ModalManagerContainer } from './components/ModalManagerContainer';
-import { Header } from './components/Header'; // Direct import of Header
+import { Header } from './Header'; // Direct import of Header
 
 import { useAppOrchestration } from './hooks/useAppOrchestration';
 import { useTranslation } from './context/TranslationContext'; // Import useTranslation

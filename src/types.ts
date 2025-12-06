@@ -251,6 +251,7 @@ export interface ModalManagerProps { // Updated ModalManagerProps
     cleanTreeOptionsModal: { isOpen: boolean }; // New prop for CleanTreeOptionsModal
     setCleanTreeOptionsModal: (val: { isOpen: boolean }) => void; // New prop setter
     people: Record<string, Person>;
+    language: Language;
     focusId: string;
     setFocusId: (id: string) => void;
     activePerson?: Person;

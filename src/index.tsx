@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import { TranslationProvider } from './context/TranslationContext'; // Corrected import path
 // Removed: import { useLanguageSync } from './hooks/useLanguageSync'; // Import useLanguageSync to get language for the key
+import './index.css'; // Ensure index.css is imported
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {

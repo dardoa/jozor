@@ -249,7 +249,7 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({ people, focus
   }, []);
 
   return (
-    <div ref={wrapperRef} className="flex-1 h-full theme-bg overflow-hidden relative cursor-move select-none transition-colors duration-500">
+    <div ref={wrapperRef} className="flex-1 h-full bg-[var(--theme-bg)] overflow-hidden relative cursor-move select-none transition-colors duration-500">
       
       {/* Minimap */}
       {!isFanChart && !isForce && settings.showMinimap && (

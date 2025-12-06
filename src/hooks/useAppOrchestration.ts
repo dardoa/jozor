@@ -2,8 +2,6 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Person, Gender, Language, TreeSettings, UserProfile, HistoryControlsProps, ThemeLanguageProps, AuthProps, ViewSettingsProps, ToolsActionsProps, ExportActionsProps, SearchProps, FamilyActionsProps } from '../types';
 import { useFamilyTree } from './useFamilyTree';
 import { useGoogleSync } from './useGoogleSync';
-import { useThemeSync } from './useThemeSync';
-import { useLanguageSync } from './useLanguageSync'; // Keep import for now, but won't be used directly here
 import { useKeyboardShortcuts } from './useKeyboardShortcuts';
 import { useModalAndSidebarLogic } from './useModalAndSidebarLogic';
 import { useTreeSettings } from './useTreeSettings';
@@ -27,9 +25,9 @@ export const useAppOrchestration = () => {
 
   // --- UI Preferences ---
   // Removed: const { language, setLanguage } = useLanguageSync();
-  const { language, setLanguage } = useTranslation(); // Get language from TranslationContext
+  const { themeLanguage: { language, setLanguage, darkMode, setDarkMode } } = useTranslation(); // Get language from TranslationContext
   const { treeSettings, setTreeSettings } = useTreeSettings();
-  const { darkMode, setDarkMode } = useThemeSync(treeSettings.theme);
+  // Removed: const { darkMode, setDarkMode } = useThemeSync(treeSettings.theme); // No longer needed, managed by TranslationContext
 
   const activePerson = people[focusId];
 
@@ -107,7 +105,7 @@ export const useAppOrchestration = () => {
 
   // Grouped props for Header and other components
   const historyControls: HistoryControlsProps = { onUndo: undo, onRedo: redo, canUndo, canRedo };
-  const themeLanguage: ThemeLanguageProps = { darkMode, setDarkMode, language, setLanguage };
+  const themeLanguageProps: ThemeLanguageProps = { darkMode, setDarkMode, language, setLanguage }; // Renamed to avoid conflict
   const auth: AuthProps = { user, isDemoMode, isSyncing, onLogin, onLogout };
   const viewSettings: ViewSettingsProps = { treeSettings, setTreeSettings, onPresent: () => setIsPresentMode(true) };
   const toolsActions: ToolsActionsProps = { onOpenModal: handleOpenModal };
@@ -135,7 +133,7 @@ export const useAppOrchestration = () => {
     
     // Grouped Props
     historyControls,
-    themeLanguage,
+    themeLanguage: themeLanguageProps, // Use the renamed prop
     auth,
     viewSettings,
     toolsActions,
