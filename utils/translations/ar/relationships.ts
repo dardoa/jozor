@@ -2,7 +2,7 @@ export const relationships = {
   parents: 'الآباء',
   spouses: 'الأزواج',
   children: 'الأبناء',
-  siblings: 'الأشقاء',
+  siblings: 'الأشقاء', // New translation
   married: 'متزوج',
   divorced: 'مطلق',
   engaged: 'مخطوب',
@@ -17,7 +17,7 @@ export const relationships = {
   noPartners: 'لم تتم إضافة شركاء بعد.',
   noParents: 'لم تتم إضافة آباء بعد.',
   noChildren: 'لم تتم إضافة أطفال بعد.',
-  noSiblings: 'لم تتم إضافة أشقاء بعد.',
+  noSiblings: 'لم تتم إضافة أشقاء بعد.', // New translation
   viewProfile: 'عرض الملف الشخصي',
   confirmUnlink: 'هل أنت متأكد أنك تريد إزالة هذه العلاقة؟',
   removeRelation: 'إزالة العلاقة',

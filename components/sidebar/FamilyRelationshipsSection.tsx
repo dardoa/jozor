@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
 import { Person, Gender, FamilyActionsProps } from '../../types';
-import { ArrowUp, Heart, ArrowDown } from 'lucide-react';
+import { ArrowUp, Heart, ArrowDown, Users } from 'lucide-react'; // Added Users icon for siblings
 import { InlineAddButton } from './InlineAddButton';
 import { FamilyMemberItem } from './FamilyMemberItem';
 import { useTranslation } from '../../context/TranslationContext';
@@ -9,8 +9,8 @@ import { useTranslation } from '../../context/TranslationContext';
 const FamilyGroup = memo(({ 
     title, icon, ids, people, onAdd, onRemove, onSelect, placeholder, isEditing
 }: { 
-    title: string, icon: React.ReactNode, ids: string[], people: Record<string, Person>, onAdd: (g: Gender) => void, onRemove?: (id: string) => void, onSelect: (id: string) => void, placeholder: string, isEditing: boolean
-}) => {
+    title: string, icon: React.ReactNode, ids: string[], people: Record<string, Person>, onAdd?: (g: Gender) => void, onRemove?: (id: string) => void, onSelect: (id: string) => void, placeholder: string, isEditing: boolean
+}) => { // Made onAdd optional
     const { t } = useTranslation();
     return (
         <div className="mb-3 last:mb-0">
@@ -19,7 +19,7 @@ const FamilyGroup = memo(({
                     <div className="p-1 rounded bg-stone-100 dark:bg-stone-800">{icon}</div>
                     <span className="text-[9px] font-bold uppercase tracking-wider">{title} <span className="opacity-60">({ids.length})</span></span>
                 </div>
-                {isEditing && (
+                {isEditing && onAdd && ( // Only show add buttons if in editing mode AND onAdd is provided
                     <div className="flex gap-1">
                         <InlineAddButton onClick={() => onAdd('male')} gender="male" />
                         <InlineAddButton onClick={() => onAdd('female')} gender="female" />
@@ -69,6 +69,11 @@ export const FamilyRelationshipsSection: React.FC<FamilyRelationshipsSectionProp
     const handleRemoveSpouse = (id: string) => familyActions.onRemoveRelationship?.(person.id, id, 'spouse');
     const handleRemoveChild = (id: string) => familyActions.onRemoveRelationship?.(person.id, id, 'child');
 
+    // Calculate siblings based on common parents
+    const siblingIds = Object.values(people)
+        .filter(p => p.id !== person.id && p.parents.some(parentId => person.parents.includes(parentId)))
+        .map(p => p.id);
+
     return (
         <div className="space-y-3 relative">
             
@@ -96,6 +101,20 @@ export const FamilyRelationshipsSection: React.FC<FamilyRelationshipsSectionProp
                     onRemove={handleRemoveSpouse}
                     onSelect={onSelect}
                     placeholder={t.noPartners}
+                    isEditing={isEditing}
+                />
+            )}
+
+            {(siblingIds.length > 0 || isEditing) && ( // Only show siblings if there are any or in editing mode
+                <FamilyGroup 
+                    title={t.siblings} 
+                    icon={<Users className="w-3.5 h-3.5 text-stone-500" />} 
+                    ids={siblingIds} 
+                    people={people}
+                    // No onAdd prop for siblings as per request
+                    onRemove={isEditing ? handleRemoveChild : undefined} // Siblings can be unlinked by removing parent-child relationship
+                    onSelect={onSelect}
+                    placeholder={t.noSiblings}
                     isEditing={isEditing}
                 />
             )}

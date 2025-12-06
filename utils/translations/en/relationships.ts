@@ -2,7 +2,7 @@ export const relationships = {
   parents: 'Parents',
   spouses: 'Spouses',
   children: 'Children',
-  siblings: 'Siblings',
+  siblings: 'Siblings', // New translation
   married: 'Married',
   divorced: 'Divorced',
   engaged: 'Engaged',
@@ -17,7 +17,7 @@ export const relationships = {
   noPartners: 'No partners added yet.',
   noParents: 'No parents added yet.',
   noChildren: 'No children added yet.',
-  noSiblings: 'No siblings added yet.',
+  noSiblings: 'No siblings added yet.', // New translation
   viewProfile: 'View Profile',
   confirmUnlink: 'Are you sure you want to remove this relationship?',
   removeRelation: 'Remove Relationship',
