@@ -2,6 +2,7 @@ import React, { Suspense } from 'react';
 import { Person, Gender, Language, UserProfile, FamilyActionsProps, ModalManagerProps } from '../types';
 import { LoadingSpinner } from './LoadingSpinner';
 import { LinkPersonModal } from './LinkPersonModal';
+import { CleanTreeOptionsModal } from './CleanTreeOptionsModal'; // Import new modal
 import { useTranslation } from '../context/TranslationContext'; // Import useTranslation
 
 // Lazy Load Modals
@@ -16,10 +17,14 @@ const GeoMapModal = React.lazy(() => import('./GeoMapModal').then(module => ({ d
 
 export const ModalManager: React.FC<ModalManagerProps> = ({
     activeModal, setActiveModal, linkModal, setLinkModal,
+    cleanTreeOptionsModal, setCleanTreeOptionsModal, // Destructure new modal state
     people, focusId, setFocusId, activePerson,
     user,
-    familyActions
+    familyActions,
+    onStartNewTree, // Pass to CleanTreeOptionsModal
+    onTriggerImportFile, // Pass to CleanTreeOptionsModal
 }) => {
+    console.log('ModalManager rendered. cleanTreeOptionsModal.isOpen:', cleanTreeOptionsModal.isOpen); // Debug log
     const closeModal = () => setActiveModal('none');
     const { language } = useTranslation(); // Get language from context
 
@@ -36,6 +41,14 @@ export const ModalManager: React.FC<ModalManagerProps> = ({
                 familyActions={familyActions}
             />
             
+            <CleanTreeOptionsModal // Render the new modal
+                isOpen={cleanTreeOptionsModal.isOpen}
+                onClose={() => setCleanTreeOptionsModal({ isOpen: false })}
+                onStartNewTree={onStartNewTree}
+                onTriggerImportFile={onTriggerImportFile}
+                language={language}
+            />
+
             {activeModal === 'calculator' && (
                 <RelationshipModal isOpen={true} onClose={closeModal} people={people} language={language} />
             )}

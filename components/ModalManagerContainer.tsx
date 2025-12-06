@@ -37,6 +37,7 @@ export const ModalManagerContainer: React.FC<ModalManagerContainerProps> = memo(
   onStartNewTree, // Destructure new prop
   onTriggerImportFile, // Destructure new prop
 }) => {
+  console.log('ModalManagerContainer rendered. cleanTreeOptionsModal.isOpen:', cleanTreeOptionsModal.isOpen); // Debug log
   return (
     <ModalManager
       activeModal={activeModal}
