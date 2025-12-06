@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
-import { translations as enTranslations } from '../../utils/translations/en'; // Corrected path
-import { translations as arTranslations } from '../../utils/translations/ar'; // Corrected path
+import { translations as enTranslations } from '../utils/translations/en'; // Corrected path
+import { translations as arTranslations } from '../utils/translations/ar'; // Corrected path
 
 // Define the types for the context values
 interface ThemeLanguageContextType {

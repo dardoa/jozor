@@ -1,67 +1,100 @@
-import React from 'react';
+import React, { useState, useEffect, useMemo, memo } from 'react';
+import { X } from 'lucide-react';
+import { InfoTab } from './InfoTab';
+import { PartnersTab } from './PartnersTab';
+import { ContactTab } from './ContactTab';
+import { BioTab } from './BioTab';
+import { MediaTab } from './MediaTab';
+import { SidebarFooter } from './SidebarFooter';
 import { SidebarTabs } from './SidebarTabs';
-import { FamilyRelationshipsSection } from './FamilyRelationshipsSection';
-import { Person, Gender } from '../../types'; // Import Gender type
+import { Person, Language, UserProfile, FamilyActionsProps } from '../../types';
 import { useTranslation } from '../../context/TranslationContext';
 
-export const Sidebar: React.FC = () => {
-  const { t } = useTranslation();
-  const tabs = [
-    { id: 'info', label: t.info, show: true },
-    { id: 'partners', label: t.partners, show: true },
-    { id: 'bio', label: t.bio, show: true },
-    { id: 'contact', label: t.contact, show: true },
-    { id: 'media', label: t.media, show: true },
-  ];
-  const [activeTab, setActiveTab] = React.useState<'info' | 'partners' | 'bio' | 'contact' | 'media'>('info');
+interface SidebarProps {
+  person: Person;
+  people: Record<string, Person>;
+  onUpdate: (id: string, updates: Partial<Person>) => void;
+  onDelete: (id: string) => void;
+  onSelect: (id: string) => void;
+  isOpen: boolean; 
+  onClose: () => void;
+  onOpenModal: (modalType: 'calculator' | 'stats' | 'chat' | 'consistency' | 'timeline' | 'share' | 'story' | 'map') => void;
+  user: UserProfile | null;
+  familyActions: FamilyActionsProps;
+  onOpenCleanTreeOptions: () => void; // New prop
+  onTriggerImportFile: () => void; // New prop
+}
 
-  // Dummy data for FamilyRelationshipsSection
-  const dummyPerson: Person = {
-    id: '1',
-    name: 'Dummy Person',
-    gender: 'male',
-    parents: ['p1', 'p2'],
-    spouses: ['s1'],
-    children: ['c1', 'c2'],
-  };
-  const dummyPeople: Record<string, Person> = {
-    '1': dummyPerson,
-    'p1': { id: 'p1', name: 'Parent 1', gender: 'male', parents: [], spouses: [], children: ['1'] },
-    'p2': { id: 'p2', name: 'Parent 2', gender: 'female', parents: [], spouses: [], children: ['1'] },
-    's1': { id: 's1', name: 'Spouse 1', gender: 'female', parents: [], spouses: ['1'], children: ['c1', 'c2'] },
-    'c1': { id: 'c1', name: 'Child 1', gender: 'male', parents: ['1', 's1'], spouses: [], children: [] },
-    'c2': { id: 'c2', name: 'Child 2', gender: 'female', parents: ['1', 's1'], spouses: [], children: [] },
-  };
-  const dummyFamilyActions = {
-    onAddParent: (g: Gender) => console.log(`Add parent ${g}`),
-    onAddSpouse: (g: Gender) => console.log(`Add spouse ${g}`),
-    onAddChild: (g: Gender) => console.log(`Add child ${g}`),
-    onRemoveRelationship: (pId: string, rId: string, type: 'parent' | 'spouse' | 'child') => console.log(`Remove ${type} relationship between ${pId} and ${rId}`),
-  };
+export const Sidebar: React.FC<SidebarProps> = memo(({
+  person, people, onUpdate, onDelete, onSelect, isOpen, onClose, onOpenModal, user,
+  familyActions, onOpenCleanTreeOptions, onTriggerImportFile // Destructure new props
+}) => {
+  const { t } = useTranslation();
+  const [activeTab, setActiveTab] = useState<'info' | 'partners' | 'bio' | 'contact' | 'media'>('info');
+  const [isEditing, setIsEditing] = useState(false);
+
+  // Reset editing state when person changes
+  useEffect(() => {
+    setIsEditing(false);
+    if (activeTab === 'partners' && person.spouses.length === 0) {
+        setActiveTab('info');
+    }
+  }, [person.id]);
+
+  // Tab definitions
+  const tabs = useMemo(() => [
+    { id: 'info', label: t.profile, show: true },
+    { id: 'partners', label: t.partners, show: person.spouses.length > 0 },
+    { id: 'contact', label: t.contact, show: true },
+    { id: 'bio', label: t.bio, show: true },
+    { id: 'media', label: t.galleryTab, show: true }
+  ], [person.spouses.length, t]);
 
   return (
-    <aside className="w-80 bg-white dark:bg-stone-900 border-r border-stone-200 dark:border-stone-800 flex flex-col">
-      <SidebarTabs activeTab={activeTab} setActiveTab={setActiveTab} tabs={tabs} onClose={() => {}} />
-      <div className="p-4 flex-1 overflow-y-auto">
-        {/* Sidebar content based on activeTab */}
-        {activeTab === 'info' && (
-          <div>
-            <h2 className="text-lg font-semibold mb-4 text-stone-900 dark:text-stone-100">{t.familyRelationships}</h2>
-            <FamilyRelationshipsSection
-              person={dummyPerson}
-              people={dummyPeople}
-              isEditing={true}
-              onUpdate={() => {}}
-              onSelect={() => {}}
-              familyActions={dummyFamilyActions}
-            />
-          </div>
+    <>
+        {/* Mobile Overlay */}
+        {isOpen && (
+            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-30 md:hidden animate-in fade-in" onClick={onClose} />
         )}
-        {activeTab === 'partners' && <p className="text-stone-500 dark:text-stone-400">Partners content.</p>}
-        {activeTab === 'bio' && <p className="text-stone-500 dark:text-stone-400">Biography content.</p>}
-        {activeTab === 'contact' && <p className="text-stone-500 dark:text-stone-400">Contact content.</p>}
-        {activeTab === 'media' && <p className="text-stone-500 dark:text-stone-400">Media content.</p>}
-      </div>
-    </aside>
+
+        {/* Sidebar Container */}
+        <div className={`
+            fixed md:relative inset-y-0 start-0 z-40
+            w-[360px] h-full
+            bg-white dark:bg-stone-900 border-e border-stone-200/50 dark:border-stone-800/50 
+            flex flex-col shadow-xl transition-transform duration-300 ease-in-out
+            ${isOpen ? 'translate-x-0' : 'translate-x-[-100%] rtl:translate-x-[100%]'} md:!transform-none
+        `}>
+        
+            {/* Header / Tabs */}
+            <SidebarTabs 
+                activeTab={activeTab} 
+                setActiveTab={setActiveTab} 
+                tabs={tabs} 
+                onClose={onClose} 
+            />
+
+            {/* Scrollable Content */}
+            <div className="flex-1 overflow-y-auto p-4 scrollbar-thin scrollbar-thumb-stone-200 dark:scrollbar-thumb-stone-700 bg-white dark:bg-stone-900">
+                {activeTab === 'info' && (
+                    <InfoTab 
+                        person={person} people={people} isEditing={isEditing} onUpdate={onUpdate} onSelect={onSelect}
+                        onOpenModal={onOpenModal}
+                        familyActions={familyActions}
+                    />
+                )}
+                {activeTab === 'partners' && <PartnersTab person={person} people={people} isEditing={isEditing} onUpdate={onUpdate} onSelect={onSelect} />}
+                {activeTab === 'contact' && <ContactTab person={person} isEditing={isEditing} onUpdate={onUpdate} />}
+                {activeTab === 'bio' && <BioTab person={person} people={people} isEditing={isEditing} onUpdate={onUpdate} />}
+                {activeTab === 'media' && <MediaTab person={person} isEditing={isEditing} onUpdate={onUpdate} user={user} />}
+            </div>
+            
+            <SidebarFooter 
+                person={person} isEditing={isEditing} setIsEditing={setIsEditing}
+                onDelete={onDelete}
+                onOpenCleanTreeOptions={onOpenCleanTreeOptions} // Pass the new prop
+            />
+        </div>
+    </>
   );
-};
+});
