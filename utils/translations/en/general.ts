@@ -20,4 +20,5 @@ export const general = {
   cleanTreeOptionsSubtitle: 'Choose how you want to begin your new family tree.', // New translation
   startNewTreeOption: 'Start a Blank Tree', // New translation
   importFileOption: 'Import from File', // New translation
+  dataLossWarning: 'Warning: All current unsaved data will be lost if you proceed.', // New translation
 };

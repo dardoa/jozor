@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { X, Plus, Upload } from 'lucide-react';
+import { X, Plus, Upload, AlertTriangle } from 'lucide-react'; // Import AlertTriangle icon
 import { CleanTreeOptionsModalProps } from '../types';
 import { useTranslation } from '../context/TranslationContext';
 
@@ -10,8 +10,6 @@ export const CleanTreeOptionsModal: React.FC<CleanTreeOptionsModalProps> = memo(
   onTriggerImportFile,
 }) => {
   const { t } = useTranslation();
-
-  console.log('CleanTreeOptionsModal rendered, isOpen:', isOpen); // Debug log
 
   if (!isOpen) return null;
 
@@ -41,6 +39,12 @@ export const CleanTreeOptionsModal: React.FC<CleanTreeOptionsModalProps> = memo(
         </div>
 
         <div className="p-6 space-y-4 bg-white dark:bg-stone-800">
+          {/* Warning Message */}
+          <div className="flex items-center gap-2 p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-100 dark:border-orange-800 rounded-xl text-orange-700 dark:text-orange-300 text-xs font-medium">
+            <AlertTriangle className="w-4 h-4 shrink-0" />
+            <span>{t.dataLossWarning}</span>
+          </div>
+
           {/* Option 1: Start a Blank Tree */}
           <button 
             onClick={handleStartNew}
@@ -67,6 +71,14 @@ export const CleanTreeOptionsModal: React.FC<CleanTreeOptionsModalProps> = memo(
                 <div className="font-bold text-emerald-900 dark:text-emerald-200">{t.importFileOption}</div>
                 <div className="text-sm text-emerald-600/80 dark:text-emerald-300/80">{t.importFile}</div>
             </div>
+          </button>
+
+          {/* Cancel Button */}
+          <button 
+            onClick={onClose}
+            className="w-full py-3 bg-stone-100 dark:bg-stone-700 hover:bg-stone-200 dark:hover:bg-stone-600 text-stone-700 dark:text-stone-200 rounded-lg font-bold text-sm shadow-sm transition-all active:scale-[0.98] mt-4"
+          >
+            {t.cancel}
           </button>
         </div>
       </div>

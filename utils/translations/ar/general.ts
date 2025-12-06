@@ -20,4 +20,5 @@ export const general = {
   cleanTreeOptionsSubtitle: 'اختر كيف تريد أن تبدأ شجرة عائلتك الجديدة.', // New translation
   startNewTreeOption: 'ابدأ شجرة فارغة', // New translation
   importFileOption: 'استيراد من ملف', // New translation
+  dataLossWarning: 'تحذير: ستفقد جميع البيانات الحالية غير المحفوظة إذا تابعت.', // New translation
 };
