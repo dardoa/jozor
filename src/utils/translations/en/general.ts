@@ -1,0 +1,16 @@
+export const general = {
+  shareTree: 'Share Tree',
+  tools: 'Tools',
+  viewOptions: 'View Options',
+  welcomeUser: 'Welcome User',
+  loginGoogle: 'Login with Google',
+  export: 'Export',
+  exportGedcom: 'Export GEDCOM',
+  exportJozor: 'Export Jozor Archive',
+  importTree: 'Import Tree',
+  settings: 'Settings',
+  treeLayout: 'Tree Layout',
+  demoModeActive: 'Demo Mode Active',
+  logout: 'Logout',
+  search: 'Search',
+};
