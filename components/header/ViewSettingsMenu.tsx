@@ -4,14 +4,14 @@ import {
   SlidersHorizontal, Eye, Check, ArrowRightLeft, ArrowUpDown, 
   CircleDashed, Share2, Network, GitGraph, MonitorPlay, Palette, Zap, LayoutGrid, Clock
 } from 'lucide-react';
-import { DropdownContent, DropdownMenuItem, DropdownMenuDivider, DropdownMenuHeader } from '../ui/DropdownMenu'; // Changed import
+import { DropdownContent, DropdownMenuItem, DropdownMenuDivider, DropdownMenuHeader } from '../ui/DropdownMenu';
 import { FormField } from '../ui/FormField';
-import { useTranslation } from '../../context/TranslationContext'; // Import useTranslation
+import { useTranslation } from '../../context/TranslationContext';
 
 export const ViewSettingsMenu = memo(({
-    settings, onUpdate, onClose, onPresent // Removed t
+    settings, onUpdate, onClose, onPresent
 }: ViewSettingsMenuProps) => {
-    const { t } = useTranslation(); // Use useTranslation hook directly
+    const { t } = useTranslation();
 
     const chartOptions = [
         { id: 'descendant', label: t.descendant, icon: <GitGraph className="w-3.5 h-3.5"/> },
@@ -27,7 +27,7 @@ export const ViewSettingsMenu = memo(({
     ];
 
     return (
-        <DropdownContent className="w-72" onClose={onClose}> {/* Pass onClose to DropdownContent */}
+        <DropdownContent className="w-72" onClose={onClose}>
             <DropdownMenuHeader icon={<Eye className="w-3 h-3" />} label={t.chartType} />
             <div className="grid grid-cols-1 gap-1 px-1">
                 {chartOptions.map((type) => (
@@ -68,7 +68,7 @@ export const ViewSettingsMenu = memo(({
             
             {settings.chartType === 'descendant' && (
                 <>
-                    <DropdownMenuHeader icon={<LayoutGrid className="w-3 h-3" />} label={t.layout} />
+                    <DropdownMenuHeader icon={<LayoutGrid className="w-3 h-3" />} label={t.layoutMode} />
                     <div className="grid grid-cols-3 gap-1 px-3 pb-2">
                         {(['vertical', 'horizontal', 'radial'] as const).map(mode => (
                             <button key={mode} onClick={() => onUpdate({ ...settings, layoutMode: mode })} 
@@ -144,7 +144,7 @@ export const ViewSettingsMenu = memo(({
 
             <DropdownMenuDivider />
             <DropdownMenuItem 
-                onClick={onPresent} // onClick will now automatically call onClose
+                onClick={onPresent}
                 icon={<MonitorPlay className="w-3.5 h-3.5"/>}
                 label="Present Mode"
             />

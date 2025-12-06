@@ -106,7 +106,6 @@ const App: React.FC = () => {
                             onUpdate={updatePerson}
                             onDelete={deletePerson}
                             onSelect={setFocusId}
-                            language={themeLanguage.language} // Use language from themeLanguage
                             isOpen={sidebarOpen}
                             onClose={() => setSidebarOpen(false)}
                             onOpenModal={handleOpenModal}
@@ -128,10 +127,11 @@ const App: React.FC = () => {
                 <ModalManagerContainer 
                     activeModal={activeModal} setActiveModal={setActiveModal}
                     linkModal={linkModal} setLinkModal={setLinkModal}
-                    people={people} language={themeLanguage.language} // Use language from themeLanguage
+                    people={people} 
                     focusId={focusId} setFocusId={setFocusId} activePerson={activePerson}
                     user={auth.user}
                     familyActions={familyActions}
+                    language={themeLanguage.language} // Pass language from themeLanguage
                 />
             </div>
           </>

@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { HeaderProps } from '../types'; // Import HeaderProps
+import { HeaderProps } from '../types';
 
 // Import sub-components
 import { HeaderLeftSection } from './header/HeaderLeftSection';
@@ -15,7 +15,7 @@ export const Header: React.FC<HeaderProps> = memo(({
         
         {/* Left Section */}
         <HeaderLeftSection 
-          themeLanguage={themeLanguage} // Pass grouped prop
+          themeLanguage={themeLanguage}
           toggleSidebar={toggleSidebar}
           historyControls={historyControls}
         />

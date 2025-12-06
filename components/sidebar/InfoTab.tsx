@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo, memo } from 'react';
-import { Person, Gender, FamilyActionsProps } from '../../types'; // Added FamilyActionsProps
-import { InfoTabView } from './InfoTabView'; // New import
-import { InfoTabEdit } from './InfoTabEdit'; // New import
-import { useTranslation } from '../../context/TranslationContext'; // Import useTranslation
+import { Person, Gender, FamilyActionsProps } from '../../types';
+import { InfoTabView } from './InfoTabView';
+import { InfoTabEdit } from './InfoTabEdit';
+import { useTranslation } from '../../context/TranslationContext';
 
 interface InfoTabProps {
   person: Person;
@@ -10,24 +10,22 @@ interface InfoTabProps {
   isEditing: boolean;
   onUpdate: (id: string, updates: Partial<Person>) => void;
   onSelect: (id: string) => void;
-  // Removed t: any;
   onOpenModal: (modalType: 'calculator' | 'stats' | 'chat' | 'consistency' | 'timeline' | 'share' | 'story' | 'map') => void;
-  familyActions: FamilyActionsProps; // New grouped prop
+  familyActions: FamilyActionsProps;
 }
 
 export const InfoTab: React.FC<InfoTabProps> = memo(({
     person, people, isEditing, onUpdate, onSelect,
-    onOpenModal, familyActions // Destructure new grouped prop
+    onOpenModal, familyActions
 }) => {
-  const { t } = useTranslation(); // Use useTranslation hook directly
+  const { t } = useTranslation();
 
   if (!isEditing) {
       return (
         <InfoTabView
             person={person} people={people} onSelect={onSelect}
             onOpenModal={onOpenModal}
-            familyActions={familyActions} // Pass new grouped prop
-            // Removed t={t}
+            familyActions={familyActions}
         />
       );
   }
@@ -35,8 +33,7 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
   return (
     <InfoTabEdit
         person={person} people={people} onUpdate={onUpdate} onSelect={onSelect}
-        familyActions={familyActions} // Pass new grouped prop
-        // Removed t={t}
+        familyActions={familyActions}
     />
   );
 });

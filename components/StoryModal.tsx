@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Person, Language } from '../types';
 import { generateFamilyStory } from '../services/geminiService';
-import { getTranslation } from '../utils/translations';
 import { X, BookOpen, Sparkles, Loader2, RefreshCw } from 'lucide-react';
-import DOMPurify from 'dompurify'; // Import DOMPurify
-import { useTranslation } from '../context/TranslationContext'; // Import useTranslation
+import DOMPurify from 'dompurify';
+import { useTranslation } from '../context/TranslationContext';
 
 interface StoryModalProps {
   isOpen: boolean;
@@ -15,10 +14,9 @@ interface StoryModalProps {
 }
 
 export const StoryModal: React.FC<StoryModalProps> = ({ isOpen, onClose, people, rootId, language }) => {
-  const { t } = useTranslation(); // Use useTranslation hook directly
+  const { t } = useTranslation();
   const [storyHtml, setStoryHtml] = useState<string>('');
   const [loading, setLoading] = useState(false);
-  // Removed t = getTranslation(language);
 
   // Generate on first open if empty
   useEffect(() => {

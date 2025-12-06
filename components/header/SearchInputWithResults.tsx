@@ -1,13 +1,13 @@
 import React, { useState, memo, useCallback } from 'react';
-import { Person, SearchInputWithResultsProps } from '../../types'; // Import SearchInputWithResultsProps
+import { Person, SearchInputWithResultsProps } from '../../types';
 import { Search, X } from 'lucide-react';
 import { SearchResults } from './SearchResults';
-import { useTranslation } from '../../context/TranslationContext'; // Import useTranslation
+import { useTranslation } from '../../context/TranslationContext';
 
 export const SearchInputWithResults: React.FC<SearchInputWithResultsProps> = memo(({
-  people, onFocusPerson // Removed t
+  people, onFocusPerson
 }) => {
-  const { t } = useTranslation(); // Use useTranslation hook directly
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Person[]>([]);
   const [isSearchActive, setIsSearchActive] = useState(false);

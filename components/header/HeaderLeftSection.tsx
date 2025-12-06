@@ -1,16 +1,14 @@
 import React, { memo } from 'react';
 import { Undo, Redo, Menu } from 'lucide-react';
 import { Logo } from '../Logo';
-import { HeaderLeftSectionProps } from '../../types'; // Import HeaderLeftSectionProps
-import { useTranslation } from '../../context/TranslationContext'; // Import useTranslation
+import { HeaderLeftSectionProps } from '../../types';
+import { useTranslation } from '../../context/TranslationContext';
 
 export const HeaderLeftSection: React.FC<HeaderLeftSectionProps> = memo(({
-  themeLanguage, // Changed to grouped prop
+  themeLanguage,
   toggleSidebar, historyControls
 }) => {
-  const { t } = useTranslation(); // Use useTranslation hook directly
-
-  // Removed handleLanguageToggle as it's no longer used here.
+  const { t } = useTranslation();
 
   return (
     <div className="flex items-center gap-3 md:gap-6">

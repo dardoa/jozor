@@ -2,12 +2,12 @@ import React, { memo } from 'react';
 import { Person, SearchResultsProps } from '../../types';
 import { ArrowRightLeft } from 'lucide-react';
 import { DropdownContent, DropdownMenuItem } from '../ui/DropdownMenu';
-import { useTranslation } from '../../context/TranslationContext'; // Import useTranslation
+import { useTranslation } from '../../context/TranslationContext';
 
 export const SearchResults = memo(({
     results, onFocus, onClose
 }: SearchResultsProps) => {
-    const { t } = useTranslation(); // Use useTranslation hook directly
+    const { t } = useTranslation();
 
     return (
         <DropdownContent className="w-80 start-0 max-h-96 overflow-y-auto scrollbar-thin">

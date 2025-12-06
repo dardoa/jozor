@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Person, Language } from '../types';
-import { getTranslation } from '../utils/translations';
 import { X, Calculator, ArrowRight, User } from 'lucide-react';
 import { calculateRelationship } from '../utils/relationshipLogic';
-import { useTranslation } from '../context/TranslationContext'; // Import useTranslation
+import { useTranslation } from '../context/TranslationContext';
 
 interface RelationshipModalProps {
   isOpen: boolean;
@@ -18,12 +17,11 @@ export const RelationshipModal: React.FC<RelationshipModalProps> = ({
   people,
   language
 }) => {
-  const { t } = useTranslation(); // Use useTranslation hook directly
+  const { t } = useTranslation();
   const [person1Id, setPerson1Id] = useState<string>('');
   const [person2Id, setPerson2Id] = useState<string>('');
   const [result, setResult] = useState<{ text: string, commonAncestor?: string } | null>(null);
   
-  // Removed t = getTranslation(language);
   const peopleList = (Object.values(people) as Person[]).sort((a, b) => a.firstName.localeCompare(b.firstName));
 
   // Reset when opened

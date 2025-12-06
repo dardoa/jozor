@@ -56,7 +56,6 @@ interface FamilyRelationshipsSectionProps {
   isEditing: boolean;
   onUpdate: (id: string, updates: Partial<Person>) => void;
   onSelect: (id: string) => void;
-  // Removed t: any;
   familyActions: FamilyActionsProps;
 }
 

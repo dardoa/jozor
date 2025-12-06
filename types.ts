@@ -268,3 +268,11 @@ export interface QuickAddAction {
   colorClasses: string; // Tailwind classes for background/text color
   buttonClassName?: string; // Optional: for styling the main trigger button
 }
+
+// New interface for collaborators in ShareModal
+export interface Collaborator {
+  email: string;
+  role: 'owner' | 'editor' | 'viewer';
+  status: 'active' | 'pending';
+  avatar?: string;
+}

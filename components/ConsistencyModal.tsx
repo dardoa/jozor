@@ -1,9 +1,8 @@
 import React, { useMemo } from 'react';
 import { Person, Language } from '../types';
 import { checkConsistency, ConsistencyIssue } from '../utils/consistencyLogic';
-import { getTranslation } from '../utils/translations';
 import { X, AlertTriangle, CheckCircle, ExternalLink, ShieldCheck } from 'lucide-react';
-import { useTranslation } from '../context/TranslationContext'; // Import useTranslation
+import { useTranslation } from '../context/TranslationContext';
 
 interface ConsistencyModalProps {
   isOpen: boolean;
@@ -16,8 +15,7 @@ interface ConsistencyModalProps {
 export const ConsistencyModal: React.FC<ConsistencyModalProps> = ({ 
     isOpen, onClose, people, onSelectPerson, language 
 }) => {
-  const { t } = useTranslation(); // Use useTranslation hook directly
-  // Removed t = getTranslation(language);
+  const { t } = useTranslation();
   const issues = useMemo(() => isOpen ? checkConsistency(people) : [], [isOpen, people]);
 
   if (!isOpen) return null;

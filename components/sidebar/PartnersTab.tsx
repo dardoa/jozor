@@ -4,8 +4,8 @@ import { DateSelect } from '../DateSelect';
 import { ExternalLink, Heart, HeartCrack, Users, Gem, Calendar, MapPin } from 'lucide-react';
 import { FormField } from '../ui/FormField';
 import { getDisplayDate } from '../../utils/familyLogic';
-import { Card } from '../ui/Card'; // Import Card component
-import { useTranslation } from '../../context/TranslationContext'; // Import useTranslation
+import { Card } from '../ui/Card';
+import { useTranslation } from '../../context/TranslationContext';
 
 interface PartnersTabProps {
   person: Person;
@@ -13,11 +13,10 @@ interface PartnersTabProps {
   isEditing: boolean;
   onUpdate: (id: string, updates: Partial<Person>) => void;
   onSelect: (id: string) => void;
-  // Removed t: any;
 }
 
 export const PartnersTab: React.FC<PartnersTabProps> = memo(({ person, people, isEditing, onUpdate, onSelect }) => {
-  const { t } = useTranslation(); // Use useTranslation hook directly
+  const { t } = useTranslation();
   
   const handlePartnerUpdate = (spouseId: string, field: keyof RelationshipInfo, value: any) => {
     const currentDetails = person.partnerDetails || {};

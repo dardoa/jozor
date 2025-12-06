@@ -7,10 +7,8 @@ import { BioTab } from './sidebar/BioTab';
 import { MediaTab } from './sidebar/MediaTab';
 import { SidebarFooter } from './sidebar/SidebarFooter';
 import { SidebarTabs } from './sidebar/SidebarTabs';
-// import { SidebarActions } from './sidebar/SidebarActions'; // Removed import
-import { getTranslation } from '../utils/translations';
 import { Person, Language, UserProfile, FamilyActionsProps } from '../types';
-import { useTranslation } from '../context/TranslationContext'; // Import useTranslation
+import { useTranslation } from '../context/TranslationContext';
 
 interface SidebarProps {
   person: Person;
@@ -18,22 +16,20 @@ interface SidebarProps {
   onUpdate: (id: string, updates: Partial<Person>) => void;
   onDelete: (id: string) => void;
   onSelect: (id: string) => void;
-  language: Language;
   isOpen: boolean; 
   onClose: () => void;
   onOpenModal: (modalType: 'calculator' | 'stats' | 'chat' | 'consistency' | 'timeline' | 'share' | 'story' | 'map') => void;
   user: UserProfile | null;
-  familyActions: FamilyActionsProps; // New grouped prop
+  familyActions: FamilyActionsProps;
 }
 
 export const Sidebar: React.FC<SidebarProps> = memo(({
-  person, people, onUpdate, onDelete, onSelect, language, isOpen, onClose, onOpenModal, user,
-  familyActions // Destructure new grouped prop
+  person, people, onUpdate, onDelete, onSelect, isOpen, onClose, onOpenModal, user,
+  familyActions
 }) => {
-  const { t } = useTranslation(); // Use useTranslation hook directly
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'info' | 'partners' | 'bio' | 'contact' | 'media'>('info');
   const [isEditing, setIsEditing] = useState(false);
-  // Removed t = getTranslation(language);
 
   // Reset editing state when person changes
   useEffect(() => {
@@ -82,8 +78,7 @@ export const Sidebar: React.FC<SidebarProps> = memo(({
                     <InfoTab 
                         person={person} people={people} isEditing={isEditing} onUpdate={onUpdate} onSelect={onSelect}
                         onOpenModal={onOpenModal}
-                        familyActions={familyActions} // Pass new grouped prop
-                        // Removed t={t}
+                        familyActions={familyActions}
                     />
                 )}
                 {activeTab === 'partners' && <PartnersTab person={person} people={people} isEditing={isEditing} onUpdate={onUpdate} onSelect={onSelect} />}
@@ -92,12 +87,9 @@ export const Sidebar: React.FC<SidebarProps> = memo(({
                 {activeTab === 'media' && <MediaTab person={person} isEditing={isEditing} onUpdate={onUpdate} user={user} />}
             </div>
             
-            {/* Sidebar Actions (Quick Add Speed Dial) - REMOVED FROM HERE */}
-
             <SidebarFooter 
                 person={person} isEditing={isEditing} setIsEditing={setIsEditing}
                 onDelete={onDelete}
-                // Removed familyActions as it's no longer used directly in this component
             />
         </div>
     </>

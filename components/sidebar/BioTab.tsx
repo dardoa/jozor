@@ -4,19 +4,18 @@ import { generateBiography } from '../../services/geminiService';
 import { Wand2, Sparkles, Loader2, Info } from 'lucide-react';
 import { SmartTextarea } from '../ui/SmartInput';
 import { FormField } from '../ui/FormField';
-import { Card } from '../ui/Card'; // Import Card component
-import { useTranslation } from '../../context/TranslationContext'; // Import useTranslation
+import { Card } from '../ui/Card';
+import { useTranslation } from '../../context/TranslationContext';
 
 interface BioTabProps {
   person: Person;
   people: Record<string, Person>;
   isEditing: boolean;
   onUpdate: (id: string, updates: Partial<Person>) => void;
-  // Removed t: any;
 }
 
 export const BioTab: React.FC<BioTabProps> = memo(({ person, people, isEditing, onUpdate }) => {
-  const { t } = useTranslation(); // Use useTranslation hook directly
+  const { t } = useTranslation();
   const [isGenerating, setIsGenerating] = useState(false);
   const [bioTone, setBioTone] = useState('Standard');
 

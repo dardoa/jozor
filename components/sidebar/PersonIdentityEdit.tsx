@@ -5,16 +5,15 @@ import { Card } from '../ui/Card';
 import { Camera, X, Sparkles, Loader2, ChevronDown } from 'lucide-react';
 import { processImageFile } from '../../utils/imageLogic';
 import { extractPersonData } from '../../services/geminiService';
-import { useTranslation } from '../../context/TranslationContext'; // Import useTranslation
+import { useTranslation } from '../../context/TranslationContext';
 
 interface PersonIdentityEditProps {
   person: Person;
   onUpdate: (id: string, updates: Partial<Person>) => void;
-  // Removed t: any;
 }
 
 export const PersonIdentityEdit: React.FC<PersonIdentityEditProps> = memo(({ person, onUpdate }) => {
-  const { t } = useTranslation(); // Use useTranslation hook directly
+  const { t } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showSmartModal, setShowSmartModal] = useState(false);
   const [smartText, setSmartText] = useState('');
@@ -160,8 +159,7 @@ export const PersonIdentityEdit: React.FC<PersonIdentityEditProps> = memo(({ per
               disabled={isExtracting || !smartText.trim()}
               className="w-full py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-300 text-white rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition-all"
             >
-              {isExtracting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-              {isExtracting ? 'Extracting...' : 'Autofill Details'}
+              {isExtracting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Autofill Details'}
             </button>
           </div>
         </div>

@@ -1,15 +1,15 @@
 import React, { memo } from 'react';
 import { Person, FamilyActionsProps } from '../../types';
 import { getDisplayDate } from '../../utils/familyLogic';
-import { User, Baby, Ribbon, MessageCircle, MapPin, CalendarDays, BookOpen, UserRound, Heart } from 'lucide-react'; // Changed ArrowUp to UserRound
+import { User, Baby, Ribbon, MessageCircle, MapPin, CalendarDays, BookOpen, UserRound, Heart } from 'lucide-react';
 import { useTranslation } from '../../context/TranslationContext';
-import { QuickAddSpeedDial } from '../ui/QuickAddSpeedDial'; // New import
+import { QuickAddSpeedDial } from '../ui/QuickAddSpeedDial';
 
 interface PersonHeaderViewProps {
   person: Person;
   onSelect: (id: string) => void;
   onOpenModal: (modalType: 'calculator' | 'stats' | 'chat' | 'consistency' | 'timeline' | 'share' | 'story' | 'map') => void;
-  familyActions: FamilyActionsProps; // NEW PROP
+  familyActions: FamilyActionsProps;
 }
 
 export const PersonHeaderView: React.FC<PersonHeaderViewProps> = memo(({ person, onSelect, onOpenModal, familyActions }) => {
@@ -24,13 +24,13 @@ export const PersonHeaderView: React.FC<PersonHeaderViewProps> = memo(({ person,
   const quickAddActions = [
     {
         onClick: () => familyActions.onAddParent('male'),
-        icon: <UserRound className="w-3 h-3"/>, // Changed icon
+        icon: <UserRound className="w-3 h-3"/>,
         colorClasses: "bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400",
         label: t.addFather
     },
     {
         onClick: () => familyActions.onAddParent('female'),
-        icon: <UserRound className="w-3 h-3"/>, // Changed icon
+        icon: <UserRound className="w-3 h-3"/>,
         colorClasses: "bg-pink-50 text-pink-600 hover:bg-pink-100 dark:bg-pink-900/30 dark:text-pink-400",
         label: t.addMother
     },

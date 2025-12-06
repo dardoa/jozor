@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, memo } from 'react'; // Added memo to import
 import { Logo } from './Logo';
 import { Plus, Upload, Languages } from 'lucide-react';
 import { Language } from '../types';
-import { useTranslation } from '../context/TranslationContext'; // Import useTranslation
+import { useTranslation } from '../context/TranslationContext';
 import { LoginButton } from './LoginButton';
 
 interface WelcomeScreenProps {
@@ -11,8 +11,8 @@ interface WelcomeScreenProps {
   onLogin: () => Promise<void>;
 }
 
-export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStartNew, onImport, onLogin }) => {
-  const { t, language, setLanguage } = useTranslation(); // Use useTranslation hook
+export const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onStartNew, onImport, onLogin }) => {
+  const { t, language, setLanguage } = useTranslation();
   const [currentOrigin, setCurrentOrigin] = useState('');
 
   useEffect(() => {
@@ -96,4 +96,4 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStartNew, onImpo
       </div>
     </div>
   );
-};
+});

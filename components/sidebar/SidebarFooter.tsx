@@ -2,14 +2,12 @@ import React, { memo } from 'react';
 import { Person } from '../../types';
 import { Trash2, Check, Edit2 } from 'lucide-react';
 import { useTranslation } from '../../context/TranslationContext';
-// Removed QuickAddSpeedDial import as it's no longer used here
 
 interface SidebarFooterProps {
     person: Person;
     isEditing: boolean;
     setIsEditing: (v: boolean) => void;
     onDelete: (id: string) => void;
-    // Removed familyActions as it's no longer used directly in this component
 }
 
 export const SidebarFooter: React.FC<SidebarFooterProps> = memo(({

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, memo } from 'react';
-import { useTranslation } from '../context/TranslationContext'; // Import useTranslation
+import { useTranslation } from '../context/TranslationContext';
 
 interface DateSelectProps {
   value: string;
@@ -9,7 +9,7 @@ interface DateSelectProps {
 }
 
 export const DateSelect: React.FC<DateSelectProps> = memo(({ value, onChange, disabled }) => {
-  const { t } = useTranslation(); // Use useTranslation hook
+  const { t } = useTranslation();
   const [day, setDay] = useState('');
   const [month, setMonth] = useState('');
   const [year, setYear] = useState('');

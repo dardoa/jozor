@@ -65,7 +65,7 @@ export const FamilyMemberItem = memo(({ id, person, onSelect, onRemove }: Family
                     >
                         <Trash2 className="w-2.5 h-2.5" /> {/* Reduced icon size */}
                     </button>
-                ) : null /* Removed ChevronRight when not in editing mode */}
+                ) : null}
             </div>
         </div>
     );

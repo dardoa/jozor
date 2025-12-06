@@ -1,9 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import { Person, Language } from '../types';
-import { getTranslation } from '../utils/translations';
 import { X, Globe, MapPin, Loader2 } from 'lucide-react';
-import { useTranslation } from '../context/TranslationContext'; // Import useTranslation
+import { useTranslation } from '../context/TranslationContext';
 
 interface GeoMapModalProps {
   isOpen: boolean;
@@ -13,8 +12,7 @@ interface GeoMapModalProps {
 }
 
 export const GeoMapModal: React.FC<GeoMapModalProps> = ({ isOpen, onClose, people, language }) => {
-  const { t } = useTranslation(); // Use useTranslation hook directly
-  // Removed t = getTranslation(language);
+  const { t } = useTranslation();
   const svgRef = useRef<SVGSVGElement>(null);
   const [geoData, setGeoData] = useState<any>(null);
   const [loading, setLoading] = useState(true);

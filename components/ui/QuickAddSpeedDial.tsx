@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Plus, UserPlus } from 'lucide-react';
 import { useTranslation } from '../../context/TranslationContext';
-import { QuickAddAction } from '../../types'; // Import QuickAddAction from types
+import { QuickAddAction } from '../../types';
 
 interface QuickAddSpeedDialProps {
   actions: QuickAddAction[];
-  buttonClassName?: string; // New prop for the main trigger button's class
+  buttonClassName?: string;
 }
 
 export const QuickAddSpeedDial: React.FC<QuickAddSpeedDialProps> = ({ actions, buttonClassName = '' }) => {
@@ -36,8 +36,8 @@ export const QuickAddSpeedDial: React.FC<QuickAddSpeedDialProps> = ({ actions, b
           className={`flex items-center justify-center shadow-sm hover:shadow-md active:scale-95 transition-all ${buttonClassName}`}
           title={t.quickAdd || 'Quick Add'}
         >
-          <UserPlus className="w-3 h-3" /> {/* Adjusted icon size */}
-          <span className="ms-1">{t.quickAdd}</span> {/* Added text label */}
+          <UserPlus className="w-3 h-3" />
+          <span className="ms-1">{t.quickAdd}</span>
         </button>
       ) : (
         // Action Buttons (when open)

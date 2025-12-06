@@ -2,21 +2,21 @@ import React, { memo } from 'react';
 import { 
   Printer, FileText, Archive, Calendar, Download
 } from 'lucide-react';
-import { DropdownContent, DropdownMenuItem, DropdownMenuDivider, DropdownMenuHeader } from '../ui/DropdownMenu'; // Changed import
-import { ExportMenuProps } from '../../types'; // Import ExportMenuProps
-import { useTranslation } from '../../context/TranslationContext'; // Import useTranslation
+import { DropdownContent, DropdownMenuItem, DropdownMenuDivider, DropdownMenuHeader } from '../ui/DropdownMenu';
+import { ExportMenuProps } from '../../types';
+import { useTranslation } from '../../context/TranslationContext';
 
 export const ExportMenu = memo(({
-    onClose, onExport // Removed t
+    onClose, onExport
 }: ExportMenuProps) => {
-    const { t } = useTranslation(); // Use useTranslation hook directly
+    const { t } = useTranslation();
 
     return (
-        <DropdownContent className="w-64" onClose={onClose}> {/* Pass onClose to DropdownContent */}
+        <DropdownContent className="w-64" onClose={onClose}>
             <DropdownMenuHeader icon={<Download className="w-3 h-3" />} label={t.downloadAs} />
             
             <DropdownMenuItem 
-                onClick={() => onExport('jozor')} // onClick will now automatically call onClose
+                onClick={() => onExport('jozor')}
                 icon={<Archive className="w-4 h-4"/>}
                 label={t.jozorArchive}
                 subLabel={t.photosData}

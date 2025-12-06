@@ -1,7 +1,8 @@
 import React, { Suspense } from 'react';
-import { Person, Gender, Language, UserProfile, FamilyActionsProps, ModalManagerProps } from '../types'; // Import ModalManagerProps
+import { Person, Gender, Language, UserProfile, FamilyActionsProps, ModalManagerProps } from '../types';
 import { LoadingSpinner } from './LoadingSpinner';
 import { LinkPersonModal } from './LinkPersonModal';
+import { useTranslation } from '../context/TranslationContext'; // Import useTranslation
 
 // Lazy Load Modals
 const RelationshipModal = React.lazy(() => import('./RelationshipModal').then(module => ({ default: module.RelationshipModal })));
@@ -15,11 +16,12 @@ const GeoMapModal = React.lazy(() => import('./GeoMapModal').then(module => ({ d
 
 export const ModalManager: React.FC<ModalManagerProps> = ({
     activeModal, setActiveModal, linkModal, setLinkModal,
-    people, language, focusId, setFocusId, activePerson,
+    people, focusId, setFocusId, activePerson,
     user,
-    familyActions // Destructure new grouped prop
+    familyActions
 }) => {
     const closeModal = () => setActiveModal('none');
+    const { language } = useTranslation(); // Get language from context
 
     return (
         <Suspense fallback={<LoadingSpinner />}>
@@ -30,8 +32,8 @@ export const ModalManager: React.FC<ModalManagerProps> = ({
                 type={linkModal.type}
                 gender={linkModal.gender}
                 currentPersonId={focusId}
-                language={language}
-                familyActions={familyActions} // Pass new grouped prop
+                language={language} // Pass language from context
+                familyActions={familyActions}
             />
             
             {activeModal === 'calculator' && (

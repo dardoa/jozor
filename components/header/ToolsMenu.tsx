@@ -2,19 +2,19 @@ import React, { memo } from 'react';
 import { 
   Calculator, Hammer, Activity, ShieldCheck, Calendar, BookOpen, Map
 } from 'lucide-react';
-import { DropdownContent, DropdownMenuItem, DropdownMenuDivider } from '../ui/DropdownMenu'; // Changed import
-import { ToolsMenuProps } from '../../types'; // Import ToolsMenuProps
-import { useTranslation } from '../../context/TranslationContext'; // Import useTranslation
+import { DropdownContent, DropdownMenuItem, DropdownMenuDivider } from '../ui/DropdownMenu';
+import { ToolsMenuProps } from '../../types';
+import { useTranslation } from '../../context/TranslationContext';
 
 export const ToolsMenu = memo(({
-    onClose, onOpenModal // Removed t
+    onClose, onOpenModal
 }: ToolsMenuProps) => {
-    const { t } = useTranslation(); // Use useTranslation hook directly
+    const { t } = useTranslation();
 
     return (
-        <DropdownContent className="w-64" onClose={onClose}> {/* Pass onClose to DropdownContent */}
+        <DropdownContent className="w-64" onClose={onClose}>
             <DropdownMenuItem 
-                onClick={() => onOpenModal('story')} // onClick will now automatically call onClose
+                onClick={() => onOpenModal('story')}
                 icon={<BookOpen className="w-3.5 h-3.5"/>}
                 label={t.familyStory}
                 colorClass="mb-1 !bg-amber-50 dark:!bg-amber-900/10 hover:!bg-amber-100 dark:hover:!bg-amber-900/30 !text-amber-800 dark:!text-amber-200"

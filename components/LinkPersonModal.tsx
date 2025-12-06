@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { Person, Gender, Language, FamilyActionsProps } from '../types';
-import { getTranslation } from '../utils/translations';
 import { X, UserPlus, Search, User } from 'lucide-react';
-import { useTranslation } from '../context/TranslationContext'; // Import useTranslation
+import { useTranslation } from '../context/TranslationContext';
 
 interface LinkPersonModalProps {
   isOpen: boolean;
@@ -12,7 +11,7 @@ interface LinkPersonModalProps {
   gender: Gender | null;
   currentPersonId: string;
   language: Language;
-  familyActions: FamilyActionsProps; // New grouped prop
+  familyActions: FamilyActionsProps;
 }
 
 export const LinkPersonModal: React.FC<LinkPersonModalProps> = ({
@@ -23,11 +22,10 @@ export const LinkPersonModal: React.FC<LinkPersonModalProps> = ({
   gender,
   currentPersonId,
   language,
-  familyActions // Destructure new grouped prop
+  familyActions
 }) => {
-  const { t } = useTranslation(); // Use useTranslation hook directly
+  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
-  // Removed t = getTranslation(language);
 
   if (!isOpen) return null;
 

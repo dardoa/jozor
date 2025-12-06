@@ -1,9 +1,8 @@
 import React, { useMemo, useState } from 'react';
-import { Person, Language, TimelineEvent } from '../types'; // Added TimelineEvent import
-import { getTranslation } from '../utils/translations';
+import { Person, Language, TimelineEvent } from '../types';
 import { X, Calendar, Baby, Heart, Ribbon } from 'lucide-react';
 import { getDisplayDate } from '../utils/familyLogic';
-import { useTranslation } from '../context/TranslationContext'; // Import useTranslation
+import { useTranslation } from '../context/TranslationContext';
 
 interface TimelineModalProps {
   isOpen: boolean;
@@ -16,8 +15,7 @@ interface TimelineModalProps {
 export const TimelineModal: React.FC<TimelineModalProps> = ({ 
     isOpen, onClose, people, onSelectPerson, language 
 }) => {
-  const { t } = useTranslation(); // Use useTranslation hook directly
-  // Removed t = getTranslation(language);
+  const { t } = useTranslation();
   const [sortAsc, setSortAsc] = useState(true);
 
   const events = useMemo(() => {

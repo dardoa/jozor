@@ -1,9 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { Person, Language } from '../types';
 import { calculateStatistics } from '../utils/statisticsLogic';
-import { getTranslation } from '../utils/translations';
 import { X, Users, Activity, Clock, Trophy, MapPin, Calendar, PieChart, BarChart3, Baby, ExternalLink } from 'lucide-react';
-import { useTranslation } from '../context/TranslationContext'; // Import useTranslation
+import { useTranslation } from '../context/TranslationContext';
 
 interface StatisticsModalProps {
   isOpen: boolean;
@@ -13,8 +12,7 @@ interface StatisticsModalProps {
 }
 
 export const StatisticsModal: React.FC<StatisticsModalProps> = ({ isOpen, onClose, people, language }) => {
-  const { t } = useTranslation(); // Use useTranslation hook directly
-  // Removed t = getTranslation(language);
+  const { t } = useTranslation();
   const stats = useMemo(() => calculateStatistics(people), [people]);
   const [activeTab, setActiveTab] = useState<'overview' | 'timeline' | 'geo' | 'names'>('overview');
 

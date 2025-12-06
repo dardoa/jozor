@@ -1,4 +1,4 @@
-import React, { memo } from 'react'; // Removed useState
+import React, { memo } from 'react';
 import {
   Moon, Sun, ChevronDown, Share2, Hammer, SlidersHorizontal
 } from 'lucide-react';
@@ -8,16 +8,15 @@ import { ToolsMenu } from './ToolsMenu';
 import { ViewSettingsMenu } from './ViewSettingsMenu';
 import { UserMenu } from './UserMenu';
 import { SearchInputWithResults } from './SearchInputWithResults';
-import { Dropdown } from '../ui/Dropdown'; // New import
-import { useTranslation } from '../../context/TranslationContext'; // Import useTranslation
-import { HeaderRightSectionProps } from '../../types'; // Import HeaderRightSectionProps
+import { Dropdown } from '../ui/Dropdown';
+import { useTranslation } from '../../context/TranslationContext';
+import { HeaderRightSectionProps } from '../../types';
 
 export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(({
-  // Removed t,
   themeLanguage, auth, viewSettings, toolsActions, exportActions,
   searchProps
 }) => {
-  const { t } = useTranslation(); // Use useTranslation hook directly
+  const { t } = useTranslation();
 
   return (
     <div className="flex items-center gap-2 md:gap-3">
@@ -52,7 +51,6 @@ export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(({
       >
         <ToolsMenu
           onOpenModal={toolsActions.onOpenModal}
-          // Removed t={t}
         />
       </Dropdown>
 
@@ -72,7 +70,6 @@ export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(({
           settings={viewSettings.treeSettings}
           onUpdate={viewSettings.setTreeSettings}
           onPresent={() => { viewSettings.onPresent(); }}
-          // Removed t={t}
         />
       </Dropdown>
 
@@ -114,7 +111,6 @@ export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(({
         >
           <ExportMenu
             onExport={exportActions.handleExport}
-            // Removed t={t}
           />
         </Dropdown>
       </div>

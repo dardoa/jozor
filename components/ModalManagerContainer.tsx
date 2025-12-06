@@ -8,12 +8,12 @@ interface ModalManagerContainerProps {
   linkModal: { isOpen: boolean; type: 'parent' | 'spouse' | 'child' | null; gender: Gender | null; };
   setLinkModal: (val: any) => void;
   people: Record<string, Person>;
-  language: Language;
   focusId: string;
   setFocusId: (id: string) => void;
   activePerson?: Person;
   user: UserProfile | null;
   familyActions: FamilyActionsProps;
+  language: Language; // Added language prop
 }
 
 export const ModalManagerContainer: React.FC<ModalManagerContainerProps> = memo(({
@@ -22,12 +22,12 @@ export const ModalManagerContainer: React.FC<ModalManagerContainerProps> = memo(
   linkModal,
   setLinkModal,
   people,
-  language,
   focusId,
   setFocusId,
   activePerson,
   user,
   familyActions,
+  language, // Destructure language
 }) => {
   return (
     <ModalManager
@@ -36,12 +36,12 @@ export const ModalManagerContainer: React.FC<ModalManagerContainerProps> = memo(
       linkModal={linkModal}
       setLinkModal={setLinkModal}
       people={people}
-      language={language}
       focusId={focusId}
       setFocusId={setFocusId}
       activePerson={activePerson}
       user={user}
       familyActions={familyActions}
+      language={language} // Pass language to ModalManager
     />
   );
 });

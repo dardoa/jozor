@@ -5,19 +5,18 @@ import { pickAndDownloadImage } from '../../services/googleService';
 import { analyzeImage } from '../../services/geminiService';
 import { Plus, Image as ImageIcon, X, Mic, Play, Trash2, Cloud, Loader2, Sparkles, ScanEye, Info } from 'lucide-react';
 import { VoiceRecorder } from '../VoiceRecorder';
-import { Card } from '../ui/Card'; // Import Card component
-import { useTranslation } from '../../context/TranslationContext'; // Import useTranslation
+import { Card } from '../ui/Card';
+import { useTranslation } from '../../context/TranslationContext';
 
 interface MediaTabProps {
   person: Person;
   isEditing: boolean;
   onUpdate: (id: string, updates: Partial<Person>) => void;
-  // Removed t: any;
   user: UserProfile | null;
 }
 
 export const MediaTab: React.FC<MediaTabProps> = memo(({ person, isEditing, onUpdate, user }) => {
-  const { t } = useTranslation(); // Use useTranslation hook directly
+  const { t } = useTranslation();
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isDriveLoading, setIsDriveLoading] = useState(false);
@@ -118,7 +117,7 @@ export const MediaTab: React.FC<MediaTabProps> = memo(({ person, isEditing, onUp
                 onChange={handleImageUpload}
             />
 
-            {(!hasPhotos && !isEditing) ? (
+            {!hasPhotos && !isEditing ? (
                 <div className="text-center py-4 text-stone-400 dark:text-stone-500 bg-stone-50 dark:bg-stone-800/50 rounded-xl border border-dashed border-stone-200 dark:border-stone-700 flex flex-col items-center">
                     <ImageIcon className="w-8 h-8 mb-2 opacity-50" />
                     <span className="text-sm">{t.noPhotos}</span>
@@ -162,7 +161,7 @@ export const MediaTab: React.FC<MediaTabProps> = memo(({ person, isEditing, onUp
                 {isEditing && <VoiceRecorder onSave={handleVoiceSave} />}
             </div>
 
-            {(!hasVoiceNotes && !isEditing) ? (
+            {!hasVoiceNotes && !isEditing ? (
                  <div className="text-center py-4 text-stone-400 dark:text-stone-500 bg-stone-50 dark:bg-stone-800/50 rounded-xl border border-dashed border-stone-200 dark:border-stone-700 flex flex-col items-center">
                     <Mic className="w-8 h-8 mb-2 opacity-50" />
                     <span className="text-sm">{t.noRecordings}</span>

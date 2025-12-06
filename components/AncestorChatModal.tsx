@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Person, Message, Language } from '../types';
 import { startAncestorChat } from '../services/geminiService';
-import { getTranslation } from '../utils/translations';
 import { X, Send, User, Bot, Loader2 } from 'lucide-react';
-import { useTranslation } from '../context/TranslationContext'; // Import useTranslation
+import { useTranslation } from '../context/TranslationContext';
 
 interface AncestorChatModalProps {
   isOpen: boolean;
@@ -14,12 +13,11 @@ interface AncestorChatModalProps {
 }
 
 export const AncestorChatModal: React.FC<AncestorChatModalProps> = ({ isOpen, onClose, person, people, language }) => {
-  const { t } = useTranslation(); // Use useTranslation hook directly
+  const { t } = useTranslation();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-  // Removed t = getTranslation(language);
 
   useEffect(() => {
     if (isOpen) {
