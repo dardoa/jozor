@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, memo } from 'react';
-import { X } from 'lucide-react';
+import { X } from 'lucide-react'; // X is used in the mobile overlay button
 import { InfoTab } from './InfoTab';
 import { PartnersTab } from './PartnersTab';
 import { ContactTab } from './ContactTab';

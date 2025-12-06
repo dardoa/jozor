@@ -1,8 +1,9 @@
 import React, { memo } from 'react';
-// Removed: import { Check } from 'lucide-react'; 
 import { DropdownContentProps } from '../../types'; // Import DropdownContentProps from types
 
 export const DropdownContent: React.FC<DropdownContentProps> = memo(({ children, className, onClose }) => {
+  // onClose is a prop passed to allow parent components to control the dropdown's visibility.
+  // It's not directly called within DropdownContent, but is part of its public API.
   return (
     <div
       className={`absolute top-full mt-2 bg-white dark:bg-stone-900 rounded-2xl shadow-float border border-stone-200 dark:border-stone-700 p-2 z-50 animate-in fade-in slide-in-from-top-2 ${className}`}
