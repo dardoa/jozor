@@ -15,6 +15,9 @@ export const TranslationProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const { language, setLanguage } = useLanguageSync();
   const t = getTranslation(language);
 
+  console.log('TranslationProvider: Current language:', language);
+  console.log('TranslationProvider: Translation object (t):', t);
+
   const memoizedSetLanguage = useCallback((lang: Language) => {
     setLanguage(lang);
   }, [setLanguage]);

@@ -62,5 +62,6 @@ const translations: Record<Language, any> = {
 };
 
 export const getTranslation = (language: Language) => {
+  console.log('getTranslation: Called with language:', language);
   return translations[language] || en; // Fallback to English if language not found
 };
