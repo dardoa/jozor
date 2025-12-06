@@ -15,5 +15,9 @@ export const general = {
   readOnly: 'للقراءة فقط',
   quickAdd: 'إضافة سريعة', // New translation
   cleanTree: 'مسح الشجرة', // New translation
-  cleanTreeConfirm: 'هل أنت متأكد أنك تريد مسح الشجرة بأكملها وبدء شجرة جديدة؟ ستفقد جميع البيانات غير المحفوظة.', // New translation
+  cleanTreeConfirm: 'هل أنت متأكد أنك تريد مسح الشجرة بأكملها وبدء شجرة جديدة؟ ستفقد جميع البيانات غير المحفوظة.', // Old translation, will be replaced by modal
+  cleanTreeOptionsTitle: 'ابدأ شجرة عائلة جديدة', // New translation
+  cleanTreeOptionsSubtitle: 'اختر كيف تريد أن تبدأ شجرة عائلتك الجديدة.', // New translation
+  startNewTreeOption: 'ابدأ شجرة فارغة', // New translation
+  importFileOption: 'استيراد من ملف', // New translation
 };

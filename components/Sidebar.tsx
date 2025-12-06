@@ -21,12 +21,13 @@ interface SidebarProps {
   onOpenModal: (modalType: 'calculator' | 'stats' | 'chat' | 'consistency' | 'timeline' | 'share' | 'story' | 'map') => void;
   user: UserProfile | null;
   familyActions: FamilyActionsProps;
-  onStartNewTree: () => void; // New prop
+  onOpenCleanTreeOptions: () => void; // New prop
+  onTriggerImportFile: () => void; // New prop
 }
 
 export const Sidebar: React.FC<SidebarProps> = memo(({
   person, people, onUpdate, onDelete, onSelect, isOpen, onClose, onOpenModal, user,
-  familyActions, onStartNewTree // Destructure new prop
+  familyActions, onOpenCleanTreeOptions, onTriggerImportFile // Destructure new props
 }) => {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'info' | 'partners' | 'bio' | 'contact' | 'media'>('info');
@@ -91,7 +92,7 @@ export const Sidebar: React.FC<SidebarProps> = memo(({
             <SidebarFooter 
                 person={person} isEditing={isEditing} setIsEditing={setIsEditing}
                 onDelete={onDelete}
-                onStartNewTree={onStartNewTree} // Pass the new prop
+                onOpenCleanTreeOptions={onOpenCleanTreeOptions} // Pass the new prop
             />
         </div>
     </>

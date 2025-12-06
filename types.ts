@@ -195,7 +195,6 @@ export interface HeaderRightSectionProps {
   searchProps: SearchProps; // Grouped search props
 }
 
-// New interface for HeaderLeftSectionProps
 export interface HeaderLeftSectionProps {
   themeLanguage: ThemeLanguageProps;
   toggleSidebar: () => void;
@@ -235,11 +234,22 @@ export interface SearchResultsProps {
     onClose: () => void
 }
 
+// New interface for CleanTreeOptionsModal
+export interface CleanTreeOptionsModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onStartNewTree: () => void;
+  onTriggerImportFile: () => void;
+  language: Language;
+}
+
 export interface ModalManagerProps { // Updated ModalManagerProps
     activeModal: 'none' | 'calculator' | 'stats' | 'chat' | 'consistency' | 'timeline' | 'share' | 'story' | 'map';
     setActiveModal: (m: any) => void;
     linkModal: { isOpen: boolean; type: 'parent' | 'spouse' | 'child' | null; gender: Gender | null; };
     setLinkModal: (val: any) => void;
+    cleanTreeOptionsModal: { isOpen: boolean }; // New prop for CleanTreeOptionsModal
+    setCleanTreeOptionsModal: (val: { isOpen: boolean }) => void; // New prop setter
     people: Record<string, Person>;
     language: Language;
     focusId: string;
@@ -247,6 +257,8 @@ export interface ModalManagerProps { // Updated ModalManagerProps
     activePerson?: Person;
     user: UserProfile | null;
     familyActions: FamilyActionsProps;
+    onStartNewTree: () => void; // Pass to CleanTreeOptionsModal
+    onTriggerImportFile: () => void; // Pass to CleanTreeOptionsModal
 }
 
 // Define HeaderProps directly here
@@ -282,5 +294,5 @@ export interface SidebarFooterProps { // Updated SidebarFooterProps
     isEditing: boolean;
     setIsEditing: (v: boolean) => void;
     onDelete: (id: string) => void;
-    onStartNewTree: () => void; // New prop for starting a new tree
+    onOpenCleanTreeOptions: () => void; // Changed from onStartNewTree
 }

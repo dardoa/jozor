@@ -8,11 +8,11 @@ interface SidebarFooterProps {
     isEditing: boolean;
     setIsEditing: (v: boolean) => void;
     onDelete: (id: string) => void;
-    onStartNewTree: () => void; // New prop
+    onOpenCleanTreeOptions: () => void; // Changed from onStartNewTree
 }
 
 export const SidebarFooter: React.FC<SidebarFooterProps> = memo(({
-    person, isEditing, setIsEditing, onDelete, onStartNewTree
+    person, isEditing, setIsEditing, onDelete, onOpenCleanTreeOptions
 }) => {
     const { t } = useTranslation();
 
@@ -23,9 +23,7 @@ export const SidebarFooter: React.FC<SidebarFooterProps> = memo(({
     };
 
     const handleCleanTree = () => {
-        if (window.confirm(t.cleanTreeConfirm)) { // Use new translation key
-            onStartNewTree();
-        }
+        onOpenCleanTreeOptions(); // Open the new modal
     };
 
     return (

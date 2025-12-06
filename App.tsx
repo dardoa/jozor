@@ -19,9 +19,9 @@ const App: React.FC = () => {
 
     // Modals & Sidebar
     sidebarOpen, setSidebarOpen, activeModal, setActiveModal, isPresentMode, setIsPresentMode,
-    linkModal, setLinkModal, 
-    handleOpenModal,
-
+    linkModal, setLinkModal, cleanTreeOptionsModal, setCleanTreeOptionsModal, // New modal state
+    handleOpenLinkModal, handleOpenModal, onOpenCleanTreeOptions, // New function
+    
     // Grouped Props
     historyControls,
     themeLanguage, // Contains darkMode, setDarkMode, language, setLanguage
@@ -32,6 +32,7 @@ const App: React.FC = () => {
     searchProps,
     familyActions,
     startNewTree, // Destructure startNewTree
+    onTriggerImportFile, // Destructure onTriggerImportFile
   } = useAppOrchestration();
 
   // Centralized application of theme class, dark mode class, and language attributes to the html element
@@ -62,7 +63,7 @@ const App: React.FC = () => {
       {showWelcome ? (
           <WelcomeScreen 
               onStartNew={handleStartNewTree}
-              onImport={() => fileInputRef.current?.click()}
+              onImport={onTriggerImportFile} // Use onTriggerImportFile here
               onLogin={auth.onLogin}
           />
       ) : (
@@ -112,7 +113,8 @@ const App: React.FC = () => {
                             onOpenModal={handleOpenModal}
                             user={auth.user}
                             familyActions={familyActions}
-                            onStartNewTree={startNewTree} // Pass startNewTree
+                            onOpenCleanTreeOptions={onOpenCleanTreeOptions} // Pass new prop
+                            onTriggerImportFile={onTriggerImportFile} // Pass new prop
                         />
                     </div>
                 )}
@@ -129,11 +131,14 @@ const App: React.FC = () => {
                 <ModalManagerContainer 
                     activeModal={activeModal} setActiveModal={setActiveModal}
                     linkModal={linkModal} setLinkModal={setLinkModal}
+                    cleanTreeOptionsModal={cleanTreeOptionsModal} setCleanTreeOptionsModal={setCleanTreeOptionsModal} // Pass new modal state
                     people={people} 
                     focusId={focusId} setFocusId={setFocusId} activePerson={activePerson}
                     user={auth.user}
                     familyActions={familyActions}
-                    language={themeLanguage.language} // Pass language from themeLanguage
+                    language={themeLanguage.language}
+                    onStartNewTree={handleStartNewTree} // Pass to CleanTreeOptionsModal
+                    onTriggerImportFile={onTriggerImportFile} // Pass to CleanTreeOptionsModal
                 />
             </div>
           </>

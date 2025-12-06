@@ -70,6 +70,15 @@ export const useAppOrchestration = () => {
     canRedo,
   });
 
+  // New state for CleanTreeOptionsModal
+  const [cleanTreeOptionsModal, setCleanTreeOptionsModal] = useState<{ isOpen: boolean }>({ isOpen: false });
+  const onOpenCleanTreeOptions = useCallback(() => setCleanTreeOptionsModal({ isOpen: true }), []);
+
+  // Adjusted onTriggerImportFile to directly trigger file input
+  const onTriggerImportFile = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
+
   // --- Keyboard Shortcuts ---
   useKeyboardShortcuts(canUndo, undo, canRedo, redo, showWelcome, isPresentMode, setIsPresentMode);
 
@@ -118,7 +127,8 @@ export const useAppOrchestration = () => {
 
     // Modals & Sidebar
     sidebarOpen, setSidebarOpen, activeModal, setActiveModal, isPresentMode, setIsPresentMode,
-    linkModal, setLinkModal, handleOpenModal,
+    linkModal, setLinkModal, cleanTreeOptionsModal, setCleanTreeOptionsModal, // New modal state
+    handleOpenLinkModal, handleOpenModal, onOpenCleanTreeOptions, // New function
     
     // Grouped Props
     historyControls,
@@ -130,5 +140,6 @@ export const useAppOrchestration = () => {
     searchProps,
     familyActions,
     startNewTree, // Make startNewTree available
+    onTriggerImportFile, // Make onTriggerImportFile available
   };
 };

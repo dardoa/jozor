@@ -7,13 +7,17 @@ interface ModalManagerContainerProps {
   setActiveModal: (m: any) => void;
   linkModal: { isOpen: boolean; type: 'parent' | 'spouse' | 'child' | null; gender: Gender | null; };
   setLinkModal: (val: any) => void;
+  cleanTreeOptionsModal: { isOpen: boolean }; // New prop
+  setCleanTreeOptionsModal: (val: { isOpen: boolean }) => void; // New prop setter
   people: Record<string, Person>;
   focusId: string;
   setFocusId: (id: string) => void;
   activePerson?: Person;
   user: UserProfile | null;
   familyActions: FamilyActionsProps;
-  language: Language; // Added language prop
+  language: Language;
+  onStartNewTree: () => void; // New prop
+  onTriggerImportFile: () => void; // New prop
 }
 
 export const ModalManagerContainer: React.FC<ModalManagerContainerProps> = memo(({
@@ -21,13 +25,17 @@ export const ModalManagerContainer: React.FC<ModalManagerContainerProps> = memo(
   setActiveModal,
   linkModal,
   setLinkModal,
+  cleanTreeOptionsModal, // Destructure new prop
+  setCleanTreeOptionsModal, // Destructure new prop setter
   people,
   focusId,
   setFocusId,
   activePerson,
   user,
   familyActions,
-  language, // Destructure language
+  language,
+  onStartNewTree, // Destructure new prop
+  onTriggerImportFile, // Destructure new prop
 }) => {
   return (
     <ModalManager
@@ -35,13 +43,17 @@ export const ModalManagerContainer: React.FC<ModalManagerContainerProps> = memo(
       setActiveModal={setActiveModal}
       linkModal={linkModal}
       setLinkModal={setLinkModal}
+      cleanTreeOptionsModal={cleanTreeOptionsModal} // Pass new prop
+      setCleanTreeOptionsModal={setCleanTreeOptionsModal} // Pass new prop setter
       people={people}
       focusId={focusId}
       setFocusId={setFocusId}
       activePerson={activePerson}
       user={user}
       familyActions={familyActions}
-      language={language} // Pass language to ModalManager
+      language={language}
+      onStartNewTree={onStartNewTree} // Pass new prop
+      onTriggerImportFile={onTriggerImportFile} // Pass new prop
     />
   );
 });
