@@ -7,7 +7,7 @@ import { BioTab } from './BioTab';
 import { MediaTab } from './MediaTab';
 import { SidebarFooter } from './SidebarFooter';
 import { SidebarTabs } from './SidebarTabs';
-import { Person, Language, UserProfile, FamilyActionsProps } from '../../types';
+import { Person, UserProfile, FamilyActionsProps } from '../../types'; // Removed Language as it's from context
 import { useTranslation } from '../../context/TranslationContext';
 
 interface SidebarProps {
@@ -46,7 +46,7 @@ export const Sidebar: React.FC<SidebarProps> = memo(({
     { id: 'info', label: t.profile, show: true },
     { id: 'partners', label: t.partners, show: person.spouses.length > 0 },
     { id: 'contact', label: t.contact, show: true },
-    { id: 'bio', label: t.bio, show: true },
+    { id: 'bio', label: t.biography, show: true }, // Corrected to t.biography
     { id: 'media', label: t.galleryTab, show: true }
   ], [person.spouses.length, t]);
 

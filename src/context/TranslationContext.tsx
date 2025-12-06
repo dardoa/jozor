@@ -1,17 +1,17 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
-import { translations as enTranslations } from '../utils/translations/en'; // Corrected path
-import { translations as arTranslations } from '../utils/translations/ar'; // Corrected path
+import { Language } from '../types'; // Import Language type
+import { getTranslation } from '../utils/translations'; // Import getTranslation
 
 // Define the types for the context values
 interface ThemeLanguageContextType {
-  language: 'en' | 'ar';
-  setLanguage: (lang: 'en' | 'ar') => void;
+  language: Language;
+  setLanguage: (lang: Language) => void;
   darkMode: boolean;
   setDarkMode: (isDark: boolean) => void;
 }
 
 interface TranslationContextType {
-  t: typeof enTranslations; // Assuming enTranslations has the full structure
+  t: any; // The translation object
   themeLanguage: ThemeLanguageContextType;
 }
 
@@ -20,9 +20,9 @@ const TranslationContext = createContext<TranslationContextType | undefined>(und
 
 // TranslationProvider component
 export const TranslationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [language, setLanguage] = useState<'en' | 'ar'>(() => {
+  const [language, setLanguage] = useState<Language>(() => {
     // Initialize language from localStorage or default to 'en'
-    return (localStorage.getItem('language') as 'en' | 'ar') || 'en';
+    return (localStorage.getItem('language') as Language) || 'en';
   });
 
   const [darkMode, setDarkMode] = useState<boolean>(() => {
@@ -53,7 +53,7 @@ export const TranslationProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   // Memoize translations to avoid unnecessary re-renders
   const t = useMemo(() => {
-    return language === 'en' ? enTranslations : arTranslations;
+    return getTranslation(language);
   }, [language]);
 
   // Memoize theme and language settings

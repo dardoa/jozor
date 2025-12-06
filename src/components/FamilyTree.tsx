@@ -200,7 +200,7 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({ people, focus
             tY = height / 2;
             scale = isForce ? 0.6 : isFanChart ? 0.8 : 1;
         } else if (nodes.length > 0) {
-             const focusNode = nodes.find(n => n.id === focusId) || nodes[0];
+             const focusNode = nodes.find((n: TreeNode) => n.id === focusId) || nodes[0]; // Explicitly type n
              if (focusNode) {
                  scale = 0.85;
                  tX = width / 2 - focusNode.x * scale;
