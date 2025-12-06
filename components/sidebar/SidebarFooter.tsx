@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
 import { Person } from '../../types';
-import { Trash2, Check, Edit2 } from 'lucide-react';
+import { Trash2, Check, Edit2, FileX } from 'lucide-react'; // Import FileX icon
 import { useTranslation } from '../../context/TranslationContext';
 
 interface SidebarFooterProps {
@@ -8,10 +8,11 @@ interface SidebarFooterProps {
     isEditing: boolean;
     setIsEditing: (v: boolean) => void;
     onDelete: (id: string) => void;
+    onStartNewTree: () => void; // New prop
 }
 
 export const SidebarFooter: React.FC<SidebarFooterProps> = memo(({
-    person, isEditing, setIsEditing, onDelete
+    person, isEditing, setIsEditing, onDelete, onStartNewTree
 }) => {
     const { t } = useTranslation();
 
@@ -21,10 +22,16 @@ export const SidebarFooter: React.FC<SidebarFooterProps> = memo(({
         }
     };
 
+    const handleCleanTree = () => {
+        if (window.confirm(t.cleanTreeConfirm)) { // Use new translation key
+            onStartNewTree();
+        }
+    };
+
     return (
         <div className="bg-white dark:bg-stone-900 border-t border-stone-200/50 dark:border-stone-800/50 flex items-center justify-between shadow-sm relative z-10 p-3">
 
-            {/* Delete Button */}
+            {/* Delete Person Button */}
             <button
                 type="button"
                 onClick={handleDelete}
@@ -33,6 +40,17 @@ export const SidebarFooter: React.FC<SidebarFooterProps> = memo(({
                 aria-label={t.deletePerson}
             >
                 <Trash2 className="w-5 h-5" />
+            </button>
+
+            {/* Clean Tree Button */}
+            <button
+                type="button"
+                onClick={handleCleanTree}
+                className="w-10 h-10 flex items-center justify-center rounded-full text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-colors active:scale-95"
+                title={t.cleanTree}
+                aria-label={t.cleanTree}
+            >
+                <FileX className="w-5 h-5" />
             </button>
 
             {/* Edit / Save Buttons */}

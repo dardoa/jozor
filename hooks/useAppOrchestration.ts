@@ -129,5 +129,6 @@ export const useAppOrchestration = () => {
     exportActions,
     searchProps,
     familyActions,
+    startNewTree, // Make startNewTree available
   };
 };

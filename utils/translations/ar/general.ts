@@ -14,4 +14,6 @@ export const general = {
   or: 'أو',
   readOnly: 'للقراءة فقط',
   quickAdd: 'إضافة سريعة', // New translation
+  cleanTree: 'مسح الشجرة', // New translation
+  cleanTreeConfirm: 'هل أنت متأكد أنك تريد مسح الشجرة بأكملها وبدء شجرة جديدة؟ ستفقد جميع البيانات غير المحفوظة.', // New translation
 };

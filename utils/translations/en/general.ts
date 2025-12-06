@@ -13,5 +13,7 @@ export const general = {
   no: 'No',
   or: 'OR',
   readOnly: 'Read-Only',
-  quickAdd: 'Quick Add', // New translation
+  quickAdd: 'Quick Add',
+  cleanTree: 'Clean Tree', // New translation
+  cleanTreeConfirm: 'Are you sure you want to clear the entire tree and start a new one? All unsaved data will be lost.', // New translation
 };

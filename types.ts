@@ -173,13 +173,6 @@ export interface ExportActionsProps {
   handleExport: (type: 'jozor' | 'json' | 'gedcom' | 'ics' | 'print') => Promise<void>;
 }
 
-export interface HeaderLeftSectionProps {
-  themeLanguage: ThemeLanguageProps; // Changed to grouped prop
-  toggleSidebar: () => void;
-  historyControls: HistoryControlsProps;
-}
-
-// New interface for search-related props
 export interface SearchProps {
   people: Record<string, Person>;
   onFocusPerson: (id: string) => void;
@@ -200,6 +193,13 @@ export interface HeaderRightSectionProps {
   toolsActions: ToolsActionsProps;
   exportActions: ExportActionsProps;
   searchProps: SearchProps; // Grouped search props
+}
+
+// New interface for HeaderLeftSectionProps
+export interface HeaderLeftSectionProps {
+  themeLanguage: ThemeLanguageProps;
+  toggleSidebar: () => void;
+  historyControls: HistoryControlsProps;
 }
 
 export interface SearchInputWithResultsProps extends SearchProps { // Extend SearchProps
@@ -275,4 +275,12 @@ export interface Collaborator {
   role: 'owner' | 'editor' | 'viewer';
   status: 'active' | 'pending';
   avatar?: string;
+}
+
+export interface SidebarFooterProps { // Updated SidebarFooterProps
+    person: Person;
+    isEditing: boolean;
+    setIsEditing: (v: boolean) => void;
+    onDelete: (id: string) => void;
+    onStartNewTree: () => void; // New prop for starting a new tree
 }

@@ -31,6 +31,7 @@ const App: React.FC = () => {
     exportActions,
     searchProps,
     familyActions,
+    startNewTree, // Destructure startNewTree
   } = useAppOrchestration();
 
   // Centralized application of theme class, dark mode class, and language attributes to the html element
@@ -111,6 +112,7 @@ const App: React.FC = () => {
                             onOpenModal={handleOpenModal}
                             user={auth.user}
                             familyActions={familyActions}
+                            onStartNewTree={startNewTree} // Pass startNewTree
                         />
                     </div>
                 )}
