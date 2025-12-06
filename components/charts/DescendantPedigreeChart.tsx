@@ -191,7 +191,7 @@ export const DescendantPedigreeChart: React.FC<DescendantPedigreeChartProps> = m
             className="cursor-pointer"
           >
             <foreignObject x={-NODE_WIDTH/2} y={-NODE_HEIGHT/2} width={NODE_WIDTH} height={NODE_HEIGHT}>
-              <div className={`h-full w-full flex flex-col items-center rounded-xl overflow-hidden bg-[var(--card-bg)] border-[var(--card-border)] border shadow-card transition-all hover:border-[var(--focus-ring-color)] dark:hover:border-[var(--focus-ring-color)] ${isFocus ? 'focus-ring' : ''}`} style={{ backdropFilter: 'blur(8px)' }}>
+              <div className={`h-full w-full flex flex-col items-center rounded-xl overflow-hidden bg-[var(--card-bg)] border-[var(--card-border)] border shadow-card transition-all hover:border-[var(--focus-ring-color)] dark:hover:border-[var(--focus-ring-color)] ${isFocus ? 'focus-ring' : ''}`}>
                 <div className={`flex flex-col items-center justify-center text-center h-full w-full ${cardPadding} gap-1.5 relative`}>
                   {settings.showPhotos && (
                     <div className={`relative ${photoSize} rounded-full flex-shrink-0 p-0.5 border-2 shadow-sm bg-white dark:bg-stone-800 ${genderBorderClass}`}>
