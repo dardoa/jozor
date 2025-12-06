@@ -18,12 +18,15 @@ export const ExportMenu = memo(({
             <DropdownMenuItem 
                 onClick={() => onExport('jozor')}
                 icon={<Archive className="w-4 h-4"/>}
-                label={t.jozorArchive}
-                subLabel={t.photosData}
                 colorClass="bg-teal-50/50 dark:bg-teal-900/10 hover:!bg-teal-50 dark:hover:!bg-teal-900/30 !text-teal-900 dark:!text-teal-100"
                 iconBgClass="bg-teal-100 dark:bg-teal-900/50"
                 iconTextColorClass="text-teal-600 dark:text-teal-400"
-            />
+            >
+                <div className="flex flex-col items-start">
+                    <span className="font-medium truncate">{t.jozorArchive}</span>
+                    <span className="text-xs text-stone-500 dark:text-stone-400 truncate">{t.photosData}</span>
+                </div>
+            </DropdownMenuItem>
             
             <DropdownMenuDivider />
             

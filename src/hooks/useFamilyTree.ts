@@ -1,8 +1,7 @@
-
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Person, Gender } from '../types';
 import { validatePerson } from '../utils/familyLogic';
-import { INITIAL_PERSON, INITIAL_ROOT_ID, SAMPLE_FAMILY } from '../constants';
+import { INITIAL_ROOT_ID, SAMPLE_FAMILY } from '../constants'; // Removed INITIAL_PERSON
 import { importFromGEDCOM } from '../utils/gedcomLogic';
 import { importFromJozorArchive } from '../utils/archiveLogic';
 import { 

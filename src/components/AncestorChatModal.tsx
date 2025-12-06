@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Person, Message, Language } from '../types';
-import { startAncestorChat } from '../services/geminiService';
+import { startAncestorChat } from '../../services/geminiService'; // Corrected import path
 import { X, Send, User, Bot, Loader2 } from 'lucide-react';
 import { useTranslation } from '../context/TranslationContext';
 
@@ -9,10 +9,10 @@ interface AncestorChatModalProps {
   onClose: () => void;
   person: Person;
   people: Record<string, Person>;
-  language: Language;
+  // language: Language; // Removed unused prop
 }
 
-export const AncestorChatModal: React.FC<AncestorChatModalProps> = ({ isOpen, onClose, person, people, language }) => {
+export const AncestorChatModal: React.FC<AncestorChatModalProps> = ({ isOpen, onClose, person, people }) => { // Removed language from destructuring
   const { t } = useTranslation();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');

@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { UserProfile, UserMenuProps } from '../../types';
+import { UserMenuProps } from '../../types'; // Removed unused UserProfile
 import { 
   Cloud, LogOut, AlertCircle
 } from 'lucide-react';
@@ -30,9 +30,10 @@ export const UserMenu = memo(({
             <DropdownMenuItem 
                 onClick={onLogout}
                 icon={<LogOut className="w-4 h-4"/>}
-                label={t.signOut}
                 colorClass="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
-            />
+            >
+                {t.signOut}
+            </DropdownMenuItem>
         </DropdownContent>
     );
 });

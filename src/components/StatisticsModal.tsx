@@ -11,7 +11,7 @@ interface StatisticsModalProps {
   language: Language;
 }
 
-export const StatisticsModal: React.FC<StatisticsModalProps> = ({ isOpen, onClose, people, language }) => {
+export const StatisticsModal: React.FC<StatisticsModalProps> = ({ isOpen, onClose, people }) => { // Removed language
   const { t } = useTranslation();
   const stats = useMemo(() => calculateStatistics(people), [people]);
   const [activeTab, setActiveTab] = useState<'overview' | 'timeline' | 'geo' | 'names'>('overview');

@@ -8,10 +8,10 @@ interface GeoMapModalProps {
   isOpen: boolean;
   onClose: () => void;
   people: Record<string, Person>;
-  language: Language;
+  // language: Language; // Removed unused prop
 }
 
-export const GeoMapModal: React.FC<GeoMapModalProps> = ({ isOpen, onClose, people, language }) => {
+export const GeoMapModal: React.FC<GeoMapModalProps> = ({ isOpen, onClose, people }) => { // Removed language from destructuring
   const { t } = useTranslation();
   const svgRef = useRef<SVGSVGElement>(null);
   const [geoData, setGeoData] = useState<any>(null);

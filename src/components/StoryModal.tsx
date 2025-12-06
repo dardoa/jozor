@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Person, Language } from '../types';
-import { generateFamilyStory } from '../services/geminiService';
+import { generateFamilyStory } from '../../services/geminiService'; // Corrected import path
 import { X, BookOpen, Sparkles, Loader2, RefreshCw } from 'lucide-react';
 import DOMPurify from 'dompurify';
 import { useTranslation } from '../context/TranslationContext';

@@ -3,7 +3,7 @@ import { Person, TreeLink, TreeSettings, TreeNode } from '../../types';
 import { CollapsePoint, NODE_WIDTH_DEFAULT, NODE_WIDTH_COMPACT, NODE_HEIGHT_DEFAULT, NODE_HEIGHT_COMPACT } from '../../utils/treeLayout'; // Import new constants
 import { getYears } from '../../utils/familyLogic';
 import { User, Ribbon, ChevronDown, ChevronUp, ChevronRight, ChevronLeft } from 'lucide-react';
-import * as d3 from 'd3';
+// import * as d3 from 'd3'; // Removed unused import
 
 interface DescendantPedigreeChartProps {
   nodes: TreeNode[];

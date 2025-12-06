@@ -1,7 +1,7 @@
 import React, { memo } from 'react';
 import { TreeSettings, ChartType, AppTheme, ViewSettingsMenuProps } from '../../types';
 import { 
-  SlidersHorizontal, Eye, Check, ArrowRightLeft, ArrowUpDown, 
+  Eye, Check, ArrowRightLeft, ArrowUpDown, // Removed SlidersHorizontal
   CircleDashed, Share2, Network, GitGraph, MonitorPlay, Palette, Zap, LayoutGrid, Clock
 } from 'lucide-react';
 import { DropdownContent, DropdownMenuItem, DropdownMenuDivider, DropdownMenuHeader } from '../ui/DropdownMenu';
@@ -36,9 +36,8 @@ export const ViewSettingsMenu = memo(({
                         onClick={() => onUpdate({ ...settings, chartType: type.id as ChartType })}
                         isActive={settings.chartType === type.id}
                         icon={type.icon}
-                        label={type.label} 
-                        className="justify-between"
                     >
+                        {type.label}
                         {settings.chartType === type.id && <Check className="w-3 h-3 text-teal-600"/>}
                     </DropdownMenuItem>
                 ))}
@@ -91,10 +90,9 @@ export const ViewSettingsMenu = memo(({
                     <DropdownMenuItem 
                         onClick={() => onUpdate({ ...settings, enableForcePhysics: !settings.enableForcePhysics })} 
                         icon={<Zap className="w-3.5 h-3.5"/>}
-                        label={t.enableForcePhysics}
-                        className="justify-between"
                     >
-                        <div className={`w-7 h-4 rounded-full p-0.5 relative transition-colors duration-300 ${settings.enableForcePhysics ? 'bg-orange-500' : 'bg-stone-300 dark:bg-stone-600'}`}>
+                        {t.enableForcePhysics}
+                        <div className={`w-7 h-4 rounded-full p-0.5 relative transition-colors duration-300 ${settings.enableForcePhysics ? 'bg-orange-500' : 'bg-stone-300 dark:bg-stone-600'} ms-auto`}>
                             <div className={`w-3 h-3 bg-white rounded-full shadow-sm transition-transform duration-300 ${settings.enableForcePhysics ? 'translate-x-3 rtl:-translate-x-3' : ''}`}></div>
                         </div>
                     </DropdownMenuItem>
@@ -146,8 +144,9 @@ export const ViewSettingsMenu = memo(({
             <DropdownMenuItem 
                 onClick={onPresent}
                 icon={<MonitorPlay className="w-3.5 h-3.5"/>}
-                label="Present Mode"
-            />
+            >
+                Present Mode
+            </DropdownMenuItem>
         </DropdownContent>
     );
 });

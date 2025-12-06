@@ -1,16 +1,16 @@
 import React, { useMemo, memo } from 'react';
 import * as d3 from 'd3';
-import { Person, TreeSettings, FanArc } from '../../types';
+import { FanArc } from '../../types'; // Removed unused Person, TreeSettings
 import { User } from 'lucide-react';
 
 interface FanChartProps {
   fanArcs: FanArc[];
   focusId: string;
   onSelect: (id: string) => void;
-  settings: TreeSettings;
+  settings: any; // Changed to any as settings is not directly used in the component logic
 }
 
-export const FanChart: React.FC<FanChartProps> = memo(({ fanArcs, focusId, onSelect, settings }) => {
+export const FanChart: React.FC<FanChartProps> = memo(({ fanArcs, onSelect }) => { // Removed focusId, settings
   const arcGen = useMemo(() => d3.arc<any, d3.DefaultArcObject>()
     .startAngle((d: d3.DefaultArcObject) => d.startAngle)
     .endAngle((d: d3.DefaultArcObject) => d.endAngle)

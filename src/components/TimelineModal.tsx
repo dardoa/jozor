@@ -9,11 +9,11 @@ interface TimelineModalProps {
   onClose: () => void;
   people: Record<string, Person>;
   onSelectPerson: (id: string) => void;
-  language: Language;
+  // language: Language; // Removed unused prop
 }
 
 export const TimelineModal: React.FC<TimelineModalProps> = ({ 
-    isOpen, onClose, people, onSelectPerson, language 
+    isOpen, onClose, people, onSelectPerson
 }) => {
   const { t } = useTranslation();
   const [sortAsc, setSortAsc] = useState(true);

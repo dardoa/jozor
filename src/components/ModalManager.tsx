@@ -1,5 +1,5 @@
 import React, { Suspense } from 'react';
-import { Person, Gender, Language, UserProfile, FamilyActionsProps, ModalManagerProps } from '../types';
+import { ModalManagerProps } from '../types'; // Removed unused Person, Gender, Language, UserProfile, FamilyActionsProps
 import { LoadingSpinner } from './LoadingSpinner';
 import { LinkPersonModal } from './LinkPersonModal';
 import { CleanTreeOptionsModal } from './CleanTreeOptionsModal'; // Import new modal
@@ -26,7 +26,7 @@ export const ModalManager: React.FC<ModalManagerProps> = ({
 }) => {
     console.log('ModalManager rendered. cleanTreeOptionsModal.isOpen:', cleanTreeOptionsModal.isOpen); // Debug log
     const closeModal = () => setActiveModal('none');
-    const { language } = useTranslation(); // Get language from context
+    const { themeLanguage: { language } } = useTranslation(); // Corrected language access
 
     return (
         <Suspense fallback={<LoadingSpinner />}>

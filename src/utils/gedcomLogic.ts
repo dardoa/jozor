@@ -1,5 +1,5 @@
-import { Person, Gender, RelationshipStatus } from '../types';
-import { createPerson, getDisplayDate } from './familyLogic';
+import { Person } from '../types'; // Removed unused Gender, RelationshipStatus
+import { createPerson } from './familyLogic'; // Removed unused getDisplayDate
 
 // Helper to format date for GEDCOM (YYYY-MM-DD -> DD MMM YYYY)
 const formatGedcomDate = (dateStr: string) => {

@@ -21,7 +21,7 @@ export const LinkPersonModal: React.FC<LinkPersonModalProps> = ({
   type,
   gender,
   currentPersonId,
-  language,
+  // language, // Removed unused prop
   familyActions
 }) => {
   const { t } = useTranslation();
@@ -41,7 +41,7 @@ export const LinkPersonModal: React.FC<LinkPersonModalProps> = ({
     if (gender && p.gender !== gender) return false;
     
     // Basic search
-    const fullName = `${p.firstName} ${p.middleName} ${p.lastName}`.toLowerCase();
+    const fullName = `${p.firstName} ${p.lastName}`.toLowerCase();
     return fullName.includes(searchTerm.toLowerCase());
   });
 

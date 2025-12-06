@@ -1,7 +1,7 @@
 import React, { memo } from 'react';
 import { 
-  Calculator, Hammer, Activity, ShieldCheck, Calendar, BookOpen, Map
-} from 'lucide-react';
+  Calculator, Activity, ShieldCheck, Calendar, BookOpen, Map
+} from 'lucide-react'; // Removed Hammer
 import { DropdownContent, DropdownMenuItem, DropdownMenuDivider } from '../ui/DropdownMenu';
 import { ToolsMenuProps } from '../../types';
 import { useTranslation } from '../../context/TranslationContext';
@@ -16,11 +16,12 @@ export const ToolsMenu = memo(({
             <DropdownMenuItem 
                 onClick={() => onOpenModal('story')}
                 icon={<BookOpen className="w-3.5 h-3.5"/>}
-                label={t.familyStory}
                 colorClass="mb-1 !bg-amber-50 dark:!bg-amber-900/10 hover:!bg-amber-100 dark:hover:!bg-amber-900/30 !text-amber-800 dark:!text-amber-200"
                 iconBgClass="bg-amber-100 dark:bg-amber-900/50"
                 iconTextColorClass="text-amber-600 dark:text-amber-400"
-            />
+            >
+                {t.familyStory}
+            </DropdownMenuItem>
             
             <DropdownMenuDivider />
             

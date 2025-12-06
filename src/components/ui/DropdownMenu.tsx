@@ -1,6 +1,7 @@
 import React, { memo } from 'react';
-import { ChevronRight } from 'lucide-react';
+import { Check, ChevronDown, ChevronRight } from 'lucide-react';
 
+// DropdownContentProps interface
 interface DropdownContentProps {
   children: React.ReactNode;
   className?: string;
@@ -9,100 +10,69 @@ interface DropdownContentProps {
 
 export const DropdownContent: React.FC<DropdownContentProps> = memo(({ children, className, onClose }) => {
   // We can use onClose here if needed, or just pass it down.
-  // For now, it's primarily for the parent Dropdown to manage its state.
   return (
-    <div className={`p-1 ${className}`}>
+    <div 
+      className={`absolute top-full mt-2 min-w-[12rem] rounded-2xl bg-white dark:bg-stone-900 p-2 shadow-float border border-stone-200 dark:border-stone-800 z-50 animate-in fade-in slide-in-from-top-1 duration-200 ${className}`}
+      role="menu"
+      aria-orientation="vertical"
+    >
       {children}
     </div>
   );
 });
 
+// DropdownMenuItemProps interface
 interface DropdownMenuItemProps {
-  children: React.ReactNode;
-  onClick?: () => void;
+  onClick: () => void;
+  children: React.ReactNode; // Content of the menu item
   icon?: React.ReactNode;
-  label?: string;
-  subLabel?: string;
+  label?: string; // Optional label, if children is not used directly
+  subLabel?: string; // Optional sub-label
   isActive?: boolean;
+  colorClass?: string;
+  iconBgClass?: string;
+  iconTextColorClass?: string;
   className?: string;
-  colorClass?: string; // For custom text/bg color
-  iconBgClass?: string; // For custom icon background
-  iconTextColorClass?: string; // For custom icon text color
 }
 
-export const DropdownMenuItem: React.FC<DropdownMenuItemProps> = memo(({
-  children,
-  onClick,
-  icon,
-  label,
-  subLabel,
-  isActive,
-  className,
-  colorClass = 'text-stone-700 dark:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800',
-  iconBgClass = 'bg-stone-100 dark:bg-stone-700',
-  iconTextColorClass = 'text-stone-500 dark:text-stone-400'
+export const DropdownMenuItem: React.FC<DropdownMenuItemProps> = memo(({ 
+  onClick, children, icon, label, subLabel, isActive, colorClass, iconBgClass, iconTextColorClass, className 
 }) => {
   return (
     <button
       onClick={onClick}
-      className={`group flex w-full items-center rounded-lg px-3 py-2 text-sm transition-colors ${colorClass} ${isActive ? 'bg-teal-50 dark:bg-teal-900/20 text-teal-600 dark:text-teal-300' : ''} ${className}`}
+      className={`flex items-center gap-3 w-full px-3 py-2 text-sm rounded-xl text-stone-700 dark:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors group ${colorClass} ${className}`}
       role="menuitem"
-      tabIndex={-1}
     >
       {icon && (
-        <div className={`flex items-center justify-center w-7 h-7 rounded-md me-2 ${iconBgClass} ${iconTextColorClass}`}>
+        <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${iconBgClass} ${iconTextColorClass}`}>
           {icon}
         </div>
       )}
-      <div className="flex flex-col items-start">
-        {label ? <span className="font-medium">{label}</span> : children}
-        {subLabel && <span className="text-[10px] text-stone-400 dark:text-stone-500">{subLabel}</span>}
+      <div className="flex flex-col items-start min-w-0 flex-1">
+        {children || ( // Render children if provided, otherwise fallback to label/subLabel
+          <>
+            {label && <span className="font-medium truncate">{label}</span>}
+            {subLabel && <span className="text-xs text-stone-500 dark:text-stone-400 truncate">{subLabel}</span>}
+          </>
+        )}
       </div>
+      {isActive && <Check className="w-4 h-4 text-teal-600 ms-auto" />}
     </button>
   );
 });
 
 interface DropdownMenuHeaderProps {
-  label: string;
   icon?: React.ReactNode;
+  label: string;
 }
 
-export const DropdownMenuHeader: React.FC<DropdownMenuHeaderProps> = memo(({ label, icon }) => {
-  return (
-    <div className="flex items-center px-3 py-2 text-xs font-bold text-stone-400 dark:text-stone-500 uppercase tracking-wider">
-      {icon && <div className="me-2 text-stone-400 dark:text-stone-500">{icon}</div>}
-      {label}
-    </div>
-  );
-});
+export const DropdownMenuHeader: React.FC<DropdownMenuHeaderProps> = memo(({ icon, label }) => (
+  <div className="flex items-center gap-2 px-3 py-2 text-xs font-bold text-stone-400 uppercase tracking-wider border-b border-stone-100 dark:border-stone-800 mb-1">
+    {icon} {label}
+  </div>
+));
 
-export const DropdownMenuDivider: React.FC = memo(() => {
-  return <div className="my-1 h-px bg-stone-100 dark:bg-stone-800" />;
-});
-
-interface DropdownMenuSubItemProps {
-  label: string;
-  children: React.ReactNode;
-  icon?: React.ReactNode;
-}
-
-export const DropdownMenuSubItem: React.FC<DropdownMenuSubItemProps> = memo(({ label, children, icon }) => {
-  return (
-    <div className="relative group">
-      <button
-        className="flex w-full items-center rounded-lg px-3 py-2 text-sm text-stone-700 dark:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800"
-        role="menuitem"
-        tabIndex={-1}
-      >
-        {icon && <div className="flex items-center justify-center w-7 h-7 rounded-md me-2 bg-stone-100 dark:bg-stone-700 text-stone-500 dark:text-stone-400">{icon}</div>}
-        <span>{label}</span>
-        <ChevronRight className="ms-auto h-4 w-4 text-stone-400" />
-      </button>
-      <div className="absolute left-full top-0 hidden group-hover:block">
-        <DropdownContent className="w-48">
-          {children}
-        </DropdownContent>
-      </div>
-    </div>
-  );
-});
+export const DropdownMenuDivider: React.FC = memo(() => (
+  <div className="h-px bg-stone-100 dark:bg-stone-800 my-2" />
+));
