@@ -69,5 +69,4 @@ export const modals = {
   actions: 'Actions',
   identity: 'Identity',
   moreNames: 'More Names',
-  requiresBackend: '(requires backend implementation)', // New translation
 };
