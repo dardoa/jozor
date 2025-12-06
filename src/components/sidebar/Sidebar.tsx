@@ -7,7 +7,7 @@ import { BioTab } from './BioTab';
 import { MediaTab } from './MediaTab';
 import { SidebarFooter } from './SidebarFooter';
 import { SidebarTabs } from './SidebarTabs';
-import { Person, UserProfile, FamilyActionsProps } from '../../types'; // Removed Language as it's from context
+import { Person, UserProfile, FamilyActionsProps } from '../../types';
 import { useTranslation } from '../../context/TranslationContext';
 
 interface SidebarProps {
@@ -22,12 +22,12 @@ interface SidebarProps {
   user: UserProfile | null;
   familyActions: FamilyActionsProps;
   onOpenCleanTreeOptions: () => void; // New prop
-  onTriggerImportFile: () => void; // New prop
+  // onTriggerImportFile: () => void; // Removed unused prop
 }
 
 export const Sidebar: React.FC<SidebarProps> = memo(({
   person, people, onUpdate, onDelete, onSelect, isOpen, onClose, onOpenModal, user,
-  familyActions, onOpenCleanTreeOptions, onTriggerImportFile // Destructure new props
+  familyActions, onOpenCleanTreeOptions // Removed onTriggerImportFile
 }) => {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'info' | 'partners' | 'bio' | 'contact' | 'media'>('info');

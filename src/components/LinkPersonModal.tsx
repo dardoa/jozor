@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Person, Gender, Language, FamilyActionsProps } from '../types';
+import { Person, Gender, FamilyActionsProps } from '../types'; // Removed Language
 import { X, UserPlus, Search, User } from 'lucide-react';
 import { useTranslation } from '../context/TranslationContext';
 
@@ -10,7 +10,7 @@ interface LinkPersonModalProps {
   type: 'parent' | 'spouse' | 'child' | null;
   gender: Gender | null;
   currentPersonId: string;
-  language: Language;
+  language: string; // Changed to string as it's passed from context
   familyActions: FamilyActionsProps;
 }
 

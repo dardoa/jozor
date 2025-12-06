@@ -3,7 +3,7 @@ import { Person, UserProfile } from '../../types';
 import { processImageFile } from '../../utils/imageLogic';
 import { pickAndDownloadImage } from '../../services/googleService';
 import { analyzeImage } from '../../../services/geminiService'; // Corrected import path
-import { Plus, Image as ImageIcon, X, Mic, Play, Trash2, Cloud, Loader2, Sparkles, ScanEye, Info } from 'lucide-react';
+import { Plus, Image as ImageIcon, X, Mic, Trash2, Cloud, Loader2, ScanEye } from 'lucide-react'; // Removed Play, Sparkles, Info
 import { VoiceRecorder } from '../VoiceRecorder';
 import { Card } from '../ui/Card';
 import { useTranslation } from '../../context/TranslationContext';
@@ -139,7 +139,7 @@ export const MediaTab: React.FC<MediaTabProps> = memo(({ person, isEditing, onUp
                                 {isEditing && (
                                     <button 
                                         onClick={() => {
-                                            const newGallery = [...(person.gallery || [])];
+                                            const newGallery: string[] = [...(person.gallery || [])]; // Explicitly type newGallery
                                             newGallery.splice(idx, 1);
                                             onUpdate(person.id, { gallery: newGallery });
                                         }}
@@ -180,7 +180,7 @@ export const MediaTab: React.FC<MediaTabProps> = memo(({ person, isEditing, onUp
                             {isEditing && (
                                 <button 
                                     onClick={() => {
-                                        const newNotes = [...(person.voiceNotes || [])];
+                                        const newNotes: string[] = [...(person.voiceNotes || [])]; // Explicitly type newNotes
                                         newNotes.splice(idx, 1);
                                         onUpdate(person.id, { voiceNotes: newNotes });
                                     }}

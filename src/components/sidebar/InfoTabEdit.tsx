@@ -1,5 +1,5 @@
 import React, { memo, useState } from 'react';
-import { Person, FamilyActionsProps } from '../../types'; // Removed Gender
+import { Person, FamilyActionsProps } from '../../types';
 import { PersonIdentityEdit } from './PersonIdentityEdit';
 import { PersonStatusEdit } from './PersonStatusEdit';
 import { PersonBirthDeathEdit } from './PersonBirthDeathEdit';

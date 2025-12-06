@@ -1,4 +1,4 @@
-import React, { useEffect, memo } from 'react'; // Removed useState
+import React, { useEffect, memo } from 'react';
 import { Plus, Upload, Languages } from 'lucide-react';
 import { useTranslation } from '../context/TranslationContext';
 import { LoginButton } from './LoginButton';

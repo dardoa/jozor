@@ -16,8 +16,6 @@ const getAncestors = (personId: string, people: Record<string, Person>): Record<
         if (visited.has(id)) continue;
         visited.add(id);
         
-        ancestors[id] = distance;
-        
         const person = people[id];
         if (person) {
             person.parents.forEach(parentId => {

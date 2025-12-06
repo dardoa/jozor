@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Person, Language } from '../types';
-import { X, Calculator, User } from 'lucide-react'; // Removed ArrowRight
+import { Person } from '../types'; // Removed Language
+import { X, Calculator, User } from 'lucide-react';
 import { calculateRelationship } from '../utils/relationshipLogic';
 import { useTranslation } from '../context/TranslationContext';
 
@@ -8,7 +8,7 @@ interface RelationshipModalProps {
   isOpen: boolean;
   onClose: () => void;
   people: Record<string, Person>;
-  language: Language;
+  language: string; // Changed to string as it's passed from context
 }
 
 export const RelationshipModal: React.FC<RelationshipModalProps> = ({
@@ -51,7 +51,7 @@ export const RelationshipModal: React.FC<RelationshipModalProps> = ({
              <div className="p-1.5 bg-blue-100 dark:bg-blue-900/30 rounded-lg text-blue-600 dark:text-blue-400">
                  <Calculator className="w-5 h-5" />
              </div>
-             <h3 className="text-lg font-bold text-stone-800 dark:text-white">{t.calculateRelationship}</h3>
+             <h3 className="text-lg font-bold text-stone-800 dark:text-white">{t.relationshipCalculator}</h3>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-stone-100 dark:hover:bg-stone-700 rounded-full transition-colors text-stone-400 hover:text-stone-600 dark:hover:text-stone-300">
             <X className="w-5 h-5" />

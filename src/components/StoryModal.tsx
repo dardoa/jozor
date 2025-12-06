@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Person, Language } from '../types';
+import { Person } from '../types'; // Removed Language
 import { generateFamilyStory } from '../../services/geminiService'; // Corrected import path
 import { X, BookOpen, Sparkles, Loader2, RefreshCw } from 'lucide-react';
 import DOMPurify from 'dompurify';
@@ -10,7 +10,7 @@ interface StoryModalProps {
   onClose: () => void;
   people: Record<string, Person>;
   rootId: string;
-  language: Language;
+  language: string; // Changed to string as it's passed from context
 }
 
 export const StoryModal: React.FC<StoryModalProps> = ({ isOpen, onClose, people, rootId, language }) => {

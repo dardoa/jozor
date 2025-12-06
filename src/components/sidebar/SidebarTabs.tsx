@@ -10,7 +10,7 @@ interface SidebarTabsProps {
 
 export const SidebarTabs: React.FC<SidebarTabsProps> = memo(({ activeTab, setActiveTab, tabs, onClose }) => {
   return (
-    <div className="flex items-end justify-between border-b border-stone-200/50 dark:border-stone-800/50 bg-stone-50/80 dark:bg-stone-900/80 backdrop-blur-sm pt-3 px-4">
+    <div className="flex items-end justify-between border-b border-stone-200/50 dark:border-800/50 bg-stone-50/80 dark:bg-stone-900/80 backdrop-blur-sm pt-3 px-4">
       {/* تم التعديل: إزالة overflow-x-auto وجعل الحاوية تأخذ المساحة المتاحة */}
       <div className="flex flex-1 gap-0.5">
         {tabs.filter(tab => tab.show).map(tab => (
