@@ -54,8 +54,7 @@ const App: React.FC = () => {
 
   return (
     <div 
-      className={`flex flex-col h-screen font-sans transition-colors duration-300 text-[var(--card-text)] overflow-hidden`} 
-      style={{ backgroundColor: 'var(--app-bg-color)' }} // Use the new CSS variable here
+      className={`flex flex-col h-screen font-sans transition-colors duration-300 text-[var(--card-text)] overflow-hidden bg-[var(--theme-bg)]`} 
     >
       
       <input ref={fileInputRef} type="file" accept=".json,.ged,.jozor,.zip" className="hidden" onChange={onFileUpload} />
