@@ -69,4 +69,5 @@ export const modals = {
   actions: 'الإجراءات',
   identity: 'الهوية',
   moreNames: 'المزيد من الأسماء',
+  requiresBackend: '(يتطلب تطبيق الواجهة الخلفية)', // New translation
 };

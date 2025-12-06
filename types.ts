@@ -281,13 +281,13 @@ export interface QuickAddAction {
   buttonClassName?: string; // Optional: for styling the main trigger button
 }
 
-// New interface for collaborators in ShareModal
-export interface Collaborator {
-  email: string;
-  role: 'owner' | 'editor' | 'viewer';
-  status: 'active' | 'pending';
-  avatar?: string;
-}
+// Removed: New interface for collaborators in ShareModal
+// export interface Collaborator {
+//   email: string;
+//   role: 'owner' | 'editor' | 'viewer';
+//   status: 'active' | 'pending';
+//   avatar?: string;
+// }
 
 export interface SidebarFooterProps { // Updated SidebarFooterProps
     person: Person;
