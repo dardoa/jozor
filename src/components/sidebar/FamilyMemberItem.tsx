@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import { memo } from 'react';
 import { Person } from '../../types';
 import { getDisplayDate } from '../../utils/familyLogic';
 import { Ribbon, Trash2 } from 'lucide-react';

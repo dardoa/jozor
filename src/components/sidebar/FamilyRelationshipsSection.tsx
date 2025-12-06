@@ -1,56 +1,10 @@
 import React, { memo } from 'react';
-import { Person, Gender, FamilyActionsProps } from '../../types';
+import { Person, FamilyActionsProps } from '../../types';
 import { Heart, Users, UserRound, Baby } from 'lucide-react';
-import { InlineAddButton } from './InlineAddButton';
-import { FamilyMemberItem } from './FamilyMemberItem';
+// Removed: import { InlineAddButton } from './InlineAddButton';
+// Removed: import { FamilyMemberItem } from './FamilyMemberItem';
 import { useTranslation } from '../../context/TranslationContext';
-
-// --- Family Group Component (now internal to this file, or could be moved to its own file if needed elsewhere) ---
-const FamilyGroup = memo(({ 
-    title, icon, ids, people, onAdd, onRemove, onSelect, placeholder, isEditing,
-    iconBgClass = 'bg-stone-100 dark:bg-stone-800', // Default background for icon
-    iconTextColorClass = 'text-stone-500' // Default text color for icon
-}: { 
-    title: string, icon: React.ReactNode, ids: string[], people: Record<string, Person>, onAdd?: (g: Gender) => void, onRemove?: (id: string) => void, onSelect: (id: string) => void, placeholder: string, isEditing: boolean,
-    iconBgClass?: string, // New prop for icon background class
-    iconTextColorClass?: string // New prop for icon text color class
-}) => {
-    const { t } = useTranslation(); // t is used here
-    return (
-        <div className="mb-3 last:mb-0">
-             <div className="flex items-center justify-between mb-2 px-1">
-                <div className="flex items-center gap-2 text-stone-500 dark:text-stone-400">
-                    <div className={`p-1 rounded ${iconBgClass} ${iconTextColorClass}`}>{icon}</div> {/* Using new color props */}
-                    <span className="text-[9px] font-bold uppercase tracking-wider">{title} <span className="opacity-60">({ids.length})</span></span>
-                </div>
-                {isEditing && onAdd && (
-                    <div className="flex gap-1">
-                        <InlineAddButton onClick={() => onAdd('male')} gender="male" />
-                        <InlineAddButton onClick={() => onAdd('female')} gender="female" />
-                    </div>
-                )}
-            </div>
-            
-            {ids.length === 0 && isEditing ? (
-                 <div className="text-[9px] text-stone-400 italic px-2 py-2 bg-stone-50/50 dark:bg-stone-800/30 rounded-lg border border-dashed border-stone-100 dark:border-stone-700 text-center">
-                    {placeholder}
-                 </div>
-            ) : (
-                <div className="grid grid-cols-2 gap-2">
-                    {ids.map(id => (
-                        <FamilyMemberItem 
-                            key={id} 
-                            id={id} 
-                            person={people[id]} 
-                            onSelect={onSelect} 
-                            onRemove={isEditing ? onRemove : undefined}
-                        />
-                    ))} 
-                </div>
-            )}
-        </div>
-    );
-});
+import { FamilyGroup } from './FamilyGroup'; // Import the new FamilyGroup component
 
 // --- Main Component ---
 

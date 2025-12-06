@@ -1,16 +1,11 @@
 import React, { useState, useRef, useEffect, cloneElement, isValidElement, memo } from 'react';
-import { DropdownContent } from './DropdownMenu'; // Assuming DropdownContent is exported from here
-
-interface DropdownProps {
-  trigger: React.ReactNode;
-  children: React.ReactElement<React.ComponentProps<typeof DropdownContent>>; // Expects DropdownContent as child
-  align?: 'start' | 'end';
-}
+import { DropdownProps } from '../../types'; // Import DropdownProps
 
 export const Dropdown: React.FC<DropdownProps> = memo(({ trigger, children, align = 'start' }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  const handleToggle = () => setIsOpen((prev) => !prev);
   const handleClose = () => setIsOpen(false);
 
   useEffect(() => {
@@ -20,25 +15,23 @@ export const Dropdown: React.FC<DropdownProps> = memo(({ trigger, children, alig
       }
     };
 
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    } else {
-      document.removeEventListener('mousedown', handleClickOutside);
-    }
-
+    document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isOpen]);
+  }, []);
 
-  // Pass the onClose handler to the DropdownContent child
-  const childrenWithProps = isValidElement(children) 
-    ? cloneElement(children, { onClose: handleClose }) 
+  const triggerWithProps = isValidElement(trigger)
+    ? cloneElement(trigger, { onClick: handleToggle })
+    : trigger;
+
+  const childrenWithProps = isValidElement(children)
+    ? cloneElement(children, { onClose: handleClose })
     : children;
 
   return (
     <div className="relative" ref={dropdownRef}>
-      <div onClick={() => setIsOpen(!isOpen)}>{trigger}</div>
+      {triggerWithProps}
       {isOpen && (
         <div className={`absolute ${align === 'end' ? 'right-0' : 'left-0'} z-50`}>
           {childrenWithProps}

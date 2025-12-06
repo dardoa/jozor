@@ -2,7 +2,7 @@ import React, { memo } from 'react';
 import { Person, FamilyActionsProps } from '../../types';
 import { InfoTabView } from './InfoTabView';
 import { InfoTabEdit } from './InfoTabEdit';
-import { useTranslation } from '../../context/TranslationContext';
+// Removed: import { useTranslation } from '../../context/TranslationContext';
 
 interface InfoTabProps {
   person: Person;

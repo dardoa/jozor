@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import { memo } from 'react';
 import { TreeSettings, ChartType, AppTheme, ViewSettingsMenuProps } from '../../types';
 import { 
   Eye, Check, ArrowRightLeft, ArrowUpDown, 

@@ -298,3 +298,17 @@ export interface SidebarFooterProps { // Updated SidebarFooterProps
     onDelete: (id: string) => void;
     onOpenCleanTreeOptions: () => void; // Changed from onStartNewTree
 }
+
+// New: Props for DropdownContent
+export interface DropdownContentProps {
+  children: React.ReactNode;
+  className?: string;
+  onClose?: () => void; // Added onClose prop
+}
+
+// New: Props for Dropdown
+export interface DropdownProps {
+  trigger: React.ReactElement<{ onClick?: () => void }>;
+  children: React.ReactElement<DropdownContentProps>;
+  align?: 'start' | 'end';
+}

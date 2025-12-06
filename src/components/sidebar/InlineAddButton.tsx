@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import { memo } from 'react';
 import { Plus } from 'lucide-react';
 import { Gender } from '../../types';
 import { useTranslation } from '../../context/TranslationContext';

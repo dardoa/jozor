@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Person } from '../types'; // Removed Language
+import { useState, useEffect } from 'react';
+import { Person, Language } from '../types'; // Import Language
 import { X, Calculator, User } from 'lucide-react';
 import { calculateRelationship } from '../utils/relationshipLogic';
 import { useTranslation } from '../context/TranslationContext';
@@ -8,7 +8,7 @@ interface RelationshipModalProps {
   isOpen: boolean;
   onClose: () => void;
   people: Record<string, Person>;
-  language: string; // Changed to string as it's passed from context
+  language: Language; // Changed to Language
 }
 
 export const RelationshipModal: React.FC<RelationshipModalProps> = ({

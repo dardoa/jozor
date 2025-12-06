@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import { memo } from 'react';
 import { SearchResultsProps } from '../../types';
 import { ArrowRightLeft } from 'lucide-react';
 import { DropdownContent, DropdownMenuItem } from '../ui/DropdownMenu';

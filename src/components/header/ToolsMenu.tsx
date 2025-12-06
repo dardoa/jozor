@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import { memo } from 'react';
 import { 
   Calculator, Activity, ShieldCheck, Calendar, BookOpen, Map
 } from 'lucide-react';

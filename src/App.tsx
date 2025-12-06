@@ -113,7 +113,7 @@ const App: React.FC = () => {
                             user={auth.user}
                             familyActions={familyActions}
                             onOpenCleanTreeOptions={onOpenCleanTreeOptions} // Pass new prop
-                            onTriggerImportFile={onTriggerImportFile} // Pass new prop
+                            // onTriggerImportFile={onTriggerImportFile} // Removed unused prop
                         />
                     </div>
                 )}
