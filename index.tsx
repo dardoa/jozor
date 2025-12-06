@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import { TranslationProvider } from './context/TranslationContext'; // Corrected import path
-import { useLanguageSync } from './hooks/useLanguageSync'; // Import useLanguageSync to get language for the key
+// Removed: import { useLanguageSync } from './hooks/useLanguageSync'; // Import useLanguageSync to get language for the key
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -10,11 +10,12 @@ if (!rootElement) {
 }
 
 const RootComponent: React.FC = () => {
-  const { language } = useLanguageSync(); // Get the current language to use as a key
-
+  // Removed: const { language } = useLanguageSync(); // Get the current language to use as a key
+  // The key will now be managed internally by TranslationProvider or derived from its internal state.
+  // Forcing a re-mount of TranslationProvider is still desired, so we'll use its internal language state for the key.
   return (
     <React.StrictMode>
-      <TranslationProvider key={language}> {/* Add key prop here */}
+      <TranslationProvider> {/* Key will be managed internally by TranslationProvider */}
         <App />
       </TranslationProvider>
     </React.StrictMode>

@@ -23,7 +23,7 @@ export const TranslationProvider: React.FC<{ children: React.ReactNode }> = ({ c
   }, [setLanguage]);
 
   return (
-    <TranslationContext.Provider value={{ t, language, setLanguage: memoizedSetLanguage }}>
+    <TranslationContext.Provider value={{ t, language, setLanguage: memoizedSetLanguage }} key={language}> {/* Added key prop here */}
       {children}
     </TranslationContext.Provider>
   );

@@ -3,7 +3,7 @@ import { Person, Gender, Language, TreeSettings, UserProfile, HistoryControlsPro
 import { useFamilyTree } from './useFamilyTree';
 import { useGoogleSync } from './useGoogleSync';
 import { useThemeSync } from './useThemeSync';
-import { useLanguageSync } from './useLanguageSync';
+import { useLanguageSync } from './useLanguageSync'; // Keep import for now, but won't be used directly here
 import { useKeyboardShortcuts } from './useKeyboardShortcuts';
 import { useModalAndSidebarLogic } from './useModalAndSidebarLogic';
 import { useTreeSettings } from './useTreeSettings';
@@ -12,6 +12,7 @@ import { exportToGEDCOM } from '../utils/gedcomLogic';
 import { exportToJozorArchive } from '../utils/archiveLogic';
 import { generateICS } from '../utils/calendarLogic';
 import { downloadFile } from '../utils/fileUtils';
+import { useTranslation } from '../context/TranslationContext'; // Import useTranslation
 
 export const useAppOrchestration = () => {
   // --- Core Data & History ---
@@ -25,7 +26,8 @@ export const useAppOrchestration = () => {
   const { user, isSyncing, isDemoMode, handleLogin, handleLogout, stopSyncing } = useGoogleSync(people, loadCloudData);
 
   // --- UI Preferences ---
-  const { language, setLanguage } = useLanguageSync();
+  // Removed: const { language, setLanguage } = useLanguageSync();
+  const { language, setLanguage } = useTranslation(); // Get language from TranslationContext
   const { treeSettings, setTreeSettings } = useTreeSettings();
   const { darkMode, setDarkMode } = useThemeSync(treeSettings.theme);
 

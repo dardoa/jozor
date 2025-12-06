@@ -1,4 +1,4 @@
-import React, { useEffect, useState, memo } from 'react'; // Added memo to import
+import React, { useEffect, useState, memo } from 'react';
 import { Logo } from './Logo';
 import { Plus, Upload, Languages } from 'lucide-react';
 import { Language } from '../types';
