@@ -1,4 +1,3 @@
-
 import { GOOGLE_CLIENT_ID } from '../constants';
 import { UserProfile, Person } from '../types';
 
@@ -11,7 +10,7 @@ declare global {
 }
 
 // Updated scopes to allow picking files (readonly)
-const SCOPES = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.readonly';
+const SCOPES = 'https://www.googleapis.com/auth/drive.file'; // Changed from drive.readonly to drive.file
 const DISCOVERY_DOCS = ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'];
 const FILE_NAME = 'jozor_family_tree.json';
 
