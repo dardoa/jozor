@@ -9,8 +9,8 @@ declare global {
   }
 }
 
-// Updated scopes to allow picking files (readonly)
-const SCOPES = 'https://www.googleapis.com/auth/drive.file'; // Changed from drive.readonly to drive.file
+// Updated scopes to allow picking files and storing in appDataFolder
+const SCOPES = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.appdata';
 const DISCOVERY_DOCS = ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'];
 const FILE_NAME = 'jozor_family_tree.json';
 
@@ -301,33 +301,15 @@ export const pickAndDownloadImage = (): Promise<string> => {
                 const fileId = doc[window.google.picker.Document.ID];
                 
                 try {
-                    // Download the file content as blob/base64
-                    const response = await window.gapi.client.drive.files.get({
+                    // Get webContentLink directly
+                    const fileDetails = await window.gapi.client.drive.files.get({
                         fileId: fileId,
-                        alt: 'media'
-                    }, { responseType: 'blob' }); // Important for binary data
-
-                    // In GAPI client, the body is usually in response.body (string) or handled via responseType
-                    // However, standard GAPI client response.body is raw string.
-                    // Let's use fetch with the token to be safe and cleaner for binary handling
-                    
-                    const fetchResp = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
-                        headers: { 'Authorization': `Bearer ${token}` }
+                        fields: 'webContentLink,webViewLink'
                     });
-                    
-                    if (!fetchResp.ok) throw new Error("Failed to download file content");
-                    
-                    const blob = await fetchResp.blob();
-                    
-                    const reader = new FileReader();
-                    reader.onloadend = () => {
-                        resolve(reader.result as string);
-                    };
-                    reader.onerror = () => reject("Failed to read file");
-                    reader.readAsDataURL(blob);
+                    resolve(fileDetails.result.webContentLink || fileDetails.result.webViewLink);
 
                 } catch (e) {
-                    console.error("Drive Download Error", e);
+                    console.error("Drive Link Retrieval Error", e);
                     reject(e);
                 }
             } else if (data[window.google.picker.Response.ACTION] === window.google.picker.Action.CANCEL) {
@@ -348,4 +330,60 @@ export const pickAndDownloadImage = (): Promise<string> => {
 
         picker.setVisible(true);
     });
+};
+
+// --- New: Upload File to Drive ---
+export const uploadFileToDrive = async (file: Blob, fileName: string, mimeType: string): Promise<string> => {
+    if (!isInitialized) throw new Error("Google API not initialized");
+    if (!window.gapi.client.getToken()?.access_token) throw new Error("Not authenticated to Google Drive.");
+
+    const metadata = {
+        name: fileName,
+        mimeType: mimeType,
+        parents: ['appDataFolder'] // Store in app-specific hidden folder
+    };
+
+    const form = new FormData();
+    form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+    form.append('file', file);
+
+    try {
+        const response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${window.gapi.client.getToken().access_token}`
+            },
+            body: form
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Failed to upload file: ${response.status} - ${errorText}`);
+        }
+
+        const result = await response.json();
+        // Return webContentLink for direct download, or webViewLink for viewing
+        const fileId = result.id;
+        const fileDetails = await window.gapi.client.drive.files.get({
+            fileId: fileId,
+            fields: 'webContentLink,webViewLink'
+        });
+        return fileDetails.result.webContentLink || fileDetails.result.webViewLink;
+
+    } catch (e) {
+        console.error("Error uploading file to Drive", e);
+        throw e;
+    }
+};
+
+// --- New: Fetch Drive File as Blob ---
+export const fetchDriveFileAsBlob = async (url: string): Promise<Blob> => {
+    const token = window.gapi.client.getToken()?.access_token;
+    if (!token) throw new Error("No Google auth token available to fetch Drive file.");
+
+    const response = await fetch(url, {
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!response.ok) throw new Error(`Failed to fetch Drive file: ${response.statusText}`);
+    return response.blob();
 };

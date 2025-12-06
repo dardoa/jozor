@@ -3,7 +3,7 @@ import { Mic, Square, Play, Trash2, Loader2 } from 'lucide-react';
 import { useTranslation } from '../context/TranslationContext';
 
 interface VoiceRecorderProps {
-  onSave: (base64Audio: string) => void;
+  onSave: (audioBlob: Blob) => void; // Changed to accept Blob
 }
 
 export const VoiceRecorder: React.FC<VoiceRecorderProps> = memo(({ onSave }) => {
@@ -28,13 +28,8 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = memo(({ onSave }) => 
                 const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
                 setAudioBlob(blob);
                 
-                // Auto save
-                const reader = new FileReader();
-                reader.readAsDataURL(blob);
-                reader.onloadend = () => {
-                    const base64 = reader.result as string;
-                    onSave(base64);
-                };
+                // Call onSave with the Blob directly
+                onSave(blob);
                 
                 // Stop all tracks
                 stream.getTracks().forEach(track => track.stop());

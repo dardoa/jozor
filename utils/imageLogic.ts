@@ -1,12 +1,12 @@
 /**
  * Reads a file, resizes it to fit within maxWidth/maxHeight, 
- * compresses it to JPEG, and returns the Data URL.
+ * compresses it to JPEG, and returns the Image Blob.
  */
 export const processImageFile = (
   file: File, 
   maxWidth: number = 600, 
   quality: number = 0.8
-): Promise<string> => {
+): Promise<Blob> => { // Changed return type to Promise<Blob>
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -39,9 +39,14 @@ export const processImageFile = (
         }
         ctx.drawImage(img, 0, 0, width, height);
         
-        // Compress to JPEG
-        const dataUrl = canvas.toDataURL('image/jpeg', quality);
-        resolve(dataUrl);
+        // Return as Blob
+        canvas.toBlob((blob) => {
+            if (blob) {
+                resolve(blob);
+            } else {
+                reject(new Error("Canvas to Blob conversion failed"));
+            }
+        }, 'image/jpeg', quality); // Specify JPEG and quality
       };
       img.onerror = (err) => reject(err);
     };

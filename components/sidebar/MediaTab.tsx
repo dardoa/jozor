@@ -1,7 +1,7 @@
 import React, { useRef, useState, memo } from 'react';
 import { Person, UserProfile } from '../../types';
 import { processImageFile } from '../../utils/imageLogic';
-import { pickAndDownloadImage } from '../../services/googleService';
+import { pickAndDownloadImage, uploadFileToDrive, fetchDriveFileAsBlob } from '../../services/googleService'; // Import new functions
 import { analyzeImage } from '../../services/geminiService';
 import { Plus, Image as ImageIcon, X, Mic, Play, Trash2, Cloud, Loader2, Sparkles, ScanEye, Info } from 'lucide-react';
 import { VoiceRecorder } from '../VoiceRecorder';
@@ -24,30 +24,36 @@ export const MediaTab: React.FC<MediaTabProps> = memo(({ person, isEditing, onUp
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file || !user) {
+        alert("Login required to upload images to Drive.");
+        return;
+    }
 
     try {
-        const dataUrl = await processImageFile(file, 600, 0.8);
+        const imageBlob = await processImageFile(file, 600, 0.8); // Get Blob
+        const driveUrl = await uploadFileToDrive(imageBlob, `gallery_${person.id}_${Date.now()}.jpeg`, 'image/jpeg'); // Upload
+        
         const currentGallery = person.gallery || [];
-        onUpdate(person.id, { gallery: [...currentGallery, dataUrl] });
+        onUpdate(person.id, { gallery: [...currentGallery, driveUrl] }); // Store URL
     } catch (err) {
         console.error("Gallery upload failed", err);
+        alert("Failed to upload image to Drive.");
     }
     e.target.value = '';
   };
 
   const handleDriveSelect = async () => {
-      if (user?.uid.startsWith('mock-')) {
+      if (!user || user?.uid.startsWith('mock-')) {
           alert("Drive Picker requires a real Google Login (Demo Mode active).");
           return;
       }
 
       setIsDriveLoading(true);
       try {
-          const dataUrl = await pickAndDownloadImage();
-          if (dataUrl) {
+          const driveUrl = await pickAndDownloadImage(); // Now returns URL
+          if (driveUrl) {
               const currentGallery = person.gallery || [];
-              onUpdate(person.id, { gallery: [...currentGallery, dataUrl] });
+              onUpdate(person.id, { gallery: [...currentGallery, driveUrl] });
           }
       } catch (err: any) {
           if (err !== "Cancelled") {
@@ -62,7 +68,20 @@ export const MediaTab: React.FC<MediaTabProps> = memo(({ person, isEditing, onUp
   const handleAnalyzePhoto = async (index: number, src: string) => {
       setAnalyzingImgIndex(index);
       try {
-          const analysis = await analyzeImage(src);
+          let base64Image: string;
+          if (src.startsWith('data:')) {
+              base64Image = src;
+          } else {
+              // Fetch from Drive URL
+              const blob = await fetchDriveFileAsBlob(src);
+              base64Image = await new Promise<string>((resolve, reject) => {
+                  const reader = new FileReader();
+                  reader.onloadend = () => resolve(reader.result as string);
+                  reader.onerror = reject;
+                  reader.readAsDataURL(blob);
+              });
+          }
+          const analysis = await analyzeImage(base64Image);
           // Append analysis to bio or alert
           if(confirm(`Analysis Result:\n\n${analysis}\n\nAppend to biography?`)) {
               onUpdate(person.id, { bio: (person.bio || '') + `\n\n[Photo Analysis]: ${analysis}` });
@@ -74,9 +93,19 @@ export const MediaTab: React.FC<MediaTabProps> = memo(({ person, isEditing, onUp
       }
   };
 
-  const handleVoiceSave = (base64: string) => {
-      const currentNotes = person.voiceNotes || [];
-      onUpdate(person.id, { voiceNotes: [...currentNotes, base64] });
+  const handleVoiceSave = async (audioBlob: Blob) => { // Accepts Blob
+      if (!user) {
+          alert("Login required to save voice notes to Drive.");
+          return;
+      }
+      try {
+          const driveUrl = await uploadFileToDrive(audioBlob, `voice_${person.id}_${Date.now()}.webm`, 'audio/webm');
+          const currentNotes = person.voiceNotes || [];
+          onUpdate(person.id, { voiceNotes: [...currentNotes, driveUrl] });
+      } catch (err) {
+          console.error("Voice note upload failed", err);
+          alert("Failed to upload voice note to Drive.");
+      }
   };
 
   const hasPhotos = person.gallery && person.gallery.length > 0;
