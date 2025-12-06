@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
 import { Person, Gender, FamilyActionsProps } from '../../types';
-import { ArrowUp, Heart, ArrowDown, Users, UserRound, Baby } from 'lucide-react'; // Added UserRound, Baby icons
+import { Heart, Users, UserRound, Baby } from 'lucide-react';
 import { InlineAddButton } from './InlineAddButton';
 import { FamilyMemberItem } from './FamilyMemberItem';
 import { useTranslation } from '../../context/TranslationContext';
@@ -15,7 +15,7 @@ const FamilyGroup = memo(({
     iconBgClass?: string, // New prop for icon background class
     iconTextColorClass?: string // New prop for icon text color class
 }) => {
-    const { t } = useTranslation();
+    const { t } = useTranslation(); // t is used here
     return (
         <div className="mb-3 last:mb-0">
              <div className="flex items-center justify-between mb-2 px-1">
@@ -58,13 +58,13 @@ interface FamilyRelationshipsSectionProps {
   person: Person;
   people: Record<string, Person>;
   isEditing: boolean;
-  onUpdate: (id: string, updates: Partial<Person>) => void;
+  // onUpdate: (id: string, updates: Partial<Person>) => void; // Removed unused prop
   onSelect: (id: string) => void;
   familyActions: FamilyActionsProps;
 }
 
 export const FamilyRelationshipsSection: React.FC<FamilyRelationshipsSectionProps> = memo(({
-    person, people, isEditing, onSelect, onUpdate,
+    person, people, isEditing, onSelect, // Removed onUpdate
     familyActions
 }) => {
     const { t } = useTranslation();

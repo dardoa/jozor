@@ -1,5 +1,5 @@
-import React, { useState, useRef, memo } from 'react'; // Added memo to import
-import { Mic, Square, Play, Trash2, Loader2 } from 'lucide-react';
+import React, { useState, useRef, memo } from 'react';
+import { Mic, Square } from 'lucide-react';
 import { useTranslation } from '../context/TranslationContext';
 
 interface VoiceRecorderProps {
@@ -9,7 +9,7 @@ interface VoiceRecorderProps {
 export const VoiceRecorder: React.FC<VoiceRecorderProps> = memo(({ onSave }) => {
     const { t } = useTranslation();
     const [isRecording, setIsRecording] = useState(false);
-    const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+    // const [audioBlob, setAudioBlob] = useState<Blob | null>(null); // Removed unused state
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const chunksRef = useRef<Blob[]>([]);
 
@@ -26,7 +26,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = memo(({ onSave }) => 
 
             mediaRecorder.onstop = () => {
                 const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
-                setAudioBlob(blob);
+                // setAudioBlob(blob); // Removed unused state update
                 
                 // Auto save
                 const reader = new FileReader();
@@ -36,6 +36,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = memo(({ onSave }) => 
                     onSave(base64);
                 };
                 
+                reader.onerror = (e) => console.error("FileReader error:", e); // Added error handling for FileReader
                 // Stop all tracks
                 stream.getTracks().forEach(track => track.stop());
             };

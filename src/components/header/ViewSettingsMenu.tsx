@@ -1,7 +1,7 @@
 import React, { memo } from 'react';
 import { TreeSettings, ChartType, AppTheme, ViewSettingsMenuProps } from '../../types';
 import { 
-  Eye, Check, ArrowRightLeft, ArrowUpDown, // Removed SlidersHorizontal
+  Eye, Check, ArrowRightLeft, ArrowUpDown, 
   CircleDashed, Share2, Network, GitGraph, MonitorPlay, Palette, Zap, LayoutGrid, Clock
 } from 'lucide-react';
 import { DropdownContent, DropdownMenuItem, DropdownMenuDivider, DropdownMenuHeader } from '../ui/DropdownMenu';

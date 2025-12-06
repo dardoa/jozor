@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { Person, Language, Gender, FamilyActionsProps } from '../../types';
+import { Person, FamilyActionsProps } from '../../types';
 import { PersonHeaderView } from './PersonHeaderView';
 import { FamilyRelationshipsSection } from './FamilyRelationshipsSection';
 import { Card } from '../ui/Card';
@@ -30,7 +30,7 @@ export const InfoTabView: React.FC<InfoTabViewProps> = memo(({
       <Card title={t.familyRelationships} contentClassName="p-3 space-y-2">
         <div className="mt-2 animate-in fade-in slide-in-from-top-1 duration-200">
           <FamilyRelationshipsSection
-            person={person} people={people} isEditing={false} onUpdate={() => {}} onSelect={onSelect}
+            person={person} people={people} isEditing={false} onSelect={onSelect}
             familyActions={familyActions}
           />
         </div>

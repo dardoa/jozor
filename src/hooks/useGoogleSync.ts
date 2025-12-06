@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { UserProfile, Person } from '../types';
 import { 
@@ -17,19 +16,18 @@ export const useGoogleSync = (
     const [user, setUser] = useState<UserProfile | null>(null);
     const [driveFileId, setDriveFileId] = useState<string | null>(null);
     const [isSyncing, setIsSyncing] = useState(false);
-    const [isInitialized, setIsInitialized] = useState(false);
     const [isDemoMode, setIsDemoMode] = useState(false);
 
     // 1. Init
     useEffect(() => {
-        let mounted = true;
+        // let mounted = true; // Removed unused variable
         initializeGoogleApi()
-            .then(() => { if(mounted) setIsInitialized(true); })
+            .then(() => { /* if(mounted) setIsInitialized(true); */ })
             .catch((e) => {
                 console.warn("Google API Init warn:", e);
-                if(mounted) setIsInitialized(true);
+                /* if(mounted) setIsInitialized(true); */
             });
-        return () => { mounted = false; };
+        // return () => { mounted = false; }; // Removed unused cleanup
     }, []);
 
     // 2. Sync Loop (Only for real auth now)

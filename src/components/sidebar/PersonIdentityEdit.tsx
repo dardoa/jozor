@@ -1,10 +1,10 @@
 import React, { memo, useRef, useState } from 'react';
-import { Person, Gender } from '../../types';
+import { Person } from '../../types';
 import { FormField } from '../ui/FormField';
 import { Card } from '../ui/Card';
 import { Camera, X, Sparkles, Loader2, ChevronDown } from 'lucide-react';
 import { processImageFile } from '../../utils/imageLogic';
-import { extractPersonData } from '../../services/geminiService';
+import { extractPersonData } from '../../../services/geminiService'; // Corrected import path
 import { useTranslation } from '../../context/TranslationContext';
 
 interface PersonIdentityEditProps {

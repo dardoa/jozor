@@ -1,4 +1,3 @@
-
 import { GOOGLE_CLIENT_ID } from '../constants';
 import { UserProfile, Person } from '../types';
 
@@ -303,15 +302,6 @@ export const pickAndDownloadImage = (): Promise<string> => {
                 
                 try {
                     // Download the file content as blob/base64
-                    const response = await window.gapi.client.drive.files.get({
-                        fileId: fileId,
-                        alt: 'media'
-                    }, { responseType: 'blob' }); // Important for binary data
-
-                    // In GAPI client, the body is usually in response.body (string) or handled via responseType
-                    // However, standard GAPI client response.body is raw string.
-                    // Let's use fetch with the token to be safe and cleaner for binary handling
-                    
                     const fetchResp = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
                         headers: { 'Authorization': `Bearer ${token}` }
                     });

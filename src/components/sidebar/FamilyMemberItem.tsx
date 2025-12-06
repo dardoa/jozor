@@ -1,7 +1,7 @@
 import React, { memo } from 'react';
 import { Person } from '../../types';
 import { getDisplayDate } from '../../utils/familyLogic';
-import { User, Ribbon, ChevronRight, Trash2 } from 'lucide-react';
+import { Ribbon, Trash2 } from 'lucide-react';
 import { useTranslation } from '../../context/TranslationContext';
 
 interface FamilyMemberItemProps {

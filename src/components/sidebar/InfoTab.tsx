@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo, memo } from 'react';
-import { Person, Gender, FamilyActionsProps } from '../../types';
+import React, { memo } from 'react';
+import { Person, FamilyActionsProps } from '../../types';
 import { InfoTabView } from './InfoTabView';
 import { InfoTabEdit } from './InfoTabEdit';
 import { useTranslation } from '../../context/TranslationContext';
@@ -18,7 +18,7 @@ export const InfoTab: React.FC<InfoTabProps> = memo(({
     person, people, isEditing, onUpdate, onSelect,
     onOpenModal, familyActions
 }) => {
-  const { t } = useTranslation();
+  // const { t } = useTranslation(); // Removed unused 't'
 
   if (!isEditing) {
       return (

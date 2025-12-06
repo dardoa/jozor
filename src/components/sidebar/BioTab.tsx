@@ -1,7 +1,7 @@
 import React, { useState, memo } from 'react';
 import { Person } from '../../types';
-import { generateBiography } from '../../services/geminiService';
-import { Wand2, Sparkles, Loader2, Info } from 'lucide-react';
+import { generateBiography } from '../../../services/geminiService'; // Corrected import path
+import { Sparkles, Loader2, Info } from 'lucide-react';
 import { SmartTextarea } from '../ui/SmartInput';
 import { FormField } from '../ui/FormField';
 import { Card } from '../ui/Card';

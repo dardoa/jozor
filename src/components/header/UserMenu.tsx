@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { UserMenuProps } from '../../types'; // Removed unused UserProfile
+import { UserMenuProps } from '../../types';
 import { 
   Cloud, LogOut, AlertCircle
 } from 'lucide-react';

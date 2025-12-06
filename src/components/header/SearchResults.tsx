@@ -1,9 +1,8 @@
 import React, { memo } from 'react';
-import { SearchResultsProps } from '../../types'; // Removed unused Person
+import { SearchResultsProps } from '../../types';
 import { ArrowRightLeft } from 'lucide-react';
 import { DropdownContent, DropdownMenuItem } from '../ui/DropdownMenu';
 import { useTranslation } from '../../context/TranslationContext';
-import { getFullName } from '../../utils/familyLogic'; // Import getFullName
 
 export const SearchResults = memo(({
     results, onFocus, onClose

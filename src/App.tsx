@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Sidebar } from './components/Sidebar';
+import { Sidebar } from './components/Sidebar'; // Corrected import path
 import { FamilyTree } from './components/FamilyTree';
 import { WelcomeScreen } from './components/WelcomeScreen';
 import { ModalManagerContainer } from './components/ModalManagerContainer';
@@ -21,7 +21,8 @@ const App: React.FC = () => {
     // Modals & Sidebar
     sidebarOpen, setSidebarOpen, activeModal, setActiveModal, isPresentMode, setIsPresentMode,
     linkModal, setLinkModal, cleanTreeOptionsModal, setCleanTreeOptionsModal, // New modal state
-    handleOpenLinkModal, handleOpenModal, onOpenCleanTreeOptions, // New function
+    // handleOpenLinkModal, // Removed unused
+    handleOpenModal, onOpenCleanTreeOptions, // New function
     
     // Grouped Props
     historyControls,
@@ -32,7 +33,7 @@ const App: React.FC = () => {
     exportActions,
     searchProps,
     familyActions,
-    startNewTree, // Destructure startNewTree
+    // startNewTree, // Removed unused
     onTriggerImportFile, // Destructure onTriggerImportFile
   } = useAppOrchestration();
 

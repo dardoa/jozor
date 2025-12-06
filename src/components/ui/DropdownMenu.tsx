@@ -1,15 +1,15 @@
 import React, { memo } from 'react';
-import { Check, ChevronDown, ChevronRight } from 'lucide-react';
+import { Check } from 'lucide-react';
+import { DropdownContentProps } from '../../types'; // Import DropdownContentProps from types
 
-// DropdownContentProps interface
-interface DropdownContentProps {
-  children: React.ReactNode;
-  className?: string;
-  onClose?: () => void; // Added onClose prop
-}
+// DropdownContentProps interface (Removed from here, now in types.ts)
+// interface DropdownContentProps {
+//   children: React.ReactNode;
+//   className?: string;
+//   onClose?: () => void;
+// }
 
 export const DropdownContent: React.FC<DropdownContentProps> = memo(({ children, className, onClose }) => {
-  // We can use onClose here if needed, or just pass it down.
   return (
     <div 
       className={`absolute top-full mt-2 min-w-[12rem] rounded-2xl bg-white dark:bg-stone-900 p-2 shadow-float border border-stone-200 dark:border-stone-800 z-50 animate-in fade-in slide-in-from-top-1 duration-200 ${className}`}
@@ -36,7 +36,7 @@ interface DropdownMenuItemProps {
 }
 
 export const DropdownMenuItem: React.FC<DropdownMenuItemProps> = memo(({ 
-  onClick, children, icon, label, subLabel, isActive, colorClass, iconBgClass, iconTextColorClass, className 
+  onClick, children, icon, isActive, colorClass, iconBgClass, iconTextColorClass, className 
 }) => {
   return (
     <button
@@ -50,12 +50,7 @@ export const DropdownMenuItem: React.FC<DropdownMenuItemProps> = memo(({
         </div>
       )}
       <div className="flex flex-col items-start min-w-0 flex-1">
-        {children || ( // Render children if provided, otherwise fallback to label/subLabel
-          <>
-            {label && <span className="font-medium truncate">{label}</span>}
-            {subLabel && <span className="text-xs text-stone-500 dark:text-stone-400 truncate">{subLabel}</span>}
-          </>
-        )}
+        {children}
       </div>
       {isActive && <Check className="w-4 h-4 text-teal-600 ms-auto" />}
     </button>

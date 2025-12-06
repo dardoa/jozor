@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Person, Message, Language } from '../types';
+import { Person, Message } from '../types';
 import { startAncestorChat } from '../../services/geminiService'; // Corrected import path
 import { X, Send, User, Bot, Loader2 } from 'lucide-react';
 import { useTranslation } from '../context/TranslationContext';

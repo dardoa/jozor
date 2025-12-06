@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
-import { Person, Language } from '../types';
+import { Person } from '../types';
 import { X, Globe, MapPin, Loader2 } from 'lucide-react';
 import { useTranslation } from '../context/TranslationContext';
 

@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Person, Language, TimelineEvent } from '../types';
+import { Person, TimelineEvent } from '../types';
 import { X, Calendar, Baby, Heart, Ribbon } from 'lucide-react';
 import { getDisplayDate } from '../utils/familyLogic';
 import { useTranslation } from '../context/TranslationContext';

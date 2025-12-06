@@ -1,6 +1,5 @@
 import React, { memo } from 'react';
-import { TreeLink, TreeNode } from '../../types'; // Removed unused Person, TreeSettings
-import { User } from 'lucide-react'; // User is used for fallback text, so keep it
+import { TreeLink, TreeNode } from '../../types';
 import { FORCE_NODE_RADIUS } from '../../utils/treeLayout'; // Import FORCE_NODE_RADIUS
 
 interface ForceChartProps {
@@ -16,7 +15,7 @@ export const ForceChart: React.FC<ForceChartProps> = memo(({ nodes, links, onSel
 
   return (
     <g>
-      {links.map((link, i) => (
+      {links.map((_link: TreeLink, i) => ( // Changed 'link' to '_link'
         <path key={i} className="force-link stroke-[var(--link-line-stroke)]" strokeWidth="2" fill="none" />
       ))}
       {nodes.map((node) => (

@@ -1,5 +1,5 @@
 import React, { memo, useState } from 'react';
-import { Person, Gender, FamilyActionsProps } from '../../types';
+import { Person, FamilyActionsProps } from '../../types'; // Removed Gender
 import { PersonIdentityEdit } from './PersonIdentityEdit';
 import { PersonStatusEdit } from './PersonStatusEdit';
 import { PersonBirthDeathEdit } from './PersonBirthDeathEdit';
@@ -51,7 +51,7 @@ export const InfoTabEdit: React.FC<InfoTabEditProps> = memo(({
         {showFamilyRelationships && (
           <div className="mt-2 animate-in fade-in slide-in-from-top-1 duration-200">
             <FamilyRelationshipsSection
-              person={person} people={people} isEditing={true} onUpdate={onUpdate} onSelect={onSelect}
+              person={person} people={people} isEditing={true} onSelect={onSelect}
               familyActions={familyActions}
             />
           </div>

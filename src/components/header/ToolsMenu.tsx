@@ -1,8 +1,8 @@
 import React, { memo } from 'react';
 import { 
   Calculator, Activity, ShieldCheck, Calendar, BookOpen, Map
-} from 'lucide-react'; // Removed Hammer
-import { DropdownContent, DropdownMenuItem, DropdownMenuDivider } from '../ui/DropdownMenu';
+} from 'lucide-react';
+import { DropdownContent, DropdownMenuItem, DropdownMenuDivider, DropdownMenuHeader } from '../ui/DropdownMenu';
 import { ToolsMenuProps } from '../../types';
 import { useTranslation } from '../../context/TranslationContext';
 

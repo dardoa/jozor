@@ -1,7 +1,7 @@
-import React, { useState, memo } from 'react';
+import React, { memo } from 'react'; // Removed useState
 
 export const Logo: React.FC<{ className?: string }> = memo(({ className }) => {
-  const [imgError, setImgError] = useState(false);
+  const [imgError, setImgError] = React.useState(false); // Moved useState to React.useState
 
   // إذا حدث خطأ في تحميل ملف SVG الخارجي، نعرض الشعار البرمجي كبديل
   if (imgError) {

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, Children, cloneElement, isValidElement, memo } from 'react';
+import React, { useState, useRef, useEffect, cloneElement, isValidElement, memo } from 'react';
 import { DropdownContent } from './DropdownMenu'; // Assuming DropdownContent is exported from here
 
 interface DropdownProps {

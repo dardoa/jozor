@@ -2,7 +2,7 @@ import React, { useRef, useState, memo } from 'react';
 import { Person, UserProfile } from '../../types';
 import { processImageFile } from '../../utils/imageLogic';
 import { pickAndDownloadImage } from '../../services/googleService';
-import { analyzeImage } from '../../services/geminiService';
+import { analyzeImage } from '../../../services/geminiService'; // Corrected import path
 import { Plus, Image as ImageIcon, X, Mic, Play, Trash2, Cloud, Loader2, Sparkles, ScanEye, Info } from 'lucide-react';
 import { VoiceRecorder } from '../VoiceRecorder';
 import { Card } from '../ui/Card';

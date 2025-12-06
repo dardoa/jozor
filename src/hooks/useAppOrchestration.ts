@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { Person, Gender, Language, TreeSettings, UserProfile, HistoryControlsProps, ThemeLanguageProps, AuthProps, ViewSettingsProps, ToolsActionsProps, ExportActionsProps, SearchProps, FamilyActionsProps } from '../types';
+import { useState, useCallback } from 'react';
+import { HistoryControlsProps, ThemeLanguageProps, AuthProps, ViewSettingsProps, ToolsActionsProps, ExportActionsProps, SearchProps, FamilyActionsProps } from '../types';
 import { useFamilyTree } from './useFamilyTree';
 import { useGoogleSync } from './useGoogleSync';
 import { useKeyboardShortcuts } from './useKeyboardShortcuts';
@@ -10,7 +10,7 @@ import { exportToGEDCOM } from '../utils/gedcomLogic';
 import { exportToJozorArchive } from '../utils/archiveLogic';
 import { generateICS } from '../utils/calendarLogic';
 import { downloadFile } from '../utils/fileUtils';
-import { useTranslation } from '../context/TranslationContext'; // Import useTranslation
+import { useTranslation } from '../context/TranslationContext';
 
 export const useAppOrchestration = () => {
   // --- Core Data & History ---
@@ -24,10 +24,8 @@ export const useAppOrchestration = () => {
   const { user, isSyncing, isDemoMode, handleLogin, handleLogout, stopSyncing } = useGoogleSync(people, loadCloudData);
 
   // --- UI Preferences ---
-  // Removed: const { language, setLanguage } = useLanguageSync();
-  const { themeLanguage: { language, setLanguage, darkMode, setDarkMode } } = useTranslation(); // Get language from TranslationContext
+  const { themeLanguage: { language, setLanguage, darkMode, setDarkMode } } = useTranslation();
   const { treeSettings, setTreeSettings } = useTreeSettings();
-  // Removed: const { darkMode, setDarkMode } = useThemeSync(treeSettings.theme); // No longer needed, managed by TranslationContext
 
   const activePerson = people[focusId];
 
@@ -63,7 +61,6 @@ export const useAppOrchestration = () => {
     handleOpenLinkModal,
     handleOpenModal,
   } = useModalAndSidebarLogic({
-    addParent, addSpouse, addChild, linkPerson, setFocusId,
     canUndo,
     canRedo,
   });
@@ -105,16 +102,16 @@ export const useAppOrchestration = () => {
 
   // Grouped props for Header and other components
   const historyControls: HistoryControlsProps = { onUndo: undo, onRedo: redo, canUndo, canRedo };
-  const themeLanguageProps: ThemeLanguageProps = { darkMode, setDarkMode, language, setLanguage }; // Renamed to avoid conflict
+  const themeLanguageProps: ThemeLanguageProps = { darkMode, setDarkMode, language, setLanguage };
   const auth: AuthProps = { user, isDemoMode, isSyncing, onLogin, onLogout };
   const viewSettings: ViewSettingsProps = { treeSettings, setTreeSettings, onPresent: () => setIsPresentMode(true) };
   const toolsActions: ToolsActionsProps = { onOpenModal: handleOpenModal };
   const exportActions: ExportActionsProps = { handleExport };
   const searchProps: SearchProps = { people, onFocusPerson: setFocusId };
   const familyActions: FamilyActionsProps = {
-    onAddParent: (g) => handleOpenLinkModal('parent', g),
-    onAddSpouse: (g) => handleOpenLinkModal('spouse', g),
-    onAddChild: (g) => handleOpenLinkModal('child', g),
+    onAddParent: (g) => { addParent(g); handleOpenLinkModal('parent', g); }, // Explicitly use addParent
+    onAddSpouse: (g) => { addSpouse(g); handleOpenLinkModal('spouse', g); }, // Explicitly use addSpouse
+    onAddChild: (g) => { addChild(g); handleOpenLinkModal('child', g); },   // Explicitly use addChild
     onRemoveRelationship: removeRelationship,
     onLinkPerson: linkPerson,
   };

@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
-import { Person, Language } from '../types';
-import { checkConsistency } from '../utils/consistencyLogic'; // Removed ConsistencyIssue
+import { Person } from '../types';
+import { checkConsistency } from '../utils/consistencyLogic';
 import { X, AlertTriangle, CheckCircle, ExternalLink, ShieldCheck } from 'lucide-react';
 import { useTranslation } from '../context/TranslationContext';
 

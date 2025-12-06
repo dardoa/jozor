@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
-import { Language, UserProfile, Collaborator } from '../types'; // Import Collaborator
+import { UserProfile, Collaborator } from '../types'; // Import Collaborator
 import { X, UserPlus, Mail, Shield, Check, Trash2, Share2, Copy, Globe } from 'lucide-react';
 import { useTranslation } from '../context/TranslationContext';
 
 interface ShareModalProps {
   isOpen: boolean;
   onClose: () => void;
-  language: Language;
+  // language: Language; // Removed unused prop
   user: UserProfile | null;
 }
 
-export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, language, user }) => {
-  const { t } = useTranslation();
+export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, user }) => { // Removed language from destructuring
+  const { t, themeLanguage: { language } } = useTranslation(); // Access language from themeLanguage
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<'editor' | 'viewer'>('editor');
   const [isCopied, setIsCopied] = useState(false);

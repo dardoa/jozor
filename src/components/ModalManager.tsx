@@ -1,5 +1,5 @@
 import React, { Suspense } from 'react';
-import { ModalManagerProps } from '../types'; // Removed unused Person, Gender, Language, UserProfile, FamilyActionsProps
+import { ModalManagerProps } from '../types';
 import { LoadingSpinner } from './LoadingSpinner';
 import { LinkPersonModal } from './LinkPersonModal';
 import { CleanTreeOptionsModal } from './CleanTreeOptionsModal'; // Import new modal
@@ -58,23 +58,23 @@ export const ModalManager: React.FC<ModalManagerProps> = ({
             )}
             
             {activeModal === 'consistency' && (
-                <ConsistencyModal isOpen={true} onClose={closeModal} people={people} onSelectPerson={setFocusId} language={language} />
+                <ConsistencyModal isOpen={true} onClose={closeModal} people={people} onSelectPerson={setFocusId} />
             )}
 
             {activeModal === 'timeline' && (
-                <TimelineModal isOpen={true} onClose={closeModal} people={people} onSelectPerson={setFocusId} language={language} />
+                <TimelineModal isOpen={true} onClose={closeModal} people={people} onSelectPerson={setFocusId} />
             )}
 
             {activeModal === 'map' && (
-                <GeoMapModal isOpen={true} onClose={closeModal} people={people} language={language} />
+                <GeoMapModal isOpen={true} onClose={closeModal} people={people} />
             )}
 
             {activeModal === 'chat' && activePerson?.isDeceased && (
-                <AncestorChatModal isOpen={true} onClose={closeModal} person={activePerson} people={people} language={language} />
+                <AncestorChatModal isOpen={true} onClose={closeModal} person={activePerson} people={people} />
             )}
 
             {activeModal === 'share' && (
-                <ShareModal isOpen={true} onClose={closeModal} language={language} user={user} />
+                <ShareModal isOpen={true} onClose={closeModal} user={user} />
             )}
 
             {activeModal === 'story' && (

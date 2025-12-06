@@ -1,5 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
-import { Person, Message } from "../types";
+import { Person, Message } from "../src/types";
+import { getFullName } from "../src/utils/familyLogic"; // Import getFullName for better context
 
 const getClient = () => {
   const apiKey = process.env.API_KEY;
@@ -28,15 +29,15 @@ export const generateBiography = async (person: Person, people: Record<string, P
 
     // Resolve relative names for richer context and sanitize them
     const parentNames = person.parents
-      .map(id => people[id])
+      .map((id: string) => people[id]) // Explicitly type id
       .filter(Boolean)
-      .map(p => sanitizePromptInput(`${p.firstName} ${p.lastName}`))
+      .map((p: Person) => sanitizePromptInput(`${p.firstName} ${p.lastName}`)) // Explicitly type p
       .join(' and ');
 
     const spouseNames = person.spouses
-      .map(id => people[id])
+      .map((id: string) => people[id]) // Explicitly type id
       .filter(Boolean)
-      .map(p => sanitizePromptInput(`${p.firstName} ${p.lastName}`))
+      .map((p: Person) => sanitizePromptInput(`${p.firstName} ${p.lastName}`)) // Explicitly type p
       .join(', ');
 
     const childCount = person.children.length;
@@ -109,8 +110,8 @@ export const startAncestorChat = async (person: Person, people: Record<string, P
         const sanitizedInterests = sanitizePromptInput(person.interests || 'Unknown');
         const sanitizedBio = sanitizePromptInput(person.bio || 'No specific bio provided.');
 
-        const sanitizedParentNames = person.parents.map(id => people[id]?.firstName).filter(Boolean).map(sanitizePromptInput).join(', ');
-        const sanitizedSpouseNames = person.spouses.map(id => people[id]?.firstName).filter(Boolean).map(sanitizePromptInput).join(', ');
+        const sanitizedParentNames = person.parents.map((id: string) => people[id]?.firstName).filter(Boolean).map(sanitizePromptInput).join(', ');
+        const sanitizedSpouseNames = person.spouses.map((id: string) => people[id]?.firstName).filter(Boolean).map(sanitizePromptInput).join(', ');
 
         const context = `
             You are playing the role of ${sanitizedPersonFirstName} ${sanitizedPersonLastName}.
@@ -223,7 +224,7 @@ export const generateFamilyStory = async (people: Record<string, Person>, rootId
         
         // Prepare simplified data dump to save tokens, sanitizing relevant fields
         const sanitizedSimplifiedData = Object.values(people).map(p => ({
-            name: sanitizePromptInput(`${p.firstName} ${p.lastName}`),
+            name: getFullName(p), // Use getFullName for consistency
             id: p.id,
             parents: p.parents,
             spouses: p.spouses,
@@ -249,6 +250,8 @@ export const generateFamilyStory = async (people: Record<string, Person>, rootId
             FAMILY DATA:
             ${JSON.stringify(sanitizedSimplifiedData.slice(0, 50))} 
             (Data limited to 50 key members for brevity if tree is huge)
+            
+            ROOT PERSON ID: ${rootId}
         `;
 
         const response = await ai.models.generateContent({
