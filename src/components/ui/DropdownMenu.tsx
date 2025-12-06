@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { Check } from 'lucide-react';
+// Removed: import { Check } from 'lucide-react'; 
 import { DropdownContentProps } from '../../types'; // Import DropdownContentProps from types
 
 export const DropdownContent: React.FC<DropdownContentProps> = memo(({ children, className, onClose }) => {

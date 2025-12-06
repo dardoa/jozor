@@ -2,7 +2,7 @@ import { memo } from 'react';
 import { 
   Calculator, Activity, ShieldCheck, Calendar, BookOpen, Map
 } from 'lucide-react';
-import { DropdownContent, DropdownMenuItem, DropdownMenuDivider, DropdownMenuHeader } from '../ui/DropdownMenu';
+import { DropdownContent, DropdownMenuItem, DropdownMenuDivider } from '../ui/DropdownMenu'; // Removed DropdownMenuHeader
 import { ToolsMenuProps } from '../../types';
 import { useTranslation } from '../../context/TranslationContext';
 
