@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Sidebar } from './components/sidebar/Sidebar'; // Updated import path for explicit resolution
+import { Sidebar } from './components/sidebar/Sidebar.tsx'; // Updated import path for explicit resolution
 import { FamilyTree } from './components/FamilyTree';
 import { WelcomeScreen } from './components/WelcomeScreen';
 import { ModalManagerContainer } from './components/ModalManagerContainer';
