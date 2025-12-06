@@ -1,60 +1,67 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Plus, UserPlus } from 'lucide-react';
+import React, { useState, memo, useRef, useEffect } from 'react';
+import { Plus } from 'lucide-react';
+import { QuickAddAction } from '../../types'; // Import QuickAddAction type
 import { useTranslation } from '../../context/TranslationContext';
-import { QuickAddAction } from '../../types';
 
 interface QuickAddSpeedDialProps {
   actions: QuickAddAction[];
   buttonClassName?: string;
 }
 
-export const QuickAddSpeedDial: React.FC<QuickAddSpeedDialProps> = ({ actions, buttonClassName = '' }) => {
-  const [isOpen, setIsOpen] = useState(false);
+export const QuickAddSpeedDial: React.FC<QuickAddSpeedDialProps> = memo(({ actions, buttonClassName }) => {
   const { t } = useTranslation();
-  const ref = useRef<HTMLDivElement>(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  const toggleOpen = () => setIsOpen(!isOpen);
 
   // Close when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (ref.current && !ref.current.contains(event.target as Node)) {
+      if (
+        menuRef.current && !menuRef.current.contains(event.target as Node) &&
+        buttonRef.current && !buttonRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [ref]);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   return (
-    <div className="relative flex justify-center" ref={ref}>
-      {!isOpen ? (
-        // Main Trigger Button (when closed)
-        <button
-          type="button"
-          onClick={() => setIsOpen(true)}
-          className={`flex items-center justify-center shadow-sm hover:shadow-md active:scale-95 transition-all ${buttonClassName}`}
-          title={t.quickAdd || 'Quick Add'}
+    <div className="relative">
+      <button
+        ref={buttonRef}
+        onClick={toggleOpen}
+        className={`${buttonClassName} relative z-20`}
+        title={t.quickAdd}
+      >
+        <Plus className={`w-3.5 h-3.5 transition-transform ${isOpen ? 'rotate-45' : ''}`} />
+        <span>{t.quickAdd}</span>
+      </button>
+
+      {isOpen && (
+        <div 
+          ref={menuRef}
+          className="absolute bottom-full mb-2 start-1/2 -translate-x-1/2 z-10 flex flex-col-reverse items-center gap-2 animate-in fade-in slide-in-from-bottom-2 duration-200"
         >
-          <UserPlus className="w-3 h-3" />
-          <span className="ms-1">{t.quickAdd}</span>
-        </button>
-      ) : (
-        // Action Buttons (when open)
-        <div className="flex gap-2 animate-in fade-in zoom-in-90 duration-200">
           {actions.map((action, index) => (
             <button
               key={index}
-              type="button"
-              onClick={(e) => { e.stopPropagation(); action.onClick(); setIsOpen(false); }}
-              className={`w-6 h-6 rounded-full flex items-center justify-center transition-all shadow-sm border border-transparent hover:shadow-md active:scale-95 ${action.colorClasses}`}
-              title={action.label}
+              onClick={() => {
+                action.onClick();
+                setIsOpen(false);
+              }}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold shadow-md transition-all active:scale-95 ${action.colorClasses}`}
             >
               {action.icon}
+              <span>{action.label}</span>
             </button>
           ))}
         </div>
       )}
     </div>
   );
-};
+});

@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { memo } from 'react';
+import { ChevronRight } from 'lucide-react';
 
 interface DropdownContentProps {
   children: React.ReactNode;
@@ -6,75 +7,102 @@ interface DropdownContentProps {
   onClose?: () => void; // Added onClose prop
 }
 
-export const DropdownContent: React.FC<DropdownContentProps> = ({ children, className = '', onClose }) => (
-  <div className={`p-1.5 bg-white/95 dark:bg-stone-950/95 backdrop-blur-xl border border-stone-200/50 dark:border-stone-700/50 rounded-2xl shadow-float z-50 animate-in fade-in zoom-in-95 duration-200 origin-top-right ring-1 ring-black/5 ${className}`}>
-    {/* Pass onClose down to children if they need it */}
-    {React.Children.map(children, child =>
-      React.isValidElement(child) ? React.cloneElement(child as React.ReactElement<any>, { onClose }) : child
-    )}
-  </div>
-);
+export const DropdownContent: React.FC<DropdownContentProps> = memo(({ children, className, onClose }) => {
+  // We can use onClose here if needed, or just pass it down.
+  // For now, it's primarily for the parent Dropdown to manage its state.
+  return (
+    <div className={`p-1 ${className}`}>
+      {children}
+    </div>
+  );
+});
 
-interface DropdownMenuItemProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  children?: React.ReactNode;
+interface DropdownMenuItemProps {
+  children: React.ReactNode;
+  onClick?: () => void;
   icon?: React.ReactNode;
   label?: string;
   subLabel?: string;
   isActive?: boolean;
-  colorClass?: string;
-  iconBgClass?: string;
-  iconTextColorClass?: string;
   className?: string;
-  onClose?: () => void; // Added onClose prop
+  colorClass?: string; // For custom text/bg color
+  iconBgClass?: string; // For custom icon background
+  iconTextColorClass?: string; // For custom icon text color
 }
 
-export const DropdownMenuItem: React.FC<DropdownMenuItemProps> = ({
+export const DropdownMenuItem: React.FC<DropdownMenuItemProps> = memo(({
   children,
+  onClick,
   icon,
   label,
   subLabel,
-  isActive = false,
-  colorClass = 'text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800',
-  iconBgClass = 'bg-stone-50 dark:bg-stone-800',
-  iconTextColorClass = 'text-stone-500 group-hover:text-teal-600 dark:text-stone-400 dark:group-hover:text-teal-400',
-  className = '',
-  onClick, // Destructure onClick
-  onClose, // Destructure onClose
-  ...props
+  isActive,
+  className,
+  colorClass = 'text-stone-700 dark:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800',
+  iconBgClass = 'bg-stone-100 dark:bg-stone-700',
+  iconTextColorClass = 'text-stone-500 dark:text-stone-400'
 }) => {
-  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    onClick?.(e); // Call original onClick
-    onClose?.(); // Close dropdown after click
-  };
-
   return (
     <button
-      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium transition-all group relative overflow-hidden ${colorClass} ${isActive ? 'bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 ring-1 ring-teal-200 dark:ring-teal-800' : ''} ${className}`}
-      onClick={handleClick} // Use new handleClick
-      {...props}
+      onClick={onClick}
+      className={`group flex w-full items-center rounded-lg px-3 py-2 text-sm transition-colors ${colorClass} ${isActive ? 'bg-teal-50 dark:bg-teal-900/20 text-teal-600 dark:text-teal-300' : ''} ${className}`}
+      role="menuitem"
+      tabIndex={-1}
     >
       {icon && (
-        <div className={`p-1.5 rounded-lg shadow-sm ${iconBgClass} ${iconTextColorClass}`}>
+        <div className={`flex items-center justify-center w-7 h-7 rounded-md me-2 ${iconBgClass} ${iconTextColorClass}`}>
           {icon}
         </div>
       )}
-      {(label || subLabel) && (
-        <div className="flex flex-col items-start flex-grow min-w-0">
-          {label && <span className="font-bold">{label}</span>}
-          {subLabel && <span className="text-[9px] opacity-70">{subLabel}</span>}
-        </div>
-      )}
-      {children}
+      <div className="flex flex-col items-start">
+        {label ? <span className="font-medium">{label}</span> : children}
+        {subLabel && <span className="text-[10px] text-stone-400 dark:text-stone-500">{subLabel}</span>}
+      </div>
     </button>
   );
-};
+});
 
-export const DropdownMenuDivider: React.FC = () => (
-  <div className="h-px bg-stone-100 dark:bg-stone-800 my-1 mx-2"></div>
-);
+interface DropdownMenuHeaderProps {
+  label: string;
+  icon?: React.ReactNode;
+}
 
-export const DropdownMenuHeader: React.FC<{ icon?: React.ReactNode; label: string }> = ({ icon, label }) => (
-  <div className="px-3 py-1.5 text-[10px] font-bold text-stone-400 uppercase tracking-widest flex items-center gap-2">
-    {icon} {label}
-  </div>
-);
+export const DropdownMenuHeader: React.FC<DropdownMenuHeaderProps> = memo(({ label, icon }) => {
+  return (
+    <div className="flex items-center px-3 py-2 text-xs font-bold text-stone-400 dark:text-stone-500 uppercase tracking-wider">
+      {icon && <div className="me-2 text-stone-400 dark:text-stone-500">{icon}</div>}
+      {label}
+    </div>
+  );
+});
+
+export const DropdownMenuDivider: React.FC = memo(() => {
+  return <div className="my-1 h-px bg-stone-100 dark:bg-stone-800" />;
+});
+
+interface DropdownMenuSubItemProps {
+  label: string;
+  children: React.ReactNode;
+  icon?: React.ReactNode;
+}
+
+export const DropdownMenuSubItem: React.FC<DropdownMenuSubItemProps> = memo(({ label, children, icon }) => {
+  return (
+    <div className="relative group">
+      <button
+        className="flex w-full items-center rounded-lg px-3 py-2 text-sm text-stone-700 dark:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800"
+        role="menuitem"
+        tabIndex={-1}
+      >
+        {icon && <div className="flex items-center justify-center w-7 h-7 rounded-md me-2 bg-stone-100 dark:bg-stone-700 text-stone-500 dark:text-stone-400">{icon}</div>}
+        <span>{label}</span>
+        <ChevronRight className="ms-auto h-4 w-4 text-stone-400" />
+      </button>
+      <div className="absolute left-full top-0 hidden group-hover:block">
+        <DropdownContent className="w-48">
+          {children}
+        </DropdownContent>
+      </div>
+    </div>
+  );
+});

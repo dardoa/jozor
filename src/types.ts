@@ -1,3 +1,5 @@
+import React from 'react'; // Added React import for React.ReactNode
+
 export type Gender = 'male' | 'female';
 
 export type RelationshipStatus = 'married' | 'divorced' | 'engaged' | 'separated';
