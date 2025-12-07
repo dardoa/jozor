@@ -151,7 +151,31 @@ export const loginToGoogle = (): Promise<UserProfile> => {
              if (!tokenClient) {
                 return reject("Google API not initialized.");
              }
-             triggerLogin(resolve, reject);
+             
+             // Use tokenClient to request access token
+             tokenClient.callback = async (resp: any) => {
+                if (resp.error) {
+                    return reject(resp.error);
+                }
+                // Set the token for gapi.client
+                window.gapi.client.setToken(resp);
+                
+                // Fetch user info
+                try {
+                    await window.gapi.client.load('oauth2', 'v2');
+                    const userInfo = await window.gapi.client.oauth2.userinfo.get();
+                    const userProfile: UserProfile = {
+                        uid: userInfo.result.id,
+                        displayName: userInfo.result.name,
+                        email: userInfo.result.email,
+                        photoURL: userInfo.result.picture
+                    };
+                    resolve(userProfile);
+                } catch (e) {
+                    reject(new Error("Failed to fetch user info after login."));
+                }
+             };
+             tokenClient.requestAccessToken();
         };
 
         if (!isInitialized || !tokenClient) {

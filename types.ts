@@ -245,6 +245,15 @@ export interface CleanTreeOptionsModalProps {
   language: Language;
 }
 
+// New interface for GoogleSyncChoiceModal
+export interface GoogleSyncChoiceModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onLoadCloud: (fileId: string) => Promise<void>;
+  onSaveNewCloud: () => Promise<void>;
+  driveFileId: string | null; // Added driveFileId
+}
+
 export interface ModalManagerProps { // Updated ModalManagerProps
     activeModal: 'none' | 'calculator' | 'stats' | 'chat' | 'consistency' | 'timeline' | 'share' | 'story' | 'map';
     setActiveModal: (m: any) => void;
@@ -252,6 +261,8 @@ export interface ModalManagerProps { // Updated ModalManagerProps
     setLinkModal: (val: any) => void;
     cleanTreeOptionsModal: { isOpen: boolean }; // New prop for CleanTreeOptionsModal
     setCleanTreeOptionsModal: (val: { isOpen: boolean }) => void; // New prop setter
+    googleSyncChoiceModal: { isOpen: boolean; driveFileId: string | null; }; // New prop for GoogleSyncChoiceModal
+    setGoogleSyncChoiceModal: (val: { isOpen: boolean; driveFileId: string | null; }) => void; // New prop setter
     people: Record<string, Person>;
     language: Language;
     focusId: string;
@@ -261,6 +272,8 @@ export interface ModalManagerProps { // Updated ModalManagerProps
     familyActions: FamilyActionsProps;
     onStartNewTree: () => void; // Pass to CleanTreeOptionsModal
     onTriggerImportFile: () => void; // Pass to CleanTreeOptionsModal
+    onLoadCloudData: (fileId: string) => Promise<void>; // Pass to GoogleSyncChoiceModal
+    onSaveNewCloudFile: () => Promise<void>; // Pass to GoogleSyncChoiceModal
 }
 
 // Define HeaderProps directly here

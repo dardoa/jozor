@@ -29,9 +29,17 @@ export const PersonIdentityEdit: React.FC<PersonIdentityEditProps> = memo(({ per
     const file = e.target.files?.[0];
     if (!file) return;
     try {
-        const dataUrl = await processImageFile(file, 300);
-        onUpdate(person.id, { photoUrl: dataUrl });
-        showSuccess("Profile photo updated successfully!"); // Toast success
+        const imageBlob = await processImageFile(file, 300);
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            onUpdate(person.id, { photoUrl: reader.result as string });
+            showSuccess("Profile photo updated successfully!"); // Toast success
+        };
+        reader.onerror = (err) => {
+            console.error("Failed to read image blob", err);
+            showError("Failed to update profile photo.");
+        };
+        reader.readAsDataURL(imageBlob);
     } catch (err) {
         console.error("Image processing failed", err);
         showError("Failed to update profile photo."); // Use toast

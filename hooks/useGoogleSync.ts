@@ -12,7 +12,11 @@ import { showSuccess, showError } from '../utils/toast'; // Import toast utiliti
 
 export const useGoogleSync = (
     people: Record<string, Person>, 
-    setPeople: (data: Record<string, Person>) => void
+    setPeople: (data: Record<string, Person>) => void,
+    // New prop: callback to open the GoogleSyncChoiceModal
+    onOpenGoogleSyncChoice: (fileId: string) => void,
+    // New prop: callback to close the GoogleSyncChoiceModal
+    onCloseGoogleSyncChoice: () => void,
 ) => {
     const [user, setUser] = useState<UserProfile | null>(null);
     const [driveFileId, setDriveFileId] = useState<string | null>(null);
@@ -64,13 +68,11 @@ export const useGoogleSync = (
             try {
                 const existingId = await findAppFile();
                 if (existingId) {
-                    console.log("Found existing file, loading...");
-                    setDriveFileId(existingId);
-                    const cloudData = await loadFromDrive(existingId);
-                    setPeople(cloudData);
-                    showSuccess("File loaded successfully from Google Drive."); // Toast success
+                    console.log("Found existing file, prompting user for action...");
+                    // Instead of directly loading, open the choice modal
+                    onOpenGoogleSyncChoice(existingId);
                 } else {
-                    console.log("Creating new file...");
+                    console.log("No existing file found. Creating new file...");
                     const newId = await saveToDrive(people, null);
                     setDriveFileId(newId);
                     showSuccess("New file saved to Google Drive successfully!"); // Toast success
@@ -88,7 +90,7 @@ export const useGoogleSync = (
         } finally {
             setIsSyncing(false);
         }
-    }, [people, setPeople]);
+    }, [people, setPeople, onOpenGoogleSyncChoice]);
 
     const handleLogout = useCallback(async () => {
         try { logoutFromGoogle(); } catch(e) {}
@@ -102,12 +104,47 @@ export const useGoogleSync = (
         setDriveFileId(null);
     }, []);
 
+    // New functions to be called by GoogleSyncChoiceModal
+    const onLoadCloudData = useCallback(async (fileId: string) => {
+        setIsSyncing(true);
+        try {
+            const cloudData = await loadFromDrive(fileId);
+            setPeople(cloudData);
+            setDriveFileId(fileId);
+            showSuccess("File loaded successfully from Google Drive.");
+        } catch (e) {
+            console.error("Failed to load file from Google Drive.", e);
+            showError("Failed to load file from Google Drive.");
+        } finally {
+            setIsSyncing(false);
+            onCloseGoogleSyncChoice();
+        }
+    }, [setPeople, onCloseGoogleSyncChoice]);
+
+    const onSaveNewCloudFile = useCallback(async () => {
+        setIsSyncing(true);
+        try {
+            const newId = await saveToDrive(people, null);
+            setDriveFileId(newId);
+            showSuccess("Current tree saved as a new file to Google Drive successfully!");
+        } catch (e) {
+            console.error("Failed to save new file to Google Drive.", e);
+            showError("Failed to save new file to Google Drive.");
+        } finally {
+            setIsSyncing(false);
+            onCloseGoogleSyncChoice();
+        }
+    }, [people, onCloseGoogleSyncChoice]);
+
+
     return {
         user,
         isSyncing,
         isDemoMode,
         handleLogin,
         handleLogout,
-        stopSyncing
+        stopSyncing,
+        onLoadCloudData, // Expose for modal
+        onSaveNewCloudFile, // Expose for modal
     };
 };

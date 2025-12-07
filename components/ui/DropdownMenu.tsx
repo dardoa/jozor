@@ -4,10 +4,12 @@ interface DropdownContentProps {
   children: React.ReactNode;
   className?: string;
   onClose?: () => void; // Added onClose prop
+  id?: string; // Added id prop
+  role?: string; // Added role prop
 }
 
-export const DropdownContent: React.FC<DropdownContentProps> = ({ children, className = '', onClose }) => (
-  <div className={`p-1.5 bg-white/95 dark:bg-stone-950/95 backdrop-blur-xl border border-stone-200/50 dark:border-stone-700/50 rounded-2xl shadow-float z-50 animate-in fade-in zoom-in-95 duration-200 origin-top-right ring-1 ring-black/5 ${className}`}>
+export const DropdownContent: React.FC<DropdownContentProps> = ({ children, className = '', onClose, id, role }) => (
+  <div className={`p-1.5 bg-white/95 dark:bg-stone-950/95 backdrop-blur-xl border border-stone-200/50 dark:border-stone-700/50 rounded-2xl shadow-float z-50 animate-in fade-in zoom-in-95 duration-200 origin-top-right ring-1 ring-black/5 ${className}`} id={id} role={role}>
     {/* Pass onClose down to children if they need it */}
     {React.Children.map(children, child =>
       React.isValidElement(child) ? React.cloneElement(child as React.ReactElement<any>, { onClose }) : child

@@ -75,4 +75,14 @@ export const modals = {
   deaths: 'الوفيات',
   marriages: 'الزيجات',
   customEvents: 'الأحداث المخصصة',
+  // New Google Drive Sync Modal translations
+  googleDriveSyncTitle: 'مزامنة جوجل درايف',
+  googleDriveSyncWarning: 'تحذير: المتابعة بأي من الخيارين أدناه ستؤدي إلى الكتابة فوق بيانات شجرتك المحلية الحالية.',
+  googleDriveSyncPrompt: 'تم العثور على ملف شجرة عائلة في جوجل درايف الخاص بك. ماذا تود أن تفعل؟',
+  googleDriveLoadExisting: 'التحميل من درايف',
+  googleDriveLoadExistingDesc: 'استبدال شجرتك المحلية الحالية بالملف من جوجل درايف.',
+  googleDriveSaveNewFile: 'حفظ كملف جديد',
+  googleDriveSaveNewFileDesc: 'حفظ شجرتك المحلية الحالية كملف جديد في جوجل درايف.',
+  noDateData: 'لا توجد بيانات تاريخ متاحة لهذا الرسم البياني.',
+  noData: 'لا توجد بيانات متاحة.',
 };

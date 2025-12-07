@@ -23,11 +23,44 @@ export const useAppOrchestration = () => {
     handleImport, startNewTree, loadCloudData
   } = useFamilyTree();
 
+  // --- Modal & Sidebar Logic ---
+  const {
+    sidebarOpen, setSidebarOpen,
+    activeModal, setActiveModal,
+    isPresentMode, setIsPresentMode,
+    linkModal, setLinkModal,
+    handleOpenLinkModal,
+    handleOpenModal,
+  } = useModalAndSidebarLogic({
+    addParent, addSpouse, addChild, linkPerson, setFocusId,
+    canUndo: history.length > 0, // Pass current canUndo/canRedo
+    canRedo: future.length > 0,
+  });
+
+  // New state for CleanTreeOptionsModal
+  const [cleanTreeOptionsModal, setCleanTreeOptionsModal] = useState<{ isOpen: boolean }>({ isOpen: false });
+  const onOpenCleanTreeOptions = useCallback(() => {
+    setCleanTreeOptionsModal({ isOpen: true });
+  }, []);
+
+  // New state for GoogleSyncChoiceModal
+  const [googleSyncChoiceModal, setGoogleSyncChoiceModal] = useState<{ isOpen: boolean; driveFileId: string | null; }>({ isOpen: false, driveFileId: null });
+  const onOpenGoogleSyncChoice = useCallback((fileId: string) => {
+    setGoogleSyncChoiceModal({ isOpen: true, driveFileId: fileId });
+  }, []);
+  const onCloseGoogleSyncChoice = useCallback(() => {
+    setGoogleSyncChoiceModal({ isOpen: false, driveFileId: null });
+  }, []);
+
   // --- Sync & Auth ---
-  const { user, isSyncing, isDemoMode, handleLogin, handleLogout, stopSyncing } = useGoogleSync(people, loadCloudData);
+  const { user, isSyncing, isDemoMode, handleLogin, handleLogout, stopSyncing, onLoadCloudData, onSaveNewCloudFile } = useGoogleSync(
+    people, 
+    loadCloudData,
+    onOpenGoogleSyncChoice, // Pass the new callback
+    onCloseGoogleSyncChoice // Pass the new callback
+  );
 
   // --- UI Preferences ---
-  // Removed: const { language, setLanguage } = useLanguageSync();
   const { language, setLanguage } = useTranslation(); // Get language from TranslationContext
   const { treeSettings, setTreeSettings } = useTreeSettings();
   const { darkMode, setDarkMode } = useThemeSync(treeSettings.theme);
@@ -56,27 +89,6 @@ export const useAppOrchestration = () => {
       await handleLogout();
       setShowWelcome(true);
   }, [handleLogout, setShowWelcome]);
-
-  // --- Modal & Sidebar Logic ---
-  const {
-    sidebarOpen, setSidebarOpen,
-    activeModal, setActiveModal,
-    isPresentMode, setIsPresentMode,
-    linkModal, setLinkModal,
-    handleOpenLinkModal,
-    handleOpenModal,
-  } = useModalAndSidebarLogic({
-    addParent, addSpouse, addChild, linkPerson, setFocusId,
-    canUndo,
-    canRedo,
-  });
-
-  // New state for CleanTreeOptionsModal
-  const [cleanTreeOptionsModal, setCleanTreeOptionsModal] = useState<{ isOpen: boolean }>({ isOpen: false });
-  const onOpenCleanTreeOptions = useCallback(() => {
-    console.log('onOpenCleanTreeOptions called, setting modal isOpen to true'); // Debug log
-    setCleanTreeOptionsModal({ isOpen: true });
-  }, []);
 
   // Adjusted onTriggerImportFile to directly trigger file input
   const onTriggerImportFile = useCallback(() => {
@@ -132,6 +144,7 @@ export const useAppOrchestration = () => {
     // Modals & Sidebar
     sidebarOpen, setSidebarOpen, activeModal, setActiveModal, isPresentMode, setIsPresentMode,
     linkModal, setLinkModal, cleanTreeOptionsModal, setCleanTreeOptionsModal, // New modal state
+    googleSyncChoiceModal, setGoogleSyncChoiceModal, // New GoogleSyncChoiceModal state
     handleOpenLinkModal, handleOpenModal, onOpenCleanTreeOptions, // New function
     
     // Grouped Props
@@ -145,5 +158,7 @@ export const useAppOrchestration = () => {
     familyActions,
     startNewTree, // Make startNewTree available
     onTriggerImportFile, // Make onTriggerImportFile available
+    onLoadCloudData, // Pass to ModalManager
+    onSaveNewCloudFile, // Pass to ModalManager
   };
 };

@@ -24,7 +24,7 @@ export const modals = {
   mostChildren: 'Most Children',
   genderRatio: 'Gender Ratio',
   maleNames: 'Top Male Names',
-  femaleNames: 'Top Female Names',
+  femaleNames: 'Top Male Names',
   topPlaces: 'Top Places',
   birthsPerDecade: 'Births Per Decade',
   checkIssues: 'Check Issues',
@@ -75,4 +75,14 @@ export const modals = {
   deaths: 'Deaths',
   marriages: 'Marriages',
   customEvents: 'Custom Events',
+  // New Google Drive Sync Modal translations
+  googleDriveSyncTitle: 'Google Drive Sync',
+  googleDriveSyncWarning: 'Warning: Proceeding with either option below will overwrite your current local tree data.',
+  googleDriveSyncPrompt: 'A family tree file was found in your Google Drive. What would you like to do?',
+  googleDriveLoadExisting: 'Load from Drive',
+  googleDriveLoadExistingDesc: 'Replace your current local tree with the one from Google Drive.',
+  googleDriveSaveNewFile: 'Save as New File',
+  googleDriveSaveNewFileDesc: 'Save your current local tree as a new file in Google Drive.',
+  noDateData: 'No date data available for this chart.',
+  noData: 'No data available.',
 };

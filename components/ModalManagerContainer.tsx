@@ -7,8 +7,10 @@ interface ModalManagerContainerProps {
   setActiveModal: (m: any) => void;
   linkModal: { isOpen: boolean; type: 'parent' | 'spouse' | 'child' | null; gender: Gender | null; };
   setLinkModal: (val: any) => void;
-  cleanTreeOptionsModal: { isOpen: boolean }; // New prop
-  setCleanTreeOptionsModal: (val: { isOpen: boolean }) => void; // New prop setter
+  cleanTreeOptionsModal: { isOpen: boolean };
+  setCleanTreeOptionsModal: (val: { isOpen: boolean }) => void;
+  googleSyncChoiceModal: { isOpen: boolean; driveFileId: string | null; }; // New prop
+  setGoogleSyncChoiceModal: (val: { isOpen: boolean; driveFileId: string | null; }) => void; // New prop setter
   people: Record<string, Person>;
   focusId: string;
   setFocusId: (id: string) => void;
@@ -16,8 +18,10 @@ interface ModalManagerContainerProps {
   user: UserProfile | null;
   familyActions: FamilyActionsProps;
   language: Language;
-  onStartNewTree: () => void; // New prop
-  onTriggerImportFile: () => void; // New prop
+  onStartNewTree: () => void;
+  onTriggerImportFile: () => void;
+  onLoadCloudData: (fileId: string) => Promise<void>; // New prop
+  onSaveNewCloudFile: () => Promise<void>; // New prop
 }
 
 export const ModalManagerContainer: React.FC<ModalManagerContainerProps> = memo(({
@@ -25,8 +29,10 @@ export const ModalManagerContainer: React.FC<ModalManagerContainerProps> = memo(
   setActiveModal,
   linkModal,
   setLinkModal,
-  cleanTreeOptionsModal, // Destructure new prop
-  setCleanTreeOptionsModal, // Destructure new prop setter
+  cleanTreeOptionsModal,
+  setCleanTreeOptionsModal,
+  googleSyncChoiceModal, // Destructure new prop
+  setGoogleSyncChoiceModal, // Destructure new prop setter
   people,
   focusId,
   setFocusId,
@@ -34,18 +40,21 @@ export const ModalManagerContainer: React.FC<ModalManagerContainerProps> = memo(
   user,
   familyActions,
   language,
-  onStartNewTree, // Destructure new prop
-  onTriggerImportFile, // Destructure new prop
+  onStartNewTree,
+  onTriggerImportFile,
+  onLoadCloudData, // Destructure new prop
+  onSaveNewCloudFile, // Destructure new prop
 }) => {
-  console.log('ModalManagerContainer rendered. cleanTreeOptionsModal.isOpen:', cleanTreeOptionsModal.isOpen); // Debug log
   return (
     <ModalManager
       activeModal={activeModal}
       setActiveModal={setActiveModal}
       linkModal={linkModal}
       setLinkModal={setLinkModal}
-      cleanTreeOptionsModal={cleanTreeOptionsModal} // Pass new prop
-      setCleanTreeOptionsModal={setCleanTreeOptionsModal} // Pass new prop setter
+      cleanTreeOptionsModal={cleanTreeOptionsModal}
+      setCleanTreeOptionsModal={setCleanTreeOptionsModal}
+      googleSyncChoiceModal={googleSyncChoiceModal} // Pass new prop
+      setGoogleSyncChoiceModal={setGoogleSyncChoiceModal} // Pass new prop setter
       people={people}
       focusId={focusId}
       setFocusId={setFocusId}
@@ -53,8 +62,10 @@ export const ModalManagerContainer: React.FC<ModalManagerContainerProps> = memo(
       user={user}
       familyActions={familyActions}
       language={language}
-      onStartNewTree={onStartNewTree} // Pass new prop
-      onTriggerImportFile={onTriggerImportFile} // Pass new prop
+      onStartNewTree={onStartNewTree}
+      onTriggerImportFile={onTriggerImportFile}
+      onLoadCloudData={onLoadCloudData} // Pass new prop
+      onSaveNewCloudFile={onSaveNewCloudFile} // Pass new prop
     />
   );
 });

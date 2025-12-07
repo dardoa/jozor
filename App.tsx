@@ -19,8 +19,9 @@ const App: React.FC = () => {
 
     // Modals & Sidebar
     sidebarOpen, setSidebarOpen, activeModal, setActiveModal, isPresentMode, setIsPresentMode,
-    linkModal, setLinkModal, cleanTreeOptionsModal, setCleanTreeOptionsModal, // New modal state
-    handleOpenLinkModal, handleOpenModal, onOpenCleanTreeOptions, // New function
+    linkModal, setLinkModal, cleanTreeOptionsModal, setCleanTreeOptionsModal,
+    googleSyncChoiceModal, setGoogleSyncChoiceModal, // New GoogleSyncChoiceModal state
+    handleOpenLinkModal, handleOpenModal, onOpenCleanTreeOptions,
     
     // Grouped Props
     historyControls,
@@ -31,8 +32,10 @@ const App: React.FC = () => {
     exportActions,
     searchProps,
     familyActions,
-    startNewTree, // Destructure startNewTree
-    onTriggerImportFile, // Destructure onTriggerImportFile
+    startNewTree,
+    onTriggerImportFile,
+    onLoadCloudData, // Destructure onLoadCloudData
+    onSaveNewCloudFile, // Destructure onSaveNewCloudFile
   } = useAppOrchestration();
 
   // Centralized application of theme class, dark mode class, and language attributes to the html element
@@ -62,7 +65,7 @@ const App: React.FC = () => {
       {showWelcome ? (
           <WelcomeScreen 
               onStartNew={handleStartNewTree}
-              onImport={onTriggerImportFile} // Use onTriggerImportFile here
+              onImport={onTriggerImportFile}
               onLogin={auth.onLogin}
           />
       ) : (
@@ -112,8 +115,8 @@ const App: React.FC = () => {
                             onOpenModal={handleOpenModal}
                             user={auth.user}
                             familyActions={familyActions}
-                            onOpenCleanTreeOptions={onOpenCleanTreeOptions} // Pass new prop
-                            onTriggerImportFile={onTriggerImportFile} // Pass new prop
+                            onOpenCleanTreeOptions={onOpenCleanTreeOptions}
+                            onTriggerImportFile={onTriggerImportFile}
                         />
                     </div>
                 )}
@@ -130,18 +133,28 @@ const App: React.FC = () => {
                 <ModalManagerContainer 
                     activeModal={activeModal} setActiveModal={setActiveModal}
                     linkModal={linkModal} setLinkModal={setLinkModal}
-                    cleanTreeOptionsModal={cleanTreeOptionsModal} setCleanTreeOptionsModal={setCleanTreeOptionsModal} // Pass new modal state
+                    cleanTreeOptionsModal={cleanTreeOptionsModal} setCleanTreeOptionsModal={setCleanTreeOptionsModal}
+                    googleSyncChoiceModal={googleSyncChoiceModal} setGoogleSyncChoiceModal={setGoogleSyncChoiceModal} // Pass new modal state
                     people={people} 
                     focusId={focusId} setFocusId={setFocusId} activePerson={activePerson}
                     user={auth.user}
                     familyActions={familyActions}
                     language={themeLanguage.language}
-                    onStartNewTree={handleStartNewTree} // Pass to CleanTreeOptionsModal
-                    onTriggerImportFile={onTriggerImportFile} // Pass to CleanTreeOptionsModal
+                    onStartNewTree={handleStartNewTree}
+                    onTriggerImportFile={onTriggerImportFile}
+                    onLoadCloudData={onLoadCloudData} // Pass to ModalManager
+                    onSaveNewCloudFile={onSaveNewCloudFile} // Pass to ModalManager
                 />
             </div>
           </>
       )}
+
+      {/* Compliance Footer */}
+      <footer className="bg-white dark:bg-stone-950/80 backdrop-blur-md text-xs text-stone-500 dark:text-stone-400 py-3 px-6 flex justify-center items-center gap-4 border-t border-stone-200/50 dark:border-stone-800/50 print:hidden">
+        <a href="/privacy-policy.html" target="_blank" rel="noopener noreferrer" className="hover:underline">Privacy Policy</a>
+        <span aria-hidden="true">•</span>
+        <a href="/terms-of-service.html" target="_blank" rel="noopener noreferrer" className="hover:underline">Terms of Service</a>
+      </footer>
     </div>
   );
 };

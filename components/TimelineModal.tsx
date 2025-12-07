@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Person, Language, TimelineEvent } from '../types';
-import { X, Calendar, Baby, Heart, Ribbon, Info, Filter } from 'lucide-react'; // Import Filter icon
+import { X, Calendar, Baby, Heart, Ribbon, Info, Filter, FileText } from 'lucide-react'; // Import FileText icon
 import { getDisplayDate } from '../utils/familyLogic';
 import { useTranslation } from '../context/TranslationContext';
 
@@ -114,7 +114,7 @@ export const TimelineModal: React.FC<TimelineModalProps> = ({
 
       return list
         .filter(event => activeFilters.has(event.type))
-        .sort((a, b) => sortAsc ? a.year - b.year : b.year - a.a.year);
+        .sort((a, b) => sortAsc ? a.year - b.year : b.year - a.year); // Fixed typo here
   }, [people, sortAsc, activeFilters, t]);
 
   if (!isOpen) return null;
