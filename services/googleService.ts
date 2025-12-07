@@ -9,9 +9,9 @@ declare global {
   }
 }
 
-// Updated scopes to allow picking files and storing in appDataFolder
-const SCOPES = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.appdata';
-const DISCOVERY_DOCS = ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'];
+// Updated scopes to allow picking files, storing in appDataFolder, and fetching user profile/email
+const SCOPES = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email';
+const DISCOVERY_DOCS = ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest', 'https://www.googleapis.com/discovery/v1/apis/oauth2/v2/rest']; // Added oauth2 discovery doc
 const FILE_NAME = 'jozor_family_tree.json';
 
 // Scripts to load dynamically
@@ -162,7 +162,7 @@ export const loginToGoogle = (): Promise<UserProfile> => {
                 
                 // Fetch user info
                 try {
-                    await window.gapi.client.load('oauth2', 'v2');
+                    // No need to load 'oauth2' again if it's in DISCOVERY_DOCS
                     const userInfo = await window.gapi.client.oauth2.userinfo.get();
                     const userProfile: UserProfile = {
                         uid: userInfo.result.id,
