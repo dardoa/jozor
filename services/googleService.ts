@@ -211,12 +211,14 @@ export const findAppFile = async (): Promise<string | null> => {
         return null;
     }
     try {
+        console.log(`Searching for file named '${FILE_NAME}' in Google Drive appDataFolder...`);
         const response = await window.gapi.client.drive.files.list({
             q: `name = '${FILE_NAME}' and trashed = false`,
             fields: 'files(id, name)',
-            spaces: 'drive',
+            spaces: 'appDataFolder', // <--- CORRECTED THIS LINE
         });
         const files = response.result.files;
+        console.log(`Found ${files ? files.length : 0} files matching '${FILE_NAME}':`, files);
         return (files && files.length > 0) ? files[0].id : null;
     } catch (e) {
         console.error("Error finding file", e);
@@ -246,11 +248,13 @@ export const saveToDrive = async (people: Record<string, Person>, existingFileId
     const metadata = {
         name: FILE_NAME,
         mimeType: 'application/json',
+        parents: ['appDataFolder'] // Ensure it's always saved to appDataFolder
     };
 
     try {
         if (existingFileId) {
             // Update
+            console.log(`Updating existing file with ID: ${existingFileId}`);
             await window.gapi.client.request({
                 path: `/upload/drive/v3/files/${existingFileId}`,
                 method: 'PATCH',
@@ -260,6 +264,7 @@ export const saveToDrive = async (people: Record<string, Person>, existingFileId
             return existingFileId;
         } else {
             // Create
+            console.log(`Creating new file: ${FILE_NAME}`);
             const response = await window.gapi.client.drive.files.create({
                 resource: metadata,
                 media: {
@@ -268,6 +273,7 @@ export const saveToDrive = async (people: Record<string, Person>, existingFileId
                 },
                 fields: 'id'
             });
+            console.log(`New file created with ID: ${response.result.id}`);
             return response.result.id;
         }
     } catch (e) {
