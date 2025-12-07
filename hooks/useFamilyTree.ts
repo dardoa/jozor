@@ -13,6 +13,7 @@ import {
     performRemoveRelationship 
 } from '../utils/treeOperations';
 import { showError } from '../utils/toast'; // Import showError
+import { encryptData, decryptData } from '../utils/encryption'; // Import encryption utilities
 
 export const useFamilyTree = () => {
   // --- State Initialization ---
@@ -20,15 +21,18 @@ export const useFamilyTree = () => {
      try {
        const saved = localStorage.getItem('echo-family-data');
        if (saved) {
-         const parsed = JSON.parse(saved);
-         const validated: Record<string, Person> = {};
-         Object.keys(parsed).forEach(key => { validated[key] = validatePerson(parsed[key]); });
-         return validated;
+         // Attempt to decrypt first
+         const decrypted = decryptData(saved);
+         if (decrypted) {
+            const validated: Record<string, Person> = {};
+            Object.keys(decrypted).forEach(key => { validated[key] = validatePerson(decrypted[key]); });
+            return validated;
+         }
        }
      } catch (e) {
-       console.error("Data load error", e);
+       console.error("Data load error (decryption/parsing failed), falling back to sample data:", e);
      }
-     // Use Sample Family by default for better UX
+     // Use Sample Family by default for better UX or if loading/decryption fails
      return SAMPLE_FAMILY; 
   });
 
@@ -43,7 +47,8 @@ export const useFamilyTree = () => {
   useEffect(() => {
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     saveTimeoutRef.current = setTimeout(() => {
-        localStorage.setItem('echo-family-data', JSON.stringify(people));
+        // Encrypt data before saving to localStorage
+        localStorage.setItem('echo-family-data', encryptData(people));
     }, 1000);
     return () => clearTimeout(saveTimeoutRef.current);
   }, [people]);
