@@ -244,6 +244,8 @@ export const loadFromDrive = async (fileId: string): Promise<Record<string, Pers
 export const saveToDrive = async (people: Record<string, Person>, existingFileId: string | null): Promise<string> => {
     if (!isInitialized) throw new Error("Google API not initialized");
     
+    console.log(`saveToDrive called. existingFileId: ${existingFileId}`); // Added log
+
     const content = JSON.stringify(people, null, 2);
     const metadata = {
         name: FILE_NAME,
@@ -265,6 +267,7 @@ export const saveToDrive = async (people: Record<string, Person>, existingFileId
         } else {
             // Create
             console.log(`Creating new file: ${FILE_NAME}`);
+            console.log('Metadata for new file creation:', metadata); // Added log
             const response = await window.gapi.client.drive.files.create({
                 resource: metadata,
                 media: {
