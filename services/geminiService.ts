@@ -1,4 +1,3 @@
-import { GoogleGenAI } from "@google/genai";
 import { Person, Message } from "../types";
 import { showError } from '../utils/toast'; // Import showError
 
@@ -25,12 +24,8 @@ const sanitizePromptInput = (input: string): string => {
 
 export const generateBiography = async (person: Person, people: Record<string, Person>, tone: string = 'Standard'): Promise<string> => {
   try {
-    // In a real implementation, 'ai' would be a client to your backend proxy.
-    // Example: const response = await fetch('/api/gemini/biography', { method: 'POST', body: JSON.stringify({ person, people, tone }) });
-    // const data = await response.json(); return data.text;
-    
     // For now, this will trigger the error from getClient()
-    const ai = getClient(); 
+    getClient(); 
     
     // Whitelist for allowed tones
     const allowedTones = ['Standard', 'Formal', 'Storyteller', 'Humorous', 'Journalistic'];
@@ -73,7 +68,7 @@ export const generateBiography = async (person: Person, people: Record<string, P
         childCount > 0 ? `Children: ${childCount}` : null,
     ].filter(Boolean).join('\n');
 
-    const prompt = `
+    const promptContent = `
       Write a short, engaging biography (approx 100-150 words) for a person in a family tree.
       
       TONE: ${sanitizedTone}
@@ -96,12 +91,12 @@ export const generateBiography = async (person: Person, people: Record<string, P
     // This part would be replaced by a fetch to your backend proxy
     // const response = await ai.models.generateContent({
     //   model: 'gemini-2.5-flash',
-    //   contents: prompt,
+    //   contents: promptContent,
     // });
     // return response.text || "Could not generate biography.";
 
     // Placeholder for backend call
-    showError("AI features are disabled. Please set up a backend proxy for Gemini API calls.");
+    showError(`AI features are disabled. Please set up a backend proxy for Gemini API calls. Prompt: ${promptContent.substring(0, 100)}...`);
     return "AI features are currently unavailable. Please set up a backend proxy.";
 
   } catch (error) {
@@ -114,7 +109,7 @@ export const generateBiography = async (person: Person, people: Record<string, P
 export const startAncestorChat = async (person: Person, people: Record<string, Person>, history: Message[], newMessage: string): Promise<string> => {
     try {
         // For now, this will trigger the error from getClient()
-        const ai = getClient(); 
+        getClient(); 
         
         // Sanitize person details for context
         const sanitizedPersonFirstName = sanitizePromptInput(person.firstName);
@@ -129,7 +124,7 @@ export const startAncestorChat = async (person: Person, people: Record<string, P
         const sanitizedParentNames = person.parents.map(id => people[id]?.firstName).filter(Boolean).map(sanitizePromptInput).join(', ');
         const sanitizedSpouseNames = person.spouses.map(id => people[id]?.firstName).filter(Boolean).map(sanitizePromptInput).join(', ');
 
-        const context = `
+        const contextContent = `
             You are playing the role of ${sanitizedPersonFirstName} ${sanitizedPersonLastName}.
             You are part of a family tree.
             
@@ -156,7 +151,7 @@ export const startAncestorChat = async (person: Person, people: Record<string, P
         // This part would be replaced by a fetch to your backend proxy.
         // const chat = ai.chats.create({
         //     model: 'gemini-2.5-flash',
-        //     config: { systemInstruction: context }
+        //     config: { systemInstruction: contextContent }
         // });
         // for (const msg of history) {
         //     await chat.sendMessage({ message: sanitizePromptInput(msg.text) });
@@ -165,7 +160,7 @@ export const startAncestorChat = async (person: Person, people: Record<string, P
         // return result.text || "I am having trouble remembering right now. (AI Error)";
 
         // Placeholder for backend call
-        showError("AI chat is disabled. Please set up a backend proxy for Gemini API calls.");
+        showError(`AI chat is disabled. Please set up a backend proxy for Gemini API calls. Context: ${contextContent.substring(0, 100)}...`);
         return "AI chat is currently unavailable. Please set up a backend proxy.";
 
     } catch (error) {
@@ -178,8 +173,8 @@ export const startAncestorChat = async (person: Person, people: Record<string, P
 export const extractPersonData = async (text: string): Promise<Partial<Person>> => {
     try {
         // For now, this will trigger the error from getClient()
-        const ai = getClient(); 
-        const prompt = `
+        getClient(); 
+        const promptContent = `
             Analyze the following unstructured text and extract details about a person to fill a family tree profile.
             Return ONLY a valid JSON object. Do not add markdown formatting.
             
@@ -201,7 +196,7 @@ export const extractPersonData = async (text: string): Promise<Partial<Person>> 
         // This part would be replaced by a fetch to your backend proxy.
         // const response = await ai.models.generateContent({
         //     model: 'gemini-2.5-flash',
-        //     contents: prompt,
+        //     contents: promptContent,
         //     config: {
         //         responseMimeType: "application/json"
         //     }
@@ -210,7 +205,7 @@ export const extractPersonData = async (text: string): Promise<Partial<Person>> 
         // return JSON.parse(jsonText);
 
         // Placeholder for backend call
-        showError("AI data extraction is disabled. Please set up a backend proxy for Gemini API calls.");
+        showError(`AI data extraction is disabled. Please set up a backend proxy for Gemini API calls. Prompt: ${promptContent.substring(0, 100)}...`);
         return {};
 
     } catch (error) {
@@ -223,7 +218,7 @@ export const extractPersonData = async (text: string): Promise<Partial<Person>> 
 export const analyzeImage = async (base64Image: string): Promise<string> => {
     try {
         // For now, this will trigger the error from getClient()
-        const ai = getClient(); 
+        getClient(); 
         
         // Remove header if present (data:image/jpeg;base64,)
         const base64Data = base64Image.includes(',') ? base64Image.split(',')[1] : base64Image;
@@ -254,7 +249,7 @@ export const analyzeImage = async (base64Image: string): Promise<string> => {
 export const generateFamilyStory = async (people: Record<string, Person>, rootId: string, language: string = 'en'): Promise<string> => {
     try {
         // For now, this will trigger the error from getClient()
-        const ai = getClient(); 
+        getClient(); 
         
         // Prepare simplified data dump to save tokens, sanitizing relevant fields
         const sanitizedSimplifiedData = Object.values(people).map(p => ({
@@ -268,7 +263,7 @@ export const generateFamilyStory = async (people: Record<string, Person>, rootId
             bio: sanitizePromptInput(p.bio ? p.bio.substring(0, 100) : '')
         }));
 
-        const prompt = `
+        const promptContent = `
             Act as a master storyteller. Based on the JSON data of a family tree provided below, write a compelling, chronological narrative history of this family.
             
             LANGUAGE: ${language === 'ar' ? 'Arabic' : 'English'}
@@ -289,12 +284,12 @@ export const generateFamilyStory = async (people: Record<string, Person>, rootId
         // This part would be replaced by a fetch to your backend proxy.
         // const response = await ai.models.generateContent({
         //     model: 'gemini-2.5-flash',
-        //     contents: prompt,
+        //     contents: promptContent,
         // });
         // return response.text || (language === 'ar' ? "<p>حدث خطأ أثناء كتابة القصة.</p>" : "<p>Error generating story.</p>");
 
         // Placeholder for backend call
-        showError("AI story generation is disabled. Please set up a backend proxy for Gemini API calls.");
+        showError(`AI story generation is disabled. Please set up a backend proxy for Gemini API calls. Prompt: ${promptContent.substring(0, 100)}...`);
         return language === 'ar' ? "<p>ميزة إنشاء القصة بالذكاء الاصطناعي غير متاحة حاليًا. يرجى إعداد وكيل خلفي لمكالمات Gemini API.</p>" : "<p>AI story generation is currently unavailable. Please set up a backend proxy for Gemini API calls.</p>";
 
     } catch (error) {

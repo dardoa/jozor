@@ -1,9 +1,8 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { Person, Gender, Language, TreeSettings, UserProfile, HistoryControlsProps, ThemeLanguageProps, AuthProps, ViewSettingsProps, ToolsActionsProps, ExportActionsProps, SearchProps, FamilyActionsProps } from '../types';
+import { useState, useCallback } from 'react';
+import { Person, Gender, HistoryControlsProps, ThemeLanguageProps, AuthProps, ViewSettingsProps, ToolsActionsProps, ExportActionsProps, SearchProps, FamilyActionsProps } from '../types';
 import { useFamilyTree } from './useFamilyTree';
 import { useGoogleSync } from './useGoogleSync';
 import { useThemeSync } from './useThemeSync';
-// Removed: import { useLanguageSync } from './useLanguageSync'; // Keep import for now, but won't be used directly here
 import { useKeyboardShortcuts } from './useKeyboardShortcuts';
 import { useModalAndSidebarLogic } from './useModalAndSidebarLogic';
 import { useTreeSettings } from './useTreeSettings';
@@ -19,7 +18,7 @@ export const useAppOrchestration = () => {
   // --- Core Data & History ---
   const {
     people, focusId, setFocusId, history, future, undo, redo,
-    updatePerson, deletePerson, addParent, addSpouse, addChild, removeRelationship, linkPerson,
+    updatePerson, deletePerson, removeRelationship, linkPerson, // Removed addParent, addSpouse, addChild
     handleImport, startNewTree, loadCloudData
   } = useFamilyTree();
 
@@ -32,7 +31,6 @@ export const useAppOrchestration = () => {
     handleOpenLinkModal,
     handleOpenModal,
   } = useModalAndSidebarLogic({
-    addParent, addSpouse, addChild, linkPerson, setFocusId,
     canUndo: history.length > 0, // Pass current canUndo/canRedo
     canRedo: future.length > 0,
   });
@@ -52,20 +50,23 @@ export const useAppOrchestration = () => {
     setGoogleSyncChoiceModal({ isOpen: false, driveFileId: null });
   }, []);
 
+  // --- UI Preferences ---
+  const { language, setLanguage } = useTranslation(); // Get language from TranslationContext
+  const { treeSettings, setTreeSettings } = useTreeSettings();
+  const { darkMode, setDarkMode } = useThemeSync(); // Removed currentTheme parameter
+  
+  const activePerson = people[focusId];
+  // Get the current family name from the active person, or default to 'Untitled'
+  const currentFamilyName = activePerson?.familyName || 'Untitled';
+
   // --- Sync & Auth ---
   const { user, isSyncing, isDemoMode, handleLogin, handleLogout, stopSyncing, onLoadCloudData, onSaveNewCloudFile } = useGoogleSync(
     people, 
     loadCloudData,
     onOpenGoogleSyncChoice, // Pass the new callback
-    onCloseGoogleSyncChoice // Pass the new callback
+    onCloseGoogleSyncChoice, // Pass the new callback
+    currentFamilyName, // Pass the current family name
   );
-
-  // --- UI Preferences ---
-  const { language, setLanguage } = useTranslation(); // Get language from TranslationContext
-  const { treeSettings, setTreeSettings } = useTreeSettings();
-  const { darkMode, setDarkMode } = useThemeSync(treeSettings.theme);
-
-  const activePerson = people[focusId];
 
   // Calculate canUndo/canRedo
   const canUndo = history.length > 0;
@@ -73,7 +74,7 @@ export const useAppOrchestration = () => {
 
   // --- Welcome Screen Logic ---
   const {
-    showWelcome, setShowWelcome, fileInputRef,
+    showWelcome, setShowWelcome, fileInputRef, // Added setShowWelcome
     handleStartNewTree, onFileUpload
   } = useWelcomeScreenLogic({
     people, startNewTree, stopSyncing, handleImport
@@ -101,14 +102,15 @@ export const useAppOrchestration = () => {
   // --- Consolidated Export Handler ---
   const handleExport = useCallback(async (type: 'jozor' | 'json' | 'gedcom' | 'ics' | 'print') => {
     try {
+      const baseFileName = currentFamilyName || 'family';
       if (type === 'jozor') {
-        downloadFile(await exportToJozorArchive(people), "family.jozor", "application/octet-stream");
+        downloadFile(await exportToJozorArchive(people), `${baseFileName}.jozor`, "application/octet-stream");
       } else if (type === 'json') {
-        downloadFile(JSON.stringify(people, null, 2), "tree.json", "application/json");
+        downloadFile(JSON.stringify(people, null, 2), `${baseFileName}.json`, "application/json");
       } else if (type === 'gedcom') {
-        downloadFile(exportToGEDCOM(people), "tree.ged", "application/octet-stream");
+        downloadFile(exportToGEDCOM(people), `${baseFileName}.ged`, "application/octet-stream");
       } else if (type === 'ics') {
-        downloadFile(generateICS(people), "family_calendar.ics", "text/calendar");
+        downloadFile(generateICS(people), `${baseFileName}_calendar.ics`, "text/calendar");
       } else if (type === 'print') {
         window.print();
       }
@@ -116,7 +118,7 @@ export const useAppOrchestration = () => {
       console.error(`Export to ${type} failed`, e);
       showError(`Export to ${type} failed`); // Use toast
     }
-  }, [people]);
+  }, [people, currentFamilyName]);
 
   // Grouped props for Header and other components
   const historyControls: HistoryControlsProps = { onUndo: undo, onRedo: redo, canUndo, canRedo };
@@ -139,13 +141,14 @@ export const useAppOrchestration = () => {
     people, focusId, setFocusId, updatePerson, deletePerson, activePerson,
 
     // Welcome Screen
-    showWelcome, fileInputRef, handleStartNewTree, onFileUpload,
+    showWelcome, fileInputRef,
+    handleStartNewTree, onFileUpload,
 
     // Modals & Sidebar
     sidebarOpen, setSidebarOpen, activeModal, setActiveModal, isPresentMode, setIsPresentMode,
     linkModal, setLinkModal, cleanTreeOptionsModal, setCleanTreeOptionsModal, // New modal state
     googleSyncChoiceModal, setGoogleSyncChoiceModal, // New GoogleSyncChoiceModal state
-    handleOpenLinkModal, handleOpenModal, onOpenCleanTreeOptions, // New function
+    handleOpenLinkModal, handleOpenModal, onOpenCleanTreeOptions,
     
     // Grouped Props
     historyControls,

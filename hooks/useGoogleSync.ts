@@ -15,6 +15,7 @@ export const useGoogleSync = (
     setPeople: (data: Record<string, Person>) => void,
     onOpenGoogleSyncChoice: (fileId: string) => void,
     onCloseGoogleSyncChoice: () => void,
+    currentFamilyName: string, // New prop: current family name
 ) => {
     const [user, setUser] = useState<UserProfile | null>(null);
     const [driveFileId, setDriveFileId] = useState<string | null>(null); // This will store the ID of the *current* file
@@ -50,7 +51,7 @@ export const useGoogleSync = (
 
             try {
                 // saveToDrive will create a new file if driveFileId is null, or update existing
-                const newOrExistingFileId = await saveToDrive(people, driveFileId);
+                const newOrExistingFileId = await saveToDrive(people, driveFileId, currentFamilyName);
                 if (newOrExistingFileId !== driveFileId) {
                     setDriveFileId(newOrExistingFileId); // Update state if a new file was created
                 }
@@ -65,7 +66,7 @@ export const useGoogleSync = (
         }, 3000); // Debounce save every 3 seconds
 
         return () => clearTimeout(timer);
-    }, [people, user, isDemoMode, driveFileId, isInitialized]); // Add isInitialized to dependencies
+    }, [people, user, isDemoMode, driveFileId, isInitialized, currentFamilyName]); // Add currentFamilyName to dependencies
 
     // 3. Login Flow
     const handleLogin = useCallback(async (): Promise<boolean> => {
@@ -76,7 +77,7 @@ export const useGoogleSync = (
             setIsDemoMode(false);
 
             try {
-                const existingId = await findAppFile();
+                const existingId = await findAppFile(currentFamilyName);
                 if (existingId) {
                     console.log("Found existing file, prompting user for action...");
                     onOpenGoogleSyncChoice(existingId); // User will choose to load or save new
@@ -98,7 +99,7 @@ export const useGoogleSync = (
         } finally {
             setIsSyncing(false);
         }
-    }, [people, onOpenGoogleSyncChoice]); // Removed setPeople from dependencies as it's not directly used here
+    }, [currentFamilyName, onOpenGoogleSyncChoice]); // Added currentFamilyName to dependencies
 
     const handleLogout = useCallback(async () => {
         try { logoutFromGoogle(); } catch(e) {}
@@ -133,7 +134,7 @@ export const useGoogleSync = (
         setIsSyncing(true);
         try {
             // Explicitly create a NEW file, even if driveFileId already exists
-            const newId = await saveToDrive(people, null);
+            const newId = await saveToDrive(people, null, currentFamilyName);
             setDriveFileId(newId); // Set the new file ID
             showSuccess("Current tree saved as a new file to Google Drive successfully!");
         } catch (e) {
@@ -143,7 +144,7 @@ export const useGoogleSync = (
             setIsSyncing(false);
             onCloseGoogleSyncChoice();
         }
-    }, [people, onCloseGoogleSyncChoice]);
+    }, [people, currentFamilyName, onCloseGoogleSyncChoice]);
 
 
     return {

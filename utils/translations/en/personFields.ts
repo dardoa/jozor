@@ -7,6 +7,8 @@ export const personFields = {
   birthName: 'Birth Name',
   nickName: 'Nickname',
   suffix: 'Suffix',
+  familyName: 'Family Name', // New translation
+  familyNamePlaceholder: 'e.g. Al-Qarji', // New translation
   birthDate: 'Birth Date',
   birthPlace: 'Birth Place',
   birthSource: 'Birth Source',

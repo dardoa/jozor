@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
-import { AppTheme } from '../types';
 
-export const useThemeSync = (currentTheme: AppTheme) => {
+export const useThemeSync = () => {
   const [darkMode, setDarkMode] = useState(() => {
     if (typeof window === 'undefined') return false; // Safety for server-side rendering
     const savedTheme = localStorage.getItem('theme');

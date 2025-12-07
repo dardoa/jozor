@@ -1,5 +1,5 @@
 import React, { memo, useRef, useState } from 'react';
-import { Person, Gender } from '../../types';
+import { Person } from '../../types';
 import { FormField } from '../ui/FormField';
 import { Card } from '../ui/Card';
 import { Camera, X, Sparkles, Loader2, ChevronDown } from 'lucide-react';
@@ -144,6 +144,14 @@ export const PersonIdentityEdit: React.FC<PersonIdentityEditProps> = memo(({ per
               </div>
             </div>
           )}
+          {/* New: Family Name field */}
+          <FormField 
+            label={t.familyName} 
+            value={person.familyName} 
+            onCommit={(v) => handleChange('familyName', v)} 
+            labelWidthClass="w-24" 
+            placeholder={t.familyNamePlaceholder}
+          />
         </div>
       </Card>
 
