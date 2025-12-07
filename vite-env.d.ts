@@ -2,7 +2,7 @@
 
 interface ImportMetaEnv {
   readonly VITE_GOOGLE_CLIENT_ID: string;
-  // Add other environment variables here if needed
+  // أضف متغيرات البيئة الأخرى هنا إذا لزم الأمر
 }
 
 interface ImportMeta {
