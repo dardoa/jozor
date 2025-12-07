@@ -7,7 +7,7 @@ export const CHILD_ID = 'child-1';
 // Google Client ID for OAuth authentication
 // IMPORTANT: This should be set via environment variables (e.g., .env.local)
 // and never hardcoded in production.
-export const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+export const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 // Template for a new person, without an ID
 export const DEFAULT_PERSON_TEMPLATE: Omit<Person, 'id'> = {
