@@ -2,8 +2,8 @@ import React, { memo } from 'react';
 import { X } from 'lucide-react';
 
 interface SidebarTabsProps {
-  activeTab: 'info' | 'partners' | 'bio' | 'contact' | 'media' | 'sources' | 'events'; // Add 'events'
-  setActiveTab: (tab: 'info' | 'partners' | 'bio' | 'contact' | 'media' | 'sources' | 'events') => void; // Add 'events'
+  activeTab: 'info' | 'partners' | 'bio' | 'contact' | 'media'; // Removed 'sources' and 'events'
+  setActiveTab: (tab: 'info' | 'partners' | 'bio' | 'contact' | 'media') => void; // Removed 'sources' and 'events'
   tabs: { id: string; label: string; show: boolean; }[];
   onClose: () => void;
 }

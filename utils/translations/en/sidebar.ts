@@ -19,6 +19,5 @@ export const sidebar = {
   noRecordings: 'No recordings yet.',
   recordVoice: 'Record Voice',
   stopRecording: 'Stop Recording',
-  sourcesTab: 'Sources',
-  eventsTab: 'Events', // New translation
+  // Removed sourcesTab and eventsTab
 };
