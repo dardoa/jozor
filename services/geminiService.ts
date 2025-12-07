@@ -2,10 +2,14 @@ import { GoogleGenAI } from "@google/genai";
 import { Person, Message } from "../types";
 import { showError } from '../utils/toast'; // Import showError
 
+// IMPORTANT: In a production environment, the Gemini API key should NOT be exposed client-side.
+// This client-side code should be modified to call your own backend server,
+// which then securely makes requests to the Gemini API using the key.
+// For now, this function will throw an error if called without a backend.
 const getClient = () => {
-  const apiKey = process.env.API_KEY;
-  if (!apiKey) throw new Error("API Key not found");
-  return new GoogleGenAI({ apiKey });
+  // This function should ideally make a request to your backend proxy.
+  // For demonstration, we'll throw an error if an API key is still expected client-side.
+  throw new Error("Gemini API calls must be proxied through a secure backend. API Key is not available client-side.");
 };
 
 /**
@@ -21,7 +25,12 @@ const sanitizePromptInput = (input: string): string => {
 
 export const generateBiography = async (person: Person, people: Record<string, Person>, tone: string = 'Standard'): Promise<string> => {
   try {
-    const ai = getClient();
+    // In a real implementation, 'ai' would be a client to your backend proxy.
+    // Example: const response = await fetch('/api/gemini/biography', { method: 'POST', body: JSON.stringify({ person, people, tone }) });
+    // const data = await response.json(); return data.text;
+    
+    // For now, this will trigger the error from getClient()
+    const ai = getClient(); 
     
     // Whitelist for allowed tones
     const allowedTones = ['Standard', 'Formal', 'Storyteller', 'Humorous', 'Journalistic'];
@@ -84,22 +93,28 @@ export const generateBiography = async (person: Person, people: Record<string, P
       - Do not invent facts not provided, but you can infer context (e.g. if they are a doctor, you can mention they worked in healthcare).
     `;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: prompt,
-    });
+    // This part would be replaced by a fetch to your backend proxy
+    // const response = await ai.models.generateContent({
+    //   model: 'gemini-2.5-flash',
+    //   contents: prompt,
+    // });
+    // return response.text || "Could not generate biography.";
 
-    return response.text || "Could not generate biography.";
+    // Placeholder for backend call
+    showError("AI features are disabled. Please set up a backend proxy for Gemini API calls.");
+    return "AI features are currently unavailable. Please set up a backend proxy.";
+
   } catch (error) {
     console.error("Gemini API Error:", error);
-    showError("Failed to generate biography. Check API Key."); // Use toast
+    showError("Failed to generate biography. Ensure backend proxy is configured."); // Use toast
     throw error;
   }
 };
 
 export const startAncestorChat = async (person: Person, people: Record<string, Person>, history: Message[], newMessage: string): Promise<string> => {
     try {
-        const ai = getClient();
+        // For now, this will trigger the error from getClient()
+        const ai = getClient(); 
         
         // Sanitize person details for context
         const sanitizedPersonFirstName = sanitizePromptInput(person.firstName);
@@ -138,19 +153,21 @@ export const startAncestorChat = async (person: Person, people: Record<string, P
             - If asked about something not in your data, say you don't remember or invent a plausible detail consistent with your profession/era.
         `;
 
-        const chat = ai.chats.create({
-            model: 'gemini-2.5-flash',
-            config: { systemInstruction: context }
-        });
+        // This part would be replaced by a fetch to your backend proxy.
+        // const chat = ai.chats.create({
+        //     model: 'gemini-2.5-flash',
+        //     config: { systemInstruction: context }
+        // });
+        // for (const msg of history) {
+        //     await chat.sendMessage({ message: sanitizePromptInput(msg.text) });
+        // }
+        // const result = await chat.sendMessage({ message: sanitizePromptInput(newMessage) });
+        // return result.text || "I am having trouble remembering right now. (AI Error)";
 
-        // Replay history with sanitized messages
-        for (const msg of history) {
-            await chat.sendMessage({ message: sanitizePromptInput(msg.text) });
-        }
+        // Placeholder for backend call
+        showError("AI chat is disabled. Please set up a backend proxy for Gemini API calls.");
+        return "AI chat is currently unavailable. Please set up a backend proxy.";
 
-        // Send the new message after sanitization
-        const result = await chat.sendMessage({ message: sanitizePromptInput(newMessage) });
-        return result.text || "I am having trouble remembering right now. (AI Error)"; // Added fallback
     } catch (error) {
         console.error("Gemini Chat Error", error);
         showError("I am having trouble remembering right now. (API Error)"); // Use toast
@@ -160,7 +177,8 @@ export const startAncestorChat = async (person: Person, people: Record<string, P
 
 export const extractPersonData = async (text: string): Promise<Partial<Person>> => {
     try {
-        const ai = getClient();
+        // For now, this will trigger the error from getClient()
+        const ai = getClient(); 
         const prompt = `
             Analyze the following unstructured text and extract details about a person to fill a family tree profile.
             Return ONLY a valid JSON object. Do not add markdown formatting.
@@ -180,51 +198,63 @@ export const extractPersonData = async (text: string): Promise<Partial<Person>> 
             "${sanitizePromptInput(text)}"
         `;
 
-        const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: prompt,
-            config: {
-                responseMimeType: "application/json"
-            }
-        });
+        // This part would be replaced by a fetch to your backend proxy.
+        // const response = await ai.models.generateContent({
+        //     model: 'gemini-2.5-flash',
+        //     contents: prompt,
+        //     config: {
+        //         responseMimeType: "application/json"
+        //     }
+        // });
+        // const jsonText = response.text || "{}";
+        // return JSON.parse(jsonText);
 
-        const jsonText = response.text || "{}";
-        return JSON.parse(jsonText);
+        // Placeholder for backend call
+        showError("AI data extraction is disabled. Please set up a backend proxy for Gemini API calls.");
+        return {};
+
     } catch (error) {
         console.error("Gemini Extraction Error", error);
-        showError("Failed to extract data."); // Use toast
+        showError("Failed to extract data. Ensure backend proxy is configured."); // Use toast
         throw error;
     }
 };
 
 export const analyzeImage = async (base64Image: string): Promise<string> => {
     try {
-        const ai = getClient();
+        // For now, this will trigger the error from getClient()
+        const ai = getClient(); 
         
         // Remove header if present (data:image/jpeg;base64,)
         const base64Data = base64Image.includes(',') ? base64Image.split(',')[1] : base64Image;
 
-        const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: {
-                parts: [
-                    { inlineData: { mimeType: 'image/jpeg', data: base64Data } },
-                    { text: "Analyze this image for a genealogy research context. Describe the people (estimated age, clothing era), the setting, and any visible text or dates. Keep it concise." }
-                ]
-            }
-        });
+        // This part would be replaced by a fetch to your backend proxy.
+        // const response = await ai.models.generateContent({
+        //     model: 'gemini-2.5-flash',
+        //     contents: {
+        //         parts: [
+        //             { inlineData: { mimeType: 'image/jpeg', data: base64Data } },
+        //             { text: "Analyze this image for a genealogy research context. Describe the people (estimated age, clothing era), the setting, and any visible text or dates. Keep it concise." }
+        //         ]
+        //     }
+        // });
+        // return response.text || "No analysis available.";
 
-        return response.text || "No analysis available.";
+        // Placeholder for backend call
+        showError("AI image analysis is disabled. Please set up a backend proxy for Gemini API calls.");
+        return "AI image analysis is currently unavailable. Please set up a backend proxy.";
+
     } catch (error) {
         console.error("Image Analysis Error", error);
-        showError("Image analysis failed."); // Use toast
+        showError("Image analysis failed. Ensure backend proxy is configured."); // Use toast
         throw error;
     }
 };
 
 export const generateFamilyStory = async (people: Record<string, Person>, rootId: string, language: string = 'en'): Promise<string> => {
     try {
-        const ai = getClient();
+        // For now, this will trigger the error from getClient()
+        const ai = getClient(); 
         
         // Prepare simplified data dump to save tokens, sanitizing relevant fields
         const sanitizedSimplifiedData = Object.values(people).map(p => ({
@@ -256,15 +286,20 @@ export const generateFamilyStory = async (people: Record<string, Person>, rootId
             (Data limited to 50 key members for brevity if tree is huge)
         `;
 
-        const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: prompt,
-        });
+        // This part would be replaced by a fetch to your backend proxy.
+        // const response = await ai.models.generateContent({
+        //     model: 'gemini-2.5-flash',
+        //     contents: prompt,
+        // });
+        // return response.text || (language === 'ar' ? "<p>حدث خطأ أثناء كتابة القصة.</p>" : "<p>Error generating story.</p>");
 
-        return response.text || (language === 'ar' ? "<p>حدث خطأ أثناء كتابة القصة.</p>" : "<p>Error generating story.</p>");
+        // Placeholder for backend call
+        showError("AI story generation is disabled. Please set up a backend proxy for Gemini API calls.");
+        return language === 'ar' ? "<p>ميزة إنشاء القصة بالذكاء الاصطناعي غير متاحة حاليًا. يرجى إعداد وكيل خلفي لمكالمات Gemini API.</p>" : "<p>AI story generation is currently unavailable. Please set up a backend proxy for Gemini API calls.</p>";
+
     } catch (error) {
         console.error("Gemini Story Error", error);
-        showError(language === 'ar' ? "حدث خطأ أثناء كتابة القصة." : "Error generating story."); // Use toast
+        showError(language === 'ar' ? "حدث خطأ أثناء كتابة القصة. يرجى التأكد من تكوين الوكيل الخلفي." : "Error generating story. Ensure backend proxy is configured."); // Use toast
         throw error;
     }
 };

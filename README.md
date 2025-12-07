@@ -15,6 +15,11 @@ View your app in AI Studio: https://ai.studio/apps/drive/1S95Wj-7U9dl4dQkXhoavNq
 
 1. Install dependencies:
    `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+2. **Securely configure Gemini API Key (IMPORTANT):**
+   The Gemini API key should **NOT** be exposed on the client-side. To use AI features, you must:
+   - **Implement a backend proxy server** that handles all calls to the Google Gemini API.
+   - Store your `GEMINI_API_KEY` securely on this backend server (e.g., as an environment variable).
+   - Modify `src/services/geminiService.ts` to make `fetch` requests to your backend proxy instead of directly using `@google/genai` client.
+   - For local development, you might still use a `.env.local` file for your backend, but ensure it's never bundled into the frontend.
 3. Run the app:
    `npm run dev`
