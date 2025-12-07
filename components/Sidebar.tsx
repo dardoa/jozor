@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useMemo, memo } from 'react';
 import { X } from 'lucide-react';
-import { InfoTab } from './InfoTab';
-import { PartnersTab } from './PartnersTab';
-import { ContactTab } from './ContactTab';
-import { BioTab } from './BioTab';
-import { MediaTab } from './MediaTab';
-import { SourcesTab } from './SourcesTab'; // Import SourcesTab
-import { EventsTab } from './EventsTab'; // Import new EventsTab
-import { SidebarFooter } from './SidebarFooter';
-import { SidebarTabs } from './SidebarTabs';
+import { InfoTab } from './sidebar/InfoTab';
+import { PartnersTab } from './sidebar/PartnersTab';
+import { ContactTab } from './sidebar/ContactTab';
+import { BioTab } from './sidebar/BioTab';
+import { MediaTab } from './sidebar/MediaTab';
+import { SourcesTab } from './sidebar/SourcesTab'; // Import SourcesTab
+import { EventsTab } from './sidebar/EventsTab'; // Import new EventsTab
+import { SidebarFooter } from './sidebar/SidebarFooter';
+import { SidebarTabs } from './sidebar/SidebarTabs';
 import { Person, Language, UserProfile, FamilyActionsProps } from '../types';
 import { useTranslation } from '../context/TranslationContext';
 
