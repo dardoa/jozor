@@ -74,9 +74,10 @@ export const initializeGoogleApi = async (): Promise<void> => {
     if (isInitialized && tokenClient) return Promise.resolve();
 
     initPromise = (async () => {
-        if (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID.includes("YOUR_CLIENT_ID_HERE")) {
-            console.warn("Google Client ID is not configured. Auth disabled.");
-            return;
+        if (!GOOGLE_CLIENT_ID) {
+            console.warn("Google Client ID is not configured. Google Drive features will be disabled.");
+            isInitialized = false; // Explicitly set to false
+            return; // Do not proceed with initialization
         }
 
         try {
@@ -143,7 +144,7 @@ export const initializeGoogleApi = async (): Promise<void> => {
 export const loginToGoogle = (): Promise<UserProfile> => {
     return new Promise((resolve, reject) => {
         if (!GOOGLE_CLIENT_ID) {
-            return reject("Missing Client ID");
+            return reject("Google Client ID is not configured. Login disabled.");
         }
 
         const performLogin = () => {
@@ -166,40 +167,6 @@ export const loginToGoogle = (): Promise<UserProfile> => {
     });
 };
 
-const triggerLogin = (resolve: (u: UserProfile) => void, reject: (r: any) => void) => {
-    try {
-        // Override callback for this specific request
-        tokenClient.callback = async (resp: any) => {
-            if (resp.error) {
-                if (resp.error !== 'popup_closed_by_user') {
-                    console.error("OAuth Error:", resp);
-                }
-                reject(resp.error);
-                return;
-            }
-            
-            try {
-                const userInfo = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-                    headers: { Authorization: `Bearer ${resp.access_token}` },
-                }).then(r => r.json());
-
-                resolve({
-                    uid: userInfo.sub,
-                    displayName: userInfo.name,
-                    email: userInfo.email,
-                    photoURL: userInfo.picture,
-                });
-            } catch (e) {
-                reject(e);
-            }
-        };
-
-        tokenClient.requestAccessToken({ prompt: 'consent' });
-    } catch (e) {
-        reject(e);
-    }
-};
-
 export const logoutFromGoogle = () => {
     if (window.gapi && window.gapi.client) {
         const token = window.gapi.client.getToken();
@@ -215,7 +182,10 @@ export const logoutFromGoogle = () => {
 // --- Drive Operations ---
 
 export const findAppFile = async (): Promise<string | null> => {
-    if (!isInitialized) return null;
+    if (!isInitialized) {
+        console.warn("Google API not initialized. Cannot find app file.");
+        return null;
+    }
     try {
         const response = await window.gapi.client.drive.files.list({
             q: `name = '${FILE_NAME}' and trashed = false`,
@@ -287,7 +257,7 @@ export const saveToDrive = async (people: Record<string, Person>, existingFileId
 export const pickAndDownloadImage = (): Promise<string> => {
     return new Promise((resolve, reject) => {
         if (!isInitialized || !window.google?.picker) {
-            return reject("Google Picker not initialized");
+            return reject("Google Picker not initialized or Google API not initialized.");
         }
 
         const token = window.gapi.client.getToken()?.access_token;
@@ -321,7 +291,7 @@ export const pickAndDownloadImage = (): Promise<string> => {
         view.setMimeTypes("image/png,image/jpeg,image/jpg,image/webp");
 
         const picker = new window.google.picker.PickerBuilder()
-            .setAppId(GOOGLE_CLIENT_ID.split('-')[0]) // Project number usually, but client ID works sometimes
+            .setAppId(GOOGLE_CLIENT_ID!.split('-')[0]) // Project number usually, but client ID works sometimes
             .setOAuthToken(token)
             .addView(view)
             .addView(new window.google.picker.DocsUploadView()) // Allow uploading too
