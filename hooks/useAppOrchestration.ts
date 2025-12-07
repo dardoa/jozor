@@ -55,7 +55,7 @@ export const useAppOrchestration = () => {
   // --- Sync & Auth ---
   const { user, isSyncing, isDemoMode, handleLogin, handleLogout, stopSyncing, onLoadCloudData, onSaveNewCloudFile } = useGoogleSync(
     people, 
-    loadCloudData,
+    loadCloudData, // Pass loadCloudData from useFamilyTree
     onOpenGoogleSyncChoice, // Pass the new callback
     onCloseGoogleSyncChoice // Pass the new callback
   );

@@ -82,8 +82,8 @@ export const useGoogleSync = (
                     onOpenGoogleSyncChoice(existingId); // User will choose to load or save new
                 } else {
                     console.log("No existing file found. Will create on first auto-save.");
-                    // Do NOT call saveToDrive here. Let the auto-save useEffect handle the initial creation.
-                    // driveFileId will remain null, triggering a create on the next auto-save.
+                    // If no file exists, set driveFileId to null so the next auto-save creates one.
+                    setDriveFileId(null); 
                 }
             } catch (driveErr) {
                 console.error("Drive Setup Error:", driveErr);
@@ -98,7 +98,7 @@ export const useGoogleSync = (
         } finally {
             setIsSyncing(false);
         }
-    }, [people, onOpenGoogleSyncChoice]); // Removed setPeople from dependencies as it's not directly used here
+    }, [onOpenGoogleSyncChoice]); // Removed 'people' from dependencies as it's not directly used here
 
     const handleLogout = useCallback(async () => {
         try { logoutFromGoogle(); } catch(e) {}
