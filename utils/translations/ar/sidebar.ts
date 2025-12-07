@@ -19,4 +19,6 @@ export const sidebar = {
   noRecordings: 'لا توجد تسجيلات بعد.',
   recordVoice: 'تسجيل صوتي',
   stopRecording: 'إيقاف التسجيل',
+  sourcesTab: 'المصادر',
+  eventsTab: 'الأحداث', // New translation
 };

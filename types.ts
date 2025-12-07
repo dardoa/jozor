@@ -67,7 +67,8 @@ export interface Person {
   photoUrl?: string;
   gallery: string[];
   voiceNotes: string[];
-  sources: { id: string; title: string; url?: string; date?: string; type?: string; }[]; // New: Array of sources
+  sources: { id: string; title: string; url?: string; date?: string; type?: string; }[];
+  events: { id: string; title: string; date: string; place?: string; description?: string; type?: string; }[]; // New: Array of custom events
 
   // Contact
   email: string;
@@ -130,7 +131,7 @@ export interface FanArc {
 export interface TimelineEvent {
   year: number;
   dateStr: string;
-  type: 'birth' | 'death' | 'marriage';
+  type: 'birth' | 'death' | 'marriage' | 'custom'; // Added 'custom' type
   personId: string;
   relatedId?: string; // For marriage events, the spouse's ID
   label: string;

@@ -31,7 +31,8 @@ export const DEFAULT_PERSON_TEMPLATE: Omit<Person, 'id'> = {
   photoUrl: '',
   gallery: [],
   voiceNotes: [],
-  sources: [], // New: Initialize as empty array
+  sources: [],
+  events: [], // New: Initialize as empty array
   email: '',
   website: '',
   blog: '',
@@ -48,7 +49,7 @@ export const INITIAL_PERSON: Person = {
   ...DEFAULT_PERSON_TEMPLATE,
   firstName: 'Me',
   lastName: '',
-  gender: 'male',
+  gender: "male"
 };
 
 // Clean slate family (Just the root user)

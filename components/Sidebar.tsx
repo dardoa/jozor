@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useMemo, memo } from 'react';
 import { X } from 'lucide-react';
-import { InfoTab } from './sidebar/InfoTab';
-import { PartnersTab } from './sidebar/PartnersTab';
-import { ContactTab } from './sidebar/ContactTab';
-import { BioTab } from './sidebar/BioTab';
-import { MediaTab } from './sidebar/MediaTab';
-import { SidebarFooter } from './sidebar/SidebarFooter';
-import { SidebarTabs } from './sidebar/SidebarTabs';
+import { InfoTab } from './InfoTab';
+import { PartnersTab } from './PartnersTab';
+import { ContactTab } from './ContactTab';
+import { BioTab } from './BioTab';
+import { MediaTab } from './MediaTab';
+import { SourcesTab } from './SourcesTab'; // Import SourcesTab
+import { EventsTab } from './EventsTab'; // Import new EventsTab
+import { SidebarFooter } from './SidebarFooter';
+import { SidebarTabs } from './SidebarTabs';
 import { Person, Language, UserProfile, FamilyActionsProps } from '../types';
 import { useTranslation } from '../context/TranslationContext';
 
@@ -30,7 +32,7 @@ export const Sidebar: React.FC<SidebarProps> = memo(({
   familyActions, onOpenCleanTreeOptions, onTriggerImportFile // Destructure new props
 }) => {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<'info' | 'partners' | 'bio' | 'contact' | 'media'>('info');
+  const [activeTab, setActiveTab] = useState<'info' | 'partners' | 'bio' | 'contact' | 'media' | 'sources' | 'events'>('info'); // Add 'events' to activeTab
   const [isEditing, setIsEditing] = useState(false);
 
   // Reset editing state when person changes
@@ -47,7 +49,9 @@ export const Sidebar: React.FC<SidebarProps> = memo(({
     { id: 'partners', label: t.partners, show: person.spouses.length > 0 },
     { id: 'contact', label: t.contact, show: true },
     { id: 'bio', label: t.bio, show: true },
-    { id: 'media', label: t.galleryTab, show: true }
+    { id: 'media', label: t.galleryTab, show: true },
+    { id: 'sources', label: t.sourcesTab, show: true },
+    { id: 'events', label: t.eventsTab, show: true } // Add Events tab
   ], [person.spouses.length, t]);
 
   return (
@@ -87,6 +91,8 @@ export const Sidebar: React.FC<SidebarProps> = memo(({
                 {activeTab === 'contact' && <ContactTab person={person} isEditing={isEditing} onUpdate={onUpdate} />}
                 {activeTab === 'bio' && <BioTab person={person} people={people} isEditing={isEditing} onUpdate={onUpdate} />}
                 {activeTab === 'media' && <MediaTab person={person} isEditing={isEditing} onUpdate={onUpdate} user={user} />}
+                {activeTab === 'sources' && <SourcesTab person={person} isEditing={isEditing} onUpdate={onUpdate} />}
+                {activeTab === 'events' && <EventsTab person={person} isEditing={isEditing} onUpdate={onUpdate} />} {/* Render EventsTab */}
             </div>
             
             <SidebarFooter 

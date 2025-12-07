@@ -22,6 +22,7 @@ export const validatePerson = (p: Partial<Person>): Person => {
     gallery: Array.isArray(p.gallery) ? p.gallery : [],
     voiceNotes: Array.isArray(p.voiceNotes) ? p.voiceNotes : [], // Ensure voiceNotes is array
     sources: Array.isArray(p.sources) ? p.sources : [], // Ensure sources is array
+    events: Array.isArray(p.events) ? p.events : [], // Ensure events is array
     partnerDetails: p.partnerDetails || {},
     // Ensure vital strings exist
     firstName: p.firstName ?? '',

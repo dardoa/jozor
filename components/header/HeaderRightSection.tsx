@@ -19,11 +19,11 @@ export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(({
   const { t } = useTranslation();
 
   return (
-    <div className="flex items-center gap-2 md:gap-3">
+    <div className="flex items-center gap-2 md:gap-3" role="navigation" aria-label={t.mainNavigation}>
       {/* Search */}
       <SearchInputWithResults people={searchProps.people} onFocusPerson={searchProps.onFocusPerson} />
 
-      <div className="h-6 w-px bg-stone-200 dark:bg-stone-800 hidden md:block mx-1"></div>
+      <div className="h-6 w-px bg-stone-200 dark:bg-stone-800 hidden md:block mx-1" aria-hidden="true"></div>
 
       {/* Share Button */}
       {auth.user && (
@@ -43,6 +43,7 @@ export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(({
           <button
             className={`w-9 h-9 rounded-full flex items-center justify-center transition-all hover:bg-stone-100 dark:hover:bg-stone-800 text-stone-500 dark:text-stone-400`}
             aria-label={t.tools}
+            aria-haspopup="menu"
           >
             <Hammer className="w-4 h-4" />
           </button>
@@ -60,6 +61,7 @@ export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(({
           <button
             className={`w-9 h-9 rounded-full flex items-center justify-center transition-all border hover:bg-stone-100 dark:hover:bg-stone-800 text-stone-500 border-transparent`}
             aria-label={t.viewOptions}
+            aria-haspopup="menu"
           >
             <SlidersHorizontal className="w-4 h-4" />
           </button>
@@ -73,12 +75,12 @@ export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(({
         />
       </Dropdown>
 
-      <div className="hidden sm:flex items-center gap-1">
+      <div className="hidden sm:flex items-center gap-1" role="group" aria-label={t.languageAndThemeSettings}>
         <button onClick={() => {
             const newLanguage = themeLanguage.language === 'en' ? 'ar' : 'en';
             themeLanguage.setLanguage(newLanguage);
-          }} className="w-9 h-9 rounded-full hover:bg-stone-100 dark:hover:bg-stone-800 text-stone-500 flex items-center justify-center font-bold text-[10px]" aria-label={themeLanguage.language === 'en' ? 'Switch to Arabic' : 'Switch to English'}>{themeLanguage.language === 'en' ? 'AR' : 'EN'}</button>
-        <button onClick={() => themeLanguage.setDarkMode(!themeLanguage.darkMode)} className="w-9 h-9 rounded-full hover:bg-stone-100 dark:hover:bg-stone-800 text-stone-500 flex items-center justify-center" aria-label={themeLanguage.darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}>{themeLanguage.darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}</button>
+          }} className="w-9 h-9 rounded-full hover:bg-stone-100 dark:hover:bg-stone-800 text-stone-500 flex items-center justify-center font-bold text-[10px]" aria-label={themeLanguage.language === 'en' ? t.switchToArabic : t.switchToEnglish}>{themeLanguage.language === 'en' ? 'AR' : 'EN'}</button>
+        <button onClick={() => themeLanguage.setDarkMode(!themeLanguage.darkMode)} className="w-9 h-9 rounded-full hover:bg-stone-100 dark:hover:bg-stone-800 text-stone-500 flex items-center justify-center" aria-label={themeLanguage.darkMode ? t.switchToLightMode : t.switchToDarkMode}>{themeLanguage.darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}</button>
       </div>
 
       {/* Auth Section */}
@@ -103,7 +105,7 @@ export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(({
       <div className="relative hidden md:block">
         <Dropdown
           trigger={
-            <button className="px-5 py-2 text-xs font-semibold bg-stone-900 dark:bg-teal-600 text-white rounded-full shadow-lg flex items-center gap-2" aria-label={t.export}>
+            <button className="px-5 py-2 text-xs font-semibold bg-stone-900 dark:bg-teal-600 text-white rounded-full shadow-lg flex items-center gap-2" aria-label={t.export} aria-haspopup="menu">
               <span>{t.export}</span> <ChevronDown className="w-3 h-3 opacity-70"/>
             </button>
           }

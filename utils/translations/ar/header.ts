@@ -46,4 +46,12 @@ export const header = {
   jsonFile: 'ملف JSON (.json)',
   gedcomFile: 'ملف GEDCOM (.ged)',
   printPdf: 'طباعة / PDF',
+  // New accessibility translations
+  mainNavigation: 'التنقل الرئيسي',
+  historyControls: 'عناصر التحكم في السجل',
+  languageAndThemeSettings: 'إعدادات اللغة والمظهر',
+  switchToArabic: 'التبديل إلى العربية',
+  switchToEnglish: 'التبديل إلى الإنجليزية',
+  switchToLightMode: 'التبديل إلى الوضع الفاتح',
+  switchToDarkMode: 'التبديل إلى الوضع الداكن',
 };

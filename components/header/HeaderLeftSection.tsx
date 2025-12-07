@@ -15,7 +15,7 @@ export const HeaderLeftSection: React.FC<HeaderLeftSectionProps> = memo(({
       <button onClick={toggleSidebar} className="md:hidden p-2 text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-xl transition-colors" aria-label={t.toggleSidebar}>
         <Menu className="w-5 h-5" />
       </button>
-      <div className="flex items-center gap-3 select-none cursor-pointer group" onClick={() => window.location.reload()}>
+      <div className="flex items-center gap-3 select-none cursor-pointer group" onClick={() => window.location.reload()} role="link" aria-label={t.appTitle}>
         <div className="bg-gradient-to-br from-teal-50 to-teal-100 dark:from-teal-900/30 dark:to-teal-800/30 p-2 rounded-xl border border-teal-200/50 dark:border-teal-700/50 shadow-sm hidden md:block group-hover:scale-105 transition-transform">
           <Logo className="w-6 h-6 text-teal-600 dark:text-teal-400" />
         </div>
@@ -23,7 +23,7 @@ export const HeaderLeftSection: React.FC<HeaderLeftSectionProps> = memo(({
       </div>
       
       {/* History Controls */}
-      <div className="hidden sm:flex items-center p-1 bg-stone-100/50 dark:bg-stone-800/50 rounded-full border border-stone-200/50 dark:border-stone-700/50 backdrop-blur-sm">
+      <div className="hidden sm:flex items-center p-1 bg-stone-100/50 dark:bg-stone-800/50 rounded-full border border-stone-200/50 dark:border-stone-700/50 backdrop-blur-sm" role="group" aria-label={t.historyControls}>
         <button onClick={historyControls.onUndo} disabled={!historyControls.canUndo} className="p-1.5 text-stone-500 hover:text-stone-900 dark:text-stone-400 dark:hover:text-white hover:bg-white dark:hover:bg-stone-700 rounded-full transition-all disabled:opacity-30 disabled:hover:bg-transparent" dir="ltr" aria-label={t.undo}>
           <Undo className={`w-4 h-4 ${themeLanguage.language === 'ar' ? 'scale-x-[-1]' : ''}`} />
         </button>

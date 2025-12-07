@@ -69,4 +69,10 @@ export const modals = {
   actions: 'Actions',
   identity: 'Identity',
   moreNames: 'More Names',
+  // New timeline filter translations
+  filterBy: 'Filter by',
+  births: 'Births',
+  deaths: 'Deaths',
+  marriages: 'Marriages',
+  customEvents: 'Custom Events',
 };

@@ -69,4 +69,10 @@ export const modals = {
   actions: 'الإجراءات',
   identity: 'الهوية',
   moreNames: 'المزيد من الأسماء',
+  // New timeline filter translations
+  filterBy: 'تصفية حسب',
+  births: 'المواليد',
+  deaths: 'الوفيات',
+  marriages: 'الزيجات',
+  customEvents: 'الأحداث المخصصة',
 };

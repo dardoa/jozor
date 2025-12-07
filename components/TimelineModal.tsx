@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Person, Language, TimelineEvent } from '../types';
-import { X, Calendar, Baby, Heart, Ribbon, Info } from 'lucide-react'; // Import Info icon
+import { X, Calendar, Baby, Heart, Ribbon, Info, Filter } from 'lucide-react'; // Import Filter icon
 import { getDisplayDate } from '../utils/familyLogic';
 import { useTranslation } from '../context/TranslationContext';
 
@@ -17,6 +17,26 @@ export const TimelineModal: React.FC<TimelineModalProps> = ({
 }) => {
   const { t } = useTranslation();
   const [sortAsc, setSortAsc] = useState(true);
+  const [activeFilters, setActiveFilters] = useState<Set<TimelineEvent['type']>>(new Set(['birth', 'death', 'marriage', 'custom']));
+
+  const toggleFilter = (type: TimelineEvent['type']) => {
+    setActiveFilters(prev => {
+      const newFilters = new Set(prev);
+      if (newFilters.has(type)) {
+        newFilters.delete(type);
+      } else {
+        newFilters.add(type);
+      }
+      return newFilters;
+    });
+  };
+
+  const eventTypes: { id: TimelineEvent['type']; label: string; icon: React.ReactNode; color: string; }[] = useMemo(() => [
+    { id: 'birth', label: t.births, icon: <Baby className="w-3.5 h-3.5" />, color: 'bg-green-500' },
+    { id: 'death', label: t.deaths, icon: <Ribbon className="w-3.5 h-3.5" />, color: 'bg-stone-500' },
+    { id: 'marriage', label: t.marriages, icon: <Heart className="w-3.5 h-3.5" />, color: 'bg-pink-500' },
+    { id: 'custom', label: t.customEvents, icon: <FileText className="w-3.5 h-3.5" />, color: 'bg-blue-500' },
+  ], [t]);
 
   const events = useMemo(() => {
       const list: TimelineEvent[] = [];
@@ -73,10 +93,29 @@ export const TimelineModal: React.FC<TimelineModalProps> = ({
                   }
               });
           }
+
+          // Custom Events
+          if (person.events && person.events.length > 0) {
+            person.events.forEach(event => {
+                const y = parseInt(getDisplayDate(event.date));
+                if (!isNaN(y)) {
+                    list.push({
+                        year: y,
+                        dateStr: event.date,
+                        type: 'custom',
+                        personId: person.id,
+                        label: event.title,
+                        subLabel: event.place || event.description
+                    });
+                }
+            });
+          }
       });
 
-      return list.sort((a, b) => sortAsc ? a.year - b.year : b.year - a.year);
-  }, [people, sortAsc, t]);
+      return list
+        .filter(event => activeFilters.has(event.type))
+        .sort((a, b) => sortAsc ? a.year - b.year : b.year - a.a.year);
+  }, [people, sortAsc, activeFilters, t]);
 
   if (!isOpen) return null;
 
@@ -105,10 +144,28 @@ export const TimelineModal: React.FC<TimelineModalProps> = ({
           </div>
         </div>
 
+        {/* Filters */}
+        <div className="flex flex-wrap gap-2 p-4 border-b border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-900/50">
+            <span className="text-xs font-bold text-stone-500 uppercase flex items-center gap-1 me-2"><Filter className="w-3.5 h-3.5"/> {t.filterBy}:</span>
+            {eventTypes.map(type => (
+                <button
+                    key={type.id}
+                    onClick={() => toggleFilter(type.id)}
+                    className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                        activeFilters.has(type.id)
+                        ? `${type.color} text-white`
+                        : 'bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600'
+                    }`}
+                >
+                    {type.icon} {type.label}
+                </button>
+            ))}
+        </div>
+
         <div className="flex-1 overflow-y-auto p-6 bg-stone-50 dark:bg-stone-900 relative">
             {events.length === 0 ? (
                 <div className="text-center py-20 text-stone-400">
-                    <Info className="w-12 h-12 mx-auto mb-3 opacity-50" /> {/* Changed to Info icon */}
+                    <Info className="w-12 h-12 mx-auto mb-3 opacity-50" />
                     <p>{t.noEvents}</p>
                 </div>
             ) : (
@@ -117,7 +174,7 @@ export const TimelineModal: React.FC<TimelineModalProps> = ({
                         <div key={idx} className="relative ps-6 group">
                             {/* Dot */}
                             <div className={`absolute -start-[9px] top-0 w-4 h-4 rounded-full border-2 border-white dark:border-stone-800 shadow-sm flex items-center justify-center 
-                                ${evt.type === 'birth' ? 'bg-green-500' : evt.type === 'death' ? 'bg-stone-500' : 'bg-pink-500'}
+                                ${evt.type === 'birth' ? 'bg-green-500' : evt.type === 'death' ? 'bg-stone-500' : evt.type === 'marriage' ? 'bg-pink-500' : 'bg-blue-500'}
                             `}>
                             </div>
 
@@ -127,10 +184,11 @@ export const TimelineModal: React.FC<TimelineModalProps> = ({
                             >
                                 <div className="flex items-center justify-between mb-1">
                                     <span className="text-xl font-bold text-stone-300 dark:text-stone-600">{evt.year}</span>
-                                    <div className={`p-1 rounded-full ${evt.type === 'birth' ? 'bg-green-50 text-green-600' : evt.type === 'death' ? 'bg-stone-100 text-stone-500' : 'bg-pink-50 text-pink-500'}`}>
+                                    <div className={`p-1 rounded-full ${evt.type === 'birth' ? 'bg-green-50 text-green-600' : evt.type === 'death' ? 'bg-stone-100 text-stone-500' : evt.type === 'marriage' ? 'bg-pink-50 text-pink-500' : 'bg-blue-50 text-blue-500'}`}>
                                         {evt.type === 'birth' && <Baby className="w-3.5 h-3.5" />}
                                         {evt.type === 'death' && <Ribbon className="w-3.5 h-3.5" />}
                                         {evt.type === 'marriage' && <Heart className="w-3.5 h-3.5" />}
+                                        {evt.type === 'custom' && <FileText className="w-3.5 h-3.5" />}
                                     </div>
                                 </div>
                                 

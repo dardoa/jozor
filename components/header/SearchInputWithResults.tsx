@@ -44,6 +44,10 @@ export const SearchInputWithResults: React.FC<SearchInputWithResultsProps> = mem
           onBlur={() => setTimeout(() => setIsSearchActive(false), 200)}
           className="bg-transparent border-none outline-none text-xs font-medium text-stone-700 dark:text-stone-200 placeholder-stone-400 w-full"
           aria-label={t.searchPlaceholder}
+          role="combobox" // ARIA role for search with suggestions
+          aria-autocomplete="list"
+          aria-controls="search-results-list"
+          aria-expanded={isSearchActive && searchResults.length > 0}
         />
         {searchQuery && (
           <button onClick={handleClearSearch} className="text-stone-400 hover:text-stone-600" aria-label={t.clearSearch}>

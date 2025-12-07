@@ -10,7 +10,7 @@ export const SearchResults = memo(({
     const { t } = useTranslation();
 
     return (
-        <DropdownContent className="w-80 start-0 max-h-96 overflow-y-auto scrollbar-thin">
+        <DropdownContent className="w-80 start-0 max-h-96 overflow-y-auto scrollbar-thin" id="search-results-list" role="listbox">
             {results.length === 0 ? (
                 <div className="p-4 text-center text-xs text-stone-400 italic flex flex-col items-center">
                     <Info className="w-8 h-8 mx-auto mb-2 opacity-50" />
@@ -18,7 +18,13 @@ export const SearchResults = memo(({
                 </div>
             ) : (
                 results.map(p => (
-                    <DropdownMenuItem key={p.id} onClick={() => { onFocus(p.id); onClose(); }} className="group text-start">
+                    <DropdownMenuItem 
+                        key={p.id} 
+                        onClick={() => { onFocus(p.id); onClose(); }} 
+                        className="group text-start"
+                        role="option" // ARIA role for list item
+                        aria-selected={false} // Can be dynamically set if needed
+                    >
                         <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shadow-sm shrink-0 ${p.gender === 'male' ? 'bg-teal-100 text-teal-600 dark:bg-teal-900 dark:text-teal-300' : 'bg-pink-100 text-pink-600 dark:bg-pink-900 dark:text-pink-300'}`}>
                             {p.firstName[0]}
                         </div>
