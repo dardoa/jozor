@@ -6,6 +6,7 @@ import { Camera, X, Sparkles, Loader2, ChevronDown } from 'lucide-react';
 import { processImageFile } from '../../utils/imageLogic';
 import { extractPersonData } from '../../services/geminiService';
 import { useTranslation } from '../../context/TranslationContext';
+import { showError, showSuccess } from '../../utils/toast'; // Import toast utilities
 
 interface PersonIdentityEditProps {
   person: Person;
@@ -30,8 +31,10 @@ export const PersonIdentityEdit: React.FC<PersonIdentityEditProps> = memo(({ per
     try {
         const dataUrl = await processImageFile(file, 300);
         onUpdate(person.id, { photoUrl: dataUrl });
+        showSuccess("Profile photo updated successfully!"); // Toast success
     } catch (err) {
         console.error("Image processing failed", err);
+        showError("Failed to update profile photo."); // Use toast
     }
     e.target.value = '';
   };
@@ -50,8 +53,9 @@ export const PersonIdentityEdit: React.FC<PersonIdentityEditProps> = memo(({ per
         onUpdate(person.id, updates);
         setShowSmartModal(false);
         setSmartText('');
+        showSuccess("Data extracted and autofilled successfully!"); // Toast success
     } catch (e) {
-        alert("Failed to extract data.");
+        showError("Failed to extract data."); // Use toast
     } finally {
         setIsExtracting(false);
     }
@@ -69,7 +73,7 @@ export const PersonIdentityEdit: React.FC<PersonIdentityEditProps> = memo(({ per
               <>
                 <img src={person.photoUrl} alt="" className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
                 <button
-                  onClick={(e) => { e.stopPropagation(); handleChange('photoUrl', ''); }}
+                  onClick={(e) => { e.stopPropagation(); handleChange('photoUrl', ''); showSuccess("Profile photo removed."); }} // Toast success
                   className="absolute top-1 right-1 p-0.5 bg-red-500/80 hover:bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                   title={t.removePhoto}
                 >

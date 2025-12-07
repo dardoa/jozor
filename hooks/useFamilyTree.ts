@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Person, Gender } from '../types';
 import { validatePerson } from '../utils/familyLogic';
@@ -13,6 +12,7 @@ import {
     performLinkPerson, 
     performRemoveRelationship 
 } from '../utils/treeOperations';
+import { showError } from '../utils/toast'; // Import showError
 
 export const useFamilyTree = () => {
   // --- State Initialization ---
@@ -105,7 +105,7 @@ export const useFamilyTree = () => {
     // 1. Guard against deleting the last person
     const ids = Object.keys(people);
     if (ids.length <= 1) {
-        alert("Cannot delete the last person in the tree.");
+        showError("Cannot delete the last person in the tree."); // Use toast
         return;
     }
 
@@ -179,7 +179,7 @@ export const useFamilyTree = () => {
           return true;
       } catch (e) {
           console.error(e);
-          alert("Import failed. Please check the file format.");
+          showError("Import failed. Please check the file format."); // Use toast
           return false;
       }
   };

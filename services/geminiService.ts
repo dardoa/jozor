@@ -1,5 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 import { Person, Message } from "../types";
+import { showError } from '../utils/toast'; // Import showError
 
 const getClient = () => {
   const apiKey = process.env.API_KEY;
@@ -91,6 +92,7 @@ export const generateBiography = async (person: Person, people: Record<string, P
     return response.text || "Could not generate biography.";
   } catch (error) {
     console.error("Gemini API Error:", error);
+    showError("Failed to generate biography. Check API Key."); // Use toast
     throw error;
   }
 };
@@ -151,6 +153,7 @@ export const startAncestorChat = async (person: Person, people: Record<string, P
         return result.text || "I am having trouble remembering right now. (AI Error)"; // Added fallback
     } catch (error) {
         console.error("Gemini Chat Error", error);
+        showError("I am having trouble remembering right now. (API Error)"); // Use toast
         return "I am having trouble remembering right now. (API Error)";
     }
 };
@@ -189,6 +192,7 @@ export const extractPersonData = async (text: string): Promise<Partial<Person>> 
         return JSON.parse(jsonText);
     } catch (error) {
         console.error("Gemini Extraction Error", error);
+        showError("Failed to extract data."); // Use toast
         throw error;
     }
 };
@@ -213,6 +217,7 @@ export const analyzeImage = async (base64Image: string): Promise<string> => {
         return response.text || "No analysis available.";
     } catch (error) {
         console.error("Image Analysis Error", error);
+        showError("Image analysis failed."); // Use toast
         throw error;
     }
 };
@@ -259,6 +264,7 @@ export const generateFamilyStory = async (people: Record<string, Person>, rootId
         return response.text || (language === 'ar' ? "<p>حدث خطأ أثناء كتابة القصة.</p>" : "<p>Error generating story.</p>");
     } catch (error) {
         console.error("Gemini Story Error", error);
+        showError(language === 'ar' ? "حدث خطأ أثناء كتابة القصة." : "Error generating story."); // Use toast
         throw error;
     }
 };

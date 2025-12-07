@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Language, UserProfile, Collaborator } from '../types'; // Import Collaborator
 import { X, UserPlus, Mail, Shield, Check, Trash2, Share2, Copy, Globe } from 'lucide-react';
 import { useTranslation } from '../context/TranslationContext';
+import { showSuccess, showError } from '../utils/toast'; // Import toast utilities
 
 interface ShareModalProps {
   isOpen: boolean;
@@ -36,16 +37,18 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, languag
       setCollaborators([...collaborators, newCollab]);
       setEmail('');
       // In a real app, this would trigger an API call
-      alert(t.inviteSent + " " + email);
+      showSuccess(t.inviteSent + " " + email); // Use toast
   };
 
   const handleRemove = (emailToRemove: string) => {
       setCollaborators(collaborators.filter(c => c.email !== emailToRemove));
+      showSuccess("Collaborator removed."); // Toast success
   };
 
   const copyLink = () => {
       navigator.clipboard.writeText(window.location.href);
       setIsCopied(true);
+      showSuccess("Link copied to clipboard!"); // Toast success
       setTimeout(() => setIsCopied(false), 2000);
   };
 

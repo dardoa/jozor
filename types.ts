@@ -67,6 +67,7 @@ export interface Person {
   photoUrl?: string;
   gallery: string[];
   voiceNotes: string[];
+  sources: { id: string; title: string; url?: string; date?: string; type?: string; }[]; // New: Array of sources
 
   // Contact
   email: string;

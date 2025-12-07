@@ -3,7 +3,7 @@ import { Person, Gender, Language, TreeSettings, UserProfile, HistoryControlsPro
 import { useFamilyTree } from './useFamilyTree';
 import { useGoogleSync } from './useGoogleSync';
 import { useThemeSync } from './useThemeSync';
-import { useLanguageSync } from './useLanguageSync'; // Keep import for now, but won't be used directly here
+// Removed: import { useLanguageSync } from './useLanguageSync'; // Keep import for now, but won't be used directly here
 import { useKeyboardShortcuts } from './useKeyboardShortcuts';
 import { useModalAndSidebarLogic } from './useModalAndSidebarLogic';
 import { useTreeSettings } from './useTreeSettings';
@@ -13,6 +13,7 @@ import { exportToJozorArchive } from '../utils/archiveLogic';
 import { generateICS } from '../utils/calendarLogic';
 import { downloadFile } from '../utils/fileUtils';
 import { useTranslation } from '../context/TranslationContext'; // Import useTranslation
+import { showError } from '../utils/toast'; // Import showError
 
 export const useAppOrchestration = () => {
   // --- Core Data & History ---
@@ -101,7 +102,7 @@ export const useAppOrchestration = () => {
       }
     } catch (e) {
       console.error(`Export to ${type} failed`, e);
-      alert(`Export to ${type} failed`);
+      showError(`Export to ${type} failed`); // Use toast
     }
   }, [people]);
 

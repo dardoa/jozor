@@ -1,8 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
-import { TranslationProvider } from './context/TranslationContext'; // Corrected import path
-// Removed: import { useLanguageSync } from './hooks/useLanguageSync'; // Import useLanguageSync to get language for the key
+import { TranslationProvider } from './context/TranslationContext';
+import ToastProvider from './components/ToastProvider'; // Import ToastProvider
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -10,12 +10,10 @@ if (!rootElement) {
 }
 
 const RootComponent: React.FC = () => {
-  // Removed: const { language } = useLanguageSync(); // Get the current language to use as a key
-  // The key will now be managed internally by TranslationProvider or derived from its internal state.
-  // Forcing a re-mount of TranslationProvider is still desired, so we'll use its internal language state for the key.
   return (
     <React.StrictMode>
-      <TranslationProvider> {/* Key will be managed internally by TranslationProvider */}
+      <TranslationProvider>
+        <ToastProvider /> {/* Add ToastProvider here */}
         <App />
       </TranslationProvider>
     </React.StrictMode>

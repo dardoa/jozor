@@ -7,6 +7,7 @@ import { Plus, Image as ImageIcon, X, Mic, Play, Trash2, Cloud, Loader2, Sparkle
 import { VoiceRecorder } from '../VoiceRecorder';
 import { Card } from '../ui/Card';
 import { useTranslation } from '../../context/TranslationContext';
+import { showError, showSuccess } from '../../utils/toast'; // Import toast utilities
 
 interface MediaTabProps {
   person: Person;
@@ -25,7 +26,7 @@ export const MediaTab: React.FC<MediaTabProps> = memo(({ person, isEditing, onUp
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user) {
-        alert("Login required to upload images to Drive.");
+        showError("Login required to upload images to Drive."); // Use toast
         return;
     }
 
@@ -35,16 +36,17 @@ export const MediaTab: React.FC<MediaTabProps> = memo(({ person, isEditing, onUp
         
         const currentGallery = person.gallery || [];
         onUpdate(person.id, { gallery: [...currentGallery, driveUrl] }); // Store URL
+        showSuccess("Image uploaded to Drive successfully!"); // Toast success
     } catch (err) {
         console.error("Gallery upload failed", err);
-        alert("Failed to upload image to Drive.");
+        showError("Failed to upload image to Drive."); // Use toast
     }
     e.target.value = '';
   };
 
   const handleDriveSelect = async () => {
       if (!user || user?.uid.startsWith('mock-')) {
-          alert("Drive Picker requires a real Google Login (Demo Mode active).");
+          showError("Drive Picker requires a real Google Login (Demo Mode active)."); // Use toast
           return;
       }
 
@@ -54,11 +56,12 @@ export const MediaTab: React.FC<MediaTabProps> = memo(({ person, isEditing, onUp
           if (driveUrl) {
               const currentGallery = person.gallery || [];
               onUpdate(person.id, { gallery: [...currentGallery, driveUrl] });
+              showSuccess("Image picked from Drive successfully!"); // Toast success
           }
       } catch (err: any) {
           if (err !== "Cancelled") {
               console.error(err);
-              alert("Failed to pick image from Drive.");
+              showError("Failed to pick image from Drive."); // Use toast
           }
       } finally {
           setIsDriveLoading(false);
@@ -85,9 +88,10 @@ export const MediaTab: React.FC<MediaTabProps> = memo(({ person, isEditing, onUp
           // Append analysis to bio or alert
           if(confirm(`Analysis Result:\n\n${analysis}\n\nAppend to biography?`)) {
               onUpdate(person.id, { bio: (person.bio || '') + `\n\n[Photo Analysis]: ${analysis}` });
+              showSuccess("Image analysis appended to biography."); // Toast success
           }
       } catch (e) {
-          alert("Analysis failed.");
+          showError("Analysis failed."); // Use toast
       } finally {
           setAnalyzingImgIndex(null);
       }
@@ -95,16 +99,17 @@ export const MediaTab: React.FC<MediaTabProps> = memo(({ person, isEditing, onUp
 
   const handleVoiceSave = async (audioBlob: Blob) => { // Accepts Blob
       if (!user) {
-          alert("Login required to save voice notes to Drive.");
+          showError("Login required to save voice notes to Drive."); // Use toast
           return;
       }
       try {
           const driveUrl = await uploadFileToDrive(audioBlob, `voice_${person.id}_${Date.now()}.webm`, 'audio/webm');
           const currentNotes = person.voiceNotes || [];
           onUpdate(person.id, { voiceNotes: [...currentNotes, driveUrl] });
+          showSuccess("Voice note uploaded to Drive successfully!"); // Toast success
       } catch (err) {
           console.error("Voice note upload failed", err);
-          alert("Failed to upload voice note to Drive.");
+          showError("Failed to upload voice note to Drive."); // Use toast
       }
   };
 

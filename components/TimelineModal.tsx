@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Person, Language, TimelineEvent } from '../types';
-import { X, Calendar, Baby, Heart, Ribbon } from 'lucide-react';
+import { X, Calendar, Baby, Heart, Ribbon, Info } from 'lucide-react'; // Import Info icon
 import { getDisplayDate } from '../utils/familyLogic';
 import { useTranslation } from '../context/TranslationContext';
 
@@ -108,7 +108,7 @@ export const TimelineModal: React.FC<TimelineModalProps> = ({
         <div className="flex-1 overflow-y-auto p-6 bg-stone-50 dark:bg-stone-900 relative">
             {events.length === 0 ? (
                 <div className="text-center py-20 text-stone-400">
-                    <Calendar className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                    <Info className="w-12 h-12 mx-auto mb-3 opacity-50" /> {/* Changed to Info icon */}
                     <p>{t.noEvents}</p>
                 </div>
             ) : (

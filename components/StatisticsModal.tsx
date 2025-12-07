@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Person, Language } from '../types';
 import { calculateStatistics } from '../utils/statisticsLogic';
-import { X, Users, Activity, Clock, Trophy, MapPin, Calendar, PieChart, BarChart3, Baby, ExternalLink } from 'lucide-react';
+import { X, Users, Activity, Clock, Trophy, MapPin, Calendar, PieChart, BarChart3, Baby, ExternalLink, Info } from 'lucide-react'; // Import Info icon
 import { useTranslation } from '../context/TranslationContext';
 
 interface StatisticsModalProps {
@@ -35,7 +35,12 @@ export const StatisticsModal: React.FC<StatisticsModalProps> = ({ isOpen, onClos
   const renderTimeline = () => {
       // Explicitly map string keys to numbers to avoid TS type issues with Number constructor
       const decades = Object.keys(stats.birthsPerDecade).map((d: string) => Number(d)).sort((a: number, b: number) => a - b);
-      if (decades.length === 0) return <div className="text-center text-stone-400 py-10">No date data available.</div>;
+      if (decades.length === 0) return (
+        <div className="text-center text-stone-400 py-10 flex flex-col items-center">
+            <Info className="w-12 h-12 mx-auto mb-3 opacity-50" />
+            {t.noDateData}
+        </div>
+      );
       
       const counts = Object.values(stats.birthsPerDecade) as number[];
       const maxVal = counts.length > 0 ? Math.max(...counts) : 0;
@@ -78,7 +83,10 @@ export const StatisticsModal: React.FC<StatisticsModalProps> = ({ isOpen, onClos
                </div>
                <div className="divide-y divide-stone-50 dark:divide-stone-700">
                    {data.length === 0 ? (
-                       <div className="p-4 text-center text-xs text-stone-400 italic">No data</div>
+                       <div className="p-4 text-center text-xs text-stone-400 italic flex flex-col items-center">
+                           <Info className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                           {t.noData}
+                       </div>
                    ) : (
                        data.map((item, i) => (
                            <div key={i} className="flex items-center justify-between p-3 px-4 hover:bg-stone-50 dark:hover:bg-stone-700/50">

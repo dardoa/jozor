@@ -2,6 +2,7 @@ import React, { memo } from 'react';
 import { Person } from '../../types';
 import { Trash2, Check, Edit2, Eraser } from 'lucide-react';
 import { useTranslation } from '../../context/TranslationContext';
+import { showSuccess, showError } from '../../utils/toast'; // Import toast utilities
 
 interface SidebarFooterProps {
     person: Person;
@@ -19,6 +20,7 @@ export const SidebarFooter: React.FC<SidebarFooterProps> = memo(({
     const handleDelete = () => {
         if (window.confirm(t.personDeleteConfirm)) {
             onDelete(person.id);
+            showSuccess("Person deleted successfully!"); // Toast success
         }
     };
 
@@ -58,7 +60,10 @@ export const SidebarFooter: React.FC<SidebarFooterProps> = memo(({
             {isEditing ? (
                 <button
                     type="button"
-                    onClick={() => setIsEditing(false)}
+                    onClick={() => {
+                        setIsEditing(false);
+                        showSuccess("Changes saved successfully!"); // Toast success
+                    }}
                     className="w-10 h-10 flex items-center justify-center bg-emerald-600  text-white rounded-full shadow-md hover:bg-emerald-700 transition-colors active:scale-95"
                     title={t.saveChanges}
                     aria-label={t.saveChanges}

@@ -31,6 +31,7 @@ export const DEFAULT_PERSON_TEMPLATE: Omit<Person, 'id'> = {
   photoUrl: '',
   gallery: [],
   voiceNotes: [],
+  sources: [], // New: Initialize as empty array
   email: '',
   website: '',
   blog: '',

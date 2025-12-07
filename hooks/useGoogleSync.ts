@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { UserProfile, Person } from '../types';
 import { 
@@ -9,6 +8,7 @@ import {
     loadFromDrive, 
     saveToDrive 
 } from '../services/googleService';
+import { showSuccess, showError } from '../utils/toast'; // Import toast utilities
 
 export const useGoogleSync = (
     people: Record<string, Person>, 
@@ -40,8 +40,10 @@ export const useGoogleSync = (
             setIsSyncing(true);
             try {
                 await saveToDrive(people, driveFileId);
+                showSuccess("Successfully synced with Google Drive!"); // Toast success
             } catch (e) {
                 console.error("Auto-save failed", e);
+                showError("Failed to sync with Google Drive."); // Toast error
             } finally {
                 setIsSyncing(false);
             }
@@ -66,20 +68,22 @@ export const useGoogleSync = (
                     setDriveFileId(existingId);
                     const cloudData = await loadFromDrive(existingId);
                     setPeople(cloudData);
+                    showSuccess("File loaded successfully from Google Drive."); // Toast success
                 } else {
                     console.log("Creating new file...");
                     const newId = await saveToDrive(people, null);
                     setDriveFileId(newId);
+                    showSuccess("New file saved to Google Drive successfully!"); // Toast success
                 }
             } catch (driveErr) {
                 console.error("Drive Setup Error:", driveErr);
-                alert("Logged in, but failed to access Google Drive. Check permissions.");
+                showError("Logged in, but failed to access Google Drive. Check permissions."); // Toast error
             }
             return true;
 
         } catch(e: any) {
             console.error("Login failed", e);
-            alert("Login failed. Please ensure your Google Client ID is configured correctly in the code.");
+            showError("Login failed. Please ensure your Google Client ID is configured correctly in the code."); // Toast error
             return false;
         } finally {
             setIsSyncing(false);
@@ -91,6 +95,7 @@ export const useGoogleSync = (
         setUser(null);
         setDriveFileId(null);
         setIsDemoMode(false);
+        showSuccess("Logged out successfully."); // Toast success
     }, []);
 
     const stopSyncing = useCallback(() => {
