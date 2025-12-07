@@ -49,7 +49,6 @@ export interface Person {
   nickName: string;
   suffix: string;
   gender: Gender;
-  familyName: string; // New: Family name for the entire tree
   
   // Vital Stats
   birthDate: string;

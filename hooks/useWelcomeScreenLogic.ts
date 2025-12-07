@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Person } from '../types';
+import { Person, Language } from '../types';
 import { INITIAL_ROOT_ID } from '../constants';
 
 interface UseWelcomeScreenLogicProps {

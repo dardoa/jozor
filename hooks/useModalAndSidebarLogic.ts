@@ -2,11 +2,17 @@ import { useState, useCallback } from 'react';
 import { Gender } from '../types';
 
 interface UseModalAndSidebarLogicProps {
+  addParent: (gender: Gender) => void;
+  addSpouse: (gender: Gender) => void;
+  addChild: (gender: Gender) => void;
+  linkPerson: (existingId: string, type: 'parent' | 'spouse' | 'child' | null) => void;
+  setFocusId: (id: string) => void;
   canUndo: boolean;
   canRedo: boolean;
 }
 
 export const useModalAndSidebarLogic = ({
+  addParent, addSpouse, addChild, linkPerson, setFocusId,
   canUndo, canRedo
 }: UseModalAndSidebarLogicProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);

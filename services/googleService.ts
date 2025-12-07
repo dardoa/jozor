@@ -12,7 +12,7 @@ declare global {
 // Updated scopes to allow picking files, storing in appDataFolder, and fetching user profile/email
 const SCOPES = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email';
 const DISCOVERY_DOCS = ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest', 'https://www.googleapis.com/discovery/v1/apis/oauth2/v2/rest']; // Added oauth2 discovery doc
-// Removed FILE_NAME constant, it will now be dynamic
+const FILE_NAME = 'jozor_family_tree.json';
 
 // Scripts to load dynamically
 const SCRIPTS = {
@@ -205,15 +205,14 @@ export const logoutFromGoogle = () => {
 
 // --- Drive Operations ---
 
-export const findAppFile = async (currentFamilyName: string): Promise<string | null> => {
+export const findAppFile = async (): Promise<string | null> => {
     if (!isInitialized) {
         console.warn("Google API not initialized. Cannot find app file.");
         return null;
     }
-    const fileName = `${currentFamilyName || 'Untitled'}_Family.json`;
     try {
         const response = await window.gapi.client.drive.files.list({
-            q: `name = '${fileName}' and trashed = false`,
+            q: `name = '${FILE_NAME}' and trashed = false`,
             fields: 'files(id, name)',
             spaces: 'drive',
         });
@@ -240,13 +239,12 @@ export const loadFromDrive = async (fileId: string): Promise<Record<string, Pers
     }
 };
 
-export const saveToDrive = async (people: Record<string, Person>, existingFileId: string | null, currentFamilyName: string): Promise<string> => {
+export const saveToDrive = async (people: Record<string, Person>, existingFileId: string | null): Promise<string> => {
     if (!isInitialized) throw new Error("Google API not initialized");
     
     const content = JSON.stringify(people, null, 2);
-    const fileName = `${currentFamilyName || 'Untitled'}_Family.json`;
     const metadata = {
-        name: fileName,
+        name: FILE_NAME,
         mimeType: 'application/json',
     };
 

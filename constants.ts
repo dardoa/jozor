@@ -22,7 +22,6 @@ export const DEFAULT_PERSON_TEMPLATE: Omit<Person, 'id'> = {
   nickName: '',
   suffix: '',
   gender: 'male',
-  familyName: '', // New: Initialize familyName
   birthDate: '',
   birthPlace: '',
   birthSource: '',
