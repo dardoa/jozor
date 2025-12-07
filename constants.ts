@@ -9,6 +9,9 @@ export const CHILD_ID = 'child-1';
 // and never hardcoded in production.
 export const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
+// Add this console log to check the value
+console.log('GOOGLE_CLIENT_ID from constants.ts:', GOOGLE_CLIENT_ID);
+
 // Template for a new person, without an ID
 export const DEFAULT_PERSON_TEMPLATE: Omit<Person, 'id'> = {
   title: '',
