@@ -1,4 +1,3 @@
-import { GoogleGenAI } from "@google/genai";
 import { Person, Message } from "../types";
 import { showError } from '../utils/toast'; // Import showError
 
@@ -25,12 +24,8 @@ const sanitizePromptInput = (input: string): string => {
 
 export const generateBiography = async (person: Person, people: Record<string, Person>, tone: string = 'Standard'): Promise<string> => {
   try {
-    // In a real implementation, 'ai' would be a client to your backend proxy.
-    // Example: const response = await fetch('/api/gemini/biography', { method: 'POST', body: JSON.stringify({ person, people, tone }) });
-    // const data = await response.json(); return data.text;
-    
     // For now, this will trigger the error from getClient()
-    const ai = getClient(); 
+    // const ai = getClient(); 
     
     // Whitelist for allowed tones
     const allowedTones = ['Standard', 'Formal', 'Storyteller', 'Humorous', 'Journalistic'];
@@ -73,33 +68,6 @@ export const generateBiography = async (person: Person, people: Record<string, P
         childCount > 0 ? `Children: ${childCount}` : null,
     ].filter(Boolean).join('\n');
 
-    const prompt = `
-      Write a short, engaging biography (approx 100-150 words) for a person in a family tree.
-      
-      TONE: ${sanitizedTone}
-      
-      PERSON DETAILS:
-      ${details}
-      
-      INSTRUCTIONS:
-      - Write in the third person.
-      - Use the provided details to weave a cohesive and natural narrative.
-      - Include family connections (parents, spouses, children) where relevant to give context.
-      - If the tone is 'Storyteller', make it sound like a legend, a fond memory, or a storybook entry.
-      - If the tone is 'Formal', stick to facts, chronology, and professional achievements.
-      - If the tone is 'Humorous', include light-hearted remarks about their profession or interests if appropriate.
-      - If the tone is 'Journalistic', write it like a newspaper obituary or feature.
-      - If dates are missing, generalize (e.g., "born in the 20th century") rather than saying "unknown date".
-      - Do not invent facts not provided, but you can infer context (e.g. if they are a doctor, you can mention they worked in healthcare).
-    `;
-
-    // This part would be replaced by a fetch to your backend proxy
-    // const response = await ai.models.generateContent({
-    //   model: 'gemini-2.5-flash',
-    //   contents: prompt,
-    // });
-    // return response.text || "Could not generate biography.";
-
     // Placeholder for backend call
     showError("AI features are disabled. Please set up a backend proxy for Gemini API calls.");
     return "AI features are currently unavailable. Please set up a backend proxy.";
@@ -114,7 +82,7 @@ export const generateBiography = async (person: Person, people: Record<string, P
 export const startAncestorChat = async (person: Person, people: Record<string, Person>, history: Message[], newMessage: string): Promise<string> => {
     try {
         // For now, this will trigger the error from getClient()
-        const ai = getClient(); 
+        // const ai = getClient(); 
         
         // Sanitize person details for context
         const sanitizedPersonFirstName = sanitizePromptInput(person.firstName);
@@ -128,41 +96,6 @@ export const startAncestorChat = async (person: Person, people: Record<string, P
 
         const sanitizedParentNames = person.parents.map(id => people[id]?.firstName).filter(Boolean).map(sanitizePromptInput).join(', ');
         const sanitizedSpouseNames = person.spouses.map(id => people[id]?.firstName).filter(Boolean).map(sanitizePromptInput).join(', ');
-
-        const context = `
-            You are playing the role of ${sanitizedPersonFirstName} ${sanitizedPersonLastName}.
-            You are part of a family tree.
-            
-            YOUR DETAILS:
-            Born: ${sanitizedBirthDate} in ${sanitizedBirthPlace}
-            Died: ${person.isDeceased ? sanitizedDeathDate : 'Still living'}
-            Profession: ${sanitizedProfession}
-            Interests: ${sanitizedInterests}
-            Bio: ${sanitizedBio}
-            
-            FAMILY:
-            Parents: ${sanitizedParentNames}
-            Spouse: ${sanitizedSpouseNames}
-            Children: ${person.children.length}
-            
-            INSTRUCTIONS:
-            - Reply to the user's message as if you are this person.
-            - Use the first person ("I").
-            - Be polite, warm, and reflect the time period you lived in if known.
-            - Keep answers relatively short (2-3 sentences) unless asked for a story.
-            - If asked about something not in your data, say you don't remember or invent a plausible detail consistent with your profession/era.
-        `;
-
-        // This part would be replaced by a fetch to your backend proxy.
-        // const chat = ai.chats.create({
-        //     model: 'gemini-2.5-flash',
-        //     config: { systemInstruction: context }
-        // });
-        // for (const msg of history) {
-        //     await chat.sendMessage({ message: sanitizePromptInput(msg.text) });
-        // }
-        // const result = await chat.sendMessage({ message: sanitizePromptInput(newMessage) });
-        // return result.text || "I am having trouble remembering right now. (AI Error)";
 
         // Placeholder for backend call
         showError("AI chat is disabled. Please set up a backend proxy for Gemini API calls.");
@@ -178,36 +111,25 @@ export const startAncestorChat = async (person: Person, people: Record<string, P
 export const extractPersonData = async (text: string): Promise<Partial<Person>> => {
     try {
         // For now, this will trigger the error from getClient()
-        const ai = getClient(); 
-        const prompt = `
-            Analyze the following unstructured text and extract details about a person to fill a family tree profile.
-            Return ONLY a valid JSON object. Do not add markdown formatting.
+        // const ai = getClient(); 
+        // const prompt = `
+        //     Analyze the following unstructured text and extract details about a person to fill a family tree profile.
+        //     Return ONLY a valid JSON object. Do not add markdown formatting.
             
-            Fields to extract:
-            - firstName, middleName, lastName, nickName, title
-            - gender (infer "male" or "female")
-            - birthDate (YYYY-MM-DD format if possible, otherwise YYYY)
-            - birthPlace
-            - isDeceased (boolean)
-            - deathDate (YYYY-MM-DD format)
-            - deathPlace
-            - profession
-            - bio (a summary of the text)
+        //     Fields to extract:
+        //     - firstName, middleName, lastName, nickName, title
+        //     - gender (infer "male" or "female")
+        //     - birthDate (YYYY-MM-DD format if possible, otherwise YYYY)
+        //     - birthPlace
+        //     - isDeceased (boolean)
+        //     - deathDate (YYYY-MM-DD format)
+        //     - deathPlace
+        //     - profession
+        //     - bio (a summary of the text)
 
-            TEXT:
-            "${sanitizePromptInput(text)}"
-        `;
-
-        // This part would be replaced by a fetch to your backend proxy.
-        // const response = await ai.models.generateContent({
-        //     model: 'gemini-2.5-flash',
-        //     contents: prompt,
-        //     config: {
-        //         responseMimeType: "application/json"
-        //     }
-        // });
-        // const jsonText = response.text || "{}";
-        // return JSON.parse(jsonText);
+        //     TEXT:
+        //     "${sanitizePromptInput(text)}"
+        // `;
 
         // Placeholder for backend call
         showError("AI data extraction is disabled. Please set up a backend proxy for Gemini API calls.");
@@ -223,22 +145,10 @@ export const extractPersonData = async (text: string): Promise<Partial<Person>> 
 export const analyzeImage = async (base64Image: string): Promise<string> => {
     try {
         // For now, this will trigger the error from getClient()
-        const ai = getClient(); 
+        // const ai = getClient(); 
         
         // Remove header if present (data:image/jpeg;base64,)
-        const base64Data = base64Image.includes(',') ? base64Image.split(',')[1] : base64Image;
-
-        // This part would be replaced by a fetch to your backend proxy.
-        // const response = await ai.models.generateContent({
-        //     model: 'gemini-2.5-flash',
-        //     contents: {
-        //         parts: [
-        //             { inlineData: { mimeType: 'image/jpeg', data: base64Data } },
-        //             { text: "Analyze this image for a genealogy research context. Describe the people (estimated age, clothing era), the setting, and any visible text or dates. Keep it concise." }
-        //         ]
-        //     }
-        // });
-        // return response.text || "No analysis available.";
+        // const base64Data = base64Image.includes(',') ? base64Image.split(',')[1] : base64Image;
 
         // Placeholder for backend call
         showError("AI image analysis is disabled. Please set up a backend proxy for Gemini API calls.");
@@ -254,7 +164,7 @@ export const analyzeImage = async (base64Image: string): Promise<string> => {
 export const generateFamilyStory = async (people: Record<string, Person>, rootId: string, language: string = 'en'): Promise<string> => {
     try {
         // For now, this will trigger the error from getClient()
-        const ai = getClient(); 
+        // const ai = getClient(); 
         
         // Prepare simplified data dump to save tokens, sanitizing relevant fields
         const sanitizedSimplifiedData = Object.values(people).map(p => ({
@@ -267,31 +177,6 @@ export const generateFamilyStory = async (people: Record<string, Person>, rootId
             died: sanitizePromptInput(p.deathDate),
             bio: sanitizePromptInput(p.bio ? p.bio.substring(0, 100) : '')
         }));
-
-        const prompt = `
-            Act as a master storyteller. Based on the JSON data of a family tree provided below, write a compelling, chronological narrative history of this family.
-            
-            LANGUAGE: ${language === 'ar' ? 'Arabic' : 'English'}
-            
-            INSTRUCTIONS:
-            1. Start from the oldest known ancestors and move forward in time to the youngest generation.
-            2. Highlight key locations (migrations), longevity, large families, or interesting professions if noted.
-            3. Use a warm, nostalgic, and respectful tone.
-            4. Structure the story in clear paragraphs. Use HTML formatting for the output (e.g. <h3> for eras/generations, <p> for text, <strong> for names).
-            5. Do NOT output Markdown code blocks. Just return the raw HTML string suitable for placing in a div.
-            6. Focus on the flow of generations. "The story begins with..."
-            
-            FAMILY DATA:
-            ${JSON.stringify(sanitizedSimplifiedData.slice(0, 50))} 
-            (Data limited to 50 key members for brevity if tree is huge)
-        `;
-
-        // This part would be replaced by a fetch to your backend proxy.
-        // const response = await ai.models.generateContent({
-        //     model: 'gemini-2.5-flash',
-        //     contents: prompt,
-        // });
-        // return response.text || (language === 'ar' ? "<p>حدث خطأ أثناء كتابة القصة.</p>" : "<p>Error generating story.</p>");
 
         // Placeholder for backend call
         showError("AI story generation is disabled. Please set up a backend proxy for Gemini API calls.");

@@ -94,7 +94,7 @@ export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(({
             }
             align="end"
           >
-            <UserMenu user={auth.user} isDemoMode={auth.isDemoMode} onLogout={auth.onLogout} />
+            <UserMenu user={auth.user} isDemoMode={auth.isDemoMode} onLogout={auth.onLogout} onOpenDriveFileManager={auth.onOpenDriveFileManager} />
           </Dropdown>
         ) : (
           <LoginButton onLogin={auth.onLogin} label={t.loginGoogle} />

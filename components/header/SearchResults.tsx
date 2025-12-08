@@ -1,5 +1,5 @@
-import React, { memo } from 'react';
-import { Person, SearchResultsProps } from '../../types';
+import { memo } from 'react';
+import { SearchResultsProps } from '../../types';
 import { ArrowRightLeft, Info } from 'lucide-react'; // Import Info icon
 import { DropdownContent, DropdownMenuItem } from '../ui/DropdownMenu';
 import { useTranslation } from '../../context/TranslationContext';

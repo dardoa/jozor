@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import { memo } from 'react';
 import { 
   Printer, FileText, Archive, Calendar, Download
 } from 'lucide-react';

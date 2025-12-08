@@ -1,8 +1,8 @@
-import React, { memo } from 'react';
-import { UserProfile, UserMenuProps } from '../../types';
+import { memo } from 'react';
+import { UserMenuProps } from '../../types';
 import { 
   Cloud, LogOut, AlertCircle, HardDrive
-} from 'lucide-react'; // Import HardDrive icon
+} from 'lucide-react';
 import { DropdownContent, DropdownMenuItem, DropdownMenuDivider } from '../ui/DropdownMenu';
 import { useTranslation } from '../../context/TranslationContext';
 

@@ -22,7 +22,8 @@ const App: React.FC = () => {
     linkModal, setLinkModal, cleanTreeOptionsModal, setCleanTreeOptionsModal,
     googleSyncChoiceModal, setGoogleSyncChoiceModal, // New GoogleSyncChoiceModal state
     driveFileManagerModal, setDriveFileManagerModal, // New DriveFileManagerModal state
-    handleOpenLinkModal, handleOpenModal, onOpenCleanTreeOptions,
+    // Removed handleOpenLinkModal as it's not directly used here
+    handleOpenModal, onOpenCleanTreeOptions,
     
     // Grouped Props
     historyControls,
@@ -33,7 +34,7 @@ const App: React.FC = () => {
     exportActions,
     searchProps,
     familyActions,
-    startNewTree,
+    // Removed startNewTree as it's not directly used here
     onTriggerImportFile,
     onLoadCloudData, // Destructure onLoadCloudData
     onSaveNewCloudFile, // Destructure onSaveNewCloudFile

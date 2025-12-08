@@ -1,6 +1,5 @@
-import React, { memo } from 'react';
 import { Person, Gender, FamilyActionsProps } from '../../types';
-import { ArrowUp, Heart, ArrowDown, Users, UserRound, Baby } from 'lucide-react'; // Added UserRound, Baby icons
+import { Heart, Users, UserRound, Baby } from 'lucide-react';
 import { InlineAddButton } from './InlineAddButton';
 import { FamilyMemberItem } from './FamilyMemberItem';
 import { useTranslation } from '../../context/TranslationContext';
@@ -22,7 +21,7 @@ const FamilyGroup = memo(({
              <div className="flex items-center justify-between mb-2 px-1">
                 <div className="flex items-center gap-2 text-stone-500 dark:text-stone-400">
                     <div className={`p-1 rounded ${iconBgClass} ${iconTextColorClass}`}>{icon}</div>
-                    <span className="text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300">{title} <span className="opacity-60">({ids.length})</span></span> {/* Increased font size and boldness */}
+                    <span className="text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300">{title} <span className="opacity-60">({ids.length})</span></span>
                 </div>
                 {isEditing && onAdd && (
                     <div className="flex gap-1">
@@ -65,7 +64,7 @@ interface FamilyRelationshipsSectionProps {
 }
 
 export const FamilyRelationshipsSection: React.FC<FamilyRelationshipsSectionProps> = memo(({
-    person, people, isEditing, onSelect, onUpdate,
+    person, people, isEditing, onSelect,
     familyActions
 }) => {
     const { t } = useTranslation();

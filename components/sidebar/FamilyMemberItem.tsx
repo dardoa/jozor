@@ -1,7 +1,7 @@
-import React, { memo } from 'react';
+import { memo } from 'react';
 import { Person } from '../../types';
 import { getDisplayDate } from '../../utils/familyLogic';
-import { User, Ribbon, ChevronRight, Trash2 } from 'lucide-react';
+import { Ribbon, Trash2 } from 'lucide-react';
 import { useTranslation } from '../../context/TranslationContext';
 
 interface FamilyMemberItemProps {
@@ -26,7 +26,7 @@ export const FamilyMemberItem = memo(({ id, person, onSelect, onRemove }: Family
                         <img src={person.photoUrl} alt="" className={`w-full h-full rounded-full object-cover ${person.isDeceased ? 'grayscale' : ''}`} />
                     ) : (
                         <div className="w-full h-full rounded-full bg-white dark:bg-stone-800 flex items-center justify-center">
-                            <span className={`text-[10px] font-bold ${person.gender === 'male' ? 'text-blue-600' : 'text-pink-600'}`}> {/* Adjusted font size */}
+                            <span className={`text-[10px] font-bold ${person.gender === 'male' ? 'text-blue-600' : 'text-pink-600'}`}>
                                 {person.firstName[0]}
                             </span>
                         </div>
@@ -40,10 +40,10 @@ export const FamilyMemberItem = memo(({ id, person, onSelect, onRemove }: Family
 
                 {/* Text Info */}
                 <div className="flex flex-col min-w-0">
-                    <span className="text-xs font-semibold text-stone-800 dark:text-stone-100 truncate group-hover/item:text-blue-600 dark:group-hover/item:text-blue-400 transition-colors"> {/* Adjusted font size */}
+                    <span className="text-xs font-semibold text-stone-800 dark:text-stone-100 truncate group-hover/item:text-blue-600 dark:group-hover/item:text-blue-400 transition-colors">
                         {person.firstName} {person.lastName}
                     </span>
-                    <div className="flex items-center gap-1.5 text-[8px] text-stone-400 dark:text-stone-500 font-medium"> {/* Adjusted font size */}
+                    <div className="flex items-center gap-1.5 text-[8px] text-stone-400 dark:text-stone-500 font-medium">
                         {person.birthDate && <span>{getDisplayDate(person.birthDate)}</span>}
                         {person.title && <span className="uppercase tracking-wide opacity-75">• {person.title}</span>}
                     </div>

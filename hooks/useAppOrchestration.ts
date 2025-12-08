@@ -6,7 +6,7 @@ import { useKeyboardShortcuts } from './useKeyboardShortcuts';
 import { useModalAndSidebarLogic } from './useModalAndSidebarLogic';
 import { useTreeSettings } from './useTreeSettings';
 import { useWelcomeScreenLogic } from './useWelcomeScreenLogic';
-import { useThemeSync } from './useThemeSync'; // Added this import
+import { useThemeSync } from './useThemeSync';
 import { exportToGEDCOM } from '../utils/gedcomLogic';
 import { exportToJozorArchive } from '../utils/archiveLogic';
 import { generateICS } from '../utils/calendarLogic';
@@ -18,7 +18,8 @@ export const useAppOrchestration = () => {
   // --- Core Data & History ---
   const {
     people, focusId, setFocusId, history, future, undo, redo,
-    updatePerson, deletePerson, addParent, addSpouse, addChild, removeRelationship, linkPerson,
+    updatePerson, deletePerson, // Removed addParent, addSpouse, addChild, linkPerson as they are now handled via familyActions
+    removeRelationship, linkPerson,
     handleImport, startNewTree, loadCloudData
   } = useFamilyTree();
 
@@ -74,7 +75,7 @@ export const useAppOrchestration = () => {
   // --- UI Preferences ---
   const { language, setLanguage } = useTranslation();
   const { treeSettings, setTreeSettings } = useTreeSettings();
-  const { darkMode, setDarkMode } = useThemeSync(treeSettings.theme);
+  const { darkMode, setDarkMode } = useThemeSync(); // Corrected: no arguments passed to useThemeSync
 
   const activePerson = people[focusId];
 

@@ -1,5 +1,5 @@
 import React, { Suspense } from 'react';
-import { Person, Gender, Language, UserProfile, FamilyActionsProps, ModalManagerProps } from '../types';
+import { ModalManagerProps } from '../types';
 import { LoadingSpinner } from './LoadingSpinner';
 import { LinkPersonModal } from './LinkPersonModal';
 import { CleanTreeOptionsModal } from './CleanTreeOptionsModal';
@@ -69,6 +69,7 @@ export const ModalManager: React.FC<ModalManagerProps> = ({
                 onClose={() => setGoogleSyncChoiceModal({ isOpen: false, driveFileId: null })}
                 onLoadCloud={() => onLoadCloudData(googleSyncChoiceModal.driveFileId!)} // Pass fileId
                 onSaveNewCloud={onSaveNewCloudFile}
+                driveFileId={googleSyncChoiceModal.driveFileId} // Pass driveFileId
             />
 
             <DriveFileManagerModal // Render the new modal

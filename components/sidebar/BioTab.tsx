@@ -1,11 +1,11 @@
 import React, { useState, memo } from 'react';
 import { Person } from '../../types';
 import { generateBiography } from '../../services/geminiService';
-import { Wand2, Sparkles, Loader2, Info, Plus, BookOpen, Link, Calendar, Tag, MapPin, FileText, Trash2, ChevronDown } from 'lucide-react'; // Added new icons
+import { Sparkles, Loader2, Info, Plus, BookOpen, Link, Calendar, Tag, MapPin, FileText, Trash2 } from 'lucide-react';
 import { SmartTextarea } from '../ui/SmartInput';
 import { FormField } from '../ui/FormField';
 import { Card } from '../ui/Card';
-import { DateSelect } from '../DateSelect'; // Added DateSelect
+import { DateSelect } from '../DateSelect';
 import { useTranslation } from '../../context/TranslationContext';
 import { showError, showSuccess } from '../../utils/toast'; // Import toast utilities
 
@@ -26,7 +26,7 @@ export const BioTab: React.FC<BioTabProps> = memo(({ person, people, isEditing, 
   const [newSourceUrl, setNewSourceUrl] = useState('');
   const [newSourceDate, setNewSourceDate] = useState('');
   const [newSourceType, setNewSourceType] = useState('');
-  const [showSourcesSection, setShowSourcesSection] = useState(true);
+  // const [showSourcesSection, setShowSourcesSection] = useState(true); // Removed
 
   // State for Events
   const [newEventTitle, setNewEventTitle] = useState('');
@@ -34,7 +34,7 @@ export const BioTab: React.FC<BioTabProps> = memo(({ person, people, isEditing, 
   const [newEventPlace, setNewEventPlace] = useState('');
   const [newEventDescription, setNewEventDescription] = useState('');
   const [newEventType, setNewEventType] = useState('');
-  const [showEventsSection, setShowEventsSection] = useState(true);
+  // const [showEventsSection, setShowEventsSection] = useState(true); // Removed
 
   const handleChange = (field: keyof Person, value: any) => {
     onUpdate(person.id, { [field]: value });
@@ -259,7 +259,7 @@ export const BioTab: React.FC<BioTabProps> = memo(({ person, people, isEditing, 
                 </div>
             ) : (
                 <div className="space-y-3">
-                    {(person.sources || []).map((source, idx) => (
+                    {(person.sources || []).map((source, index) => (
                         <div key={source.id} className="p-3 bg-white dark:bg-stone-900 border border-stone-100 dark:border-stone-700 rounded-xl shadow-sm group">
                             {isEditing ? (
                                 <div className="space-y-1.5">
@@ -392,7 +392,7 @@ export const BioTab: React.FC<BioTabProps> = memo(({ person, people, isEditing, 
                 </div>
             ) : (
                 <div className="space-y-3">
-                    {(person.events || []).map((event, idx) => (
+                    {(person.events || []).map((event, index) => (
                         <div key={event.id} className="p-3 bg-white dark:bg-stone-900 border border-stone-100 dark:border-stone-700 rounded-xl shadow-sm group">
                             {isEditing ? (
                                 <div className="space-y-1.5">

@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { AppTheme } from '../types';
 
 export const useThemeSync = () => {
   const [darkMode, setDarkMode] = useState(() => {

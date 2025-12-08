@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo, memo } from 'react';
-import { X } from 'lucide-react';
 import { InfoTab } from './sidebar/InfoTab';
 import { PartnersTab } from './sidebar/PartnersTab';
 import { ContactTab } from './sidebar/ContactTab';
@@ -7,7 +6,7 @@ import { BioTab } from './sidebar/BioTab'; // BioTab will now include Sources an
 import { MediaTab } from './sidebar/MediaTab';
 import { SidebarFooter } from './sidebar/SidebarFooter';
 import { SidebarTabs } from './sidebar/SidebarTabs';
-import { Person, Language, UserProfile, FamilyActionsProps } from '../types';
+import { Person, UserProfile, FamilyActionsProps } from '../types';
 import { useTranslation } from '../context/TranslationContext';
 
 interface SidebarProps {

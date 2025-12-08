@@ -1,7 +1,6 @@
 import React, { memo } from 'react';
 import { Person } from '../../types';
 import { Card } from '../ui/Card';
-import { Ribbon } from 'lucide-react';
 import { useTranslation } from '../../context/TranslationContext';
 
 interface PersonStatusEditProps {

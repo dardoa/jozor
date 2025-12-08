@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { Person, Language, Gender, FamilyActionsProps } from '../../types';
+import { Person, FamilyActionsProps } from '../../types';
 import { PersonHeaderView } from './PersonHeaderView';
 import { FamilyRelationshipsSection } from './FamilyRelationshipsSection';
 import { Card } from '../ui/Card';

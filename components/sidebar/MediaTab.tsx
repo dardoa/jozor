@@ -3,7 +3,7 @@ import { Person, UserProfile } from '../../types';
 import { processImageFile } from '../../utils/imageLogic';
 import { pickAndDownloadImage, uploadFileToDrive, fetchDriveFileAsBlob } from '../../services/googleService'; // Import new functions
 import { analyzeImage } from '../../services/geminiService';
-import { Plus, Image as ImageIcon, X, Mic, Play, Trash2, Cloud, Loader2, Sparkles, ScanEye, Info } from 'lucide-react';
+import { Plus, Image as ImageIcon, X, Mic, Trash2, Cloud, Loader2, ScanEye } from 'lucide-react';
 import { VoiceRecorder } from '../VoiceRecorder';
 import { Card } from '../ui/Card';
 import { useTranslation } from '../../context/TranslationContext';

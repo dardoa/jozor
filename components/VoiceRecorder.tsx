@@ -1,15 +1,14 @@
-import React, { useState, useRef, memo } from 'react'; // Added memo to import
-import { Mic, Square, Play, Trash2, Loader2 } from 'lucide-react';
+import React, { useState, useRef, memo } from 'react';
+import { Mic, Square } from 'lucide-react';
 import { useTranslation } from '../context/TranslationContext';
 
 interface VoiceRecorderProps {
-  onSave: (audioBlob: Blob) => void; // Changed to accept Blob
+  onSave: (audioBlob: Blob) => void;
 }
 
 export const VoiceRecorder: React.FC<VoiceRecorderProps> = memo(({ onSave }) => {
     const { t } = useTranslation();
     const [isRecording, setIsRecording] = useState(false);
-    const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const chunksRef = useRef<Blob[]>([]);
 
@@ -26,7 +25,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = memo(({ onSave }) => 
 
             mediaRecorder.onstop = () => {
                 const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
-                setAudioBlob(blob);
+                // setAudioBlob(blob); // Removed
                 
                 // Call onSave with the Blob directly
                 onSave(blob);

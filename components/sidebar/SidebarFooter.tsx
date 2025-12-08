@@ -2,7 +2,7 @@ import React, { memo } from 'react';
 import { Person } from '../../types';
 import { Trash2, Check, Edit2, Eraser } from 'lucide-react';
 import { useTranslation } from '../../context/TranslationContext';
-import { showSuccess, showError } from '../../utils/toast'; // Import toast utilities
+import { showSuccess } from '../../utils/toast'; // Import toast utilities
 
 interface SidebarFooterProps {
     person: Person;

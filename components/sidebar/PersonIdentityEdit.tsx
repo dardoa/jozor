@@ -1,5 +1,5 @@
 import React, { memo, useRef, useState } from 'react';
-import { Person, Gender } from '../../types';
+import { Person } from '../../types';
 import { FormField } from '../ui/FormField';
 import { Card } from '../ui/Card';
 import { Camera, X, Sparkles, Loader2, ChevronDown } from 'lucide-react';

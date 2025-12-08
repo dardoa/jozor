@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
 import { ModalManager } from './ModalManager';
-import { Person, Language, UserProfile, Gender, FamilyActionsProps } from '../types';
+import { Person, Language, UserProfile, Gender, FamilyActionsProps, DriveFile } from '../types'; // Import DriveFile
 
 interface ModalManagerContainerProps {
   activeModal: 'none' | 'calculator' | 'stats' | 'chat' | 'consistency' | 'timeline' | 'share' | 'story' | 'map';

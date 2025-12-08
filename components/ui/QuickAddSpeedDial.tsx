@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Plus, UserPlus } from 'lucide-react';
+import { UserPlus } from 'lucide-react';
 import { useTranslation } from '../../context/TranslationContext';
 import { QuickAddAction } from '../../types';
 

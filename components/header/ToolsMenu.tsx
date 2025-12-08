@@ -1,6 +1,6 @@
-import React, { memo } from 'react';
+import { memo } from 'react';
 import { 
-  Calculator, Hammer, Activity, ShieldCheck, Calendar, BookOpen, Map
+  Calculator, Activity, ShieldCheck, Calendar, BookOpen, Map
 } from 'lucide-react';
 import { DropdownContent, DropdownMenuItem, DropdownMenuDivider } from '../ui/DropdownMenu';
 import { ToolsMenuProps } from '../../types';
