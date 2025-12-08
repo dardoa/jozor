@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Person, Gender, FamilyActionsProps } from '../../types';
 import { Heart, Users, UserRound, Baby } from 'lucide-react';
 import { InlineAddButton } from './InlineAddButton';
@@ -7,15 +8,15 @@ import { sortPeopleByBirthDate } from '../../utils/familyLogic'; // Import the n
 
 // --- Family Group Component (now internal to this file, or could be moved to its own file if needed elsewhere) ---
 const FamilyGroup = memo(({ 
-    title, icon, ids, people, onAdd, onRemove, onSelect, placeholder, isEditing,
+    title, icon, ids, people, onAdd, onRemove, onSelect, placeholder, isEditing, t, // Added 't' prop
     iconBgClass = 'bg-stone-100 dark:bg-stone-800', // Default background for icon
     iconTextColorClass = 'text-stone-500' // Default text color for icon
 }: { 
-    title: string, icon: React.ReactNode, ids: string[], people: Record<string, Person>, onAdd?: (g: Gender) => void, onRemove?: (id: string) => void, onSelect: (id: string) => void, placeholder: string, isEditing: boolean,
+    title: string, icon: React.ReactNode, ids: string[], people: Record<string, Person>, onAdd?: (g: Gender) => void, onRemove?: (id: string) => void, onSelect: (id: string) => void, placeholder: string, isEditing: boolean, t: any, // Added 't' to prop type
     iconBgClass?: string, // New prop for icon background class
     iconTextColorClass?: string // New prop for icon text color class
 }) => {
-    const { t } = useTranslation();
+    // Removed useTranslation() hook here as 't' is now passed as a prop
     return (
         <div className="mb-3 last:mb-0">
              <div className="flex items-center justify-between mb-2 px-1">
@@ -67,7 +68,7 @@ export const FamilyRelationshipsSection: React.FC<FamilyRelationshipsSectionProp
     person, people, isEditing, onSelect,
     familyActions
 }) => {
-    const { t } = useTranslation();
+    const { t } = useTranslation(); // 't' is now used here
 
     const handleRemoveParent = (id: string) => familyActions.onRemoveRelationship?.(person.id, id, 'parent');
     const handleRemoveSpouse = (id: string) => familyActions.onRemoveRelationship?.(person.id, id, 'spouse');
@@ -103,6 +104,7 @@ export const FamilyRelationshipsSection: React.FC<FamilyRelationshipsSectionProp
                     isEditing={isEditing}
                     iconBgClass="bg-amber-100 dark:bg-amber-900/20"
                     iconTextColorClass="text-amber-600 dark:text-amber-400"
+                    t={t} // Pass 't' here
                 />
             )}
             
@@ -119,6 +121,7 @@ export const FamilyRelationshipsSection: React.FC<FamilyRelationshipsSectionProp
                     isEditing={isEditing}
                     iconBgClass="bg-rose-100 dark:bg-rose-900/20"
                     iconTextColorClass="text-rose-600 dark:text-rose-400"
+                    t={t} // Pass 't' here
                 />
             )}
 
@@ -135,6 +138,7 @@ export const FamilyRelationshipsSection: React.FC<FamilyRelationshipsSectionProp
                     isEditing={isEditing}
                     iconBgClass="bg-emerald-100 dark:bg-emerald-900/20"
                     iconTextColorClass="text-emerald-600 dark:text-emerald-400"
+                    t={t} // Pass 't' here
                 />
             )}
 
@@ -150,6 +154,7 @@ export const FamilyRelationshipsSection: React.FC<FamilyRelationshipsSectionProp
                     isEditing={isEditing}
                     iconBgClass="bg-indigo-100 dark:bg-indigo-900/20"
                     iconTextColorClass="text-indigo-600 dark:text-indigo-400"
+                    t={t} // Pass 't' here
                 />
             )}
         </div>

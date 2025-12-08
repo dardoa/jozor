@@ -1,7 +1,7 @@
 import React, { useCallback, memo } from 'react';
 import { Person, TreeLink, TreeSettings, TreeNode } from '../../types';
 import { CollapsePoint, NODE_WIDTH_DEFAULT, NODE_WIDTH_COMPACT, NODE_HEIGHT_DEFAULT, NODE_HEIGHT_COMPACT } from '../../utils/treeLayout';
-import { getYears } => '../../utils/familyLogic';
+import { getYears } from '../../utils/familyLogic';
 import { User, Ribbon, ChevronDown, ChevronUp, ChevronRight, ChevronLeft } from 'lucide-react';
 
 interface DescendantPedigreeChartProps {
@@ -12,11 +12,11 @@ interface DescendantPedigreeChartProps {
   onSelect: (id: string) => void;
   settings: TreeSettings;
   toggleCollapse: (uniqueKey: string) => void;
-  people: Record<string, Person>; // Needed for link path logic
+  // Removed 'people' as it was not being used in this component
 }
 
 export const DescendantPedigreeChart: React.FC<DescendantPedigreeChartProps> = memo(({
-  nodes, links, collapsePoints, focusId, onSelect, settings, toggleCollapse, people
+  nodes, links, collapsePoints, focusId, onSelect, settings, toggleCollapse // Removed 'people' from destructuring
 }) => {
   // Use centralized constants
   const NODE_WIDTH = settings.isCompact ? NODE_WIDTH_COMPACT : NODE_WIDTH_DEFAULT;
@@ -25,42 +25,7 @@ export const DescendantPedigreeChart: React.FC<DescendantPedigreeChartProps> = m
   const LINE_CORNER_RADIUS = 10; // Radius for line corners
   const isVertical = settings.layoutMode === 'vertical';
 
-  // Helper function to draw path from collapse point to child with curved corners
-  const drawChildBranchPath = useCallback((collapsePointX: number, collapsePointY: number, targetX: number, targetY: number) => {
-    const startPointY = collapsePointY + COLLAPSE_CIRCLE_RADIUS; // Start from bottom edge of collapse circle
-    const targetPointY = targetY - NODE_HEIGHT / 2; // Connect to top edge of target node
-    const targetPointX = targetX;
-
-    const r = LINE_CORNER_RADIUS;
-
-    if (isVertical) {
-        // If child is directly below collapse point, draw a straight vertical line
-        if (Math.abs(collapsePointX - targetPointX) < 1) {
-            return `M ${collapsePointX} ${startPointY} V ${targetPointY}`;
-        }
-
-        // Otherwise, draw a path with curved corners
-        const midY = startPointY + (targetPointY - startPointY) / 2;
-        const dirX = targetPointX > collapsePointX ? 1 : -1;
-
-        return `M ${collapsePointX} ${startPointY}` +
-               `V ${midY - r}` + // Vertical segment before first curve
-               `Q ${collapsePointX} ${midY}, ${collapsePointX + dirX * r} ${midY}` + // First curve
-               `H ${targetPointX - dirX * r}` + // Horizontal segment
-               `Q ${targetPointX} ${midY}, ${targetPointX} ${midY + r}` + // Second curve
-               `V ${targetPointY}`; // Vertical segment to target
-    } else { // Horizontal layout
-        const midX = startPointY + (targetPointY - startPointY) / 2;
-        const dirY = targetPointX > collapsePointX ? 1 : -1;
-
-        return `M ${collapsePointX} ${startPointY}` +
-               `H ${midX - r}` + // Horizontal segment before first curve
-               `Q ${midX} ${startPointY}, ${midX} ${startPointY + dirY * r}` + // First curve
-               `V ${targetPointY - dirY * r}` + // Vertical segment
-               `Q ${midX} ${targetPointY}, ${midX + r} ${targetPointY}` + // Second curve
-               `H ${targetPointX}`; // Horizontal segment to target
-    }
-  }, [NODE_HEIGHT, NODE_WIDTH, LINE_CORNER_RADIUS, COLLAPSE_CIRCLE_RADIUS, isVertical]);
+  // Removed 'drawChildBranchPath' as it was declared but never read.
 
   // Helper to draw standard links
   const drawLinkPath = useCallback((source: TreeNode, target: TreeNode) => {
