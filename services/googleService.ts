@@ -279,8 +279,15 @@ export const saveToDrive = async (people: Record<string, Person>, existingFileId
     if (!isInitialized) throw new Error("Google API not initialized");
     
     const folderId = await getAppFolderId(); // This will now return 'appDataFolder'
-    const fileNameToUse = customFileName || FILE_NAME;
-    console.log(`saveToDrive called. existingFileId: ${existingFileId}, customFileName: ${customFileName}, resolved fileNameToUse: ${fileNameToUse}, target folderId: ${folderId}`);
+    let fileNameToUse = customFileName || FILE_NAME; // Changed to 'let'
+    
+    // Ensure fileNameToUse is never empty or 'Untitled'
+    if (!fileNameToUse || fileNameToUse.toLowerCase() === 'untitled') {
+        console.warn("Filename was empty or 'untitled', defaulting to FILE_NAME.");
+        fileNameToUse = FILE_NAME;
+    }
+
+    console.log(`saveToDrive called. existingFileId (hint): ${existingFileId}, customFileName: ${customFileName}, resolved fileNameToUse: ${fileNameToUse}, target folderId: ${folderId}`);
 
     const content = JSON.stringify(people, null, 2);
     const metadata = {
@@ -292,24 +299,47 @@ export const saveToDrive = async (people: Record<string, Person>, existingFileId
     console.log("saveToDrive: Metadata for API call:", metadata); // Added log
 
     try {
-        if (existingFileId) {
-            console.log(`Attempting to update existing Drive file. ID: ${existingFileId}, Name: ${fileNameToUse}`);
+        let targetFileId = existingFileId; // Start with the provided hint ID
+
+        // If no explicit file ID was provided (e.g., auto-save or 'Save as New' without targeting a specific file)
+        if (!targetFileId) {
+            // Query Drive for a file with the exact name in the appDataFolder
+            console.log(`saveToDrive: No explicit file ID. Searching for file named '${fileNameToUse}' in appDataFolder.`);
+            const searchResponse = await window.gapi.client.drive.files.list({
+                q: `mimeType='application/json' and name='${fileNameToUse}' and trashed = false`,
+                fields: 'files(id, name)',
+                spaces: folderId,
+                pageSize: 1
+            });
+            const foundFiles = searchResponse.result.files;
+
+            if (foundFiles && foundFiles.length > 0) {
+                targetFileId = foundFiles[0].id;
+                console.log(`File ID found: ${targetFileId}. Updating existing file.`);
+            } else {
+                console.log('No file found, creating new one.');
+            }
+        } else {
+            console.log(`saveToDrive: Explicit file ID provided: ${targetFileId}. Attempting to update.`);
+        }
+
+        if (targetFileId) {
+            // Perform PATCH/UPDATE
             await window.gapi.client.request({
-                path: `/upload/drive/v3/files/${existingFileId}`,
+                path: `/upload/drive/v3/files/${targetFileId}`,
                 method: 'PATCH',
                 params: { uploadType: 'media' },
                 body: content,
             });
-            console.log(`Successfully updated Drive file with ID: ${existingFileId}`);
-            return existingFileId;
+            console.log(`Successfully updated Drive file with ID: ${targetFileId}`);
+            return targetFileId;
         } else {
-            console.log(`Attempting to create new Drive file. Name: ${fileNameToUse} in folder ${folderId}`);
+            // Perform POST/CREATE
             const response = await window.gapi.client.drive.files.create({
                 resource: metadata, // Metadata includes name and parents
                 media: {
                     mimeType: 'application/json',
                     body: content,
-                    // REMOVED: name: fileNameToUse // This was redundant and potentially problematic
                 },
                 fields: 'id, name',
                 spaces: folderId // Specify appDataFolder space for creation

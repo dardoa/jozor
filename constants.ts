@@ -13,7 +13,7 @@ export const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 console.log('GOOGLE_CLIENT_ID from constants.ts:', GOOGLE_CLIENT_ID);
 
 // Default file name for Google Drive sync
-export const FILE_NAME = 'FamilyTree.json';
+export const FILE_NAME = 'MyFamilyTree.json'; // Updated to MyFamilyTree.json
 
 // Template for a new person, without an ID
 export const DEFAULT_PERSON_TEMPLATE: Omit<Person, 'id'> = {
