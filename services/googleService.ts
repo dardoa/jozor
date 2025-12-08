@@ -389,7 +389,8 @@ export const uploadFileToDrive = async (file: Blob, fileName: string, mimeType: 
     form.append('file', file);
 
     try {
-        const response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+        // IMPORTANT: Add &spaces=${folderId} to the URL for multipart uploads to ensure it goes into appDataFolder
+        const response = await fetch(`https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&spaces=${folderId}`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${window.gapi.client.getToken().access_token}`
