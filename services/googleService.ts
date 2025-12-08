@@ -9,11 +9,10 @@ declare global {
   }
 }
 
-// Updated scopes to allow managing files and folders in the user's Drive
-const SCOPES = 'https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email';
+// Updated scopes to allow picking files, storing in appDataFolder, and fetching user profile/email
+const SCOPES = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email';
 const DISCOVERY_DOCS = ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest', 'https://www.googleapis.com/discovery/v1/apis/oauth2/v2/rest']; // Added oauth2 discovery doc
 const FILE_NAME = 'jozor_family_tree.json'; // Default file name
-const APP_FOLDER_NAME = 'My Family Tree App'; // New: Visible folder name
 
 // Scripts to load dynamically
 const SCRIPTS = {
@@ -24,7 +23,6 @@ const SCRIPTS = {
 let tokenClient: any;
 let isInitialized = false;
 let initPromise: Promise<void> | null = null;
-let appFolderId: string | null = null; // Module-level variable to store the ID of the 'My Family Tree App' folder
 
 // Helper to inject script
 const loadScript = (src: string, id: string): Promise<void> => {
@@ -65,46 +63,6 @@ const waitForGlobal = (key: string, timeout = 10000) => new Promise<void>((resol
         }
     }, 100);
 });
-
-// New: Function to ensure the 'My Family Tree App' folder exists
-export const ensureAppFolderExists = async (): Promise<string> => {
-    if (appFolderId) return appFolderId; // Return cached ID if already found/created
-    if (!isInitialized) throw new Error("Google API not initialized.");
-
-    try {
-        // Search for the folder in the user's root Drive
-        const response = await window.gapi.client.drive.files.list({
-            q: `mimeType='application/vnd.google-apps.folder' and name='${APP_FOLDER_NAME}' and 'root' in parents and trashed = false`,
-            fields: 'files(id, name)',
-            spaces: 'drive', // Search in user's drive
-            pageSize: 1
-        });
-
-        const files = response.result.files;
-        if (files && files.length > 0) {
-            appFolderId = files[0].id;
-            console.log(`Found existing app folder: ${APP_FOLDER_NAME} (ID: ${appFolderId})`);
-            return appFolderId;
-        } else {
-            // Create the folder if it doesn't exist
-            const folderMetadata = {
-                name: APP_FOLDER_NAME,
-                mimeType: 'application/vnd.google-apps.folder',
-                parents: ['root'] // Create in the root of My Drive
-            };
-            const createResponse = await window.gapi.client.drive.files.create({
-                resource: folderMetadata,
-                fields: 'id'
-            });
-            appFolderId = createResponse.result.id;
-            console.log(`Created new app folder: ${APP_FOLDER_NAME} (ID: ${appFolderId})`);
-            return appFolderId;
-        }
-    } catch (e) {
-        console.error("Error ensuring app folder exists:", e);
-        throw e;
-    }
-};
 
 // Initialize Google API Client (GAPI) for Drive calls
 export const initializeGoogleApi = async (): Promise<void> => {
@@ -247,18 +205,18 @@ export const logoutFromGoogle = () => {
 
 // --- Drive Operations ---
 
+// Renamed from findAppFile to findLatestJozorFile for more robust discovery
 export const findLatestJozorFile = async (): Promise<string | null> => {
     if (!isInitialized) {
         console.warn("Google API not initialized. Cannot find app file.");
         return null;
     }
     try {
-        const folderId = await ensureAppFolderExists(); // Ensure folder exists and get its ID
-        console.log(`Searching for latest Jozor file in folder '${APP_FOLDER_NAME}' (ID: ${folderId})...`);
+        console.log(`Searching for latest Jozor file in Google Drive appDataFolder...`);
         const response = await window.gapi.client.drive.files.list({
-            q: `mimeType='application/json' and name contains 'jozor' and '${folderId}' in parents and trashed = false`,
+            q: `mimeType='application/json' and name contains 'jozor' and trashed = false`,
             fields: 'files(id, name, modifiedTime)',
-            spaces: 'drive', // Search in user's drive
+            spaces: 'appDataFolder',
             orderBy: 'modifiedTime desc', // Order by most recently modified
             pageSize: 1 // Only need the latest one
         });
@@ -274,11 +232,10 @@ export const findLatestJozorFile = async (): Promise<string | null> => {
 export const listJozorFiles = async (): Promise<DriveFile[]> => {
     if (!isInitialized) throw new Error("Google API not initialized");
     try {
-        const folderId = await ensureAppFolderExists(); // Ensure folder exists and get its ID
         const response = await window.gapi.client.drive.files.list({
-            q: `mimeType='application/json' and name contains 'jozor' and '${folderId}' in parents and trashed = false`,
+            q: `mimeType='application/json' and name contains 'jozor' and trashed = false`,
             fields: 'files(id, name, modifiedTime)',
-            spaces: 'drive', // Search in user's drive
+            spaces: 'appDataFolder',
         });
         return response.result.files.map((f: any) => ({
             id: f.id,
@@ -322,19 +279,18 @@ export const saveToDrive = async (people: Record<string, Person>, existingFileId
     if (!isInitialized) throw new Error("Google API not initialized");
     
     const fileNameToUse = customFileName || FILE_NAME;
-    const folderId = await ensureAppFolderExists(); // Ensure folder exists and get its ID
-    console.log(`saveToDrive called. existingFileId: ${existingFileId}, customFileName: ${customFileName}, resolved fileNameToUse: ${fileNameToUse}, target folderId: ${folderId}`);
+    console.log(`saveToDrive called. existingFileId: ${existingFileId}, customFileName: ${customFileName}, resolved fileNameToUse: ${fileNameToUse}`); // Added log
 
     const content = JSON.stringify(people, null, 2);
     const metadata = {
-        name: fileNameToUse,
+        name: fileNameToUse, // Use the resolved file name
         mimeType: 'application/json',
-        parents: [folderId] // Use the visible app folder ID
+        parents: ['appDataFolder'] // Ensure it's always saved to appDataFolder
     };
 
     try {
         if (existingFileId) {
-            // Update existing file
+            // Update
             console.log(`Updating existing file with ID: ${existingFileId}, name: ${fileNameToUse}`);
             await window.gapi.client.request({
                 path: `/upload/drive/v3/files/${existingFileId}`,
@@ -344,7 +300,7 @@ export const saveToDrive = async (people: Record<string, Person>, existingFileId
             });
             return existingFileId;
         } else {
-            // Create new file
+            // Create
             console.log(`Creating new file: ${metadata.name}`);
             console.log('Metadata for new file creation:', metadata);
             const response = await window.gapi.client.drive.files.create({
@@ -419,12 +375,10 @@ export const uploadFileToDrive = async (file: Blob, fileName: string, mimeType: 
     if (!isInitialized) throw new Error("Google API not initialized");
     if (!window.gapi.client.getToken()?.access_token) throw new Error("Not authenticated to Google Drive.");
 
-    const folderId = await ensureAppFolderExists(); // Ensure folder exists and get its ID
-
     const metadata = {
         name: fileName,
         mimeType: mimeType,
-        parents: [folderId] // Store in the visible app folder
+        parents: ['appDataFolder'] // Store in app-specific hidden folder
     };
 
     const form = new FormData();
