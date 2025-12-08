@@ -221,7 +221,7 @@ export const findLatestJozorFile = async (): Promise<string | null> => {
             pageSize: 1 // Only need the latest one
         });
         const files = response.result.files;
-        console.log(`Found ${files ? files.length : 0} Jozor files:`, files);
+        console.log(`Found ${files ? files.length : 0} Jozor files matching 'jozor' in name:`, files.map((f:any) => f.name)); // Added log
         return (files && files.length > 0) ? files[0].id : null;
     } catch (e) {
         console.error("Error finding latest Jozor file", e);
@@ -279,11 +279,11 @@ export const saveToDrive = async (people: Record<string, Person>, existingFileId
     if (!isInitialized) throw new Error("Google API not initialized");
     
     const fileNameToUse = customFileName || FILE_NAME;
-    console.log(`saveToDrive called. existingFileId: ${existingFileId}, customFileName: ${customFileName}, resolved fileNameToUse: ${fileNameToUse}`); // Added log
+    console.log(`saveToDrive called. existingFileId: ${existingFileId}, customFileName: ${customFileName}, resolved fileNameToUse: ${fileNameToUse}`);
 
     const content = JSON.stringify(people, null, 2);
     const metadata = {
-        name: fileNameToUse, // Use the resolved file name
+        name: fileNameToUse,
         mimeType: 'application/json',
         parents: ['appDataFolder'] // Ensure it's always saved to appDataFolder
     };
@@ -291,27 +291,27 @@ export const saveToDrive = async (people: Record<string, Person>, existingFileId
     try {
         if (existingFileId) {
             // Update
-            console.log(`Updating existing file with ID: ${existingFileId}, name: ${fileNameToUse}`);
+            console.log(`Attempting to update existing Drive file. ID: ${existingFileId}, Name: ${fileNameToUse}`); // Added log
             await window.gapi.client.request({
                 path: `/upload/drive/v3/files/${existingFileId}`,
                 method: 'PATCH',
                 params: { uploadType: 'media' },
                 body: content,
             });
+            console.log(`Successfully updated Drive file with ID: ${existingFileId}`); // Added log
             return existingFileId;
         } else {
             // Create
-            console.log(`Creating new file: ${metadata.name}`);
-            console.log('Metadata for new file creation:', metadata);
+            console.log(`Attempting to create new Drive file. Name: ${fileNameToUse}`); // Added log
             const response = await window.gapi.client.drive.files.create({
                 resource: metadata,
                 media: {
                     mimeType: 'application/json',
                     body: content
                 },
-                fields: 'id'
+                fields: 'id, name' // Request name back to confirm
             });
-            console.log(`New file created with ID: ${response.result.id}, name: ${metadata.name}`);
+            console.log(`New Drive file created. ID: ${response.result.id}, Name returned by API: ${response.result.name}`); // Added log
             return response.result.id;
         }
     } catch (e) {
