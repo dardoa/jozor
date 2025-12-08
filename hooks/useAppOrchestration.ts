@@ -90,17 +90,6 @@ export const useAppOrchestration = (): AppOrchestrationReturn => {
     people, startNewTree, stopSyncing: googleSync.stopSyncing, handleImport // Use googleSync.stopSyncing
   });
 
-  // --- Login/Logout Handlers (now directly from useGoogleSync) ---
-  const onLogin = useCallback(async () => {
-      const success = await googleSync.handleLogin(); // Use googleSync.handleLogin
-      if (success) setShowWelcome(false);
-  }, [googleSync.handleLogin, setShowWelcome]);
-
-  const onLogout = useCallback(async () => {
-      await googleSync.handleLogout(); // Use googleSync.handleLogout
-      setShowWelcome(true);
-  }, [googleSync.handleLogout, setShowWelcome]);
-
   // Adjusted onTriggerImportFile to directly trigger file input
   const onTriggerImportFile = useCallback(() => {
     fileInputRef.current?.click();
@@ -132,7 +121,15 @@ export const useAppOrchestration = (): AppOrchestrationReturn => {
   // Grouped props for Header and other components
   const historyControls: HistoryControlsProps = { onUndo: undo, onRedo: redo, canUndo, canRedo };
   const themeLanguage: ThemeLanguageProps = { darkMode, setDarkMode, language, setLanguage };
-  // const auth: AuthProps = { user, isDemoMode, isSyncing, onLogin, onLogout, onOpenDriveFileManager }; // Removed as googleSync is passed directly
+  // The `auth` object should now directly use `googleSync.onLogin` and `googleSync.onLogout`
+  const auth: AuthProps = { 
+    user: googleSync.user, 
+    isDemoMode: googleSync.isDemoMode, 
+    isSyncing: googleSync.isSyncing, 
+    onLogin: googleSync.onLogin, // Direct reference
+    onLogout: googleSync.onLogout, // Direct reference
+    onOpenDriveFileManager: googleSync.onOpenDriveFileManager 
+  }; 
   const viewSettings: ViewSettingsProps = { treeSettings, setTreeSettings, onPresent: () => setIsPresentMode(true) };
   const toolsActions: ToolsActionsProps = { onOpenModal: handleOpenModal };
   const exportActions: ExportActionsProps = { handleExport };
@@ -166,7 +163,7 @@ export const useAppOrchestration = (): AppOrchestrationReturn => {
     appState,
     welcomeScreen: welcomeScreenReturn, // Use renamed object
     modals: modalsReturn, // Use renamed object
-    googleSync,
+    googleSync, // Still return googleSync for other parts of App.tsx that use it directly
     historyControls,
     themeLanguage,
     viewSettings,

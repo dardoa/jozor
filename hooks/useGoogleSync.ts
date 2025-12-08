@@ -93,7 +93,7 @@ export const useGoogleSync = (
     }, [people, user, isDemoMode, currentActiveDriveFileId, isInitialized, refreshDriveFiles]); // Added refreshDriveFiles to dependencies
 
     // 3. Login Flow
-    const handleLogin = useCallback(async (): Promise<boolean> => {
+    const onLogin = useCallback(async (): Promise<void> => { // Renamed from handleLogin, changed return type to void
         setIsSyncing(true);
         try {
             const u = await loginToGoogle();
@@ -119,18 +119,17 @@ export const useGoogleSync = (
                 console.error("Drive Setup Error:", driveErr);
                 showError("Logged in, but failed to access Google Drive. Check permissions.");
             }
-            return true;
-
+            // No return value needed for onLogin as per AuthProps
         } catch(e: any) {
             console.error("Login failed", e);
             showError("Login failed. Please ensure your Google Client ID is configured correctly in the code.");
-            return false;
+            throw e; // Re-throw error to be handled by caller if needed
         } finally {
             setIsSyncing(false);
         }
     }, [onOpenGoogleSyncChoice, refreshDriveFiles]); // refreshDriveFiles is now defined
 
-    const handleLogout = useCallback(async () => {
+    const onLogout = useCallback(async (): Promise<void> => { // Renamed from handleLogout, changed return type to void
         try { logoutFromGoogle(); } catch(e) {}
         setUser(null);
         setCurrentActiveDriveFileId(null); // Clear file ID on logout
@@ -243,8 +242,8 @@ export const useGoogleSync = (
         user,
         isSyncing,
         isDemoMode,
-        handleLogin,
-        handleLogout,
+        onLogin, // Now directly onLogin
+        onLogout, // Now directly onLogout
         stopSyncing,
         onLoadCloudData,
         onSaveNewCloudFile,
