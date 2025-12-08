@@ -231,7 +231,8 @@ export const listJozorFiles = async (): Promise<DriveFile[]> => {
     try {
         const folderId = await getAppFolderId();
         const response = await window.gapi.client.drive.files.list({
-            q: `mimeType='application/json' and name contains 'jozor' and trashed = false`,
+            // Updated query to include the default FILE_NAME or files containing 'jozor'
+            q: `mimeType='application/json' and (name='${FILE_NAME}' or name contains 'jozor') and trashed = false`,
             fields: 'files(id, name, modifiedTime)',
             spaces: folderId, // Search in 'appDataFolder' space
         });
