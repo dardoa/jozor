@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Person, Gender, Language, FamilyActionsProps } from '../types';
-import { X, UserPlus, Search, User, Info } from 'lucide-react'; // Import Info icon
+import { Person, Gender, FamilyActionsProps } from '../types';
+import { X, UserPlus, Search, Info } from 'lucide-react'; // Removed User
 import { useTranslation } from '../context/TranslationContext';
 
 interface LinkPersonModalProps {
@@ -10,7 +10,7 @@ interface LinkPersonModalProps {
   type: 'parent' | 'spouse' | 'child' | null;
   gender: Gender | null;
   currentPersonId: string;
-  language: Language;
+  // language: Language; // Removed
   familyActions: FamilyActionsProps;
 }
 
@@ -21,7 +21,7 @@ export const LinkPersonModal: React.FC<LinkPersonModalProps> = ({
   type,
   gender,
   currentPersonId,
-  language,
+  // language, // Removed
   familyActions
 }) => {
   const { t } = useTranslation();
@@ -108,7 +108,7 @@ export const LinkPersonModal: React.FC<LinkPersonModalProps> = ({
             <div className="border border-stone-200 dark:border-stone-700 rounded-lg max-h-48 overflow-y-auto divide-y divide-stone-50 dark:divide-stone-700 bg-white dark:bg-stone-800 scrollbar-thin scrollbar-thumb-stone-200 dark:scrollbar-thumb-600">
                 {candidates.length === 0 ? (
                     <div className="p-4 text-center">
-                        <Info className="w-8 h-8 text-stone-200 dark:text-stone-600 mx-auto mb-2" /> {/* Changed to Info icon */}
+                        <Info className="w-8 h-8 text-stone-200 dark:text-stone-600 mx-auto mb-2" />
                         <p className="text-sm text-stone-500 dark:text-stone-400">{t.noMatches}</p>
                     </div>
                 ) : (
@@ -137,4 +137,4 @@ export const LinkPersonModal: React.FC<LinkPersonModalProps> = ({
       </div>
     </div>
   );
-};
+});

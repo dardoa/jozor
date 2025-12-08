@@ -278,40 +278,6 @@ export interface DriveFileManagerModalProps {
   isListing: boolean; // To indicate if files are being listed
 }
 
-export interface ModalManagerProps { // Updated ModalManagerProps
-    activeModal: 'none' | 'calculator' | 'stats' | 'chat' | 'consistency' | 'timeline' | 'share' | 'story' | 'map';
-    setActiveModal: (m: any) => void;
-    linkModal: { isOpen: boolean; type: 'parent' | 'spouse' | 'child' | null; gender: Gender | null; };
-    setLinkModal: (val: any) => void;
-    cleanTreeOptionsModal: { isOpen: boolean }; // New prop for CleanTreeOptionsModal
-    setCleanTreeOptionsModal: (val: { isOpen: boolean }) => void; // New prop setter
-    googleSyncChoiceModal: { isOpen: boolean; driveFileId: string | null; }; // New prop for GoogleSyncChoiceModal
-    setGoogleSyncChoiceModal: (val: { isOpen: boolean; driveFileId: string | null; }) => void; // New prop setter
-    driveFileManagerModal: { isOpen: boolean }; // New prop for DriveFileManagerModal
-    setDriveFileManagerModal: (val: { isOpen: boolean }) => void; // New prop setter
-    people: Record<string, Person>;
-    language: Language;
-    focusId: string;
-    setFocusId: (id: string) => void;
-    activePerson?: Person;
-    user: UserProfile | null;
-    familyActions: FamilyActionsProps;
-    onStartNewTree: () => void; // Pass to CleanTreeOptionsModal
-    onTriggerImportFile: () => void; // Pass to CleanTreeOptionsModal
-    onLoadCloudData: (fileId: string) => Promise<void>; // Pass to GoogleSyncChoiceModal
-    onSaveNewCloudFile: () => Promise<void>; // Pass to GoogleSyncChoiceModal
-    // New props for DriveFileManagerModal
-    driveFiles: DriveFile[];
-    currentActiveDriveFileId: string | null;
-    handleLoadDriveFile: (fileId: string) => Promise<void>;
-    handleSaveAsNewDriveFile: (fileName: string) => Promise<void>;
-    handleOverwriteExistingDriveFile: (fileId: string) => Promise<void>;
-    handleDeleteDriveFile: (fileId: string) => Promise<void>;
-    isSavingDriveFile: boolean;
-    isDeletingDriveFile: boolean;
-    isListingDriveFiles: boolean;
-}
-
 // Define HeaderProps directly here
 export interface HeaderProps {
   toggleSidebar: () => void;
@@ -346,4 +312,77 @@ export interface SidebarFooterProps { // Updated SidebarFooterProps
     setIsEditing: (v: boolean) => void;
     onDelete: (id: string) => void;
     onOpenCleanTreeOptions: () => void; // Changed from onStartNewTree
+}
+
+// --- New Grouped Interfaces for useAppOrchestration return ---
+export interface AppStateAndActions {
+  people: Record<string, Person>;
+  focusId: string;
+  setFocusId: (id: string) => void;
+  updatePerson: (id: string, updates: Partial<Person>) => void;
+  deletePerson: (id: string) => void;
+  activePerson?: Person;
+}
+
+export interface WelcomeScreenLogicProps {
+  showWelcome: boolean;
+  fileInputRef: React.RefObject<HTMLInputElement | null>; // Updated to allow null
+  handleStartNewTree: () => void;
+  onFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
+  onTriggerImportFile: () => void;
+}
+
+export interface ModalStateAndActions {
+  activeModal: 'none' | 'calculator' | 'stats' | 'chat' | 'consistency' | 'timeline' | 'share' | 'story' | 'map';
+  setActiveModal: (m: any) => void;
+  linkModal: { isOpen: boolean; type: 'parent' | 'spouse' | 'child' | null; gender: Gender | null; };
+  setLinkModal: (val: any) => void;
+  cleanTreeOptionsModal: { isOpen: boolean };
+  setCleanTreeOptionsModal: (val: { isOpen: boolean }) => void;
+  googleSyncChoiceModal: { isOpen: boolean; driveFileId: string | null; };
+  setGoogleSyncChoiceModal: (val: { isOpen: boolean; driveFileId: string | null; }) => void;
+  driveFileManagerModal: { isOpen: boolean };
+  setDriveFileManagerModal: (val: { isOpen: boolean }) => void;
+  handleOpenLinkModal: (type: 'parent' | 'spouse' | 'child', gender: Gender) => void;
+  handleOpenModal: (modalType: 'calculator' | 'stats' | 'chat' | 'consistency' | 'timeline' | 'share' | 'story' | 'map') => void;
+  onOpenCleanTreeOptions: () => void;
+}
+
+export interface GoogleSyncStateAndActions {
+  user: UserProfile | null;
+  isSyncing: boolean;
+  isDemoMode: boolean;
+  onLogin: () => Promise<void>;
+  onLogout: () => Promise<void>;
+  onLoadCloudData: (fileId: string) => Promise<void>;
+  onSaveNewCloudFile: () => Promise<void>;
+  onOpenDriveFileManager: () => void;
+  driveFiles: DriveFile[];
+  currentActiveDriveFileId: string | null;
+  refreshDriveFiles: () => Promise<void>;
+  handleLoadDriveFile: (fileId: string) => Promise<void>;
+  handleSaveAsNewDriveFile: (fileName: string) => Promise<void>;
+  handleOverwriteExistingDriveFile: (fileId: string) => Promise<void>;
+  handleDeleteDriveFile: (fileId: string) => Promise<void>;
+  isSavingDriveFile: boolean;
+  isDeletingDriveFile: boolean;
+  isListingDriveFiles: boolean;
+}
+
+export interface AppOrchestrationReturn {
+  appState: AppStateAndActions;
+  welcomeScreen: WelcomeScreenLogicProps;
+  modals: ModalStateAndActions;
+  googleSync: GoogleSyncStateAndActions;
+  historyControls: HistoryControlsProps;
+  themeLanguage: ThemeLanguageProps;
+  viewSettings: ViewSettingsProps;
+  toolsActions: ToolsActionsProps;
+  exportActions: ExportActionsProps;
+  searchProps: SearchProps;
+  familyActions: FamilyActionsProps;
+  isPresentMode: boolean;
+  setIsPresentMode: (v: boolean) => void;
+  sidebarOpen: boolean;
+  setSidebarOpen: (v: boolean) => void;
 }

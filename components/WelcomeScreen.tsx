@@ -1,7 +1,7 @@
-import React, { useEffect, useState, memo } from 'react';
+import React, { memo } from 'react'; // Removed useEffect, useState
 import { Logo } from './Logo';
 import { Plus, Upload, Languages } from 'lucide-react';
-import { Language } from '../types';
+// import { Language } from '../types'; // Removed
 import { useTranslation } from '../context/TranslationContext';
 import { LoginButton } from './LoginButton';
 
@@ -13,14 +13,14 @@ interface WelcomeScreenProps {
 
 export const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(({ onStartNew, onImport, onLogin }) => {
   const { t, language, setLanguage } = useTranslation();
-  const [currentOrigin, setCurrentOrigin] = useState('');
+  // const [currentOrigin, setCurrentOrigin] = useState(''); // Removed
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const origin = window.location.origin.replace(/\/$/, "");
-      setCurrentOrigin(origin);
-    }
-  }, []);
+  // useEffect(() => {
+  //   if (typeof window !== 'undefined') {
+  //     const origin = window.location.origin.replace(/\/$/, "");
+  //     setCurrentOrigin(origin);
+  //   }
+  // }, []);
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black">

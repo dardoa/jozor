@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Person, Language } from '../types';
 import { calculateStatistics } from '../utils/statisticsLogic';
-import { X, Users, Activity, Clock, Trophy, MapPin, Calendar, PieChart, BarChart3, Baby, ExternalLink, Info } from 'lucide-react'; // Import Info icon
+import { X, Users, Activity, Clock, Trophy, MapPin, Calendar, PieChart, BarChart3, Baby, ExternalLink, Info } from 'lucide-react';
 import { useTranslation } from '../context/TranslationContext';
 
 interface StatisticsModalProps {
@@ -11,7 +11,7 @@ interface StatisticsModalProps {
   language: Language;
 }
 
-export const StatisticsModal: React.FC<StatisticsModalProps> = ({ isOpen, onClose, people, language }) => {
+export const StatisticsModal: React.FC<StatisticsModalProps> = ({ isOpen, onClose, people }) => { // Removed language from destructuring
   const { t } = useTranslation();
   const stats = useMemo(() => calculateStatistics(people), [people]);
   const [activeTab, setActiveTab] = useState<'overview' | 'timeline' | 'geo' | 'names'>('overview');

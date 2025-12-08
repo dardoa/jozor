@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
-import { Person, TreeLink, TreeSettings, TreeNode } from '../../types';
-import { User } from 'lucide-react';
+import { TreeLink, TreeSettings, TreeNode } from '../../types';
+// import { User } from 'lucide-react'; // Removed User as it's not directly used in JSX
 import { FORCE_NODE_RADIUS } from '../../utils/treeLayout'; // Import FORCE_NODE_RADIUS
 
 interface ForceChartProps {
@@ -11,12 +11,12 @@ interface ForceChartProps {
   settings: TreeSettings;
 }
 
-export const ForceChart: React.FC<ForceChartProps> = memo(({ nodes, links, focusId, onSelect, settings }) => {
+export const ForceChart: React.FC<ForceChartProps> = memo(({ nodes, links, onSelect }) => { // Removed focusId, settings from destructuring
   const nodeRadius = FORCE_NODE_RADIUS; // Use the centralized constant
 
   return (
     <g>
-      {links.map((link, i) => (
+      {links.map((_link, i) => ( // Changed 'link' to '_link' to indicate it's unused in JSX
         <path key={i} className="force-link stroke-[var(--link-line-stroke)]" strokeWidth="2" fill="none" />
       ))}
       {nodes.map((node) => (

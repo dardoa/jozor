@@ -1,6 +1,6 @@
 import React, { useMemo, memo } from 'react';
 import * as d3 from 'd3';
-import { Person, TreeSettings, FanArc } from '../../types';
+import { TreeSettings, FanArc } from '../../types';
 import { User } from 'lucide-react';
 
 interface FanChartProps {
@@ -10,7 +10,7 @@ interface FanChartProps {
   settings: TreeSettings;
 }
 
-export const FanChart: React.FC<FanChartProps> = memo(({ fanArcs, focusId, onSelect, settings }) => {
+export const FanChart: React.FC<FanChartProps> = memo(({ fanArcs, onSelect }) => { // Removed focusId, settings from destructuring
   const arcGen = useMemo(() => d3.arc<any, d3.DefaultArcObject>()
     .startAngle((d: d3.DefaultArcObject) => d.startAngle)
     .endAngle((d: d3.DefaultArcObject) => d.endAngle)

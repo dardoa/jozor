@@ -1,5 +1,5 @@
 import React, { useCallback, memo } from 'react';
-import { Person, TreeLink, TreeSettings, TreeNode } from '../../types';
+import { TreeLink, TreeSettings, TreeNode } from '../../types'; // Removed Person
 import { CollapsePoint, NODE_WIDTH_DEFAULT, NODE_WIDTH_COMPACT, NODE_HEIGHT_DEFAULT, NODE_HEIGHT_COMPACT } from '../../utils/treeLayout';
 import { getYears } from '../../utils/familyLogic';
 import { User, Ribbon, ChevronDown, ChevronUp, ChevronRight, ChevronLeft } from 'lucide-react';

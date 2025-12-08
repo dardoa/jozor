@@ -1,11 +1,11 @@
 import React, { Suspense } from 'react';
-import { ModalManagerProps } from '../types';
+import { AppStateAndActions, ModalStateAndActions, GoogleSyncStateAndActions, WelcomeScreenLogicProps, FamilyActionsProps, ThemeLanguageProps } from '../types';
 import { LoadingSpinner } from './LoadingSpinner';
 import { LinkPersonModal } from './LinkPersonModal';
 import { CleanTreeOptionsModal } from './CleanTreeOptionsModal';
-import { GoogleSyncChoiceModal } from './GoogleSyncChoiceModal'; // Import new modal
-import { DriveFileManagerModal } from './DriveFileManagerModal'; // Import new modal
-import { useTranslation } from '../context/TranslationContext'; // Import useTranslation
+import { GoogleSyncChoiceModal } from './GoogleSyncChoiceModal';
+import { DriveFileManagerModal } from './DriveFileManagerModal';
+import { useTranslation } from '../context/TranslationContext';
 
 // Lazy Load Modals
 const RelationshipModal = React.lazy(() => import('./RelationshipModal').then(module => ({ default: module.RelationshipModal })));
@@ -17,19 +17,53 @@ const ShareModal = React.lazy(() => import('./ShareModal').then(module => ({ def
 const StoryModal = React.lazy(() => import('./StoryModal').then(module => ({ default: module.StoryModal })));
 const GeoMapModal = React.lazy(() => import('./GeoMapModal').then(module => ({ default: module.GeoMapModal })));
 
+// Define props for ModalManager directly here, matching the structure from ModalManagerContainer
+interface ModalManagerProps {
+    activeModal: ModalStateAndActions['activeModal'];
+    setActiveModal: ModalStateAndActions['setActiveModal'];
+    linkModal: ModalStateAndActions['linkModal'];
+    setLinkModal: ModalStateAndActions['setLinkModal'];
+    cleanTreeOptionsModal: ModalStateAndActions['cleanTreeOptionsModal'];
+    setCleanTreeOptionsModal: ModalStateAndActions['setCleanTreeOptionsModal'];
+    googleSyncChoiceModal: ModalStateAndActions['googleSyncChoiceModal'];
+    setGoogleSyncChoiceModal: ModalStateAndActions['setGoogleSyncChoiceModal'];
+    driveFileManagerModal: ModalStateAndActions['driveFileManagerModal'];
+    setDriveFileManagerModal: ModalStateAndActions['setDriveFileManagerModal'];
+    people: AppStateAndActions['people'];
+    focusId: AppStateAndActions['focusId'];
+    setFocusId: AppStateAndActions['setFocusId'];
+    activePerson?: AppStateAndActions['activePerson'];
+    user: GoogleSyncStateAndActions['user'];
+    familyActions: FamilyActionsProps;
+    language: ThemeLanguageProps['language'];
+    onStartNewTree: WelcomeScreenLogicProps['handleStartNewTree'];
+    onTriggerImportFile: WelcomeScreenLogicProps['onTriggerImportFile'];
+    onLoadCloudData: GoogleSyncStateAndActions['onLoadCloudData'];
+    onSaveNewCloudFile: GoogleSyncStateAndActions['onSaveNewCloudFile'];
+    driveFiles: GoogleSyncStateAndActions['driveFiles'];
+    currentActiveDriveFileId: GoogleSyncStateAndActions['currentActiveDriveFileId'];
+    handleLoadDriveFile: GoogleSyncStateAndActions['handleLoadDriveFile'];
+    handleSaveAsNewDriveFile: GoogleSyncStateAndActions['handleSaveAsNewDriveFile'];
+    handleOverwriteExistingDriveFile: GoogleSyncStateAndActions['handleOverwriteExistingDriveFile'];
+    handleDeleteDriveFile: GoogleSyncStateAndActions['handleDeleteDriveFile'];
+    isSavingDriveFile: GoogleSyncStateAndActions['isSavingDriveFile'];
+    isDeletingDriveFile: GoogleSyncStateAndActions['isDeletingDriveFile'];
+    isListingDriveFiles: GoogleSyncStateAndActions['isListingDriveFiles'];
+}
+
 export const ModalManager: React.FC<ModalManagerProps> = ({
     activeModal, setActiveModal, linkModal, setLinkModal,
     cleanTreeOptionsModal, setCleanTreeOptionsModal,
-    googleSyncChoiceModal, setGoogleSyncChoiceModal, // Destructure new modal state
-    driveFileManagerModal, setDriveFileManagerModal, // Destructure new modal state
+    googleSyncChoiceModal, setGoogleSyncChoiceModal,
+    driveFileManagerModal, setDriveFileManagerModal,
     people, focusId, setFocusId, activePerson,
     user,
     familyActions,
+    language,
     onStartNewTree,
     onTriggerImportFile,
-    onLoadCloudData, // Pass to GoogleSyncChoiceModal
-    onSaveNewCloudFile, // Pass to GoogleSyncChoiceModal
-    // New props for DriveFileManagerModal
+    onLoadCloudData,
+    onSaveNewCloudFile,
     driveFiles,
     currentActiveDriveFileId,
     handleLoadDriveFile,
@@ -41,7 +75,6 @@ export const ModalManager: React.FC<ModalManagerProps> = ({
     isListingDriveFiles,
 }) => {
     const closeModal = () => setActiveModal('none');
-    const { language } = useTranslation(); // Get language from context
 
     return (
         <Suspense fallback={<LoadingSpinner />}>
@@ -52,7 +85,7 @@ export const ModalManager: React.FC<ModalManagerProps> = ({
                 type={linkModal.type}
                 gender={linkModal.gender}
                 currentPersonId={focusId}
-                language={language} // Pass language from context
+                language={language}
                 familyActions={familyActions}
             />
             
@@ -64,15 +97,15 @@ export const ModalManager: React.FC<ModalManagerProps> = ({
                 language={language}
             />
 
-            <GoogleSyncChoiceModal // Render the new modal
+            <GoogleSyncChoiceModal
                 isOpen={googleSyncChoiceModal.isOpen}
                 onClose={() => setGoogleSyncChoiceModal({ isOpen: false, driveFileId: null })}
-                onLoadCloud={() => onLoadCloudData(googleSyncChoiceModal.driveFileId!)} // Pass fileId
+                onLoadCloud={() => onLoadCloudData(googleSyncChoiceModal.driveFileId!)}
                 onSaveNewCloud={onSaveNewCloudFile}
-                driveFileId={googleSyncChoiceModal.driveFileId} // Pass driveFileId
+                driveFileId={googleSyncChoiceModal.driveFileId}
             />
 
-            <DriveFileManagerModal // Render the new modal
+            <DriveFileManagerModal
                 isOpen={driveFileManagerModal.isOpen}
                 onClose={() => setDriveFileManagerModal({ isOpen: false })}
                 files={driveFiles}

@@ -12,7 +12,7 @@ interface AncestorChatModalProps {
   language: Language;
 }
 
-export const AncestorChatModal: React.FC<AncestorChatModalProps> = ({ isOpen, onClose, person, people, language }) => {
+export const AncestorChatModal: React.FC<AncestorChatModalProps> = ({ isOpen, onClose, person, people }) => { // Removed language from destructuring
   const { t } = useTranslation();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');

@@ -259,7 +259,7 @@ export const BioTab: React.FC<BioTabProps> = memo(({ person, people, isEditing, 
                 </div>
             ) : (
                 <div className="space-y-3">
-                    {(person.sources || []).map((source, index) => (
+                    {(person.sources || []).map((source) => (
                         <div key={source.id} className="p-3 bg-white dark:bg-stone-900 border border-stone-100 dark:border-stone-700 rounded-xl shadow-sm group">
                             {isEditing ? (
                                 <div className="space-y-1.5">
@@ -392,7 +392,7 @@ export const BioTab: React.FC<BioTabProps> = memo(({ person, people, isEditing, 
                 </div>
             ) : (
                 <div className="space-y-3">
-                    {(person.events || []).map((event, index) => (
+                    {(person.events || []).map((event) => (
                         <div key={event.id} className="p-3 bg-white dark:bg-stone-900 border border-stone-100 dark:border-stone-700 rounded-xl shadow-sm group">
                             {isEditing ? (
                                 <div className="space-y-1.5">

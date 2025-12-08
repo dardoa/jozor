@@ -2,11 +2,11 @@ import React, { useState, useEffect, useMemo, memo } from 'react';
 import { InfoTab } from './sidebar/InfoTab';
 import { PartnersTab } from './sidebar/PartnersTab';
 import { ContactTab } from './sidebar/ContactTab';
-import { BioTab } from './sidebar/BioTab'; // BioTab will now include Sources and Events
+import { BioTab } from './sidebar/BioTab';
 import { MediaTab } from './sidebar/MediaTab';
 import { SidebarFooter } from './sidebar/SidebarFooter';
 import { SidebarTabs } from './sidebar/SidebarTabs';
-import { Person, UserProfile, FamilyActionsProps } from '../types';
+import { Person, UserProfile, FamilyActionsProps, ModalStateAndActions } from '../types'; // Removed WelcomeScreenLogicProps
 import { useTranslation } from '../context/TranslationContext';
 
 interface SidebarProps {
@@ -17,19 +17,18 @@ interface SidebarProps {
   onSelect: (id: string) => void;
   isOpen: boolean; 
   onClose: () => void;
-  onOpenModal: (modalType: 'calculator' | 'stats' | 'chat' | 'consistency' | 'timeline' | 'share' | 'story' | 'map') => void;
+  onOpenModal: ModalStateAndActions['handleOpenModal']; // Use grouped type
   user: UserProfile | null;
   familyActions: FamilyActionsProps;
-  onOpenCleanTreeOptions: () => void; // New prop
-  onTriggerImportFile: () => void; // New prop
+  onOpenCleanTreeOptions: ModalStateAndActions['onOpenCleanTreeOptions']; // Use grouped type
+  // onTriggerImportFile: WelcomeScreenLogicProps['onTriggerImportFile']; // Removed
 }
 
 export const Sidebar: React.FC<SidebarProps> = memo(({
   person, people, onUpdate, onDelete, onSelect, isOpen, onClose, onOpenModal, user,
-  familyActions, onOpenCleanTreeOptions, onTriggerImportFile // Destructure new props
+  familyActions, onOpenCleanTreeOptions // Removed onTriggerImportFile
 }) => {
   const { t } = useTranslation();
-  // Removed 'sources' and 'events' from activeTab type
   const [activeTab, setActiveTab] = useState<'info' | 'partners' | 'bio' | 'contact' | 'media'>('info'); 
   const [isEditing, setIsEditing] = useState(false);
 
@@ -39,9 +38,9 @@ export const Sidebar: React.FC<SidebarProps> = memo(({
     if (activeTab === 'partners' && person.spouses.length === 0) {
         setActiveTab('info');
     }
-  }, [person.id]);
+  }, [person.id, activeTab, person.spouses.length]); // Added activeTab and person.spouses.length to dependencies
 
-  // Tab definitions - Removed 'sources' and 'events'
+  // Tab definitions
   const tabs = useMemo(() => [
     { id: 'info', label: t.profile, show: true },
     { id: 'partners', label: t.partners, show: person.spouses.length > 0 },
@@ -87,13 +86,12 @@ export const Sidebar: React.FC<SidebarProps> = memo(({
                 {activeTab === 'contact' && <ContactTab person={person} isEditing={isEditing} onUpdate={onUpdate} />}
                 {activeTab === 'bio' && <BioTab person={person} people={people} isEditing={isEditing} onUpdate={onUpdate} />}
                 {activeTab === 'media' && <MediaTab person={person} isEditing={isEditing} onUpdate={onUpdate} user={user} />}
-                {/* Removed SourcesTab and EventsTab rendering */}
             </div>
             
             <SidebarFooter 
                 person={person} isEditing={isEditing} setIsEditing={setIsEditing}
                 onDelete={onDelete}
-                onOpenCleanTreeOptions={onOpenCleanTreeOptions} // Pass the new prop
+                onOpenCleanTreeOptions={onOpenCleanTreeOptions}
             />
         </div>
     </>

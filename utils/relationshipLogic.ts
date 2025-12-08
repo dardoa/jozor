@@ -1,4 +1,3 @@
-
 import { Person, Language } from '../types';
 
 interface AncestorPath {
@@ -67,9 +66,6 @@ export const calculateRelationship = (id1: string, id2: string, people: Record<s
         return { text: lang === 'en' ? "No direct relationship found" : "لا توجد قرابة مباشرة" };
     }
 
-    const enTerms: Record<string, string> = {};
-    const arTerms: Record<string, string> = {};
-
     // Logic based on distance up (dist1) and distance down (dist2)
     
     // Direct Descendant/Ancestor
@@ -96,7 +92,6 @@ export const calculateRelationship = (id1: string, id2: string, people: Record<s
     if (dist1 === 3 && dist2 === 3) return { text: lang === 'en' ? "Second Cousin" : "ابن عم (درجة ثانية)", commonAncestor: commonAncestorId };
     
     // Extended Logic fallback
-    const generationDiff = Math.abs(dist1 - dist2);
     if (lang === 'en') {
         if (dist1 > 2 && dist2 > 2) return { text: "Distant Cousin", commonAncestor: commonAncestorId };
         return { text: "Relative", commonAncestor: commonAncestorId };

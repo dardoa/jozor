@@ -129,7 +129,7 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({ people, focus
             });
         });
 
-        return { nodes: [], links: [], collapsePoints: [], fanArcs: [] as FanArc[] };
+        return { nodes: [], links: [], collapsePoints: [], fanArcs: arcs }; // Return arcs here
     } 
     
     return { ...calculateTreeLayout(people, focusId, settings, collapsedIds), fanArcs: [] as FanArc[] };
@@ -160,7 +160,7 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({ people, focus
       }
 
       return () => { simulation.stop(); };
-  }, [isForce, nodes, links]);
+  }, [isForce, nodes, links, settings.enableForcePhysics]); // Added settings.enableForcePhysics to dependencies
 
   useEffect(() => {
       if (!simulationRef.current || !isForce) return;
@@ -280,7 +280,7 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({ people, focus
               onSelect={onSelect} 
               settings={settings} 
               toggleCollapse={toggleCollapse}
-              people={people}
+              // Removed people={people}
             />
           )}
         </g>

@@ -1,5 +1,10 @@
 import { useState, useCallback } from 'react';
-import { Person, Gender, HistoryControlsProps, ThemeLanguageProps, AuthProps, ViewSettingsProps, ToolsActionsProps, ExportActionsProps, SearchProps, FamilyActionsProps } from '../types';
+import { 
+  HistoryControlsProps, ThemeLanguageProps, 
+  ViewSettingsProps, ToolsActionsProps, ExportActionsProps, SearchProps, 
+  FamilyActionsProps, AppStateAndActions, WelcomeScreenLogicProps, 
+  ModalStateAndActions, GoogleSyncStateAndActions, AppOrchestrationReturn, Gender
+} from '../types';
 import { useFamilyTree } from './useFamilyTree';
 import { useGoogleSync } from './useGoogleSync';
 import { useKeyboardShortcuts } from './useKeyboardShortcuts';
@@ -14,11 +19,11 @@ import { downloadFile } from '../utils/fileUtils';
 import { useTranslation } from '../context/TranslationContext';
 import { showError } from '../utils/toast';
 
-export const useAppOrchestration = () => {
+export const useAppOrchestration = (): AppOrchestrationReturn => {
   // --- Core Data & History ---
   const {
     people, focusId, setFocusId, history, future, undo, redo,
-    updatePerson, deletePerson, // Removed addParent, addSpouse, addChild, linkPerson as they are now handled via familyActions
+    updatePerson, deletePerson,
     removeRelationship, linkPerson,
     handleImport, startNewTree, loadCloudData
   } = useFamilyTree();
@@ -54,18 +59,12 @@ export const useAppOrchestration = () => {
   // New state for DriveFileManagerModal
   const [driveFileManagerModal, setDriveFileManagerModal] = useState<{ isOpen: boolean }>({ isOpen: false });
   const onOpenDriveFileManager = useCallback(() => {
-    console.log("onOpenDriveFileManager called, setting driveFileManagerModal.isOpen to true"); // Added log
+    console.log("onOpenDriveFileManager called, setting driveFileManagerModal.isOpen to true");
     setDriveFileManagerModal({ isOpen: true });
   }, []);
 
   // --- Sync & Auth ---
-  const { 
-    user, isSyncing, isDemoMode, handleLogin, handleLogout, stopSyncing, 
-    onLoadCloudData, onSaveNewCloudFile,
-    driveFiles, currentActiveDriveFileId, refreshDriveFiles,
-    handleLoadDriveFile, handleSaveAsNewDriveFile, handleOverwriteExistingDriveFile, handleDeleteDriveFile,
-    isSavingDriveFile, isDeletingDriveFile, isListingDriveFiles,
-  } = useGoogleSync(
+  const googleSync = useGoogleSync( // Renamed from `const { ... } = useGoogleSync(...)` to `const googleSync = ...`
     people, 
     loadCloudData,
     onOpenGoogleSyncChoice,
@@ -75,7 +74,7 @@ export const useAppOrchestration = () => {
   // --- UI Preferences ---
   const { language, setLanguage } = useTranslation();
   const { treeSettings, setTreeSettings } = useTreeSettings();
-  const { darkMode, setDarkMode } = useThemeSync(); // Corrected: no arguments passed to useThemeSync
+  const { darkMode, setDarkMode } = useThemeSync();
 
   const activePerson = people[focusId];
 
@@ -88,19 +87,19 @@ export const useAppOrchestration = () => {
     showWelcome, setShowWelcome, fileInputRef,
     handleStartNewTree, onFileUpload
   } = useWelcomeScreenLogic({
-    people, startNewTree, stopSyncing, handleImport
+    people, startNewTree, stopSyncing: googleSync.stopSyncing, handleImport // Use googleSync.stopSyncing
   });
 
   // --- Login/Logout Handlers (now directly from useGoogleSync) ---
   const onLogin = useCallback(async () => {
-      const success = await handleLogin();
+      const success = await googleSync.handleLogin(); // Use googleSync.handleLogin
       if (success) setShowWelcome(false);
-  }, [handleLogin, setShowWelcome]);
+  }, [googleSync.handleLogin, setShowWelcome]);
 
   const onLogout = useCallback(async () => {
-      await handleLogout();
+      await googleSync.handleLogout(); // Use googleSync.handleLogout
       setShowWelcome(true);
-  }, [handleLogout, setShowWelcome]);
+  }, [googleSync.handleLogout, setShowWelcome]);
 
   // Adjusted onTriggerImportFile to directly trigger file input
   const onTriggerImportFile = useCallback(() => {
@@ -133,7 +132,7 @@ export const useAppOrchestration = () => {
   // Grouped props for Header and other components
   const historyControls: HistoryControlsProps = { onUndo: undo, onRedo: redo, canUndo, canRedo };
   const themeLanguage: ThemeLanguageProps = { darkMode, setDarkMode, language, setLanguage };
-  const auth: AuthProps = { user, isDemoMode, isSyncing, onLogin, onLogout, onOpenDriveFileManager };
+  // const auth: AuthProps = { user, isDemoMode, isSyncing, onLogin, onLogout, onOpenDriveFileManager }; // Removed as googleSync is passed directly
   const viewSettings: ViewSettingsProps = { treeSettings, setTreeSettings, onPresent: () => setIsPresentMode(true) };
   const toolsActions: ToolsActionsProps = { onOpenModal: handleOpenModal };
   const exportActions: ExportActionsProps = { handleExport };
@@ -146,43 +145,38 @@ export const useAppOrchestration = () => {
     onLinkPerson: linkPerson,
   };
 
-  return {
-    // Core Data
-    people, focusId, setFocusId, updatePerson, deletePerson, activePerson,
+  // New grouped objects for return
+  const appState: AppStateAndActions = {
+    people, focusId, setFocusId, updatePerson, deletePerson, activePerson
+  };
 
-    // Welcome Screen
-    showWelcome, fileInputRef, handleStartNewTree, onFileUpload,
+  const welcomeScreenReturn: WelcomeScreenLogicProps = { // Renamed to avoid conflict with hook return
+    showWelcome, fileInputRef, handleStartNewTree, onFileUpload, onTriggerImportFile
+  };
 
-    // Modals & Sidebar
-    sidebarOpen, setSidebarOpen, activeModal, setActiveModal, isPresentMode, setIsPresentMode,
-    linkModal, setLinkModal, cleanTreeOptionsModal, setCleanTreeOptionsModal,
+  const modalsReturn: ModalStateAndActions = { // Renamed to avoid conflict with hook return
+    activeModal, setActiveModal, linkModal, setLinkModal,
+    cleanTreeOptionsModal, setCleanTreeOptionsModal,
     googleSyncChoiceModal, setGoogleSyncChoiceModal,
     driveFileManagerModal, setDriveFileManagerModal,
-    handleOpenLinkModal, handleOpenModal, onOpenCleanTreeOptions,
-    
-    // Grouped Props
+    handleOpenLinkModal, handleOpenModal, onOpenCleanTreeOptions
+  };
+
+  return {
+    appState,
+    welcomeScreen: welcomeScreenReturn, // Use renamed object
+    modals: modalsReturn, // Use renamed object
+    googleSync,
     historyControls,
     themeLanguage,
-    auth,
     viewSettings,
     toolsActions,
     exportActions,
     searchProps,
     familyActions,
-    startNewTree,
-    onTriggerImportFile,
-    onLoadCloudData,
-    onSaveNewCloudFile,
-    // New Drive file management props
-    driveFiles,
-    currentActiveDriveFileId,
-    refreshDriveFiles,
-    handleLoadDriveFile,
-    handleSaveAsNewDriveFile,
-    handleOverwriteExistingDriveFile,
-    handleDeleteDriveFile,
-    isSavingDriveFile,
-    isDeletingDriveFile,
-    isListingDriveFiles,
+    isPresentMode,
+    setIsPresentMode,
+    sidebarOpen,
+    setSidebarOpen,
   };
 };

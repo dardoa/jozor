@@ -3,7 +3,7 @@ import { Sidebar } from './components/Sidebar';
 import { FamilyTree } from './components/FamilyTree';
 import { WelcomeScreen } from './components/WelcomeScreen';
 import { ModalManagerContainer } from './components/ModalManagerContainer';
-import { Header } from './components/Header'; // Direct import of Header
+import { Header } from './components/Header';
 
 import { useAppOrchestration } from './hooks/useAppOrchestration';
 
@@ -11,43 +11,21 @@ import { X } from 'lucide-react';
 
 const App: React.FC = () => {
   const {
-    // Core Data
-    people, focusId, setFocusId, updatePerson, deletePerson, activePerson,
-    
-    // Welcome Screen
-    showWelcome, fileInputRef, handleStartNewTree, onFileUpload,
-
-    // Modals & Sidebar
-    sidebarOpen, setSidebarOpen, activeModal, setActiveModal, isPresentMode, setIsPresentMode,
-    linkModal, setLinkModal, cleanTreeOptionsModal, setCleanTreeOptionsModal,
-    googleSyncChoiceModal, setGoogleSyncChoiceModal, // New GoogleSyncChoiceModal state
-    driveFileManagerModal, setDriveFileManagerModal, // New DriveFileManagerModal state
-    // Removed handleOpenLinkModal as it's not directly used here
-    handleOpenModal, onOpenCleanTreeOptions,
-    
-    // Grouped Props
+    appState,
+    welcomeScreen,
+    modals,
+    googleSync,
     historyControls,
-    themeLanguage, // Contains darkMode, setDarkMode, language, setLanguage
-    auth,
+    themeLanguage,
     viewSettings,
     toolsActions,
     exportActions,
     searchProps,
     familyActions,
-    // Removed startNewTree as it's not directly used here
-    onTriggerImportFile,
-    onLoadCloudData, // Destructure onLoadCloudData
-    onSaveNewCloudFile, // Destructure onSaveNewCloudFile
-    // New Drive file management props
-    driveFiles,
-    currentActiveDriveFileId,
-    handleLoadDriveFile,
-    handleSaveAsNewDriveFile,
-    handleOverwriteExistingDriveFile,
-    handleDeleteDriveFile,
-    isSavingDriveFile,
-    isDeletingDriveFile,
-    isListingDriveFiles,
+    isPresentMode,
+    setIsPresentMode,
+    sidebarOpen,
+    setSidebarOpen,
   } = useAppOrchestration();
 
   // Centralized application of theme class, dark mode class, and language attributes to the html element
@@ -72,13 +50,13 @@ const App: React.FC = () => {
       className={`flex flex-col h-screen font-sans transition-colors duration-300 text-[var(--card-text)] overflow-hidden bg-[var(--theme-bg)]`} 
     >
       
-      <input ref={fileInputRef} type="file" accept=".json,.ged,.jozor,.zip" className="hidden" onChange={onFileUpload} />
+      <input ref={welcomeScreen.fileInputRef} type="file" accept=".json,.ged,.jozor,.zip" className="hidden" onChange={welcomeScreen.onFileUpload} />
 
-      {showWelcome ? (
+      {welcomeScreen.showWelcome ? (
           <WelcomeScreen 
-              onStartNew={handleStartNewTree}
-              onImport={onTriggerImportFile}
-              onLogin={auth.onLogin}
+              onStartNew={welcomeScreen.handleStartNewTree}
+              onImport={welcomeScreen.onTriggerImportFile}
+              onLogin={googleSync.onLogin}
           />
       ) : (
           <>
@@ -87,7 +65,7 @@ const App: React.FC = () => {
                     toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
                     historyControls={historyControls}
                     themeLanguage={themeLanguage}
-                    auth={auth}
+                    auth={googleSync} // Pass googleSync as auth prop
                     viewSettings={viewSettings}
                     toolsActions={toolsActions}
                     exportActions={exportActions}
@@ -106,67 +84,66 @@ const App: React.FC = () => {
             )}
             
             {/* Cloud Status */}
-            {!isPresentMode && auth.isSyncing && (
-                <div className={`absolute top-16 start-1/2 -translate-x-1/2 z-50 text-white text-xs px-3 py-1 rounded-b-lg shadow-lg flex items-center gap-2 ${auth.isDemoMode ? 'bg-orange-500' : 'bg-blue-600 animate-pulse'}`}>
-                     {auth.isDemoMode ? 'Saving locally...' : (themeLanguage.language === 'ar' ? 'جاري المزامنة...' : 'Syncing...')}
+            {!isPresentMode && googleSync.isSyncing && (
+                <div className={`absolute top-16 start-1/2 -translate-x-1/2 z-50 text-white text-xs px-3 py-1 rounded-b-lg shadow-lg flex items-center gap-2 ${googleSync.isDemoMode ? 'bg-orange-500' : 'bg-blue-600 animate-pulse'}`}>
+                     {googleSync.isDemoMode ? 'Saving locally...' : (themeLanguage.language === 'ar' ? 'جاري المزامنة...' : 'Syncing...')}
                 </div>
             )}
 
             <div className="flex flex-1 overflow-hidden relative">
                 {/* Sidebar */}
-                {activePerson && !isPresentMode && (
+                {appState.activePerson && !isPresentMode && (
                     <div className="print:hidden h-full z-20 shadow-xl border-e border-gray-200 dark:border-gray-800">
                         <Sidebar
-                            person={activePerson}
-                            people={people}
-                            onUpdate={updatePerson}
-                            onDelete={deletePerson}
-                            onSelect={setFocusId}
+                            person={appState.activePerson}
+                            people={appState.people}
+                            onUpdate={appState.updatePerson}
+                            onDelete={appState.deletePerson}
+                            onSelect={appState.setFocusId}
                             isOpen={sidebarOpen}
                             onClose={() => setSidebarOpen(false)}
-                            onOpenModal={handleOpenModal}
-                            user={auth.user}
+                            onOpenModal={modals.handleOpenModal}
+                            user={googleSync.user}
                             familyActions={familyActions}
-                            onOpenCleanTreeOptions={onOpenCleanTreeOptions}
-                            onTriggerImportFile={onTriggerImportFile}
+                            onOpenCleanTreeOptions={modals.onOpenCleanTreeOptions}
+                            onTriggerImportFile={welcomeScreen.onTriggerImportFile}
                         />
                     </div>
                 )}
 
                 {/* Main Tree Visualization */}
                 <FamilyTree
-                    people={people}
-                    focusId={focusId}
-                    onSelect={setFocusId}
+                    people={appState.people}
+                    focusId={appState.focusId}
+                    onSelect={appState.setFocusId}
                     settings={viewSettings.treeSettings}
                 />
 
                 {/* Modals Layer */}
                 <ModalManagerContainer 
-                    activeModal={activeModal} setActiveModal={setActiveModal}
-                    linkModal={linkModal} setLinkModal={setLinkModal}
-                    cleanTreeOptionsModal={cleanTreeOptionsModal} setCleanTreeOptionsModal={setCleanTreeOptionsModal}
-                    googleSyncChoiceModal={googleSyncChoiceModal} setGoogleSyncChoiceModal={setGoogleSyncChoiceModal} // Pass new modal state
-                    driveFileManagerModal={driveFileManagerModal} setDriveFileManagerModal={setDriveFileManagerModal} // Pass new modal state
-                    people={people} 
-                    focusId={focusId} setFocusId={setFocusId} activePerson={activePerson}
-                    user={auth.user}
+                    activeModal={modals.activeModal} setActiveModal={modals.setActiveModal}
+                    linkModal={modals.linkModal} setLinkModal={modals.setLinkModal}
+                    cleanTreeOptionsModal={modals.cleanTreeOptionsModal} setCleanTreeOptionsModal={modals.setCleanTreeOptionsModal}
+                    googleSyncChoiceModal={modals.googleSyncChoiceModal} setGoogleSyncChoiceModal={modals.setGoogleSyncChoiceModal}
+                    driveFileManagerModal={modals.driveFileManagerModal} setDriveFileManagerModal={modals.setDriveFileManagerModal}
+                    people={appState.people} 
+                    focusId={appState.focusId} setFocusId={appState.setFocusId} activePerson={appState.activePerson}
+                    user={googleSync.user}
                     familyActions={familyActions}
                     language={themeLanguage.language}
-                    onStartNewTree={handleStartNewTree}
-                    onTriggerImportFile={onTriggerImportFile}
-                    onLoadCloudData={onLoadCloudData} // Pass to ModalManager
-                    onSaveNewCloudFile={onSaveNewCloudFile} // Pass to ModalManager
-                    // New Drive file management props
-                    driveFiles={driveFiles}
-                    currentActiveDriveFileId={currentActiveDriveFileId}
-                    handleLoadDriveFile={handleLoadDriveFile}
-                    handleSaveAsNewDriveFile={handleSaveAsNewDriveFile}
-                    handleOverwriteExistingDriveFile={handleOverwriteExistingDriveFile}
-                    handleDeleteDriveFile={handleDeleteDriveFile}
-                    isSavingDriveFile={isSavingDriveFile}
-                    isDeletingDriveFile={isDeletingDriveFile}
-                    isListingDriveFiles={isListingDriveFiles}
+                    onStartNewTree={welcomeScreen.handleStartNewTree}
+                    onTriggerImportFile={welcomeScreen.onTriggerImportFile}
+                    onLoadCloudData={googleSync.onLoadCloudData}
+                    onSaveNewCloudFile={googleSync.onSaveNewCloudFile}
+                    driveFiles={googleSync.driveFiles}
+                    currentActiveDriveFileId={googleSync.currentActiveDriveFileId}
+                    handleLoadDriveFile={googleSync.handleLoadDriveFile}
+                    handleSaveAsNewDriveFile={googleSync.handleSaveAsNewDriveFile}
+                    handleOverwriteExistingDriveFile={googleSync.handleOverwriteExistingDriveFile}
+                    handleDeleteDriveFile={googleSync.handleDeleteDriveFile}
+                    isSavingDriveFile={googleSync.isSavingDriveFile}
+                    isDeletingDriveFile={googleSync.isDeletingDriveFile}
+                    isListingDriveFiles={googleSync.isListingDriveFiles}
                 />
             </div>
           </>

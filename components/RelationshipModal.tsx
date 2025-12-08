@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Person, Language } from '../types';
-import { X, Calculator, ArrowRight, User } from 'lucide-react';
+import { X, Calculator, User } from 'lucide-react'; // Removed ArrowRight
 import { calculateRelationship } from '../utils/relationshipLogic';
 import { useTranslation } from '../context/TranslationContext';
 
