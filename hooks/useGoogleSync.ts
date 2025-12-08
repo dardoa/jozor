@@ -4,11 +4,11 @@ import {
     initializeGoogleApi, 
     loginToGoogle, 
     logoutFromGoogle, 
-    findAppFile, 
+    findLatestJozorFile, 
     loadFromDrive, 
     saveToDrive,
-    listJozorFiles, // Import new function
-    deleteDriveFile, // Import new function
+    listJozorFiles, 
+    deleteDriveFile, 
 } from '../services/googleService';
 import { showSuccess, showError } from '../utils/toast'; // Import toast utilities
 
@@ -19,14 +19,14 @@ export const useGoogleSync = (
     onCloseGoogleSyncChoice: () => void,
 ) => {
     const [user, setUser] = useState<UserProfile | null>(null);
-    const [currentActiveDriveFileId, setCurrentActiveDriveFileId] = useState<string | null>(null); // Renamed for clarity
+    const [currentActiveDriveFileId, setCurrentActiveDriveFileId] = useState<string | null>(null);
     const [isSyncing, setIsSyncing] = useState(false);
     const [isInitialized, setIsInitialized] = useState(false);
     const [isDemoMode, setIsDemoMode] = useState(false);
-    const [driveFiles, setDriveFiles] = useState<DriveFile[]>([]); // New state for listing files
-    const [isListingDriveFiles, setIsListingDriveFiles] = useState(false); // New state for listing status
-    const [isSavingDriveFile, setIsSavingDriveFile] = useState(false); // New state for saving status
-    const [isDeletingDriveFile, setIsDeletingDriveFile] = useState(false); // New state for deleting status
+    const [driveFiles, setDriveFiles] = useState<DriveFile[]>([]);
+    const [isListingDriveFiles, setIsListingDriveFiles] = useState(false);
+    const [isSavingDriveFile, setIsSavingDriveFile] = useState(false);
+    const [isDeletingDriveFile, setIsDeletingDriveFile] = useState(false);
 
     // Ref to track if a save is already in progress to prevent multiple simultaneous saves
     const saveInProgressRef = useRef(false);
@@ -42,6 +42,24 @@ export const useGoogleSync = (
             });
         return () => { mounted = false; };
     }, []);
+
+    // --- Drive File Management Functions (Declared early as they are dependencies) ---
+    const refreshDriveFiles = useCallback(async () => {
+        if (!user) {
+            setDriveFiles([]);
+            return;
+        }
+        setIsListingDriveFiles(true);
+        try {
+            const files = await listJozorFiles();
+            setDriveFiles(files);
+        } catch (e) {
+            console.error("Failed to list Drive files", e);
+            showError("Failed to list files from Google Drive.");
+        } finally {
+            setIsListingDriveFiles(false);
+        }
+    }, [user]); // Depends on 'user'
 
     // 2. Auto-save/Update Logic
     useEffect(() => {
@@ -72,7 +90,7 @@ export const useGoogleSync = (
         }, 3000); // Debounce save every 3 seconds
 
         return () => clearTimeout(timer);
-    }, [people, user, isDemoMode, currentActiveDriveFileId, isInitialized]); // Add isInitialized to dependencies
+    }, [people, user, isDemoMode, currentActiveDriveFileId, isInitialized, refreshDriveFiles]); // Added refreshDriveFiles to dependencies
 
     // 3. Login Flow
     const handleLogin = useCallback(async (): Promise<boolean> => {
@@ -86,12 +104,12 @@ export const useGoogleSync = (
             await refreshDriveFiles();
 
             try {
-                const existingId = await findAppFile();
-                if (existingId) {
-                    console.log("Found existing file, prompting user for action...");
-                    onOpenGoogleSyncChoice(existingId); // User will choose to load or save new
+                const latestFileId = await findLatestJozorFile();
+                if (latestFileId) {
+                    console.log("Found latest existing file, prompting user for action...");
+                    onOpenGoogleSyncChoice(latestFileId); // User will choose to load or save new
                 } else {
-                    console.log("No existing file found. Will create on first auto-save.");
+                    console.log("No existing Jozor file found. Will create on first auto-save.");
                     // If no file exists, set currentActiveDriveFileId to null so the next auto-save creates one.
                     setCurrentActiveDriveFileId(null); 
                 }
@@ -108,7 +126,7 @@ export const useGoogleSync = (
         } finally {
             setIsSyncing(false);
         }
-    }, [onOpenGoogleSyncChoice]); // Removed 'people' from dependencies as it's not directly used here
+    }, [onOpenGoogleSyncChoice, refreshDriveFiles]); // refreshDriveFiles is now defined
 
     const handleLogout = useCallback(async () => {
         try { logoutFromGoogle(); } catch(e) {}
@@ -155,25 +173,7 @@ export const useGoogleSync = (
             setIsSyncing(false);
             onCloseGoogleSyncChoice();
         }
-    }, [people, onCloseGoogleSyncChoice]);
-
-    // --- New Drive File Management Functions ---
-    const refreshDriveFiles = useCallback(async () => {
-        if (!user) {
-            setDriveFiles([]);
-            return;
-        }
-        setIsListingDriveFiles(true);
-        try {
-            const files = await listJozorFiles();
-            setDriveFiles(files);
-        } catch (e) {
-            console.error("Failed to list Drive files", e);
-            showError("Failed to list files from Google Drive.");
-        } finally {
-            setIsListingDriveFiles(false);
-        }
-    }, [user]);
+    }, [people, onCloseGoogleSyncChoice, refreshDriveFiles]); // refreshDriveFiles is now defined
 
     const handleLoadDriveFile = useCallback(async (fileId: string) => {
         setIsSyncing(true);

@@ -205,23 +205,26 @@ export const logoutFromGoogle = () => {
 
 // --- Drive Operations ---
 
-export const findAppFile = async (): Promise<string | null> => {
+// Renamed from findAppFile to findLatestJozorFile for more robust discovery
+export const findLatestJozorFile = async (): Promise<string | null> => {
     if (!isInitialized) {
         console.warn("Google API not initialized. Cannot find app file.");
         return null;
     }
     try {
-        console.log(`Searching for file named '${FILE_NAME}' in Google Drive appDataFolder...`);
+        console.log(`Searching for latest Jozor file in Google Drive appDataFolder...`);
         const response = await window.gapi.client.drive.files.list({
-            q: `name = '${FILE_NAME}' and trashed = false`,
-            fields: 'files(id, name)',
-            spaces: 'appDataFolder', // <--- CORRECTED THIS LINE
+            q: `mimeType='application/json' and name contains 'jozor' and trashed = false`,
+            fields: 'files(id, name, modifiedTime)',
+            spaces: 'appDataFolder',
+            orderBy: 'modifiedTime desc', // Order by most recently modified
+            pageSize: 1 // Only need the latest one
         });
         const files = response.result.files;
-        console.log(`Found ${files ? files.length : 0} files matching '${FILE_NAME}':`, files);
+        console.log(`Found ${files ? files.length : 0} Jozor files:`, files);
         return (files && files.length > 0) ? files[0].id : null;
     } catch (e) {
-        console.error("Error finding file", e);
+        console.error("Error finding latest Jozor file", e);
         return null;
     }
 };
@@ -275,11 +278,12 @@ export const loadFromDrive = async (fileId: string): Promise<Record<string, Pers
 export const saveToDrive = async (people: Record<string, Person>, existingFileId: string | null, customFileName?: string): Promise<string> => {
     if (!isInitialized) throw new Error("Google API not initialized");
     
-    console.log(`saveToDrive called. existingFileId: ${existingFileId}, customFileName: ${customFileName}`); // Added log
+    const fileNameToUse = customFileName || FILE_NAME;
+    console.log(`saveToDrive called. existingFileId: ${existingFileId}, customFileName: ${customFileName}, resolved fileNameToUse: ${fileNameToUse}`); // Added log
 
     const content = JSON.stringify(people, null, 2);
     const metadata = {
-        name: customFileName || FILE_NAME, // Use customFileName if provided, otherwise default
+        name: fileNameToUse, // Use the resolved file name
         mimeType: 'application/json',
         parents: ['appDataFolder'] // Ensure it's always saved to appDataFolder
     };
@@ -287,7 +291,7 @@ export const saveToDrive = async (people: Record<string, Person>, existingFileId
     try {
         if (existingFileId) {
             // Update
-            console.log(`Updating existing file with ID: ${existingFileId}`);
+            console.log(`Updating existing file with ID: ${existingFileId}, name: ${fileNameToUse}`);
             await window.gapi.client.request({
                 path: `/upload/drive/v3/files/${existingFileId}`,
                 method: 'PATCH',
@@ -298,7 +302,7 @@ export const saveToDrive = async (people: Record<string, Person>, existingFileId
         } else {
             // Create
             console.log(`Creating new file: ${metadata.name}`);
-            console.log('Metadata for new file creation:', metadata); // Added log
+            console.log('Metadata for new file creation:', metadata);
             const response = await window.gapi.client.drive.files.create({
                 resource: metadata,
                 media: {
@@ -307,7 +311,7 @@ export const saveToDrive = async (people: Record<string, Person>, existingFileId
                 },
                 fields: 'id'
             });
-            console.log(`New file created with ID: ${response.result.id}`);
+            console.log(`New file created with ID: ${response.result.id}, name: ${metadata.name}`);
             return response.result.id;
         }
     } catch (e) {
