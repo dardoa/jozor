@@ -211,7 +211,7 @@ const getOrCreateUserVisibleAppFolderId = async (): Promise<string> => {
         if (folders && folders.length > 0) {
             userVisibleAppFolderId = folders[0].id;
             console.log(`Found 'Family Tree App' folder with ID: ${userVisibleAppFolderId}`);
-            return userVisibleAppFolderId;
+            return userVisibleAppFolderId!; // Assert non-null
         }
 
         // 2. If not found, create it
@@ -227,7 +227,7 @@ const getOrCreateUserVisibleAppFolderId = async (): Promise<string> => {
         });
         userVisibleAppFolderId = createResponse.result.id;
         console.log(`Created 'Family Tree App' folder with ID: ${userVisibleAppFolderId}`);
-        return userVisibleAppFolderId;
+        return userVisibleAppFolderId!; // Assert non-null
 
     } catch (e) {
         console.error("Error getting or creating 'Family Tree App' folder", e);
@@ -330,23 +330,50 @@ export const saveToDrive = async (people: Record<string, Person>, existingFileId
     };
 
     try {
-        let targetFileId: string | null = null;
+        let targetFileId: string | null = existingFileId; // Start with the provided existingFileId
 
-        // --- Pre-Save Check: Always query Google Drive for a file with that exact name within the specific folder ---
-        console.log(`saveToDrive: Performing pre-save check for file named '${fileNameToUse}' in 'Family Tree App' folder (ID: ${folderId}).`);
-        const searchResponse = await window.gapi.client.drive.files.list({
-            q: `mimeType='application/json' and name='${fileNameToUse}' and '${folderId}' in parents and trashed = false`,
-            fields: 'files(id, name)',
-            spaces: 'drive', // Search in My Drive
-            pageSize: 1
-        });
-        const foundFiles = searchResponse.result.files;
+        // If an existingFileId is provided, try to update it directly.
+        // We should also verify it still exists and is not trashed.
+        if (targetFileId) {
+            try {
+                const fileCheck = await window.gapi.client.drive.files.get({
+                    fileId: targetFileId,
+                    fields: 'id, trashed',
+                    spaces: 'drive'
+                });
+                if (fileCheck.result.trashed) {
+                    console.warn(`Provided existingFileId ${targetFileId} is trashed. Will attempt to find/create by name.`);
+                    targetFileId = null; // Treat as if no existing ID was provided
+                } else {
+                    console.log(`Provided existingFileId ${targetFileId} is valid. Updating it directly.`);
+                }
+            } catch (checkError: any) {
+                if (checkError.status === 404) { // File not found
+                    console.warn(`Provided existingFileId ${targetFileId} not found. Will attempt to find/create by name.`);
+                    targetFileId = null;
+                } else {
+                    throw checkError; // Re-throw other errors
+                }
+            }
+        }
 
-        if (foundFiles && foundFiles.length > 0) {
-            targetFileId = foundFiles[0].id;
-            console.log(`File ID found: ${targetFileId}. Updating existing file.`);
-        } else {
-            console.log('No file found by name in the specified folder, creating new one.');
+        // If no valid targetFileId from the parameter, then proceed with searching by name
+        if (!targetFileId) {
+            console.log(`No valid existingFileId provided or found. Performing pre-save check for file named '${fileNameToUse}' in 'Family Tree App' folder (ID: ${folderId}).`);
+            const searchResponse = await window.gapi.client.drive.files.list({
+                q: `mimeType='application/json' and name='${fileNameToUse}' and '${folderId}' in parents and trashed = false`,
+                fields: 'files(id, name)',
+                spaces: 'drive',
+                pageSize: 1
+            });
+            const foundFiles = searchResponse.result.files;
+
+            if (foundFiles && foundFiles.length > 0) {
+                targetFileId = foundFiles[0].id;
+                console.log(`File ID found by name: ${targetFileId}. Updating existing file.`);
+            } else {
+                console.log('No file found by name, creating new one.');
+            }
         }
 
         if (targetFileId) {
@@ -362,13 +389,13 @@ export const saveToDrive = async (people: Record<string, Person>, existingFileId
         } else {
             // Perform POST/CREATE
             const response = await window.gapi.client.drive.files.create({
-                resource: metadata, // Metadata includes name and parents
+                resource: metadata,
                 media: {
                     mimeType: 'application/json',
                     body: content,
                 },
                 fields: 'id, name',
-                spaces: 'drive' // Specify drive space for creation
+                spaces: 'drive'
             });
             console.log(`New Drive file created. ID: ${response.result.id}, Name returned by API: ${response.result.name}`);
             return response.result.id;
