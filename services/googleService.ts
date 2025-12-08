@@ -289,6 +289,8 @@ export const saveToDrive = async (people: Record<string, Person>, existingFileId
         parents: [folderId] // Save to the 'appDataFolder'
     };
 
+    console.log("saveToDrive: Metadata for API call:", metadata); // Added log
+
     try {
         if (existingFileId) {
             console.log(`Attempting to update existing Drive file. ID: ${existingFileId}, Name: ${fileNameToUse}`);
@@ -303,11 +305,11 @@ export const saveToDrive = async (people: Record<string, Person>, existingFileId
         } else {
             console.log(`Attempting to create new Drive file. Name: ${fileNameToUse} in folder ${folderId}`);
             const response = await window.gapi.client.drive.files.create({
-                resource: metadata,
+                resource: metadata, // Metadata includes name and parents
                 media: {
                     mimeType: 'application/json',
                     body: content,
-                    name: fileNameToUse 
+                    // REMOVED: name: fileNameToUse // This was redundant and potentially problematic
                 },
                 fields: 'id, name',
                 spaces: folderId // Specify appDataFolder space for creation
@@ -384,12 +386,14 @@ export const uploadFileToDrive = async (file: Blob, fileName: string, mimeType: 
         parents: [folderId] // Store in the 'appDataFolder'
     };
 
+    console.log("uploadFileToDrive: Metadata for API call:", metadata); // Added log
+    console.log("uploadFileToDrive: Target fileName:", fileName); // Added log
+
     const form = new FormData();
     form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
     form.append('file', file);
 
     try {
-        // IMPORTANT: Add &spaces=${folderId} to the URL for multipart uploads to ensure it goes into appDataFolder
         const response = await fetch(`https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&spaces=${folderId}`, {
             method: 'POST',
             headers: {
