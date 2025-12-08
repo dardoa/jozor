@@ -4,7 +4,7 @@ import {
     initializeGoogleApi, 
     loginToGoogle, 
     logoutFromGoogle, 
-    findLatestJozorFile, 
+    findLatestJozorFile, // This now searches for the specific FILE_NAME
     loadFromDrive, 
     saveToDrive,
     listJozorFiles, 
@@ -104,12 +104,14 @@ export const useGoogleSync = (
             await refreshDriveFiles();
 
             try {
-                const latestFileId = await findLatestJozorFile();
-                if (latestFileId) {
-                    console.log("Found latest existing file, prompting user for action...");
-                    onOpenGoogleSyncChoice(latestFileId); // User will choose to load or save new
+                // Now find the specific FILE_NAME (FamilyTree.json)
+                const existingFileId = await findLatestJozorFile(); // This now searches for the specific FILE_NAME
+                if (existingFileId) {
+                    console.log("Found existing FamilyTree.json file, prompting user for action...");
+                    setCurrentActiveDriveFileId(existingFileId); // Set it as the active file
+                    onOpenGoogleSyncChoice(existingFileId); // User will choose to load or save new
                 } else {
-                    console.log("No existing Jozor file found. Will create on first auto-save.");
+                    console.log("No existing FamilyTree.json file found. Will create on first auto-save.");
                     // If no file exists, set currentActiveDriveFileId to null so the next auto-save creates one.
                     setCurrentActiveDriveFileId(null); 
                 }
@@ -162,7 +164,7 @@ export const useGoogleSync = (
         setIsSyncing(true);
         try {
             // Explicitly create a NEW file, even if currentActiveDriveFileId already exists
-            const newId = await saveToDrive(people, null);
+            const newId = await saveToDrive(people, null); // Pass null to force new file creation
             setCurrentActiveDriveFileId(newId); // Set the new file ID
             showSuccess("Current tree saved as a new file to Google Drive successfully!");
             refreshDriveFiles(); // Refresh file list after saving
@@ -173,7 +175,7 @@ export const useGoogleSync = (
             setIsSyncing(false);
             onCloseGoogleSyncChoice();
         }
-    }, [people, onCloseGoogleSyncChoice, refreshDriveFiles]); // refreshDriveFiles is now defined
+    }, [people, onCloseGoogleSyncChoice, refreshDriveFiles]);
 
     const handleLoadDriveFile = useCallback(async (fileId: string) => {
         setIsSyncing(true);
@@ -193,7 +195,7 @@ export const useGoogleSync = (
     const handleSaveAsNewDriveFile = useCallback(async (fileName: string) => {
         setIsSavingDriveFile(true);
         try {
-            const newId = await saveToDrive(people, null, fileName);
+            const newId = await saveToDrive(people, null, fileName); // Pass null to force new file creation
             setCurrentActiveDriveFileId(newId);
             showSuccess(`Tree saved as '${fileName}' to Google Drive!`);
             await refreshDriveFiles();

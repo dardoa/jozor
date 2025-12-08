@@ -12,16 +12,19 @@ export const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 // Add this console log to check the value
 console.log('GOOGLE_CLIENT_ID from constants.ts:', GOOGLE_CLIENT_ID);
 
+// Default file name for Google Drive sync
+export const FILE_NAME = 'FamilyTree.json';
+
 // Template for a new person, without an ID
 export const DEFAULT_PERSON_TEMPLATE: Omit<Person, 'id'> = {
   title: '',
-  firstName: 'New',
+  firstName: 'New', // Default first name for new person
   middleName: '',
-  lastName: 'Person',
+  lastName: 'Person', // Default last name for new person
   birthName: '',
   nickName: '',
   suffix: '',
-  gender: 'male',
+  gender: 'male', // Default gender
   birthDate: '',
   birthPlace: '',
   birthSource: '',
@@ -38,13 +41,19 @@ export const DEFAULT_PERSON_TEMPLATE: Omit<Person, 'id'> = {
   voiceNotes: [],
   sources: [],
   events: [], // New: Initialize as empty array
+
+  // Contact
   email: '',
   website: '',
   blog: '',
   address: '',
+  
+  // Relationships (stored as IDs)
   parents: [],
   spouses: [],
   children: [],
+  
+  // Metadata for relationships (Keyed by Spouse ID)
   partnerDetails: {}
 };
 

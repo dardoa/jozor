@@ -1,4 +1,4 @@
-import { GOOGLE_CLIENT_ID } from '../constants';
+import { GOOGLE_CLIENT_ID, FILE_NAME } from '../constants'; // Import FILE_NAME
 import { UserProfile, Person, DriveFile } from '../types';
 
 // Types for global google objects
@@ -13,7 +13,7 @@ declare global {
 // 'drive' scope is necessary for creating folders in the root and managing visible files.
 const SCOPES = 'https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email';
 const DISCOVERY_DOCS = ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest', 'https://www.googleapis.com/discovery/v1/apis/oauth2/v2/rest'];
-const FILE_NAME = 'jozor_family_tree.json'; // Default file name
+// const FILE_NAME = 'jozor_family_tree.json'; // Moved to constants.ts
 const APP_FOLDER_NAME = 'My Family Tree App'; // New: Visible folder name
 
 // Scripts to load dynamically
@@ -276,14 +276,15 @@ export const findLatestJozorFile = async (): Promise<string | null> => {
         const folderId = await getAppFolderId(); // Ensure folder exists
         console.log(`Searching for latest Jozor file in folder ${folderId}...`);
         const response = await window.gapi.client.drive.files.list({
-            q: `mimeType='application/json' and name contains 'jozor' and '${folderId}' in parents and trashed = false`,
+            // Search for the specific FILE_NAME
+            q: `mimeType='application/json' and name='${FILE_NAME}' and '${folderId}' in parents and trashed = false`,
             fields: 'files(id, name, modifiedTime)',
             spaces: 'drive', // Search in 'drive' space for visible files
-            orderBy: 'modifiedTime desc',
-            pageSize: 1
+            orderBy: 'modifiedTime desc', // Still order by modified time, though with exact name it's less critical
+            pageSize: 1 // Only need to find one
         });
         const files = response.result.files;
-        console.log(`Found ${files ? files.length : 0} Jozor files matching 'jozor' in name:`, files.map((f:any) => f.name));
+        console.log(`Found ${files ? files.length : 0} Jozor files matching '${FILE_NAME}' in name:`, files.map((f:any) => f.name));
         return (files && files.length > 0) ? files[0].id : null;
     } catch (e) {
         console.error("Error finding latest Jozor file", e);
