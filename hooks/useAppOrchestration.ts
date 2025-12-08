@@ -1,19 +1,18 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { Person, Gender, Language, TreeSettings, UserProfile, HistoryControlsProps, ThemeLanguageProps, AuthProps, ViewSettingsProps, ToolsActionsProps, ExportActionsProps, SearchProps, FamilyActionsProps } from '../types';
+import { useState, useCallback } from 'react';
+import { Person, Gender, HistoryControlsProps, ThemeLanguageProps, AuthProps, ViewSettingsProps, ToolsActionsProps, ExportActionsProps, SearchProps, FamilyActionsProps } from '../types';
 import { useFamilyTree } from './useFamilyTree';
 import { useGoogleSync } from './useGoogleSync';
-import { useThemeSync } from './useThemeSync';
-// Removed: import { useLanguageSync } from './useLanguageSync'; // Keep import for now, but won't be used directly here
 import { useKeyboardShortcuts } from './useKeyboardShortcuts';
 import { useModalAndSidebarLogic } from './useModalAndSidebarLogic';
 import { useTreeSettings } from './useTreeSettings';
 import { useWelcomeScreenLogic } from './useWelcomeScreenLogic';
+import { useThemeSync } from './useThemeSync'; // Added this import
 import { exportToGEDCOM } from '../utils/gedcomLogic';
 import { exportToJozorArchive } from '../utils/archiveLogic';
 import { generateICS } from '../utils/calendarLogic';
 import { downloadFile } from '../utils/fileUtils';
-import { useTranslation } from '../context/TranslationContext'; // Import useTranslation
-import { showError } from '../utils/toast'; // Import showError
+import { useTranslation } from '../context/TranslationContext';
+import { showError } from '../utils/toast';
 
 export const useAppOrchestration = () => {
   // --- Core Data & History ---
@@ -32,8 +31,7 @@ export const useAppOrchestration = () => {
     handleOpenLinkModal,
     handleOpenModal,
   } = useModalAndSidebarLogic({
-    addParent, addSpouse, addChild, linkPerson, setFocusId,
-    canUndo: history.length > 0, // Pass current canUndo/canRedo
+    canUndo: history.length > 0,
     canRedo: future.length > 0,
   });
 
@@ -55,25 +53,26 @@ export const useAppOrchestration = () => {
   // New state for DriveFileManagerModal
   const [driveFileManagerModal, setDriveFileManagerModal] = useState<{ isOpen: boolean }>({ isOpen: false });
   const onOpenDriveFileManager = useCallback(() => {
+    console.log("onOpenDriveFileManager called, setting driveFileManagerModal.isOpen to true"); // Added log
     setDriveFileManagerModal({ isOpen: true });
   }, []);
 
   // --- Sync & Auth ---
   const { 
     user, isSyncing, isDemoMode, handleLogin, handleLogout, stopSyncing, 
-    onLoadCloudData, onSaveNewCloudFile, // These are for the initial sync choice modal
-    driveFiles, currentActiveDriveFileId, refreshDriveFiles, // New from useGoogleSync
-    handleLoadDriveFile, handleSaveAsNewDriveFile, handleOverwriteExistingDriveFile, handleDeleteDriveFile, // New Drive file actions
-    isSavingDriveFile, isDeletingDriveFile, isListingDriveFiles, // New Drive file statuses
+    onLoadCloudData, onSaveNewCloudFile,
+    driveFiles, currentActiveDriveFileId, refreshDriveFiles,
+    handleLoadDriveFile, handleSaveAsNewDriveFile, handleOverwriteExistingDriveFile, handleDeleteDriveFile,
+    isSavingDriveFile, isDeletingDriveFile, isListingDriveFiles,
   } = useGoogleSync(
     people, 
-    loadCloudData, // Pass loadCloudData from useFamilyTree
-    onOpenGoogleSyncChoice, // Pass the new callback
-    onCloseGoogleSyncChoice // Pass the new callback
+    loadCloudData,
+    onOpenGoogleSyncChoice,
+    onCloseGoogleSyncChoice
   );
 
   // --- UI Preferences ---
-  const { language, setLanguage } = useTranslation(); // Get language from TranslationContext
+  const { language, setLanguage } = useTranslation();
   const { treeSettings, setTreeSettings } = useTreeSettings();
   const { darkMode, setDarkMode } = useThemeSync(treeSettings.theme);
 
@@ -126,14 +125,14 @@ export const useAppOrchestration = () => {
       }
     } catch (e) {
       console.error(`Export to ${type} failed`, e);
-      showError(`Export to ${type} failed`); // Use toast
+      showError(`Export to ${type} failed`);
     }
   }, [people]);
 
   // Grouped props for Header and other components
   const historyControls: HistoryControlsProps = { onUndo: undo, onRedo: redo, canUndo, canRedo };
   const themeLanguage: ThemeLanguageProps = { darkMode, setDarkMode, language, setLanguage };
-  const auth: AuthProps = { user, isDemoMode, isSyncing, onLogin, onLogout, onOpenDriveFileManager }; // Added onOpenDriveFileManager
+  const auth: AuthProps = { user, isDemoMode, isSyncing, onLogin, onLogout, onOpenDriveFileManager };
   const viewSettings: ViewSettingsProps = { treeSettings, setTreeSettings, onPresent: () => setIsPresentMode(true) };
   const toolsActions: ToolsActionsProps = { onOpenModal: handleOpenModal };
   const exportActions: ExportActionsProps = { handleExport };
@@ -155,10 +154,10 @@ export const useAppOrchestration = () => {
 
     // Modals & Sidebar
     sidebarOpen, setSidebarOpen, activeModal, setActiveModal, isPresentMode, setIsPresentMode,
-    linkModal, setLinkModal, cleanTreeOptionsModal, setCleanTreeOptionsModal, // New modal state
-    googleSyncChoiceModal, setGoogleSyncChoiceModal, // New GoogleSyncChoiceModal state
-    driveFileManagerModal, setDriveFileManagerModal, // New DriveFileManagerModal state
-    handleOpenLinkModal, handleOpenModal, onOpenCleanTreeOptions, // New function
+    linkModal, setLinkModal, cleanTreeOptionsModal, setCleanTreeOptionsModal,
+    googleSyncChoiceModal, setGoogleSyncChoiceModal,
+    driveFileManagerModal, setDriveFileManagerModal,
+    handleOpenLinkModal, handleOpenModal, onOpenCleanTreeOptions,
     
     // Grouped Props
     historyControls,
@@ -169,10 +168,10 @@ export const useAppOrchestration = () => {
     exportActions,
     searchProps,
     familyActions,
-    startNewTree, // Make startNewTree available
-    onTriggerImportFile, // Make onTriggerImportFile available
-    onLoadCloudData, // Pass to ModalManager (for initial sync choice)
-    onSaveNewCloudFile, // Pass to ModalManager (for initial sync choice)
+    startNewTree,
+    onTriggerImportFile,
+    onLoadCloudData,
+    onSaveNewCloudFile,
     // New Drive file management props
     driveFiles,
     currentActiveDriveFileId,

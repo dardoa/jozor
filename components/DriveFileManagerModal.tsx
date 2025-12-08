@@ -1,11 +1,11 @@
 "use client";
 
 import React, { memo, useState, useEffect } from 'react';
-import { X, Cloud, FolderOpen, Save, Trash2, Check, Loader2, AlertTriangle, FileText } from 'lucide-react';
-import { DriveFileManagerModalProps, DriveFile } from '../types';
+import { X, Cloud, FolderOpen, Save, Trash2, Loader2, AlertTriangle, FileText, Info } from 'lucide-react';
+import { DriveFileManagerModalProps } from '../types';
 import { useTranslation } from '../context/TranslationContext';
-import { showSuccess, showError } from '../utils/toast';
-import { format } from 'date-fns'; // For date formatting
+import { showError } from '../utils/toast';
+import { format } from 'date-fns';
 
 export const DriveFileManagerModal: React.FC<DriveFileManagerModalProps> = memo(({
   isOpen,
@@ -27,6 +27,7 @@ export const DriveFileManagerModal: React.FC<DriveFileManagerModalProps> = memo(
 
   useEffect(() => {
     if (isOpen) {
+      console.log("DriveFileManagerModal is open!"); // Added log
       setNewFileName('');
       setConfirmOverwriteId(null);
       setConfirmDeleteId(null);
@@ -65,7 +66,7 @@ export const DriveFileManagerModal: React.FC<DriveFileManagerModalProps> = memo(
     try {
       return format(new Date(isoString), language === 'ar' ? 'dd/MM/yyyy HH:mm' : 'MMM dd, yyyy HH:mm');
     } catch (e) {
-      return isoString; // Fallback
+      return isoString;
     }
   };
 
