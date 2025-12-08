@@ -326,7 +326,7 @@ export interface AppStateAndActions {
 
 export interface WelcomeScreenLogicProps {
   showWelcome: boolean;
-  fileInputRef: React.RefObject<HTMLInputElement | null>; // Updated to allow null
+  fileInputRef: React.RefObject<HTMLInputElement | null>;
   handleStartNewTree: () => void;
   onFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
   onTriggerImportFile: () => void;
@@ -385,4 +385,21 @@ export interface AppOrchestrationReturn {
   setIsPresentMode: (v: boolean) => void;
   sidebarOpen: boolean;
   setSidebarOpen: (v: boolean) => void;
+}
+
+// New interfaces for LinkPersonModal sub-components
+export interface CreateNewPersonSectionProps {
+  type: 'parent' | 'spouse' | 'child' | null;
+  gender: Gender | null;
+  familyActions: FamilyActionsProps;
+  onClose: () => void;
+}
+
+export interface SelectExistingPersonSectionProps {
+  people: Record<string, Person>;
+  type: 'parent' | 'spouse' | 'child' | null;
+  gender: Gender | null;
+  currentPersonId: string;
+  familyActions: FamilyActionsProps;
+  onClose: () => void;
 }
