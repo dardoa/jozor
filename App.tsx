@@ -21,6 +21,7 @@ const App: React.FC = () => {
     sidebarOpen, setSidebarOpen, activeModal, setActiveModal, isPresentMode, setIsPresentMode,
     linkModal, setLinkModal, cleanTreeOptionsModal, setCleanTreeOptionsModal,
     googleSyncChoiceModal, setGoogleSyncChoiceModal, // New GoogleSyncChoiceModal state
+    driveFileManagerModal, setDriveFileManagerModal, // New DriveFileManagerModal state
     handleOpenLinkModal, handleOpenModal, onOpenCleanTreeOptions,
     
     // Grouped Props
@@ -36,6 +37,16 @@ const App: React.FC = () => {
     onTriggerImportFile,
     onLoadCloudData, // Destructure onLoadCloudData
     onSaveNewCloudFile, // Destructure onSaveNewCloudFile
+    // New Drive file management props
+    driveFiles,
+    currentActiveDriveFileId,
+    handleLoadDriveFile,
+    handleSaveAsNewDriveFile,
+    handleOverwriteExistingDriveFile,
+    handleDeleteDriveFile,
+    isSavingDriveFile,
+    isDeletingDriveFile,
+    isListingDriveFiles,
   } = useAppOrchestration();
 
   // Centralized application of theme class, dark mode class, and language attributes to the html element
@@ -135,6 +146,7 @@ const App: React.FC = () => {
                     linkModal={linkModal} setLinkModal={setLinkModal}
                     cleanTreeOptionsModal={cleanTreeOptionsModal} setCleanTreeOptionsModal={setCleanTreeOptionsModal}
                     googleSyncChoiceModal={googleSyncChoiceModal} setGoogleSyncChoiceModal={setGoogleSyncChoiceModal} // Pass new modal state
+                    driveFileManagerModal={driveFileManagerModal} setDriveFileManagerModal={setDriveFileManagerModal} // Pass new modal state
                     people={people} 
                     focusId={focusId} setFocusId={setFocusId} activePerson={activePerson}
                     user={auth.user}
@@ -144,6 +156,16 @@ const App: React.FC = () => {
                     onTriggerImportFile={onTriggerImportFile}
                     onLoadCloudData={onLoadCloudData} // Pass to ModalManager
                     onSaveNewCloudFile={onSaveNewCloudFile} // Pass to ModalManager
+                    // New Drive file management props
+                    driveFiles={driveFiles}
+                    currentActiveDriveFileId={currentActiveDriveFileId}
+                    handleLoadDriveFile={handleLoadDriveFile}
+                    handleSaveAsNewDriveFile={handleSaveAsNewDriveFile}
+                    handleOverwriteExistingDriveFile={handleOverwriteExistingDriveFile}
+                    handleDeleteDriveFile={handleDeleteDriveFile}
+                    isSavingDriveFile={isSavingDriveFile}
+                    isDeletingDriveFile={isDeletingDriveFile}
+                    isListingDriveFiles={isListingDriveFiles}
                 />
             </div>
           </>

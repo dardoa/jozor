@@ -11,6 +11,8 @@ interface ModalManagerContainerProps {
   setCleanTreeOptionsModal: (val: { isOpen: boolean }) => void;
   googleSyncChoiceModal: { isOpen: boolean; driveFileId: string | null; }; // New prop
   setGoogleSyncChoiceModal: (val: { isOpen: boolean; driveFileId: string | null; }) => void; // New prop setter
+  driveFileManagerModal: { isOpen: boolean }; // New prop
+  setDriveFileManagerModal: (val: { isOpen: boolean }) => void; // New prop setter
   people: Record<string, Person>;
   focusId: string;
   setFocusId: (id: string) => void;
@@ -22,6 +24,16 @@ interface ModalManagerContainerProps {
   onTriggerImportFile: () => void;
   onLoadCloudData: (fileId: string) => Promise<void>; // New prop
   onSaveNewCloudFile: () => Promise<void>; // New prop
+  // New props for DriveFileManagerModal
+  driveFiles: DriveFile[];
+  currentActiveDriveFileId: string | null;
+  handleLoadDriveFile: (fileId: string) => Promise<void>;
+  handleSaveAsNewDriveFile: (fileName: string) => Promise<void>;
+  handleOverwriteExistingDriveFile: (fileId: string) => Promise<void>;
+  handleDeleteDriveFile: (fileId: string) => Promise<void>;
+  isSavingDriveFile: boolean;
+  isDeletingDriveFile: boolean;
+  isListingDriveFiles: boolean;
 }
 
 export const ModalManagerContainer: React.FC<ModalManagerContainerProps> = memo(({
@@ -33,6 +45,8 @@ export const ModalManagerContainer: React.FC<ModalManagerContainerProps> = memo(
   setCleanTreeOptionsModal,
   googleSyncChoiceModal, // Destructure new prop
   setGoogleSyncChoiceModal, // Destructure new prop setter
+  driveFileManagerModal, // Destructure new prop
+  setDriveFileManagerModal, // Destructure new prop setter
   people,
   focusId,
   setFocusId,
@@ -44,6 +58,16 @@ export const ModalManagerContainer: React.FC<ModalManagerContainerProps> = memo(
   onTriggerImportFile,
   onLoadCloudData, // Destructure new prop
   onSaveNewCloudFile, // Destructure new prop
+  // New props for DriveFileManagerModal
+  driveFiles,
+  currentActiveDriveFileId,
+  handleLoadDriveFile,
+  handleSaveAsNewDriveFile,
+  handleOverwriteExistingDriveFile,
+  handleDeleteDriveFile,
+  isSavingDriveFile,
+  isDeletingDriveFile,
+  isListingDriveFiles,
 }) => {
   return (
     <ModalManager
@@ -55,6 +79,8 @@ export const ModalManagerContainer: React.FC<ModalManagerContainerProps> = memo(
       setCleanTreeOptionsModal={setCleanTreeOptionsModal}
       googleSyncChoiceModal={googleSyncChoiceModal} // Pass new prop
       setGoogleSyncChoiceModal={setGoogleSyncChoiceModal} // Pass new prop setter
+      driveFileManagerModal={driveFileManagerModal} // Pass new prop
+      setDriveFileManagerModal={setDriveFileManagerModal} // Pass new prop setter
       people={people}
       focusId={focusId}
       setFocusId={setFocusId}
@@ -66,6 +92,16 @@ export const ModalManagerContainer: React.FC<ModalManagerContainerProps> = memo(
       onTriggerImportFile={onTriggerImportFile}
       onLoadCloudData={onLoadCloudData} // Pass new prop
       onSaveNewCloudFile={onSaveNewCloudFile} // Pass new prop
+      // New props for DriveFileManagerModal
+      driveFiles={driveFiles}
+      currentActiveDriveFileId={currentActiveDriveFileId}
+      handleLoadDriveFile={handleLoadDriveFile}
+      handleSaveAsNewDriveFile={handleSaveAsNewDriveFile}
+      handleOverwriteExistingDriveFile={handleOverwriteExistingDriveFile}
+      handleDeleteDriveFile={handleDeleteDriveFile}
+      isSavingDriveFile={isSavingDriveFile}
+      isDeletingDriveFile={isDeletingDriveFile}
+      isListingDriveFiles={isListingDriveFiles}
     />
   );
 });

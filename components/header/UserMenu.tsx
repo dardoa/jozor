@@ -1,13 +1,13 @@
 import React, { memo } from 'react';
 import { UserProfile, UserMenuProps } from '../../types';
 import { 
-  Cloud, LogOut, AlertCircle
-} from 'lucide-react';
+  Cloud, LogOut, AlertCircle, HardDrive
+} from 'lucide-react'; // Import HardDrive icon
 import { DropdownContent, DropdownMenuItem, DropdownMenuDivider } from '../ui/DropdownMenu';
 import { useTranslation } from '../../context/TranslationContext';
 
 export const UserMenu = memo(({
-    user, isDemoMode, onLogout, onClose
+    user, isDemoMode, onLogout, onClose, onOpenDriveFileManager // Destructure new prop
 }: UserMenuProps) => {
     const { t } = useTranslation();
 
@@ -24,6 +24,15 @@ export const UserMenu = memo(({
                     {isDemoMode ? t.demoMode : t.synced}
                  </div>
             </div>
+
+            <DropdownMenuDivider />
+
+            {/* New: Manage Drive Files button */}
+            <DropdownMenuItem 
+                onClick={onOpenDriveFileManager}
+                icon={<HardDrive className="w-4 h-4"/>}
+                label={t.manageDriveFiles}
+            />
 
             <DropdownMenuDivider />
 

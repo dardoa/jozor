@@ -159,6 +159,7 @@ export interface AuthProps {
   isSyncing: boolean; // Added isSyncing
   onLogin: () => Promise<void>;
   onLogout: () => Promise<void>;
+  onOpenDriveFileManager: () => void; // New: To open the Drive file manager
 }
 
 export interface ViewSettingsProps {
@@ -223,6 +224,7 @@ export interface UserMenuProps {
     isDemoMode: boolean;
     onLogout: () => void;
     onClose?: () => void; // This onClose will be passed from Dropdown
+    onOpenDriveFileManager: () => void; // New: To open the Drive file manager
 }
 
 export interface ExportMenuProps {
@@ -254,6 +256,28 @@ export interface GoogleSyncChoiceModalProps {
   driveFileId: string | null; // Added driveFileId
 }
 
+// New interface for DriveFile
+export interface DriveFile {
+  id: string;
+  name: string;
+  modifiedTime: string; // ISO string
+}
+
+// New interface for DriveFileManagerModal
+export interface DriveFileManagerModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  files: DriveFile[]; // List of Jozor files in Drive
+  currentActiveFileId: string | null; // The file currently loaded in the app
+  onLoadFile: (fileId: string) => Promise<void>;
+  onSaveAsNewFile: (fileName: string) => Promise<void>;
+  onOverwriteExistingFile: (fileId: string) => Promise<void>;
+  onDeleteFile: (fileId: string) => Promise<void>;
+  isSaving: boolean; // To indicate if a save operation is in progress
+  isDeleting: boolean; // To indicate if a delete operation is in progress
+  isListing: boolean; // To indicate if files are being listed
+}
+
 export interface ModalManagerProps { // Updated ModalManagerProps
     activeModal: 'none' | 'calculator' | 'stats' | 'chat' | 'consistency' | 'timeline' | 'share' | 'story' | 'map';
     setActiveModal: (m: any) => void;
@@ -263,6 +287,8 @@ export interface ModalManagerProps { // Updated ModalManagerProps
     setCleanTreeOptionsModal: (val: { isOpen: boolean }) => void; // New prop setter
     googleSyncChoiceModal: { isOpen: boolean; driveFileId: string | null; }; // New prop for GoogleSyncChoiceModal
     setGoogleSyncChoiceModal: (val: { isOpen: boolean; driveFileId: string | null; }) => void; // New prop setter
+    driveFileManagerModal: { isOpen: boolean }; // New prop for DriveFileManagerModal
+    setDriveFileManagerModal: (val: { isOpen: boolean }) => void; // New prop setter
     people: Record<string, Person>;
     language: Language;
     focusId: string;
@@ -274,6 +300,16 @@ export interface ModalManagerProps { // Updated ModalManagerProps
     onTriggerImportFile: () => void; // Pass to CleanTreeOptionsModal
     onLoadCloudData: (fileId: string) => Promise<void>; // Pass to GoogleSyncChoiceModal
     onSaveNewCloudFile: () => Promise<void>; // Pass to GoogleSyncChoiceModal
+    // New props for DriveFileManagerModal
+    driveFiles: DriveFile[];
+    currentActiveDriveFileId: string | null;
+    handleLoadDriveFile: (fileId: string) => Promise<void>;
+    handleSaveAsNewDriveFile: (fileName: string) => Promise<void>;
+    handleOverwriteExistingDriveFile: (fileId: string) => Promise<void>;
+    handleDeleteDriveFile: (fileId: string) => Promise<void>;
+    isSavingDriveFile: boolean;
+    isDeletingDriveFile: boolean;
+    isListingDriveFiles: boolean;
 }
 
 // Define HeaderProps directly here

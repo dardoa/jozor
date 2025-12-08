@@ -1,12 +1,14 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { UserProfile, Person } from '../types';
+import { UserProfile, Person, DriveFile } from '../types';
 import { 
     initializeGoogleApi, 
     loginToGoogle, 
     logoutFromGoogle, 
     findAppFile, 
     loadFromDrive, 
-    saveToDrive 
+    saveToDrive,
+    listJozorFiles, // Import new function
+    deleteDriveFile, // Import new function
 } from '../services/googleService';
 import { showSuccess, showError } from '../utils/toast'; // Import toast utilities
 
@@ -17,10 +19,14 @@ export const useGoogleSync = (
     onCloseGoogleSyncChoice: () => void,
 ) => {
     const [user, setUser] = useState<UserProfile | null>(null);
-    const [driveFileId, setDriveFileId] = useState<string | null>(null); // This will store the ID of the *current* file
+    const [currentActiveDriveFileId, setCurrentActiveDriveFileId] = useState<string | null>(null); // Renamed for clarity
     const [isSyncing, setIsSyncing] = useState(false);
     const [isInitialized, setIsInitialized] = useState(false);
     const [isDemoMode, setIsDemoMode] = useState(false);
+    const [driveFiles, setDriveFiles] = useState<DriveFile[]>([]); // New state for listing files
+    const [isListingDriveFiles, setIsListingDriveFiles] = useState(false); // New state for listing status
+    const [isSavingDriveFile, setIsSavingDriveFile] = useState(false); // New state for saving status
+    const [isDeletingDriveFile, setIsDeletingDriveFile] = useState(false); // New state for deleting status
 
     // Ref to track if a save is already in progress to prevent multiple simultaneous saves
     const saveInProgressRef = useRef(false);
@@ -49,12 +55,13 @@ export const useGoogleSync = (
             saveInProgressRef.current = true; // Mark save as in progress
 
             try {
-                // saveToDrive will create a new file if driveFileId is null, or update existing
-                const newOrExistingFileId = await saveToDrive(people, driveFileId);
-                if (newOrExistingFileId !== driveFileId) {
-                    setDriveFileId(newOrExistingFileId); // Update state if a new file was created
+                // saveToDrive will create a new file if currentActiveDriveFileId is null, or update existing
+                const newOrExistingFileId = await saveToDrive(people, currentActiveDriveFileId);
+                if (newOrExistingFileId !== currentActiveDriveFileId) {
+                    setCurrentActiveDriveFileId(newOrExistingFileId); // Update state if a new file was created
                 }
                 showSuccess("Successfully synced with Google Drive!");
+                refreshDriveFiles(); // Refresh file list after auto-save
             } catch (e) {
                 console.error("Auto-save failed", e);
                 showError("Failed to sync with Google Drive.");
@@ -65,7 +72,7 @@ export const useGoogleSync = (
         }, 3000); // Debounce save every 3 seconds
 
         return () => clearTimeout(timer);
-    }, [people, user, isDemoMode, driveFileId, isInitialized]); // Add isInitialized to dependencies
+    }, [people, user, isDemoMode, currentActiveDriveFileId, isInitialized]); // Add isInitialized to dependencies
 
     // 3. Login Flow
     const handleLogin = useCallback(async (): Promise<boolean> => {
@@ -75,6 +82,9 @@ export const useGoogleSync = (
             setUser(u);
             setIsDemoMode(false);
 
+            // After login, refresh the list of files
+            await refreshDriveFiles();
+
             try {
                 const existingId = await findAppFile();
                 if (existingId) {
@@ -82,8 +92,8 @@ export const useGoogleSync = (
                     onOpenGoogleSyncChoice(existingId); // User will choose to load or save new
                 } else {
                     console.log("No existing file found. Will create on first auto-save.");
-                    // If no file exists, set driveFileId to null so the next auto-save creates one.
-                    setDriveFileId(null); 
+                    // If no file exists, set currentActiveDriveFileId to null so the next auto-save creates one.
+                    setCurrentActiveDriveFileId(null); 
                 }
             } catch (driveErr) {
                 console.error("Drive Setup Error:", driveErr);
@@ -103,13 +113,14 @@ export const useGoogleSync = (
     const handleLogout = useCallback(async () => {
         try { logoutFromGoogle(); } catch(e) {}
         setUser(null);
-        setDriveFileId(null); // Clear file ID on logout
+        setCurrentActiveDriveFileId(null); // Clear file ID on logout
         setIsDemoMode(false);
+        setDriveFiles([]); // Clear drive files on logout
         showSuccess("Logged out successfully.");
     }, []);
 
     const stopSyncing = useCallback(() => {
-        setDriveFileId(null); // Stop syncing by clearing the file ID
+        setCurrentActiveDriveFileId(null); // Stop syncing by clearing the file ID
     }, []);
 
     // Functions called by GoogleSyncChoiceModal
@@ -118,7 +129,7 @@ export const useGoogleSync = (
         try {
             const cloudData = await loadFromDrive(fileId);
             setPeople(cloudData);
-            setDriveFileId(fileId); // Set the file ID of the loaded file
+            setCurrentActiveDriveFileId(fileId); // Set the file ID of the loaded file
             showSuccess("File loaded successfully from Google Drive.");
         } catch (e) {
             console.error("Failed to load file from Google Drive.", e);
@@ -132,10 +143,11 @@ export const useGoogleSync = (
     const onSaveNewCloudFile = useCallback(async () => {
         setIsSyncing(true);
         try {
-            // Explicitly create a NEW file, even if driveFileId already exists
+            // Explicitly create a NEW file, even if currentActiveDriveFileId already exists
             const newId = await saveToDrive(people, null);
-            setDriveFileId(newId); // Set the new file ID
+            setCurrentActiveDriveFileId(newId); // Set the new file ID
             showSuccess("Current tree saved as a new file to Google Drive successfully!");
+            refreshDriveFiles(); // Refresh file list after saving
         } catch (e) {
             console.error("Failed to save new file to Google Drive.", e);
             showError("Failed to save new file to Google Drive.");
@@ -145,6 +157,85 @@ export const useGoogleSync = (
         }
     }, [people, onCloseGoogleSyncChoice]);
 
+    // --- New Drive File Management Functions ---
+    const refreshDriveFiles = useCallback(async () => {
+        if (!user) {
+            setDriveFiles([]);
+            return;
+        }
+        setIsListingDriveFiles(true);
+        try {
+            const files = await listJozorFiles();
+            setDriveFiles(files);
+        } catch (e) {
+            console.error("Failed to list Drive files", e);
+            showError("Failed to list files from Google Drive.");
+        } finally {
+            setIsListingDriveFiles(false);
+        }
+    }, [user]);
+
+    const handleLoadDriveFile = useCallback(async (fileId: string) => {
+        setIsSyncing(true);
+        try {
+            const cloudData = await loadFromDrive(fileId);
+            setPeople(cloudData);
+            setCurrentActiveDriveFileId(fileId);
+            showSuccess("File loaded successfully from Google Drive.");
+        } catch (e) {
+            console.error("Failed to load file from Google Drive.", e);
+            showError("Failed to load file from Google Drive.");
+        } finally {
+            setIsSyncing(false);
+        }
+    }, [setPeople]);
+
+    const handleSaveAsNewDriveFile = useCallback(async (fileName: string) => {
+        setIsSavingDriveFile(true);
+        try {
+            const newId = await saveToDrive(people, null, fileName);
+            setCurrentActiveDriveFileId(newId);
+            showSuccess(`Tree saved as '${fileName}' to Google Drive!`);
+            await refreshDriveFiles();
+        } catch (e) {
+            console.error("Failed to save as new file to Google Drive.", e);
+            showError("Failed to save as new file to Google Drive.");
+        } finally {
+            setIsSavingDriveFile(false);
+        }
+    }, [people, refreshDriveFiles]);
+
+    const handleOverwriteExistingDriveFile = useCallback(async (fileId: string) => {
+        setIsSavingDriveFile(true);
+        try {
+            await saveToDrive(people, fileId);
+            setCurrentActiveDriveFileId(fileId);
+            showSuccess("File overwritten successfully on Google Drive!");
+            await refreshDriveFiles();
+        } catch (e) {
+            console.error("Failed to overwrite file on Google Drive.", e);
+            showError("Failed to overwrite file on Google Drive.");
+        } finally {
+            setIsSavingDriveFile(false);
+        }
+    }, [people, refreshDriveFiles]);
+
+    const handleDeleteDriveFile = useCallback(async (fileId: string) => {
+        setIsDeletingDriveFile(true);
+        try {
+            await deleteDriveFile(fileId);
+            showSuccess("File deleted from Google Drive.");
+            if (currentActiveDriveFileId === fileId) {
+                setCurrentActiveDriveFileId(null); // If active file is deleted, clear it
+            }
+            await refreshDriveFiles();
+        } catch (e) {
+            console.error("Failed to delete file from Google Drive.", e);
+            showError("Failed to delete file from Google Drive.");
+        } finally {
+            setIsDeletingDriveFile(false);
+        }
+    }, [currentActiveDriveFileId, refreshDriveFiles]);
 
     return {
         user,
@@ -155,5 +246,16 @@ export const useGoogleSync = (
         stopSyncing,
         onLoadCloudData,
         onSaveNewCloudFile,
+        // New exports for Drive File Manager
+        driveFiles,
+        currentActiveDriveFileId,
+        refreshDriveFiles,
+        handleLoadDriveFile,
+        handleSaveAsNewDriveFile,
+        handleOverwriteExistingDriveFile,
+        handleDeleteDriveFile,
+        isSavingDriveFile,
+        isDeletingDriveFile,
+        isListingDriveFiles,
     };
 };

@@ -1,5 +1,5 @@
 import { GOOGLE_CLIENT_ID } from '../constants';
-import { UserProfile, Person } from '../types';
+import { UserProfile, Person, DriveFile } from '../types';
 
 // Types for global google objects
 declare global {
@@ -12,7 +12,7 @@ declare global {
 // Updated scopes to allow picking files, storing in appDataFolder, and fetching user profile/email
 const SCOPES = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email';
 const DISCOVERY_DOCS = ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest', 'https://www.googleapis.com/discovery/v1/apis/oauth2/v2/rest']; // Added oauth2 discovery doc
-const FILE_NAME = 'jozor_family_tree.json';
+const FILE_NAME = 'jozor_family_tree.json'; // Default file name
 
 // Scripts to load dynamically
 const SCRIPTS = {
@@ -226,6 +226,37 @@ export const findAppFile = async (): Promise<string | null> => {
     }
 };
 
+export const listJozorFiles = async (): Promise<DriveFile[]> => {
+    if (!isInitialized) throw new Error("Google API not initialized");
+    try {
+        const response = await window.gapi.client.drive.files.list({
+            q: `mimeType='application/json' and name contains 'jozor' and trashed = false`,
+            fields: 'files(id, name, modifiedTime)',
+            spaces: 'appDataFolder',
+        });
+        return response.result.files.map((f: any) => ({
+            id: f.id,
+            name: f.name,
+            modifiedTime: f.modifiedTime,
+        }));
+    } catch (e) {
+        console.error("Error listing Jozor files", e);
+        throw e;
+    }
+};
+
+export const deleteDriveFile = async (fileId: string): Promise<void> => {
+    if (!isInitialized) throw new Error("Google API not initialized");
+    try {
+        await window.gapi.client.drive.files.delete({
+            fileId: fileId,
+        });
+    } catch (e) {
+        console.error("Error deleting file", e);
+        throw e;
+    }
+};
+
 export const loadFromDrive = async (fileId: string): Promise<Record<string, Person>> => {
     if (!isInitialized) throw new Error("Google API not initialized");
     try {
@@ -241,14 +272,14 @@ export const loadFromDrive = async (fileId: string): Promise<Record<string, Pers
     }
 };
 
-export const saveToDrive = async (people: Record<string, Person>, existingFileId: string | null): Promise<string> => {
+export const saveToDrive = async (people: Record<string, Person>, existingFileId: string | null, customFileName?: string): Promise<string> => {
     if (!isInitialized) throw new Error("Google API not initialized");
     
-    console.log(`saveToDrive called. existingFileId: ${existingFileId}`); // Added log
+    console.log(`saveToDrive called. existingFileId: ${existingFileId}, customFileName: ${customFileName}`); // Added log
 
     const content = JSON.stringify(people, null, 2);
     const metadata = {
-        name: FILE_NAME,
+        name: customFileName || FILE_NAME, // Use customFileName if provided, otherwise default
         mimeType: 'application/json',
         parents: ['appDataFolder'] // Ensure it's always saved to appDataFolder
     };
@@ -266,7 +297,7 @@ export const saveToDrive = async (people: Record<string, Person>, existingFileId
             return existingFileId;
         } else {
             // Create
-            console.log(`Creating new file: ${FILE_NAME}`);
+            console.log(`Creating new file: ${metadata.name}`);
             console.log('Metadata for new file creation:', metadata); // Added log
             const response = await window.gapi.client.drive.files.create({
                 resource: metadata,

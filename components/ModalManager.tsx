@@ -4,6 +4,7 @@ import { LoadingSpinner } from './LoadingSpinner';
 import { LinkPersonModal } from './LinkPersonModal';
 import { CleanTreeOptionsModal } from './CleanTreeOptionsModal';
 import { GoogleSyncChoiceModal } from './GoogleSyncChoiceModal'; // Import new modal
+import { DriveFileManagerModal } from './DriveFileManagerModal'; // Import new modal
 import { useTranslation } from '../context/TranslationContext'; // Import useTranslation
 
 // Lazy Load Modals
@@ -20,6 +21,7 @@ export const ModalManager: React.FC<ModalManagerProps> = ({
     activeModal, setActiveModal, linkModal, setLinkModal,
     cleanTreeOptionsModal, setCleanTreeOptionsModal,
     googleSyncChoiceModal, setGoogleSyncChoiceModal, // Destructure new modal state
+    driveFileManagerModal, setDriveFileManagerModal, // Destructure new modal state
     people, focusId, setFocusId, activePerson,
     user,
     familyActions,
@@ -27,6 +29,16 @@ export const ModalManager: React.FC<ModalManagerProps> = ({
     onTriggerImportFile,
     onLoadCloudData, // Pass to GoogleSyncChoiceModal
     onSaveNewCloudFile, // Pass to GoogleSyncChoiceModal
+    // New props for DriveFileManagerModal
+    driveFiles,
+    currentActiveDriveFileId,
+    handleLoadDriveFile,
+    handleSaveAsNewDriveFile,
+    handleOverwriteExistingDriveFile,
+    handleDeleteDriveFile,
+    isSavingDriveFile,
+    isDeletingDriveFile,
+    isListingDriveFiles,
 }) => {
     const closeModal = () => setActiveModal('none');
     const { language } = useTranslation(); // Get language from context
@@ -57,6 +69,20 @@ export const ModalManager: React.FC<ModalManagerProps> = ({
                 onClose={() => setGoogleSyncChoiceModal({ isOpen: false, driveFileId: null })}
                 onLoadCloud={() => onLoadCloudData(googleSyncChoiceModal.driveFileId!)} // Pass fileId
                 onSaveNewCloud={onSaveNewCloudFile}
+            />
+
+            <DriveFileManagerModal // Render the new modal
+                isOpen={driveFileManagerModal.isOpen}
+                onClose={() => setDriveFileManagerModal({ isOpen: false })}
+                files={driveFiles}
+                currentActiveFileId={currentActiveDriveFileId}
+                onLoadFile={handleLoadDriveFile}
+                onSaveAsNewFile={handleSaveAsNewDriveFile}
+                onOverwriteExistingFile={handleOverwriteExistingDriveFile}
+                onDeleteFile={handleDeleteDriveFile}
+                isSaving={isSavingDriveFile}
+                isDeleting={isDeletingDriveFile}
+                isListing={isListingDriveFiles}
             />
 
             {activeModal === 'calculator' && (

@@ -52,8 +52,20 @@ export const useAppOrchestration = () => {
     setGoogleSyncChoiceModal({ isOpen: false, driveFileId: null });
   }, []);
 
+  // New state for DriveFileManagerModal
+  const [driveFileManagerModal, setDriveFileManagerModal] = useState<{ isOpen: boolean }>({ isOpen: false });
+  const onOpenDriveFileManager = useCallback(() => {
+    setDriveFileManagerModal({ isOpen: true });
+  }, []);
+
   // --- Sync & Auth ---
-  const { user, isSyncing, isDemoMode, handleLogin, handleLogout, stopSyncing, onLoadCloudData, onSaveNewCloudFile } = useGoogleSync(
+  const { 
+    user, isSyncing, isDemoMode, handleLogin, handleLogout, stopSyncing, 
+    onLoadCloudData, onSaveNewCloudFile, // These are for the initial sync choice modal
+    driveFiles, currentActiveDriveFileId, refreshDriveFiles, // New from useGoogleSync
+    handleLoadDriveFile, handleSaveAsNewDriveFile, handleOverwriteExistingDriveFile, handleDeleteDriveFile, // New Drive file actions
+    isSavingDriveFile, isDeletingDriveFile, isListingDriveFiles, // New Drive file statuses
+  } = useGoogleSync(
     people, 
     loadCloudData, // Pass loadCloudData from useFamilyTree
     onOpenGoogleSyncChoice, // Pass the new callback
@@ -121,7 +133,7 @@ export const useAppOrchestration = () => {
   // Grouped props for Header and other components
   const historyControls: HistoryControlsProps = { onUndo: undo, onRedo: redo, canUndo, canRedo };
   const themeLanguage: ThemeLanguageProps = { darkMode, setDarkMode, language, setLanguage };
-  const auth: AuthProps = { user, isDemoMode, isSyncing, onLogin, onLogout };
+  const auth: AuthProps = { user, isDemoMode, isSyncing, onLogin, onLogout, onOpenDriveFileManager }; // Added onOpenDriveFileManager
   const viewSettings: ViewSettingsProps = { treeSettings, setTreeSettings, onPresent: () => setIsPresentMode(true) };
   const toolsActions: ToolsActionsProps = { onOpenModal: handleOpenModal };
   const exportActions: ExportActionsProps = { handleExport };
@@ -145,6 +157,7 @@ export const useAppOrchestration = () => {
     sidebarOpen, setSidebarOpen, activeModal, setActiveModal, isPresentMode, setIsPresentMode,
     linkModal, setLinkModal, cleanTreeOptionsModal, setCleanTreeOptionsModal, // New modal state
     googleSyncChoiceModal, setGoogleSyncChoiceModal, // New GoogleSyncChoiceModal state
+    driveFileManagerModal, setDriveFileManagerModal, // New DriveFileManagerModal state
     handleOpenLinkModal, handleOpenModal, onOpenCleanTreeOptions, // New function
     
     // Grouped Props
@@ -158,7 +171,18 @@ export const useAppOrchestration = () => {
     familyActions,
     startNewTree, // Make startNewTree available
     onTriggerImportFile, // Make onTriggerImportFile available
-    onLoadCloudData, // Pass to ModalManager
-    onSaveNewCloudFile, // Pass to ModalManager
+    onLoadCloudData, // Pass to ModalManager (for initial sync choice)
+    onSaveNewCloudFile, // Pass to ModalManager (for initial sync choice)
+    // New Drive file management props
+    driveFiles,
+    currentActiveDriveFileId,
+    refreshDriveFiles,
+    handleLoadDriveFile,
+    handleSaveAsNewDriveFile,
+    handleOverwriteExistingDriveFile,
+    handleDeleteDriveFile,
+    isSavingDriveFile,
+    isDeletingDriveFile,
+    isListingDriveFiles,
   };
 };
