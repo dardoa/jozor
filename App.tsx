@@ -26,6 +26,7 @@ const App: React.FC = () => {
     setIsPresentMode,
     sidebarOpen,
     setSidebarOpen,
+    auth, // <--- Destructure auth here
   } = useAppOrchestration();
 
   // Centralized application of theme class, dark mode class, and language attributes to the html element
@@ -65,7 +66,7 @@ const App: React.FC = () => {
                     toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
                     historyControls={historyControls}
                     themeLanguage={themeLanguage}
-                    auth={googleSync} // Pass googleSync as auth prop
+                    auth={auth} // <--- Pass auth here
                     viewSettings={viewSettings}
                     toolsActions={toolsActions}
                     exportActions={exportActions}

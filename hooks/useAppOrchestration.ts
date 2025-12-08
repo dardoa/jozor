@@ -3,7 +3,7 @@ import {
   HistoryControlsProps, ThemeLanguageProps, 
   ViewSettingsProps, ToolsActionsProps, ExportActionsProps, SearchProps, 
   FamilyActionsProps, AppStateAndActions, WelcomeScreenLogicProps, 
-  ModalStateAndActions, GoogleSyncStateAndActions, AppOrchestrationReturn, Gender
+  ModalStateAndActions, GoogleSyncStateAndActions, AppOrchestrationReturn, Gender, AuthProps
 } from '../types';
 import { useFamilyTree } from './useFamilyTree';
 import { useGoogleSync } from './useGoogleSync';
@@ -63,32 +63,34 @@ export const useAppOrchestration = (): AppOrchestrationReturn => {
     setDriveFileManagerModal({ isOpen: true });
   }, []);
 
-  // --- Sync & Auth ---
-  const googleSync = useGoogleSync( // Renamed from `const { ... } = useGoogleSync(...)` to `const googleSync = ...`
-    people, 
-    loadCloudData,
-    onOpenGoogleSyncChoice,
-    onCloseGoogleSyncChoice
-  );
-
   // --- UI Preferences ---
   const { language, setLanguage } = useTranslation();
   const { treeSettings, setTreeSettings } = useTreeSettings();
   const { darkMode, setDarkMode } = useThemeSync();
+
+  // --- Welcome Screen Logic (depends on googleSync, so declare googleSync first) ---
+  const {
+    showWelcome, setShowWelcome, fileInputRef,
+    handleStartNewTree, onFileUpload
+  } = useWelcomeScreenLogic({
+    people, startNewTree, stopSyncing: () => googleSync.stopSyncing(), handleImport // Use googleSync.stopSyncing
+  });
+
+  // --- Sync & Auth ---
+  const googleSync = useGoogleSync( 
+    people, 
+    loadCloudData,
+    onOpenGoogleSyncChoice,
+    onCloseGoogleSyncChoice,
+    setShowWelcome, // Pass setShowWelcome here
+    onOpenDriveFileManager // Pass onOpenDriveFileManager here
+  );
 
   const activePerson = people[focusId];
 
   // Calculate canUndo/canRedo
   const canUndo = history.length > 0;
   const canRedo = future.length > 0;
-
-  // --- Welcome Screen Logic ---
-  const {
-    showWelcome, setShowWelcome, fileInputRef,
-    handleStartNewTree, onFileUpload
-  } = useWelcomeScreenLogic({
-    people, startNewTree, stopSyncing: googleSync.stopSyncing, handleImport // Use googleSync.stopSyncing
-  });
 
   // Adjusted onTriggerImportFile to directly trigger file input
   const onTriggerImportFile = useCallback(() => {
@@ -175,5 +177,6 @@ export const useAppOrchestration = (): AppOrchestrationReturn => {
     setIsPresentMode,
     sidebarOpen,
     setSidebarOpen,
+    auth, // <--- Add auth here
   };
 };

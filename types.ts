@@ -326,6 +326,7 @@ export interface AppStateAndActions {
 
 export interface WelcomeScreenLogicProps {
   showWelcome: boolean;
+  // setShowWelcome: (show: boolean) => void; // Removed setShowWelcome
   fileInputRef: React.RefObject<HTMLInputElement | null>;
   handleStartNewTree: () => void;
   onFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
@@ -367,6 +368,7 @@ export interface GoogleSyncStateAndActions {
   isSavingDriveFile: boolean;
   isDeletingDriveFile: boolean;
   isListingDriveFiles: boolean;
+  setShowWelcome: (show: boolean) => void; // New: To dismiss welcome screen
 }
 
 export interface AppOrchestrationReturn {

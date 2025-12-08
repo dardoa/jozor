@@ -17,6 +17,8 @@ export const useGoogleSync = (
     setPeople: (data: Record<string, Person>) => void,
     onOpenGoogleSyncChoice: (fileId: string) => void,
     onCloseGoogleSyncChoice: () => void,
+    setShowWelcome: (show: boolean) => void, // New prop: to dismiss welcome screen
+    onOpenDriveFileManager: () => void // New prop: to open the Drive file manager
 ) => {
     const [user, setUser] = useState<UserProfile | null>(null);
     const [currentActiveDriveFileId, setCurrentActiveDriveFileId] = useState<string | null>(null);
@@ -99,6 +101,7 @@ export const useGoogleSync = (
             const u = await loginToGoogle();
             setUser(u);
             setIsDemoMode(false);
+            setShowWelcome(false); // Dismiss welcome screen on successful login
 
             // After login, refresh the list of files
             await refreshDriveFiles();
@@ -127,7 +130,7 @@ export const useGoogleSync = (
         } finally {
             setIsSyncing(false);
         }
-    }, [onOpenGoogleSyncChoice, refreshDriveFiles]); // refreshDriveFiles is now defined
+    }, [onOpenGoogleSyncChoice, refreshDriveFiles, setShowWelcome]); // Added setShowWelcome to dependencies
 
     const onLogout = useCallback(async (): Promise<void> => { // Renamed from handleLogout, changed return type to void
         try { logoutFromGoogle(); } catch(e) {}
@@ -258,5 +261,7 @@ export const useGoogleSync = (
         isSavingDriveFile,
         isDeletingDriveFile,
         isListingDriveFiles,
+        setShowWelcome, // Export setShowWelcome
+        onOpenDriveFileManager, // Export onOpenDriveFileManager
     };
 };
