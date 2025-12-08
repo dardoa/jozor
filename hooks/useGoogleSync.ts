@@ -4,7 +4,7 @@ import {
     initializeGoogleApi, 
     loginToGoogle, 
     logoutFromGoogle, 
-    findLatestJozorFile, 
+    findLatestJozorFile, // This now searches for the specific FILE_NAME
     loadFromDrive, 
     saveToDrive,
     listJozorFiles, 
@@ -31,7 +31,7 @@ export const useGoogleSync = (
     // Ref to track if a save is already in progress to prevent multiple simultaneous saves
     const saveInProgressRef = useRef(false);
 
-    // 1. Init Google API (remains the same, it uses the updated SCOPES from googleService.ts)
+    // 1. Init Google API
     useEffect(() => {
         let mounted = true;
         initializeGoogleApi()
@@ -51,7 +51,6 @@ export const useGoogleSync = (
         }
         setIsListingDriveFiles(true);
         try {
-            // listJozorFiles now lists files directly in My Drive that the app has access to
             const files = await listJozorFiles();
             setDriveFiles(files);
         } catch (e) {
@@ -60,9 +59,9 @@ export const useGoogleSync = (
         } finally {
             setIsListingDriveFiles(false);
         }
-    }, [user]);
+    }, [user]); // Depends on 'user'
 
-    // 2. Auto-save/Update Logic (remains the same, it calls saveToDrive which is updated)
+    // 2. Auto-save/Update Logic
     useEffect(() => {
         // Only auto-save if user is logged in, not in demo mode, and API is initialized
         if (!user || isDemoMode || !isInitialized) return;
@@ -76,7 +75,7 @@ export const useGoogleSync = (
             try {
                 // saveToDrive will create a new file if currentActiveDriveFileId is null, or update existing
                 const newOrExistingFileId = await saveToDrive(people, currentActiveDriveFileId);
-                if (newOrExistingFileId !== currentActiveDriveFileId) { // Corrected typo here
+                if (newOrExistingFileId !== currentActiveDriveFileId) {
                     setCurrentActiveDriveFileId(newOrExistingFileId); // Update state if a new file was created
                 }
                 showSuccess("Successfully synced with Google Drive!");
@@ -91,7 +90,7 @@ export const useGoogleSync = (
         }, 3000); // Debounce save every 3 seconds
 
         return () => clearTimeout(timer);
-    }, [people, user, isDemoMode, currentActiveDriveFileId, isInitialized, refreshDriveFiles]);
+    }, [people, user, isDemoMode, currentActiveDriveFileId, isInitialized, refreshDriveFiles]); // Added refreshDriveFiles to dependencies
 
     // 3. Login Flow
     const handleLogin = useCallback(async (): Promise<boolean> => {
@@ -105,15 +104,16 @@ export const useGoogleSync = (
             await refreshDriveFiles();
 
             try {
-                // findLatestJozorFile now searches for the specific FILE_NAME in My Drive
-                const existingFileId = await findLatestJozorFile();
+                // Now find the specific FILE_NAME (FamilyTree.json)
+                const existingFileId = await findLatestJozorFile(); // This now searches for the specific FILE_NAME
                 if (existingFileId) {
                     console.log("Found existing FamilyTree.json file, prompting user for action...");
-                    setCurrentActiveDriveFileId(existingFileId);
-                    onOpenGoogleSyncChoice(existingFileId);
+                    setCurrentActiveDriveFileId(existingFileId); // Set it as the active file
+                    onOpenGoogleSyncChoice(existingFileId); // User will choose to load or save new
                 } else {
                     console.log("No existing FamilyTree.json file found. Will create on first auto-save.");
-                    setCurrentActiveDriveFileId(null);
+                    // If no file exists, set currentActiveDriveFileId to null so the next auto-save creates one.
+                    setCurrentActiveDriveFileId(null); 
                 }
             } catch (driveErr) {
                 console.error("Drive Setup Error:", driveErr);
@@ -128,7 +128,7 @@ export const useGoogleSync = (
         } finally {
             setIsSyncing(false);
         }
-    }, [onOpenGoogleSyncChoice, refreshDriveFiles]);
+    }, [onOpenGoogleSyncChoice, refreshDriveFiles]); // refreshDriveFiles is now defined
 
     const handleLogout = useCallback(async () => {
         try { logoutFromGoogle(); } catch(e) {}
