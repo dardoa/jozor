@@ -279,7 +279,7 @@ export const saveToDrive = async (people: Record<string, Person>, existingFileId
     if (!isInitialized) throw new Error("Google API not initialized");
     
     const folderId = await getAppFolderId(); // This will now return 'appDataFolder'
-    let fileNameToUse = customFileName || FILE_NAME; // Changed to 'let'
+    let fileNameToUse = customFileName || FILE_NAME; 
     
     // Ensure fileNameToUse is never empty or 'Untitled'
     if (!fileNameToUse || fileNameToUse.toLowerCase() === 'untitled') {
@@ -296,31 +296,24 @@ export const saveToDrive = async (people: Record<string, Person>, existingFileId
         parents: [folderId] // Save to the 'appDataFolder'
     };
 
-    console.log("saveToDrive: Metadata for API call:", metadata); // Added log
-
     try {
-        let targetFileId = existingFileId; // Start with the provided hint ID
+        let targetFileId: string | null = null;
 
-        // If no explicit file ID was provided (e.g., auto-save or 'Save as New' without targeting a specific file)
-        if (!targetFileId) {
-            // Query Drive for a file with the exact name in the appDataFolder
-            console.log(`saveToDrive: No explicit file ID. Searching for file named '${fileNameToUse}' in appDataFolder.`);
-            const searchResponse = await window.gapi.client.drive.files.list({
-                q: `mimeType='application/json' and name='${fileNameToUse}' and trashed = false`,
-                fields: 'files(id, name)',
-                spaces: folderId,
-                pageSize: 1
-            });
-            const foundFiles = searchResponse.result.files;
+        // --- Pre-Save Check: Always query Google Drive for a file with that exact name ---
+        console.log(`saveToDrive: Performing pre-save check for file named '${fileNameToUse}' in appDataFolder.`);
+        const searchResponse = await window.gapi.client.drive.files.list({
+            q: `mimeType='application/json' and name='${fileNameToUse}' and trashed = false`,
+            fields: 'files(id, name)',
+            spaces: folderId,
+            pageSize: 1
+        });
+        const foundFiles = searchResponse.result.files;
 
-            if (foundFiles && foundFiles.length > 0) {
-                targetFileId = foundFiles[0].id;
-                console.log(`File ID found: ${targetFileId}. Updating existing file.`);
-            } else {
-                console.log('No file found, creating new one.');
-            }
+        if (foundFiles && foundFiles.length > 0) {
+            targetFileId = foundFiles[0].id;
+            console.log(`File ID found: ${targetFileId}. Updating existing file.`);
         } else {
-            console.log(`saveToDrive: Explicit file ID provided: ${targetFileId}. Attempting to update.`);
+            console.log('No file found by name, creating new one.');
         }
 
         if (targetFileId) {
