@@ -296,7 +296,7 @@ export const listJozorFiles = async (): Promise<DriveFile[]> => {
     try {
         const folderId = await getAppFolderId(); // Ensure folder exists
         const response = await window.gapi.client.drive.files.list({
-            q: `mimeType='application/json' and name contains 'jozor' and '${folderId}' in parents and trashed = false`,
+            q: `mimeType='application/json' and name contains 'jozor' and trashed = false and '${folderId}' in parents`,
             fields: 'files(id, name, modifiedTime)',
             spaces: 'drive', // Search in 'drive' space for visible files
         });
@@ -369,7 +369,12 @@ export const saveToDrive = async (people: Record<string, Person>, existingFileId
                 resource: metadata,
                 media: {
                     mimeType: 'application/json',
-                    body: content
+                    body: content,
+                    // Explicitly set the name in the media body as well
+                    // This is a workaround for a potential API quirk where 'name' from resource might be ignored
+                    // when uploadType is 'multipart' and the file is being created.
+                    // Note: This is not standard practice for Drive API, but for debugging 'Untitled' issue.
+                    name: fileNameToUse 
                 },
                 fields: 'id, name'
             });
