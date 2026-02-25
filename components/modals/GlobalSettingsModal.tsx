@@ -6,7 +6,7 @@ import {
 import toast from 'react-hot-toast';
 import { useTranslation } from '../../context/TranslationContext';
 import { useAppStore } from '../../store/useAppStore';
-import { SupabaseStorageService } from '../../services/SupabaseStorageService';
+import { SupabaseStorageService } from '../../services/supabaseStorageService';
 import { updateUserProfile } from '../../services/supabaseTreeService';
 import { Button } from '../ui/Button';
 import { FormField } from '../ui/FormField';
