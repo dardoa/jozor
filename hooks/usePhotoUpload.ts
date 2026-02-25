@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { useTreeActions } from './useTreeActions';
-import { SupabaseStorageService } from '../services/SupabaseStorageService';
+import { SupabaseStorageService } from '../services/supabaseStorageService';
 import { showError, showSuccess } from '../utils/toast';
 
 interface UsePhotoUploadReturn {
