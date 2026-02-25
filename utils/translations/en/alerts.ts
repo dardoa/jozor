@@ -15,4 +15,6 @@ export const alerts = {
   gedcomImportError: 'Failed to import GEDCOM file.',
   jozorImportSuccess: 'Jozor file imported successfully!',
   jozorImportError: 'Failed to import Jozor file.',
+  avatarUpdateSuccess: 'Profile picture updated! It’s now visible across the tree.',
+  preferencesSaveSuccess: 'Preferences saved successfully.',
 };

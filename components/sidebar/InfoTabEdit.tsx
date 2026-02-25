@@ -1,4 +1,4 @@
-import React, { memo, useState } from 'react';
+import { memo, useState } from 'react';
 import { Person, FamilyActionsProps } from '../../types';
 import { PersonIdentityEdit } from './PersonIdentityEdit';
 import { PersonStatusEdit } from './PersonStatusEdit';
@@ -16,47 +16,46 @@ interface InfoTabEditProps {
   familyActions: FamilyActionsProps;
 }
 
-export const InfoTabEdit: React.FC<InfoTabEditProps> = memo(({
-  person, people, onUpdate, onSelect,
-  familyActions
-}) => {
-  const { t } = useTranslation();
-  const [showFamilyRelationships, setShowFamilyRelationships] = useState(true);
+export const InfoTabEdit = memo<InfoTabEditProps>(
+  ({ person, people, onUpdate, onSelect, familyActions }) => {
+    const { t } = useTranslation();
+    const [showFamilyRelationships, setShowFamilyRelationships] = useState(true);
 
-  return (
-    <div className="flex flex-col gap-4 animate-in fade-in duration-200">
-      <PersonIdentityEdit
-        person={person}
-        onUpdate={onUpdate}
-      />
+    return (
+      <div className='flex flex-col gap-4 animate-in fade-in duration-200'>
+        <PersonIdentityEdit person={person} onUpdate={onUpdate} />
 
-      <PersonStatusEdit
-        person={person}
-        onUpdate={onUpdate}
-      />
+        <PersonStatusEdit person={person} onUpdate={onUpdate} />
 
-      <PersonBirthDeathEdit
-        person={person}
-        onUpdate={onUpdate}
-      />
-      
-      <Card title={t.familyRelationships}>
-        <button
-          onClick={() => setShowFamilyRelationships(!showFamilyRelationships)}
-          className="w-full flex items-center justify-between text-xs font-medium text-stone-600 dark:text-stone-400 hover:text-teal-600 dark:hover:text-teal-400 py-1 px-0.5 -mx-0.5 rounded-md transition-colors"
-        >
-          <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showFamilyRelationships ? 'rotate-180' : ''}`} />
-        </button>
+        <PersonBirthDeathEdit person={person} onUpdate={onUpdate} />
 
-        {showFamilyRelationships && (
-          <div className="mt-2 animate-in fade-in slide-in-from-top-1 duration-200">
-            <FamilyRelationshipsSection
-              person={person} people={people} isEditing={true} onUpdate={onUpdate} onSelect={onSelect}
-              familyActions={familyActions}
+        <Card title={t.familyRelationships}>
+          <button
+            onClick={() => setShowFamilyRelationships(!showFamilyRelationships)}
+            className='w-full flex items-center justify-between text-xs font-medium text-[var(--text-muted)] hover:text-[var(--primary-600)] py-1 px-0.5 -mx-0.5 rounded-md transition-colors'
+            aria-label={
+              showFamilyRelationships ? 'Hide family relationships' : 'Show family relationships'
+            }
+          >
+            <ChevronDown
+              className={`w-3.5 h-3.5 transition-transform ${showFamilyRelationships ? 'rotate-180' : ''}`}
             />
-          </div>
-        )}
-      </Card>
-    </div>
-  );
-});
+          </button>
+
+          {showFamilyRelationships && (
+            <div className='mt-2 animate-in fade-in slide-in-from-top-1 duration-200'>
+              <FamilyRelationshipsSection
+                person={person}
+                people={people}
+                isEditing={true}
+                onUpdate={onUpdate}
+                onSelect={onSelect}
+                familyActions={familyActions}
+              />
+            </div>
+          )}
+        </Card>
+      </div>
+    );
+  }
+);

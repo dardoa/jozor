@@ -15,10 +15,14 @@ export const general = {
   readOnly: 'Read-Only',
   quickAdd: 'Quick Add',
   cleanTree: 'Clean Tree', // New translation
-  cleanTreeConfirm: 'Are you sure you want to clear the entire tree and start a new one? All unsaved data will be lost.', // Old translation, will be replaced by modal
+  cleanTreeConfirm:
+    'Are you sure you want to clear the entire tree and start a new one? All unsaved data will be lost.', // Old translation, will be replaced by modal
   cleanTreeOptionsTitle: 'Start a New Family Tree', // New translation
   cleanTreeOptionsSubtitle: 'Choose how you want to begin your new family tree.', // New translation
   startNewTreeOption: 'Start a Blank Tree', // New translation
   importFileOption: 'Import from File', // New translation
   dataLossWarning: 'Warning: All current unsaved data will be lost if you proceed.', // New translation
+  close: 'Close',
+  vertical: 'Vertical',
+  horizontal: 'Horizontal',
 };

@@ -1,19 +1,20 @@
 import { useState, useCallback } from 'react';
-import { Gender } from '../types';
+import { Gender, ModalType } from '../types';
 
 interface UseModalAndSidebarLogicProps {
-  // Removed unused parameters: addParent, addSpouse, addChild, linkPerson, setFocusId
   canUndo: boolean;
   canRedo: boolean;
 }
 
-export const useModalAndSidebarLogic = ({
-  canUndo, canRedo
-}: UseModalAndSidebarLogicProps) => {
+/**
+ * Hook to manage the state of UI modals and the sidebar.
+ * Centralizes the logic for opening/closing various dialogs.
+ */
+export const useModalAndSidebarLogic = ({ canUndo, canRedo }: UseModalAndSidebarLogicProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [activeModal, setActiveModal] = useState<'none' | 'calculator' | 'stats' | 'chat' | 'consistency' | 'timeline' | 'share' | 'story' | 'map'>('none');
+  const [activeModal, setActiveModal] = useState<'none' | ModalType>('none');
   const [isPresentMode, setIsPresentMode] = useState(false);
-  
+
   const [linkModal, setLinkModal] = useState<{
     isOpen: boolean;
     type: 'parent' | 'spouse' | 'child' | null;
@@ -24,21 +25,25 @@ export const useModalAndSidebarLogic = ({
     setLinkModal({ isOpen: true, type, gender });
   }, []);
 
-  // Removed handleCreateNewRelative and handleSelectExistingRelative as their logic is now handled by familyActions
-  // and the LinkPersonModal directly uses familyActions.
-
-  const handleOpenModal = useCallback((modalType: 'calculator' | 'stats' | 'chat' | 'consistency' | 'timeline' | 'share' | 'story' | 'map') => {
+  const handleOpenModal = useCallback(
+    (
+      modalType: ModalType
+    ) => {
       setActiveModal(modalType);
-  }, []);
+    },
+    []
+  );
 
   return {
-    sidebarOpen, setSidebarOpen,
-    activeModal, setActiveModal,
-    isPresentMode, setIsPresentMode,
-    linkModal, setLinkModal,
+    sidebarOpen,
+    setSidebarOpen,
+    activeModal,
+    setActiveModal,
+    isPresentMode,
+    setIsPresentMode,
+    linkModal,
+    setLinkModal,
     handleOpenLinkModal,
-    // Removed handleCreateNewRelative,
-    // Removed handleSelectExistingRelative,
     handleOpenModal,
     canUndo,
     canRedo,

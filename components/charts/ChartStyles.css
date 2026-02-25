@@ -1,0 +1,127 @@
+/* CSS for Charts */
+.chart-cursor-grab {
+  cursor: grab;
+}
+
+.chart-cursor-grabbing {
+  cursor: grabbing;
+}
+
+.fan-chart-container {
+  overflow: visible;
+  pointer-events: none;
+}
+
+.fan-chart-label {
+  color: var(--card-text);
+  pointer-events: none;
+}
+
+.fan-chart-node {
+  pointer-events: none;
+}
+
+.fan-chart-circle {
+  border-color: var(--gender-female-border);
+  background-color: var(--card-bg);
+}
+
+.fan-chart-circle.male {
+  border-color: var(--gender-male-border);
+}
+
+.fan-chart-icon {
+  color: var(--gender-female-border);
+}
+
+.fan-chart-icon.male {
+  color: var(--gender-male-border);
+}
+
+.fan-chart-text {
+  color: var(--gender-female-text);
+}
+
+.fan-chart-text.male {
+  color: var(--gender-male-text);
+}
+
+/* FanChart Filter */
+.fan-root-shadow {
+  filter: url(#shadow);
+}
+
+/* Pedigree/Descendant Chart Node Styles */
+.pedigree-node {
+  border-color: var(--gender-female-border);
+  background-color: var(--gender-female-bg);
+}
+
+.pedigree-node.male {
+  border-color: var(--gender-male-border);
+  background-color: var(--gender-male-bg);
+}
+
+.family-pod-bg {
+  fill: rgba(255, 255, 255, 0.02);
+  stroke: rgba(255, 255, 255, 0.08);
+  stroke-width: 1.5;
+  rx: 32;
+  ry: 32;
+  pointer-events: none;
+  backdrop-filter: blur(12px);
+  filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.2));
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[data-theme='dark'] .family-pod-bg {
+  fill: rgba(15, 23, 42, 0.3);
+  stroke: rgba(255, 255, 255, 0.04);
+  filter: drop-shadow(0 15px 30px rgba(0, 0, 0, 0.5));
+}
+
+@keyframes pulse-ring {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 20px rgba(245, 158, 11, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+}
+
+.animate-pulse-ring {
+  animation: pulse-ring 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  border-color: #f59e0b !important;
+  border-width: 3px !important;
+  z-index: 50;
+}
+
+/* Enhanced Force Chart Links */
+.force-link {
+  transition: all 0.3s ease;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.force-link:hover {
+  opacity: 1 !important;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+}
+
+.force-link-glow {
+  transition: all 0.3s ease;
+  filter: blur(2px);
+}
+
+/* CSS Variables for Link Colors */
+:root {
+  --marriage-link-stroke: #f59e0b;
+  --marriage-link-glow: #fbbf24;
+  --parent-link-stroke: #64748b;
+  --parent-link-glow: #94a3b8;
+  --link-line-stroke: #64748b;
+}
+
+[data-theme='dark'] {
+  --marriage-link-stroke: #f59e0b;
+  --marriage-link-glow: #fbbf24;
+  --parent-link-stroke: #94a3b8;
+  --parent-link-glow: #cbd5e1;
+  --link-line-stroke: #94a3b8;
+}

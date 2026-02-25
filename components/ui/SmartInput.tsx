@@ -7,7 +7,7 @@ interface SmartInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElemen
 
 export const SmartInput: React.FC<SmartInputProps> = ({ value, onCommit, ...props }) => {
   const [localValue, setLocalValue] = useState(value);
-  
+
   useEffect(() => {
     setLocalValue(value);
   }, [value]);
@@ -18,55 +18,53 @@ export const SmartInput: React.FC<SmartInputProps> = ({ value, onCommit, ...prop
 
   const handleBlur = () => {
     if (localValue !== value) {
-        onCommit(localValue);
+      onCommit(localValue);
     }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-        e.currentTarget.blur();
+      e.currentTarget.blur();
     }
   };
 
   return (
-    <input 
-        {...props} 
-        value={localValue || ''} 
-        onChange={handleChange} 
-        onBlur={handleBlur} 
-        onKeyDown={handleKeyDown}
+    <input
+      {...props}
+      value={localValue || ''}
+      onChange={handleChange}
+      onBlur={handleBlur}
+      onKeyDown={handleKeyDown}
     />
   );
 };
 
-interface SmartTextareaProps extends Omit<React.TextareaHTMLAttributes<HTMLTextAreaElement>, 'onChange'> {
-    value: string;
-    onCommit: (value: string) => void;
+interface SmartTextareaProps extends Omit<
+  React.TextareaHTMLAttributes<HTMLTextAreaElement>,
+  'onChange'
+> {
+  value: string;
+  onCommit: (value: string) => void;
 }
 
 export const SmartTextarea: React.FC<SmartTextareaProps> = ({ value, onCommit, ...props }) => {
-    const [localValue, setLocalValue] = useState(value);
-    
-    useEffect(() => {
-      setLocalValue(value);
-    }, [value]);
-  
-    const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      setLocalValue(e.target.value);
-    };
-  
-    const handleBlur = () => {
-      if (localValue !== value) {
-          onCommit(localValue);
-      }
-    };
-  
-    return (
-      <textarea 
-          {...props} 
-          value={localValue || ''} 
-          onChange={handleChange} 
-          onBlur={handleBlur} 
-      />
-    );
+  const [localValue, setLocalValue] = useState(value);
+
+  useEffect(() => {
+    setLocalValue(value);
+  }, [value]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setLocalValue(e.target.value);
+  };
+
+  const handleBlur = () => {
+    if (localValue !== value) {
+      onCommit(localValue);
+    }
+  };
+
+  return (
+    <textarea {...props} value={localValue || ''} onChange={handleChange} onBlur={handleBlur} />
+  );
 };

@@ -12,6 +12,11 @@ dist
 dist-ssr
 *.local
 
+# Environment variables
+.env
+.env.*
+!.env.example
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -22,3 +27,15 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+.vercel
+
+.vercel
+.env*.local
+
+# تجاهل كافة ملفات الشروحات والنصوص
+*.md
+*.txt
+
+# استثناء ملف README فقط ليتم رفعه
+!README.md

@@ -1,182 +1,206 @@
-import { useState, useCallback } from 'react';
-import { 
-  HistoryControlsProps, ThemeLanguageProps, 
-  ViewSettingsProps, ToolsActionsProps, ExportActionsProps, SearchProps, 
-  FamilyActionsProps, AppStateAndActions, WelcomeScreenLogicProps, 
-  ModalStateAndActions, GoogleSyncStateAndActions, AppOrchestrationReturn, Gender, AuthProps
+import * as React from 'react';
+import { useRef, useCallback, useEffect } from 'react';
+import {
+  HistoryControlsProps,
+  ThemeLanguageProps,
+  ViewSettingsProps,
+  ToolsActionsProps,
+  ExportActionsProps,
+  SearchProps,
+  FamilyActionsProps,
+  AppStateAndActions,
+  WelcomeScreenLogicProps,
+  ModalStateAndActions,
+  AppOrchestrationReturn,
+  AuthProps,
+  Gender,
+  Person,
+  ExportType,
 } from '../types';
-import { useFamilyTree } from './useFamilyTree';
-import { useGoogleSync } from './useGoogleSync';
+import { useAppStore } from '../store/useAppStore';
 import { useKeyboardShortcuts } from './useKeyboardShortcuts';
-import { useModalAndSidebarLogic } from './useModalAndSidebarLogic';
-import { useTreeSettings } from './useTreeSettings';
-import { useWelcomeScreenLogic } from './useWelcomeScreenLogic';
-import { useThemeSync } from './useThemeSync';
-import { exportToGEDCOM } from '../utils/gedcomLogic';
-import { exportToJozorArchive } from '../utils/archiveLogic';
-import { generateICS } from '../utils/calendarLogic';
-import { downloadFile } from '../utils/fileUtils';
-import { useTranslation } from '../context/TranslationContext';
-import { showError } from '../utils/toast';
+import { useUIAndSettingsOrchestrator } from './useUIAndSettingsOrchestrator';
+import { useExport } from './useExport';
+import { useModalOrchestrator } from './useModalOrchestrator';
+import { useAuthAndSyncOrchestrator } from './useAuthAndSyncOrchestrator';
+import { performAddChild, performAddParent, performAddSpouse, performLinkPerson } from '../utils/treeOperations';
+import { useTreeActions } from './useTreeActions';
+import {
+  savePerson,
+  deletePerson as deletePersonFromSupabase,
+  saveRelationship,
+  deleteRelationship,
+  createPersonAndRelationshipAtomic,
+} from '../services/supabaseTreeService';
 
-export const useAppOrchestration = (): AppOrchestrationReturn => {
-  // --- Core Data & History ---
-  const {
-    people, focusId, setFocusId, history, future, undo, redo,
-    updatePerson, deletePerson,
-    removeRelationship, linkPerson,
-    handleImport, startNewTree, loadCloudData
-  } = useFamilyTree();
+export const useAppOrchestration = (isSharedMode: boolean = false): AppOrchestrationReturn => {
+  // Core state from Zustand store (single source of truth)
+  const people = useAppStore((state) => state.people);
+  const focusId = useAppStore((state) => state.focusId);
+  const setFocusId = useAppStore((state) => state.setFocusId);
 
-  // --- Modal & Sidebar Logic ---
+
+  const treeActions = useTreeActions();
+  const history = useAppStore((state) => state.history);
+  const future = useAppStore((state) => state.future);
+  const undo = useAppStore((state) => state.undo);
+  const redo = useAppStore((state) => state.redo);
+  const removeRelationship = treeActions.removeRelationship;
+  const linkPerson = treeActions.linkPerson;
+  const startNewTree = useAppStore((state) => state.startNewTree);
+
+  // Ref for Exporting Visuals
+  const svgRef = useRef<SVGSVGElement>(null);
+
+  // Auth state from Zustand (Firebase-based)
+  const user = useAppStore((state) => state.user);
+  const currentTreeId = useAppStore((state) => state.currentTreeId);
+  const setCurrentTreeId = useAppStore((state) => state.setCurrentTreeId);
+  const currentUserRole = useAppStore((state) => state.currentUserRole);
   const {
-    sidebarOpen, setSidebarOpen,
-    activeModal, setActiveModal,
-    isPresentMode, setIsPresentMode,
-    linkModal, setLinkModal,
-    handleOpenLinkModal,
+    sidebarOpen,
+    setSidebarOpen,
+    isPresentMode,
+    setIsPresentMode,
+    modals,
     handleOpenModal,
-  } = useModalAndSidebarLogic({
-    canUndo: history.length > 0,
-    canRedo: future.length > 0,
-  });
-
-  // New state for CleanTreeOptionsModal
-  const [cleanTreeOptionsModal, setCleanTreeOptionsModal] = useState<{ isOpen: boolean }>({ isOpen: false });
-  const onOpenCleanTreeOptions = useCallback(() => {
-    setCleanTreeOptionsModal({ isOpen: true });
-  }, []);
-
-  // New state for GoogleSyncChoiceModal
-  const [googleSyncChoiceModal, setGoogleSyncChoiceModal] = useState<{ isOpen: boolean; driveFileId: string | null; }>({ isOpen: false, driveFileId: null });
-  const onOpenGoogleSyncChoice = useCallback((fileId: string) => {
-    setGoogleSyncChoiceModal({ isOpen: true, driveFileId: fileId });
-  }, []);
-  const onCloseGoogleSyncChoice = useCallback(() => {
-    setGoogleSyncChoiceModal({ isOpen: false, driveFileId: null });
-  }, []);
-
-  // New state for DriveFileManagerModal
-  const [driveFileManagerModal, setDriveFileManagerModal] = useState<{ isOpen: boolean }>({ isOpen: false });
-  const onOpenDriveFileManager = useCallback(() => {
-    console.log("onOpenDriveFileManager called, setting driveFileManagerModal.isOpen to true");
-    setDriveFileManagerModal({ isOpen: true });
-  }, []);
-
-  // --- UI Preferences ---
-  const { language, setLanguage } = useTranslation();
-  const { treeSettings, setTreeSettings } = useTreeSettings();
-  const { darkMode, setDarkMode } = useThemeSync();
-
-  // --- Welcome Screen Logic (depends on googleSync, so declare googleSync first) ---
-  const {
-    showWelcome, setShowWelcome, fileInputRef,
-    handleStartNewTree, onFileUpload
-  } = useWelcomeScreenLogic({
-    people, startNewTree, stopSyncing: () => googleSync.stopSyncing(), handleImport // Use googleSync.stopSyncing
-  });
-
-  // --- Sync & Auth ---
-  const googleSync = useGoogleSync( 
-    people, 
-    loadCloudData,
+    handleOpenLinkModal,
+    onOpenSnapshotHistory,
+    onOpenTreeManager,
+    onOpenAdminHub,
+    onOpenGlobalSettings,
+    onOpenDriveFileManager,
     onOpenGoogleSyncChoice,
     onCloseGoogleSyncChoice,
-    setShowWelcome, // Pass setShowWelcome here
-    onOpenDriveFileManager // Pass onOpenDriveFileManager here
-  );
+  } = useModalOrchestrator();
 
+  const { handleExport: rawHandleExport } = useExport(people, svgRef);
+
+  // Wrap with debug logging
+  const handleExport = useCallback(async (type: any) => {
+    console.log('🎯 Export triggered:', type);
+    console.log('📊 People count:', Object.keys(people).length);
+    console.log('🖼️ SVG Ref:', svgRef.current ? 'Available' : 'Missing');
+    try {
+      await rawHandleExport(type);
+      console.log('✅ Export completed');
+    } catch (error) {
+      console.error('❌ Export failed:', error);
+    }
+  }, [rawHandleExport, people]);
+
+  const {
+    welcomeScreen,
+    themeLanguage,
+    viewSettings,
+    searchProps,
+    setShowWelcome,
+  } = useUIAndSettingsOrchestrator({
+    people,
+    startNewTree,
+    focusId,
+    setFocusId,
+    currentUserRole,
+    setIsPresentMode,
+    onOpenSnapshotHistory,
+    onOpenAdminHub,
+  });
+
+  // UI Helpers
   const activePerson = people[focusId];
-
-  // Calculate canUndo/canRedo
   const canUndo = history.length > 0;
   const canRedo = future.length > 0;
 
-  // Adjusted onTriggerImportFile to directly trigger file input
-  const onTriggerImportFile = useCallback(() => {
-    fileInputRef.current?.click();
-  }, []);
+  useKeyboardShortcuts(
+    canUndo,
+    undo,
+    canRedo,
+    redo,
+    welcomeScreen.showWelcome,
+    isPresentMode,
+    setIsPresentMode
+  );
 
-  // --- Keyboard Shortcuts ---
-  useKeyboardShortcuts(canUndo, undo, canRedo, redo, showWelcome, isPresentMode, setIsPresentMode);
-
-  // --- Consolidated Export Handler ---
-  const handleExport = useCallback(async (type: 'jozor' | 'json' | 'gedcom' | 'ics' | 'print') => {
-    try {
-      if (type === 'jozor') {
-        downloadFile(await exportToJozorArchive(people), "family.jozor", "application/octet-stream");
-      } else if (type === 'json') {
-        downloadFile(JSON.stringify(people, null, 2), "tree.json", "application/json");
-      } else if (type === 'gedcom') {
-        downloadFile(exportToGEDCOM(people), "tree.ged", "application/octet-stream");
-      } else if (type === 'ics') {
-        downloadFile(generateICS(people), "family_calendar.ics", "text/calendar");
-      } else if (type === 'print') {
-        window.print();
-      }
-    } catch (e) {
-      console.error(`Export to ${type} failed`, e);
-      showError(`Export to ${type} failed`);
+  // Auto-open sidebar when a person is focused
+  useEffect(() => {
+    if (focusId && !sidebarOpen && !isPresentMode) {
+      setSidebarOpen(true);
     }
-  }, [people]);
+  }, [focusId, isPresentMode, setSidebarOpen, sidebarOpen]);
 
-  // Grouped props for Header and other components
+  const {
+    auth,
+    googleSync,
+    syncStatus,
+    isActivityLogOpen,
+    setActivityLogOpen,
+  } = useAuthAndSyncOrchestrator({
+    isSharedMode,
+    people,
+    setShowWelcome,
+    onOpenGoogleSyncChoice,
+    onCloseGoogleSyncChoice,
+    onOpenDriveFileManager,
+    onOpenTreeManager,
+    setSharedTreePromptModal: modals.setSharedTreePromptModal,
+    onOpenLoginModal: async () => handleOpenModal('login'),
+    onExport: handleExport,
+  });
+
+  // Prop Grouping
   const historyControls: HistoryControlsProps = { onUndo: undo, onRedo: redo, canUndo, canRedo };
-  const themeLanguage: ThemeLanguageProps = { darkMode, setDarkMode, language, setLanguage };
-  // The `auth` object should now directly use `googleSync.onLogin` and `googleSync.onLogout`
-  const auth: AuthProps = { 
-    user: googleSync.user, 
-    isDemoMode: googleSync.isDemoMode, 
-    isSyncing: googleSync.isSyncing, 
-    onLogin: googleSync.onLogin, // Direct reference
-    onLogout: googleSync.onLogout, // Direct reference
-    onOpenDriveFileManager: googleSync.onOpenDriveFileManager 
-  }; 
-  const viewSettings: ViewSettingsProps = { treeSettings, setTreeSettings, onPresent: () => setIsPresentMode(true) };
+
   const toolsActions: ToolsActionsProps = { onOpenModal: handleOpenModal };
   const exportActions: ExportActionsProps = { handleExport };
-  const searchProps: SearchProps = { people, onFocusPerson: setFocusId };
-  const familyActions: FamilyActionsProps = {
+  const sidebarFamilyActions: FamilyActionsProps = {
     onAddParent: (g) => handleOpenLinkModal('parent', g),
     onAddSpouse: (g) => handleOpenLinkModal('spouse', g),
     onAddChild: (g) => handleOpenLinkModal('child', g),
-    onRemoveRelationship: removeRelationship,
-    onLinkPerson: linkPerson,
+    onRemoveRelationship: (targetId, relativeId, type) => treeActions.removeRelationship(targetId, relativeId, type),
+    onLinkPerson: (existingId, type) => type && treeActions.linkPerson(existingId, type),
   };
 
-  // New grouped objects for return
+  const coreFamilyActions: FamilyActionsProps = {
+    onAddParent: (g) => treeActions.addParent(g),
+    onAddSpouse: (g) => treeActions.addSpouse(g),
+    onAddChild: (g) => treeActions.addChild(g),
+    onRemoveRelationship: (targetId, relativeId, type) => treeActions.removeRelationship(targetId, relativeId, type),
+    onLinkPerson: (existingId, type) => type && treeActions.linkPerson(existingId, type),
+  };
+
   const appState: AppStateAndActions = {
-    people, focusId, setFocusId, updatePerson, deletePerson, activePerson
+    people,
+    focusId,
+    setFocusId,
+    updatePerson: (id, updates) => treeActions.updatePerson(id, updates),
+    deletePerson: (id) => treeActions.deletePerson(id),
+    currentTreeId,
+    setCurrentTreeId,
+    activePerson,
   };
 
-  const welcomeScreenReturn: WelcomeScreenLogicProps = { // Renamed to avoid conflict with hook return
-    showWelcome, fileInputRef, handleStartNewTree, onFileUpload, onTriggerImportFile
-  };
-
-  const modalsReturn: ModalStateAndActions = { // Renamed to avoid conflict with hook return
-    activeModal, setActiveModal, linkModal, setLinkModal,
-    cleanTreeOptionsModal, setCleanTreeOptionsModal,
-    googleSyncChoiceModal, setGoogleSyncChoiceModal,
-    driveFileManagerModal, setDriveFileManagerModal,
-    handleOpenLinkModal, handleOpenModal, onOpenCleanTreeOptions
-  };
+  const modalsReturn: ModalStateAndActions = modals;
 
   return {
     appState,
-    welcomeScreen: welcomeScreenReturn, // Use renamed object
-    modals: modalsReturn, // Use renamed object
-    googleSync, // Still return googleSync for other parts of App.tsx that use it directly
+    welcomeScreen,
+    modals: modalsReturn,
+    googleSync,
     historyControls,
     themeLanguage,
     viewSettings,
     toolsActions,
     exportActions,
     searchProps,
-    familyActions,
+    sidebarFamilyActions,
+    coreFamilyActions,
+    svgRef,
     isPresentMode,
     setIsPresentMode,
     sidebarOpen,
     setSidebarOpen,
-    auth, // <--- Add auth here
+    isActivityLogOpen,
+    setActivityLogOpen,
+    auth,
   };
 };

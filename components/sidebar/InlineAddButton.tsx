@@ -9,16 +9,21 @@ interface InlineAddButtonProps {
 }
 
 export const InlineAddButton = memo(({ onClick, gender }: InlineAddButtonProps) => {
-    const { t } = useTranslation();
-    return (
-        <button 
-            onClick={(e) => { e.stopPropagation(); onClick(); }}
-            className={`w-5 h-5 rounded-md flex items-center justify-center transition-all hover:scale-105 active:scale-95 ${gender === 'male' 
-                ? 'bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400' 
-                : 'bg-pink-50 text-pink-600 hover:bg-pink-100 dark:bg-pink-900/30 dark:text-pink-400'}`}
-            title={t.add}
-        >
-            <Plus className="w-3 h-3" strokeWidth={3} />
-        </button>
-    );
+  const { t } = useTranslation();
+  return (
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick();
+      }}
+      className={`w-5 h-5 rounded-md flex items-center justify-center transition-all hover:scale-105 active:scale-95 ${gender === 'male'
+          ? 'bg-[var(--gender-male-bg)] text-[var(--gender-male-text)] hover:shadow-sm'
+          : 'bg-[var(--gender-female-bg)] text-[var(--gender-female-text)] hover:shadow-sm'
+        }`}
+      title={t.add}
+      aria-label={t.add || 'Add'}
+    >
+      <Plus className='w-3 h-3' strokeWidth={3} />
+    </button>
+  );
 });

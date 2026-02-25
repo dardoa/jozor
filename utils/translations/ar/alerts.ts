@@ -15,4 +15,6 @@ export const alerts = {
   gedcomImportError: 'فشل في استيراد ملف GEDCOM.',
   jozorImportSuccess: 'تم استيراد ملف Jozor بنجاح!',
   jozorImportError: 'فشل في استيراد ملف Jozor.',
+  avatarUpdateSuccess: 'تم تحديث الصورة بنجاح! تظهر الآن في جميع أنحاء الشجرة.',
+  preferencesSaveSuccess: 'تم حفظ التفضيلات بنجاح.',
 };

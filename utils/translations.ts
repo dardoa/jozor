@@ -56,11 +56,18 @@ const ar = {
   ...arFamilyTree,
 };
 
-const translations: Record<Language, any> = {
+// Define the type based on the English translation object
+export type TranslationSchema = typeof en;
+
+const translations: Record<Language, TranslationSchema> = {
   en,
   ar,
 };
 
-export const getTranslation = (language: Language) => {
-  return translations[language] || en; // Fallback to English if language not found
+/**
+ * Retrieves the translation object for the specified language.
+ * Falls back to English if the language is not found.
+ */
+export const getTranslation = (language: Language): TranslationSchema => {
+  return translations[language] || en;
 };

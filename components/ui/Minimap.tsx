@@ -21,7 +21,7 @@ export const Minimap: React.FC<MinimapProps> = ({ nodes, links, focusId }) => {
   const viewBoxHeight = (maxY - minY) + 200;
 
   return (
-    <div className="absolute bottom-5 left-5 w-[150px] h-[100px] bg-white/80 dark:bg-stone-950/80 border border-stone-200/50 dark:border-stone-700/50 rounded-xl pointer-events-none overflow-hidden z-20 shadow-lg backdrop-blur-sm">
+    <div className='absolute bottom-5 start-5 w-[150px] h-[100px] bg-white/70 dark:bg-slate-900/70 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-xl pointer-events-none overflow-hidden z-20 shadow-sm'>
       <svg viewBox={`${viewBoxX} ${viewBoxY} ${viewBoxWidth} ${viewBoxHeight}`} className="w-full h-full opacity-50">
         {nodes.map(n => (
           <circle key={n.id} cx={n.x} cy={n.y} r={20} fill={n.id === focusId ? 'var(--focus-ring-color)' : 'var(--link-line-stroke)'} />

@@ -1,0 +1,21 @@
+{
+  "functions": {
+    "api/**/*.ts": {
+      "runtime": "@vercel/node@3.2.17"
+    }
+  },
+  "env": {
+    "GEMINI_API_KEY": "@gemini-api-key"
+  },
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Cross-Origin-Opener-Policy",
+          "value": "same-origin-allow-popups"
+        }
+      ]
+    }
+  ]
+}

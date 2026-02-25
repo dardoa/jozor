@@ -1,5 +1,9 @@
 import { useState, useEffect } from 'react';
 
+/**
+ * Hook to manage application theme (dark/light mode).
+ * Persists preference to localStorage and respects system preference.
+ */
 export const useThemeSync = () => {
   const [darkMode, setDarkMode] = useState(() => {
     if (typeof window === 'undefined') return false; // Safety for server-side rendering
@@ -13,8 +17,6 @@ export const useThemeSync = () => {
     root.classList.toggle('dark', darkMode);
     localStorage.setItem('theme', darkMode ? 'dark' : 'light');
   }, [darkMode]);
-
-  // Removed the old initialization useEffect as it's now handled by useState directly.
 
   return { darkMode, setDarkMode };
 };

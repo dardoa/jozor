@@ -1,0 +1,10 @@
+/* CSS for StatisticsModal */
+.stat-decade-bar {
+  /* Dynamic height controlled by --bar-height variable */
+  height: var(--bar-height, 0%);
+}
+
+.stat-gender-bar {
+  /* Dynamic width controlled by --bar-width variable */
+  width: var(--bar-width, 0%);
+}

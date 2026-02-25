@@ -1,29 +1,25 @@
 import { useState, useEffect } from 'react';
 import { Language } from '../types';
 
+/**
+ * Hook to manage language preference.
+ * Persists preference to localStorage.
+ */
 export const useLanguageSync = () => {
-  const [language, setLanguage] = useState<Language>('ar'); // Default to Arabic as per existing logic
-
-  // Initialize language from localStorage
-  useEffect(() => {
+  const [language, setLanguage] = useState<Language>(() => {
     if (typeof window !== 'undefined') {
-      const savedLanguage = (localStorage.getItem('language') as Language);
-      if (savedLanguage && (savedLanguage === 'en' || savedLanguage === 'ar')) { // Validate saved language
-        setLanguage(savedLanguage);
-        console.log('useLanguageSync: Initial language from localStorage:', savedLanguage);
-      } else {
-        // Default to Arabic if no preference is found or saved language is invalid
-        setLanguage('ar'); 
-        console.log('useLanguageSync: Defaulting to Arabic.');
+      const savedLanguage = localStorage.getItem('language') as Language;
+      if (savedLanguage && (savedLanguage === 'en' || savedLanguage === 'ar')) {
+        return savedLanguage;
       }
     }
-  }, []); // Empty dependency array for initialization
+    return 'ar';
+  });
 
   // Persist language to localStorage whenever it changes
   useEffect(() => {
     if (typeof window !== 'undefined') {
       localStorage.setItem('language', language);
-      console.log('useLanguageSync: Language changed and saved to localStorage:', language);
     }
   }, [language]);
 

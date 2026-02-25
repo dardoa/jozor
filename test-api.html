@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>اختبار Gemini API</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 50px auto;
+        padding: 20px;
+        background: #f5f5f5;
+      }
+
+      .container {
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      h1 {
+        color: #333;
+        text-align: center;
+      }
+
+      textarea {
+        width: 100%;
+        padding: 10px;
+        border: 2px solid #ddd;
+        border-radius: 5px;
+        font-size: 16px;
+        resize: vertical;
+      }
+
+      button {
+        width: 100%;
+        padding: 12px;
+        background: #0070f3;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-size: 16px;
+        cursor: pointer;
+        margin-top: 10px;
+      }
+
+      button:hover {
+        background: #0051cc;
+      }
+
+      button:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+      }
+
+      .result {
+        margin-top: 20px;
+        padding: 15px;
+        background: #f0f7ff;
+        border: 1px solid #0070f3;
+        border-radius: 5px;
+        white-space: pre-wrap;
+        max-height: 400px;
+        overflow-y: auto;
+      }
+
+      .error {
+        background: #fff0f0;
+        border-color: #ff0000;
+        color: #cc0000;
+      }
+
+      .loading {
+        text-align: center;
+        color: #666;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <h1>🧪 اختبار Gemini API</h1>
+
+      <div>
+        <label for="prompt"><strong>أدخل السؤال أو الطلب:</strong></label>
+        <textarea id="prompt" rows="4" placeholder="مثال: اكتب قصيدة قصيرة عن العائلة">
+اكتب قصيدة قصيرة عن أهمية العائلة</textarea
+        >
+      </div>
+
+      <button id="testBtn" onclick="testAPI()">إرسال الطلب</button>
+
+      <div id="result"></div>
+    </div>
+
+    <script>
+      async function testAPI() {
+        const prompt = document.getElementById('prompt').value;
+        const resultDiv = document.getElementById('result');
+        const btn = document.getElementById('testBtn');
+
+        if (!prompt.trim()) {
+          alert('الرجاء إدخال سؤال أو طلب');
+          return;
+        }
+
+        // تعطيل الزر وإظهار loading
+        btn.disabled = true;
+        resultDiv.className = 'result loading';
+        resultDiv.textContent = '⏳ جاري الإرسال إلى Gemini API...';
+
+        try {
+          const startTime = Date.now();
+
+          const response = await fetch('/api/gemini', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              prompt: prompt,
+              action: 'test',
+            }),
+          });
+
+          const endTime = Date.now();
+          const duration = ((endTime - startTime) / 1000).toFixed(2);
+
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || `HTTP ${response.status}`);
+          }
+
+          const data = await response.json();
+
+          // عرض النتيجة
+          resultDiv.className = 'result';
+          resultDiv.innerHTML = `
+                    <strong>✅ نجح!</strong><br>
+                    <strong>الوقت المستغرق:</strong> ${duration} ثانية<br><br>
+                    <strong>الرد من Gemini:</strong><br>
+                    ${data.result || 'لا يوجد رد'}
+                `;
+        } catch (error) {
+          const errorData = error.response ? await error.response.json() : null;
+          resultDiv.className = 'result error';
+          resultDiv.innerHTML = `
+                    <strong>❌ خطأ!</strong><br><br>
+                    <strong>الرسالة:</strong> ${error.message}<br>
+                    ${errorData?.details ? `<strong>التفاصيل:</strong> ${errorData.details}<br>` : ''}
+                    ${errorData?.status ? `<strong>Status Code:</strong> ${errorData.status}<br>` : ''}
+                    <br>
+                    <small><strong>نصائح:</strong>
+                    <br>1. تأكد من إضافة GEMINI_API_KEY في .env
+                    <br>2. المفتاح يجب أن يبدأ بـ AIza...
+                    <br>3. تحقق من console في vercel dev
+                    <br>4. جرّب مفتاح جديد من: <a href="https://makersuite.google.com/app/apikey" target="_blank">Google AI Studio</a>
+                    </small>
+                `;
+        } finally {
+          btn.disabled = false;
+        }
+      }
+
+      // اختبار تلقائي عند التحميل (اختياري)
+      window.addEventListener('load', () => {
+        console.log('✅ صفحة الاختبار جاهزة');
+        console.log('🔗 تأكد من تشغيل: vercel dev');
+      });
+    </script>
+  </body>
+</html>

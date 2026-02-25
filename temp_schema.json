@@ -1,0 +1,29 @@
+{
+  "id": {
+    "default": "gen_random_uuid()",
+    "description": "Note:\nThis is a Primary Key.<pk/>",
+    "format": "uuid",
+    "type": "string"
+  },
+  "tree_id": {
+    "description": "Note:\nThis is a Foreign Key to `trees.id`.<fk table='trees' column='id'/>",
+    "format": "uuid",
+    "type": "string"
+  },
+  "drive_file_id": {
+    "format": "text",
+    "type": "string"
+  },
+  "owner_uid": {
+    "format": "text",
+    "type": "string"
+  },
+  "collaborators": {
+    "format": "jsonb"
+  },
+  "created_at": {
+    "default": "now()",
+    "format": "timestamp with time zone",
+    "type": "string"
+  }
+}

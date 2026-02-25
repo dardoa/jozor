@@ -9,16 +9,27 @@ interface UseWelcomeScreenLogicProps {
   handleImport: (file: File) => Promise<boolean>;
 }
 
+/**
+ * Hook to manage the Welcome Screen state and logic.
+ * Detects if existing data exists to auto-dismiss the screen.
+ */
 export const useWelcomeScreenLogic = ({
-  people, startNewTree, stopSyncing, handleImport
+  people,
+  startNewTree,
+  stopSyncing,
+  handleImport,
 }: UseWelcomeScreenLogicProps) => {
   const [showWelcome, setShowWelcome] = useState<boolean>(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const hasData = Object.keys(people).length > 1 || people[INITIAL_ROOT_ID].firstName !== 'Me';
-    if (hasData) setShowWelcome(false);
-  }, [people]);
+    if (!showWelcome) return;
+    // Check if we have meaningful data (more than just the initial person)
+    const hasData =
+      Object.keys(people).length > 1 ||
+      (people[INITIAL_ROOT_ID] && people[INITIAL_ROOT_ID].firstName !== 'Me');
+    if (hasData) setTimeout(() => setShowWelcome(false), 0);
+  }, [people, showWelcome]);
 
   const handleStartNewTree = useCallback(() => {
     startNewTree();
