@@ -7,7 +7,10 @@ export type ActivityActionType =
     | 'DELETE_PERSON'
     | 'ADD_RELATION'
     | 'DELETE_RELATION'
-    | 'RENAME_TREE';
+    | 'RENAME_TREE'
+    | 'SHARE_INVITE'
+    | 'SHARE_REVOKE'
+    | 'SHARE_ROLE_CHANGE';
 
 export interface ActivityLog {
     id: string;

@@ -10,6 +10,7 @@ import {
 import { getSupabaseWithAuth } from '../../../services/supabaseClient';
 import { useAppStore } from '../../../store/useAppStore';
 import { showSuccess, showError } from '../../../utils/toast';
+import { activityService } from '../../../services/activityService';
 
 interface AccessControlTabProps {
     treeId: string;
@@ -77,6 +78,10 @@ export const AccessControlTab: React.FC<AccessControlTabProps> = ({ treeId, owne
             await inviteCollaborator(treeId, inviteEmail.trim(), inviteRole, ownerId, ownerEmail, supabaseToken);
             setInviteEmail('');
             showSuccess(`Invited ${inviteEmail} as ${inviteRole}`);
+            await activityService.logAction(treeId, 'SHARE_INVITE', {
+                email: inviteEmail.trim(),
+                role: inviteRole,
+            });
         } catch (err: any) {
             console.error('Failed to invite collaborator:', err);
             showError(err.message || 'Failed to invite collaborator');
@@ -89,6 +94,10 @@ export const AccessControlTab: React.FC<AccessControlTabProps> = ({ treeId, owne
         try {
             await updateCollaboratorRole(treeId, email, newRole, ownerId, ownerEmail, supabaseToken);
             showSuccess(`Updated ${email} to ${newRole}`);
+            await activityService.logAction(treeId, 'SHARE_ROLE_CHANGE', {
+                email,
+                newRole,
+            });
         } catch (err) {
             console.error('Failed to update role:', err);
             showError('Failed to update role');
@@ -101,6 +110,9 @@ export const AccessControlTab: React.FC<AccessControlTabProps> = ({ treeId, owne
         try {
             await revokeCollaboratorAccess(treeId, email, ownerId, ownerEmail, supabaseToken);
             showSuccess(`Revoked access for ${email}`);
+            await activityService.logAction(treeId, 'SHARE_REVOKE', {
+                email,
+            });
         } catch (err) {
             console.error('Failed to revoke access:', err);
             showError('Failed to revoke access');

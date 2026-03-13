@@ -59,6 +59,71 @@ async function getOrCreateShareRecord(
   return created[0] as ShareRecord;
 }
 
+async function syncTreeCollaborator(
+  supabase: SupabaseClient,
+  action: 'invite' | 'remove' | 'update_role',
+  treeId: string | null | undefined,
+  email: string | undefined,
+  role?: 'editor' | 'viewer'
+) {
+  if (!treeId || !email) return;
+
+  const normalizedEmail = String(email).trim().toLowerCase();
+
+  if (action === 'invite') {
+    const { data: existing, error: fetchError } = await supabase
+      .from('tree_collaborators')
+      .select('id')
+      .eq('tree_id', treeId)
+      .eq('email', normalizedEmail)
+      .limit(1);
+
+    if (fetchError) {
+      console.warn('syncTreeCollaborator: failed to check existing collaborator', fetchError.message);
+      return;
+    }
+
+    if (existing && existing.length > 0) {
+      const { error: updateError } = await supabase
+        .from('tree_collaborators')
+        .update({ role })
+        .eq('id', existing[0].id);
+      if (updateError) {
+        console.warn('syncTreeCollaborator: failed to update existing collaborator', updateError.message);
+      }
+    } else {
+      const { error: insertError } = await supabase
+        .from('tree_collaborators')
+        .insert({
+          tree_id: treeId,
+          email: normalizedEmail,
+          role,
+        });
+      if (insertError) {
+        console.warn('syncTreeCollaborator: failed to insert collaborator', insertError.message);
+      }
+    }
+  } else if (action === 'remove') {
+    const { error: deleteError } = await supabase
+      .from('tree_collaborators')
+      .delete()
+      .eq('tree_id', treeId)
+      .eq('email', normalizedEmail);
+    if (deleteError) {
+      console.warn('syncTreeCollaborator: failed to remove collaborator', deleteError.message);
+    }
+  } else if (action === 'update_role') {
+    const { error: updateError } = await supabase
+      .from('tree_collaborators')
+      .update({ role })
+      .eq('tree_id', treeId)
+      .eq('email', normalizedEmail);
+    if (updateError) {
+      console.warn('syncTreeCollaborator: failed to update role', updateError.message);
+    }
+  }
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const user = await authenticateUser(req.headers.authorization);
@@ -127,6 +192,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         } else {
           collaborators.push(newCollab);
         }
+        await syncTreeCollaborator(supabase, 'invite', treeId, normalizedEmail, role);
       } else if (action === 'remove') {
         if (!email) {
           return res.status(400).json({ error: 'email is required for remove' });
@@ -135,6 +201,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         collaborators = collaborators.filter(
           (c) => c.email.toLowerCase() !== normalizedEmail
         );
+        await syncTreeCollaborator(supabase, 'remove', treeId, normalizedEmail);
       } else if (action === 'update_role') {
         if (!email || !role) {
           return res.status(400).json({ error: 'email and role are required for update_role' });
@@ -148,6 +215,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         } else {
           return res.status(404).json({ error: 'Collaborator not found' });
         }
+        await syncTreeCollaborator(supabase, 'update_role', treeId, normalizedEmail, role);
       } else {
         return res.status(400).json({ error: 'Unknown action' });
       }

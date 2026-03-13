@@ -21,7 +21,7 @@ interface ActivityLogDrawerProps {
 }
 
 const ActivityLogDrawer: React.FC<ActivityLogDrawerProps> = ({ isOpen, onClose, treeId, onNavigate }) => {
-    useTranslation();
+    const { language } = useTranslation();
     const [logs, setLogs] = useState<ActivityLog[]>([]);
     const [page, setPage] = useState(0);
     const [hasMore, setHasMore] = useState(true);
@@ -85,21 +85,61 @@ const ActivityLogDrawer: React.FC<ActivityLogDrawerProps> = ({ isOpen, onClose, 
             case 'DELETE_PERSON': return <Trash2 className="w-4 h-4 text-red-500" />;
             case 'ADD_RELATION': return <Link className="w-4 h-4 text-amber-500" />;
             case 'DELETE_RELATION': return <Unlink className="w-4 h-4 text-orange-500" />;
+            case 'SHARE_INVITE': return <UserPlus className="w-4 h-4 text-indigo-500" />;
+            case 'SHARE_REVOKE': return <Shield className="w-4 h-4 text-red-500" />;
+            case 'SHARE_ROLE_CHANGE': return <Shield className="w-4 h-4 text-amber-600" />;
             default: return <Clock className="w-4 h-4 text-gray-500" />;
         }
     };
 
     const formatActionDescription = (log: ActivityLog) => {
         const { details, action_type } = log;
-        const name = details.personName || details.targetName || details.focusName || 'Someone';
+        const name =
+            (details.personName as string) ||
+            (details.targetName as string) ||
+            (details.focusName as string) ||
+            (language === 'ar' ? 'شخص ما' : 'Someone');
+
+        const inviteEmail = details.email as string | undefined;
+        const role = details.role as string | undefined;
+        const newRole = details.newRole as string | undefined;
+
+        const isAr = language === 'ar';
 
         switch (action_type) {
-            case 'ADD_PERSON': return `Added ${name}`;
-            case 'UPDATE_PERSON': return `Updated details for ${name}`;
-            case 'DELETE_PERSON': return `Removed ${name} from the tree`;
-            case 'ADD_RELATION': return `Modified relationship between ${details.focusName} and ${details.existingName}`;
-            case 'DELETE_RELATION': return `Modified relationship between ${details.targetName} and ${details.relativeName}`;
-            default: return 'Performed an action';
+            case 'ADD_PERSON':
+                return isAr ? `تمت إضافة ${name}` : `Added ${name}`;
+            case 'UPDATE_PERSON':
+                return isAr ? `تم تحديث بيانات ${name}` : `Updated details for ${name}`;
+            case 'DELETE_PERSON':
+                return isAr ? `تم حذف ${name} من الشجرة` : `Removed ${name} from the tree`;
+            case 'ADD_RELATION':
+                return isAr
+                    ? `تم تعديل العلاقة بين ${details.focusName} و${details.existingName}`
+                    : `Modified relationship between ${details.focusName} and ${details.existingName}`;
+            case 'DELETE_RELATION':
+                return isAr
+                    ? `تم تعديل العلاقة بين ${details.targetName} و${details.relativeName}`
+                    : `Modified relationship between ${details.targetName} and ${details.relativeName}`;
+            case 'SHARE_INVITE':
+                if (!inviteEmail) return isAr ? 'تم إرسال دعوة مشاركة' : 'Sent a share invitation';
+                return isAr
+                    ? `تمت دعوة ${inviteEmail} بصلاحية ${role === 'editor' ? 'محرر' : 'مشاهد'}`
+                    : `Invited ${inviteEmail} as ${role || 'viewer'}`;
+            case 'SHARE_REVOKE':
+                if (!inviteEmail) return isAr ? 'تم إلغاء صلاحية مستخدم' : 'Revoked access for a collaborator';
+                return isAr
+                    ? `تم إلغاء صلاحية ${inviteEmail}`
+                    : `Revoked access for ${inviteEmail}`;
+            case 'SHARE_ROLE_CHANGE':
+                if (!inviteEmail || !newRole) {
+                    return isAr ? 'تم تعديل صلاحيات مستخدم' : 'Updated collaborator role';
+                }
+                return isAr
+                    ? `تم تغيير صلاحية ${inviteEmail} إلى ${newRole === 'editor' ? 'محرر' : 'مشاهد'}`
+                    : `Updated ${inviteEmail} to ${newRole}`;
+            default:
+                return isAr ? 'تم تنفيذ إجراء على الشجرة' : 'Performed an action';
         }
     };
 
@@ -131,8 +171,12 @@ const ActivityLogDrawer: React.FC<ActivityLogDrawerProps> = ({ isOpen, onClose, 
                                 <Clock className="w-5 h-5 text-indigo-600" />
                             </div>
                             <div>
-                                <h2 className="text-lg font-bold text-gray-900 leading-tight">Activity History</h2>
-                                <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Audit Trail</p>
+                                <h2 className="text-lg font-bold text-gray-900 leading-tight">
+                                    {language === 'ar' ? 'سجل الأنشطة' : 'Activity History'}
+                                </h2>
+                                <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">
+                                    {language === 'ar' ? 'سجل التغييرات' : 'Audit Trail'}
+                                </p>
                             </div>
                         </div>
                         <button
@@ -149,7 +193,9 @@ const ActivityLogDrawer: React.FC<ActivityLogDrawerProps> = ({ isOpen, onClose, 
                             onChange={(e) => handleFilterChange(e.target.value)}
                             className="w-full pl-3 pr-10 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm font-bold text-gray-700 outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all appearance-none cursor-pointer"
                         >
-                            <option value="">All Contributors</option>
+                            <option value="">
+                                {language === 'ar' ? 'كل المساهمين' : 'All Contributors'}
+                            </option>
                             {uniqueUsers.map(email => (
                                 <option key={email} value={email}>{email}</option>
                             ))}
@@ -160,12 +206,18 @@ const ActivityLogDrawer: React.FC<ActivityLogDrawerProps> = ({ isOpen, onClose, 
 
                 <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin scrollbar-thumb-gray-200">
                     {logs.length === 0 && !isLoading ? (
-                        <div className="flex flex-col items-center justify-center h-64 text-center">
+                            <div className="flex flex-col items-center justify-center h-64 text-center">
                             <div className="p-4 bg-gray-50 rounded-full mb-4">
                                 <Clock className="w-8 h-8 text-gray-300" />
                             </div>
-                            <p className="text-gray-500 font-medium">No activity recorded yet</p>
-                            <p className="text-xs text-gray-400 mt-1">Changes will appear here in real-time</p>
+                            <p className="text-gray-500 font-medium">
+                                {language === 'ar' ? 'لا توجد أنشطة بعد' : 'No activity recorded yet'}
+                            </p>
+                            <p className="text-xs text-gray-400 mt-1">
+                                {language === 'ar'
+                                    ? 'ستظهر التغييرات هنا في الوقت الفعلي'
+                                    : 'Changes will appear here in real-time'}
+                            </p>
                         </div>
                     ) : (
                         <div className="relative">
@@ -225,7 +277,9 @@ const ActivityLogDrawer: React.FC<ActivityLogDrawerProps> = ({ isOpen, onClose, 
                                 <div className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
                             ) : (
                                 <>
-                                    <span>Load older activities</span>
+                                    <span>
+                                        {language === 'ar' ? 'تحميل أنشطة أقدم' : 'Load older activities'}
+                                    </span>
                                     <ChevronDown className="w-4 h-4 group-hover:translate-y-0.5 transition-transform" />
                                 </>
                             )}
