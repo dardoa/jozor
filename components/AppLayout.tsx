@@ -225,17 +225,15 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
       {!isPresentMode && (
         <MobileActionBar
           activeTab={
-            sidebarOpen ? 'relations' :
-              isSettingsDrawerOpen ? 'tools' :
+            sidebarOpen ? null : // Hide highlight on bottom icons if profile is open
+              isSettingsDrawerOpen ? 'tools' : // This is for visualization settings
                 null
           }
           onCenterView={() => {
             window.dispatchEvent(new CustomEvent('reset-interactive-view'));
           }}
-          onOpenRelations={() => {
-            if (activePerson) {
-              setSidebarOpen(!sidebarOpen);
-            }
+          onOpenAdmin={() => {
+            viewSettings.onOpenAdminHub?.();
           }}
           onOpenTools={() => {
             setSettingsDrawerOpen(true);

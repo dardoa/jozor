@@ -1,18 +1,17 @@
-import React from 'react';
-import { Target, Users, Wrench, Trash2 } from 'lucide-react';
+import { Target, Settings, Wrench, Trash2 } from 'lucide-react';
 import { useTranslation } from '../../context/TranslationContext';
 
 interface MobileActionBarProps {
   onCenterView: () => void;
-  onOpenRelations: () => void;
+  onOpenAdmin: () => void;
   onOpenTools: () => void;
   onDelete: () => void;
-  activeTab?: 'center' | 'relations' | 'tools' | 'delete' | null;
+  activeTab?: 'center' | 'admin' | 'tools' | 'delete' | null;
 }
 
 export const MobileActionBar: React.FC<MobileActionBarProps> = ({
   onCenterView,
-  onOpenRelations,
+  onOpenAdmin,
   onOpenTools,
   onDelete,
   activeTab = null,
@@ -28,10 +27,10 @@ export const MobileActionBar: React.FC<MobileActionBarProps> = ({
       onClick: onCenterView,
     },
     {
-      id: 'relations',
-      label: isRtl ? 'الأقارب' : 'Relations',
-      icon: Users,
-      onClick: onOpenRelations,
+      id: 'admin',
+      label: isRtl ? 'الإدارة' : 'Admin',
+      icon: Settings,
+      onClick: onOpenAdmin,
     },
     {
       id: 'tools',

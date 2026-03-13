@@ -48,39 +48,39 @@ export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(
         ></div>
 
 
-        {/* Auth Section */}
-        <div className='hidden sm:flex items-center gap-2'>
+        {/* Auth Section - Always visible now, with sm: gap adjustments */}
+        <div className='flex items-center gap-1 sm:gap-2'>
           {auth.user ? (
             <>
-              {/* Advanced HUD Toggle - Universal Visualization Controls */}
+              {/* Advanced HUD Toggle - Universal Visualization Controls (Desktop Only) */}
               <Tooltip content={isRtl ? 'تفضيلات العرض' : 'Visual Preferences'} position="bottom">
                 <button
                   onClick={() => setSettingsDrawerOpen(!isSettingsDrawerOpen)}
-                  className={`p-2.5 rounded-xl hover:bg-[var(--card-bg)] hover:shadow-lg active:scale-95 transition-all duration-300 group border border-transparent hover:border-[var(--border-main)] ${isSettingsDrawerOpen ? 'bg-amber-500/10 border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.2)]' : ''}`}
+                  className={`hidden sm:block p-2.5 rounded-xl hover:bg-[var(--card-bg)] hover:shadow-lg active:scale-95 transition-all duration-300 group border border-transparent hover:border-[var(--border-main)] ${isSettingsDrawerOpen ? 'bg-amber-500/10 border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.2)]' : ''}`}
                 >
                   <SlidersHorizontal className={`w-5 h-5 transition-all duration-300 ${isSettingsDrawerOpen ? 'text-amber-500 scale-110' : 'text-[var(--text-main)] group-hover:scale-110'}`} />
                 </button>
               </Tooltip>
 
-              {/* Admin Hub (Gear) - Primary Management (Role-Locked) */}
+              {/* Admin Hub (Gear) - Primary Management (Desktop Only, Action Bar handles mobile) */}
               {viewSettings.currentUserRole === 'owner' && (
                 <Tooltip content={isRtl ? 'مركز الإدارة' : 'Admin Hub'} position="bottom">
                   <button
                     onClick={() => viewSettings.onOpenAdminHub?.()}
-                    className='p-2.5 rounded-xl hover:bg-[var(--card-bg)] hover:shadow-lg active:scale-95 transition-all duration-300 group border border-transparent hover:border-[var(--border-main)]'
+                    className='hidden sm:block p-2.5 rounded-xl hover:bg-[var(--card-bg)] hover:shadow-lg active:scale-95 transition-all duration-300 group border border-transparent hover:border-[var(--border-main)]'
                   >
                     <Settings className='w-5 h-5 text-[var(--text-main)] group-hover:rotate-90 transition-transform duration-500' />
                   </button>
                 </Tooltip>
               )}
 
-              {/* Tools Menu - Analysis & Insights */}
+              {/* Tools Menu - Analysis & Insights (Desktop Only, Action Bar handles mobile) */}
               <Tooltip content={isRtl ? 'الأدوات' : 'Tools'} position="bottom">
                 <Dropdown
                   trigger={
                     <button
                       type='button'
-                      className='p-2.5 rounded-xl hover:bg-[var(--card-bg)] hover:shadow-lg active:scale-95 transition-all duration-300 group border border-transparent hover:border-[var(--border-main)]'
+                      className='hidden sm:block p-2.5 rounded-xl hover:bg-[var(--card-bg)] hover:shadow-lg active:scale-95 transition-all duration-300 group border border-transparent hover:border-[var(--border-main)]'
                     >
                       <Wrench className='w-5 h-5 text-[var(--text-main)] group-hover:text-[var(--primary-500)] transition-colors' />
                     </button>
@@ -93,13 +93,13 @@ export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(
                 </Dropdown>
               </Tooltip>
 
-              {/* Export Menu - Downloads & Sharing */}
+              {/* Export Menu - Downloads & Sharing (Desktop Only) */}
               <Tooltip content={isRtl ? 'تصدير' : 'Export'} position="bottom">
                 <Dropdown
                   trigger={
                     <button
                       type='button'
-                      className='p-2.5 rounded-xl hover:bg-[var(--card-bg)] hover:shadow-lg active:scale-95 transition-all duration-300 group border border-transparent hover:border-[var(--border-main)]'
+                      className='hidden sm:block p-2.5 rounded-xl hover:bg-[var(--card-bg)] hover:shadow-lg active:scale-95 transition-all duration-300 group border border-transparent hover:border-[var(--border-main)]'
                     >
                       <Download className='w-5 h-5 text-[var(--text-main)] group-hover:text-[var(--primary-500)] transition-colors' />
                     </button>
@@ -112,15 +112,15 @@ export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(
                 </Dropdown>
               </Tooltip>
 
-              {/* User Account Menu */}
+              {/* User Account Menu - ALWAYS VISIBLE */}
               <Dropdown
                 trigger={
                   <button
                     id="user-menu-trigger"
                     type='button'
-                    className='flex items-center gap-2 p-1 pe-2 rounded-full border border-[var(--border-main)] bg-[var(--theme-bg)] hover:bg-[var(--theme-hover)] transition-all active:scale-95'
+                    className='flex items-center gap-1.5 p-1 sm:pe-2 rounded-full border border-[var(--border-main)] bg-[var(--theme-bg)] hover:bg-[var(--theme-hover)] transition-all active:scale-95'
                   >
-                    <div className='w-7 h-7 rounded-full bg-gradient-to-br from-[var(--primary-600)] to-[var(--primary-400)] flex items-center justify-center text-white text-[10px] font-bold overflow-hidden shadow-sm'>
+                    <div className='w-8 h-8 sm:w-7 sm:h-7 rounded-full bg-gradient-to-br from-[var(--primary-600)] to-[var(--primary-400)] flex items-center justify-center text-white text-[10px] sm:text-[9px] font-bold overflow-hidden shadow-sm'>
                       {auth.user.photoURL ? (
                         <img
                           src={auth.user.photoURL}
@@ -131,7 +131,7 @@ export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(
                         (auth.user.displayName || auth.user.email || 'U')[0].toUpperCase()
                       )}
                     </div>
-                    <ChevronDown className='w-3 h-3 text-[var(--text-dim)]' />
+                    <ChevronDown className='w-3 h-3 text-[var(--text-dim)] hidden sm:block' />
                   </button>
                 }
                 align='end'
@@ -145,13 +145,14 @@ export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(
             </>
           ) : (
             <>
+              {/* Guest / Settings - ALWAYS VISIBLE */}
               <Dropdown
                 trigger={
                   <button
-                    className='w-11 h-11 md:w-9 md:h-9 rounded-full flex items-center justify-center hover:bg-[var(--theme-hover)] text-[var(--text-dim)] hover:text-[var(--text-main)] transition-colors'
+                    className='w-11 h-11 sm:w-9 sm:h-9 rounded-full flex items-center justify-center hover:bg-[var(--theme-hover)] text-[var(--text-dim)] hover:text-[var(--text-main)] transition-colors border border-[var(--border-main)] sm:border-transparent'
                     aria-label={t.settings}
                   >
-                    <Settings className='w-4 h-4' />
+                    <Settings className='w-5 h-5 sm:w-4 sm:h-4' />
                   </button>
                 }
                 align='end'
@@ -161,7 +162,9 @@ export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(
                   onLogin={auth.onOpenLoginModal}
                 />
               </Dropdown>
-              <LoginButton onLogin={auth.onOpenLoginModal} label={t.loginGoogle} />
+              <div className="hidden sm:block">
+                <LoginButton onLogin={auth.onOpenLoginModal} label={t.loginGoogle} />
+              </div>
             </>
           )}
         </div>
