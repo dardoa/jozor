@@ -12,7 +12,7 @@ export const HeaderLeftSection: React.FC<HeaderLeftSectionProps> = memo(
       <div className='flex items-center gap-3 md:gap-6'>
         <button
           onClick={toggleSidebar}
-          className='p-2 text-[var(--text-muted)] hover:bg-[var(--theme-bg)] rounded-xl transition-colors'
+          className='p-3 md:p-2 text-[var(--text-muted)] hover:bg-[var(--theme-bg)] rounded-xl transition-colors'
           aria-label={t.toggleSidebar}
         >
           <Menu className='w-5 h-5' />

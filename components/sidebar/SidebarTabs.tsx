@@ -12,15 +12,14 @@ export const SidebarTabs = memo<SidebarTabsProps>(({ activeTab, setActiveTab, ta
   return (
     <div className='flex items-end justify-between border-b border-[var(--border-main)] bg-[var(--theme-bg)]/80 backdrop-blur-sm pt-3 px-4'>
       {/* تم التعديل: إزالة overflow-x-auto وجعل الحاوية تأخذ المساحة المتاحة */}
-      <div className='flex flex-1 gap-0.5'>
+      <div className='flex flex-1 gap-1 overflow-x-auto no-scrollbar scroll-smooth'>
         {tabs
           .filter((tab) => tab.show)
           .map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              // تم التعديل: جعل كل زر يأخذ مساحة متساوية ويتوسط النص
-              className={`flex-1 min-w-0 text-center px-2.5 py-1.5 rounded-t-lg text-xs font-semibold transition-all relative top-[1px] 
+              className={`flex-none min-w-[70px] sm:flex-1 text-center px-3 py-2 rounded-t-lg text-xs font-semibold transition-all relative top-[1px] whitespace-nowrap
             ${activeTab === tab.id
                   ? 'bg-[var(--theme-bg)] text-[var(--primary-600)] border-x border-t border-[var(--border-main)] z-10 shadow-t-sm'
                   : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'

@@ -222,6 +222,13 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
       {/* Mobile Action Bar */}
       {!isPresentMode && (
         <MobileActionBar
+          activeTab={
+            modals.activeModal === 'stats'
+              ? 'tools'
+              : modals.activeModal === 'login' || !!useAppStore.getState().isSettingsDrawerOpen
+                ? 'account'
+                : null
+          }
           onCenterView={() => {
             window.dispatchEvent(new CustomEvent('reset-interactive-view'));
           }}

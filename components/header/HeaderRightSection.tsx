@@ -148,7 +148,7 @@ export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(
               <Dropdown
                 trigger={
                   <button
-                    className='w-9 h-9 rounded-full flex items-center justify-center hover:bg-[var(--theme-hover)] text-[var(--text-dim)] hover:text-[var(--text-main)] transition-colors'
+                    className='w-11 h-11 md:w-9 md:h-9 rounded-full flex items-center justify-center hover:bg-[var(--theme-hover)] text-[var(--text-dim)] hover:text-[var(--text-main)] transition-colors'
                     aria-label={t.settings}
                   >
                     <Settings className='w-4 h-4' />

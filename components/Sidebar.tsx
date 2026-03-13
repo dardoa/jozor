@@ -61,13 +61,16 @@ export const Sidebar = memo<SidebarProps>(
     }, [person.spouses?.length, activeTab]);
 
     const tabs = useMemo(() => {
-      return [
-        { id: 'info', label: t.profile || 'Info', show: true },
-        { id: 'partners', label: t.partners || 'Partners', show: !!(person.spouses && person.spouses.length > 0) },
-        { id: 'bio', label: t.biography || 'Bio', show: true },
-        { id: 'contact', label: t.contact || 'Contact', show: true },
-        { id: 'media', label: t.galleryTab || 'Media', show: true },
-      ] as { id: 'info' | 'partners' | 'bio' | 'contact' | 'media'; label: string; show: boolean }[];
+      const allTabs = [
+        { id: 'info', label: t.profile || 'Info', show: true, priority: 1 },
+        { id: 'partners', label: t.partners || 'Partners', show: !!(person.spouses && person.spouses.length > 0), priority: 3 },
+        { id: 'bio', label: t.biography || 'Bio', show: true, priority: 2 },
+        { id: 'contact', label: t.contact || 'Contact', show: true, priority: 4 },
+        { id: 'media', label: t.galleryTab || 'Media', show: true, priority: 5 },
+      ] as { id: 'info' | 'partners' | 'bio' | 'contact' | 'media'; label: string; show: boolean; priority: number }[];
+
+      // Note: On mobile < 640px, SidebarTabs already handles the overflow-x-auto scroll.
+      return allTabs.filter(tab => tab.show);
     }, [person.spouses, t]);
 
     if (!isOpen) return null;

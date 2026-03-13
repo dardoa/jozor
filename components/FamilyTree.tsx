@@ -3,6 +3,7 @@ import * as d3 from 'd3';
 import { Person, TreeLink, TreeSettings, TreeNode, FanArc } from '../types';
 import { CollapsePoint } from '../utils/layout/constants';
 import { useAppStore } from '../store/useAppStore';
+import { useTranslation } from '../context/TranslationContext';
 // Removed synchronous calculateTreeLayout import
 
 // Import new sub-components
@@ -44,6 +45,7 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({
   onNodeContextMenu = () => { }
 }) => {
   const svgRef = useRef<SVGSVGElement>(null);
+  const { language } = useTranslation();
 
   // Bridge external providedSvgRef
   const setSvgRef = useCallback((node: SVGSVGElement | null) => {
@@ -134,6 +136,9 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({
   const searchTarget = useAppStore(state => state.searchTarget);
 
   const geometryKey = useMemo(() => {
+    const isMobile = window.innerWidth < 768;
+    const effectiveGenLimit = isMobile ? Math.min(settings.generationLimit, 3) : settings.generationLimit;
+
     const geometrySettings = {
       chartType: settings.chartType,
       layoutMode: settings.layoutMode,
@@ -141,7 +146,8 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({
       nodeSpacingX: settings.nodeSpacingX,
       nodeSpacingY: settings.nodeSpacingY,
       enableTimeOffset: settings.enableTimeOffset,
-      generationLimit: settings.generationLimit,
+      generationLimit: effectiveGenLimit,
+      enableForcePhysics: isMobile ? false : settings.enableForcePhysics,
     };
 
     return JSON.stringify({
@@ -165,6 +171,9 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({
 
   // --- Web Worker Integration ---
   useEffect(() => {
+    // Detect mobile for worker optimization
+    const isMobile = window.innerWidth < 768;
+    
     // Initialize Worker
     workerRef.current = new Worker(new URL('../utils/layout.worker.ts', import.meta.url), { type: 'module' });
 
@@ -205,6 +214,7 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({
   }, []);
 
   useEffect(() => {
+    const isMobile = window.innerWidth < 768;
     if (layoutCacheRef.current.has(geometryKey)) {
       const cached = layoutCacheRef.current.get(geometryKey);
       // Validate cached data matches the expected chart type
@@ -226,11 +236,16 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({
     const requestId = ++latestRequestIdRef.current;
 
     const timeoutId = setTimeout(() => {
+      // Create optimized copy of settings for mobile
+      const effectiveSettings = isMobile 
+        ? { ...settings, enableForcePhysics: false, generationLimit: Math.min(settings.generationLimit, 3) }
+        : settings;
+
       workerRef.current?.postMessage({
         requestId,
         people,
         focusId: focusId,          // Use live focusId, not deferred
-        settings: settings,        // Use live settings so chartType is always current
+        settings: effectiveSettings, // Use optimized settings
         collapsedIds: Array.from(collapsedIds)
       });
     }, 150);
@@ -374,7 +389,9 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/5 backdrop-blur-[2px] transition-opacity duration-300">
           <div className="flex flex-col items-center gap-3 bg-[var(--theme-bg-elevated)] p-6 rounded-2xl shadow-2xl border border-white/10">
             <div className="w-10 h-10 border-2 border-[var(--brand-color)] border-t-transparent rounded-full animate-spin"></div>
-            <span className="text-sm font-medium text-[var(--theme-text-muted)]">Calculating Layout...</span>
+            <span className="text-sm font-medium text-[var(--theme-text-muted)]">
+              {language === 'ar' ? 'جارٍ تجهيز الشجرة...' : 'Calculating Layout...'}
+            </span>
           </div>
         </div>
       )}

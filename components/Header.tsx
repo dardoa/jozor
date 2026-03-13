@@ -56,7 +56,7 @@ export const Header = memo<HeaderProps>(
 
     return (
       <header
-        className={`h-16 bg-[var(--card-bg)]/80 flex items-center px-4 md:px-6 justify-between border-b border-[var(--border-main)] z-30 print:hidden transition-all shadow-sm sticky top-0 ${isLowGraphicsMode ? '' : 'backdrop-blur-md'}`}
+        className={`h-14 md:h-16 bg-[var(--card-bg)]/80 flex items-center px-4 md:px-6 justify-between border-b border-[var(--border-main)] z-30 print:hidden transition-all shadow-sm sticky top-0 ${isLowGraphicsMode ? '' : 'backdrop-blur-md'}`}
         role='banner'
       >
         {/* Left Section */}

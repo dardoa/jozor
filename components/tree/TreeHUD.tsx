@@ -2,8 +2,6 @@ import React from 'react';
 import { TreeSettings, TreeNode, TreeLink } from '../../types';
 import { ZoomControls } from '../ui/ZoomControls';
 import { Minimap } from '../ui/Minimap';
-import { Dropdown } from '../ui/Dropdown';
-import { ViewSettingsMenu } from '../header/ViewSettingsMenu';
 import { useAppStore } from '../../store/useAppStore';
 
 interface TreeHUDProps {
@@ -52,52 +50,49 @@ export const TreeHUD: React.FC<TreeHUDProps> = ({
     onZoomOut,
     onResetZoom,
     onFitToScreen,
-    settings,
-    onPresent,
-    onOpenSnapshotHistory,
-    onOpenModal,
 }) => {
     const { setSettingsDrawerOpen, isSettingsDrawerOpen } = useAppStore();
     return (
         <>
-            {/* Minimap (Bottom-Start) */}
+            {/* Minimap (Bottom-Start) - Hidden on mobile md:block */}
             {!isFanChart && !isForce && showMinimap && (
                 <div
                     className={`absolute z-20 transition-all duration-300
-            bottom-5 start-5
+            bottom-5 start-5 hidden md:block
             pb-[env(safe-area-inset-bottom,0px)]
             ps-[env(safe-area-inset-left,0px)]
-            ${isSidebarOpen ? 'md:translate-x-0' : ''}
+            ${isSidebarOpen ? 'translate-x-0' : ''}
           `}
                 >
                     <Minimap nodes={nodes} links={links} focusId={focusId} />
                 </div>
             )}
-
-            {/* Zoom Controls (Bottom-End) */}
+ 
+            {/* Zoom Controls (Bottom-End) - Adjusted for Mobile */}
             <div
                 className={`absolute z-50 transition-all duration-300 print:hidden
-          bottom-6 end-4
+          bottom-20 md:bottom-6 end-4
           pb-[env(safe-area-inset-bottom,0px)]
           pe-[env(safe-area-inset-right,0px)]
         `}
             >
-                <ZoomControls
-                    onZoomIn={onZoomIn}
-                    onZoomOut={onZoomOut}
-                    onReset={onResetZoom}
-                    onFitToScreen={onFitToScreen}
-                    onOpenAdvanced={() => setSettingsDrawerOpen(true)}
-                />
+                <div className="scale-110 md:scale-100 origin-bottom-right">
+                    <ZoomControls
+                        onZoomIn={onZoomIn}
+                        onZoomOut={onZoomOut}
+                        onReset={onResetZoom}
+                        onFitToScreen={onFitToScreen}
+                        onOpenAdvanced={() => setSettingsDrawerOpen(true)}
+                    />
+                </div>
             </div>
-
-            {/* Floating View Settings Menu (Top-End corner - with Safe Area and Sidebar awareness) */}
+ 
+            {/* Floating View Settings Menu (Hidden on mobile as it's redundant with Sidebar/HUD) */}
             <div
                 className={`absolute z-50 transition-all duration-300 print:hidden
-          top-6 end-4
+          top-6 end-4 hidden md:block
           pt-[env(safe-area-inset-top,0px)]
           pe-[env(safe-area-inset-right,0px)]
-          ${isSidebarOpen ? 'md:translate-x-0' : ''}
         `}
             >
                 <button
