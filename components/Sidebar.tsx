@@ -125,12 +125,12 @@ export const Sidebar = memo<SidebarProps>(
         <aside
           className={`fixed inset-x-0 bottom-0 sm:inset-y-0 z-[100] w-full sm:w-[450px] h-[75vh] sm:h-full bg-[var(--theme-bg)] border-t sm:border-t-0 border-[var(--border-main)] flex flex-col shadow-[0_-8px_30px_rgba(0,0,0,0.3)] transition-all duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] rounded-t-[32px] sm:rounded-none ${
             isRtl 
-              ? 'sm:left-0 sm:right-auto sm:border-r' 
-              : 'sm:right-0 sm:left-auto sm:border-l'
+              ? 'sm:right-0 sm:left-auto sm:border-l' 
+              : 'sm:left-0 sm:right-auto sm:border-r'
           } ${
             isOpen
               ? 'translate-y-0 sm:translate-x-0'
-              : `translate-y-full ${isRtl ? 'sm:-translate-x-full' : 'sm:translate-x-full'} pointer-events-none`
+              : `translate-y-full ${isRtl ? 'sm:translate-x-full' : 'sm:-translate-x-full'} pointer-events-none`
           }`}
           style={{ 
             transform: (isDragging && isOpen) ? `translateY(${dragY}px)` : undefined,
