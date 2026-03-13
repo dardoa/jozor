@@ -1,7 +1,7 @@
 import { StateCreator } from 'zustand';
 import { Person } from '../../types';
 import { INITIAL_ROOT_ID, SAMPLE_FAMILY, DEFAULT_PERSON_TEMPLATE, INITIAL_PERSON } from '../../constants';
-import { validatePerson } from '../../utils/familyLogic';
+import { validatePerson, createPerson } from '../../utils/familyLogic';
 import {
     performAddChild,
     performAddParent,
@@ -286,10 +286,9 @@ export const createFamilySlice: StateCreator<AppStore, [["zustand/devtools", nev
 
     addFirstPerson: (gender) => {
         const newPerson = {
-            ...INITIAL_PERSON,
-            id: INITIAL_ROOT_ID,
-            gender,
-            firstName: gender === 'male' ? 'Me' : 'Me',
+            ...createPerson(gender),
+            firstName: 'Me',
+            lastName: '',
         };
 
         set((state) => ({

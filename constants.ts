@@ -1,9 +1,9 @@
 /// <reference types="vite/client" />
 import { Person, Gender } from './types';
 
-export const INITIAL_ROOT_ID = 'root-1';
-export const SPOUSE_ID = 'spouse-1';
-export const CHILD_ID = 'child-1';
+export const INITIAL_ROOT_ID = '00000000-0000-0000-0000-000000000001';
+export const SPOUSE_ID = '00000000-0000-0000-0000-000000000002';
+export const CHILD_ID = '00000000-0000-0000-0000-000000000003';
 
 // @ts-expect-error - Global defined by build tool
 export const APP_VERSION = __APP_VERSION__;
