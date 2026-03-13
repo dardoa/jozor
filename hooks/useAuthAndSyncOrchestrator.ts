@@ -96,6 +96,8 @@ export const useAuthAndSyncOrchestrator = (
       // For Google Drive, we can trigger a save if we have a file ID
       if (googleSync.currentActiveDriveFileId) {
         googleSync.handleOverwriteExistingDriveFile(googleSync.currentActiveDriveFileId);
+      } else {
+        googleSync.onSaveNewCloudFile();
       }
     };
 

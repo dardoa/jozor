@@ -171,7 +171,7 @@ export const SyncStatusTooltip: React.FC<SyncStatusTooltipProps> = ({
                     className="w-full py-2 px-3 bg-[var(--primary-600)] text-white rounded-lg text-sm font-medium hover:bg-[var(--primary-500)] transition-colors flex items-center justify-center gap-2"
                 >
                     <RefreshCw className="w-4 h-4" />
-                    Force Sync to Drive
+                    Backup Now (Google Drive)
                 </button>
 
                 <button
@@ -185,7 +185,7 @@ export const SyncStatusTooltip: React.FC<SyncStatusTooltipProps> = ({
                     title="Purge corrupted sync state and force new file creation"
                 >
                     <AlertCircle className="w-3.5 h-3.5" />
-                    Clear Sync Cache & Retry
+                    Reset Backup Link & Retry
                 </button>
 
                 {syncStatus.state === 'error' && (
@@ -203,7 +203,7 @@ export const SyncStatusTooltip: React.FC<SyncStatusTooltipProps> = ({
 
             {/* Info */}
             <div className="mt-3 pt-3 border-t border-[var(--border-main)] text-xs text-[var(--text-dim)]">
-                💡 Changes are auto-saved to Supabase and backed up to Google Drive
+                💡 Changes are saved to Supabase. Google Drive is used for backups.
             </div>
         </div>
     );

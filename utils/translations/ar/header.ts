@@ -7,6 +7,7 @@ export const header = {
   signIn: 'تسجيل الدخول',
   signOut: 'تسجيل الخروج',
   syncWithGoogleDrive: 'النسخ الاحتياطي السحابي',
+  backupNow: 'نسخ احتياطي الآن',
   manageDriveFiles: 'إدارة النسخ الاحتياطية',
   syncing: 'جاري النسخ الاحتياطي...',
   view: 'عرض',

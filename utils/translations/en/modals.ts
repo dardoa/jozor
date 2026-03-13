@@ -80,7 +80,7 @@ export const modals = {
   googleDriveSyncWarning:
     'Warning: Proceeding with either option below will replace your current local tree data.',
   googleDriveSyncPrompt:
-    'A backup file was found in your Google Drive. What would you like to do?',
+    'A backup file was found in your Google Drive. Would you like to restore it or create a new backup?',
   googleDriveLoadExisting: 'Restore from Cloud',
   googleDriveLoadExistingDesc: 'Replace your current local tree with the cloud backup.',
   googleDriveSaveNewFile: 'Create New Backup',

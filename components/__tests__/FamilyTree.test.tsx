@@ -1,24 +1,55 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { describe, it, expect, vi } from 'vitest';
 import { FamilyTree } from '../FamilyTree';
 import { Person, TreeSettings } from '../../types';
 
-// Mock the useTreeLayout hook to avoid Web Worker issues
-vi.mock('../../hooks/useTreeLayout', () => ({
-    useTreeLayout: () => ({
-        nodes: [
-            { id: '1', x: 0, y: 0, data: { id: '1', firstName: 'Root', lastName: 'Person', gender: 'male' }, type: 'focus' },
-            { id: '2', x: 100, y: 100, data: { id: '2', firstName: 'Child', lastName: 'Person', gender: 'female' }, type: 'descendant' }
-        ],
-        links: [
-            { source: { x: 0, y: 0 }, target: { x: 100, y: 100 } }
-        ],
-        collapsePoints: [],
-        isCalculating: false
-    })
+vi.mock('../../context/TranslationContext', () => ({
+    useTranslation: () => ({
+        t: {},
+        language: 'en',
+        setLanguage: vi.fn(),
+    }),
+    TranslationProvider: ({ children }: any) => children,
 }));
+
+// FamilyTree uses a Web Worker for layout. Provide a Worker mock that
+// immediately returns a minimal layout so the chart layers render.
+class WorkerMock {
+    onmessage: ((ev: MessageEvent) => any) | null = null;
+    constructor() { }
+    postMessage(msg: any) {
+        const requestId = msg?.requestId ?? 1;
+        const people = msg?.people ?? {};
+        const focusId = msg?.focusId;
+        const focus = focusId && people[focusId] ? focusId : Object.keys(people)[0];
+        const focusPerson = focus ? people[focus] : undefined;
+        const childId = focusPerson?.children?.[0];
+
+        const nodes = focusPerson
+            ? [
+                { id: focus, x: 0, y: 0, data: focusPerson, type: 'focus' },
+                ...(childId && people[childId]
+                    ? [{ id: childId, x: 100, y: 100, data: people[childId], type: 'descendant' }]
+                    : [])
+            ]
+            : [];
+
+        const links = (focusPerson && childId && people[childId])
+            ? [{ source: focus, target: childId, type: 'parent-child' }]
+            : [];
+
+        setTimeout(() => {
+            this.onmessage?.({
+                data: { requestId, nodes, links, collapsePoints: [], fanArcs: [] }
+            } as any);
+        }, 0);
+    }
+    terminate() { }
+}
+
+global.Worker = WorkerMock as any;
 
 // Mock d3 to avoid timer/transition issues in JSDOM
 vi.mock('d3', async () => {
@@ -66,6 +97,7 @@ const mockPeople: Record<string, Person> = {
         birthDate: '1980', parents: [], children: ['2'], spouses: [],
         title: '', middleName: '', birthName: '', nickName: '', suffix: '',
         birthPlace: '', birthSource: '', deathDate: '', deathPlace: '', deathSource: '',
+        burialPlace: '', residence: '',
         isDeceased: false, profession: '', company: '', interests: '', bio: '',
         gallery: [], voiceNotes: [], events: [], email: '', website: '', blog: '', address: '',
         sources: []
@@ -75,6 +107,7 @@ const mockPeople: Record<string, Person> = {
         birthDate: '2010', parents: ['1'], children: [], spouses: [],
         title: '', middleName: '', birthName: '', nickName: '', suffix: '',
         birthPlace: '', birthSource: '', deathDate: '', deathPlace: '', deathSource: '',
+        burialPlace: '', residence: '',
         isDeceased: false, profession: '', company: '', interests: '', bio: '',
         gallery: [], voiceNotes: [], events: [], email: '', website: '', blog: '', address: '',
         sources: []
@@ -90,12 +123,28 @@ const mockSettings: TreeSettings = {
     timeScaleFactor: 5,
     theme: 'modern',
     showPhotos: true,
+    showFirstName: true,
     showDates: true,
+    showBirthDate: true,
+    showMarriageDate: false,
+    showDeathDate: true,
+    showBirthPlace: false,
+    showMarriagePlace: false,
+    showBurialPlace: false,
+    showResidence: false,
     showMiddleName: false,
     showLastName: true,
+    showNickname: false,
     isCompact: false,
+    showDeceased: true,
+    highlightBranch: false,
     nodeSpacingX: 60,
     nodeSpacingY: 400,
+    nodeWidth: 240,
+    textSize: 12,
+    themeColor: '#10b981',
+    boxColorLogic: 'gender',
+    generationLimit: 6,
 };
 
 describe('FamilyTree Component', () => {
@@ -121,7 +170,7 @@ describe('FamilyTree Component', () => {
         expect(svg).toBeInTheDocument();
     });
 
-    it('renders node and link layers from the layout hook', () => {
+    it('renders node and link layers from the layout hook', async () => {
         // The nodes and links are rendered by DescendantPedigreeChart inside FamilyTree.
         // We verify that the structural SVG groups for nodes and links are present,
         // without depending on specific text labels (which may be async/worker-driven).
@@ -142,10 +191,11 @@ describe('FamilyTree Component', () => {
             />
         );
 
-        const nodesLayer = container.querySelector('.nodes-layer');
-        const linksLayer = container.querySelector('.links-layer');
-
-        expect(nodesLayer).not.toBeNull();
-        expect(linksLayer).not.toBeNull();
+        await waitFor(() => {
+            const nodesLayer = container.querySelector('.nodes-layer');
+            const linksLayer = container.querySelector('.links-layer');
+            expect(nodesLayer).not.toBeNull();
+            expect(linksLayer).not.toBeNull();
+        });
     });
 });

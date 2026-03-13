@@ -27,6 +27,8 @@ export const useGoogleSync = (
   const [isDemoMode, setIsDemoMode] = useState(false);
   const [driveFiles, setDriveFiles] = useState<DriveFile[]>([]);
 
+  const isDriveBackupOnly = true;
+
   // UI State for operations
   const [isListingDriveFiles, setIsListingDriveFiles] = useState(false);
   const [isSavingDriveFile, setIsSavingDriveFile] = useState(false);
@@ -98,17 +100,19 @@ export const useGoogleSync = (
       // refreshDriveFiles depends on 'user' which is now from the store
       await refreshDriveFiles(true); // Allow popup here
 
-      try {
-        const existingFileId = await runWithAuth(() => googleDriveService.findLatestJozorFile(), true);
-        if (existingFileId) {
-          setCurrentActiveDriveFileId(existingFileId);
-          onOpenGoogleSyncChoice(existingFileId);
-        } else {
-          setCurrentActiveDriveFileId(null);
+      if (!isDriveBackupOnly) {
+        try {
+          const existingFileId = await runWithAuth(() => googleDriveService.findLatestJozorFile(), true);
+          if (existingFileId) {
+            setCurrentActiveDriveFileId(existingFileId);
+            onOpenGoogleSyncChoice(existingFileId);
+          } else {
+            setCurrentActiveDriveFileId(null);
+          }
+        } catch (driveErr) {
+          console.error('Drive Setup Error:', driveErr);
+          showError('Logged in, but failed to access Google Drive. Check permissions.');
         }
-      } catch (driveErr) {
-        console.error('Drive Setup Error:', driveErr);
-        showError('Logged in, but failed to access Google Drive. Check permissions.');
       }
     } catch (e: unknown) {
       const err = e as Error;
@@ -169,6 +173,7 @@ export const useGoogleSync = (
 
   // Check if we have pending offline syncs on mount
   useEffect(() => {
+    if (isDriveBackupOnly) return;
     const pendingSync = localStorage.getItem('pending_google_sync');
     if (pendingSync === 'true' && currentActiveDriveFileId && !isSyncing && navigator.onLine) {
       console.log('Detected pending offline sync. Retrying now...');
@@ -206,6 +211,8 @@ export const useGoogleSync = (
     // 2. We have an active file ID
     // 3. We are not currently syncing (to avoid race conditions)
     // 4. People data is not empty (integrity check 1)
+
+    if (isDriveBackupOnly) return;
 
     if (!user || !currentActiveDriveFileId || isSyncing || isSavingDriveFile || isListingDriveFiles) return;
 
@@ -506,6 +513,7 @@ export const useGoogleSync = (
 
   // Daily Snapshot Logic
   useEffect(() => {
+    if (isDriveBackupOnly) return;
     if (!currentActiveDriveFileId || !user) return;
 
     const checkAndCreateDaily = async () => {
@@ -623,6 +631,11 @@ export const useGoogleSync = (
     handleCreateSnapshot,
     handleRestoreSnapshot,
     handleClearSyncCache,
-    onSaveToGoogleDrive: () => handleOverwriteExistingDriveFile(currentActiveDriveFileId!, false, true),
+    onSaveToGoogleDrive: () => {
+      if (!currentActiveDriveFileId) {
+        return onSaveNewCloudFile();
+      }
+      return handleOverwriteExistingDriveFile(currentActiveDriveFileId, false, true);
+    },
   };
 };

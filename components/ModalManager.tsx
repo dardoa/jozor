@@ -221,10 +221,6 @@ export const ModalManager = ({
         sharedTrees={sharedTreePromptModal.sharedTrees}
         onSelect={async (tree) => {
           setSharedTreePromptModal({ isOpen: false, sharedTrees: [] });
-          // If it has a driveFileId, we should prioritize loading that snapshot
-          if (tree.driveFileId) {
-            await handleLoadDriveFile(tree.driveFileId);
-          }
           // Set the current tree ID so delta sync and metadata fetch work
           onTreeSelected(tree.id);
         }}

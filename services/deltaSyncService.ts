@@ -62,6 +62,16 @@ const reorderBuffer = new Map<number, DeltaOperation>();
 let gapCount = 0;
 const MAX_GAP_RETRIES = 3;
 
+const REORDER_BUFFER_MAX_SIZE = 500;
+
+// --- RECONCILE THROTTLING / BACKOFF ---
+let reconcileInFlight = false;
+let lastReconcileAttempt = 0;
+let reconcileFailureCount = 0;
+let nextReconcileAllowedAt = 0;
+const RECONCILE_MIN_INTERVAL_MS = 5000;
+const RECONCILE_MAX_BACKOFF_MS = 60000;
+
 /** Throttle for realtime SUBSCRIBED catch-up reconciliation. */
 let lastReconcileTime = 0;
 
@@ -69,6 +79,8 @@ let lastReconcileTime = 0;
 let outgoingQueue: PendingDeltaOp[] = [];
 let outgoingTimeout: NodeJS.Timeout | null = null;
 const OUTGOING_BATCH_DELAY = 300; // ms - slightly longer for outgoing to allow multiple state changes (e.g. adding relationship) to group
+
+const clientInstanceId = `client_${Math.random().toString(36).slice(2)}_${Date.now()}`;
 
 export const deltaSyncService = {
     _snapshotCounter: 0,
@@ -97,6 +109,28 @@ export const deltaSyncService = {
         } catch (error: unknown) {
             logError('DeltaSync', error, { showToast: false });
             return false;
+        }
+    },
+
+    async _requestReconcile(treeId: string, reason: 'gap' | 'realtime' | 'buffer_overflow' | 'manual') {
+        const now = Date.now();
+        if (reconcileInFlight) return;
+        if (now < nextReconcileAllowedAt) return;
+        if (now - lastReconcileAttempt < RECONCILE_MIN_INTERVAL_MS) return;
+
+        reconcileInFlight = true;
+        lastReconcileAttempt = now;
+
+        try {
+            await deltaSyncService.reconcileTree(treeId);
+            reconcileFailureCount = 0;
+            nextReconcileAllowedAt = Date.now() + RECONCILE_MIN_INTERVAL_MS;
+        } catch (e) {
+            reconcileFailureCount += 1;
+            const backoff = Math.min(RECONCILE_MAX_BACKOFF_MS, RECONCILE_MIN_INTERVAL_MS * Math.pow(2, reconcileFailureCount));
+            nextReconcileAllowedAt = Date.now() + backoff;
+        } finally {
+            reconcileInFlight = false;
         }
     },
 
@@ -141,7 +175,7 @@ export const deltaSyncService = {
             tree_id: treeId,
             user_id: user.uid,
             type,
-            payload: { ...payload, client_version: clientVersion },
+            payload: { ...payload, client_version: clientVersion, client_id: clientInstanceId },
             client_version: clientVersion,
             created_at: new Date().toISOString()
         };
@@ -452,6 +486,15 @@ export const deltaSyncService = {
             }
         });
 
+        if (reorderBuffer.size > REORDER_BUFFER_MAX_SIZE) {
+            const { currentTreeId } = useAppStore.getState();
+            console.warn(`[DeltaSync] ⚠️ Reorder buffer exceeded ${REORDER_BUFFER_MAX_SIZE}. Triggering reconciliation and clearing buffer.`);
+            reorderBuffer.clear();
+            if (currentTreeId) {
+                void deltaSyncService._requestReconcile(currentTreeId, 'buffer_overflow');
+            }
+        }
+
         // Also prune existing buffer entries that might have become stale
         for (const seq of reorderBuffer.keys()) {
             if (seq <= currentVersion) {
@@ -492,7 +535,7 @@ export const deltaSyncService = {
 
                     // Immediate Reconcile logic
                     if (currentTreeId) {
-                        void deltaSyncService.reconcileTree(currentTreeId);
+                        void deltaSyncService._requestReconcile(currentTreeId, 'gap');
                         window.dispatchEvent(new CustomEvent('sync-gap-resolved', { detail: { treeId: currentTreeId, version: currentVersion } }));
                     }
                 }
@@ -508,6 +551,7 @@ export const deltaSyncService = {
         // 3. Apply all operations batched in a single animation frame
         requestAnimationFrame(async () => {
             const state = useAppStore.getState();
+            const currentUserId = state.user?.uid;
             let people = { ...state.people };
             let maxVersion = currentVersion;
 
@@ -520,9 +564,12 @@ export const deltaSyncService = {
                     maxVersion = op.version_seq;
                 }
 
-                // If this op has a client_version matching ours or if user matches and payload reveals it, remove the optimistic lock
+                // Only release optimistic locks for operations that originate from this user/client.
                 const pTarget = op.payload?.id || op.payload?.person?.id || op.payload?.existingId || op.payload?.targetId;
-                if (pTarget) {
+                const opClientId = (op.payload as any)?.client_id as string | undefined;
+                const isFromMe = !!currentUserId && op.user_id === currentUserId;
+                const isSameClient = !!opClientId && opClientId === clientInstanceId;
+                if (pTarget && (isSameClient || isFromMe)) {
                     state.removeSyncingNode(pTarget);
                 }
             });

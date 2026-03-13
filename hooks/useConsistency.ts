@@ -20,9 +20,13 @@ export const useConsistency = () => {
 
         if (workerRef.current) {
             workerRef.current.onmessage = (e) => {
-                const { type, issues } = e.data;
-                if (type === 'ISSUES') {
-                    setValidationErrors(issues);
+                const { type } = e.data as { type?: string };
+                if (type === 'success') {
+                    const { errors } = e.data as { errors?: Record<string, string[]> };
+                    setValidationErrors(errors || {});
+                }
+                if (type === 'error') {
+                    setValidationErrors({});
                 }
             };
         }

@@ -7,6 +7,7 @@ export const header = {
   signIn: 'Sign In',
   signOut: 'Sign Out',
   syncWithGoogleDrive: 'Cloud Backup',
+  backupNow: 'Backup Now',
   manageDriveFiles: 'Manage Backups',
   syncing: 'Backing up...',
   view: 'View',

@@ -16,6 +16,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
+    if (user.type !== 'internal' || !user.token) {
+      return res.status(401).json({
+        error: {
+          message: 'This endpoint requires an internal Supabase JWT',
+          code: 'UNAUTHORIZED',
+        },
+      });
+    }
+
     const supabase = createSupabaseClientForUser(user);
 
     if (req.method === 'GET') {

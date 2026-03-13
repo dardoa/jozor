@@ -138,6 +138,7 @@ export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(
               >
                 <UserMenu
                   onLogout={auth.onLogout}
+                  onBackupNow={auth.onSaveToGoogleDrive}
                   onOpenDriveFileManager={auth.onOpenDriveFileManager}
                   onOpenTreeManager={auth.onOpenTreeManager}
                 />

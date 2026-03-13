@@ -72,8 +72,9 @@ describe('useAppOrchestration Integration', () => {
             expect(Object.keys(result.current.appState.people).length).toBeGreaterThan(0);
         });
 
-        const rootId = 'root-1';
-        expect(result.current.appState.people[rootId]).toBeDefined();
+        const focusId = result.current.appState.focusId;
+        expect(focusId).toBeTruthy();
+        expect(result.current.appState.people[focusId]).toBeDefined();
     });
 
     it('handles interaction: updating a person', async () => {

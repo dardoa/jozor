@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { LogOut, HardDrive, Settings, FolderTree, Clock } from 'lucide-react';
+import { LogOut, HardDrive, Settings, FolderTree, Clock, CloudUpload } from 'lucide-react';
 import { DropdownContent, DropdownMenuItem, DropdownMenuDivider } from '../ui/DropdownMenu';
 import { useTranslation } from '../../context/TranslationContext';
 import { useAppStore } from '../../store/useAppStore';
@@ -10,6 +10,7 @@ interface UserMenuProps {
   onLogout: () => void;
   onOpenDriveFileManager: () => void;
   onOpenTreeManager: () => void;
+  onBackupNow?: () => Promise<void> | void;
   onOpenModal?: (modalType: ModalType) => void;
 }
 
@@ -19,6 +20,7 @@ export const UserMenu = memo(
     onClose,
     onOpenDriveFileManager,
     onOpenTreeManager,
+    onBackupNow,
     onOpenModal,
   }: UserMenuProps) => {
     const { t, language } = useTranslation();
@@ -51,6 +53,17 @@ export const UserMenu = memo(
         />
 
         {/* Manage Drive Files & Trees */}
+        {onBackupNow && (
+          <DropdownMenuItem
+            onClick={() => {
+              void onBackupNow();
+              onClose?.();
+            }}
+            icon={<CloudUpload className='w-4 h-4' />}
+            label={(t as any).backupNow || (language === 'ar' ? 'نسخ احتياطي الآن' : 'Backup Now')}
+          />
+        )}
+
         <DropdownMenuItem
           onClick={onOpenDriveFileManager}
           icon={<HardDrive className='w-4 h-4' />}

@@ -79,7 +79,7 @@ export const modals = {
   googleDriveSyncTitle: 'النسخ الاحتياطية السحابية',
   googleDriveSyncWarning:
     'تحذير: المتابعة بأي من الخيارين أدناه ستؤدي إلى استبدال بيانات شجرتك المحلية الحالية.',
-  googleDriveSyncPrompt: 'تم العثور على نسخة احتياطية في جوجل درايف. ماذا تود أن تفعل؟',
+  googleDriveSyncPrompt: 'تم العثور على نسخة احتياطية في جوجل درايف. هل تود استعادتها أم إنشاء نسخة احتياطية جديدة؟',
   googleDriveLoadExisting: 'استعادة من السحابة',
   googleDriveLoadExistingDesc: 'استبدال شجرتك المحلية الحالية بالنسخة الاحتياطية من جوجل درايف.',
   googleDriveSaveNewFile: 'إنشاء نسخة احتياطية جديدة',
