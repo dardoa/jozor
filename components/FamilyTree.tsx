@@ -27,6 +27,7 @@ interface FamilyTreeProps {
   onOpenLinkModal: (type: 'parent' | 'spouse' | 'child', gender: 'male' | 'female') => void;
   onOpenModal: (type: any, data?: any) => void;
   onNodeContextMenu?: (e: React.MouseEvent, id: string) => void;
+  onAddFirstPerson?: (gender: 'male' | 'female') => void;
 }
 
 export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({
@@ -42,7 +43,8 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({
   activeModal,
   setSidebarOpen,
   onOpenLinkModal,
-  onNodeContextMenu = () => { }
+  onNodeContextMenu = () => { },
+  onAddFirstPerson = () => { }
 }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const { language } = useTranslation();
@@ -476,16 +478,48 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({
                     highlightedNodeId={null}
                     highlightedPath={highlightedPath}
                   />
-                ) : !isLoading && hasReceivedLayout && (
-                  <foreignObject x="-200" y="-80" width="400" height="160">
+                ) : !isLoading && (
+                  <foreignObject x="-250" y="-150" width="500" height="300">
                     <div
-                      style={{ fontFamily: 'sans-serif' }}
-                      className="w-full h-full flex flex-col items-center justify-center gap-3 text-center p-6 rounded-2xl bg-[var(--card-bg,#1e293b)] border border-white/10 shadow-xl"
+                      style={{ fontFamily: 'var(--font-main, sans-serif)' }}
+                      className="w-full h-full flex flex-col items-center justify-center gap-6 text-center p-8 rounded-[2.5rem] bg-[var(--theme-bg-elevated)] border border-white/10 shadow-2xl backdrop-blur-xl animate-in zoom-in-95 duration-500"
                     >
-                      <span className="text-3xl">🌳</span>
-                      <p className="text-sm font-semibold text-[var(--text-main,#f1f5f9)]">No data to display.</p>
-                      <p className="text-xs text-[var(--text-dim,#94a3b8)] leading-relaxed">
-                        Check <strong>Show Deceased</strong> or adjust <strong>Timeline Layout</strong> and filters in the <strong>Settings</strong> side drawer.
+                      <div className="w-20 h-20 rounded-3xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 mb-2">
+                        <svg className="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" />
+                          <path d="M12 8V16" />
+                          <path d="M8 12H16" />
+                        </svg>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <h3 className="text-xl font-black text-[var(--theme-text)]">
+                          {language === 'ar' ? 'ابدأ شجرتك العائلية' : 'Start Your Family Tree'}
+                        </h3>
+                        <p className="text-sm text-[var(--theme-text-muted)] max-w-[300px] leading-relaxed">
+                          {language === 'ar' 
+                            ? 'هذه الشجرة فارغة حالياً. أضف نفسك أو الشخص الأول لبدء توثيق سلالتك.' 
+                            : 'This tree is currently empty. Add yourself or the first person to begin documenting your lineage.'}
+                        </p>
+                      </div>
+
+                      <div className="flex gap-4 w-full max-w-[300px]">
+                        <button
+                          onClick={() => onAddFirstPerson('male')}
+                          className="flex-1 px-6 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-black text-sm transition-all shadow-lg shadow-emerald-600/20 active:scale-95 flex items-center justify-center gap-2"
+                        >
+                          {language === 'ar' ? 'إضافة (ذكر)' : 'Add Male'}
+                        </button>
+                        <button
+                          onClick={() => onAddFirstPerson('female')}
+                          className="flex-1 px-6 py-3.5 bg-pink-600 hover:bg-pink-500 text-white rounded-2xl font-black text-sm transition-all shadow-lg shadow-pink-600/20 active:scale-95 flex items-center justify-center gap-2"
+                        >
+                          {language === 'ar' ? 'إضافة (أنثى)' : 'Add Female'}
+                        </button>
+                      </div>
+                      
+                      <p className="text-[10px] font-black uppercase tracking-widest text-[var(--theme-text-muted)] opacity-50 mt-2">
+                        Jozor Premium Interactive Canvas
                       </p>
                     </div>
                   </foreignObject>

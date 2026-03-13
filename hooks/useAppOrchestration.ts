@@ -158,6 +158,7 @@ export const useAppOrchestration = (isSharedMode: boolean = false): AppOrchestra
     onAddParent: (g) => handleOpenLinkModal('parent', g),
     onAddSpouse: (g) => handleOpenLinkModal('spouse', g),
     onAddChild: (g) => handleOpenLinkModal('child', g),
+    onAddFirstPerson: (g) => treeActions.addFirstPerson(g),
     onRemoveRelationship: (targetId, relativeId, type) => treeActions.removeRelationship(targetId, relativeId, type),
     onLinkPerson: (existingId, type) => type && treeActions.linkPerson(existingId, type),
   };
@@ -166,6 +167,7 @@ export const useAppOrchestration = (isSharedMode: boolean = false): AppOrchestra
     onAddParent: (g) => treeActions.addParent(g),
     onAddSpouse: (g) => treeActions.addSpouse(g),
     onAddChild: (g) => treeActions.addChild(g),
+    onAddFirstPerson: (g) => treeActions.addFirstPerson(g),
     onRemoveRelationship: (targetId, relativeId, type) => treeActions.removeRelationship(targetId, relativeId, type),
     onLinkPerson: (existingId, type) => type && treeActions.linkPerson(existingId, type),
   };

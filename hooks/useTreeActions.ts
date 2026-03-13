@@ -97,6 +97,30 @@ export const useTreeActions = () => {
         return res;
     };
 
+    const addFirstPerson = (gender: 'male' | 'female', bypassSync = false) => {
+        store.addFirstPerson(gender);
+        const postAddPeople = getPeople();
+        const newId = store.focusId;
+        const newPerson = postAddPeople[newId];
+        
+        throttledSaveLocal(postAddPeople);
+
+        if (!bypassSync) {
+            const treeId = getCurrentTreeId();
+            if (treeId) {
+                deltaSyncService.pushOperation(treeId, 'ADD_NODE', { person: newPerson, relativeId: undefined, type: undefined }).then(success => {
+                    if (success) {
+                        void activityService.logAction(treeId, 'ADD_PERSON', {
+                            personId: newId,
+                            personName: `${newPerson.firstName} ${newPerson.lastName}`.trim(),
+                            type: 'initial'
+                        });
+                    }
+                });
+            }
+        }
+    };
+
     const addSpouse = (gender: 'male' | 'female', bypassSync = false) => {
         const focusId = useAppStore.getState().focusId;
         const res = store.addSpouse(gender, bypassSync);
@@ -215,6 +239,7 @@ export const useTreeActions = () => {
         addParent,
         addSpouse,
         addChild,
+        addFirstPerson,
         removeRelationship,
         linkPerson
     };

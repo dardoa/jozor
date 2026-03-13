@@ -1,6 +1,6 @@
 import { StateCreator } from 'zustand';
 import { Person } from '../../types';
-import { INITIAL_ROOT_ID, SAMPLE_FAMILY, DEFAULT_PERSON_TEMPLATE } from '../../constants';
+import { INITIAL_ROOT_ID, SAMPLE_FAMILY, DEFAULT_PERSON_TEMPLATE, INITIAL_PERSON } from '../../constants';
 import { validatePerson } from '../../utils/familyLogic';
 import {
     performAddChild,
@@ -52,6 +52,7 @@ export interface FamilySlice {
     incrementLocalClientVersion: () => void;
     addSyncingNode: (id: string) => void;
     removeSyncingNode: (id: string) => void;
+    addFirstPerson: (gender: 'male' | 'female') => void;
 }
 
 // Google Drive backup will be called explicitly when opCount reaches 50
@@ -281,5 +282,22 @@ export const createFamilySlice: StateCreator<AppStore, [["zustand/devtools", nev
             set({ opCount: 0 });
             window.dispatchEvent(new CustomEvent('jozor-backup-requested'));
         }
+    },
+
+    addFirstPerson: (gender) => {
+        const newPerson = {
+            ...INITIAL_PERSON,
+            id: INITIAL_ROOT_ID,
+            gender,
+            firstName: gender === 'male' ? 'Me' : 'Me',
+        };
+
+        set((state) => ({
+            people: { [newPerson.id]: newPerson },
+            peopleVersion: state.peopleVersion + 1,
+            focusId: newPerson.id,
+            history: [...state.history, state.people],
+            future: [],
+        }));
     },
 });

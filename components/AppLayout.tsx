@@ -150,6 +150,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
             onPresent={viewSettings.onPresent}
             onOpenSnapshotHistory={viewSettings.onOpenSnapshotHistory}
             isSidebarOpen={sidebarOpen}
+            onAddFirstPerson={coreFamilyActions.onAddFirstPerson}
           />
         </TreeErrorBoundary>
       </div>
@@ -211,6 +212,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
            onAddParent: (g) => modals.handleOpenLinkModal('parent', g),
            onAddSpouse: (g) => modals.handleOpenLinkModal('spouse', g),
            onAddChild: (g) => modals.handleOpenLinkModal('child', g),
+           onAddFirstPerson: (g) => sidebarFamilyActions.onAddFirstPerson(g),
            onRemoveRelationship: sidebarFamilyActions.onRemoveRelationship,
            onLinkPerson: sidebarFamilyActions.onLinkPerson,
          }}

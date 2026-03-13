@@ -331,6 +331,7 @@ export interface FamilyActionsProps {
   onAddParent: (gender: Gender) => void;
   onAddSpouse: (gender: Gender) => void;
   onAddChild: (gender: Gender) => void;
+  onAddFirstPerson: (gender: Gender) => void;
   onRemoveRelationship?: (
     targetId: string,
     relativeId: string,
