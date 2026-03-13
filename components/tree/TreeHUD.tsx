@@ -70,13 +70,14 @@ export const TreeHUD: React.FC<TreeHUDProps> = ({
  
             {/* Zoom Controls (Bottom-End) - Adjusted for Mobile */}
             <div
-                className={`absolute z-50 transition-all duration-300 print:hidden
-          bottom-20 md:bottom-6 end-4
+                className={`absolute z-[70] transition-all duration-300 print:hidden
+          bottom-28 md:bottom-6 end-4
           pb-[env(safe-area-inset-bottom,0px)]
           pe-[env(safe-area-inset-right,0px)]
+          ${isSidebarOpen ? 'opacity-0 pointer-events-none translate-y-10 md:opacity-100 md:pointer-events-auto md:translate-y-0' : 'opacity-100'}
         `}
             >
-                <div className="scale-110 md:scale-100 origin-bottom-right">
+                <div className="scale-90 md:scale-100 origin-bottom-right">
                     <ZoomControls
                         onZoomIn={onZoomIn}
                         onZoomOut={onZoomOut}

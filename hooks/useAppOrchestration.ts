@@ -121,12 +121,14 @@ export const useAppOrchestration = (isSharedMode: boolean = false): AppOrchestra
     setIsPresentMode
   );
 
-  // Auto-open sidebar when a person is focused
+  // Auto-open sidebar ONLY when a new person is selected
+  const lastFocusIdRef = useRef<string | null>(null);
   useEffect(() => {
-    if (focusId && !sidebarOpen && !isPresentMode) {
+    if (focusId && focusId !== lastFocusIdRef.current && !isPresentMode) {
       setSidebarOpen(true);
     }
-  }, [focusId, isPresentMode, setSidebarOpen, sidebarOpen]);
+    lastFocusIdRef.current = focusId;
+  }, [focusId, isPresentMode, setSidebarOpen]);
 
   const {
     auth,

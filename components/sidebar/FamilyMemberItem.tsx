@@ -18,7 +18,7 @@ export const FamilyMemberItem = memo<FamilyMemberItemProps>(
     return (
       <div
         onClick={() => onSelect(id)}
-        className='group/item flex items-center justify-between p-2 bg-[var(--card-bg)] border border-[var(--border-main)] hover:border-[var(--primary-500)]/30 hover:shadow-sm rounded-xl cursor-pointer transition-all'
+        className='group/item flex items-center justify-between p-2 bg-[var(--card-bg)] border border-[var(--border-main)] hover:border-[var(--primary-500)]/30 hover:shadow-sm rounded-2xl cursor-pointer transition-all'
       >
         <div className='flex items-center gap-2 flex-1 min-w-0'>
           {/* Avatar */}

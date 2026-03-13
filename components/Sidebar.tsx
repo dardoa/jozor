@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, memo } from 'react';
+import { useState, useEffect, useMemo, memo, useRef } from 'react';
 import { InfoTab } from './sidebar/InfoTab';
 import { PartnersTab } from './sidebar/PartnersTab';
 import { ContactTab } from './sidebar/ContactTab';
@@ -73,8 +73,7 @@ export const Sidebar = memo<SidebarProps>(
       return allTabs.filter(tab => tab.show);
     }, [person.spouses, t]);
 
-    if (!isOpen) return null;
-
+    // Removal of early return to allow transitions to play
     const handleDeleteClick = () => setDeleteModalOpen(true);
     const handleConfirmDelete = () => {
       onDelete(person.id);
@@ -82,19 +81,78 @@ export const Sidebar = memo<SidebarProps>(
       onClose();
     };
 
-    return (
-      <aside
-        className="fixed inset-y-0 right-0 z-40 w-full sm:w-[450px] md:relative bg-[var(--theme-bg-elevated)] border-l border-[var(--border-main)] flex flex-col shadow-[-4px_0_20px_rgba(0,0,0,0.05)] transition-all duration-300 animate-in slide-in-from-right h-full"
-        id="person-sidebar"
-      >
-        <SidebarTabs
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          tabs={tabs}
-          onClose={onClose}
-        />
+    // --- Swipe-to-Close Logic ---
+    const [dragY, setDragY] = useState(0);
+    const [isDragging, setIsDragging] = useState(false);
+    const startYRef = useRef(0);
 
-        <div className="flex-1 overflow-y-auto px-6 py-4 custom-scrollbar">
+    const handleTouchStart = (e: React.TouchEvent) => {
+      // Only allow dragging from the top area or handle
+      const target = e.target as HTMLElement;
+      if (target.closest('.no-drag')) return;
+      
+      startYRef.current = e.touches[0].clientY;
+      setIsDragging(true);
+    };
+
+    const handleTouchMove = (e: React.TouchEvent) => {
+      if (!isDragging) return;
+      const currentY = e.touches[0].clientY;
+      const deltaY = Math.max(0, currentY - startYRef.current);
+      setDragY(deltaY);
+    };
+
+    const handleTouchEnd = () => {
+      if (!isDragging) return;
+      setIsDragging(false);
+      if (dragY > 100) {
+        onClose();
+      }
+      setDragY(0);
+    };
+
+    return (
+      <>
+        {/* Backdrop for Mobile */}
+        {isOpen && (
+          <div
+            className="fixed inset-0 bg-black/40 z-[90] sm:hidden animate-in fade-in duration-300"
+            onClick={onClose}
+          />
+        )}
+
+        <aside
+          className={`fixed inset-x-0 bottom-0 sm:inset-y-0 sm:right-0 sm:left-auto z-[100] w-full sm:w-[450px] h-[75vh] sm:h-full bg-[var(--theme-bg)] border-t sm:border-t-0 sm:border-l border-[var(--border-main)] flex flex-col shadow-[0_-8px_30px_rgba(0,0,0,0.3)] transition-all duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] rounded-t-[32px] sm:rounded-none ${
+            isOpen
+              ? 'translate-y-0 sm:translate-x-0'
+              : 'translate-y-full sm:translate-x-full pointer-events-none'
+          }`}
+          style={{ 
+            transform: (isDragging && isOpen) ? `translateY(${dragY}px)` : undefined,
+            transition: isDragging ? 'none' : undefined
+          }}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          id="person-sidebar"
+        >
+          {/* Mobile Drag Handle - Interactive Handle */}
+          <div 
+            className="flex justify-center pt-3 pb-1 sm:hidden cursor-grab active:cursor-grabbing translate-y-0 active:scale-95 transition-transform"
+          >
+            <div className="w-12 h-1.5 rounded-full bg-[var(--border-main)] opacity-30" />
+          </div>
+
+          <div className="no-drag">
+             <SidebarTabs
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+                tabs={tabs}
+                onClose={onClose}
+              />
+          </div>
+
+        <div className="flex-1 overflow-y-auto px-6 py-4 custom-scrollbar no-drag">
           {activeTab === 'info' && (
             <InfoTab
               person={person}
@@ -122,15 +180,17 @@ export const Sidebar = memo<SidebarProps>(
           )}
         </div>
 
-        <SidebarFooter
-          person={person}
-          isEditing={isEditing}
-          setIsEditing={setIsEditing}
-          onDelete={onDelete}
-          onOpenCleanTreeOptions={onOpenCleanTreeOptions}
-          canEdit={canEdit}
-          isOwner={isOwner}
-        />
+        <div className="no-drag">
+            <SidebarFooter
+              person={person}
+              isEditing={isEditing}
+              setIsEditing={setIsEditing}
+              onDelete={onDelete}
+              onOpenCleanTreeOptions={onOpenCleanTreeOptions}
+              canEdit={canEdit}
+              isOwner={isOwner}
+            />
+        </div>
 
         <ConfirmationModal
           isOpen={deleteModalOpen}
@@ -139,7 +199,8 @@ export const Sidebar = memo<SidebarProps>(
           title={t.deletePerson || 'Delete Person'}
           message={`${t.personDeleteConfirm || 'Are you sure you want to delete this person?'} (${person.firstName} ${person.lastName})`}
         />
-      </aside>
+        </aside>
+      </>
     );
   }
 );

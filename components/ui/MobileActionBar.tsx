@@ -1,76 +1,86 @@
 import React from 'react';
-import { Maximize2, Wrench, User } from 'lucide-react';
+import { Target, Users, Wrench, Trash2 } from 'lucide-react';
 import { useTranslation } from '../../context/TranslationContext';
 
 interface MobileActionBarProps {
   onCenterView: () => void;
+  onOpenRelations: () => void;
   onOpenTools: () => void;
-  onOpenAccount: () => void;
-  activeTab?: 'center' | 'tools' | 'account' | null;
+  onDelete: () => void;
+  activeTab?: 'center' | 'relations' | 'tools' | 'delete' | null;
 }
 
 export const MobileActionBar: React.FC<MobileActionBarProps> = ({
   onCenterView,
+  onOpenRelations,
   onOpenTools,
-  onOpenAccount,
+  onDelete,
   activeTab = null,
 }) => {
-  const { language } = useTranslation();
+  const { t, language } = useTranslation();
   const isRtl = language === 'ar';
-
-  const centerLabel = isRtl ? 'تمركز' : 'Center';
-  const toolsLabel = isRtl ? 'أدوات' : 'Tools';
-  const accountLabel = isRtl ? 'الحساب' : 'Account';
 
   const buttons = [
     {
       id: 'center',
-      label: centerLabel,
-      icon: Maximize2,
+      label: t.center || 'Center',
+      icon: Target,
       onClick: onCenterView,
     },
     {
+      id: 'relations',
+      label: isRtl ? 'الأقارب' : 'Relations',
+      icon: Users,
+      onClick: onOpenRelations,
+    },
+    {
       id: 'tools',
-      label: toolsLabel,
+      label: t.tools || 'Tools',
       icon: Wrench,
       onClick: onOpenTools,
     },
     {
-      id: 'account',
-      label: accountLabel,
-      icon: User,
-      onClick: onOpenAccount,
+      id: 'delete',
+      label: t.delete || 'Delete',
+      icon: Trash2,
+      onClick: onDelete,
     },
   ];
 
-  if (isRtl) buttons.reverse();
+  // Logic: [Center] -> [Rel] -> [Tools] -> [Delete]
+  // In RTL, we want Center to stay near the thumb (right in RTL), but we reverse the array if we use justify-around/between
+  // Actually, if we want [Center][Rel][Tools][Delete] in RTL it should be rendered in that order from right to left.
+  const displayButtons = isRtl ? [...buttons].reverse() : buttons;
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 bg-[var(--card-bg)]/95 border-t border-[var(--border-main)] shadow-soft px-4 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] flex justify-between items-center gap-3 sm:hidden">
-      {buttons.map((btn) => {
+    <nav className="fixed inset-x-0 bottom-0 z-[80] bg-[var(--theme-bg)] border-t border-[var(--border-main)] shadow-[0_-8px_20px_rgba(0,0,0,0.1)] px-3 pt-2 pb-[calc(1.2rem+env(safe-area-inset-bottom))] flex justify-around items-center gap-2 sm:hidden">
+      {displayButtons.map((btn) => {
         const isActive = activeTab === btn.id;
         const Icon = btn.icon;
+        const isDelete = btn.id === 'delete';
 
         return (
           <button
             key={btn.id}
             type="button"
             onClick={btn.onClick}
-            className={`flex-1 flex flex-col items-center justify-center text-xs font-medium transition-all min-h-[44px] rounded-2xl py-1 relative ${
+            className={`flex-1 flex flex-col items-center justify-center text-[10px] font-bold transition-all min-h-[44px] rounded-2xl py-1 relative ${
               isActive
                 ? 'text-[var(--primary-600)] bg-[var(--primary-600)]/[0.08] shadow-sm'
+                : isDelete
+                ? 'text-red-500/70 hover:text-red-500'
                 : 'text-[var(--text-dim)] hover:text-[var(--text-main)] hover:bg-[var(--primary-600)]/[0.02]'
             }`}
           >
-            <Icon className={`w-5 h-5 mb-1 transition-transform duration-300 ${isActive ? 'scale-110' : ''}`} />
-            <span className={isActive ? 'font-bold' : ''}>{btn.label}</span>
+            <Icon className={`w-5 h-5 mb-0.5 transition-transform duration-300 ${isActive ? 'scale-110' : ''}`} />
+            <span className="truncate max-w-[64px]">{btn.label}</span>
             {isActive && (
-              <span className="absolute -bottom-1 w-1 h-1 rounded-full bg-[var(--primary-600)] animate-pulse" />
+              <span className="absolute bottom-1 w-1 h-1 rounded-full bg-[var(--primary-600)] animate-pulse" />
             )}
           </button>
         );
       })}
-    </div>
+    </nav>
   );
 };
 

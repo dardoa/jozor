@@ -75,6 +75,8 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   const { treeSettings } = viewSettings;
   const isExporting = useAppStore((state) => state.exportStatus?.isExporting);
   const isAdvancedBarOpen = useAppStore((state) => state.isAdvancedBarOpen);
+  const isSettingsDrawerOpen = useAppStore((state) => state.isSettingsDrawerOpen);
+  const setSettingsDrawerOpen = useAppStore((state) => state.setSettingsDrawerOpen);
 
   return (
     <>
@@ -134,31 +136,6 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
       <div
         className='flex flex-1 overflow-hidden relative transition-all duration-300'
       >
-        {activePerson && !isPresentMode && (
-          <div className='print:hidden h-full z-20 shadow-xl border-e border-[var(--border-main)]'>
-            <Sidebar
-              person={activePerson}
-              people={people}
-              onUpdate={appState.updatePerson}
-              onDelete={appState.deletePerson}
-              onSelect={setFocusId}
-              isOpen={sidebarOpen}
-              onClose={() => setSidebarOpen(false)}
-              onOpenModal={toolsActions.onOpenModal}
-              user={auth.user}
-              familyActions={{
-                onAddParent: (g) => modals.handleOpenLinkModal('parent', g),
-                onAddSpouse: (g) => modals.handleOpenLinkModal('spouse', g),
-                onAddChild: (g) => modals.handleOpenLinkModal('child', g),
-                onRemoveRelationship: sidebarFamilyActions.onRemoveRelationship,
-                onLinkPerson: sidebarFamilyActions.onLinkPerson,
-              }}
-              onOpenCleanTreeOptions={modals.onOpenCleanTreeOptions}
-              settings={treeSettings}
-            />
-          </div>
-        )}
-
         <TreeErrorBoundary>
           <FamilyTree
             people={people}
@@ -217,32 +194,57 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
       />
 
       <OnboardingTour sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+      
+      {/* Sidebar - Moved to root level for true portal layering */}
+      {activePerson && !isPresentMode && (
+         <Sidebar
+         person={activePerson}
+         people={people}
+         onUpdate={appState.updatePerson}
+         onDelete={appState.deletePerson}
+         onSelect={setFocusId}
+         isOpen={sidebarOpen}
+         onClose={() => setSidebarOpen(false)}
+         onOpenModal={toolsActions.onOpenModal}
+         user={auth.user}
+         familyActions={{
+           onAddParent: (g) => modals.handleOpenLinkModal('parent', g),
+           onAddSpouse: (g) => modals.handleOpenLinkModal('spouse', g),
+           onAddChild: (g) => modals.handleOpenLinkModal('child', g),
+           onRemoveRelationship: sidebarFamilyActions.onRemoveRelationship,
+           onLinkPerson: sidebarFamilyActions.onLinkPerson,
+         }}
+         onOpenCleanTreeOptions={modals.onOpenCleanTreeOptions}
+         settings={treeSettings}
+       />
+      )}
+
       <SettingsDrawer />
 
       {/* Mobile Action Bar */}
       {!isPresentMode && (
         <MobileActionBar
           activeTab={
-            modals.activeModal === 'stats'
-              ? 'tools'
-              : modals.activeModal === 'login' || !!useAppStore.getState().isSettingsDrawerOpen
-                ? 'account'
-                : null
+            sidebarOpen ? 'relations' :
+              isSettingsDrawerOpen ? 'tools' :
+                null
           }
           onCenterView={() => {
             window.dispatchEvent(new CustomEvent('reset-interactive-view'));
           }}
-          onOpenTools={() => {
-            // Open a useful default tool on mobile (Statistics dashboard)
-            toolsActions.onOpenModal('stats');
+          onOpenRelations={() => {
+            if (activePerson) {
+              setSidebarOpen(!sidebarOpen);
+            }
           }}
-          onOpenAccount={() => {
-            if (auth.user) {
-              // Open global settings/account hub for signed-in users
-              modals.onOpenGlobalSettings();
-            } else {
-              // Trigger unified login flow for guests
-              auth.onOpenLoginModal();
+          onOpenTools={() => {
+            setSettingsDrawerOpen(true);
+          }}
+          onDelete={() => {
+            if (activePerson) {
+              // Trigger delete confirmation via custom event or finding the UI element
+              const deleteBtn = document.querySelector('[aria-label="Delete Person"]');
+              if (deleteBtn instanceof HTMLElement) deleteBtn.click();
             }
           }}
         />

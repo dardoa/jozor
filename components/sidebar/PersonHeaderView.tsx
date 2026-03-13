@@ -101,7 +101,7 @@ export const PersonHeaderView = memo<PersonHeaderViewProps>(
           <div className='shrink-0 flex flex-col items-center gap-2'>
             <div className='relative group cursor-pointer' onClick={() => onSelect(person.id)}>
               <div
-                className={`w-28 h-28 rounded-2xl border-2 border-[var(--card-bg)] shadow-md flex items-center justify-center overflow-hidden bg-[var(--theme-bg)] ${person.isDeceased ? 'grayscale' : ''}`}
+                className={`w-20 h-20 sm:w-28 sm:h-28 rounded-2xl border-2 border-[var(--card-bg)] shadow-md flex items-center justify-center overflow-hidden bg-[var(--theme-bg)] ${person.isDeceased ? 'grayscale' : ''}`}
               >
                 {person.photoUrl ? (
                   <img
@@ -111,7 +111,7 @@ export const PersonHeaderView = memo<PersonHeaderViewProps>(
                   />
                 ) : (
                   <User
-                    className={`w-12 h-12 ${person.gender === 'male' ? 'text-[var(--gender-male-text)]' : 'text-[var(--gender-female-text)]'} opacity-30`}
+                    className={`w-10 h-10 sm:w-12 sm:h-12 ${person.gender === 'male' ? 'text-[var(--gender-male-text)]' : 'text-[var(--gender-female-text)]'} opacity-30`}
                   />
                 )}
               </div>
@@ -124,13 +124,13 @@ export const PersonHeaderView = memo<PersonHeaderViewProps>(
           </div>
 
           {/* Info */}
-          <div className='flex-1 min-w-0 pt-0.5 space-y-2'>
+          <div className='flex-1 min-w-0 pt-0 space-y-1.5'>
             <div>
-              <h2 className='text-2xl font-black text-[var(--text-main)] leading-tight font-serif tracking-tight'>
+              <h2 className='text-xl sm:text-2xl font-black text-[var(--text-main)] leading-tight font-serif tracking-tight lg:truncate'>
                 {fullName}
               </h2>
               {(person.birthName || person.nickName) && (
-                <p className='text-xs text-[var(--text-muted)] italic font-medium opacity-80'>
+                <p className='text-[10px] sm:text-xs text-[var(--text-muted)] italic font-medium opacity-80'>
                   {person.nickName && `"${person.nickName}"`}
                   {person.nickName && person.birthName && ' • '}
                   {person.birthName && `${t.nee} ${person.birthName}`}
@@ -204,11 +204,11 @@ export const PersonHeaderView = memo<PersonHeaderViewProps>(
         <div className='h-px bg-[var(--border-main)]'></div>
 
         {/* Actions Section - Consolidated */}
-        <div className='flex flex-wrap items-center justify-center gap-2 mt-2 animate-in fade-in slide-in-from-top-1 duration-200'>
+        <div className='flex overflow-x-auto no-scrollbar gap-2 mt-2 px-1 animate-in fade-in slide-in-from-top-1 duration-200 pb-2'>
           {person.isDeceased && (
             <button
               onClick={() => onOpenModal('chat')}
-              className={`${baseButtonClasses} bg-purple-500/10 text-purple-600 dark:text-purple-400 hover:shadow-sm`}
+              className={`${baseButtonClasses} bg-[var(--primary-600)]/[0.08] text-[var(--primary-600)] min-w-fit rounded-2xl whitespace-nowrap`}
             >
               <MessageCircle className='w-3.5 h-3.5' /> {t.chatWithAncestor}
             </button>
@@ -217,18 +217,18 @@ export const PersonHeaderView = memo<PersonHeaderViewProps>(
           {/* Quick Add Speed Dial */}
           <QuickAddSpeedDial
             actions={quickAddActions}
-            buttonClassName={`${baseButtonClasses} bg-[var(--primary-500)]/10 text-[var(--primary-600)] hover:shadow-sm`}
+            buttonClassName={`${baseButtonClasses} bg-[var(--primary-600)]/[0.08] text-[var(--primary-600)] min-w-fit rounded-2xl`}
           />
 
           <button
             onClick={() => onOpenModal('map')}
-            className={`${baseButtonClasses} bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:shadow-sm`}
+            className={`${baseButtonClasses} bg-[var(--primary-600)]/[0.08] text-[var(--primary-600)] min-w-fit rounded-2xl whitespace-nowrap`}
           >
             <MapPin className='w-3.5 h-3.5' /> {t.viewOnMap}
           </button>
           <button
             onClick={() => onOpenModal('timeline')}
-            className={`${baseButtonClasses} bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:shadow-sm`}
+            className={`${baseButtonClasses} bg-[var(--primary-600)]/[0.08] text-[var(--primary-600)] min-w-fit rounded-2xl whitespace-nowrap`}
           >
             <CalendarDays className='w-3.5 h-3.5' /> {t.familyTimelineHeader}
           </button>

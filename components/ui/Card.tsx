@@ -15,7 +15,7 @@ export const Card: React.FC<CardProps> = ({
 }) => {
   return (
     <div
-      className={`bg-[var(--card-bg)] rounded-xl border border-[var(--card-border)] shadow-sm relative ${className}`}
+      className={`bg-[var(--card-bg)] rounded-2xl border border-[var(--card-border)] shadow-sm relative ${className}`}
     >
       {title && (
         <h3 className='absolute top-[-12px] start-3 z-10 bg-[var(--theme-bg)] px-2 text-[9px] font-bold text-[var(--text-dim)] uppercase tracking-wider'>
