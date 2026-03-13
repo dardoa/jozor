@@ -132,6 +132,11 @@ export const deltaSyncService = {
         }
 
         // Save to IndexedDB for offline persistence BEFORE anything else
+        if (type === 'ADD_NODE' && !payload.person) {
+            console.error('DeltaSync: Blocked pushOperation (ADD_NODE) - Missing person data in payload');
+            return false;
+        }
+
         const pendingOp = {
             tree_id: treeId,
             user_id: user.uid,

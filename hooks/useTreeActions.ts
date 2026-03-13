@@ -99,15 +99,18 @@ export const useTreeActions = () => {
 
     const addFirstPerson = (gender: 'male' | 'female', bypassSync = false) => {
         store.addFirstPerson(gender);
-        const postAddPeople = getPeople();
-        const newId = store.focusId;
+        
+        // Use getState to ensure we have the absolute latest state after the synchronous store update
+        const latestState = useAppStore.getState();
+        const postAddPeople = latestState.people;
+        const newId = latestState.focusId;
         const newPerson = postAddPeople[newId];
         
         throttledSaveLocal(postAddPeople);
 
         if (!bypassSync) {
             const treeId = getCurrentTreeId();
-            if (treeId) {
+            if (treeId && newPerson) {
                 deltaSyncService.pushOperation(treeId, 'ADD_NODE', { person: newPerson, relativeId: undefined, type: undefined }).then(success => {
                     if (success) {
                         void activityService.logAction(treeId, 'ADD_PERSON', {
@@ -117,6 +120,8 @@ export const useTreeActions = () => {
                         });
                     }
                 });
+            } else {
+                console.warn('DeltaSync: Skip pushOperation (ADD_NODE/initial) - treeId or person missing', { treeId, hasPerson: !!newPerson });
             }
         }
     };
