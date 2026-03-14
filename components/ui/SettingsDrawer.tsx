@@ -205,7 +205,7 @@ const VisualsContent = ({ treeSettings, updateSetting, resetSection, applyPreset
             <div className="grid grid-cols-3 gap-2">
                 {['simple', 'detailed', 'print'].map(p => (
                     <button key={p} onClick={() => applyPreset(p as any)} className="px-2 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-[10px] font-black uppercase tracking-widest text-slate-200">
-                        {t.general[p] || p}
+                        {t.settings[p] || p}
                     </button>
                 ))}
             </div>

@@ -28,5 +28,9 @@ const RootComponent: React.FC = () => {
   );
 };
 
-const root = ReactDOM.createRoot(rootElement);
+let root = (window as any)._reactRoot;
+if (!root) {
+  root = ReactDOM.createRoot(rootElement);
+  (window as any)._reactRoot = root;
+}
 root.render(<RootComponent />);

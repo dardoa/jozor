@@ -92,6 +92,9 @@ export const general = {
     lowGraphicsDesc: 'يقلل من تأثيرات الشفافية والتحريك',
     themeColor: 'لون النمط',
     dateFormat: 'تنسيق التاريخ',
+    simple: 'بسيط',
+    detailed: 'مفصّل',
+    print: 'للطباعة',
   },
   syncStatus: {
     savingLocally: 'جاري الحفظ محلياً...',

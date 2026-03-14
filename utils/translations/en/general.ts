@@ -92,6 +92,9 @@ export const general = {
     lowGraphicsDesc: 'Disables blurs & heavy animations',
     themeColor: 'Theme Color',
     dateFormat: 'Date Format',
+    simple: 'Simple',
+    detailed: 'Detailed',
+    print: 'Print',
   },
   syncStatus: {
     savingLocally: 'Saving locally...',

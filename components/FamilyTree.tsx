@@ -508,10 +508,10 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({
                       
                       <div className="space-y-2">
                         <h3 className="text-xl font-black text-[var(--theme-text)]">
-                          {t.emptyState.title}
+                          {t.emptyState?.title || 'Start Your Family Tree'}
                         </h3>
                         <p className="text-sm text-[var(--theme-text-muted)] max-w-[300px] leading-relaxed">
-                          {t.emptyState.description}
+                          {t.emptyState?.description || 'This tree is currently empty. Add yourself or the first person to begin documenting your lineage.'}
                         </p>
                       </div>
 
@@ -520,13 +520,13 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({
                           onClick={() => onAddFirstPerson('male')}
                           className="flex-1 px-6 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-black text-sm transition-all shadow-lg shadow-emerald-600/20 active:scale-95 flex items-center justify-center gap-2"
                         >
-                          {t.emptyState.addMale}
+                          {t.emptyState?.addMale || 'Add Male'}
                         </button>
                         <button
                           onClick={() => onAddFirstPerson('female')}
                           className="flex-1 px-6 py-3.5 bg-pink-600 hover:bg-pink-500 text-white rounded-2xl font-black text-sm transition-all shadow-lg shadow-pink-600/20 active:scale-95 flex items-center justify-center gap-2"
                         >
-                          {t.emptyState.addFemale}
+                          {t.emptyState?.addFemale || 'Add Female'}
                         </button>
                       </div>
                       
