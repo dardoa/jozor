@@ -2,6 +2,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom/client';
 import App from './App';
 import { TranslationProvider } from './context/TranslationContext';
+import { OverlayProvider } from './context/OverlayContext';
 import ToastProvider from './components/ToastProvider';
 import './global.css';
 
@@ -16,10 +17,12 @@ const RootComponent: React.FC = () => {
   return (
     <React.StrictMode>
       <BrowserRouter>
-        <TranslationProvider>
-          <ToastProvider />
-          <App />
-        </TranslationProvider>
+        <OverlayProvider>
+          <TranslationProvider>
+            <ToastProvider />
+            <App />
+          </TranslationProvider>
+        </OverlayProvider>
       </BrowserRouter>
     </React.StrictMode>
   );

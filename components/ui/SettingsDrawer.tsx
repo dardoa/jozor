@@ -8,6 +8,7 @@ import { useAppStore } from '../../store/useAppStore';
 import { DEFAULT_TREE_SETTINGS } from '../../constants';
 import { useTranslation } from '../../context/TranslationContext';
 import { TreeSettings } from '../../types';
+import { OverlayPrimitive } from '../../context/OverlayContext';
 
 const SectionHeader = ({ icon: Icon, label, onReset, language }: { icon: any, label: string, onReset?: () => void, language: string }) => (
     <div className="flex items-center justify-between mb-4 mt-6 first:mt-0">
@@ -518,6 +519,12 @@ export const SettingsDrawer = memo(() => {
     };
 
     return (
+      <OverlayPrimitive
+        id="settings-drawer"
+        isOpen={isSettingsDrawerOpen}
+        onClose={() => setSettingsDrawerOpen(false)}
+        withBackdrop={false}
+      >
         <div className="fixed inset-0 z-[1000] flex justify-end pointer-events-none">
             {/* Backdrop */}
             <div
@@ -547,6 +554,7 @@ export const SettingsDrawer = memo(() => {
                     </div>
                     <button
                         onClick={() => setSettingsDrawerOpen(false)}
+                        aria-label={isRtl ? 'إغلاق الإعدادات' : 'Close Settings'}
                         className="p-2.5 hover:bg-white/10 rounded-full transition-all text-slate-400 hover:text-white"
                     >
                         <X className="w-5 h-5" />
@@ -578,10 +586,8 @@ export const SettingsDrawer = memo(() => {
 
                     {/* Tabbed Content Wrapper */}
                     <div className="transition-all duration-300 ease-in-out">
-                        {/* Tab 1: Layout */}
                         {activeTab === 'layout' && (
                             <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-6">
-                                {/* ... existing layout settings content ... */}
                                 <LayoutContent
                                     {...contentProps}
                                     localWidth={localWidth}
@@ -595,8 +601,6 @@ export const SettingsDrawer = memo(() => {
                                 />
                             </div>
                         )}
-
-                        {/* Tab 2: Visuals */}
                         {activeTab === 'visuals' && (
                             <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-6">
                                 <VisualsContent
@@ -608,13 +612,9 @@ export const SettingsDrawer = memo(() => {
                                 />
                             </div>
                         )}
-
-                        {/* Tab 3: Performance */}
                         {activeTab === 'performance' && (
                             <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-6">
-                                <PerformanceContent
-                                    {...contentProps}
-                                />
+                                <PerformanceContent {...contentProps} />
                             </div>
                         )}
                     </div>
@@ -630,23 +630,19 @@ export const SettingsDrawer = memo(() => {
 
             <style>{`
                 input[type=range]::-webkit-slider-thumb {
-                    appearance: none;
-                    height: 12px;
-                    width: 12px;
-                    border-radius: 50%;
-                    background: #f59e0b;
-                    cursor: pointer;
-                    margin-top: -4px;
+                    appearance: none; height: 12px; width: 12px;
+                    border-radius: 50%; background: #f59e0b;
+                    cursor: pointer; margin-top: -4px;
                     border: 2px solid #0f172a;
                     box-shadow: 0 0 10px rgba(245, 158, 11, 0.4);
                 }
                 input[type=range]::-webkit-slider-runnable-track {
-                    width: 100%;
-                    height: 4px;
+                    width: 100%; height: 4px;
                     background: rgba(255, 255, 255, 0.05);
                     border-radius: 2px;
                 }
             `}</style>
         </div>
+      </OverlayPrimitive>
     );
 });

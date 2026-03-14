@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Routes, Route, Navigate, useMatch, useNavigate, useParams } from 'react-router-dom';
+import { Routes, Route, Navigate, useMatch, useNavigate, useParams, useLocation } from 'react-router-dom';
 
 import { Person, AuthProps } from '../types';
 import { SharedTreeLoader } from './SharedTreeLoader';
@@ -179,8 +179,9 @@ export const AppUIManager: React.FC = () => {
           <Route path="/help" element={<HelpCenter />} />
           <Route path="/support" element={<Navigate to="/help" replace />} />
           
+          {/* Clean DB tree route (new format) */}
           <Route 
-            path="/tree/:ownerUid/:fileId" 
+            path="/tree/db/:ownerUid/:fileId" 
             element={
               <SharedTreeRouteWrapper 
                 auth={auth} 
@@ -188,6 +189,12 @@ export const AppUIManager: React.FC = () => {
                 onCancel={() => navigate('/', { replace: true })} 
               />
             } 
+          />
+
+          {/* Legacy route — redirects ?type=db to new /tree/db path, otherwise loads Drive tree */}
+          <Route 
+            path="/tree/:ownerUid/:fileId" 
+            element={<LegacySharedTreeRedirect auth={auth} onLoadComplete={handleSharedTreeLoaded} onCancel={() => navigate('/', { replace: true })} />} 
           />
 
           <Route path="/" element={renderMainLayout()} />
@@ -218,6 +225,36 @@ const SharedTreeRouteWrapper: React.FC<SharedTreeRouteWrapperProps> = ({ auth, o
   const { ownerUid, fileId } = useParams<{ ownerUid: string; fileId: string }>();
   if (!ownerUid || !fileId) return <Navigate to="/" replace />;
   
+  return (
+    <SharedTreeLoader
+      ownerUid={ownerUid}
+      fileId={fileId}
+      auth={auth}
+      onLoadComplete={onLoadComplete}
+      onCancel={onCancel}
+    />
+  );
+};
+
+/**
+ * LegacySharedTreeRedirect
+ * Handles old links: /tree/:ownerUid/:fileId?type=db
+ * If ?type=db is present → redirects to /tree/db/:ownerUid/:fileId (new clean route)
+ * Otherwise → renders shared Drive tree as before
+ */
+const LegacySharedTreeRedirect: React.FC<SharedTreeRouteWrapperProps> = ({ auth, onLoadComplete, onCancel }) => {
+  const { ownerUid, fileId } = useParams<{ ownerUid: string; fileId: string }>();
+  const location = useLocation();
+  const isDbTree = new URLSearchParams(location.search).get('type') === 'db';
+
+  if (!ownerUid || !fileId) return <Navigate to="/" replace />;
+
+  // Upgrade old link to the clean URL format
+  if (isDbTree) {
+    return <Navigate to={`/tree/db/${ownerUid}/${fileId}`} replace />;
+  }
+
+  // Legacy Drive tree link (no ?type=db) — render as before
   return (
     <SharedTreeLoader
       ownerUid={ownerUid}

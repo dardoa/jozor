@@ -4,6 +4,7 @@ import { X, UserPlus, Mail, Shield, Check, Trash2, Share2, Copy, Globe } from 'l
 import { useTranslation } from '../context/TranslationContext';
 import { showSuccess, showError } from '../utils/toast';
 import { getShareSettings, inviteCollaborator, removeCollaborator } from '../services/shareService';
+import { OverlayPrimitive } from '../context/OverlayContext';
 
 interface ShareModalProps {
   isOpen: boolean;
@@ -21,11 +22,13 @@ export const ShareModal = ({ isOpen, onClose, language, user, driveFileId, treeI
   const [isCopied, setIsCopied] = useState(false);
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
 
-  // Updated Share Link Format: Now includes driveFileId for unique targeting
-  // Format: /tree/:ownerUid/:driveFileId
+  // Clean URL format: /tree/db/:ownerUid/:treeId
+  // Old format (?type=db) is kept in AppUIManager as a legacy redirect route.
   const shareLink =
     user && (driveFileId || treeId)
-      ? `${window.location.origin}/tree/${user.uid}/${driveFileId || treeId}${treeId && !driveFileId ? '?type=db' : ''}`
+      ? treeId && !driveFileId
+        ? `${window.location.origin}/tree/db/${user.uid}/${treeId}`
+        : `${window.location.origin}/tree/${user.uid}/${driveFileId}`
       : '';
 
   // Load collaborators from Supabase when modal opens
@@ -141,8 +144,14 @@ export const ShareModal = ({ isOpen, onClose, language, user, driveFileId, treeI
   };
 
   return (
-    <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200'>
-      <div className='bg-white dark:bg-stone-800 rounded-xl shadow-2xl max-w-lg w-full overflow-hidden flex flex-col border border-stone-200 dark:border-stone-700'>
+    <OverlayPrimitive
+      id="share-modal"
+      isOpen={isOpen}
+      onClose={onClose}
+      backdropClassName='fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200'
+      contentClassName='bg-white dark:bg-stone-800 rounded-xl shadow-2xl max-w-lg w-full overflow-hidden flex flex-col border border-stone-200 dark:border-stone-700'
+    >
+      <div>
         {/* Header */}
         <div className='flex items-center justify-between p-4 border-b border-stone-200 dark:border-stone-700 bg-stone-50/50 dark:bg-stone-900/50'>
           <div className='flex items-center gap-2'>
@@ -278,6 +287,6 @@ export const ShareModal = ({ isOpen, onClose, language, user, driveFileId, treeI
           </div>
         </div>
       </div>
-    </div>
+    </OverlayPrimitive>
   );
 };
