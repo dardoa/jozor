@@ -4,6 +4,7 @@ import { Person, TreeLink, TreeSettings, TreeNode, FanArc } from '../types';
 import { CollapsePoint } from '../utils/layout/constants';
 import { useAppStore } from '../store/useAppStore';
 import { useTranslation } from '../context/TranslationContext';
+import { useDebouncedValue, useDebouncedCallback } from '../hooks/useDebounce';
 // Removed synchronous calculateTreeLayout import
 
 // Import new sub-components
@@ -136,6 +137,8 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({
 
   const peopleVersion = useAppStore(state => state.peopleVersion);
   const searchTarget = useAppStore(state => state.searchTarget);
+  // Heavy dependency debounce
+  const debouncedPeople = useDebouncedValue(people, 200);
 
   const geometryKey = useMemo(() => {
     const isMobile = window.innerWidth < 768;
@@ -245,15 +248,15 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({
 
       workerRef.current?.postMessage({
         requestId,
-        people,
+        people: debouncedPeople,
         focusId: focusId,          // Use live focusId, not deferred
         settings: effectiveSettings, // Use optimized settings
         collapsedIds: Array.from(collapsedIds)
       });
-    }, 150);
+    }, 50);
 
     return () => clearTimeout(timeoutId);
-  }, [people, geometryKey, collapsedIds]);
+  }, [debouncedPeople, geometryKey, collapsedIds]);
 
   // Update cache when layoutData changes and it's not from cache
   useEffect(() => {
@@ -362,13 +365,15 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({
     isAdvancedBarOpen,
   });
 
-  const [viewportSize, setViewportSize] = useState({ width: 1920, height: 1080 });
+  const [viewportSize, setViewportSize] = useState({ width: window.innerWidth, height: window.innerHeight });
+  const handleResize = useDebouncedCallback(() => {
+    setViewportSize({ width: window.innerWidth, height: window.innerHeight });
+  }, 200);
+
   useEffect(() => {
-    const handleResize = () => setViewportSize({ width: window.innerWidth, height: window.innerHeight });
-    handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  }, [handleResize]);
 
   const toggleCollapse = useCallback((uniqueKey: string) => {
     setCollapsedIds(prev => {
@@ -422,7 +427,11 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({
           <filter id="shadow"><feDropShadow dx="0" dy="4" stdDeviation="6" floodColor="#000000" floodOpacity="0.06" /></filter>
         </defs>
 
-        <g ref={gRef} className="viewport">
+        <g 
+          ref={gRef} 
+          className="viewport transition-opacity duration-300"
+          style={{ opacity: isLoading ? 0.3 : 1 }}
+        >
           {activeLayout && (
             <>
               {activeChartType === 'fan' && (
