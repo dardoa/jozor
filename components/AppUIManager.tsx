@@ -185,6 +185,7 @@ export const AppUIManager: React.FC = () => {
             element={
               <SharedTreeRouteWrapper 
                 auth={auth} 
+                isDbTree={true}
                 onLoadComplete={handleSharedTreeLoaded} 
                 onCancel={() => navigate('/', { replace: true })} 
               />
@@ -219,9 +220,10 @@ interface SharedTreeRouteWrapperProps {
   auth: AuthProps;
   onLoadComplete: (data: Record<string, Person>, fileId: string, isDbTree: boolean, role?: 'owner' | 'editor' | 'viewer') => void;
   onCancel: () => void;
+  isDbTree?: boolean;
 }
 
-const SharedTreeRouteWrapper: React.FC<SharedTreeRouteWrapperProps> = ({ auth, onLoadComplete, onCancel }) => {
+const SharedTreeRouteWrapper: React.FC<SharedTreeRouteWrapperProps> = ({ auth, onLoadComplete, onCancel, isDbTree }) => {
   const { ownerUid, fileId } = useParams<{ ownerUid: string; fileId: string }>();
   if (!ownerUid || !fileId) return <Navigate to="/" replace />;
   
@@ -232,6 +234,7 @@ const SharedTreeRouteWrapper: React.FC<SharedTreeRouteWrapperProps> = ({ auth, o
       auth={auth}
       onLoadComplete={onLoadComplete}
       onCancel={onCancel}
+      isDbTree={isDbTree}
     />
   );
 };

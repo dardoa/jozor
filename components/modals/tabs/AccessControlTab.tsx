@@ -28,7 +28,7 @@ export const AccessControlTab: React.FC<AccessControlTabProps> = ({ treeId, owne
     const [isCopied, setIsCopied] = useState(false);
 
     // Share link logic from ShareModal
-    const shareLink = `${window.location.origin}/tree/${ownerId}/${treeId}?type=db`;
+    const shareLink = `${window.location.origin}/tree/db/${ownerId}/${treeId}`;
 
     const supabaseToken = useAppStore((state) => state.user?.supabaseToken);
 

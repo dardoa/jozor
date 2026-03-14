@@ -11,6 +11,7 @@ interface SharedTreeLoaderProps {
   auth: AuthProps;
   onLoadComplete: (data: Record<string, Person>, fileId: string, isDbTree: boolean, role: 'owner' | 'editor' | 'viewer') => void;
   onCancel: () => void;
+  isDbTree?: boolean;
 }
 
 export const SharedTreeLoader: React.FC<SharedTreeLoaderProps> = ({
@@ -19,6 +20,7 @@ export const SharedTreeLoader: React.FC<SharedTreeLoaderProps> = ({
   auth,
   onLoadComplete,
   onCancel,
+  isDbTree: isDbTreeProp,
 }) => {
 
   const [status, setStatus] = useState<
@@ -35,7 +37,7 @@ export const SharedTreeLoader: React.FC<SharedTreeLoaderProps> = ({
       }
 
       const urlParams = new URLSearchParams(window.location.search);
-      const isDbTree = urlParams.get('type') === 'db' || urlParams.get('treeId') !== null;
+      const isDbTree = isDbTreeProp ?? (urlParams.get('type') === 'db' || urlParams.get('treeId') !== null);
 
       if (!isDbTree) {
         await initializeGoogleApi();
