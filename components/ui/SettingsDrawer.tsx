@@ -282,9 +282,9 @@ const VisualsContent = ({ treeSettings, updateSetting, resetSection, applyPreset
                                         ? 'bg-amber-500/30 border-amber-400 text-amber-100'
                                         : 'bg-white/0 border-white/5 text-slate-400 hover:text-slate-200 hover:border-white/20'}`}
                             >
-                                {fmt === 'iso' ? t.settings.dateFormats.iso :
-                                    fmt === 'eu' ? t.settings.dateFormats.eu :
-                                        fmt === 'us' ? t.settings.dateFormats.us : t.settings.dateFormats.long}
+                                {fmt === 'iso' ? (t.settings.dateFormats?.iso || 'ISO') :
+                                    fmt === 'eu' ? (t.settings.dateFormats?.eu || 'EU') :
+                                        fmt === 'us' ? (t.settings.dateFormats?.us || 'US') : (t.settings.dateFormats?.long || 'Long')}
                             </button>
                         ))}
                     </div>

@@ -95,6 +95,12 @@ export const general = {
     simple: 'Simple',
     detailed: 'Detailed',
     print: 'Print',
+    dateFormats: {
+      iso: 'ISO',
+      eu: 'EU',
+      us: 'US',
+      long: 'Long',
+    },
   },
   syncStatus: {
     savingLocally: 'Saving locally...',
