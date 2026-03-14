@@ -63,6 +63,8 @@ export const MobileActionBar: React.FC<MobileActionBarProps> = ({
             key={btn.id}
             type="button"
             onClick={btn.onClick}
+            aria-label={btn.label}
+            title={btn.label}
             className={`flex-1 flex flex-col items-center justify-center text-[10px] font-bold transition-all min-h-[44px] rounded-2xl py-1 relative ${
               isActive
                 ? 'text-[var(--primary-600)] bg-[var(--primary-600)]/[0.08] shadow-sm'

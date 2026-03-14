@@ -12,6 +12,7 @@ import { welcomeScreen as enWelcomeScreen } from './translations/en/welcomeScree
 import { dateSelect as enDateSelect } from './translations/en/dateSelect';
 import { smartInput as enSmartInput } from './translations/en/smartInput';
 import { familyTree as enFamilyTree } from './translations/en/familyTree';
+import { helpEn } from './translations/en/help';
 
 // Import all Arabic translation modules
 import { general as arGeneral } from './translations/ar/general';
@@ -25,6 +26,7 @@ import { welcomeScreen as arWelcomeScreen } from './translations/ar/welcomeScree
 import { dateSelect as arDateSelect } from './translations/ar/dateSelect';
 import { smartInput as arSmartInput } from './translations/ar/smartInput';
 import { familyTree as arFamilyTree } from './translations/ar/familyTree';
+import { helpAr } from './translations/ar/help';
 
 // Combine English translations
 const en = {
@@ -39,6 +41,7 @@ const en = {
   ...enDateSelect,
   ...enSmartInput,
   ...enFamilyTree,
+  help: helpEn,
 };
 
 // Combine Arabic translations
@@ -54,6 +57,7 @@ const ar = {
   ...arDateSelect,
   ...arSmartInput,
   ...arFamilyTree,
+  help: helpAr,
 };
 
 // Define the type based on the English translation object

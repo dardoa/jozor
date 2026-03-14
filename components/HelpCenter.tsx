@@ -63,76 +63,25 @@ const FAQSection: React.FC<FAQSectionProps> = ({ title, icon, items }) => (
 );
 
 export const HelpCenter: React.FC = () => {
-    const { language } = useTranslation();
+    const { language, t } = useTranslation();
     const isRTL = language === 'ar';
     const navigate = useNavigate();
 
     const sections = [
         {
-            title: isRTL ? 'سلامة البيانات' : 'Data Integrity',
-            icon: <ShieldCheck className='w-5 h-5' />,
-            items: [
-                {
-                    q: isRTL ? 'ما هي علامات التحذير الصفراء؟' : 'What are yellow warning badges?',
-                    a: isRTL
-                        ? 'هذه الشارات تشير إلى وجود أخطاء منطقية في بياناتك (على سبيل المثال، طفل ولد قبل والديه) تم اكتشافها بواسطة محرك فحص الاتساق في الخلفية.'
-                        : 'These badges indicate logical errors in your data (e.g., a child born before a parent) detected by our background consistency engine.'
-                },
-                {
-                    q: isRTL ? 'كيف أتحقق من الحالة العامة لشجرتي؟' : 'How do I check my tree\'s overall health?',
-                    a: isRTL
-                        ? 'قم بزيارة لوحة الإحصائيات (Statistics Dashboard) وابحث عن العداد الخاص بـ "Health Score".'
-                        : 'Visit the Statistics Dashboard and look for the "Health Score" gauge.'
-                }
-            ]
-        },
-        {
-            title: isRTL ? 'الخريطة الجغرافية' : 'GeoMap',
-            icon: <MapIcon className='w-5 h-5' />,
-            items: [
-                {
-                    q: isRTL ? 'كيف أتنقل في الخريطة؟' : 'How do I navigate the map?',
-                    a: isRTL
-                        ? 'استخدم عجلة الماوس للتكبير والتصغير، وانقر مع السحب للتحرك. على الأجهزة المحمولة، استخدم إيماءات القرص والسحب القياسية.'
-                        : 'Use your mouse wheel to zoom and click-drag to pan. On mobile, use standard pinch and drag gestures.'
-                },
-                {
-                    q: isRTL ? 'هل يمكنني تصدير خريطتي؟' : 'Can I export my map?',
-                    a: isRTL
-                        ? 'نعم، استخدم الزر العائم "Snapshot" لالتقاط صورة PNG عالية الدقة للشاشة الحالية مع شعار مخصص.'
-                        : 'Yes, use the floating \'Snapshot\' button to capture a high-resolution, branded PNG of your current view.'
-                }
-            ]
-        },
-        {
-            title: isRTL ? 'الخصوصية' : 'Privacy',
+            title: t.help.categories.gettingStarted.title,
             icon: <HelpCircle className='w-5 h-5' />,
-            items: [
-                {
-                    q: isRTL ? 'كيف أقوم بإخفاء أفراد العائلة الحساسين؟' : 'How do I hide sensitive family members?',
-                    a: isRTL
-                        ? 'قم بتفعيل خيار "Is Private" في قائمة تحرير حالة الشخص (Status Edit Menu).'
-                        : 'Toggle the "Is Private" checkbox in a person\'s status edit menu.'
-                },
-                {
-                    q: isRTL ? 'هل يظهر الأعضاء الخاصون في الخرائط المشتركة؟' : 'Are private members shown on shared maps?',
-                    a: isRTL
-                        ? 'لا، يتم تجهيل أو استبعاد الأفراد الخاصين تلقائياً من عمليات التصدير والخرائط عالية الدقة.'
-                        : 'No, private individuals are automatically anonymized or excluded from exports.'
-                }
-            ]
+            items: t.help.categories.gettingStarted.items
         },
         {
-            title: isRTL ? 'المزامنة' : 'Sync',
-            icon: <RefreshCw className='w-5 h-5' />,
-            items: [
-                {
-                    q: isRTL ? 'هل يتم حفظ بياناتي تلقائياً؟' : 'Does my data save automatically?',
-                    a: isRTL
-                        ? 'نعم، يستخدم جوزور "Trust Layer" الذي يقوم بمزامنة كل تغيير تلقائياً مع Supabase و Google Drive (إذا تم تهيئته).'
-                        : 'Yes, Jozor uses a "Trust Layer" that automatically syncs every change to Supabase and (if configured) your Google Drive.'
-                }
-            ]
+            title: t.help.categories.toolsFeatures.title,
+            icon: <MapIcon className='w-5 h-5' />,
+            items: t.help.categories.toolsFeatures.items
+        },
+        {
+            title: t.help.categories.privacySharing.title,
+            icon: <ShieldCheck className='w-5 h-5' />,
+            items: t.help.categories.privacySharing.items
         }
     ];
 
@@ -148,10 +97,10 @@ export const HelpCenter: React.FC = () => {
                             onClick={() => navigate('/')}
                             leftIcon={<ArrowLeft className={`w-4 h-4 ${isRTL ? 'rotate-180' : ''}`} />}
                         >
-                            {isRTL ? 'العودة للشجرة' : 'Back to Tree'}
+                            {t.help.goHome}
                         </Button>
                         <h1 className='text-xl font-bold text-[var(--text-main)]'>
-                            {isRTL ? 'مركز المساعدة' : 'Help Center'}
+                            {t.help.title}
                         </h1>
                     </div>
 
@@ -173,12 +122,10 @@ export const HelpCenter: React.FC = () => {
             <div className='max-w-4xl mx-auto px-6 pt-12 animate-in fade-in slide-in-from-bottom-4 duration-700'>
                 <div className='text-center mb-16'>
                     <h2 className='text-4xl font-black mb-4 text-[var(--text-main)] tracking-tight'>
-                        {isRTL ? 'كيف يمكننا مساعدتك؟' : 'How can we help you?'}
+                        {t.help.categories.gettingStarted.title}
                     </h2>
                     <p className='text-[var(--text-dim)] max-w-xl mx-auto text-lg'>
-                        {isRTL
-                            ? 'دليلك الشامل لفهم ميزات جوزور 1.1 المتقدمة والحفاظ على تراث عائلتك.'
-                            : 'Your comprehensive guide to understanding Jozor 1.1 features and preserving your family legacy.'}
+                        {t.help.description}
                     </p>
                 </div>
 
@@ -198,14 +145,12 @@ export const HelpCenter: React.FC = () => {
                     <div className='w-16 h-16 bg-[var(--primary-600)]/20 rounded-2xl flex items-center justify-center mb-4'>
                         <ExternalLink className='w-8 h-8 text-[var(--primary-600)]' />
                     </div>
-                    <h3 className='text-xl font-bold mb-2'>{isRTL ? 'هل لا تزال بحاجة لمساعدة؟' : 'Still need help?'}</h3>
+                    <h3 className='text-xl font-bold mb-2'>{t.help.contactSupport}</h3>
                     <p className='text-[var(--text-dim)] mb-6 max-w-sm'>
-                        {isRTL
-                            ? 'فريقنا جاهز للإجابة على جميع استفساراتك التقنية.'
-                            : 'Our team is ready to help you with any technical questions you might have.'}
+                        {t.help.supportEmail}
                     </p>
                     <Button variant='outline' onClick={() => window.open('https://jozor.com/contact', '_blank')}>
-                        {isRTL ? 'تواصل معنا' : 'Contact Support'}
+                        {t.help.contactSupport}
                     </Button>
                 </div>
             </div>

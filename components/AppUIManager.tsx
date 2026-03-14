@@ -9,6 +9,7 @@ import { TreeSelector } from './TreeSelector';
 import { useAppStore, loadFullState } from '../store/useAppStore';
 import { ModalManagerContainer } from './ModalManagerContainer';
 import { useAppOrchestration } from '../hooks/useAppOrchestration';
+import { NotFound } from './NotFound';
 
 const HelpCenter = React.lazy(() => import('./HelpCenter').then(m => ({ default: m.HelpCenter })));
 
@@ -190,7 +191,7 @@ export const AppUIManager: React.FC = () => {
           />
 
           <Route path="/" element={renderMainLayout()} />
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </React.Suspense>
 

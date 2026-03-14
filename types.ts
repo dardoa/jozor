@@ -212,6 +212,19 @@ export interface FanArc {
 // Props Interfaces
 // ==========================================
 
+export interface HelpTranslations {
+  title: string;
+  description: string;
+  categories: {
+    gettingStarted: { title: string; desc: string; items: { q: string; a: string }[] };
+    toolsFeatures: { title: string; desc: string; items: { q: string; a: string }[] };
+    privacySharing: { title: string; desc: string; items: { q: string; a: string }[] };
+  };
+  contactSupport: string;
+  supportEmail: string;
+  goHome: string;
+}
+
 export interface HistoryControlsProps {
   onUndo: () => void;
   onRedo: () => void;

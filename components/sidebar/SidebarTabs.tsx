@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import { X } from 'lucide-react';
+import { useTranslation } from '../../context/TranslationContext';
 
 interface SidebarTabsProps {
   activeTab: 'info' | 'partners' | 'bio' | 'contact' | 'media'; // Removed 'sources' and 'events'
@@ -9,6 +10,7 @@ interface SidebarTabsProps {
 }
 
 export const SidebarTabs = memo<SidebarTabsProps>(({ activeTab, setActiveTab, tabs, onClose }) => {
+  const { t } = useTranslation();
   return (
     <div className='flex items-end justify-between border-b border-[var(--border-main)] bg-[var(--theme-bg)] pt-4 sm:pt-3 px-4'>
       {/* تم التعديل: إزالة overflow-x-auto وجعل الحاوية تأخذ المساحة المتاحة */}
@@ -31,7 +33,8 @@ export const SidebarTabs = memo<SidebarTabsProps>(({ activeTab, setActiveTab, ta
       </div>
       <button
         onClick={onClose}
-        aria-label='Close'
+        aria-label={t.common?.close || 'Close'}
+        title={t.common?.close || 'Close'}
         className='p-2 text-[var(--text-dim)] hover:text-[var(--text-main)] transition-colors'
       >
         <X className='w-5 h-5' />
