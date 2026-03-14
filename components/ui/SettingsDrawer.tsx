@@ -74,10 +74,10 @@ const LayoutContent = ({ treeSettings, updateSetting, resetSection, localWidth, 
             <SectionHeader icon={Grid} label={t.settings.layoutEngine} onReset={() => resetSection('layout')} t={t} />
             <div className="grid grid-cols-2 gap-2 mb-4">
                 {[
-                    { id: 'descendant', label: t.types.descendant, icon: Layout },
-                    { id: 'fan', label: t.types.fan, icon: RotateCcw },
-                    { id: 'pedigree', label: t.types.pedigree, icon: Move },
-                    { id: 'force', label: t.types.force, icon: Activity },
+                    { id: 'descendant', label: t.familyTree?.descendant, icon: Layout },
+                    { id: 'fan', label: t.familyTree?.fan, icon: RotateCcw },
+                    { id: 'pedigree', label: t.familyTree?.pedigree, icon: Move },
+                    { id: 'force', label: t.familyTree?.force, icon: Activity },
                 ].map(opt => (
                     <button
                         key={opt.id}
@@ -92,9 +92,9 @@ const LayoutContent = ({ treeSettings, updateSetting, resetSection, localWidth, 
             {treeSettings.chartType !== 'force' && (
                 <div className="bg-black/20 p-1 rounded-xl flex gap-1">
                     {[
-                        { id: 'vertical', label: t.vertical },
-                        { id: 'horizontal', label: t.horizontal },
-                        { id: 'radial', label: t.radial }
+                        { id: 'vertical', label: t.familyTree?.vertical },
+                        { id: 'horizontal', label: t.familyTree?.horizontal },
+                        { id: 'radial', label: t.familyTree?.radial }
                     ].map(mode => (
                         <button
                             key={mode.id}
@@ -253,13 +253,13 @@ const VisualsContent = ({ treeSettings, updateSetting, resetSection, applyPreset
             <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-2">
                     <button onClick={() => setDarkMode(!darkMode)} className={`flex items-center justify-between px-4 py-3 rounded-2xl border ${darkMode ? 'bg-white/10 text-white' : 'bg-white/5 text-slate-400'}`}>
-                        <span className="text-[10px] font-black uppercase">{darkMode ? t.darkMode : t.lightMode}</span>
+                        <span className="text-[10px] font-black uppercase">{darkMode ? t.settings?.darkMode : t.settings?.lightMode}</span>
                         {darkMode ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
                     </button>
                     <button onClick={() => {
                         const nextLang: Record<string, string> = { en: 'ar', ar: 'en' };
                         setLanguage(nextLang[language] || 'en');
-                    }} className="px-4 py-3 rounded-2xl bg-white/5 text-slate-400 font-black uppercase text-[10px] tracking-widest">{t.languageName}</button>
+                    }} className="px-4 py-3 rounded-2xl bg-white/5 text-slate-400 font-black uppercase text-[10px] tracking-widest">{t.settings?.languageName}</button>
                 </div>
                 <div className="p-3 bg-white/5 rounded-2xl space-y-2">
                     <label className="text-[10px] font-bold text-slate-500 uppercase">{t.settings.themeColor}</label>
@@ -271,7 +271,7 @@ const VisualsContent = ({ treeSettings, updateSetting, resetSection, applyPreset
                 </div>
                 {/* Date Format */}
                 <div className="p-3 bg-white/5 rounded-2xl space-y-2">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase">{t.dateFormat}</label>
+                    <label className="text-[10px] font-bold text-slate-500 uppercase">{t.settings?.dateFormat}</label>
                     <div className="grid grid-cols-4 gap-1">
                         {(['iso', 'eu', 'us', 'long'] as const).map(fmt => (
                             <button
@@ -303,8 +303,8 @@ const PerformanceContent = ({ treeSettings, updateSetting, resetSection, t }: an
     <div className="space-y-6">
         <SectionHeader icon={Zap} label={t.settings.performance} onReset={() => resetSection('performance')} t={t} />
         <div className="space-y-4">
-            <Checkbox label={t.settings.lowGraphics} value={!!treeSettings.isLowGraphicsMode} onChange={v => updateSetting('isLowGraphicsMode', v)} icon={Zap} />
-            <p className="px-3 text-[9px] font-bold text-slate-500 uppercase tracking-tight">{t.settings.lowGraphicsDesc}</p>
+            <Checkbox label={t.settings?.lowGraphics} value={!!treeSettings.isLowGraphicsMode} onChange={v => updateSetting('isLowGraphicsMode', v)} icon={Zap} />
+            <p className="px-3 text-[9px] font-bold text-slate-500 uppercase tracking-tight">{t.settings?.lowGraphicsDesc}</p>
         </div>
     </div>
 );
