@@ -113,7 +113,7 @@ export const HelpCenter: React.FC = () => {
                         }}
                         leftIcon={<PlayCircle className='w-4 h-4' />}
                     >
-                        {isRTL ? 'إعادة تشغيل الجولة' : 'Restart Interactive Tour'}
+                        {t.help.restartTour}
                     </Button>
                 </div>
             </div>

@@ -49,5 +49,11 @@ export const helpEn: HelpTranslations = {
   },
   contactSupport: 'Contact Developer Support',
   supportEmail: 'Contact us via email: jozor@jozor.com',
-  goHome: 'Go to Home Screen'
+  goHome: 'Go to Home Screen',
+  restartTour: 'Restart Interactive Tour',
+  zoomIn: 'Zoom In',
+  zoomOut: 'Zoom Out',
+  resetZoom: 'Reset Zoom',
+  fitToScreen: 'Fit to Screen',
+  advancedSettings: 'Advanced Layout Settings',
 };

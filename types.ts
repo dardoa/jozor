@@ -223,6 +223,12 @@ export interface HelpTranslations {
   contactSupport: string;
   supportEmail: string;
   goHome: string;
+  restartTour: string;
+  zoomIn: string;
+  zoomOut: string;
+  resetZoom: string;
+  fitToScreen: string;
+  advancedSettings: string;
 }
 
 export interface HistoryControlsProps {

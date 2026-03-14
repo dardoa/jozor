@@ -49,5 +49,11 @@ export const helpAr: HelpTranslations = {
   },
   contactSupport: 'التواصل مع الدعم وتطوير النظام',
   supportEmail: 'راسلنا عبر البريد: jozor@jozor.com',
-  goHome: 'العودة للشاشة الرئيسية'
+  goHome: 'العودة للشاشة الرئيسية',
+  restartTour: 'إعادة تشغيل الجولة التفاعلية',
+  zoomIn: 'تكبير',
+  zoomOut: 'تصغير',
+  resetZoom: 'إعادة ضبط الحجم',
+  fitToScreen: 'ملاءمة الشاشة',
+  advancedSettings: 'إعدادات التخطيط المتقدمة',
 };
