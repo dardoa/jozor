@@ -72,7 +72,7 @@ export const StoryModal: React.FC<StoryModalProps> = ({
                 <span className='text-amber-600'>{people[rootId]?.lastName || t.family}</span>
               </h3>
               <p className='text-xs text-stone-500 font-sans flex items-center gap-1'>
-                <Sparkles className='w-3 h-3' /> {t.modals.story.aiSubtitle || 'AI Generated Narrative'}
+                <Sparkles className='w-3 h-3' /> {t.modals.story.aiSubtitle}
               </p>
             </div>
           </div>
@@ -81,7 +81,7 @@ export const StoryModal: React.FC<StoryModalProps> = ({
               onClick={handleGenerate}
               disabled={loading}
               className='p-2 text-stone-500 hover:text-amber-600 dark:hover:text-amber-400 transition-colors'
-              title={t.modals.story.regenerate || 'Regenerate'}
+              title={t.modals.story.regenerate}
             >
               <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
             </button>
@@ -111,7 +111,7 @@ export const StoryModal: React.FC<StoryModalProps> = ({
 
         {/* Footer Page Number */}
         <div className='py-2 text-center text-xs text-stone-400 font-serif border-t border-stone-200 dark:border-stone-800'>
-          ~ {t.modals.story.page || 'Page'} 1 ~
+          ~ {t.modals.story.page} 1 ~
         </div>
       </div>
     </OverlayPrimitive>

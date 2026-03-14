@@ -1,4 +1,5 @@
 import React, { useEffect, useState, memo } from 'react';
+import { EMPTY_STRING } from '../constants';
 import { useTranslation } from '../context/TranslationContext';
 
 interface DateSelectProps {
@@ -25,9 +26,9 @@ export const DateSelect: React.FC<DateSelectProps> = memo(({ value, onChange, di
 
     const parts = value.split('-');
     // Format assumed: YYYY-MM-DD or YYYY-MM or YYYY
-    const newYear = parts[0] || '';
-    const newMonth = parts[1] || '';
-    const newDay = parts[2] || '';
+    const newYear = parts[0] || EMPTY_STRING;
+    const newMonth = parts[1] || EMPTY_STRING;
+    const newDay = parts[2] || EMPTY_STRING;
 
     if (year !== newYear) setTimeout(() => setYear(newYear), 0);
     if (month !== newMonth) setTimeout(() => setMonth(newMonth), 0);
@@ -113,7 +114,7 @@ export const DateSelect: React.FC<DateSelectProps> = memo(({ value, onChange, di
         disabled={disabled || !month} // Disable day if no month selected
         className={`w-12 ${inputBaseClass} ${disabledClass}`}
       >
-        <option value=''>DD</option>
+        <option value=''>{t.date?.day}</option>
         {days.map((d) => (
           <option key={d} value={d}>
             {parseInt(d)}
@@ -128,7 +129,7 @@ export const DateSelect: React.FC<DateSelectProps> = memo(({ value, onChange, di
         disabled={disabled}
         className={`w-16 ${inputBaseClass} ${disabledClass}`}
       >
-        <option value=''>MM</option>
+        <option value=''>{t.date?.month}</option>
         {months.map((m) => (
           <option key={m.v} value={m.v}>
             {m.l}
@@ -142,7 +143,7 @@ export const DateSelect: React.FC<DateSelectProps> = memo(({ value, onChange, di
         value={year}
         onChange={handleYearChange}
         disabled={disabled}
-        placeholder='YYYY'
+        placeholder={t.date?.year}
         maxLength={4}
         className={`w-16 text-center ${inputBaseClass} ${disabledClass}`}
       />

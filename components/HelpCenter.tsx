@@ -64,7 +64,6 @@ const FAQSection: React.FC<FAQSectionProps> = ({ title, icon, items }) => (
 
 export const HelpCenter: React.FC = () => {
     const { language, t } = useTranslation();
-    const isRTL = language === 'ar';
     const navigate = useNavigate();
 
     const sections = [

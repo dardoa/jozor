@@ -52,7 +52,6 @@ export const NodeContextMenu: React.FC<NodeContextMenuProps> = ({
     const isOwner = currentUserRole === 'owner';
     const isViewer = currentUserRole === 'viewer';
     const canEdit = isOwner || currentUserRole === 'editor';
-    const isRTL = language === 'ar';
 
     // Handle click outside to close
     useEffect(() => {

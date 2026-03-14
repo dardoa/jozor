@@ -137,7 +137,7 @@ export const DriveFileManagerModal = memo<DriveFileManagerModalProps>(
             </div>
             <button
               onClick={onClose}
-              aria-label={t.close || 'Close'}
+              aria-label={t.close}
               className='p-2 hover:bg-stone-100 dark:hover:bg-stone-700 rounded-full transition-colors text-stone-400 hover:text-stone-600 dark:hover:text-stone-300'
             >
               <X className='w-5 h-5' />

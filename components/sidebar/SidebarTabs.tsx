@@ -33,8 +33,8 @@ export const SidebarTabs = memo<SidebarTabsProps>(({ activeTab, setActiveTab, ta
       </div>
       <button
         onClick={onClose}
-        aria-label={t.common?.close || 'Close'}
-        title={t.common?.close || 'Close'}
+        aria-label={t.common?.close}
+        title={t.common?.close}
         className='p-2 text-[var(--text-dim)] hover:text-[var(--text-main)] transition-colors'
       >
         <X className='w-5 h-5' />

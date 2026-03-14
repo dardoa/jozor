@@ -50,12 +50,12 @@ export const EmailLoginForm: React.FC<EmailLoginFormProps> = ({ onSuccess, onCan
         } catch (err: any) {
             console.error(err);
             // Simplify error messages
-            let msg = err.message || 'An error occurred';
-            if (msg.includes('auth/invalid-email')) msg = 'Invalid email address';
-            if (msg.includes('auth/user-not-found')) msg = 'User not found';
-            if (msg.includes('auth/wrong-password')) msg = 'Incorrect password';
-            if (msg.includes('auth/email-already-in-use')) msg = 'Email already in use';
-            if (msg.includes('auth/weak-password')) msg = 'Password should be at least 6 characters';
+            let msg = err.message || t.authErrors.generic;
+            if (msg.includes('auth/invalid-email')) msg = t.authErrors.invalidEmail;
+            if (msg.includes('auth/user-not-found')) msg = t.authErrors.userNotFound;
+            if (msg.includes('auth/wrong-password')) msg = t.authErrors.wrongPassword;
+            if (msg.includes('auth/email-already-in-use')) msg = t.authErrors.emailInUse;
+            if (msg.includes('auth/weak-password')) msg = t.authErrors.weakPassword;
             setAuthError(msg);
         } finally {
             setAuthLoading(false);

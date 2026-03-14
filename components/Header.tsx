@@ -19,7 +19,6 @@ export const Header = memo<HeaderProps>(
     searchProps,
   }) => {
     const { t, language } = useTranslation();
-    const isRtl = language === 'ar';
     const activeFile = auth.driveFiles.find((f) => f.id === auth.currentActiveDriveFileId) || null;
     const treeLabel = activeFile
       ? `${t.header.treeLabelPrefix}${activeFile.name}`

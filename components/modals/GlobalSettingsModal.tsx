@@ -8,6 +8,7 @@ import { useTranslation } from '../../context/TranslationContext';
 import { useAppStore } from '../../store/useAppStore';
 import { SupabaseStorageService } from '../../services/supabaseStorageService';
 import { updateUserProfile } from '../../services/supabaseTreeService';
+import { EMPTY_STRING } from '../../constants';
 import { Button } from '../ui/Button';
 import { FormField } from '../ui/FormField';
 import { OverlayPrimitive } from '../../context/OverlayContext';
@@ -28,7 +29,7 @@ export const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen
     const logout = useAppStore((state) => state.logout);
 
     const [activeTab, setActiveTab] = useState<TabType>('profile');
-    const [displayName, setDisplayName] = useState(user?.displayName || '');
+    const [displayName, setDisplayName] = useState(user?.displayName || EMPTY_STRING);
     const [isUploading, setIsUploading] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [deleteProgress, setDeleteProgress] = useState(0);

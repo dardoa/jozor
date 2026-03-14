@@ -67,7 +67,7 @@ const SliderField = ({ label, value, onChange, min, max, step, unit, icon: Icon 
     </div>
 );
 
-const LayoutContent = ({ isRtl, treeSettings, updateSetting, resetSection, localWidth, setLocalWidth, localTextSize, setLocalTextSize, localSpacingX, setLocalSpacingX, localSpacingY, setLocalSpacingY, t }: any) => (
+const LayoutContent = ({ treeSettings, updateSetting, resetSection, localWidth, setLocalWidth, localTextSize, setLocalTextSize, localSpacingX, setLocalSpacingX, localSpacingY, setLocalSpacingY, t }: any) => (
     <>
         {/* Section: Chart Type */}
         <div>
@@ -197,7 +197,7 @@ const LayoutContent = ({ isRtl, treeSettings, updateSetting, resetSection, local
     </>
 );
 
-const VisualsContent = ({ isRtl, treeSettings, updateSetting, resetSection, applyPreset, darkMode, setDarkMode, language, setLanguage, t }: any) => (
+const VisualsContent = ({ treeSettings, updateSetting, resetSection, applyPreset, darkMode, setDarkMode, language, setLanguage, t }: any) => (
     <>
         {/* Global Presets */}
         <div className="bg-white/5 rounded-2xl p-3 border border-white/5">
@@ -256,7 +256,10 @@ const VisualsContent = ({ isRtl, treeSettings, updateSetting, resetSection, appl
                         <span className="text-[10px] font-black uppercase">{darkMode ? t.general.darkMode : t.general.lightMode}</span>
                         {darkMode ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
                     </button>
-                    <button onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')} className="px-4 py-3 rounded-2xl bg-white/5 text-slate-400 font-black uppercase text-[10px] tracking-widest">{t.general.languageName}</button>
+                    <button onClick={() => {
+                        const nextLang: Record<string, string> = { en: 'ar', ar: 'en' };
+                        setLanguage(nextLang[language] || 'en');
+                    }} className="px-4 py-3 rounded-2xl bg-white/5 text-slate-400 font-black uppercase text-[10px] tracking-widest">{t.general.languageName}</button>
                 </div>
                 <div className="p-3 bg-white/5 rounded-2xl space-y-2">
                     <label className="text-[10px] font-bold text-slate-500 uppercase">{t.settings.themeColor}</label>
@@ -275,7 +278,7 @@ const VisualsContent = ({ isRtl, treeSettings, updateSetting, resetSection, appl
                                 key={fmt}
                                 onClick={() => updateSetting('dateFormat', fmt)}
                                 className={`px-2 py-1.5 rounded-lg text-[9px] font-black uppercase border transition-all
-                                    ${(treeSettings.dateFormat || 'iso') === fmt
+                                    ${(treeSettings.dateFormat) === fmt
                                         ? 'bg-amber-500/30 border-amber-400 text-amber-100'
                                         : 'bg-white/0 border-white/5 text-slate-400 hover:text-slate-200 hover:border-white/20'}`}
                             >
@@ -286,9 +289,9 @@ const VisualsContent = ({ isRtl, treeSettings, updateSetting, resetSection, appl
                         ))}
                     </div>
                     <p className="text-[9px] text-slate-600 font-bold">
-                        {(treeSettings.dateFormat || 'iso') === 'iso' ? '2001-09-11' :
-                            (treeSettings.dateFormat || 'iso') === 'eu' ? '11/09/2001' :
-                                (treeSettings.dateFormat || 'iso') === 'us' ? '09/11/2001' : 'Sep 11, 2001'}
+                        {treeSettings.dateFormat === 'iso' ? '2001-09-11' :
+                            treeSettings.dateFormat === 'eu' ? '11/09/2001' :
+                                treeSettings.dateFormat === 'us' ? '09/11/2001' : 'Sep 11, 2001'}
                     </p>
                 </div>
             </div>
@@ -296,7 +299,7 @@ const VisualsContent = ({ isRtl, treeSettings, updateSetting, resetSection, appl
     </>
 );
 
-const PerformanceContent = ({ isRtl, treeSettings, updateSetting, resetSection, t }: any) => (
+const PerformanceContent = ({ treeSettings, updateSetting, resetSection, t }: any) => (
     <div className="space-y-6">
         <SectionHeader icon={Zap} label={t.settings.performance} onReset={() => resetSection('performance')} t={t} />
         <div className="space-y-4">
@@ -509,10 +512,7 @@ export const SettingsDrawer = memo(() => {
 
     if (!isSettingsDrawerOpen) return null;
 
-    const isRtl = language === 'ar';
-
     const contentProps = {
-        isRtl,
         treeSettings,
         updateSetting,
         resetSection,

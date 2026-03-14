@@ -247,7 +247,7 @@ const ActivityLogDrawer: React.FC<ActivityLogDrawerProps> = ({ isOpen, onClose, 
                                                 <div className="flex items-center justify-between mb-1">
                                                     <div className="flex items-center gap-2">
                                                         <span className="text-sm font-semibold text-gray-900 truncate max-w-[150px]">
-                                                            {log.user_email?.split('@')[0] || 'Unknown User'}
+                                                            {log.user_email?.split('@')[0] || t.modals.activityDrawer.someone}
                                                         </span>
                                                         <span className="text-[10px] px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full font-bold uppercase">
                                                             {log.action_type.split('_')[0]}

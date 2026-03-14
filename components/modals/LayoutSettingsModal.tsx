@@ -2,47 +2,22 @@ import React, { memo } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import { Button } from '../ui/Button';
 import { OverlayPrimitive } from '../../context/OverlayContext';
+import { useTranslation } from '../../context/TranslationContext';
+import { X } from 'lucide-react';
 
 interface LayoutSettingsModalProps {
     isOpen: boolean;
     onClose: () => void;
 }
 
-// Local Dictionary
-const LOCAL_LABELS = {
-    en: {
-        layoutSettings: 'Layout Settings',
-        orientation: 'Orientation',
-        vertical: 'Vertical',
-        horizontal: 'Horizontal',
-        spacing: 'Spacing',
-        horizX: 'Horizontal (X)',
-        vertY: 'Vertical (Y)',
-        close: 'Close',
-        closeAria: 'Close'
-    },
-    ar: {
-        layoutSettings: 'إعدادات المخطط',
-        orientation: 'الاتجاه',
-        vertical: 'عمودي',
-        horizontal: 'أفقي',
-        spacing: 'المسافات',
-        horizX: 'أفقي (س)',
-        vertY: 'عمودي (ص)',
-        close: 'إغلاق',
-        closeAria: 'إغلاق'
-    }
-};
-
 export const LayoutSettingsModal = memo(({ isOpen, onClose }: LayoutSettingsModalProps) => {
-    // Get language
-    const language = useAppStore((state) => state.language);
-    const t = LOCAL_LABELS[(language || 'en') as 'en' | 'ar'] || LOCAL_LABELS.en;
-
+    const { t } = useTranslation();
     const treeSettings = useAppStore((state) => state.treeSettings);
     const setTreeSettings = useAppStore((state) => state.setTreeSettings);
 
     if (!treeSettings) return null;
+
+    const labels = t.modals.layoutSettings;
 
     return (
         <OverlayPrimitive
@@ -57,21 +32,21 @@ export const LayoutSettingsModal = memo(({ isOpen, onClose }: LayoutSettingsModa
                 {/* Header */}
                 <div className='flex items-center justify-between p-4 border-b border-stone-200 dark:border-stone-800 bg-stone-50/50 dark:bg-stone-900/50'>
                     <h2 className='font-semibold text-stone-800 dark:text-stone-100'>
-                        {t.layoutSettings}
+                        {labels.title}
                     </h2>
                     <button
                         onClick={onClose}
                         className='p-1 rounded-full hover:bg-stone-200 dark:hover:bg-stone-800 text-stone-500 transition-colors'
-                        aria-label={t.closeAria}
+                        aria-label={t.close}
                     >
-                        ✕
+                        <X className="w-5 h-5" />
                     </button>
                 </div>
 
                 <div className='p-6 space-y-6'>
                     {/* Orientation */}
                     <div className='space-y-4'>
-                        <h3 className='text-sm font-medium text-stone-700 dark:text-stone-300'>{t.orientation}</h3>
+                        <h3 className='text-sm font-medium text-stone-700 dark:text-stone-300'>{labels.orientation}</h3>
                         <div className='grid grid-cols-2 gap-2'>
                             {(['vertical', 'horizontal'] as const).map((mode) => (
                                 <button
@@ -83,7 +58,7 @@ export const LayoutSettingsModal = memo(({ isOpen, onClose }: LayoutSettingsModa
                                         }`}
                                 >
                                     <span className='text-xs font-semibold uppercase'>
-                                        {mode === 'vertical' ? t.vertical : t.horizontal}
+                                        {mode === 'vertical' ? labels.vertical : labels.horizontal}
                                     </span>
                                 </button>
                             ))}
@@ -92,13 +67,13 @@ export const LayoutSettingsModal = memo(({ isOpen, onClose }: LayoutSettingsModa
 
                     {/* Spacing */}
                     <div className='space-y-4 pt-2'>
-                        <h3 className='text-sm font-medium text-stone-700 dark:text-stone-300'>{t.spacing}</h3>
+                        <h3 className='text-sm font-medium text-stone-700 dark:text-stone-300'>{labels.spacing}</h3>
 
                         {/* Horizontal Spacing */}
                         <div className='bg-stone-50/50 dark:bg-stone-900/30 p-2 rounded-lg border border-transparent hover:border-stone-200 dark:hover:border-stone-800 transition-colors'>
                             <div className='flex items-center gap-3'>
                                 <label className='w-24 text-xs text-stone-600 dark:text-stone-400 font-medium'>
-                                    {t.horizX}
+                                    {labels.horizX}
                                 </label>
                                 <input
                                     type='range'
@@ -115,7 +90,7 @@ export const LayoutSettingsModal = memo(({ isOpen, onClose }: LayoutSettingsModa
                         <div className='bg-stone-50/50 dark:bg-stone-900/30 p-2 rounded-lg border border-transparent hover:border-stone-200 dark:hover:border-stone-800 transition-colors'>
                             <div className='flex items-center gap-3'>
                                 <label className='w-24 text-xs text-stone-600 dark:text-stone-400 font-medium'>
-                                    {t.vertY}
+                                    {labels.vertY}
                                 </label>
                                 <input
                                     type='range'

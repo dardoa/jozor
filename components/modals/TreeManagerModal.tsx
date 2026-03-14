@@ -483,7 +483,7 @@ const TreeItem: React.FC<TreeItemProps> = ({
                                 {isShared && (
                                     <div className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-tight flex items-center gap-1 ${role === 'editor' ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-400'}`}>
                                         {role === 'editor' ? <Shield className='w-2.5 h-2.5' /> : <Eye className='w-2.5 h-2.5' />}
-                                        {role === 'editor' ? t.editor || 'Editor' : t.viewer || 'Viewer'}
+                                        {role === 'editor' ? t.modals.editor : t.modals.viewer}
                                     </div>
                                 )}
                             </div>
@@ -494,7 +494,7 @@ const TreeItem: React.FC<TreeItemProps> = ({
                             {activeTreeId === tree.id && (
                                 <div className='mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-[10px] font-black text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 animate-pulse'>
                                     <div className='w-1 h-1 rounded-full bg-emerald-500'></div>
-                                    {t.active || 'Active'}
+                                    {t.active}
                                 </div>
                             )}
                         </div>
@@ -506,7 +506,7 @@ const TreeItem: React.FC<TreeItemProps> = ({
                         onClick={() => handleOpenTree(tree.id)}
                         disabled={isProcessing === tree.id || activeTreeId === tree.id}
                         className='p-2 text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed'
-                        title={activeTreeId === tree.id ? t.active : (t.setActive || 'Set Active')}
+                        title={activeTreeId === tree.id ? t.active : t.setActive}
                     >
                         {isProcessing === tree.id ? <Loader2 className='w-4 h-4 animate-spin' /> : <Play className='w-4 h-4 fill-current' />}
                     </button>

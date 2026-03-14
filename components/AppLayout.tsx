@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { X } from 'lucide-react';
+import { EMPTY_STRING } from '../constants';
 
 import { Sidebar } from './Sidebar';
 import { FamilyTree } from './FamilyTree';
@@ -172,7 +173,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
       <ActivityLogDrawer
         isOpen={isActivityLogOpen}
         onClose={() => setActivityLogOpen(false)}
-        treeId={appState.currentTreeId || ''}
+        treeId={appState.currentTreeId || EMPTY_STRING}
         onNavigate={appState.setFocusId}
       />
 

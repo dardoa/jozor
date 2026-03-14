@@ -21,28 +21,28 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ sidebarOpen, set
     const steps: Step[] = [
         {
             target: '#family-tree-canvas',
-            content: t.onboardingTree || 'This is your interactive Family Tree. Click and drag to explore, or zoom in for specific details.',
+            content: t.onboarding?.tree,
             placement: 'center',
             disableBeacon: true,
         },
         {
             target: '#tree-search-input',
-            content: t.onboardingSearch || 'Use the Smart Search (Top Right) to instantly find any relative in your tree.',
+            content: t.onboarding?.search,
             placement: 'bottom',
         },
         {
             target: '#user-menu-trigger',
-            content: t.onboardingAvatarHub || 'Click your avatar to access the Tools Hub (Map, Stats, Timeline, and History).',
+            content: t.onboarding?.avatarHub,
             placement: 'bottom',
         },
         {
             target: '#geomap-tool-item',
-            content: t.onboardingGeoMap || 'Explore where your family came from in the Worldwide Geographic Map.',
+            content: t.onboarding?.geoMap,
             placement: 'right',
         },
         {
             target: '#privacy-toggle-item',
-            content: t.onboardingPrivacy || 'Control your privacy. Mark family members as "Private" to hide them during exports.',
+            content: t.onboarding?.privacy,
             placement: 'left',
         },
     ];

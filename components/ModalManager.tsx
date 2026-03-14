@@ -8,6 +8,7 @@ import {
   ThemeLanguageProps,
 } from '../types';
 import { useAppStore } from '../store/useAppStore';
+import { EMPTY_STRING, DEFAULT_ROLE } from '../constants';
 import { LoadingSpinner } from './LoadingSpinner';
 import { LinkPersonModal } from './LinkPersonModal';
 import { CleanTreeOptionsModal } from './CleanTreeOptionsModal';
@@ -209,8 +210,8 @@ export const ModalManager = ({
       <TreeManagerModal
         isOpen={treeManagerModal.isOpen}
         onClose={() => setTreeManagerModal({ isOpen: false })}
-        ownerId={user?.uid || ''}
-        userEmail={user?.email || ''}
+        ownerId={user?.uid || EMPTY_STRING}
+        userEmail={user?.email || EMPTY_STRING}
         activeTreeId={activeTreeId}
         onTreeSelected={onTreeSelected}
       />
@@ -232,6 +233,8 @@ export const ModalManager = ({
 
       {activeModal === 'stats' && (
         <StatisticsDashboard
+          isOpen={true}
+          onClose={closeModal}
           people={people}
           onNavigateToPerson={(id) => {
             setFocusId(id);
@@ -242,6 +245,8 @@ export const ModalManager = ({
 
       {activeModal === 'consistency' && (
         <StatisticsDashboard
+          isOpen={true}
+          onClose={closeModal}
           people={people}
           onNavigateToPerson={(id) => {
             setFocusId(id);
@@ -327,10 +332,10 @@ export const ModalManager = ({
         <AdminHubModal
           isOpen={true}
           onClose={() => setAdminHubModal({ isOpen: false })}
-          treeId={activeTreeId || ''}
-          ownerId={user?.uid || ''}
-          ownerEmail={user?.email || ''}
-          currentUserRole={useAppStore.getState().currentUserRole || 'viewer'}
+          treeId={activeTreeId || EMPTY_STRING}
+          ownerId={user?.uid || EMPTY_STRING}
+          ownerEmail={user?.email || EMPTY_STRING}
+          currentUserRole={useAppStore.getState().currentUserRole || DEFAULT_ROLE}
           googleSync={googleSync}
           onRootChanged={setFocusId}
         />

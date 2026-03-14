@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Trash2, AlertTriangle, Loader2, Edit3, User } from 'lucide-react';
+import { EMPTY_STRING } from '../../../constants';
 import { renameTree, deleteWholeTree, updateTreeRoot } from '../../../services/supabaseTreeService';
 import { useAppStore } from '../../../store/useAppStore';
 import type { Person } from '../../../types';
@@ -150,7 +151,7 @@ export const TreeSettingsTab: React.FC<TreeSettingsTabProps> = ({
                         Change Root Person
                     </h4>
                     <select
-                        value={currentRootId || ''}
+                        value={currentRootId || EMPTY_STRING}
                         onChange={(e) => handleChangeRoot(e.target.value)}
                         className="w-full px-3 py-2 rounded-lg border border-[var(--border-main)] bg-[var(--theme-bg)] text-[var(--text-main)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary-600)]"
                     >

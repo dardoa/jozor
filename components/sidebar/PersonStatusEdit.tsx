@@ -81,7 +81,7 @@ export const PersonStatusEdit = memo<PersonStatusEditProps>(({ person, onUpdate 
               className='w-3.5 h-3.5 rounded text-amber-500 focus:ring-0 cursor-pointer border-[var(--border-main)] bg-[var(--card-bg)] transition-colors'
             />
             <span className='text-sm font-medium text-[var(--text-main)] group-hover:text-amber-500 transition-colors'>
-              {t.private || 'Private'}
+              {t.private}
             </span>
           </label>
         </div>

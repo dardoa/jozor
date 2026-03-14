@@ -13,6 +13,22 @@ export const general = {
   no: 'No',
   or: 'OR',
   confirm: 'Confirm',
+  onboarding: {
+    tree: 'This is your interactive Family Tree. Click and drag to explore, or zoom in for specific details.',
+    search: 'Use the Smart Search (Top Right) to instantly find any relative in your tree.',
+    avatarHub: 'Click your avatar to access the Tools Hub (Map, Stats, Timeline, and History).',
+    geoMap: 'Explore where your family came from in the Worldwide Geographic Map.',
+    privacy: 'Control your privacy. Mark family members as "Private" to hide them during exports.',
+    tip: 'Tip',
+  },
+  authErrors: {
+    invalidEmail: 'Invalid email address',
+    userNotFound: 'User not found',
+    wrongPassword: 'Incorrect password',
+    emailInUse: 'Email already in use',
+    weakPassword: 'Password should be at least 6 characters',
+    generic: 'An error occurred during authentication',
+  },
   readOnly: 'Read-Only',
   quickAdd: 'Quick Add',
   cleanTree: 'Clean Tree', // New translation

@@ -41,7 +41,7 @@ export const PersonHeaderView = memo<PersonHeaderViewProps>(
         .filter(Boolean)
         .join(' ') || t.sidebar.unnamedPerson;
     // Use configured format, default to ISO if not set (though settings usually has default)
-    const dateFormat = settings.dateFormat || 'iso';
+    const dateFormat = settings.dateFormat;
     const displayBirth = formatDate(person.birthDate, dateFormat);
     const displayDeath = formatDate(person.deathDate, dateFormat);
 

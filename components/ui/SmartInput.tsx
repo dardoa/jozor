@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { EMPTY_STRING } from '../../constants';
 
 interface SmartInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
   value: string | number;
@@ -31,7 +32,7 @@ export const SmartInput: React.FC<SmartInputProps> = ({ value, onCommit, ...prop
   return (
     <input
       {...props}
-      value={localValue || ''}
+      value={localValue || EMPTY_STRING}
       onChange={handleChange}
       onBlur={handleBlur}
       onKeyDown={handleKeyDown}
@@ -65,6 +66,6 @@ export const SmartTextarea: React.FC<SmartTextareaProps> = ({ value, onCommit, .
   };
 
   return (
-    <textarea {...props} value={localValue || ''} onChange={handleChange} onBlur={handleBlur} />
+    <textarea {...props} value={localValue || EMPTY_STRING} onChange={handleChange} onBlur={handleBlur} />
   );
 };

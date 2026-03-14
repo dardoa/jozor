@@ -107,7 +107,7 @@ export const NodeComponent = memo<NodeComponentProps>(({
                     width={nodeWidth + 16}
                     height={nodeHeight + 16}
                     rx="24"
-                    className={`fill-none stroke-[${settings.themeColor || '#E1AD01'}] stroke-2 ${isPulsing ? 'animate-ping opacity-50' : 'animate-pulse'}`}
+                    className={`fill-none stroke-2 ${isPulsing ? 'animate-ping opacity-50' : 'animate-pulse'}`}
                     style={{ stroke: settings.themeColor }}
                 />
             )}

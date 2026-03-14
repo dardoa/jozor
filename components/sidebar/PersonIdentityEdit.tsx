@@ -104,7 +104,7 @@ export const PersonIdentityEdit = memo<PersonIdentityEditProps>(({ person, onUpd
             accept='image/*'
             className='hidden'
             onChange={handleImageUpload}
-            aria-label={t.uploadPhoto || 'Upload Photo'}
+            aria-label={t.uploadPhoto}
           />
         </div>
 

@@ -12,6 +12,13 @@ export const GOOGLE_API_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
 
 export const FILE_NAME = 'MyTreeData.json';
 
+export const EMPTY_STRING = '';
+export const DEFAULT_ROLE = 'viewer';
+export const DEFAULT_LANGUAGE = 'en';
+export const DEFAULT_DIR = 'ltr';
+export const DEFAULT_GENDER: Gender = 'male';
+export const DEFAULT_LAYOUT_MODE = 'vertical';
+
 export const DEFAULT_PERSON_TEMPLATE: Omit<Person, 'id'> = {
   title: '',
   firstName: 'New',

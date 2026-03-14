@@ -2,6 +2,7 @@ import * as React from 'react';
 import { Routes, Route, Navigate, useMatch, useNavigate, useParams, useLocation } from 'react-router-dom';
 
 import { Person, AuthProps } from '../types';
+import { EMPTY_STRING } from '../constants';
 import { SharedTreeLoader } from './SharedTreeLoader';
 import { WelcomeScreen } from './WelcomeScreen';
 import { AppLayout } from './AppLayout';
@@ -128,7 +129,7 @@ export const AppUIManager: React.FC = () => {
       return (
         <TreeSelector
           ownerId={auth.user.uid}
-          userEmail={auth.user.email || ''}
+          userEmail={auth.user.email || EMPTY_STRING}
           currentTreeId={currentTreeId}
           supabaseToken={auth.user.supabaseToken}
           onTreeSelected={(id, role) => {

@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import { EMPTY_STRING } from '../../constants';
 import { Person, RelationshipInfo } from '../../types';
 import { DateSelect } from '../DateSelect';
 import { ExternalLink, Heart, HeartCrack, Users, Gem, Calendar, MapPin } from 'lucide-react';
@@ -153,7 +154,7 @@ export const PartnersTab = memo<PartnersTabProps>(
                       </div>
                       <FormField
                         label={t.place}
-                        value={details.startPlace || ''}
+                        value={details.startPlace || EMPTY_STRING}
                         onCommit={(v: string) => handlePartnerUpdate(spouseId, 'startPlace', v)}
                         disabled={!isEditing}
                         placeholder={t.place}
@@ -169,7 +170,7 @@ export const PartnersTab = memo<PartnersTabProps>(
                             </label>
                             <DateSelect
                               disabled={!isEditing}
-                              value={details.endDate || ''}
+                              value={details.endDate || EMPTY_STRING}
                               onChange={(val: string) =>
                                 handlePartnerUpdate(spouseId, 'endDate', val)
                               }
@@ -177,7 +178,7 @@ export const PartnersTab = memo<PartnersTabProps>(
                           </div>
                           <FormField
                             label={t.place}
-                            value={details.endPlace || ''}
+                            value={details.endPlace || EMPTY_STRING}
                             onCommit={(v: string) => handlePartnerUpdate(spouseId, 'endPlace', v)}
                             disabled={!isEditing}
                             placeholder={t.place}

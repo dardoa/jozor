@@ -190,7 +190,7 @@ export const ShareModal = ({ isOpen, onClose, language, user, driveFileId, treeI
               <select
                 value={role}
                 onChange={(e) => setRole(e.target.value as any)}
-                aria-label={t.sidebar.role || 'Role'}
+                aria-label={t.sidebar.role}
                 className='bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-lg text-sm px-3 text-stone-700 dark:text-stone-200 outline-none focus:border-blue-500'
               >
                 <option value='editor'>{t.modals.editor}</option>

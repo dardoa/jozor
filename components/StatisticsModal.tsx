@@ -1,4 +1,5 @@
 import { useMemo, useState, lazy, Suspense } from 'react';
+import { EMPTY_STRING } from '../constants';
 import './StatisticsModal.css';
 import { Person } from '../types';
 import { calculateStatistics } from '../utils/statisticsLogic';
@@ -213,7 +214,7 @@ export const StatisticsModal = ({ isOpen, onClose, people, initialTab = 'overvie
                   />
                 ) : (
                   <div className='w-10 h-10 rounded-full bg-stone-200 dark:bg-stone-700 flex items-center justify-center text-xs font-bold text-stone-500'>
-                    {(birthday.person.firstName?.[0] || '') + (birthday.person.lastName?.[0] || '')}
+                    {(birthday.person.firstName?.[0] || EMPTY_STRING) + (birthday.person.lastName?.[0] || EMPTY_STRING)}
                   </div>
                 )}
                 <div>

@@ -16,8 +16,7 @@ export const MobileActionBar: React.FC<MobileActionBarProps> = ({
   onDelete,
   activeTab = null,
 }) => {
-  const { t, language } = useTranslation();
-  const isRtl = language === 'ar';
+  const { t } = useTranslation();
 
   const buttons = [
     {

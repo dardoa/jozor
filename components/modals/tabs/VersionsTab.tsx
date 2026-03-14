@@ -97,7 +97,7 @@ export const VersionsTab: React.FC<VersionsTabProps> = ({ treeId, language, goog
                 resource: { name: newName }
             } as any));
             
-            showSuccess(isPinned ? t.modals.versions?.unpinned || 'Unpinned' : t.modals.versions?.pinned || 'Pinned');
+            showSuccess(isPinned ? t.modals.versions?.unpinned : t.modals.versions?.pinned);
             fetchSnapshots();
         } catch (err) {
             console.error('Failed to toggle pin:', err);

@@ -1,4 +1,5 @@
 import { useState, memo } from 'react';
+import { EMPTY_STRING } from '../../constants';
 import DOMPurify from 'dompurify';
 import { Person } from '../../types';
 import { generateBiography } from '../../services/geminiService';
@@ -300,7 +301,7 @@ export const BioTab = memo<BioTabProps>(({ person, people, isEditing, onUpdate }
                     />
                     <FormField
                       label={t.personFields.sourceUrl}
-                      value={source.url || ''}
+                      value={source.url || EMPTY_STRING}
                       onCommit={(v: string) => handleUpdateSource(source.id, 'url', v)}
                       disabled={!isEditing}
                       type='url'
@@ -309,7 +310,7 @@ export const BioTab = memo<BioTabProps>(({ person, people, isEditing, onUpdate }
                     />
                     <FormField
                       label={t.personFields.sourceDate}
-                      value={source.date || ''}
+                      value={source.date || EMPTY_STRING}
                       onCommit={(v: string) => handleUpdateSource(source.id, 'date', v)}
                       disabled={!isEditing}
                       className='!h-7 !text-xs'
@@ -317,7 +318,7 @@ export const BioTab = memo<BioTabProps>(({ person, people, isEditing, onUpdate }
                     />
                     <FormField
                       label={t.personFields.sourceType}
-                      value={source.type || ''}
+                      value={source.type || EMPTY_STRING}
                       onCommit={(v: string) => handleUpdateSource(source.id, 'type', v)}
                       disabled={!isEditing}
                       className='!h-7 !text-xs'
@@ -453,7 +454,7 @@ export const BioTab = memo<BioTabProps>(({ person, people, isEditing, onUpdate }
                     </div>
                     <FormField
                       label={t.personFields.eventPlace}
-                      value={event.place || ''}
+                      value={event.place || EMPTY_STRING}
                       onCommit={(v: string) => handleUpdateEvent(event.id, 'place', v)}
                       disabled={!isEditing}
                       className='!h-7 !text-xs'
@@ -461,7 +462,7 @@ export const BioTab = memo<BioTabProps>(({ person, people, isEditing, onUpdate }
                     />
                     <FormField
                       label={t.personFields.eventType}
-                      value={event.type || ''}
+                      value={event.type || EMPTY_STRING}
                       onCommit={(v: string) => handleUpdateEvent(event.id, 'type', v)}
                       disabled={!isEditing}
                       className='!h-7 !text-xs'
@@ -469,7 +470,7 @@ export const BioTab = memo<BioTabProps>(({ person, people, isEditing, onUpdate }
                     />
                     <FormField
                       label={t.personFields.eventDescription}
-                      value={event.description || ''}
+                      value={event.description || EMPTY_STRING}
                       onCommit={(v: string) => handleUpdateEvent(event.id, 'description', v)}
                       disabled={!isEditing}
                       isTextArea={true}

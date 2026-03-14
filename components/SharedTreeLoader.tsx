@@ -4,6 +4,8 @@ import { AuthProps, Person } from '../types';
 import { initializeGoogleApi } from '../services/googleService';
 import { loadSharedFile } from '../services/proxyService';
 import { Loader2, AlertCircle, LogIn } from 'lucide-react';
+import { EMPTY_STRING, DEFAULT_ROLE } from '../constants';
+import { useTranslation } from '../context/TranslationContext';
 
 interface SharedTreeLoaderProps {
   ownerUid: string;
@@ -22,7 +24,7 @@ export const SharedTreeLoader: React.FC<SharedTreeLoaderProps> = ({
   onCancel,
   isDbTree: isDbTreeProp,
 }) => {
-
+  const { t } = useTranslation();
   const [status, setStatus] = useState<
     'init' | 'checking_auth' | 'loading_file' | 'error' | 'unauthorized'
   >('init');
@@ -67,7 +69,7 @@ export const SharedTreeLoader: React.FC<SharedTreeLoaderProps> = ({
               const collab = share.collaborators?.find(
                 (c: any) => c.email.toLowerCase() === auth.user!.email!.toLowerCase()
               );
-              role = collab?.role || 'viewer';
+              role = collab?.role || DEFAULT_ROLE;
             }
           }
         }
@@ -91,23 +93,23 @@ export const SharedTreeLoader: React.FC<SharedTreeLoaderProps> = ({
             <LogIn className='w-8 h-8' />
           </div>
           <h2 className='text-2xl font-bold mb-2 text-stone-800 dark:text-gray-100'>
-            Login Required
+            {t.modals.sharedLoader.loginRequired}
           </h2>
           <p className='text-stone-600 dark:text-stone-400 mb-8'>
-            You need to be logged in to access this shared family tree.
+            {t.modals.sharedLoader.loginPrompt}
           </p>
           <button
             onClick={() => auth.onOpenLoginModal()}
             className='w-full py-3 px-6 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-colors flex items-center justify-center gap-2'
           >
             <LogIn className='w-5 h-5' />
-            Login with Google
+            {t.modals.sharedLoader.loginWithGoogle}
           </button>
           <button
             onClick={onCancel}
             className='mt-4 text-sm text-stone-500 hover:text-stone-800 dark:hover:text-stone-200 underline'
           >
-            Go to Home
+            {t.modals.sharedLoader.goToHome}
           </button>
         </div>
       </div>
@@ -122,18 +124,17 @@ export const SharedTreeLoader: React.FC<SharedTreeLoaderProps> = ({
             <AlertCircle className='w-8 h-8' />
           </div>
           <h2 className='text-2xl font-bold mb-2 text-stone-800 dark:text-gray-100'>
-            Access Denied
+            {t.modals.sharedLoader.accessDenied}
           </h2>
           <p className='text-red-600 dark:text-red-400 mb-6 font-medium'>{errorMsg}</p>
           <p className='text-stone-500 text-sm mb-8'>
-            Make sure the owner has invited your email address ({auth.user?.email}) to view this
-            tree.
+            {t.modals.sharedLoader.invitationCheck.replace('{email}', auth.user?.email || EMPTY_STRING)}
           </p>
           <button
             onClick={onCancel}
             className='px-6 py-2 bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 rounded-lg font-bold transition-colors'
           >
-            Back to Home
+            {t.modals.sharedLoader.backToHome}
           </button>
         </div>
       </div>
@@ -145,7 +146,7 @@ export const SharedTreeLoader: React.FC<SharedTreeLoaderProps> = ({
     <div className='flex flex-col items-center justify-center h-screen bg-stone-50 dark:bg-stone-950'>
       <div className='flex flex-col items-center gap-4 animate-pulse'>
         <Loader2 className='w-12 h-12 text-blue-600 animate-spin' />
-        <p className='text-stone-500 font-medium'>Loading shared tree...</p>
+        <p className='text-stone-500 font-medium'>{t.modals.sharedLoader.loading}</p>
       </div>
     </div>
   );

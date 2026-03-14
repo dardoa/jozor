@@ -18,7 +18,8 @@ export const TranslationProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const language = useAppStore(state => state.language);
   const setStoreLanguage = useAppStore(state => state.setLanguage);
   const t = getTranslation(language);
-  const dateLocale = language === 'ar' ? ar : enUS;
+  const locales: Record<string, any> = { ar, en: enUS };
+  const dateLocale = locales[language] || enUS;
 
   const memoizedSetLanguage = useCallback(
     (lang: Language) => {

@@ -18,7 +18,6 @@ export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(
     const { t, language } = useTranslation();
     const isSettingsDrawerOpen = useAppStore(state => state.isSettingsDrawerOpen);
     const setSettingsDrawerOpen = useAppStore(state => state.setSettingsDrawerOpen);
-    const isRtl = language === 'ar';
 
     return (
       <div

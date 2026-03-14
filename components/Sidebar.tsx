@@ -43,8 +43,7 @@ export const Sidebar = memo<SidebarProps>(
     canEdit = true,
     isOwner = true,
   }) => {
-    const { t, language } = useTranslation();
-    const isRtl = language === 'ar';
+    const { t } = useTranslation();
     const [activeTab, setActiveTab] = useState<'info' | 'partners' | 'bio' | 'contact' | 'media'>(
       'info'
     );

@@ -5,8 +5,7 @@ import { ToolsMenuProps } from '../../types';
 import { useTranslation } from '../../context/TranslationContext';
 
 export const ToolsMenu = memo(({ onClose, onOpenModal }: ToolsMenuProps) => {
-  const { t, language } = useTranslation();
-  const isRtl = language === 'ar';
+  const { t } = useTranslation();
 
   return (
     <DropdownContent className='w-64' onClose={onClose} aria-label={t.header.toolsMenuAria}>

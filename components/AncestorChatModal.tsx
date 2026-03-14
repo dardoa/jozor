@@ -81,7 +81,7 @@ export const AncestorChatModal = ({ isOpen, onClose, person, people }: AncestorC
           </div>
           <button
             onClick={onClose}
-            aria-label={t.close || 'Close'}
+            aria-label={t.close}
             className='p-2 hover:bg-stone-200 dark:hover:bg-stone-800 rounded-full transition-colors'
           >
             <X className='w-5 h-5 text-stone-500' />

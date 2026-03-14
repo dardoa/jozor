@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { useEffect } from 'react';
+import { DEFAULT_DIR, EMPTY_STRING } from '../constants';
 
 import { useAppStore } from '../store/useAppStore';
 import { useAppOrchestration } from '../hooks/useAppOrchestration';
@@ -26,7 +27,8 @@ export const AppStateManager: React.FC = () => {
 
     root.classList.toggle('dark', darkMode);
 
-    const dir = language === 'ar' ? 'rtl' : 'ltr';
+    const directions: Record<string, 'rtl' | 'ltr'> = { ar: 'rtl', en: 'ltr' };
+    const dir = directions[language] || DEFAULT_DIR;
     root.setAttribute('dir', dir);
     root.setAttribute('lang', language);
   }, [treeSettings.theme, darkMode, language]);
@@ -48,7 +50,7 @@ export const AppStateManager: React.FC = () => {
         // Also fetch Supabase profile metadata
         try {
           const { fetchUserProfile } = await import('../services/supabaseTreeService');
-          const profile = await fetchUserProfile(user.uid, user.email || '', user.supabaseToken);
+          const profile = await fetchUserProfile(user.uid, user.email || EMPTY_STRING, user.supabaseToken);
           if (profile) {
             user.metadata = profile.metadata;
           }

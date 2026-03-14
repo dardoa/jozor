@@ -1,4 +1,5 @@
 import { useRef, useState, memo } from 'react';
+import { EMPTY_STRING } from '../../constants';
 import { Person, UserProfile } from '../../types';
 import { processImageFile } from '../../utils/imageLogic';
 import { googleMediaService } from '../../services/googleService'; // Import new service
@@ -90,7 +91,7 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
       }
       const analysis = await analyzeImage(base64Image);
       // Append analysis to bio or alert
-      onUpdate(person.id, { bio: (person.bio || '') + `\n\n[${t.sidebar.photoAnalysisLabel}]: ${analysis}` });
+      onUpdate(person.id, { bio: (person.bio || EMPTY_STRING) + `\n\n[${t.sidebar.photoAnalysisLabel}]: ${analysis}` });
       showSuccess(t.modals.messages.success.analysisAppended);
     } catch (e) {
       showError(t.general.analysisFailed); // Use toast
