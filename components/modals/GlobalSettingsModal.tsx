@@ -60,10 +60,10 @@ export const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen
             const updatedUser = { ...user, photoURL: publicUrl };
             useAppStore.setState({ user: updatedUser });
             await updateUserProfile(user.uid, user.email, { photoURL: publicUrl }, user.supabaseToken);
-            toast.success(t.modals.globalSettings.profile.avatarUpdateSuccess);
+            toast.success(t.globalSettings.profile.avatarUpdateSuccess);
         } catch (error) {
             console.error('Failed to upload avatar:', error);
-            toast.error(t.modals.globalSettings.profile.avatarUpdateError);
+            toast.error(t.globalSettings.profile.avatarUpdateError);
         } finally {
             setIsUploading(false);
         }
@@ -78,7 +78,7 @@ export const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen
             toast.success(t.preferencesSaveSuccess);
         } catch (error) {
             console.error('Failed to update profile:', error);
-            toast.error(t.modals.globalSettings.profile.saveChangesError);
+            toast.error(t.globalSettings.profile.saveChangesError);
         } finally {
             setIsSaving(false);
         }
@@ -139,11 +139,11 @@ export const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen
             // 3. Logout
             await logout();
             onClose();
-            toast.success(t.modals.globalSettings.security.deleteSuccess);
+            toast.success(t.globalSettings.security.deleteSuccess);
         } catch (error) {
             console.error('Delete failed:', error);
             setIsDeleting(false);
-            toast.error(t.modals.globalSettings.security.deleteError);
+            toast.error(t.globalSettings.security.deleteError);
         }
     };
 
@@ -162,7 +162,7 @@ export const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen
                             <Settings className="w-5 h-5" />
                         </div>
                         <h2 className="text-xl font-bold text-[var(--text-main)]">
-                            {t.modals.globalSettings.title}
+                            {t.globalSettings.title}
                         </h2>
                     </div>
                     <button 
@@ -177,9 +177,9 @@ export const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen
                 {/* Tab Navigation */}
                 <div className="flex px-6 border-b border-white/5 bg-black/5">
                     {[
-                        { id: 'profile', icon: User, label: t.modals.globalSettings.tabs.profile },
-                        { id: 'preferences', icon: Settings, label: t.modals.globalSettings.tabs.preferences },
-                        { id: 'security', icon: ShieldAlert, label: t.modals.globalSettings.tabs.security },
+                        { id: 'profile', icon: User, label: t.globalSettings.tabs.profile },
+                        { id: 'preferences', icon: Settings, label: t.globalSettings.tabs.preferences },
+                        { id: 'security', icon: ShieldAlert, label: t.globalSettings.tabs.security },
                     ].map(tab => (
                         <button
                             key={tab.id}
@@ -214,7 +214,7 @@ export const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen
                                         {/* Upload Overlay */}
                                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 text-white text-xs font-bold">
                                             <Camera className="w-6 h-6" />
-                                            <span>{t.modals.globalSettings.profile.changePhoto}</span>
+                                            <span>{t.globalSettings.profile.changePhoto}</span>
                                         </div>
 
                                         {/* Progress Indicator */}
@@ -240,7 +240,7 @@ export const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen
 
                             <div className="space-y-4 pt-4">
                                 <FormField
-                                    label={t.modals.globalSettings.profile.displayName}
+                                    label={t.globalSettings.profile.displayName}
                                     value={displayName}
                                     onCommit={setDisplayName}
                                 />
@@ -249,7 +249,7 @@ export const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen
                                     onClick={handleSaveProfile}
                                     isLoading={isSaving}
                                 >
-                                    {t.modals.globalSettings.profile.saveChanges}
+                                    {t.globalSettings.profile.saveChanges}
                                 </Button>
                             </div>
                         </div>
@@ -265,10 +265,10 @@ export const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen
                                     </div>
                                     <div>
                                         <h4 className="font-bold text-sm text-[var(--text-main)]">
-                                            {t.modals.globalSettings.preferences.appearance}
+                                            {t.globalSettings.preferences.appearance}
                                         </h4>
                                         <p className="text-[10px] text-[var(--text-dim)]">
-                                            {darkMode ? t.modals.globalSettings.preferences.darkMode : t.modals.globalSettings.preferences.lightMode}
+                                            {darkMode ? t.globalSettings.preferences.darkMode : t.globalSettings.preferences.lightMode}
                                         </p>
                                     </div>
                                 </div>
@@ -288,7 +288,7 @@ export const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen
                                     </div>
                                     <div>
                                         <h4 className="font-bold text-sm text-[var(--text-main)]">
-                                            {t.modals.globalSettings.preferences.language}
+                                            {t.globalSettings.preferences.language}
                                         </h4>
                                         <p className="text-[10px] text-[var(--text-dim)]">
                                             {language === 'en' ? 'English' : 'العربية'}
@@ -321,10 +321,10 @@ export const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen
                                     </div>
                                     <div>
                                         <h4 className="font-bold text-sm text-[var(--text-main)]">
-                                            {t.modals.globalSettings.preferences.interactiveTour}
+                                            {t.globalSettings.preferences.interactiveTour}
                                         </h4>
                                         <p className="text-[10px] text-[var(--text-dim)]">
-                                            {t.modals.globalSettings.preferences.restartTour}
+                                            {t.globalSettings.preferences.restartTour}
                                         </p>
                                     </div>
                                 </div>
@@ -336,7 +336,7 @@ export const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen
                                 >
                                     <span className="flex items-center gap-2">
                                         <Check className="w-3 h-3" />
-                                        {t.modals.globalSettings.preferences.reset}
+                                        {t.globalSettings.preferences.reset}
                                     </span>
                                 </Button>
                             </div>
@@ -359,7 +359,7 @@ export const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen
                                         className="w-full h-12 rounded-2xl font-bold"
                                         onClick={() => setShowDeleteConfirm(true)}
                                     >
-                                        {t.modals.globalSettings.security.startDeletion}
+                                        {t.globalSettings.security.startDeletion}
                                     </Button>
                                 </div>
                             ) : (
@@ -367,7 +367,7 @@ export const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen
                                     <div className="text-center space-y-2">
                                         <h4 className="text-lg font-bold text-red-500">{t.deleteAccountPermanentTitle}</h4>
                                         <p className="text-xs text-[var(--text-dim)]">
-                                            {t.modals.globalSettings.security.deletionHold}
+                                            {t.globalSettings.security.deletionHold}
                                         </p>
                                     </div>
 
@@ -415,7 +415,7 @@ export const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen
                                         </Button>
 
                                         <p className="text-[10px] text-center text-red-400/80 font-medium italic">
-                                            {t.modals.globalSettings.security.deletionWarning}
+                                            {t.globalSettings.security.deletionWarning}
                                         </p>
                                     </div>
                                 </div>
@@ -445,7 +445,7 @@ export const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen
                         </div>
                         <div className="space-y-2">
                             <h4 className="text-lg font-bold text-[var(--text-main)]">
-                                {t.modals.globalSettings.restartTourModal.title}
+                                {t.globalSettings.restartTourModal.title}
                             </h4>
                             <p className="text-sm text-[var(--text-dim)] leading-relaxed">
                                 {t.tourRestartBody}
@@ -463,7 +463,7 @@ export const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen
                                 className="flex-1 rounded-xl bg-blue-500 hover:bg-blue-600 font-bold"
                                 onClick={handleResetTour}
                             >
-                                {t.modals.globalSettings.restartTourModal.yes}
+                                {t.globalSettings.restartTourModal.yes}
                             </Button>
                         </div>
                     </div>

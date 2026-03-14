@@ -27,7 +27,7 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user) {
-      showError(t.general.loginRequired); // Use toast
+      showError(t.loginRequired); // Use toast
       return;
     }
 
@@ -41,17 +41,17 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
 
       const currentGallery = person.gallery || [];
       onUpdate(person.id, { gallery: [...currentGallery, driveUrl] }); // Store URL
-      showSuccess(t.modals.messages.success.uploadSuccess); // Toast success
+      showSuccess(t.messages.success.uploadSuccess); // Toast success
     } catch (err) {
       console.error('Gallery upload failed', err);
-      showError(t.modals.messages.error.import); // Use toast
+      showError(t.messages.error.import); // Use toast
     }
     e.target.value = '';
   };
 
   const handleDriveSelect = async () => {
     if (!user || user?.uid.startsWith('mock-')) {
-      showError(t.general.demoModeNote); // Use toast
+      showError(t.demoModeNote); // Use toast
       return;
     }
 
@@ -61,12 +61,12 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
       if (driveUrl) {
         const currentGallery = person.gallery || [];
         onUpdate(person.id, { gallery: [...currentGallery, driveUrl] });
-        showSuccess(t.modals.messages.success.uploadSuccess); // Toast success
+        showSuccess(t.messages.success.uploadSuccess); // Toast success
       }
     } catch (err: any) {
       if (err !== 'Cancelled') {
         console.error(err);
-        showError(t.modals.messages.error.import); // Use toast
+        showError(t.messages.error.import); // Use toast
       }
     } finally {
       setIsDriveLoading(false);
@@ -91,10 +91,10 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
       }
       const analysis = await analyzeImage(base64Image);
       // Append analysis to bio or alert
-      onUpdate(person.id, { bio: (person.bio || EMPTY_STRING) + `\n\n[${t.sidebar.photoAnalysisLabel}]: ${analysis}` });
-      showSuccess(t.modals.messages.success.analysisAppended);
+      onUpdate(person.id, { bio: (person.bio || EMPTY_STRING) + `\n\n[${t.photoAnalysisLabel}]: ${analysis}` });
+      showSuccess(t.messages.success.analysisAppended);
     } catch (e) {
-      showError(t.general.analysisFailed); // Use toast
+      showError(t.analysisFailed); // Use toast
     } finally {
       setAnalyzingImgIndex(null);
     }
@@ -103,7 +103,7 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
   const handleVoiceSave = async (audioBlob: Blob) => {
     // Accepts Blob
     if (!user) {
-      showError(t.general.loginRequired); // Use toast
+      showError(t.loginRequired); // Use toast
       return;
     }
     try {
@@ -114,10 +114,10 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
       );
       const currentNotes = person.voiceNotes || [];
       onUpdate(person.id, { voiceNotes: [...currentNotes, driveUrl] });
-      showSuccess(t.modals.messages.success.uploadSuccess); // Toast success
+      showSuccess(t.messages.success.uploadSuccess); // Toast success
     } catch (err) {
       console.error('Voice note upload failed', err);
-      showError(t.modals.messages.error.import); // Use toast
+      showError(t.messages.error.import); // Use toast
     }
   };
 
@@ -127,7 +127,7 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
   return (
     <div className='space-y-5'>
       {/* --- PHOTOS SECTION --- */}
-      <Card title={t.sidebar.galleryTab}>
+      <Card title={t.galleryTab}>
         <div className='flex justify-between items-center relative z-10 mb-3'>
           {isEditing && (
             <div className='flex gap-1.5 ms-auto'>
@@ -150,7 +150,7 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
                 onClick={() => galleryInputRef.current?.click()}
                 className='text-xs font-bold text-[var(--primary-600)] hover:underline flex items-center gap-1 px-2 py-1 rounded-full'
               >
-                <Plus className='w-3.5 h-3.5' /> {t.sidebar.changePhoto}
+                <Plus className='w-3.5 h-3.5' /> {t.changePhoto}
               </button>
             </div>
           )}
@@ -161,13 +161,13 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
           accept='image/*'
           className='hidden'
           onChange={handleImageUpload}
-          aria-label={t.sidebar.changePhoto}
+          aria-label={t.changePhoto}
         />
 
         {!hasPhotos && !isEditing ? (
           <div className='text-center py-4 text-[var(--text-muted)] bg-[var(--theme-bg)]/50 rounded-xl border border-dashed border-[var(--border-main)] flex flex-col items-center'>
             <ImageIcon className='w-8 h-8 mb-2 opacity-50' />
-            <span className='text-sm'>{t.sidebar.noPhotos}</span>
+            <span className='text-sm'>{t.noPhotos}</span>
           </div>
         ) : (
           <div className='grid grid-cols-2 gap-2'>
@@ -198,7 +198,7 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
                         onUpdate(person.id, { gallery: newGallery });
                       }}
                       className='p-1.5 bg-red-500/80 hover:bg-red-600 text-white rounded-full'
-                      aria-label={t.general.delete}
+                      aria-label={t.delete}
                     >
                       <X className='w-4 h-4' />
                     </button>
@@ -211,7 +211,7 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
       </Card>
 
       {/* --- AUDIO SECTION --- */}
-      <Card title={t.sidebar.voiceMemories}>
+      <Card title={t.voiceMemories}>
         <div className='flex justify-between items-center relative z-10 mb-3'>
           {isEditing && <VoiceRecorder onSave={handleVoiceSave} />}
         </div>
@@ -219,7 +219,7 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
         {!hasVoiceNotes && !isEditing ? (
           <div className='text-center py-4 text-[var(--text-muted)] bg-[var(--theme-bg)]/50 rounded-xl border border-dashed border-[var(--border-main)] flex flex-col items-center'>
             <Mic className='w-8 h-8 mb-2 opacity-50' />
-            <span className='text-sm'>{t.sidebar.noRecordings}</span>
+            <span className='text-sm'>{t.noRecordings}</span>
           </div>
         ) : (
           <div className='space-y-2'>
@@ -245,7 +245,7 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
                       onUpdate(person.id, { voiceNotes: newNotes });
                     }}
                     className='p-2 text-[var(--text-muted)] hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors'
-                    aria-label={t.general.delete}
+                    aria-label={t.delete}
                   >
                     <Trash2 className='w-4 h-4' />
                   </button>
@@ -258,3 +258,4 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
     </div>
   );
 });
+

@@ -31,12 +31,12 @@ export const TreeSelector: React.FC<TreeSelectorProps> = ({ ownerId, userEmail, 
         const [owned, shared] = await Promise.all([
           fetchTreesForUser(ownerId, userEmail, supabaseToken).catch(e => {
             console.error('fetchTreesForUser failed', e);
-            showError(t.modals.messages.error.load);
+            showError(t.messages.error.load);
             return [] as TreeSummary[];
           }),
           fetchSharedTrees(ownerId, userEmail, supabaseToken).catch(e => {
             console.error('fetchSharedTrees failed', e);
-            showError(t.modals.messages.error.collaborators);
+            showError(t.messages.error.collaborators);
             return [] as SharedTreeSummary[];
           })
         ]);
@@ -46,7 +46,7 @@ export const TreeSelector: React.FC<TreeSelectorProps> = ({ ownerId, userEmail, 
         }
       } catch (e) {
         console.error('Failed to load trees', e);
-        if (!cancelled) showError(t.modals.messages.error.load);
+        if (!cancelled) showError(t.messages.error.load);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -72,10 +72,10 @@ export const TreeSelector: React.FC<TreeSelectorProps> = ({ ownerId, userEmail, 
         focusId: full.focusId,
       });
       onTreeSelected(treeId, role);
-      showSuccess(t.modals.messages.success.load);
+      showSuccess(t.messages.success.load);
     } catch (e) {
       console.error('Failed to open tree', e);
-      showError(t.modals.messages.error.open);
+      showError(t.messages.error.open);
     } finally {
       setLoading(false);
     }
@@ -84,11 +84,11 @@ export const TreeSelector: React.FC<TreeSelectorProps> = ({ ownerId, userEmail, 
   const handleCreateTree = async () => {
     try {
       setCreating(true);
-      const newTreeId = await createTree(ownerId, userEmail, t.modals.newTreeName, supabaseToken);
+      const newTreeId = await createTree(ownerId, userEmail, t.newTreeName, supabaseToken);
       await handleOpenTree(newTreeId);
     } catch (e) {
       console.error('Failed to create tree:', e);
-      showError(t.modals.messages.error.load);
+      showError(t.messages.error.load);
     } finally {
       setCreating(false);
     }
@@ -140,11 +140,11 @@ export const TreeSelector: React.FC<TreeSelectorProps> = ({ ownerId, userEmail, 
                 <FolderTree className='w-5 h-5' />
               </div>
               <h1 className='text-3xl font-black text-stone-900 dark:text-white tracking-tighter'>
-                {t.modals.manageTrees}
+                {t.manageTrees}
               </h1>
             </div>
             <p className='text-stone-500 dark:text-stone-400 font-medium px-1'>
-              {t.modals.manageTreesDesc}
+              {t.manageTreesDesc}
             </p>
           </div>
 
@@ -155,7 +155,7 @@ export const TreeSelector: React.FC<TreeSelectorProps> = ({ ownerId, userEmail, 
               className='flex-1 sm:flex-none group flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-black text-sm transition-all shadow-xl shadow-emerald-500/10 active:scale-95 disabled:opacity-50'
             >
               {creating ? <Loader2 className='w-4 h-4 animate-spin' /> : <Plus className='w-4 h-4 group-hover:rotate-90 transition-transform duration-300' />}
-              {t.general.add}
+              {t.add}
             </button>
             <button
               onClick={handleImportClick}
@@ -163,7 +163,7 @@ export const TreeSelector: React.FC<TreeSelectorProps> = ({ ownerId, userEmail, 
               className='flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 text-stone-600 dark:text-stone-300 rounded-2xl font-bold text-sm transition-all active:scale-95 disabled:opacity-50'
             >
               {importing ? <Loader2 className='w-4 h-4 animate-spin' /> : <Download className='w-4 h-4' />}
-              {t.modals.load}
+              {t.load}
             </button>
           </div>
         </div>
@@ -171,13 +171,13 @@ export const TreeSelector: React.FC<TreeSelectorProps> = ({ ownerId, userEmail, 
         {loading ? (
           <div className='flex flex-col items-center justify-center py-20 text-stone-400'>
             <Loader2 className='w-12 h-12 animate-spin mb-6 text-emerald-500 opacity-80' />
-            <p className='text-sm font-black uppercase tracking-widest opacity-50'>{t.modals.loadingFiles}</p>
+            <p className='text-sm font-black uppercase tracking-widest opacity-50'>{t.loadingFiles}</p>
           </div>
         ) : trees.length === 0 && sharedTrees.length === 0 ? (
           <div className='flex flex-col items-center justify-center py-20 bg-stone-50/50 dark:bg-stone-800/20 rounded-[2rem] border-2 border-dashed border-stone-200 dark:border-stone-800'>
             <TreePine className='w-16 h-16 text-stone-200 dark:text-stone-800 mb-4' />
-            <p className='text-stone-500 dark:text-stone-400 font-bold mb-2'>{t.modals.noTreesFound}</p>
-            <button onClick={handleCreateTree} className='text-emerald-500 font-black text-sm hover:underline'>{t.modals.getStarted}</button>
+            <p className='text-stone-500 dark:text-stone-400 font-bold mb-2'>{t.noTreesFound}</p>
+            <button onClick={handleCreateTree} className='text-emerald-500 font-black text-sm hover:underline'>{t.getStarted}</button>
           </div>
         ) : (
           <div className='space-y-10'>
@@ -187,7 +187,7 @@ export const TreeSelector: React.FC<TreeSelectorProps> = ({ ownerId, userEmail, 
                 <div className='flex items-center gap-3 px-1'>
                   <div className='w-1 h-4 bg-emerald-500 rounded-full'></div>
                   <h2 className='text-xs font-black uppercase tracking-widest text-stone-400 dark:text-stone-600'>
-                    {t.modals.treeManager.myTrees}
+                    {t.treeManager.myTrees}
                   </h2>
                 </div>
                 <div className='grid grid-cols-1 gap-4'>
@@ -210,7 +210,7 @@ export const TreeSelector: React.FC<TreeSelectorProps> = ({ ownerId, userEmail, 
                 <div className='flex items-center gap-3 px-1'>
                   <div className='w-1 h-4 bg-blue-500 rounded-full'></div>
                   <h2 className='text-xs font-black uppercase tracking-widest text-stone-400 dark:text-stone-600'>
-                    {t.modals.treeManager.sharedWithMe}
+                    {t.treeManager.sharedWithMe}
                   </h2>
                 </div>
                 <div className='grid grid-cols-1 gap-4'>

@@ -14,10 +14,10 @@ export const ExportProgressOverlay: React.FC = () => {
         <div className='w-12 h-12 border-4 border-[var(--primary-600)]/20 border-t-[var(--primary-600)] rounded-full animate-spin' />
         <div>
           <h3 className='font-bold text-lg mb-1'>
-            {t.general.exportStatus.generating}
+            {t.exportStatus.generating}
           </h3>
           <p className='text-sm text-[var(--text-dim)]'>
-            {t.general.exportStatus.capturingLabel}
+            {t.exportStatus.capturingLabel}
           </p>
         </div>
       </div>

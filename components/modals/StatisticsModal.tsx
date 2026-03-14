@@ -50,7 +50,7 @@ export const StatisticsModal = memo(({ onClose }: StatisticsModalProps) => {
                             <TrendingUp className='w-5 h-5 text-emerald-500' />
                         </div>
                         <h2 className='text-xl font-bold text-[var(--text-main)]'>
-                            {t.modals.statistics.title}
+                            {t.statistics.title}
                         </h2>
                     </div>
                     <button
@@ -68,7 +68,7 @@ export const StatisticsModal = memo(({ onClose }: StatisticsModalProps) => {
                     <div className='bg-[var(--theme-bg)] rounded-xl p-5 border border-[var(--border-main)]'>
                         <div className='flex items-center gap-2 mb-4'>
                             <Users className='w-4 h-4 text-[var(--primary-600)]' />
-                            <h3 className='font-semibold text-[var(--text-main)]'>{t.modals.statistics.genderDistribution}</h3>
+                            <h3 className='font-semibold text-[var(--text-main)]'>{t.statistics.genderDistribution}</h3>
                         </div>
 
                         <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
@@ -114,7 +114,7 @@ export const StatisticsModal = memo(({ onClose }: StatisticsModalProps) => {
                                     <div className='absolute inset-0 flex items-center justify-center'>
                                         <div className='text-center'>
                                             <div className='text-2xl font-bold text-[var(--text-main)]'>{stats.total}</div>
-                                            <div className='text-xs text-[var(--text-dim)]'>{t.modals.statistics.total}</div>
+                                            <div className='text-xs text-[var(--text-dim)]'>{t.statistics.total}</div>
                                         </div>
                                     </div>
                                 </div>
@@ -125,7 +125,7 @@ export const StatisticsModal = memo(({ onClose }: StatisticsModalProps) => {
                                 <div className='flex items-center justify-between'>
                                     <div className='flex items-center gap-2'>
                                         <div className='w-4 h-4 bg-blue-500 rounded'></div>
-                                        <span className='text-sm text-[var(--text-main)]'>{t.modals.statistics.male}</span>
+                                        <span className='text-sm text-[var(--text-main)]'>{t.statistics.male}</span>
                                     </div>
                                     <span className='text-sm font-semibold text-[var(--text-main)]'>
                                         {stats.genderSplit.male} ({stats.malePercent}%)
@@ -134,7 +134,7 @@ export const StatisticsModal = memo(({ onClose }: StatisticsModalProps) => {
                                 <div className='flex items-center justify-between'>
                                     <div className='flex items-center gap-2'>
                                         <div className='w-4 h-4 bg-pink-500 rounded'></div>
-                                        <span className='text-sm text-[var(--text-main)]'>{t.modals.statistics.female}</span>
+                                        <span className='text-sm text-[var(--text-main)]'>{t.statistics.female}</span>
                                     </div>
                                     <span className='text-sm font-semibold text-[var(--text-main)]'>
                                         {stats.genderSplit.female} ({stats.femalePercent}%)
@@ -144,7 +144,7 @@ export const StatisticsModal = memo(({ onClose }: StatisticsModalProps) => {
                                     <div className='flex items-center justify-between'>
                                         <div className='flex items-center gap-2'>
                                             <div className='w-4 h-4 bg-slate-400 rounded'></div>
-                                            <span className='text-sm text-[var(--text-main)]'>{t.modals.statistics.unknown}</span>
+                                            <span className='text-sm text-[var(--text-main)]'>{t.statistics.unknown}</span>
                                         </div>
                                         <span className='text-sm font-semibold text-[var(--text-main)]'>
                                             {stats.genderSplit.unknown} ({stats.unknownPercent}%)
@@ -159,7 +159,7 @@ export const StatisticsModal = memo(({ onClose }: StatisticsModalProps) => {
                     <div className='bg-[var(--theme-bg)] rounded-xl p-5 border border-[var(--border-main)]'>
                         <div className='flex items-center gap-2 mb-4'>
                             <MapPin className='w-4 h-4 text-green-600' />
-                            <h3 className='font-semibold text-[var(--text-main)]'>{t.modals.statistics.topBirthLocations}</h3>
+                            <h3 className='font-semibold text-[var(--text-main)]'>{t.statistics.topBirthLocations}</h3>
                         </div>
                         {stats.topLocations.length > 0 ? (
                             <div className='space-y-2'>
@@ -174,12 +174,12 @@ export const StatisticsModal = memo(({ onClose }: StatisticsModalProps) => {
                                             </div>
                                             <span className='text-sm font-medium text-[var(--text-main)]'>{loc.location}</span>
                                         </div>
-                                        <span className='text-sm font-semibold text-[var(--text-dim)]'>{t.modals.statistics.peopleCount?.replace('{count}', loc.count.toString())}</span>
+                                        <span className='text-sm font-semibold text-[var(--text-dim)]'>{t.statistics.peopleCount?.replace('{count}', loc.count.toString())}</span>
                                     </div>
                                 ))}
                             </div>
                         ) : (
-                            <p className='text-sm text-[var(--text-dim)] italic'>{t.modals.statistics.noLocationData}</p>
+                            <p className='text-sm text-[var(--text-dim)] italic'>{t.statistics.noLocationData}</p>
                         )}
                     </div>
 
@@ -187,7 +187,7 @@ export const StatisticsModal = memo(({ onClose }: StatisticsModalProps) => {
                     <div className='bg-[var(--theme-bg)] rounded-xl p-5 border border-[var(--border-main)]'>
                         <div className='flex items-center gap-2 mb-4'>
                             <Calendar className='w-4 h-4 text-amber-600' />
-                            <h3 className='font-semibold text-[var(--text-main)]'>{t.modals.statistics.upcomingBirthdays}</h3>
+                            <h3 className='font-semibold text-[var(--text-main)]'>{t.statistics.upcomingBirthdays}</h3>
                         </div>
                         {stats.upcomingBirthdays.length > 0 ? (
                             <div className='space-y-2'>
@@ -215,14 +215,14 @@ export const StatisticsModal = memo(({ onClose }: StatisticsModalProps) => {
                                         </div>
                                         <div className='text-end'>
                                             <div className='text-sm font-semibold text-amber-600'>
-                                                {birthday.daysUntil === 0 ? t.modals.statistics.today : `${birthday.daysUntil} ${t.modals.statistics.days}`}
+                                                {birthday.daysUntil === 0 ? t.statistics.today : `${birthday.daysUntil} ${t.statistics.days}`}
                                             </div>
                                         </div>
                                     </div>
                                 ))}
                             </div>
                         ) : (
-                            <p className='text-sm text-[var(--text-dim)] italic'>{t.modals.statistics.noUpcomingBirthdays || t.noUpcomingBirthdays}</p>
+                            <p className='text-sm text-[var(--text-dim)] italic'>{t.statistics.noUpcomingBirthdays || t.noUpcomingBirthdays}</p>
                         )}
                     </div>
 
@@ -230,7 +230,7 @@ export const StatisticsModal = memo(({ onClose }: StatisticsModalProps) => {
                     <div className='bg-[var(--theme-bg)] rounded-xl p-5 border border-[var(--border-main)]'>
                         <div className='flex items-center gap-2 mb-4'>
                             <TrendingUp className='w-4 h-4 text-purple-600' />
-                            <h3 className='font-semibold text-[var(--text-main)]'>{t.modals.statistics.ageDistribution}</h3>
+                            <h3 className='font-semibold text-[var(--text-main)]'>{t.statistics.ageDistribution}</h3>
                         </div>
                         <div className='space-y-3'>
                             {stats.ageDistribution.ranges.map((range) => {
@@ -240,8 +240,8 @@ export const StatisticsModal = memo(({ onClose }: StatisticsModalProps) => {
                                 return (
                                     <div key={range.range} className='space-y-1'>
                                         <div className='flex items-center justify-between text-sm'>
-                                            <span className='text-[var(--text-main)] font-medium'>{range.range} {t.modals.years}</span>
-                                            <span className='text-[var(--text-dim)]'>{t.modals.statistics.peopleCount?.replace('{count}', range.count.toString())}</span>
+                                            <span className='text-[var(--text-main)] font-medium'>{range.range} {t.years}</span>
+                                            <span className='text-[var(--text-dim)]'>{t.statistics.peopleCount?.replace('{count}', range.count.toString())}</span>
                                         </div>
                                         <div className='h-2 bg-[var(--card-bg)] rounded-full overflow-hidden'>
                                             <div
@@ -254,7 +254,7 @@ export const StatisticsModal = memo(({ onClose }: StatisticsModalProps) => {
                             })}
                             <div className='pt-2 mt-2 border-t border-[var(--border-main)]'>
                                 <span className='text-sm text-[var(--text-dim)]'>
-                                    {t.modals.statistics.averageAge?.replace('{age}', stats.ageDistribution.average.toString())}
+                                    {t.statistics.averageAge?.replace('{age}', stats.ageDistribution.average.toString())}
                                 </span>
                             </div>
                         </div>

@@ -44,11 +44,11 @@ export const SharedTreePromptModal: React.FC<SharedTreePromptModalProps> = ({
                         </button>
                     </div>
 
-                    <h3 className="text-xl font-bold text-white mb-2">{t.modals.sharedTreePrompt.title}</h3>
+                    <h3 className="text-xl font-bold text-white mb-2">{t.sharedTreePrompt.title}</h3>
                     <p className="text-gray-400 text-sm mb-6 leading-relaxed">
                         {sharedTrees.length > 1
-                            ? t.modals.sharedTreePrompt.multiplePrompt
-                            : t.modals.sharedTreePrompt.singlePrompt}
+                            ? t.sharedTreePrompt.multiplePrompt
+                            : t.sharedTreePrompt.singlePrompt}
                     </p>
 
                     <div className="space-y-3">
@@ -63,7 +63,7 @@ export const SharedTreePromptModal: React.FC<SharedTreePromptModalProps> = ({
                                         {tree.name}
                                     </div>
                                     <div className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">
-                                        {t.modals.sharedTreePrompt.role}: {tree.role}
+                                        {t.sharedTreePrompt.role}: {tree.role}
                                     </div>
                                 </div>
                                 <ArrowRight className="w-4 h-4 text-gray-500 group-hover:text-white group-hover:translate-x-1 transition-all" />
@@ -77,7 +77,7 @@ export const SharedTreePromptModal: React.FC<SharedTreePromptModalProps> = ({
                         onClick={onClose}
                         className="flex-1 py-2.5 text-sm font-semibold text-gray-400 hover:text-white transition-colors"
                     >
-                        {t.modals.sharedTreePrompt.maybeLater}
+                        {t.sharedTreePrompt.maybeLater}
                     </button>
                 </div>
             </div>

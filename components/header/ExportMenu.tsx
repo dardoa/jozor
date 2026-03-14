@@ -32,7 +32,7 @@ export const ExportMenu = memo(({ onClose, onExport, onBack }: ExportMenuProps) 
       {!isOwner ? (
         <div className='p-4 text-center'>
           <p className='text-xs text-[var(--text-dim)] italic'>
-            {t.modals.export.ownerOnly}
+            {t.ownerOnly}
           </p>
         </div>
       ) : (
@@ -65,10 +65,10 @@ export const ExportMenu = memo(({ onClose, onExport, onBack }: ExportMenuProps) 
 
           {/* Image formats */}
           <DropdownMenuItem onClick={() => onExport('png')} icon={<FileImage className='w-3.5 h-3.5' />}>
-            label={t.modals.export.formats.png}
+            label={t.formats.png}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => onExport('jpeg')} icon={<FileImage className='w-3.5 h-3.5' />}>
-            label={t.modals.export.formats.jpeg}
+            label={t.formats.jpeg}
           </DropdownMenuItem>
 
           <DropdownMenuDivider />
@@ -78,7 +78,7 @@ export const ExportMenu = memo(({ onClose, onExport, onBack }: ExportMenuProps) 
             {t.printPdf}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => onExport('pdf')} icon={<FileText className='w-3.5 h-3.5' />}>
-            label={t.modals.export.formats.pdf}
+            label={t.formats.pdf}
           </DropdownMenuItem>
         </>
       )}

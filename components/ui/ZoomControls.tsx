@@ -51,8 +51,8 @@ export const ZoomControls: React.FC<ZoomControlsProps> = ({ onZoomIn, onZoomOut,
         <button
           onClick={onOpenAdvanced}
           className='p-2.5 bg-[#E1AD01] text-black rounded-full shadow-lg hover:scale-110 active:scale-95 transition-all mt-2'
-          aria-label={t.general.advancedSettings}
-          title={t.general.advancedSettings}
+          aria-label={t.advancedSettings}
+          title={t.advancedSettings}
         >
           <Settings2 className='w-5 h-5' />
         </button>

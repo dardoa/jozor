@@ -21,7 +21,7 @@ export const InlineAddButton = memo(({ onClick, gender }: InlineAddButtonProps) 
           : 'bg-[var(--gender-female-bg)] text-[var(--gender-female-text)] hover:shadow-sm'
         }`}
       title={t.add}
-      aria-label={t.general.add}
+      aria-label={t.add}
     >
       <Plus className='w-3 h-3' strokeWidth={3} />
     </button>

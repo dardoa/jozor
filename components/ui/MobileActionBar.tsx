@@ -21,25 +21,25 @@ export const MobileActionBar: React.FC<MobileActionBarProps> = ({
   const buttons = [
     {
       id: 'center',
-      label: t.general.center,
+      label: t.center,
       icon: Target,
       onClick: onCenterView,
     },
     {
       id: 'admin',
-      label: t.header.tooltips.adminHub,
+      label: t.tooltips.adminHub,
       icon: Settings,
       onClick: onOpenAdmin,
     },
     {
       id: 'tools',
-      label: t.general.tools,
+      label: t.tools,
       icon: Wrench,
       onClick: onOpenTools,
     },
     {
       id: 'delete',
-      label: t.general.delete,
+      label: t.delete,
       icon: Trash2,
       onClick: onDelete,
     },
@@ -83,4 +83,5 @@ export const MobileActionBar: React.FC<MobileActionBarProps> = ({
     </nav>
   );
 };
+
 

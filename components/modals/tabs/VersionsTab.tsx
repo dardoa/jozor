@@ -38,7 +38,7 @@ export const VersionsTab: React.FC<VersionsTabProps> = ({ treeId, language, goog
             setSnapshots(files);
         } catch (err) {
             console.error('Failed to load snapshots:', err);
-            showError(t.modals.messages.error.snapshot);
+            showError(t.messages.error.snapshot);
         } finally {
             setIsLoading(false);
         }
@@ -54,10 +54,10 @@ export const VersionsTab: React.FC<VersionsTabProps> = ({ treeId, language, goog
             setIsCreating(true);
             await googleSync.handleCreateSnapshot(newLabel);
             setNewLabel('');
-            showSuccess(t.modals.messages.success.snapshot);
+            showSuccess(t.messages.success.snapshot);
             fetchSnapshots();
         } catch (err) {
-            showError(t.modals.messages.error.snapshot);
+            showError(t.messages.error.snapshot);
         } finally {
             setIsCreating(false);
         }
@@ -66,15 +66,15 @@ export const VersionsTab: React.FC<VersionsTabProps> = ({ treeId, language, goog
     const handleRestore = (file: DriveFile) => {
         setConfirmConfig({
             isOpen: true,
-            title: t.modals.versions.restore,
-            message: t.modals.treeManager.confirmRestoreVersion,
+            title: t.versions.restore,
+            message: t.treeManager.confirmRestoreVersion,
             type: 'warning',
             onConfirm: async () => {
                 try {
                     await googleSync.handleRestoreSnapshot(file);
-                    showSuccess(t.modals.messages.success.restore);
+                    showSuccess(t.messages.success.restore);
                 } catch (err) {
-                    showError(t.modals.messages.error.load);
+                    showError(t.messages.error.load);
                 }
             }
         });
@@ -97,27 +97,27 @@ export const VersionsTab: React.FC<VersionsTabProps> = ({ treeId, language, goog
                 resource: { name: newName }
             } as any));
             
-            showSuccess(isPinned ? t.modals.versions?.unpinned : t.modals.versions?.pinned);
+            showSuccess(isPinned ? t.versions?.unpinned : t.versions?.pinned);
             fetchSnapshots();
         } catch (err) {
             console.error('Failed to toggle pin:', err);
-            showError(t.modals.messages.error.rename);
+            showError(t.messages.error.rename);
         }
     };
 
     const handleDelete = (fileId: string) => {
         setConfirmConfig({
             isOpen: true,
-            title: t.modals.delete,
-            message: t.modals.treeManager.confirmDeleteVersion,
+            title: t.delete,
+            message: t.treeManager.confirmDeleteVersion,
             type: 'danger',
             onConfirm: async () => {
                 try {
                     await googleDriveService.deleteFile(fileId);
-                    showSuccess(t.modals.messages.success.deleteSuccess);
+                    showSuccess(t.messages.success.deleteSuccess);
                     fetchSnapshots();
                 } catch (err) {
-                    showError(t.modals.messages.error.delete);
+                    showError(t.messages.error.delete);
                 }
             }
         });
@@ -129,14 +129,14 @@ export const VersionsTab: React.FC<VersionsTabProps> = ({ treeId, language, goog
             <div className="bg-[var(--theme-surface)] rounded-xl p-4 border border-[var(--border-main)]">
                 <h4 className="text-sm font-semibold text-[var(--text-main)] mb-3 flex items-center gap-2">
                     <Plus className="w-4 h-4" />
-                    {t.modals.treeManager.createManualSnapshot}
+                    {t.treeManager.createManualSnapshot}
                 </h4>
                 <div className="flex gap-2">
                     <input
                         type="text"
                         value={newLabel}
                         onChange={(e) => setNewLabel(e.target.value)}
-                        placeholder={t.modals.treeManager.snapshotLabelPlaceholder}
+                        placeholder={t.treeManager.snapshotLabelPlaceholder}
                         className="flex-1 px-3 py-2 rounded-lg border border-[var(--border-main)] bg-[var(--theme-bg)] text-[var(--text-main)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary-600)]"
                     />
                     <button
@@ -145,7 +145,7 @@ export const VersionsTab: React.FC<VersionsTabProps> = ({ treeId, language, goog
                         className="px-4 py-2 bg-[var(--primary-600)] text-white rounded-lg text-sm font-medium hover:bg-[var(--primary-500)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                     >
                         {isCreating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-                        {t.modals.versions.save}
+                        {t.versions.save}
                     </button>
                 </div>
             </div>
@@ -154,7 +154,7 @@ export const VersionsTab: React.FC<VersionsTabProps> = ({ treeId, language, goog
             <div>
                 <h4 className="text-sm font-semibold text-[var(--text-main)] mb-3 flex items-center gap-2">
                     <Clock className="w-4 h-4" />
-                    {t.modals.treeManager.previousVersions}
+                    {t.treeManager.previousVersions}
                 </h4>
 
                 {isLoading ? (
@@ -163,7 +163,7 @@ export const VersionsTab: React.FC<VersionsTabProps> = ({ treeId, language, goog
                     </div>
                 ) : snapshots.length === 0 ? (
                     <div className="text-center py-8 text-[var(--text-dim)] text-sm">
-                        {t.modals.treeManager.noSnapshotsYet}
+                        {t.treeManager.noSnapshotsYet}
                     </div>
                 ) : (
                     <div className="space-y-2">
@@ -171,7 +171,7 @@ export const VersionsTab: React.FC<VersionsTabProps> = ({ treeId, language, goog
                             const isPinned = snap.name.startsWith('pinned_');
                             const cleanName = snap.name.replace('pinned_', '').replace('.json', '');
                             const parts = cleanName.split('_');
-                            const label = parts.slice(3).join(' ') || t.modals.versions.untitled;
+                            const label = parts.slice(3).join(' ') || t.versions.untitled;
                             const date = new Date(snap.modifiedTime);
 
                             return (
@@ -207,7 +207,7 @@ export const VersionsTab: React.FC<VersionsTabProps> = ({ treeId, language, goog
                                                 ? 'text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/30' 
                                                 : 'text-[var(--text-dim)] hover:bg-[var(--theme-hover)]'
                                             }`}
-                                            title={isPinned ? t.modals.versions.untitled : t.modals.versions.untitled}
+                                            title={isPinned ? t.versions.untitled : t.versions.untitled}
                                         >
                                             {isPinned ? <PinOff className="w-4 h-4" /> : <Pin className="w-4 h-4" />}
                                         </button>
@@ -216,13 +216,13 @@ export const VersionsTab: React.FC<VersionsTabProps> = ({ treeId, language, goog
                                             className="px-3 py-1.5 bg-[var(--primary-600)]/10 text-[var(--primary-600)] hover:bg-[var(--primary-600)] hover:text-white rounded-lg text-xs font-medium transition-all flex items-center gap-1"
                                         >
                                             <RotateCcw className="w-3 h-3" />
-                                            {t.modals.versions.restore}
+                                            {t.versions.restore}
                                         </button>
                                         {!isPinned && (
                                             <button
                                                 onClick={() => handleDelete(snap.id)}
                                                 className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                                                title={t.modals.delete}
+                                                title={t.delete}
                                             >
                                                 <Trash2 className="w-4 h-4" />
                                             </button>
@@ -237,8 +237,8 @@ export const VersionsTab: React.FC<VersionsTabProps> = ({ treeId, language, goog
 
             <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
                 <p className="text-xs text-blue-800 dark:text-blue-200 leading-relaxed">
-                    💡 <strong>{t.modals.treeManager.aboutSnapshotsTitle}</strong><br />
-                    {t.modals.treeManager.aboutSnapshotsBody}
+                    💡 <strong>{t.treeManager.aboutSnapshotsTitle}</strong><br />
+                    {t.treeManager.aboutSnapshotsBody}
                 </p>
             </div>
 

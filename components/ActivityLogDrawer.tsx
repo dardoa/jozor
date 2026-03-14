@@ -101,45 +101,45 @@ const ActivityLogDrawer: React.FC<ActivityLogDrawerProps> = ({ isOpen, onClose, 
             (details.personName as string) ||
             (details.targetName as string) ||
             (details.focusName as string) ||
-            t.modals.activityDrawer.someone;
+            t.activityDrawer.someone;
 
         const inviteEmail = details.email as string | undefined;
         const role = details.role as string | undefined;
         const newRole = details.newRole as string | undefined;
 
-        const roleLabel = role === 'editor' ? t.modals.activityDrawer.roles.editor : t.modals.activityDrawer.roles.viewer;
-        const newRoleLabel = newRole === 'editor' ? t.modals.activityDrawer.roles.editor : t.modals.activityDrawer.roles.viewer;
+        const roleLabel = role === 'editor' ? t.activityDrawer.roles.editor : t.activityDrawer.roles.viewer;
+        const newRoleLabel = newRole === 'editor' ? t.activityDrawer.roles.editor : t.activityDrawer.roles.viewer;
 
         switch (action_type) {
             case 'ADD_PERSON':
-                return t.modals.activityDrawer.actions.addPerson.replace('{name}', name);
+                return t.activityDrawer.actions.addPerson.replace('{name}', name);
             case 'UPDATE_PERSON':
-                return t.modals.activityDrawer.actions.updatePerson.replace('{name}', name);
+                return t.activityDrawer.actions.updatePerson.replace('{name}', name);
             case 'DELETE_PERSON':
-                return t.modals.activityDrawer.actions.deletePerson.replace('{name}', name);
+                return t.activityDrawer.actions.deletePerson.replace('{name}', name);
             case 'ADD_RELATION':
-                return t.modals.activityDrawer.actions.addRelation
+                return t.activityDrawer.actions.addRelation
                     .replace('{focusName}', details.focusName as string)
                     .replace('{existingName}', details.existingName as string);
             case 'DELETE_RELATION':
-                return t.modals.activityDrawer.actions.deleteRelation
+                return t.activityDrawer.actions.deleteRelation
                     .replace('{targetName}', details.targetName as string)
                     .replace('{relativeName}', details.relativeName as string);
             case 'SHARE_INVITE':
-                if (!inviteEmail) return t.modals.activityDrawer.actions.shareInvite;
-                return t.modals.activityDrawer.actions.shareInviteDetails
+                if (!inviteEmail) return t.activityDrawer.actions.shareInvite;
+                return t.activityDrawer.actions.shareInviteDetails
                     .replace('{email}', inviteEmail)
                     .replace('{role}', roleLabel);
             case 'SHARE_REVOKE':
-                if (!inviteEmail) return t.modals.activityDrawer.actions.shareRevoke;
-                return t.modals.activityDrawer.actions.shareRevokeDetails.replace('{email}', inviteEmail);
+                if (!inviteEmail) return t.activityDrawer.actions.shareRevoke;
+                return t.activityDrawer.actions.shareRevokeDetails.replace('{email}', inviteEmail);
             case 'SHARE_ROLE_CHANGE':
-                if (!inviteEmail || !newRole) return t.modals.activityDrawer.actions.shareRoleChange;
-                return t.modals.activityDrawer.actions.shareRoleChangeDetails
+                if (!inviteEmail || !newRole) return t.activityDrawer.actions.shareRoleChange;
+                return t.activityDrawer.actions.shareRoleChangeDetails
                     .replace('{email}', inviteEmail)
                     .replace('{role}', newRoleLabel);
             default:
-                return t.modals.activityDrawer.actions.default;
+                return t.activityDrawer.actions.default;
         }
     };
 
@@ -175,10 +175,10 @@ const ActivityLogDrawer: React.FC<ActivityLogDrawerProps> = ({ isOpen, onClose, 
                             </div>
                             <div>
                                 <h2 className="text-lg font-bold text-gray-900 leading-tight">
-                                    {t.modals.activityDrawer.title}
+                                    {t.activityDrawer.title}
                                 </h2>
                                 <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">
-                                    {t.modals.activityDrawer.subtitle}
+                                    {t.activityDrawer.subtitle}
                                 </p>
                             </div>
                         </div>
@@ -197,7 +197,7 @@ const ActivityLogDrawer: React.FC<ActivityLogDrawerProps> = ({ isOpen, onClose, 
                             className="w-full pl-3 pr-10 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm font-bold text-gray-700 outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all appearance-none cursor-pointer"
                         >
                             <option value="">
-                                {t.modals.activityDrawer.allContributors}
+                                {t.activityDrawer.allContributors}
                             </option>
                             {uniqueUsers.map(email => (
                                 <option key={email} value={email}>{email}</option>
@@ -214,10 +214,10 @@ const ActivityLogDrawer: React.FC<ActivityLogDrawerProps> = ({ isOpen, onClose, 
                                 <Clock className="w-8 h-8 text-gray-300" />
                             </div>
                             <p className="text-gray-500 font-medium">
-                                {t.modals.activityDrawer.emptyState}
+                                {t.activityDrawer.emptyState}
                             </p>
                             <p className="text-xs text-gray-400 mt-1">
-                                {t.modals.activityDrawer.emptyStateDesc}
+                                {t.activityDrawer.emptyStateDesc}
                             </p>
                         </div>
                     ) : (
@@ -247,7 +247,7 @@ const ActivityLogDrawer: React.FC<ActivityLogDrawerProps> = ({ isOpen, onClose, 
                                                 <div className="flex items-center justify-between mb-1">
                                                     <div className="flex items-center gap-2">
                                                         <span className="text-sm font-semibold text-gray-900 truncate max-w-[150px]">
-                                                            {log.user_email?.split('@')[0] || t.modals.activityDrawer.someone}
+                                                            {log.user_email?.split('@')[0] || t.activityDrawer.someone}
                                                         </span>
                                                         <span className="text-[10px] px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full font-bold uppercase">
                                                             {log.action_type.split('_')[0]}
@@ -279,7 +279,7 @@ const ActivityLogDrawer: React.FC<ActivityLogDrawerProps> = ({ isOpen, onClose, 
                             ) : (
                                 <>
                                     <span>
-                                        {t.modals.activityDrawer.loadMore}
+                                        {t.activityDrawer.loadMore}
                                     </span>
                                     <ChevronDown className="w-4 h-4 group-hover:translate-y-0.5 transition-transform" />
                                 </>

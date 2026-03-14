@@ -402,7 +402,7 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({
           <div className="flex flex-col items-center gap-3 bg-[var(--theme-bg-elevated)] p-6 rounded-2xl shadow-2xl border border-white/10">
             <div className="w-10 h-10 border-2 border-[var(--brand-color)] border-t-transparent rounded-full animate-spin"></div>
             <span className="text-sm font-medium text-[var(--theme-text-muted)]">
-              {t.modals.familyTree.calculatingLayout}
+              {t.calculatingLayout}
             </span>
           </div>
         </div>
@@ -452,9 +452,9 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({
                   <foreignObject x="-200" y="-80" width="400" height="160">
                     <div className="w-full h-full flex flex-col items-center justify-center gap-3 text-center p-6 rounded-2xl bg-[var(--card-bg)] border border-white/10 shadow-xl">
                       <span className="text-3xl">🪭</span>
-                      <p className="text-sm font-semibold text-[var(--text-main)]">{t.modals.familyTree.fanEmpty.title}</p>
+                      <p className="text-sm font-semibold text-[var(--text-main)]">{t.fanEmpty.title}</p>
                       <p className="text-xs text-[var(--text-dim)] leading-relaxed">
-                        {t.modals.familyTree.fanEmpty.description}
+                        {t.fanEmpty.description}
                       </p>
                     </div>
                   </foreignObject>
@@ -508,10 +508,10 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({
                       
                       <div className="space-y-2">
                         <h3 className="text-xl font-black text-[var(--theme-text)]">
-                          {t.modals.familyTree.emptyState.title}
+                          {t.emptyState.title}
                         </h3>
                         <p className="text-sm text-[var(--theme-text-muted)] max-w-[300px] leading-relaxed">
-                          {t.modals.familyTree.emptyState.description}
+                          {t.emptyState.description}
                         </p>
                       </div>
 
@@ -520,13 +520,13 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({
                           onClick={() => onAddFirstPerson('male')}
                           className="flex-1 px-6 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-black text-sm transition-all shadow-lg shadow-emerald-600/20 active:scale-95 flex items-center justify-center gap-2"
                         >
-                          {t.modals.familyTree.emptyState.addMale}
+                          {t.emptyState.addMale}
                         </button>
                         <button
                           onClick={() => onAddFirstPerson('female')}
                           className="flex-1 px-6 py-3.5 bg-pink-600 hover:bg-pink-500 text-white rounded-2xl font-black text-sm transition-all shadow-lg shadow-pink-600/20 active:scale-95 flex items-center justify-center gap-2"
                         >
-                          {t.modals.familyTree.emptyState.addFemale}
+                          {t.emptyState.addFemale}
                         </button>
                       </div>
                       

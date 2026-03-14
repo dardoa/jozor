@@ -70,10 +70,10 @@ export const TreeHealthModal = memo(({ isOpen, onClose, onNavigateToPerson }: Tr
                         </div>
                         <div>
                             <h2 className='text-xl font-bold text-[var(--text-main)]'>
-                                {t.modals.treeHealth.title}
+                                {t.treeHealth.title}
                             </h2>
                             <p className='text-sm text-[var(--text-dim)]'>
-                                {t.modals.treeHealth.score}: <span className={`font-semibold ${diagnostics.healthScore >= 80 ? 'text-green-500' :
+                                {t.treeHealth.score}: <span className={`font-semibold ${diagnostics.healthScore >= 80 ? 'text-green-500' :
                                     diagnostics.healthScore >= 50 ? 'text-amber-500' :
                                         'text-red-500'
                                     }`}>{diagnostics.healthScore}%</span>
@@ -100,7 +100,7 @@ export const TreeHealthModal = memo(({ isOpen, onClose, onNavigateToPerson }: Tr
                     >
                         <Users className='w-5 h-5 text-orange-500 mb-2' />
                         <div className='text-2xl font-bold text-[var(--text-main)]'>{diagnostics.disconnected.length}</div>
-                        <div className='text-xs text-[var(--text-dim)]'>{t.modals.treeHealth.disconnected}</div>
+                        <div className='text-xs text-[var(--text-dim)]'>{t.treeHealth.disconnected}</div>
                     </button>
 
                     <button
@@ -112,7 +112,7 @@ export const TreeHealthModal = memo(({ isOpen, onClose, onNavigateToPerson }: Tr
                     >
                         <Calendar className='w-5 h-5 text-red-500 mb-2' />
                         <div className='text-2xl font-bold text-[var(--text-main)]'>{diagnostics.dateErrors.length}</div>
-                        <div className='text-xs text-[var(--text-dim)]'>{t.modals.treeHealth.dateErrors}</div>
+                        <div className='text-xs text-[var(--text-dim)]'>{t.treeHealth.dateErrors}</div>
                     </button>
 
                     <button
@@ -124,7 +124,7 @@ export const TreeHealthModal = memo(({ isOpen, onClose, onNavigateToPerson }: Tr
                     >
                         <FileQuestion className='w-5 h-5 text-blue-500 mb-2' />
                         <div className='text-2xl font-bold text-[var(--text-main)]'>{diagnostics.missingData.length}</div>
-                        <div className='text-xs text-[var(--text-dim)]'>{t.modals.treeHealth.missingData}</div>
+                        <div className='text-xs text-[var(--text-dim)]'>{t.treeHealth.missingData}</div>
                     </button>
                 </div>
 
@@ -135,9 +135,9 @@ export const TreeHealthModal = memo(({ isOpen, onClose, onNavigateToPerson }: Tr
                         <div className='space-y-3'>
                             <div className='flex items-center gap-2 mb-4'>
                                 <Users className='w-4 h-4 text-orange-500' />
-                                <h3 className='font-semibold text-[var(--text-main)]'>{t.modals.treeHealth.disconnected}</h3>
+                                <h3 className='font-semibold text-[var(--text-main)]'>{t.treeHealth.disconnected}</h3>
                                 <span className='text-xs text-[var(--text-dim)]'>
-                                    ({t.modals.treeHealth.disconnectedDesc})
+                                    ({t.treeHealth.disconnectedDesc})
                                 </span>
                             </div>
                             {diagnostics.disconnected.length > 0 ? (
@@ -159,7 +159,7 @@ export const TreeHealthModal = memo(({ isOpen, onClose, onNavigateToPerson }: Tr
                                                 <div className='text-sm font-medium text-[var(--text-main)]'>{person.firstName} {person.lastName}</div>
                                                 {person.birthDate && (
                                                     <div className='text-xs text-[var(--text-dim)]'>
-                                                        {t.modals.treeHealth.born}: {new Date(person.birthDate).toLocaleDateString()}
+                                                        {t.treeHealth.born}: {new Date(person.birthDate).toLocaleDateString()}
                                                     </div>
                                                 )}
                                             </div>
@@ -170,7 +170,7 @@ export const TreeHealthModal = memo(({ isOpen, onClose, onNavigateToPerson }: Tr
                             ) : (
                                 <div className='text-center py-8'>
                                     <div className='text-green-500 text-4xl mb-2'>✓</div>
-                                    <p className='text-sm text-[var(--text-dim)]'>{t.modals.treeHealth.allConnected}</p>
+                                    <p className='text-sm text-[var(--text-dim)]'>{t.treeHealth.allConnected}</p>
                                 </div>
                             )}
                         </div>
@@ -181,7 +181,7 @@ export const TreeHealthModal = memo(({ isOpen, onClose, onNavigateToPerson }: Tr
                         <div className='space-y-3'>
                             <div className='flex items-center gap-2 mb-4'>
                                 <Calendar className='w-4 h-4 text-red-500' />
-                                <h3 className='font-semibold text-[var(--text-main)]'>{t.modals.treeHealth.dateErrors}</h3>
+                                <h3 className='font-semibold text-[var(--text-main)]'>{t.treeHealth.dateErrors}</h3>
                             </div>
                             {diagnostics.dateErrors.length > 0 ? (
                                 diagnostics.dateErrors.map((item, index) => (
@@ -201,7 +201,7 @@ export const TreeHealthModal = memo(({ isOpen, onClose, onNavigateToPerson }: Tr
                                             <div className='text-start flex-1'>
                                                 <div className='text-sm font-medium text-[var(--text-main)]'>{item.person.firstName} {item.person.lastName}</div>
                                                 <div className='text-xs text-red-500 mt-1'>
-                                                    {t.modals.types[item.errorKey]?.replace('{name}', item.params?.name).replace('{age}', item.params?.age) || item.errorKey}
+                                                    {t.types[item.errorKey]?.replace('{name}', item.params?.name).replace('{age}', item.params?.age) || item.errorKey}
                                                 </div>
                                             </div>
                                         </div>
@@ -211,7 +211,7 @@ export const TreeHealthModal = memo(({ isOpen, onClose, onNavigateToPerson }: Tr
                             ) : (
                                 <div className='text-center py-8'>
                                     <div className='text-green-500 text-4xl mb-2'>✓</div>
-                                    <p className='text-sm text-[var(--text-dim)]'>{t.modals.treeHealth.noDateErrors}</p>
+                                    <p className='text-sm text-[var(--text-dim)]'>{t.treeHealth.noDateErrors}</p>
                                 </div>
                             )}
                         </div>
@@ -222,7 +222,7 @@ export const TreeHealthModal = memo(({ isOpen, onClose, onNavigateToPerson }: Tr
                         <div className='space-y-3'>
                             <div className='flex items-center gap-2 mb-4'>
                                 <FileQuestion className='w-4 h-4 text-blue-500' />
-                                <h3 className='font-semibold text-[var(--text-main)]'>{t.modals.treeHealth.missingData}</h3>
+                                <h3 className='font-semibold text-[var(--text-main)]'>{t.treeHealth.missingData}</h3>
                             </div>
                             {diagnostics.missingData.length > 0 ? (
                                 diagnostics.missingData.map((item) => (
@@ -241,7 +241,7 @@ export const TreeHealthModal = memo(({ isOpen, onClose, onNavigateToPerson }: Tr
                                             )}
                                             <div className='text-start flex-1'>
                                                 <div className='text-sm font-medium text-[var(--text-main)]'>
-                                                    {item.person.firstName || item.person.lastName ? `${item.person.firstName} ${item.person.lastName}` : t.modals.treeHealth.unnamedPerson}
+                                                    {item.person.firstName || item.person.lastName ? `${item.person.firstName} ${item.person.lastName}` : t.treeHealth.unnamedPerson}
                                                 </div>
                                                 <div className='flex gap-2 mt-1'>
                                                     {item.missing.map((field) => (
@@ -249,7 +249,7 @@ export const TreeHealthModal = memo(({ isOpen, onClose, onNavigateToPerson }: Tr
                                                             key={field.key}
                                                             className='text-xs px-2 py-0.5 bg-blue-500/10 text-blue-600 rounded'
                                                         >
-                                                            {t.modals.treeHealth.missingField}: {t.personFields[field.key] || field.key}
+                                                            {t.treeHealth.missingField}: {t.personFields[field.key] || field.key}
                                                         </span>
                                                     ))}
                                                 </div>
@@ -261,7 +261,7 @@ export const TreeHealthModal = memo(({ isOpen, onClose, onNavigateToPerson }: Tr
                             ) : (
                                 <div className='text-center py-8'>
                                     <div className='text-green-500 text-4xl mb-2'>✓</div>
-                                    <p className='text-sm text-[var(--text-dim)]'>{t.modals.treeHealth.noMissingData}</p>
+                                    <p className='text-sm text-[var(--text-dim)]'>{t.treeHealth.noMissingData}</p>
                                 </div>
                             )}
                         </div>

@@ -222,7 +222,7 @@ export const StatisticsModal = ({ isOpen, onClose, people, initialTab = 'overvie
                     {birthday.person.firstName} {birthday.person.lastName}
                   </div>
                   <div className='text-xs text-stone-500 dark:text-stone-400'>
-                    {t.modals.statistics.turnsAgeOn
+                    {t.statistics.turnsAgeOn
                       ?.replace('{age}', birthday.ageTurning.toString())
                       .replace('{date}', formatDate(birthday.nextBirthday.toISOString(), treeSettings.dateFormat))}
                   </div>
@@ -230,8 +230,8 @@ export const StatisticsModal = ({ isOpen, onClose, people, initialTab = 'overvie
               </div>
               <div className='text-xs font-bold text-pink-500 bg-pink-50 dark:bg-pink-900/20 px-2.5 py-1 rounded-full whitespace-nowrap'>
                 {birthday.daysUntil === 0 
-                  ? t.modals.statistics.today 
-                  : `${birthday.daysUntil} ${t.modals.statistics.days}`}
+                  ? t.statistics.today 
+                  : `${birthday.daysUntil} ${t.statistics.days}`}
               </div>
             </div>
           ))}
@@ -250,7 +250,7 @@ export const StatisticsModal = ({ isOpen, onClose, people, initialTab = 'overvie
               <Activity className='w-5 h-5' />
             </div>
             <h3 className='text-xl font-bold text-stone-900 dark:text-white'>
-              {t.modals.statistics.title}
+              {t.statistics.title}
             </h3>
           </div>
           <button
@@ -269,8 +269,8 @@ export const StatisticsModal = ({ isOpen, onClose, people, initialTab = 'overvie
             { id: 'timeline', label: t.timelineTab, icon: <BarChart3 className='w-4 h-4' /> },
             { id: 'geo', label: t.geography, icon: <MapPin className='w-4 h-4' /> },
             { id: 'names', label: t.names, icon: <Baby className='w-4 h-4' /> },
-            { id: 'birthdays', label: t.modals.statistics.birthdays, icon: <Cake className='w-4 h-4' /> },
-            { id: 'health', label: t.modals.statistics.health, icon: <AlertTriangle className='w-4 h-4' /> },
+            { id: 'birthdays', label: t.statistics.birthdays, icon: <Cake className='w-4 h-4' /> },
+            { id: 'health', label: t.statistics.health, icon: <AlertTriangle className='w-4 h-4' /> },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -339,7 +339,7 @@ export const StatisticsModal = ({ isOpen, onClose, people, initialTab = 'overvie
                 >
                   <Users className='w-6 h-6 text-orange-500' />
                   <div className='text-2xl font-bold text-stone-900 dark:text-white'>{diagnostics.disconnected.length}</div>
-                  <div className='text-xs text-stone-500 dark:text-stone-400 font-medium'>{t.modals.treeHealth.disconnected}</div>
+                  <div className='text-xs text-stone-500 dark:text-stone-400 font-medium'>{t.treeHealth.disconnected}</div>
                 </button>
 
                 <button
@@ -351,7 +351,7 @@ export const StatisticsModal = ({ isOpen, onClose, people, initialTab = 'overvie
                 >
                   <Calendar className='w-6 h-6 text-red-500' />
                   <div className='text-2xl font-bold text-stone-900 dark:text-white'>{diagnostics.dateErrors.length}</div>
-                  <div className='text-xs text-stone-500 dark:text-stone-400 font-medium'>{t.modals.treeHealth.dateErrors}</div>
+                  <div className='text-xs text-stone-500 dark:text-stone-400 font-medium'>{t.treeHealth.dateErrors}</div>
                 </button>
 
                 <button
@@ -363,7 +363,7 @@ export const StatisticsModal = ({ isOpen, onClose, people, initialTab = 'overvie
                 >
                   <FileQuestion className='w-6 h-6 text-blue-500' />
                   <div className='text-2xl font-bold text-stone-900 dark:text-white'>{diagnostics.missingData.length}</div>
-                  <div className='text-xs text-stone-500 dark:text-stone-400 font-medium'>{t.modals.treeHealth.missingData}</div>
+                  <div className='text-xs text-stone-500 dark:text-stone-400 font-medium'>{t.treeHealth.missingData}</div>
                 </button>
               </div>
 
@@ -373,20 +373,20 @@ export const StatisticsModal = ({ isOpen, onClose, people, initialTab = 'overvie
                   {healthSubTab === 'disconnected' && (
                     <div className='flex items-center gap-2'>
                       <Users className='w-4 h-4 text-orange-500' />
-                      <h4 className='font-bold text-stone-800 dark:text-stone-200'>{t.modals.treeHealth.disconnected}</h4>
-                      <span className='text-xs text-stone-500 dark:text-stone-400 ms-auto'>({t.modals.treeHealth.disconnectedDesc})</span>
+                      <h4 className='font-bold text-stone-800 dark:text-stone-200'>{t.treeHealth.disconnected}</h4>
+                      <span className='text-xs text-stone-500 dark:text-stone-400 ms-auto'>({t.treeHealth.disconnectedDesc})</span>
                     </div>
                   )}
                   {healthSubTab === 'dates' && (
                     <div className='flex items-center gap-2'>
                       <Calendar className='w-4 h-4 text-red-500' />
-                      <h4 className='font-bold text-stone-800 dark:text-stone-200'>{t.modals.treeHealth.dateErrors}</h4>
+                      <h4 className='font-bold text-stone-800 dark:text-stone-200'>{t.treeHealth.dateErrors}</h4>
                     </div>
                   )}
                   {healthSubTab === 'missing' && (
                     <div className='flex items-center gap-2'>
                       <FileQuestion className='w-4 h-4 text-blue-500' />
-                      <h4 className='font-bold text-stone-800 dark:text-stone-200'>{t.modals.treeHealth.missingData}</h4>
+                      <h4 className='font-bold text-stone-800 dark:text-stone-200'>{t.treeHealth.missingData}</h4>
                     </div>
                   )}
                 </div>
@@ -415,7 +415,7 @@ export const StatisticsModal = ({ isOpen, onClose, people, initialTab = 'overvie
                     ) : (
                       <div className='p-8 text-center text-stone-400 flex flex-col items-center'>
                         <CheckCircle2 className='w-12 h-12 text-green-500 mb-2 opacity-80' />
-                        <p>{t.modals.treeHealth.allConnected}</p>
+                        <p>{t.treeHealth.allConnected}</p>
                       </div>
                     )
                   )}
@@ -435,7 +435,7 @@ export const StatisticsModal = ({ isOpen, onClose, people, initialTab = 'overvie
                             <div>
                               <div className='text-sm font-medium text-stone-700 dark:text-stone-300'>{item.person.firstName} {item.person.lastName}</div>
                               <div className='text-xs text-red-500 mt-0.5'>
-                                {t.modals.types[item.errorKey]?.replace('{name}', item.params?.name).replace('{age}', item.params?.age) || item.errorKey}
+                                {t.types[item.errorKey]?.replace('{name}', item.params?.name).replace('{age}', item.params?.age) || item.errorKey}
                               </div>
                             </div>
                           </div>
@@ -445,7 +445,7 @@ export const StatisticsModal = ({ isOpen, onClose, people, initialTab = 'overvie
                     ) : (
                       <div className='p-8 text-center text-stone-400 flex flex-col items-center'>
                         <CheckCircle2 className='w-12 h-12 text-green-500 mb-2 opacity-80' />
-                        <p>{t.modals.treeHealth.noDateErrors}</p>
+                        <p>{t.treeHealth.noDateErrors}</p>
                       </div>
                     )
                   )}
@@ -467,7 +467,7 @@ export const StatisticsModal = ({ isOpen, onClose, people, initialTab = 'overvie
                               <div className='flex gap-1 mt-1 flex-wrap'>
                                 {item.missing.map(m => (
                                   <span key={m.key} className='text-[10px] bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 px-1.5 py-0.5 rounded'>
-                                    {t.modals.treeHealth.missingField}: {t.personFields[m.key] || m.key}
+                                    {t.treeHealth.missingField}: {t.personFields[m.key] || m.key}
                                   </span>
                                 ))}
                               </div>
@@ -479,7 +479,7 @@ export const StatisticsModal = ({ isOpen, onClose, people, initialTab = 'overvie
                     ) : (
                       <div className='p-8 text-center text-stone-400 flex flex-col items-center'>
                         <CheckCircle2 className='w-12 h-12 text-green-500 mb-2 opacity-80' />
-                        <p>{t.modals.treeHealth.noMissingData}</p>
+                        <p>{t.treeHealth.noMissingData}</p>
                       </div>
                     )
                   )}

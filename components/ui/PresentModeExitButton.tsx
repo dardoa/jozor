@@ -14,7 +14,7 @@ export const PresentModeExitButton: React.FC<PresentModeExitButtonProps> = ({ on
       onClick={onExit}
       className='fixed top-4 right-4 z-[100] bg-black/50 text-white px-4 py-2 rounded-full backdrop-blur hover:bg-black/70 flex items-center gap-2'
     >
-      <X className='w-4 h-4' /> {t.general.exitPresentMode}
+      <X className='w-4 h-4' /> {t.exitPresentMode}
     </button>
   );
 };

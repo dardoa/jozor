@@ -52,7 +52,7 @@ export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(
           {auth.user ? (
             <>
               {/* Advanced HUD Toggle - Universal Visualization Controls (Desktop Only) */}
-              <Tooltip content={t.header.tooltips.visualPreferences} position="bottom">
+              <Tooltip content={t.tooltips.visualPreferences} position="bottom">
                 <button
                   onClick={() => setSettingsDrawerOpen(!isSettingsDrawerOpen)}
                   className={`hidden sm:block p-2.5 rounded-xl hover:bg-[var(--card-bg)] hover:shadow-lg active:scale-95 transition-all duration-300 group border border-transparent hover:border-[var(--border-main)] ${isSettingsDrawerOpen ? 'bg-amber-500/10 border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.2)]' : ''}`}
@@ -63,7 +63,7 @@ export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(
 
               {/* Admin Hub (Gear) - Primary Management (Desktop Only, Action Bar handles mobile) */}
               {viewSettings.currentUserRole === 'owner' && (
-                <Tooltip content={t.header.tooltips.adminHub} position="bottom">
+                <Tooltip content={t.tooltips.adminHub} position="bottom">
                   <button
                     onClick={() => viewSettings.onOpenAdminHub?.()}
                     className='hidden sm:block p-2.5 rounded-xl hover:bg-[var(--card-bg)] hover:shadow-lg active:scale-95 transition-all duration-300 group border border-transparent hover:border-[var(--border-main)]'
@@ -74,7 +74,7 @@ export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(
               )}
 
               {/* Tools Menu - Analysis & Insights (Desktop Only, Action Bar handles mobile) */}
-              <Tooltip content={t.header.tooltips.tools} position="bottom">
+              <Tooltip content={t.tooltips.tools} position="bottom">
                 <Dropdown
                   trigger={
                     <button
@@ -93,7 +93,7 @@ export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(
               </Tooltip>
 
               {/* Export Menu - Downloads & Sharing (Desktop Only) */}
-              <Tooltip content={t.header.tooltips.export} position="bottom">
+              <Tooltip content={t.tooltips.export} position="bottom">
                 <Dropdown
                   trigger={
                     <button
@@ -173,3 +173,4 @@ export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(
     );
   }
 );
+

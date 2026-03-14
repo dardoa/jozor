@@ -49,9 +49,9 @@ export const StatisticsDashboard = memo(({ isOpen, onClose, people, onNavigateTo
         { id: 'overview', label: t.overview, icon: <PieChart className="w-4 h-4" /> },
         { id: 'timeline', label: t.timelineTab, icon: <BarChart3 className="w-4 h-4" /> },
         { id: 'geo', label: t.geography, icon: <MapPin className="w-4 h-4" /> },
-        { id: 'names', label: t.modals.names, icon: <Baby className="w-4 h-4" /> },
-        { id: 'birthdays', label: t.modals.statistics.birthdays, icon: <Cake className="w-4 h-4" /> },
-        { id: 'health', label: t.modals.statistics.health, icon: <ShieldCheck className="w-4 h-4" /> },
+        { id: 'names', label: t.names, icon: <Baby className="w-4 h-4" /> },
+        { id: 'birthdays', label: t.statistics.birthdays, icon: <Cake className="w-4 h-4" /> },
+        { id: 'health', label: t.statistics.health, icon: <ShieldCheck className="w-4 h-4" /> },
     ];
 
     const renderList = (title: string, data: { name: string; count: number }[], icon: React.ReactNode, colorClass: string, isMap = false) => (
@@ -61,7 +61,7 @@ export const StatisticsDashboard = memo(({ isOpen, onClose, people, onNavigateTo
             </div>
             <div className="divide-y divide-white/5">
                 {data.length === 0 ? (
-                    <div className="p-8 text-center text-xs text-white/30 italic">{t.modals.statistics.noDataAvailable}</div>
+                    <div className="p-8 text-center text-xs text-white/30 italic">{t.statistics.noDataAvailable}</div>
                 ) : (
                     data.map((item, i) => (
                         <div key={i} className="flex items-center justify-between p-3 px-4 hover:bg-white/5 transition-colors">
@@ -100,7 +100,7 @@ export const StatisticsDashboard = memo(({ isOpen, onClose, people, onNavigateTo
                     <div className="flex items-center gap-3">
                         <Activity className="w-5 h-5 text-[#E1AD01]" />
                         <h2 className="text-lg font-black text-white uppercase tracking-tight">
-                            {t.modals.statistics.title}
+                            {t.statistics.title}
                         </h2>
                     </div>
                     <button
@@ -151,23 +151,23 @@ export const StatisticsDashboard = memo(({ isOpen, onClose, people, onNavigateTo
                                     {/* Records Card */}
                                     <div className="bg-gradient-to-br from-white/10 to-transparent rounded-2xl p-6 border border-white/10">
                                         <h3 className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-6 flex items-center gap-2">
-                                            <Trophy className="w-3 h-3 text-[#E1AD01]" /> {t.modals.names}
+                                            <Trophy className="w-3 h-3 text-[#E1AD01]" /> {t.names}
                                         </h3>
                                         <div className="space-y-4">
                                             <div className="flex items-center gap-4">
                                                 <div className="p-2 rounded-lg bg-[#E1AD01]/10 text-[#E1AD01]"><Clock className="w-4 h-4" /></div>
                                                 <div>
-                                                    <p className="text-[10px] text-white/30 uppercase font-bold">{t.modals.oldestMember}</p>
-                                                    <p className="text-sm font-bold text-white/80">{stats.records.oldestPerson?.name || t.modals.statistics.na}</p>
-                                                    <p className="text-xs text-[#E1AD01]">{stats.records.oldestPerson?.age} {t.modals.years}</p>
+                                                    <p className="text-[10px] text-white/30 uppercase font-bold">{t.oldestMember}</p>
+                                                    <p className="text-sm font-bold text-white/80">{stats.records.oldestPerson?.name || t.statistics.na}</p>
+                                                    <p className="text-xs text-[#E1AD01]">{stats.records.oldestPerson?.age} {t.years}</p>
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-4">
                                                 <div className="p-2 rounded-lg bg-blue-500/10 text-blue-400"><Users className="w-4 h-4" /></div>
                                                 <div>
-                                                    <p className="text-[10px] text-white/30 uppercase font-bold">{t.modals.mostChildren}</p>
-                                                    <p className="text-sm font-bold text-white/80">{stats.records.mostChildren?.name || t.modals.statistics.na}</p>
-                                                    <p className="text-xs text-blue-400">{stats.records.mostChildren?.count} {t.modals.deceased}</p>
+                                                    <p className="text-[10px] text-white/30 uppercase font-bold">{t.mostChildren}</p>
+                                                    <p className="text-sm font-bold text-white/80">{stats.records.mostChildren?.name || t.statistics.na}</p>
+                                                    <p className="text-xs text-blue-400">{stats.records.mostChildren?.count} {t.deceased}</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -182,10 +182,10 @@ export const StatisticsDashboard = memo(({ isOpen, onClose, people, onNavigateTo
                                             </svg>
                                             <div className="absolute inset-0 flex flex-col items-center justify-center">
                                                 <span className="text-2xl font-black text-white">{stats.kpis.healthScore}%</span>
-                                                <span className="text-[8px] text-white/40 uppercase tracking-tighter">{t.modals.statistics.health}</span>
+                                                <span className="text-[8px] text-white/40 uppercase tracking-tighter">{t.statistics.health}</span>
                                             </div>
                                         </div>
-                                        <p className="mt-4 text-[10px] text-white/40 text-center leading-relaxed">{t.modals.statistics.inconsistenciesFound?.replace('{count}', Object.keys(validationErrors).length.toString())}</p>
+                                        <p className="mt-4 text-[10px] text-white/40 text-center leading-relaxed">{t.statistics.inconsistenciesFound?.replace('{count}', Object.keys(validationErrors).length.toString())}</p>
                                     </div>
                                 </div>
                             </div>
@@ -199,8 +199,8 @@ export const StatisticsDashboard = memo(({ isOpen, onClose, people, onNavigateTo
                             {renderList(t.topPlaces, stats.topPlaces, <MapPin className="w-4 h-4 text-red-500" />, "bg-red-500/20 text-red-400", true)}
                             <div className="bg-white/5 rounded-2xl p-8 border border-white/10 flex flex-col items-center justify-center text-center">
                                 <MapPin className="w-12 h-12 text-white/10 mb-4" />
-                                <h4 className="text-white/60 font-bold">{t.modals.statistics.migrationInsights}</h4>
-                                <p className="text-xs text-white/30 max-w-xs mt-2">{t.modals.statistics.migrationDesc?.replace('{count}', stats.topPlaces.length.toString())}</p>
+                                <h4 className="text-white/60 font-bold">{t.statistics.migrationInsights}</h4>
+                                <p className="text-xs text-white/30 max-w-xs mt-2">{t.statistics.migrationDesc?.replace('{count}', stats.topPlaces.length.toString())}</p>
                             </div>
                         </div>
                     )}
@@ -215,7 +215,7 @@ export const StatisticsDashboard = memo(({ isOpen, onClose, people, onNavigateTo
                     {activeTab === 'birthdays' && (
                         <div className="max-w-2xl mx-auto space-y-4">
                             {stats.upcomingBirthdays.length === 0 ? (
-                                <div className="text-center py-20 opacity-30 italic">{t.modals.statistics.noUpcomingBirthdays}</div>
+                                <div className="text-center py-20 opacity-30 italic">{t.statistics.noUpcomingBirthdays}</div>
                             ) : (
                                 stats.upcomingBirthdays.map((b: any) => (
                                     <div key={b.person.id} className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10 transition-colors">
@@ -230,7 +230,7 @@ export const StatisticsDashboard = memo(({ isOpen, onClose, people, onNavigateTo
                                             <div>
                                                 <h4 className="text-sm font-bold text-white/80">{b.person.firstName} {b.person.lastName}</h4>
                                                 <p className="text-xs text-white/40">
-                                                    {t.modals.statistics.turnsAgeOn
+                                                    {t.statistics.turnsAgeOn
                                                         ?.replace('{age}', b.ageTurning.toString())
                                                         .replace('{date}', formatDate(b.nextBirthday))}
                                                 </p>
@@ -239,8 +239,8 @@ export const StatisticsDashboard = memo(({ isOpen, onClose, people, onNavigateTo
                                         <div className="text-end">
                                             <div className="text-xs font-black text-[#E1AD01] uppercase">
                                                 {b.daysUntil === 0 
-                                                    ? t.modals.statistics.today 
-                                                    : `${b.daysUntil} ${t.modals.statistics.days}`}
+                                                    ? t.statistics.today 
+                                                    : `${b.daysUntil} ${t.statistics.days}`}
                                             </div>
                                         </div>
                                     </div>
@@ -255,24 +255,24 @@ export const StatisticsDashboard = memo(({ isOpen, onClose, people, onNavigateTo
                                 <div className="bg-white/5 p-6 rounded-2xl border border-white/10 text-center">
                                     <Users className="w-6 h-6 text-orange-400 mx-auto mb-2" />
                                     <div className="text-2xl font-black text-white">{Object.keys(validationErrors).filter(id => validationErrors[id].some(e => e.includes('connected'))).length}</div>
-                                    <div className="text-[10px] text-white/30 uppercase font-bold">{t.modals.treeHealth.disconnected}</div>
+                                    <div className="text-[10px] text-white/30 uppercase font-bold">{t.treeHealth.disconnected}</div>
                                 </div>
                                 <div className="bg-white/5 p-6 rounded-2xl border border-white/10 text-center">
                                     <Calendar className="w-6 h-6 text-red-500 mx-auto mb-2" />
                                     <div className="text-2xl font-black text-white">{Object.keys(validationErrors).filter(id => validationErrors[id].some(e => e.includes('date'))).length}</div>
-                                    <div className="text-[10px] text-white/30 uppercase font-bold">{t.modals.treeHealth.dateErrors}</div>
+                                    <div className="text-[10px] text-white/30 uppercase font-bold">{t.treeHealth.dateErrors}</div>
                                 </div>
                                 <div className="bg-white/5 p-6 rounded-2xl border border-white/10 text-center">
                                     <ShieldCheck className="w-6 h-6 text-green-500 mx-auto mb-2" />
                                     <div className="text-2xl font-black text-white">{stats.kpis.healthScore}%</div>
-                                    <div className="text-[10px] text-white/30 uppercase font-bold">{t.modals.statistics.totalAccuracy}</div>
+                                    <div className="text-[10px] text-white/30 uppercase font-bold">{t.statistics.totalAccuracy}</div>
                                 </div>
                             </div>
 
                             <div className="bg-white/5 rounded-2xl border border-white/10 overflow-hidden">
                                 <div className="p-4 border-b border-white/10 bg-white/5 flex items-center gap-2">
                                     <AlertTriangle className="w-4 h-4 text-[#E1AD01]" />
-                                    <h4 className="text-sm font-bold text-white/80">{t.modals.issuesFound}</h4>
+                                    <h4 className="text-sm font-bold text-white/80">{t.issuesFound}</h4>
                                 </div>
                                 <div className="divide-y divide-white/5 max-h-[400px] overflow-y-auto">
                                     {Object.entries(validationErrors).map(([id, errors]) => (
@@ -302,7 +302,7 @@ export const StatisticsDashboard = memo(({ isOpen, onClose, people, onNavigateTo
                                     {Object.keys(validationErrors).length === 0 && (
                                         <div className="p-20 text-center flex flex-col items-center">
                                             <ShieldCheck className="w-12 h-12 text-green-500/20 mb-4" />
-                                            <p className="text-white/30 italic">{t.modals.noIssuesFound}</p>
+                                            <p className="text-white/30 italic">{t.noIssuesFound}</p>
                                         </div>
                                     )}
                                 </div>

@@ -46,7 +46,7 @@ export const SnapshotHistoryModal: React.FC<SnapshotHistoryModalProps> = ({
             setSnapshots(files);
         } catch (e) {
             console.error('Failed to list snapshots', e);
-            showError(t.modals.messages.error.load);
+            showError(t.messages.error.load);
         } finally {
             setIsLoading(false);
         }
@@ -64,11 +64,11 @@ export const SnapshotHistoryModal: React.FC<SnapshotHistoryModalProps> = ({
         try {
             await googleSync.handleCreateSnapshot(newLabel);
             setNewLabel('');
-            showSuccess(t.modals.messages.success.load);
+            showSuccess(t.messages.success.load);
             await fetchSnapshots();
         } catch (e) {
             console.error('Create snapshot failed:', e);
-            showError(t.modals.messages.error.snapshot);
+            showError(t.messages.error.snapshot);
         } finally {
             setIsCreating(false);
         }
@@ -86,7 +86,7 @@ export const SnapshotHistoryModal: React.FC<SnapshotHistoryModalProps> = ({
             onClose();
         } catch (e) {
             console.error('Restore failed:', e);
-            showError(t.modals.messages.error.load);
+            showError(t.messages.error.load);
         } finally {
             setRestoreConfirmOpen(false);
             setPendingRestoreFile(null);
@@ -108,7 +108,7 @@ export const SnapshotHistoryModal: React.FC<SnapshotHistoryModalProps> = ({
                 <div className="flex items-center justify-between p-4 border-b border-[var(--border-main)]">
                     <h2 className="text-xl font-bold flex items-center gap-2">
                         <Clock className="w-5 h-5 text-[var(--primary-600)]" />
-                        {t.modals.versions.title}
+                        {t.versions.title}
                     </h2>
                     <button 
                         onClick={onClose} 
@@ -122,14 +122,14 @@ export const SnapshotHistoryModal: React.FC<SnapshotHistoryModalProps> = ({
                 {/* Create New Section */}
                 <div className="p-4 bg-[var(--theme-surface)] border-b border-[var(--border-main)]">
                     <label className="text-sm font-medium mb-1 block">
-                        {t.modals.versions.create}
+                        {t.versions.create}
                     </label>
                     <div className="flex gap-2">
                         <input
                             type="text"
                             value={newLabel}
                             onChange={(e) => setNewLabel(e.target.value)}
-                            placeholder={t.modals.versions.snapshotLabelPlaceholder}
+                            placeholder={t.versions.snapshotLabelPlaceholder}
                             className="flex-1 px-3 py-2 rounded-lg border border-[var(--border-strong)] bg-[var(--theme-bg)] focus:ring-2 focus:ring-[var(--primary-500)] outline-none"
                         />
                         <button
@@ -137,7 +137,7 @@ export const SnapshotHistoryModal: React.FC<SnapshotHistoryModalProps> = ({
                             disabled={isCreating || !newLabel.trim()}
                             className="bg-[var(--primary-600)] text-white px-4 py-2 rounded-lg flex items-center gap-2 font-medium hover:bg-[var(--primary-700)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         >
-                            {isCreating ? t.modals.versions.save + '...' : <><Plus className="w-4 h-4" /> {t.modals.versions.save}</>}
+                            {isCreating ? t.versions.save + '...' : <><Plus className="w-4 h-4" /> {t.versions.save}</>}
                         </button>
                     </div>
                 </div>
@@ -145,18 +145,18 @@ export const SnapshotHistoryModal: React.FC<SnapshotHistoryModalProps> = ({
                 {/* List */}
                 <div className="flex-1 overflow-y-auto p-4 space-y-3">
                     {isLoading && (
-                        <div className="text-center py-8 text-[var(--text-dim)]">{t.modals.versions.loadingHistory}</div>
+                        <div className="text-center py-8 text-[var(--text-dim)]">{t.versions.loadingHistory}</div>
                     )}
 
                     {!isLoading && snapshots.length === 0 && (
                         <div className="text-center py-8 text-[var(--text-dim)]">
-                            {t.modals.versions.noSnapshots}
+                            {t.versions.noSnapshots}
                         </div>
                     )}
 
                     {snapshots.map((snap) => {
                         const parts = snap.name.replace('.json', '').split('_');
-                        const label = parts.slice(3).join(' ') || t.modals.versions.untitled;
+                        const label = parts.slice(3).join(' ') || t.versions.untitled;
                         const date = new Date(snap.modifiedTime);
 
                         return (
@@ -177,10 +177,10 @@ export const SnapshotHistoryModal: React.FC<SnapshotHistoryModalProps> = ({
                                     <button
                                         onClick={() => handleRestore(snap)}
                                         className="px-3 py-1.5 text-xs font-medium bg-[var(--primary-100)] text-[var(--primary-700)] rounded hover:bg-[var(--primary-200)] flex items-center gap-1"
-                                        title={t.modals.versions.restore}
+                                        title={t.versions.restore}
                                     >
                                         <RotateCcw className="w-3 h-3" />
-                                        {t.modals.versions.restore}
+                                        {t.versions.restore}
                                     </button>
                                 </div>
                             </div>
@@ -194,8 +194,8 @@ export const SnapshotHistoryModal: React.FC<SnapshotHistoryModalProps> = ({
                 isOpen={isRestoreConfirmOpen}
                 onClose={() => setRestoreConfirmOpen(false)}
                 onConfirm={confirmRestore}
-                title={t.modals.versions.restore}
-                message={t.modals.versions.restoreConfirm}
+                title={t.versions.restore}
+                message={t.versions.restoreConfirm}
                 type="warning"
                 overlayId="snapshot-history-restore-confirm"
             />

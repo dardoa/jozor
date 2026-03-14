@@ -85,7 +85,7 @@ export const NodeContextMenu: React.FC<NodeContextMenuProps> = ({
             )}
             <div>
                 <p className="text-[10px] uppercase tracking-widest text-[var(--text-dim)] font-black">
-                    {showBack ? t.sidebar.back : (person.firstName + ' ' + person.lastName)}
+                    {showBack ? t.back : (person.firstName + ' ' + person.lastName)}
                 </p>
                 <h3 className="font-bold text-xs text-[var(--text-main)] truncate">
                     {label}
@@ -107,7 +107,7 @@ export const NodeContextMenu: React.FC<NodeContextMenuProps> = ({
 
                 {view === 'main' && (
                     <div className="animate-in duration-200 slide-in-from-inline-end-1">
-                        <MenuHeader label={t.sidebar.personActions} />
+                        <MenuHeader label={t.personActions} />
 
                         <div className="p-1 space-y-0.5">
                             <DropdownMenuItem
@@ -115,13 +115,13 @@ export const NodeContextMenu: React.FC<NodeContextMenuProps> = ({
                                 icon={<Edit3 className="w-3.5 h-3.5" />}
                                 iconBgClass="!bg-indigo-500/10"
                                 iconTextColorClass="!text-indigo-400"
-                                label={t.sidebar.editDetails}
+                                label={t.editDetails}
                             />
 
                             <DropdownMenuItem
                                 onClick={() => setView('addRelative')}
                                 icon={<UserPlus className="w-3.5 h-3.5" />}
-                                label={t.sidebar.addRelative}
+                                label={t.addRelative}
                                 rightElement={<ChevronRight className="w-3 h-3 text-white/20 rtl:rotate-180" />}
                             />
 
@@ -130,7 +130,7 @@ export const NodeContextMenu: React.FC<NodeContextMenuProps> = ({
                                 icon={<Image className="w-3.5 h-3.5" />}
                                 iconBgClass="!bg-purple-500/10"
                                 iconTextColorClass="!text-purple-400"
-                                label={t.sidebar.viewGallery}
+                                label={t.viewGallery}
                             />
 
                             <DropdownMenuItem
@@ -138,7 +138,7 @@ export const NodeContextMenu: React.FC<NodeContextMenuProps> = ({
                                 icon={<BookOpen className="w-3.5 h-3.5" />}
                                 iconBgClass="!bg-amber-500/10"
                                 iconTextColorClass="!text-amber-400"
-                                label={t.sidebar.familyStory}
+                                label={t.familyStory}
                             />
 
                             <DropdownMenuDivider />
@@ -146,7 +146,7 @@ export const NodeContextMenu: React.FC<NodeContextMenuProps> = ({
                             <DropdownMenuItem
                                 onClick={() => setView('management')}
                                 icon={<Settings2 className="w-3.5 h-3.5" />}
-                                label={t.sidebar.management}
+                                label={t.management}
                                 rightElement={<ChevronRight className="w-3 h-3 text-white/20 rtl:rotate-180" />}
                             />
                         </div>
@@ -155,38 +155,38 @@ export const NodeContextMenu: React.FC<NodeContextMenuProps> = ({
 
                 {view === 'addRelative' && (
                     <div className="animate-in duration-200 slide-in-from-inline-start-1">
-                        <MenuHeader label={t.sidebar.addRelativeTitle} showBack />
+                        <MenuHeader label={t.addRelativeTitle} showBack />
                         <div className="p-1 space-y-0.5">
                             <DropdownMenuItem
                                 onClick={() => onAddRelation('parent', 'male')}
                                 disabled={isViewer}
                                 icon={<UserRound className="w-3.5 h-3.5" />}
-                                label={t.sidebar.addFather}
+                                label={t.addFather}
                             />
                             <DropdownMenuItem
                                 onClick={() => onAddRelation('parent', 'female')}
                                 disabled={isViewer}
                                 icon={<UserRound className="w-3.5 h-3.5" />}
-                                label={t.sidebar.addMother}
+                                label={t.addMother}
                             />
                             <DropdownMenuItem
                                 onClick={() => onAddRelation('spouse', person.gender === 'male' ? 'female' : 'male')}
                                 disabled={isViewer}
                                 icon={<Heart className="w-3.5 h-3.5" />}
-                                label={t.sidebar.addSpouse}
+                                label={t.addSpouse}
                             />
                             <DropdownMenuDivider />
                             <DropdownMenuItem
                                 onClick={() => onAddRelation('child', 'male')}
                                 disabled={isViewer}
                                 icon={<Baby className="w-3.5 h-3.5" />}
-                                label={t.sidebar.addSon}
+                                label={t.addSon}
                             />
                             <DropdownMenuItem
                                 onClick={() => onAddRelation('child', 'female')}
                                 disabled={isViewer}
                                 icon={<Baby className="w-3.5 h-3.5" />}
-                                label={t.sidebar.addDaughter}
+                                label={t.addDaughter}
                             />
                         </div>
                     </div>
@@ -194,7 +194,7 @@ export const NodeContextMenu: React.FC<NodeContextMenuProps> = ({
 
                 {view === 'management' && (
                     <div className="animate-in duration-200 slide-in-from-inline-start-1">
-                        <MenuHeader label={t.sidebar.nodeManagement} showBack />
+                        <MenuHeader label={t.nodeManagement} showBack />
                         <div className="p-1 space-y-0.5">
                             <DropdownMenuItem
                                 onClick={() => onSetAsRoot(person.id)}
@@ -202,7 +202,7 @@ export const NodeContextMenu: React.FC<NodeContextMenuProps> = ({
                                 icon={<Star className="w-3.5 h-3.5" />}
                                 iconBgClass="!bg-yellow-500/20"
                                 iconTextColorClass="!text-yellow-400"
-                                label={t.sidebar.setAsRoot}
+                                label={t.setAsRoot}
                             />
                             <DropdownMenuDivider />
                             <DropdownMenuItem
@@ -212,7 +212,7 @@ export const NodeContextMenu: React.FC<NodeContextMenuProps> = ({
                                 iconBgClass="!bg-red-500/20"
                                 iconTextColorClass="!text-red-400"
                                 colorClass="text-red-400 hover:bg-red-500/10"
-                                label={t.sidebar.deletePerson}
+                                label={t.deletePerson}
                             />
                         </div>
                     </div>
@@ -221,3 +221,4 @@ export const NodeContextMenu: React.FC<NodeContextMenuProps> = ({
         </div>
     );
 };
+

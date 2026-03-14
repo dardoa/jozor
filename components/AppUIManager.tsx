@@ -174,7 +174,7 @@ export const AppUIManager: React.FC = () => {
         accept='.json,.ged,.jozor,.zip'
         className='hidden'
         onChange={onFileUpload}
-        aria-label={t.header.importFile}
+        aria-label={t.importFile}
       />
 
       <React.Suspense fallback={<div className="flex h-screen items-center justify-center bg-[var(--theme-bg)] text-[var(--text-main)] animate-pulse">{t.loading}</div>}>
@@ -271,3 +271,4 @@ const LegacySharedTreeRedirect: React.FC<SharedTreeRouteWrapperProps> = ({ auth,
     />
   );
 };
+

@@ -73,11 +73,11 @@ export const DriveFileManagerModal = memo<DriveFileManagerModalProps>(
         // Delegate to parent so it can call loadFullState/useAppStore
         await onImportLocalFile(data);
 
-        showSuccess(t.modals.messages.success.importSuccess);
+        showSuccess(t.messages.success.importSuccess);
         onClose();
       } catch (error) {
         console.error('Import error:', error);
-        showError(t.modals.messages.success.importError);
+        showError(t.messages.success.importError);
       }
 
       // Reset input
@@ -186,7 +186,7 @@ export const DriveFileManagerModal = memo<DriveFileManagerModalProps>(
                       onClick={handleImportClick}
                       disabled={isSaving}
                       className='p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-all active:scale-[0.95] flex items-center justify-center'
-                      title={t.modals.importLocalJson}
+                      title={t.importLocalJson}
                     >
                       <Upload className='w-5 h-5' />
                     </button>
@@ -215,7 +215,7 @@ export const DriveFileManagerModal = memo<DriveFileManagerModalProps>(
                 </div>
                 {files.length > 0 && (
                   <span className='text-[10px] font-bold px-2 py-0.5 bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400 rounded-full border border-stone-200 dark:border-stone-700'>
-                    {files.length} {t.modals.backups}
+                    {files.length} {t.backups}
                   </span>
                 )}
               </div>
@@ -230,7 +230,7 @@ export const DriveFileManagerModal = memo<DriveFileManagerModalProps>(
                   <div className='p-4 bg-stone-100 dark:bg-stone-800 rounded-full mb-4'>
                     <Info className='w-8 h-8 opacity-40' />
                   </div>
-                  <h5 className='text-stone-600 dark:text-stone-300 font-bold mb-1'>{t.modals.noBackups}</h5>
+                  <h5 className='text-stone-600 dark:text-stone-300 font-bold mb-1'>{t.noBackups}</h5>
                   <p className='text-xs max-w-xs leading-relaxed'>{t.noDriveFiles}</p>
                 </div>
               ) : (
@@ -260,7 +260,7 @@ export const DriveFileManagerModal = memo<DriveFileManagerModalProps>(
                               {formatDate(file.modifiedTime)}
                             </span>
                             <span className='w-1 h-1 rounded-full bg-stone-300 dark:bg-stone-600' />
-                            <span className='opacity-80'>{t.modals.backupFile}</span>
+                            <span className='opacity-80'>{t.backupFile}</span>
                           </div>
                         </div>
 

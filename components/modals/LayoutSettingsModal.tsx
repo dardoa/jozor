@@ -17,7 +17,7 @@ export const LayoutSettingsModal = memo(({ isOpen, onClose }: LayoutSettingsModa
 
     if (!treeSettings) return null;
 
-    const labels = t.modals.layoutSettings;
+    const labels = t.layoutSettings;
 
     return (
         <OverlayPrimitive

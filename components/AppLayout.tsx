@@ -150,7 +150,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
           rel='noopener noreferrer'
           className='hover:underline hover:text-[var(--primary-600)] transition-colors'
         >
-          {t.general.footer.privacyPolicy}
+          {t.footer.privacyPolicy}
         </a>
         <span aria-hidden='true'>•</span>
         <a
@@ -159,14 +159,14 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
           rel='noopener noreferrer'
           className='hover:underline hover:text-[var(--primary-600)] transition-colors'
         >
-          {t.general.footer.termsOfService}
+          {t.footer.termsOfService}
         </a>
         <span aria-hidden='true'>•</span>
         <Link
           to='/help'
           className='hover:underline hover:text-[var(--primary-600)] transition-colors'
         >
-          {t.general.footer.helpCenter}
+          {t.footer.helpCenter}
         </Link>
       </footer>
 

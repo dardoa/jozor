@@ -8,15 +8,15 @@ export const ToolsMenu = memo(({ onClose, onOpenModal }: ToolsMenuProps) => {
   const { t } = useTranslation();
 
   return (
-    <DropdownContent className='w-64' onClose={onClose} aria-label={t.header.toolsMenuAria}>
+    <DropdownContent className='w-64' onClose={onClose} aria-label={t.toolsMenuAria}>
 
       {/* Category 1: Content & Visualization */}
-      <DropdownMenuHeader label={t.header.categories.viewAndStory} />
+      <DropdownMenuHeader label={t.categories.viewAndStory} />
 
       <DropdownMenuItem
         onClick={() => onOpenModal('story')}
         icon={<BookOpen className='w-3.5 h-3.5' />}
-        label={t.header.familyStory}
+        label={t.familyStory}
         colorClass='mb-1 !bg-amber-500/5 hover:!bg-amber-500/10 !text-amber-600 dark:!text-amber-400'
         iconBgClass='bg-amber-500/10'
         iconTextColorClass='text-amber-600'
@@ -25,14 +25,14 @@ export const ToolsMenu = memo(({ onClose, onOpenModal }: ToolsMenuProps) => {
         id="geomap-tool-item"
         onClick={() => onOpenModal('map')}
         icon={<Map className='w-3.5 h-3.5' />}
-        label={t.header.viewOnMap}
+        label={t.viewOnMap}
         iconBgClass='!bg-green-500/10'
         iconTextColorClass='!text-green-600'
       />
       <DropdownMenuItem
         onClick={() => onOpenModal('timeline')}
         icon={<Calendar className='w-3.5 h-3.5' />}
-        label={t.header.familyTimelineHeader}
+        label={t.familyTimelineHeader}
         iconBgClass='!bg-blue-500/10'
         iconTextColorClass='!text-blue-500'
       />
@@ -40,7 +40,7 @@ export const ToolsMenu = memo(({ onClose, onOpenModal }: ToolsMenuProps) => {
       <DropdownMenuDivider />
 
       {/* Category 2: Analysis & Insights */}
-      <DropdownMenuHeader label={t.header.categories.analysisAndInsights} />
+      <DropdownMenuHeader label={t.categories.analysisAndInsights} />
 
       <DropdownMenuItem
         onClick={() => onOpenModal('stats')}
@@ -66,3 +66,4 @@ export const ToolsMenu = memo(({ onClose, onOpenModal }: ToolsMenuProps) => {
     </DropdownContent>
   );
 });
+

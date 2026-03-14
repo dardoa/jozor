@@ -61,7 +61,7 @@ export const SidebarFooter = memo<SidebarFooterProps>(
             type='button'
             onClick={() => {
               setIsEditing(false);
-              showSuccess(t.sidebar.changesSaved);
+              showSuccess(t.changesSaved);
             }}
             className='w-10 h-10 flex items-center justify-center bg-[var(--primary-600)] text-[var(--primary-text)] rounded-full shadow-md hover:bg-[var(--primary-700)] transition-colors active:scale-95'
             title={t.saveChanges}
@@ -85,3 +85,4 @@ export const SidebarFooter = memo<SidebarFooterProps>(
     );
   }
 );
+

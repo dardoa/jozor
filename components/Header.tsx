@@ -21,31 +21,31 @@ export const Header = memo<HeaderProps>(
     const { t, language } = useTranslation();
     const activeFile = auth.driveFiles.find((f) => f.id === auth.currentActiveDriveFileId) || null;
     const treeLabel = activeFile
-      ? `${t.header.treeLabelPrefix}${activeFile.name}`
-      : t.header.untitledTree;
+      ? `${t.treeLabelPrefix}${activeFile.name}`
+      : t.untitledTree;
 
     const role = viewSettings.currentUserRole;
-    const roleLabelPrefix = t.header.roleLabelPrefix;
+    const roleLabelPrefix = t.roleLabelPrefix;
     const roleName =
       role === 'owner'
-        ? t.header.roles.owner
+        ? t.roles.owner
         : role === 'editor'
-          ? t.header.roles.editor
+          ? t.roles.editor
           : role === 'viewer'
-            ? t.header.roles.viewer
-            : t.header.roles.unknown;
+            ? t.roles.viewer
+            : t.roles.unknown;
     const roleLabel = `${roleLabelPrefix}${roleName}`;
 
     const syncState = auth.syncStatus.state;
     const syncStatusLabel =
       syncState === 'saving'
-        ? t.header.syncStatus.saving
+        ? t.syncStatus.saving
         : syncState === 'error'
-          ? t.header.syncStatus.error
+          ? t.syncStatus.error
           : syncState === 'offline'
-            ? t.header.syncStatus.offline
-            : t.header.syncStatus.synced;
-    const syncLabel = `${t.header.syncStatusPrefix}${syncStatusLabel}`;
+            ? t.syncStatus.offline
+            : t.syncStatus.synced;
+    const syncLabel = `${t.syncStatusPrefix}${syncStatusLabel}`;
 
     const syncColorClass =
       syncState === 'saving'
@@ -88,7 +88,7 @@ export const Header = memo<HeaderProps>(
               <>
                 <span aria-hidden='true'>•</span>
                 <span className='px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 font-semibold'>
-                  {t.header.demoMode}
+                  {t.demoMode}
                 </span>
               </>
             )}
@@ -108,3 +108,4 @@ export const Header = memo<HeaderProps>(
     );
   }
 );
+

@@ -50,16 +50,16 @@ export class TreeErrorBoundary extends Component<Props, State> {
                                     </div>
 
                                     <h2 className="text-2xl font-bold mb-3 text-[var(--text-main)]">
-                                        {t.modals.messages.error.render.title}
+                                        {t.messages.error.render.title}
                                     </h2>
 
                                     <p className="mb-6 text-[var(--text-dim)] leading-relaxed max-w-md">
-                                        {t.modals.messages.error.render.description}
+                                        {t.messages.error.render.description}
                                     </p>
 
                                     <div className="w-full bg-black/5 dark:bg-black/40 p-4 rounded-xl mb-8 overflow-auto max-h-40 text-start border border-[var(--border-main)]">
                                         <code className="text-xs font-mono text-red-600 dark:text-red-400 break-words whitespace-pre-wrap">
-                                            {this.state.error?.message || (t.general.unknownError)}
+                                            {this.state.error?.message || (t.unknownError)}
                                         </code>
                                     </div>
 
@@ -68,13 +68,13 @@ export class TreeErrorBoundary extends Component<Props, State> {
                                             onClick={this.handleReset}
                                             className="flex-1 py-3 px-6 bg-[var(--primary-600)] hover:bg-[var(--primary-700)] text-white rounded-xl font-medium transition-colors shadow-lg shadow-[var(--primary-600)]/20"
                                         >
-                                            {t.modals.messages.error.render.retry}
+                                            {t.messages.error.render.retry}
                                         </button>
                                         <button
                                             onClick={() => window.location.reload()}
                                             className="flex-1 py-3 px-6 bg-[var(--card-bg)] hover:bg-[var(--theme-bg-elevated)] border border-[var(--border-main)] text-[var(--text-main)] rounded-xl font-medium transition-colors"
                                         >
-                                            {t.modals.messages.error.render.reload}
+                                            {t.messages.error.render.reload}
                                         </button>
                                     </div>
                                 </div>

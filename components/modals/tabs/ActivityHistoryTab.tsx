@@ -88,8 +88,8 @@ export const ActivityHistoryTab: React.FC<ActivityHistoryTabProps> = ({
     return (
         <div className="space-y-4">
             <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-[var(--text-main)]">{t.modals.activityTab.title}</h3>
-                <p className="text-xs text-[var(--text-dim)]">{logs.length} {t.modals.activityTab.count}</p>
+                <h3 className="text-lg font-semibold text-[var(--text-main)]">{t.activityTab.title}</h3>
+                <p className="text-xs text-[var(--text-dim)]">{logs.length} {t.activityTab.count}</p>
             </div>
 
             {isLoading && logs.length === 0 ? (
@@ -98,7 +98,7 @@ export const ActivityHistoryTab: React.FC<ActivityHistoryTabProps> = ({
                 </div>
             ) : logs.length === 0 ? (
                 <div className="text-center py-12 text-[var(--text-dim)] text-sm">
-                    {t.modals.activityTab.noActivity}
+                    {t.activityTab.noActivity}
                 </div>
             ) : (
                 <div className="space-y-2">
@@ -144,7 +144,7 @@ export const ActivityHistoryTab: React.FC<ActivityHistoryTabProps> = ({
                             ) : (
                                 <>
                                     <ChevronDown className="w-4 h-4" />
-                                    {t.modals.activityTab.loadMore}
+                                    {t.activityTab.loadMore}
                                 </>
                             )}
                         </button>
@@ -154,7 +154,7 @@ export const ActivityHistoryTab: React.FC<ActivityHistoryTabProps> = ({
 
             <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 mt-4">
                 <p className="text-xs text-blue-800 dark:text-blue-200">
-                    💡 <strong>{t.onboarding?.tip}:</strong> {t.modals.activityTab.tip}
+                    💡 <strong>{t.onboarding?.tip}:</strong> {t.activityTab.tip}
                 </p>
             </div>
         </div>

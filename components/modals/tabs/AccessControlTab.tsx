@@ -66,7 +66,7 @@ export const AccessControlTab: React.FC<AccessControlTabProps> = ({ treeId, owne
             setCollaborators(collabs);
         } catch (err) {
             console.error('Failed to load collaborators:', err);
-            showError(t.modals.messages.error.collaborators);
+            showError(t.messages.error.collaborators);
         } finally {
             setIsLoading(false);
         }
@@ -79,14 +79,14 @@ export const AccessControlTab: React.FC<AccessControlTabProps> = ({ treeId, owne
             setIsInviting(true);
             await inviteCollaborator(treeId, inviteEmail.trim(), inviteRole, ownerId, ownerEmail, supabaseToken);
             setInviteEmail('');
-            showSuccess(t.modals.messages.success.invite.replace('{email}', inviteEmail));
+            showSuccess(t.messages.success.invite.replace('{email}', inviteEmail));
             await activityService.logAction(treeId, 'SHARE_INVITE', {
                 email: inviteEmail.trim(),
                 role: inviteRole,
             });
         } catch (err: any) {
             console.error('Failed to invite collaborator:', err);
-            showError(t.modals.messages.error.invite);
+            showError(t.messages.error.invite);
         } finally {
             setIsInviting(false);
         }
@@ -95,36 +95,36 @@ export const AccessControlTab: React.FC<AccessControlTabProps> = ({ treeId, owne
     const handleChangeRole = async (email: string, newRole: 'editor' | 'viewer') => {
         try {
             await updateCollaboratorRole(treeId, email, newRole, ownerId, ownerEmail, supabaseToken);
-            showSuccess(t.modals.messages.success.role);
+            showSuccess(t.messages.success.role);
             await activityService.logAction(treeId, 'SHARE_ROLE_CHANGE', {
                 email,
                 newRole,
             });
         } catch (err) {
             console.error('Failed to update role:', err);
-            showError(t.modals.messages.error.role);
+            showError(t.messages.error.role);
         }
     };
 
     const handleRevoke = async (email: string) => {
-        if (!confirm(t.modals.treeManager.confirmRevoke.replace('{email}', email))) return;
+        if (!confirm(t.treeManager.confirmRevoke.replace('{email}', email))) return;
 
         try {
             await revokeCollaboratorAccess(treeId, email, ownerId, ownerEmail, supabaseToken);
-            showSuccess(t.modals.messages.success.revoke);
+            showSuccess(t.messages.success.revoke);
             await activityService.logAction(treeId, 'SHARE_REVOKE', {
                 email,
             });
         } catch (err) {
             console.error('Failed to revoke access:', err);
-            showError(t.modals.messages.error.revoke);
+            showError(t.messages.error.revoke);
         }
     };
 
     const copyLink = () => {
         navigator.clipboard.writeText(shareLink);
         setIsCopied(true);
-        showSuccess(t.modals.messages.success.copy);
+        showSuccess(t.messages.success.copy);
         setTimeout(() => setIsCopied(false), 2000);
     };
 
@@ -134,7 +134,7 @@ export const AccessControlTab: React.FC<AccessControlTabProps> = ({ treeId, owne
             <div className="bg-[var(--theme-surface)] rounded-xl p-4 border border-[var(--border-main)]">
                 <h4 className="text-sm font-semibold text-[var(--text-main)] mb-3 flex items-center gap-2">
                     <Globe className="w-4 h-4 text-blue-500" />
-                    {t.modals.treeManager.shareViaLink}
+                    {t.treeManager.shareViaLink}
                 </h4>
                 <div className="flex items-center gap-2 p-3 bg-[var(--theme-bg)] rounded-lg border border-dashed border-[var(--border-main)]">
                     <div className="flex-1 overflow-hidden">
@@ -145,11 +145,11 @@ export const AccessControlTab: React.FC<AccessControlTabProps> = ({ treeId, owne
                         className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--primary-600)]/10 text-[var(--primary-600)] hover:bg-[var(--primary-600)] hover:text-white rounded-lg text-xs font-bold transition-all"
                     >
                         {isCopied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                        {isCopied ? t.modals.copied : t.modals.copyLink}
+                        {isCopied ? t.copied : t.copyLink}
                     </button>
                 </div>
                 <p className="mt-2 text-[10px] text-[var(--text-dim)] px-1">
-                    {t.modals.treeManager.linkNote}
+                    {t.treeManager.linkNote}
                 </p>
             </div>
 
@@ -157,7 +157,7 @@ export const AccessControlTab: React.FC<AccessControlTabProps> = ({ treeId, owne
             <div className="bg-[var(--theme-surface)] rounded-xl p-4 border border-[var(--border-main)]">
                 <h4 className="text-sm font-semibold text-[var(--text-main)] mb-3 flex items-center gap-2">
                     <UserPlus className="w-4 h-4" />
-                    {t.modals.treeManager.inviteNewCollaborator}
+                    {t.treeManager.inviteNewCollaborator}
                 </h4>
                 <div className="flex gap-2">
                     <div className="flex-1 relative">
@@ -167,7 +167,7 @@ export const AccessControlTab: React.FC<AccessControlTabProps> = ({ treeId, owne
                             value={inviteEmail}
                             onChange={(e) => setInviteEmail(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleInvite()}
-                            placeholder={t.modals.treeManager.emailLabel}
+                            placeholder={t.treeManager.emailLabel}
                             className="w-full ps-10 pe-3 py-2 rounded-lg border border-[var(--border-main)] bg-[var(--theme-bg)] text-[var(--text-main)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary-600)]"
                         />
                     </div>
@@ -176,8 +176,8 @@ export const AccessControlTab: React.FC<AccessControlTabProps> = ({ treeId, owne
                         onChange={(e) => setInviteRole(e.target.value as 'editor' | 'viewer')}
                         className="px-3 py-2 rounded-lg border border-[var(--border-main)] bg-[var(--theme-bg)] text-[var(--text-main)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary-600)]"
                     >
-                        <option value="viewer">{t.modals.viewer}</option>
-                        <option value="editor">{t.modals.editor}</option>
+                        <option value="viewer">{t.viewer}</option>
+                        <option value="editor">{t.editor}</option>
                     </select>
                     <button
                         onClick={handleInvite}
@@ -185,7 +185,7 @@ export const AccessControlTab: React.FC<AccessControlTabProps> = ({ treeId, owne
                         className="px-4 py-2 bg-[var(--primary-600)] text-white rounded-lg text-sm font-medium hover:bg-[var(--primary-500)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
                     >
                         {isInviting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
-                        {t.modals.treeManager.inviteButton}
+                        {t.treeManager.inviteButton}
                     </button>
                 </div>
             </div>
@@ -193,7 +193,7 @@ export const AccessControlTab: React.FC<AccessControlTabProps> = ({ treeId, owne
             {/* Collaborators List */}
             <div>
                 <h4 className="text-sm font-semibold text-[var(--text-main)] mb-3">
-                    {t.modals.treeManager.collaboratorsCount.replace('{count}', collaborators.length.toString())}
+                    {t.treeManager.collaboratorsCount.replace('{count}', collaborators.length.toString())}
                 </h4>
 
                 {isLoading ? (
@@ -202,7 +202,7 @@ export const AccessControlTab: React.FC<AccessControlTabProps> = ({ treeId, owne
                     </div>
                 ) : collaborators.length === 0 ? (
                     <div className="text-center py-8 text-[var(--text-dim)] text-sm">
-                        {t.modals.treeManager.noCollaboratorsYet}
+                        {t.treeManager.noCollaboratorsYet}
                     </div>
                 ) : (
                     <div className="space-y-2">
@@ -218,7 +218,7 @@ export const AccessControlTab: React.FC<AccessControlTabProps> = ({ treeId, owne
                                     <div>
                                         <p className="text-sm font-bold text-[var(--text-main)]">{collab.email}</p>
                                         <p className="text-[10px] text-[var(--text-dim)]">
-                                            {t.modals.treeManager.invitedOn.replace('{date}', new Date(collab.invited_at).toLocaleDateString())}
+                                            {t.treeManager.invitedOn.replace('{date}', new Date(collab.invited_at).toLocaleDateString())}
                                         </p>
                                     </div>
                                 </div>
@@ -228,13 +228,13 @@ export const AccessControlTab: React.FC<AccessControlTabProps> = ({ treeId, owne
                                         onChange={(e) => handleChangeRole(collab.email, e.target.value as 'editor' | 'viewer')}
                                         className="px-3 py-1.5 rounded-lg border border-[var(--border-main)] bg-[var(--theme-bg)] text-[var(--text-main)] text-xs focus:outline-none focus:ring-2 focus:ring-[var(--primary-600)]"
                                     >
-                                        <option value="viewer">👁️ {t.modals.viewer}</option>
-                                        <option value="editor">✏️ {t.modals.editor}</option>
+                                        <option value="viewer">👁️ {t.viewer}</option>
+                                        <option value="editor">✏️ {t.editor}</option>
                                     </select>
                                     <button
                                         onClick={() => handleRevoke(collab.email)}
                                         className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                                        title={t.modals.delete}
+                                        title={t.delete}
                                     >
                                         <Trash2 className="w-4 h-4" />
                                     </button>
@@ -250,7 +250,7 @@ export const AccessControlTab: React.FC<AccessControlTabProps> = ({ treeId, owne
                 <div className="flex items-center gap-2 text-amber-800 dark:text-amber-200">
                     <Shield className="w-4 h-4" />
                     <p className="text-xs">
-                        <strong>{t.modals.owner}:</strong> {ownerEmail}
+                        <strong>{t.owner}:</strong> {ownerEmail}
                     </p>
                 </div>
             </div>

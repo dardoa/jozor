@@ -60,11 +60,11 @@ export const Sidebar = memo<SidebarProps>(
 
     const tabs = useMemo(() => {
       const allTabs = [
-        { id: 'info', label: t.sidebar.profile, show: true, priority: 1 },
-        { id: 'partners', label: t.sidebar.partners, show: !!(person.spouses && person.spouses.length > 0), priority: 3 },
-        { id: 'bio', label: t.sidebar.biography, show: true, priority: 2 },
-        { id: 'contact', label: t.sidebar.contact, show: true, priority: 4 },
-        { id: 'media', label: t.sidebar.galleryTab, show: true, priority: 5 },
+        { id: 'info', label: t.profile, show: true, priority: 1 },
+        { id: 'partners', label: t.partners, show: !!(person.spouses && person.spouses.length > 0), priority: 3 },
+        { id: 'bio', label: t.biography, show: true, priority: 2 },
+        { id: 'contact', label: t.contact, show: true, priority: 4 },
+        { id: 'media', label: t.galleryTab, show: true, priority: 5 },
       ] as { id: 'info' | 'partners' | 'bio' | 'contact' | 'media'; label: string; show: boolean; priority: number }[];
 
       // Note: On mobile < 640px, SidebarTabs already handles the overflow-x-auto scroll.
@@ -189,3 +189,4 @@ export const Sidebar = memo<SidebarProps>(
     );
   }
 );
+

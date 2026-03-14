@@ -35,7 +35,7 @@ export const UserMenu = memo(
       <DropdownContent className='w-64' onClose={onClose}>
         <div className='px-4 py-3 bg-[var(--theme-bg)]/50 rounded-t-2xl border-b border-[var(--border-main)]'>
           <p className='text-xs font-bold text-[var(--text-main)] truncate'>
-            {t.header.userMenu.welcome} {user.displayName.split(' ')[0]}
+            {t.userMenu.welcome} {user.displayName.split(' ')[0]}
           </p>
           <p className='text-[10px] text-[var(--text-muted)] truncate'>{user.email}</p>
         </div>
@@ -60,7 +60,7 @@ export const UserMenu = memo(
               onClose?.();
             }}
             icon={<CloudUpload className='w-4 h-4' />}
-            label={t.header.userMenu.backupNow}
+            label={t.userMenu.backupNow}
           />
         )}
 
@@ -79,7 +79,7 @@ export const UserMenu = memo(
         <DropdownMenuItem
           onClick={() => setActivityLogOpen(true)}
           icon={<Clock className='w-4 h-4' />}
-          label={t.header.userMenu.activityLog}
+          label={t.userMenu.activityLog}
         />
 
         <DropdownMenuDivider />
@@ -94,3 +94,4 @@ export const UserMenu = memo(
     );
   }
 );
+

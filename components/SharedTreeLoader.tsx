@@ -93,23 +93,23 @@ export const SharedTreeLoader: React.FC<SharedTreeLoaderProps> = ({
             <LogIn className='w-8 h-8' />
           </div>
           <h2 className='text-2xl font-bold mb-2 text-stone-800 dark:text-gray-100'>
-            {t.modals.sharedLoader.loginRequired}
+            {t.sharedLoader.loginRequired}
           </h2>
           <p className='text-stone-600 dark:text-stone-400 mb-8'>
-            {t.modals.sharedLoader.loginPrompt}
+            {t.sharedLoader.loginPrompt}
           </p>
           <button
             onClick={() => auth.onOpenLoginModal()}
             className='w-full py-3 px-6 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-colors flex items-center justify-center gap-2'
           >
             <LogIn className='w-5 h-5' />
-            {t.modals.sharedLoader.loginWithGoogle}
+            {t.sharedLoader.loginWithGoogle}
           </button>
           <button
             onClick={onCancel}
             className='mt-4 text-sm text-stone-500 hover:text-stone-800 dark:hover:text-stone-200 underline'
           >
-            {t.modals.sharedLoader.goToHome}
+            {t.sharedLoader.goToHome}
           </button>
         </div>
       </div>
@@ -124,17 +124,17 @@ export const SharedTreeLoader: React.FC<SharedTreeLoaderProps> = ({
             <AlertCircle className='w-8 h-8' />
           </div>
           <h2 className='text-2xl font-bold mb-2 text-stone-800 dark:text-gray-100'>
-            {t.modals.sharedLoader.accessDenied}
+            {t.sharedLoader.accessDenied}
           </h2>
           <p className='text-red-600 dark:text-red-400 mb-6 font-medium'>{errorMsg}</p>
           <p className='text-stone-500 text-sm mb-8'>
-            {t.modals.sharedLoader.invitationCheck.replace('{email}', auth.user?.email || EMPTY_STRING)}
+            {t.sharedLoader.invitationCheck.replace('{email}', auth.user?.email || EMPTY_STRING)}
           </p>
           <button
             onClick={onCancel}
             className='px-6 py-2 bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 rounded-lg font-bold transition-colors'
           >
-            {t.modals.sharedLoader.backToHome}
+            {t.sharedLoader.backToHome}
           </button>
         </div>
       </div>
@@ -146,7 +146,7 @@ export const SharedTreeLoader: React.FC<SharedTreeLoaderProps> = ({
     <div className='flex flex-col items-center justify-center h-screen bg-stone-50 dark:bg-stone-950'>
       <div className='flex flex-col items-center gap-4 animate-pulse'>
         <Loader2 className='w-12 h-12 text-blue-600 animate-spin' />
-        <p className='text-stone-500 font-medium'>{t.modals.sharedLoader.loading}</p>
+        <p className='text-stone-500 font-medium'>{t.sharedLoader.loading}</p>
       </div>
     </div>
   );

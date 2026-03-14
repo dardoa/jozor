@@ -50,10 +50,10 @@ export const AdminHubModal = memo<AdminHubModalProps>(({
     }, [isOpen, treeId]);
 
     const tabs = [
-        { id: 'access' as TabType, label: t.modals.adminHub.tabs.access, icon: Users },
-        { id: 'activity' as TabType, label: t.modals.adminHub.tabs.activity, icon: History },
-        { id: 'versions' as TabType, label: t.modals.adminHub.tabs.versions, icon: Clock },
-        { id: 'settings' as TabType, label: t.modals.adminHub.tabs.settings, icon: Settings },
+        { id: 'access' as TabType, label: t.adminHub.tabs.access, icon: Users },
+        { id: 'activity' as TabType, label: t.adminHub.tabs.activity, icon: History },
+        { id: 'versions' as TabType, label: t.adminHub.tabs.versions, icon: Clock },
+        { id: 'settings' as TabType, label: t.adminHub.tabs.settings, icon: Settings },
     ];
 
     return (
@@ -72,10 +72,10 @@ export const AdminHubModal = memo<AdminHubModalProps>(({
                         </div>
                         <div>
                             <h2 className="text-xl font-bold text-[var(--text-main)]">
-                                {t.modals.adminHub.title}
+                                {t.adminHub.title}
                             </h2>
                             <p className="text-xs text-[var(--text-dim)]">
-                                {treeName || t.modals.adminHub.subtitle} • {currentUserRole.toUpperCase()}
+                                {treeName || t.adminHub.subtitle} • {currentUserRole.toUpperCase()}
                             </p>
                         </div>
                     </div>
@@ -154,7 +154,7 @@ export const AdminHubModal = memo<AdminHubModalProps>(({
                 {/* Footer */}
                 <div className="p-4 border-t border-[var(--border-main)] bg-[var(--theme-surface)]/30 flex justify-end">
                     <p className="text-[10px] text-[var(--text-dim)] italic">
-                        {t.modals.adminHub.footerNote}
+                        {t.adminHub.footerNote}
                     </p>
                 </div>
             </div>
