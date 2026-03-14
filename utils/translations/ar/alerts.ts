@@ -1,5 +1,6 @@
 export const alerts = {
   personDeleteConfirm: 'هل أنت متأكد أنك تريد حذف هذا الشخص وجميع علاقاته؟',
+  personDeletedSuccess: 'تم حذف الشخص بنجاح!',
   googleDriveSyncSuccess: 'تمت المزامنة مع جوجل درايف بنجاح!',
   googleDriveSyncError: 'فشل في المزامنة مع جوجل درايف.',
   googleDriveFileSelect: 'اختر ملف جوزور من جوجل درايف',

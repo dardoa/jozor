@@ -6,7 +6,6 @@ import { BioTab } from './sidebar/BioTab';
 import { MediaTab } from './sidebar/MediaTab';
 import { SidebarFooter } from './sidebar/SidebarFooter';
 import { SidebarTabs } from './sidebar/SidebarTabs';
-import { ConfirmationModal } from './ConfirmationModal';
 import { Person, FamilyActionsProps, ModalStateAndActions, TreeSettings, UserProfile } from '../types';
 import { useTranslation } from '../context/TranslationContext';
 
@@ -49,7 +48,6 @@ export const Sidebar = memo<SidebarProps>(
     const [activeTab, setActiveTab] = useState<'info' | 'partners' | 'bio' | 'contact' | 'media'>(
       'info'
     );
-    const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
 
     // Reset tab if partners tab becomes invalid
@@ -75,12 +73,6 @@ export const Sidebar = memo<SidebarProps>(
     }, [person.spouses, t]);
 
     // Removal of early return to allow transitions to play
-    const handleDeleteClick = () => setDeleteModalOpen(true);
-    const handleConfirmDelete = () => {
-      onDelete(person.id);
-      setDeleteModalOpen(false);
-      onClose();
-    };
 
     // --- Swipe-to-Close Logic ---
     const [dragY, setDragY] = useState(0);
@@ -197,13 +189,6 @@ export const Sidebar = memo<SidebarProps>(
             />
         </div>
 
-        <ConfirmationModal
-          isOpen={deleteModalOpen}
-          onClose={() => setDeleteModalOpen(false)}
-          onConfirm={handleConfirmDelete}
-          title={t.deletePerson || 'Delete Person'}
-          message={`${t.personDeleteConfirm || 'Are you sure you want to delete this person?'} (${person.firstName} ${person.lastName})`}
-        />
         </aside>
       </>
     );

@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { Routes, Route, Navigate, useMatch, useNavigate, useParams } from 'react-router-dom';
 
 import { Person } from '../types';
 import { SharedTreeLoader } from './SharedTreeLoader';
@@ -7,19 +8,15 @@ import { AppLayout } from './AppLayout';
 import { TreeSelector } from './TreeSelector';
 import { useAppStore, loadFullState } from '../store/useAppStore';
 import { ModalManagerContainer } from './ModalManagerContainer';
-import { HelpCenter } from './HelpCenter';
 import { useAppOrchestration } from '../hooks/useAppOrchestration';
 
-interface AppUIManagerProps {
-  sharedTreeParams: { ownerUid: string; fileId: string } | null;
-  setSharedTreeParams: (value: { ownerUid: string; fileId: string } | null) => void;
-}
+const HelpCenter = React.lazy(() => import('./HelpCenter').then(m => ({ default: m.HelpCenter })));
 
-export const AppUIManager: React.FC<AppUIManagerProps> = ({
-  sharedTreeParams,
-  setSharedTreeParams,
-}) => {
-  const orchestrationObj = useAppOrchestration(!!sharedTreeParams);
+export const AppUIManager: React.FC = () => {
+  const sharedMatch = useMatch('/tree/:ownerUid/:fileId');
+  const isSharedMode = !!sharedMatch;
+  const orchestrationObj = useAppOrchestration(isSharedMode);
+  const navigate = useNavigate();
   const {
     appState,
     welcomeScreen,
@@ -46,23 +43,29 @@ export const AppUIManager: React.FC<AppUIManagerProps> = ({
   const setCurrentTreeId = useAppStore((state) => state.setCurrentTreeId);
   const setCurrentUserRole = useAppStore((state) => state.setCurrentUserRole);
 
-  // Expose Debug Helpers
+  // Expose Debug Helpers ONLY in development
   React.useEffect(() => {
-    (window as any).jozorDebug = {
-      clearSyncQueue: async () => {
-        const { deltaSyncService } = await import('../services/deltaSyncService');
-        await deltaSyncService.clearOutgoingQueue();
-      },
-      forceSync: async () => {
-        const { deltaSyncService } = await import('../services/deltaSyncService');
-        await deltaSyncService.flushOutgoingBatch();
-      },
-      getQueueSize: async () => {
-        // This is a bit hacky as queue is private, but good for debug
-        console.log('Check console logs for queue status');
-      }
-    };
-    console.log('🔧 Jozor Debug Tools available via window.jozorDebug');
+    if (import.meta.env.DEV) {
+      (window as any).jozorDebug = {
+        clearSyncQueue: async () => {
+          const { deltaSyncService } = await import('../services/deltaSyncService');
+          await deltaSyncService.clearOutgoingQueue();
+        },
+        forceSync: async () => {
+          const { deltaSyncService } = await import('../services/deltaSyncService');
+          await deltaSyncService.flushOutgoingBatch();
+        },
+        getQueueSize: async () => {
+          // This is a bit hacky as queue is private, but good for debug
+          console.log('Check console logs for queue status');
+        }
+      };
+      console.log('🔧 Jozor Debug Tools available via window.jozorDebug');
+      
+      return () => {
+        delete (window as any).jozorDebug;
+      };
+    }
   }, []);
 
   const { fileInputRef, onFileUpload, showWelcome, handleStartNewTree } = welcomeScreen;
@@ -91,7 +94,7 @@ export const AppUIManager: React.FC<AppUIManagerProps> = ({
         people: data,
         settings: {},
       });
-      setSharedTreeParams(null);
+      navigate('/', { replace: true });
       welcomeScreen.setShowWelcome(false);
     } else {
       // Legacy Drive-centric sharing
@@ -100,34 +103,14 @@ export const AppUIManager: React.FC<AppUIManagerProps> = ({
           console.error('Failed to handle shared tree load via Google Sync', e);
         })
         .finally(() => {
-          setSharedTreeParams(null);
+          navigate('/', { replace: true });
           welcomeScreen.setShowWelcome(false);
         });
     }
   };
 
 
-  const renderContent = () => {
-    const path = window.location.pathname;
-    if (path === '/help' || path === '/support') {
-      return <HelpCenter />;
-    }
-
-    if (sharedTreeParams) {
-      return (
-        <SharedTreeLoader
-          ownerUid={sharedTreeParams.ownerUid}
-          fileId={sharedTreeParams.fileId}
-          auth={auth}
-          onLoadComplete={handleSharedTreeLoaded}
-          onCancel={() => {
-            setSharedTreeParams(null);
-            window.history.pushState({}, '', '/');
-          }}
-        />
-      );
-    }
-
+  const renderMainLayout = () => {
     if (showWelcome) {
       return (
         <WelcomeScreen
@@ -190,7 +173,26 @@ export const AppUIManager: React.FC<AppUIManagerProps> = ({
         aria-label='Import Family Tree File'
       />
 
-      {renderContent()}
+      <React.Suspense fallback={<div className="flex h-screen items-center justify-center bg-[var(--theme-bg)] text-[var(--text-main)] animate-pulse">Loading...</div>}>
+        <Routes>
+          <Route path="/help" element={<HelpCenter />} />
+          <Route path="/support" element={<Navigate to="/help" replace />} />
+          
+          <Route 
+            path="/tree/:ownerUid/:fileId" 
+            element={
+              <SharedTreeRouteWrapper 
+                auth={auth} 
+                onLoadComplete={handleSharedTreeLoaded} 
+                onCancel={() => navigate('/', { replace: true })} 
+              />
+            } 
+          />
+
+          <Route path="/" element={renderMainLayout()} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </React.Suspense>
 
       <ModalManagerContainer
         appState={appState}
@@ -202,5 +204,20 @@ export const AppUIManager: React.FC<AppUIManagerProps> = ({
         auth={auth}
       />
     </>
+  );
+};
+
+const SharedTreeRouteWrapper: React.FC<{ auth: any, onLoadComplete: any, onCancel: any }> = ({ auth, onLoadComplete, onCancel }) => {
+  const { ownerUid, fileId } = useParams<{ ownerUid: string; fileId: string }>();
+  if (!ownerUid || !fileId) return <Navigate to="/" replace />;
+  
+  return (
+    <SharedTreeLoader
+      ownerUid={ownerUid}
+      fileId={fileId}
+      auth={auth}
+      onLoadComplete={onLoadComplete}
+      onCancel={onCancel}
+    />
   );
 };

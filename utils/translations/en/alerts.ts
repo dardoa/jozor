@@ -1,5 +1,6 @@
 export const alerts = {
   personDeleteConfirm: 'Are you sure you want to delete this person and all their relationships?',
+  personDeletedSuccess: 'Person deleted successfully!',
   googleDriveSyncSuccess: 'Successfully synced with Google Drive!',
   googleDriveSyncError: 'Failed to sync with Google Drive.',
   googleDriveFileSelect: 'Select a Jozor file from Google Drive',

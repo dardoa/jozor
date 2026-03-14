@@ -25,6 +25,10 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = memo(
         onClick={onClose}
       >
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="confirm-title"
+          aria-describedby="confirm-desc"
           className='
                     bg-white/90 dark:bg-stone-900/90 backdrop-blur-xl 
                     rounded-2xl shadow-2xl ring-1 ring-stone-900/5 dark:ring-white/10
@@ -48,6 +52,7 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = memo(
             </div>
             <button
               onClick={onClose}
+              aria-label={t.close || 'Close'}
               className='p-2 -mr-2 -mt-2 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-full transition-colors text-stone-400 hover:text-stone-600 dark:hover:text-stone-200'
             >
               <X className='w-5 h-5' />
@@ -56,8 +61,8 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = memo(
 
           {/* Content */}
           <div className='px-6 pb-6 pt-2'>
-            <h3 className='text-xl font-bold text-stone-900 dark:text-white mb-2'>{title}</h3>
-            <p className='text-stone-600 dark:text-stone-300 text-base leading-relaxed'>
+            <h3 id="confirm-title" className='text-xl font-bold text-stone-900 dark:text-white mb-2'>{title}</h3>
+            <p id="confirm-desc" className='text-stone-600 dark:text-stone-300 text-base leading-relaxed'>
               {message}
             </p>
           </div>

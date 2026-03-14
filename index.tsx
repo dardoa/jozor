@@ -10,13 +10,17 @@ if (!rootElement) {
   throw new Error('Could not find root element to mount to');
 }
 
+import { BrowserRouter } from 'react-router-dom';
+
 const RootComponent: React.FC = () => {
   return (
     <React.StrictMode>
-      <TranslationProvider>
-        <ToastProvider />
-        <App />
-      </TranslationProvider>
+      <BrowserRouter>
+        <TranslationProvider>
+          <ToastProvider />
+          <App />
+        </TranslationProvider>
+      </BrowserRouter>
     </React.StrictMode>
   );
 };

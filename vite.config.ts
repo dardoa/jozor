@@ -35,6 +35,14 @@ export default defineConfig(({ mode }) => {
                 return;
               }
 
+              // SECURITY FIX: Explicit opt-in required to run local proxy middleware with Service Role
+              if (env.ENABLE_LOCAL_API_PROXY !== 'true') {
+                 res.statusCode = 403;
+                 res.setHeader('Content-Type', 'application/json');
+                 res.end(JSON.stringify({ error: 'Local API proxy is disabled. Set ENABLE_LOCAL_API_PROXY=true in .env to use.' }));
+                 return;
+              }
+
               // Body Parser for POST
               let body: any = {};
               if (req.method === 'POST') {

@@ -32,7 +32,14 @@ export const createSettingsSlice: StateCreator<SettingsSlice> = (set) => ({
         treeSettings: typeof settings === 'function' ? settings(state.treeSettings) : settings
     })),
     setDarkMode: (dark) => set({ darkMode: dark }),
-    setLanguage: (lang) => set({ language: lang }),
+    setLanguage: (lang) => set((state) => {
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('language', lang);
+            document.documentElement.lang = lang;
+            document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+        }
+        return { language: lang };
+    }),
     importSettings: (settings) => set((state) => ({ ...state, ...settings })),
     setExportStatus: (status) => set({ exportStatus: status }),
     setActivityLogOpen: (open) => set({ isActivityLogOpen: open }),

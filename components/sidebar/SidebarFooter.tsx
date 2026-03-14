@@ -19,10 +19,7 @@ export const SidebarFooter = memo<SidebarFooterProps>(
     const { t } = useTranslation();
 
     const handleDelete = () => {
-      if (window.confirm(t.personDeleteConfirm)) {
-        onDelete(person.id);
-        showSuccess('Person deleted successfully!'); // Toast success
-      }
+      onDelete(person.id);
     };
 
     const handleCleanTree = () => {

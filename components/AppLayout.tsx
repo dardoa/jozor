@@ -10,7 +10,11 @@ import ActivityLogDrawer from './ActivityLogDrawer';
 import { OnboardingTour } from './OnboardingTour';
 import { SettingsDrawer } from './ui/SettingsDrawer';
 import { MobileActionBar } from './ui/MobileActionBar';
+import { ConfirmationModal } from './ConfirmationModal';
 import { useAppStore } from '../store/useAppStore';
+import { useTranslation } from '../context/TranslationContext';
+import { showSuccess } from '../utils/toast';
+import { Link } from 'react-router-dom';
 import {
   AppStateAndActions,
   ModalStateAndActions,
@@ -78,6 +82,20 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   const isSettingsDrawerOpen = useAppStore((state) => state.isSettingsDrawerOpen);
   const setSettingsDrawerOpen = useAppStore((state) => state.setSettingsDrawerOpen);
 
+  const { t } = useTranslation();
+  const [deleteModalOpen, setDeleteModalOpen] = React.useState(false);
+
+  const handleDeleteConfirm = () => {
+    if (activePerson) {
+      appState.deletePerson(activePerson.id);
+      showSuccess(t.personDeletedSuccess || 'Person deleted successfully!');
+    }
+    setDeleteModalOpen(false);
+    setSidebarOpen(false);
+  };
+
+  const triggerDelete = () => setDeleteModalOpen(true);
+
   return (
     <>
       {!isPresentMode && (
@@ -98,7 +116,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
           onClick={() => setIsPresentMode(false)}
           className='fixed top-4 right-4 z-[100] bg-black/50 text-white px-4 py-2 rounded-full backdrop-blur hover:bg-black/70 flex items-center gap-2'
         >
-          <X className='w-4 h-4' /> Exit Present Mode
+          <X className='w-4 h-4' /> {t.exitPresentMode || 'Exit Present Mode'}
         </button>
       )}
 
@@ -174,17 +192,12 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
           Terms of Service
         </a>
         <span aria-hidden='true'>•</span>
-        <a
-          href='/help'
-          onClick={(e) => {
-            e.preventDefault();
-            window.history.pushState({}, '', '/help');
-            window.dispatchEvent(new PopStateEvent('popstate'));
-          }}
+        <Link
+          to='/help'
           className='hover:underline hover:text-[var(--primary-600)] transition-colors'
         >
           {themeLanguage.language === 'ar' ? 'مركز المساعدة' : 'Help Center'}
-        </a>
+        </Link>
       </footer>
 
       <ActivityLogDrawer
@@ -202,7 +215,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
          person={activePerson}
          people={people}
          onUpdate={appState.updatePerson}
-         onDelete={appState.deletePerson}
+         onDelete={triggerDelete}
          onSelect={setFocusId}
          isOpen={sidebarOpen}
          onClose={() => setSidebarOpen(false)}
@@ -241,12 +254,18 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
             setSettingsDrawerOpen(true);
           }}
           onDelete={() => {
-            if (activePerson) {
-              // Trigger delete confirmation via custom event or finding the UI element
-              const deleteBtn = document.querySelector('[aria-label="Delete Person"]');
-              if (deleteBtn instanceof HTMLElement) deleteBtn.click();
-            }
+            if (activePerson) triggerDelete();
           }}
+        />
+      )}
+
+      {activePerson && (
+        <ConfirmationModal
+          isOpen={deleteModalOpen}
+          onClose={() => setDeleteModalOpen(false)}
+          onConfirm={handleDeleteConfirm}
+          title={t.deletePerson || 'Delete Person'}
+          message={`${t.personDeleteConfirm || 'Are you sure you want to delete this person?'} (${activePerson.firstName} ${activePerson.lastName})`}
         />
       )}
     </>

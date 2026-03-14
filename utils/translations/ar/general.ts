@@ -25,4 +25,5 @@ export const general = {
   close: 'إغلاق',
   vertical: 'رأسي', // Vertical
   horizontal: 'أفقي', // Horizontal
+  exitPresentMode: 'الخروج من العرض',
 };

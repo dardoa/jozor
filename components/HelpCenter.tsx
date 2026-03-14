@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from '../context/TranslationContext';
 import { Button } from './ui/Button';
+import { useNavigate } from 'react-router-dom';
 
 interface FAQItemProps {
     question: string;
@@ -64,6 +65,7 @@ const FAQSection: React.FC<FAQSectionProps> = ({ title, icon, items }) => (
 export const HelpCenter: React.FC = () => {
     const { language } = useTranslation();
     const isRTL = language === 'ar';
+    const navigate = useNavigate();
 
     const sections = [
         {
@@ -143,7 +145,7 @@ export const HelpCenter: React.FC = () => {
                         <Button
                             variant='ghost'
                             size='sm'
-                            onClick={() => window.location.href = '/'}
+                            onClick={() => navigate('/')}
                             leftIcon={<ArrowLeft className={`w-4 h-4 ${isRTL ? 'rotate-180' : ''}`} />}
                         >
                             {isRTL ? 'العودة للشجرة' : 'Back to Tree'}
@@ -158,7 +160,7 @@ export const HelpCenter: React.FC = () => {
                         size='sm'
                         onClick={() => {
                             localStorage.removeItem('jozor_onboarding_completed');
-                            window.location.href = '/';
+                            navigate('/');
                         }}
                         leftIcon={<PlayCircle className='w-4 h-4' />}
                     >

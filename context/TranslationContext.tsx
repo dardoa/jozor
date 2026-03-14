@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useCallback } from 'react';
 import { Language } from '../types';
 import { getTranslation } from '../utils/translations';
-import { useLanguageSync } from '../hooks/useLanguageSync';
+import { useAppStore } from '../store/useAppStore';
 
 interface TranslationContextType {
   t: any; // The translation object
@@ -12,14 +12,15 @@ interface TranslationContextType {
 const TranslationContext = createContext<TranslationContextType | undefined>(undefined);
 
 export const TranslationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { language, setLanguage } = useLanguageSync();
+  const language = useAppStore(state => state.language);
+  const setStoreLanguage = useAppStore(state => state.setLanguage);
   const t = getTranslation(language);
 
   const memoizedSetLanguage = useCallback(
     (lang: Language) => {
-      setLanguage(lang);
+      setStoreLanguage(lang);
     },
-    [setLanguage]
+    [setStoreLanguage]
   );
 
   return (

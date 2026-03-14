@@ -25,4 +25,5 @@ export const general = {
   close: 'Close',
   vertical: 'Vertical',
   horizontal: 'Horizontal',
+  exitPresentMode: 'Exit Present Mode',
 };

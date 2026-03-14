@@ -9,15 +9,7 @@ import { googleAuthService } from '../services/googleService';
 import { AppUIManager } from './AppUIManager';
 import { UserProfile } from '../types';
 
-interface AppStateManagerProps {
-  sharedTreeParams: { ownerUid: string; fileId: string } | null;
-  setSharedTreeParams: (value: { ownerUid: string; fileId: string } | null) => void;
-}
-
-export const AppStateManager: React.FC<AppStateManagerProps> = ({
-  sharedTreeParams,
-  setSharedTreeParams,
-}) => {
+export const AppStateManager: React.FC = () => {
   // Background Data Integrity Service
   useConsistency();
 
@@ -73,9 +65,6 @@ export const AppStateManager: React.FC<AppStateManagerProps> = ({
   }, []);
 
   return (
-    <AppUIManager
-      sharedTreeParams={sharedTreeParams}
-      setSharedTreeParams={setSharedTreeParams}
-    />
+    <AppUIManager />
   );
 };
