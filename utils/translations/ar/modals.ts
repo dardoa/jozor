@@ -180,6 +180,7 @@ export const modals = {
     loading: 'جاري تحميل الشجرة المشتركة...',
   },
   treeManager: {
+    myTrees: 'أشجاري',
     manageAccess: 'إدارة الصلاحيات',
     accessDesc: 'التحكم في صلاحيات الوصول لهذه الشجرة',
     invitePlaceholder: 'أدخل البريد الإلكتروني للمتعاون...',
@@ -195,10 +196,10 @@ export const modals = {
     collaboratorsCount: 'المساهمون ({count})',
     noCollaboratorsYet: 'لا يوجد مساهمون حالياً.',
     invitedOn: 'منذ {date}',
-    createManualSnapshot: 'إنشاء نسخة احتياطية يدوية',
-    snapshotLabelPlaceholder: 'مثال: قبل التغييرات الكبيرة...',
+    createManualSnapshot: 'إنشاء نسخة يدوية',
+    snapshotLabelPlaceholder: 'اسم النسخة...',
     previousVersions: 'النسخ السابقة',
-    noSnapshotsYet: 'لا توجد نسخ محفوظة بعد.',
+    noSnapshotsYet: 'لا توجد نسخ بعد.',
     aboutSnapshotsTitle: 'حول النسخ الاحتياطية:',
     aboutSnapshotsBody: 'يتم حفظ النسخ في مجلد تطبيق مخفي على Google Drive. النسخ المثبتة (Pinned) لا يتم حذفها تلقائياً عند تنظيف السجل.',
     confirmRevoke: 'هل أنت متأكد من إزالة {email}؟',
@@ -234,6 +235,11 @@ export const modals = {
   },
   messages: {
     success: {
+      importSuccess: 'تم الاستيراد بنجاح',
+      importError: 'فشل الاستيراد',
+      snapshot: 'تم حفظ نسخة',
+      restore: 'تم استعادة النسخة',
+      deleteSuccess: 'تم الحذف بنجاح',
       rename: 'تم تحديث الاسم بنجاح',
       load: 'تم تحميل الشجرة بنجاح',
       delete: 'تم حذف الشجرة بنجاح',

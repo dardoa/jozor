@@ -49,7 +49,7 @@ export const UserMenu = memo(
             onClose?.();
           }}
           icon={<Settings className='w-4 h-4' />}
-          label={t.settings}
+          label={t.settingsLabel}
         />
 
         {/* Manage Drive Files & Trees */}

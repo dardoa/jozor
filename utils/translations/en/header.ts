@@ -1,7 +1,7 @@
 export const header = {
   undo: 'Undo',
   redo: 'Redo',
-  settings: 'Settings',
+  settingsLabel: 'Settings',
   darkMode: 'Dark Mode',
   language: 'Language',
   signIn: 'Sign In',
@@ -19,7 +19,7 @@ export const header = {
   consistency: 'Consistency',
   familyTimelineHeader: 'Timeline',
   share: 'Share',
-  story: 'Story',
+  storyLabel: 'Story',
   map: 'Map',
   export: 'Export',
   exportJozor: 'Export Jozor',

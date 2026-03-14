@@ -16,6 +16,7 @@ export const general = {
   common: {
     back: 'Back',
     close: 'Close',
+    cancel: 'Cancel',
   },
   onboarding: {
     tree: 'This is your interactive Family Tree. Click and drag to explore, or zoom in for specific details.',
@@ -47,6 +48,43 @@ export const general = {
   languageName: 'Arabic',
   vertical: 'Vertical',
   horizontal: 'Horizontal',
+  loading: 'Loading...',
+  date: 'Date',
+  born: 'Born',
+  died: 'Died',
+  addSpouse: 'Add Spouse',
+  setAsRoot: 'Set as Root Person',
+  calculateRelationship: 'Calculate Relationship',
+  role: 'Role',
+  interestsPlaceholder: 'Type interests...',
+  upcomingBirthdays: 'Upcoming Birthdays',
+  noUpcomingBirthdays: 'No upcoming birthdays',
+  marriage: 'Marriage',
+  familyTimeline: 'Family Timeline',
+  familyTree: 'Family Tree',
+  x: 'X Coordinate',
+  y: 'Y Coordinate',
+  dates: 'Dates',
+  photos: 'Photos',
+  gender: 'Gender',
+  minimap: 'Minimap',
+  relationshipType: 'Relationship Type',
+  uploadPhoto: 'Upload Photo',
+  private: 'Private',
+  personFields: 'Person Fields',
+  importLocalJson: 'Import Local JSON',
+  messages: {
+    success: {
+      importSuccess: 'Import successful',
+      importError: 'Import failed',
+      snapshot: 'Snapshot created',
+      restore: 'Snapshot restored',
+      deleteSuccess: 'Deleted successfully'
+    }
+  },
+  treeManager: {
+    myTrees: 'My Trees'
+  },
   dropdownAlign: {
     start: 'start',
     end: 'end',
@@ -111,6 +149,10 @@ export const general = {
     lightMode: 'Light Mode',
     languageName: 'English (US)',
     lowGraphics: 'Low Graphics Mode',
+    importDrive: 'Import from Drive',
+    drive: 'Google Drive',
+    aiAnalyze: 'AI Analysis',
+    recording: 'Recording',
     dateFormats: {
       iso: 'ISO',
       eu: 'EU',
@@ -192,10 +234,13 @@ export const general = {
       deleteSuccess: 'Account deleted successfully',
       deleteError: 'Failed to delete account',
     },
+    restartTourModal: {
+      title: 'Restart Tour',
+      yes: 'Yes, Start',
+    },
   },
-  restartTourModal: {
-    title: 'Restart Tour',
-    yes: 'Yes, Start',
+  versions: {
+    snapshotLabelPlaceholder: 'Snapshot name...',
   },
   notFound: {
     title: 'Oops, Page Not Found!',

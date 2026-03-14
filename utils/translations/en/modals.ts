@@ -182,6 +182,7 @@ export const modals = {
     loading: 'Loading shared tree...',
   },
   treeManager: {
+    myTrees: 'My Trees',
     manageAccess: 'Manage Access',
     accessDesc: 'Control permissions for this tree',
     invitePlaceholder: 'Enter collaborator email...',
@@ -198,7 +199,7 @@ export const modals = {
     noCollaboratorsYet: 'No collaborators yet.',
     invitedOn: 'Invited {date}',
     createManualSnapshot: 'Create Manual Snapshot',
-    snapshotLabelPlaceholder: 'e.g., Before massive changes...',
+    snapshotLabelPlaceholder: 'Snapshot name...',
     previousVersions: 'Previous Versions',
     noSnapshotsYet: 'No snapshots found yet.',
     aboutSnapshotsTitle: 'About Snapshots:',
@@ -209,6 +210,8 @@ export const modals = {
   },
   statistics: {
     title: 'Analytics Dashboard',
+    male: 'Male',
+    female: 'Female',
     birthdays: 'Birthdays',
     health: 'Health',
     noUpcomingBirthdays: 'No upcoming birthdays found',
@@ -234,6 +237,11 @@ export const modals = {
   },
   messages: {
     success: {
+      importSuccess: 'Import successful',
+      importError: 'Import failed',
+      snapshot: 'Snapshot created',
+      restore: 'Snapshot restored',
+      deleteSuccess: 'Deleted successfully',
       rename: 'Name updated successfully',
       load: 'Tree loaded successfully',
       delete: 'Tree deleted successfully',

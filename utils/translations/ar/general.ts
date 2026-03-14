@@ -16,6 +16,7 @@ export const general = {
   common: {
     back: 'رجوع',
     close: 'إغلاق',
+    cancel: 'إلغاء',
   },
   onboarding: {
     tree: 'هذه شجرتك العائلية التفاعلية. انقر واسحب للاستكشاف، أو قم بالتكبير للحصول على تفاصيل محددة.',
@@ -47,6 +48,43 @@ export const general = {
   languageName: 'الإنجليزية',
   vertical: 'رأسي', // Vertical
   horizontal: 'أفقي', // Horizontal
+  loading: 'جاري التحميل...',
+  date: 'التاريخ',
+  born: 'وُلد',
+  died: 'تُوفي',
+  addSpouse: 'إضافة شريك/ـة',
+  setAsRoot: 'تعيين كشخص مركزي',
+  calculateRelationship: 'حساب القرابة',
+  role: 'الصلاحية',
+  interestsPlaceholder: 'اكتب الاهتمامات...',
+  upcomingBirthdays: 'أعياد الميلاد القادمة',
+  noUpcomingBirthdays: 'لا توجد أعياد ميلاد قادمة',
+  marriage: 'زواج',
+  familyTimeline: 'الخط الزمني للعائلة',
+  familyTree: 'شجرة العائلة',
+  x: 'إحداثي س',
+  y: 'إحداثي ص',
+  dates: 'التواريخ',
+  photos: 'الصور',
+  gender: 'الجنس',
+  minimap: 'خريطة التصفح المصغرة',
+  relationshipType: 'نوع العلاقة',
+  uploadPhoto: 'رفع صورة',
+  private: 'خاص',
+  personFields: 'بيانات الشخص',
+  importLocalJson: 'استيراد JSON محلي',
+  messages: {
+    success: {
+      importSuccess: 'تم الاستيراد بنجاح',
+      importError: 'فشل الاستيراد',
+      snapshot: 'تم حفظ نسخة',
+      restore: 'تم استعادة النسخة',
+      deleteSuccess: 'تم الحذف بنجاح'
+    }
+  },
+  treeManager: {
+    myTrees: 'أشجاري'
+  },
   dropdownAlign: {
     start: 'start',
     end: 'end',
@@ -111,6 +149,10 @@ export const general = {
     lightMode: 'الوضع الفاتح',
     languageName: 'العربية',
     lowGraphics: 'رسومات منخفضة',
+    importDrive: 'استيراد من درايف',
+    drive: 'جوجل درايف',
+    aiAnalyze: 'تحليل الذكاء الاصطناعي',
+    recording: 'تسجيل',
     dateFormats: {
       iso: 'دولي (ISO)',
       eu: 'أوروبي (EU)',
@@ -192,10 +234,13 @@ export const general = {
       deleteSuccess: 'تم حذف الحساب بنجاح',
       deleteError: 'فشل حذف الحساب',
     },
+    restartTourModal: {
+      title: 'إعادة الجولة',
+      yes: 'نعم، ابدأ',
+    },
   },
-  restartTourModal: {
-    title: 'إعادة الجولة',
-    yes: 'نعم، ابدأ',
+  versions: {
+    snapshotLabelPlaceholder: 'اسم النسخة...',
   },
   notFound: {
     title: 'عذراً، الصفحة غير موجودة!',

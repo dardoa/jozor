@@ -1,7 +1,7 @@
 export const header = {
   undo: 'تراجع',
   redo: 'إعادة',
-  settings: 'الإعدادات',
+  settingsLabel: 'الإعدادات',
   darkMode: 'الوضع الداكن',
   language: 'اللغة',
   signIn: 'تسجيل الدخول',
@@ -19,7 +19,7 @@ export const header = {
   consistency: 'التناسق',
   familyTimelineHeader: 'الخط الزمني',
   share: 'مشاركة',
-  story: 'القصة',
+  storyLabel: 'القصة',
   map: 'الخريطة',
   export: 'تصدير',
   exportJozor: 'تصدير جوزور',
