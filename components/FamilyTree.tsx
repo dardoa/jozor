@@ -139,6 +139,7 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({
   const searchTarget = useAppStore(state => state.searchTarget);
   // Heavy dependency debounce
   const debouncedPeople = useDebouncedValue(people, 200);
+  const debouncedPeopleVersion = useDebouncedValue(peopleVersion, 200);
 
   const geometryKey = useMemo(() => {
     const isMobile = window.innerWidth < 768;
@@ -158,7 +159,7 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({
     return JSON.stringify({
       focusId,
       settings: geometrySettings,
-      peopleVersion,
+      peopleVersion: debouncedPeopleVersion,
       collapsedIds: Array.from(collapsedIds)
     });
   }, [
@@ -170,7 +171,7 @@ export const FamilyTree: React.FC<FamilyTreeProps> = React.memo(({
     settings.nodeSpacingY,
     settings.enableTimeOffset,
     settings.generationLimit,
-    peopleVersion,
+    debouncedPeopleVersion,
     collapsedIds,
   ]);
 

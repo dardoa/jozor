@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Routes, Route, Navigate, useMatch, useNavigate, useParams } from 'react-router-dom';
 
-import { Person } from '../types';
+import { Person, AuthProps } from '../types';
 import { SharedTreeLoader } from './SharedTreeLoader';
 import { WelcomeScreen } from './WelcomeScreen';
 import { AppLayout } from './AppLayout';
@@ -207,7 +207,13 @@ export const AppUIManager: React.FC = () => {
   );
 };
 
-const SharedTreeRouteWrapper: React.FC<{ auth: any, onLoadComplete: any, onCancel: any }> = ({ auth, onLoadComplete, onCancel }) => {
+interface SharedTreeRouteWrapperProps {
+  auth: AuthProps;
+  onLoadComplete: (data: Record<string, Person>, fileId: string, isDbTree: boolean, role?: 'owner' | 'editor' | 'viewer') => void;
+  onCancel: () => void;
+}
+
+const SharedTreeRouteWrapper: React.FC<SharedTreeRouteWrapperProps> = ({ auth, onLoadComplete, onCancel }) => {
   const { ownerUid, fileId } = useParams<{ ownerUid: string; fileId: string }>();
   if (!ownerUid || !fileId) return <Navigate to="/" replace />;
   
