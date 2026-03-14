@@ -51,9 +51,9 @@ export const PersonIdentityEdit = memo<PersonIdentityEditProps>(({ person, onUpd
       onUpdate(person.id, updates);
       setShowSmartModal(false);
       setSmartText('');
-      showSuccess('Data extracted and autofilled successfully!'); // Toast success
+      showSuccess(t.sidebar.extractSuccess);
     } catch (e) {
-      showError('Failed to extract data.'); // Use toast
+      showError(t.sidebar.extractError);
     } finally {
       setIsExtracting(false);
     }
@@ -84,7 +84,7 @@ export const PersonIdentityEdit = memo<PersonIdentityEditProps>(({ person, onUpd
                     onClick={(e) => {
                       e.stopPropagation();
                       handleChange('photoUrl', '');
-                      showSuccess('Profile photo removed.');
+                      showSuccess(t.sidebar.photoRemoved);
                     }} // Toast success
                     className='absolute top-1 right-1 p-0.5 bg-red-500/80 hover:bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity'
                     title={t.removePhoto}
@@ -121,16 +121,16 @@ export const PersonIdentityEdit = memo<PersonIdentityEditProps>(({ person, onUpd
         </div>
       </div>
 
-      <Card title={t.identity}>
+      <Card title={t.sidebar.identity}>
         <div className='space-y-2 mt-2 animate-in fade-in slide-in-from-top-1 duration-200'>
           <FormField
-            label={t.firstName}
+            label={t.personFields.firstName}
             value={person.firstName}
             onCommit={(v: string) => handleChange('firstName', v)}
             labelWidthClass='w-24'
           />
           <FormField
-            label={t.middleName}
+            label={t.personFields.middleName}
             value={person.middleName}
             onCommit={(v: string) => handleChange('middleName', v)}
             labelWidthClass='w-24'
@@ -139,7 +139,7 @@ export const PersonIdentityEdit = memo<PersonIdentityEditProps>(({ person, onUpd
           <div className='flex items-center gap-2'>
             <div className='flex-1'>
               <FormField
-                label={t.lastName}
+                label={t.personFields.lastName}
                 value={person.lastName}
                 onCommit={(v: string) => handleChange('lastName', v)}
                 labelWidthClass='w-24'
@@ -148,8 +148,8 @@ export const PersonIdentityEdit = memo<PersonIdentityEditProps>(({ person, onUpd
             <button
               onClick={() => setShowMoreIdentityFields(!showMoreIdentityFields)}
               className='w-7 h-7 rounded-full flex items-center justify-center text-[var(--text-dim)] hover:bg-[var(--theme-bg)] transition-colors'
-              title={t.moreNames || 'More Names'}
-              aria-label={t.moreNames || 'More Names'}
+              title={t.sidebar.moreNames}
+              aria-label={t.sidebar.moreNames}
             >
               <ChevronDown
                 className={`w-4 h-4 transition-transform ${showMoreIdentityFields ? 'rotate-180' : ''}`}
@@ -160,13 +160,13 @@ export const PersonIdentityEdit = memo<PersonIdentityEditProps>(({ person, onUpd
           {showMoreIdentityFields && (
             <div className='space-y-2 mt-2 animate-in fade-in slide-in-from-top-1 duration-200'>
               <FormField
-                label={t.birthName}
+                label={t.personFields.birthName}
                 value={person.birthName}
                 onCommit={(v: string) => handleChange('birthName', v)}
                 labelWidthClass='w-24'
               />
               <FormField
-                label={t.nickName}
+                label={t.personFields.nickName}
                 value={person.nickName}
                 onCommit={(v: string) => handleChange('nickName', v)}
                 labelWidthClass='w-24'
@@ -174,7 +174,7 @@ export const PersonIdentityEdit = memo<PersonIdentityEditProps>(({ person, onUpd
               <div className='flex gap-2'>
                 <div className='flex-1'>
                   <FormField
-                    label={t.title}
+                    label={t.personFields.title}
                     value={person.title}
                     onCommit={(v: string) => handleChange('title', v)}
                     labelWidthClass='w-24'
@@ -182,7 +182,7 @@ export const PersonIdentityEdit = memo<PersonIdentityEditProps>(({ person, onUpd
                 </div>
                 <div className='flex-1'>
                   <FormField
-                    label={t.suffix}
+                    label={t.personFields.suffix}
                     value={person.suffix}
                     onCommit={(v: string) => handleChange('suffix', v)}
                     labelWidthClass='w-24'
@@ -201,11 +201,11 @@ export const PersonIdentityEdit = memo<PersonIdentityEditProps>(({ person, onUpd
             <div className='flex justify-between items-center'>
               <h3 className='font-bold flex items-center gap-2 text-[var(--text-main)]'>
                 <Sparkles className='w-4 h-4 text-purple-500' />
-                AI Data Extractor
+                {t.sidebar.aiDataExtractor}
               </h3>
               <button
                 onClick={() => setShowSmartModal(false)}
-                aria-label='Close'
+                aria-label={t.modals.close}
                 className='p-1 hover:bg-[var(--theme-bg)] rounded-full'
               >
                 <X className='w-4 h-4 text-[var(--text-muted)]' />
@@ -214,7 +214,7 @@ export const PersonIdentityEdit = memo<PersonIdentityEditProps>(({ person, onUpd
             <textarea
               value={smartText}
               onChange={(e) => setSmartText(e.target.value)}
-              placeholder='Paste text here...'
+              placeholder={t.sidebar.pasteTextHere}
               className='w-full h-32 p-3 rounded-xl bg-[var(--theme-bg)] border border-[var(--border-main)] text-sm focus:ring-2 focus:ring-purple-500/20 outline-none resize-none'
             />
             <button
@@ -222,7 +222,7 @@ export const PersonIdentityEdit = memo<PersonIdentityEditProps>(({ person, onUpd
               disabled={isExtracting || !smartText.trim()}
               className='w-full py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-300 text-white rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition-all'
             >
-              {isExtracting ? <Loader2 className='w-4 h-4 animate-spin' /> : 'Autofill Details'}
+              {isExtracting ? <Loader2 className='w-4 h-4 animate-spin' /> : t.sidebar.autofillDetails}
             </button>
           </div>
         </div>

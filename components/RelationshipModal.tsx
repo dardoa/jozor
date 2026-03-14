@@ -3,6 +3,7 @@ import { Person, Language } from '../types';
 import { X, Calculator, User } from 'lucide-react'; // Removed ArrowRight
 import { calculateRelationship } from '../utils/relationshipLogic';
 import { useTranslation } from '../context/TranslationContext';
+import { OverlayPrimitive } from '../context/OverlayContext';
 
 interface RelationshipModalProps {
   isOpen: boolean;
@@ -40,11 +41,16 @@ export const RelationshipModal = ({
     setResult(res);
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200'>
-      <div className='bg-white dark:bg-stone-800 rounded-xl shadow-2xl max-w-md w-full overflow-hidden flex flex-col border border-stone-200 dark:border-stone-700'>
+    <OverlayPrimitive
+      isOpen={isOpen}
+      onClose={onClose}
+      id='relationship-modal'
+    >
+      <div
+        className='bg-white dark:bg-stone-800 rounded-xl shadow-2xl max-w-md w-full overflow-hidden flex flex-col border border-stone-200 dark:border-stone-700'
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className='flex items-center justify-between p-4 border-b border-stone-200 dark:border-stone-700 bg-stone-50/50 dark:bg-stone-900/50'>
           <div className='flex items-center gap-2'>
@@ -142,6 +148,6 @@ export const RelationshipModal = ({
           )}
         </div>
       </div>
-    </div>
+    </OverlayPrimitive>
   );
 };

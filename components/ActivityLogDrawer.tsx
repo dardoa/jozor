@@ -7,11 +7,14 @@ import {
     Trash2,
     Link,
     Unlink,
-    ChevronDown
+    ChevronDown,
+    UserPlus,
+    Shield
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { activityService, ActivityLog } from '../services/activityService';
 import { useTranslation } from '../context/TranslationContext';
+import { OverlayPrimitive } from '../context/OverlayContext';
 
 interface ActivityLogDrawerProps {
     isOpen: boolean;
@@ -21,7 +24,7 @@ interface ActivityLogDrawerProps {
 }
 
 const ActivityLogDrawer: React.FC<ActivityLogDrawerProps> = ({ isOpen, onClose, treeId, onNavigate }) => {
-    const { language } = useTranslation();
+    const { t, language } = useTranslation();
     const [logs, setLogs] = useState<ActivityLog[]>([]);
     const [page, setPage] = useState(0);
     const [hasMore, setHasMore] = useState(true);
@@ -98,70 +101,70 @@ const ActivityLogDrawer: React.FC<ActivityLogDrawerProps> = ({ isOpen, onClose, 
             (details.personName as string) ||
             (details.targetName as string) ||
             (details.focusName as string) ||
-            (language === 'ar' ? 'شخص ما' : 'Someone');
+            t.modals.activityDrawer.someone;
 
         const inviteEmail = details.email as string | undefined;
         const role = details.role as string | undefined;
         const newRole = details.newRole as string | undefined;
 
-        const isAr = language === 'ar';
+        const roleLabel = role === 'editor' ? t.modals.activityDrawer.roles.editor : t.modals.activityDrawer.roles.viewer;
+        const newRoleLabel = newRole === 'editor' ? t.modals.activityDrawer.roles.editor : t.modals.activityDrawer.roles.viewer;
 
         switch (action_type) {
             case 'ADD_PERSON':
-                return isAr ? `تمت إضافة ${name}` : `Added ${name}`;
+                return t.modals.activityDrawer.actions.addPerson.replace('{name}', name);
             case 'UPDATE_PERSON':
-                return isAr ? `تم تحديث بيانات ${name}` : `Updated details for ${name}`;
+                return t.modals.activityDrawer.actions.updatePerson.replace('{name}', name);
             case 'DELETE_PERSON':
-                return isAr ? `تم حذف ${name} من الشجرة` : `Removed ${name} from the tree`;
+                return t.modals.activityDrawer.actions.deletePerson.replace('{name}', name);
             case 'ADD_RELATION':
-                return isAr
-                    ? `تم تعديل العلاقة بين ${details.focusName} و${details.existingName}`
-                    : `Modified relationship between ${details.focusName} and ${details.existingName}`;
+                return t.modals.activityDrawer.actions.addRelation
+                    .replace('{focusName}', details.focusName as string)
+                    .replace('{existingName}', details.existingName as string);
             case 'DELETE_RELATION':
-                return isAr
-                    ? `تم تعديل العلاقة بين ${details.targetName} و${details.relativeName}`
-                    : `Modified relationship between ${details.targetName} and ${details.relativeName}`;
+                return t.modals.activityDrawer.actions.deleteRelation
+                    .replace('{targetName}', details.targetName as string)
+                    .replace('{relativeName}', details.relativeName as string);
             case 'SHARE_INVITE':
-                if (!inviteEmail) return isAr ? 'تم إرسال دعوة مشاركة' : 'Sent a share invitation';
-                return isAr
-                    ? `تمت دعوة ${inviteEmail} بصلاحية ${role === 'editor' ? 'محرر' : 'مشاهد'}`
-                    : `Invited ${inviteEmail} as ${role || 'viewer'}`;
+                if (!inviteEmail) return t.modals.activityDrawer.actions.shareInvite;
+                return t.modals.activityDrawer.actions.shareInviteDetails
+                    .replace('{email}', inviteEmail)
+                    .replace('{role}', roleLabel);
             case 'SHARE_REVOKE':
-                if (!inviteEmail) return isAr ? 'تم إلغاء صلاحية مستخدم' : 'Revoked access for a collaborator';
-                return isAr
-                    ? `تم إلغاء صلاحية ${inviteEmail}`
-                    : `Revoked access for ${inviteEmail}`;
+                if (!inviteEmail) return t.modals.activityDrawer.actions.shareRevoke;
+                return t.modals.activityDrawer.actions.shareRevokeDetails.replace('{email}', inviteEmail);
             case 'SHARE_ROLE_CHANGE':
-                if (!inviteEmail || !newRole) {
-                    return isAr ? 'تم تعديل صلاحيات مستخدم' : 'Updated collaborator role';
-                }
-                return isAr
-                    ? `تم تغيير صلاحية ${inviteEmail} إلى ${newRole === 'editor' ? 'محرر' : 'مشاهد'}`
-                    : `Updated ${inviteEmail} to ${newRole}`;
+                if (!inviteEmail || !newRole) return t.modals.activityDrawer.actions.shareRoleChange;
+                return t.modals.activityDrawer.actions.shareRoleChangeDetails
+                    .replace('{email}', inviteEmail)
+                    .replace('{role}', newRoleLabel);
             default:
-                return isAr ? 'تم تنفيذ إجراء على الشجرة' : 'Performed an action';
+                return t.modals.activityDrawer.actions.default;
         }
     };
 
     const getTargetId = (log: ActivityLog) => {
         const { details, action_type } = log;
         if (action_type === 'DELETE_PERSON') return null;
-        return details.personId || details.focusId || details.targetId || null;
+        return (details.personId as string) || (details.focusId as string) || (details.targetId as string) || null;
     };
 
     return (
-        <>
-            {isOpen && (
-                <div
-                    className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[100] transition-opacity"
-                    onClick={onClose}
-                />
-            )}
+        <OverlayPrimitive
+            isOpen={isOpen}
+            onClose={onClose}
+            id='activity-log-drawer'
+            withBackdrop={false}
+        >
+            <div
+                className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[100] transition-opacity"
+                onClick={onClose}
+            />
 
             <div className={`
                 fixed top-0 right-0 h-full w-[400px] bg-white shadow-2xl z-[101]
                 transform transition-transform duration-300 ease-in-out
-                ${isOpen ? 'translate-x-0' : 'translate-x-full'}
+                ${isOpen ? 'translate-x-0' : 'translate-x-full rtl:-translate-x-full'}
                 flex flex-col border-l border-gray-100
             `}>
                 <div className="p-6 border-b border-gray-50 flex flex-col gap-4 bg-white sticky top-0 shadow-sm">
@@ -172,10 +175,10 @@ const ActivityLogDrawer: React.FC<ActivityLogDrawerProps> = ({ isOpen, onClose, 
                             </div>
                             <div>
                                 <h2 className="text-lg font-bold text-gray-900 leading-tight">
-                                    {language === 'ar' ? 'سجل الأنشطة' : 'Activity History'}
+                                    {t.modals.activityDrawer.title}
                                 </h2>
                                 <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">
-                                    {language === 'ar' ? 'سجل التغييرات' : 'Audit Trail'}
+                                    {t.modals.activityDrawer.subtitle}
                                 </p>
                             </div>
                         </div>
@@ -194,7 +197,7 @@ const ActivityLogDrawer: React.FC<ActivityLogDrawerProps> = ({ isOpen, onClose, 
                             className="w-full pl-3 pr-10 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm font-bold text-gray-700 outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all appearance-none cursor-pointer"
                         >
                             <option value="">
-                                {language === 'ar' ? 'كل المساهمين' : 'All Contributors'}
+                                {t.modals.activityDrawer.allContributors}
                             </option>
                             {uniqueUsers.map(email => (
                                 <option key={email} value={email}>{email}</option>
@@ -211,12 +214,10 @@ const ActivityLogDrawer: React.FC<ActivityLogDrawerProps> = ({ isOpen, onClose, 
                                 <Clock className="w-8 h-8 text-gray-300" />
                             </div>
                             <p className="text-gray-500 font-medium">
-                                {language === 'ar' ? 'لا توجد أنشطة بعد' : 'No activity recorded yet'}
+                                {t.modals.activityDrawer.emptyState}
                             </p>
                             <p className="text-xs text-gray-400 mt-1">
-                                {language === 'ar'
-                                    ? 'ستظهر التغييرات هنا في الوقت الفعلي'
-                                    : 'Changes will appear here in real-time'}
+                                {t.modals.activityDrawer.emptyStateDesc}
                             </p>
                         </div>
                     ) : (
@@ -278,7 +279,7 @@ const ActivityLogDrawer: React.FC<ActivityLogDrawerProps> = ({ isOpen, onClose, 
                             ) : (
                                 <>
                                     <span>
-                                        {language === 'ar' ? 'تحميل أنشطة أقدم' : 'Load older activities'}
+                                        {t.modals.activityDrawer.loadMore}
                                     </span>
                                     <ChevronDown className="w-4 h-4 group-hover:translate-y-0.5 transition-transform" />
                                 </>
@@ -287,7 +288,7 @@ const ActivityLogDrawer: React.FC<ActivityLogDrawerProps> = ({ isOpen, onClose, 
                     )}
                 </div>
             </div>
-        </>
+        </OverlayPrimitive>
     );
 };
 

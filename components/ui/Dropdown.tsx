@@ -122,14 +122,15 @@ export const Dropdown: React.FC<DropdownProps> = ({
       ref={dropdownRef}
       onKeyDown={handleKeyDown}
     >
-      <div
+      <button
+        type="button"
         onClick={handleToggle}
-        className="cursor-pointer"
+        className="cursor-pointer bg-transparent border-none p-0 m-0 block w-full text-left rtl:text-right"
         aria-haspopup="menu"
         aria-expanded={isOpen}
       >
         {trigger}
-      </div>
+      </button>
       {isOpen && (
         <div
           ref={contentRef}

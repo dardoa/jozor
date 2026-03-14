@@ -1,7 +1,7 @@
 import React, { memo } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import { Button } from '../ui/Button';
-import { shallow } from 'zustand/shallow'; // Not available in all versions, better to split manually
+import { OverlayPrimitive } from '../../context/OverlayContext';
 
 interface LayoutSettingsModalProps {
     isOpen: boolean;
@@ -43,14 +43,16 @@ export const LayoutSettingsModal = memo(({ isOpen, onClose }: LayoutSettingsModa
     const setTreeSettings = useAppStore((state) => state.setTreeSettings);
 
     if (!treeSettings) return null;
-    if (!isOpen) return null;
 
     return (
-        <div className='fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm'>
+        <OverlayPrimitive
+            isOpen={isOpen}
+            onClose={onClose}
+            id='layout-settings-modal'
+        >
             <div
                 className='bg-white dark:bg-stone-900 rounded-xl shadow-xl w-full max-w-md overflow-hidden border border-stone-200 dark:border-stone-800'
-                role='dialog'
-                aria-modal='true'
+                onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
                 <div className='flex items-center justify-between p-4 border-b border-stone-200 dark:border-stone-800 bg-stone-50/50 dark:bg-stone-900/50'>
@@ -105,7 +107,7 @@ export const LayoutSettingsModal = memo(({ isOpen, onClose }: LayoutSettingsModa
                                     onChange={(e) => setTreeSettings({ ...treeSettings, nodeSpacingX: Number(e.target.value) })}
                                     min={20} max={200} step={10}
                                 />
-                                <span className='text-[10px] font-mono w-8 text-right'>{treeSettings.nodeSpacingX}px</span>
+                                <span className='text-[10px] font-mono w-8 text-end'>{treeSettings.nodeSpacingX}px</span>
                             </div>
                         </div>
 
@@ -122,7 +124,7 @@ export const LayoutSettingsModal = memo(({ isOpen, onClose }: LayoutSettingsModa
                                     onChange={(e) => setTreeSettings({ ...treeSettings, nodeSpacingY: Number(e.target.value) })}
                                     min={50} max={300} step={10}
                                 />
-                                <span className='text-[10px] font-mono w-8 text-right'>{treeSettings.nodeSpacingY}px</span>
+                                <span className='text-[10px] font-mono w-8 text-end'>{treeSettings.nodeSpacingY}px</span>
                             </div>
                         </div>
                     </div>
@@ -134,6 +136,6 @@ export const LayoutSettingsModal = memo(({ isOpen, onClose }: LayoutSettingsModa
                     </Button>
                 </div>
             </div>
-        </div>
+        </OverlayPrimitive>
     );
 });

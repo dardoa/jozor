@@ -3,6 +3,7 @@ import { Person, Message } from '../types';
 import { startAncestorChat } from '../services/geminiService';
 import { X, Send, User, Bot, Loader2 } from 'lucide-react';
 import { useTranslation } from '../context/TranslationContext';
+import { OverlayPrimitive } from '../context/OverlayContext';
 
 interface AncestorChatModalProps {
   isOpen: boolean;
@@ -45,11 +46,16 @@ export const AncestorChatModal = ({ isOpen, onClose, person, people }: AncestorC
     setLoading(false);
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200'>
-      <div className='bg-white dark:bg-stone-900 rounded-2xl shadow-2xl max-w-lg w-full h-[600px] flex flex-col overflow-hidden border border-stone-200 dark:border-stone-800'>
+    <OverlayPrimitive
+      isOpen={isOpen}
+      onClose={onClose}
+      id='ancestor-chat-modal'
+    >
+      <div
+        className='bg-white dark:bg-stone-900 rounded-2xl shadow-2xl max-w-lg w-full h-[600px] flex flex-col overflow-hidden border border-stone-200 dark:border-stone-800'
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className='flex items-center justify-between p-4 border-b border-stone-200 dark:border-stone-800 bg-stone-50/80 dark:bg-stone-900/80 backdrop-blur'>
           <div className='flex items-center gap-3'>
@@ -142,6 +148,6 @@ export const AncestorChatModal = ({ isOpen, onClose, person, people }: AncestorC
           </div>
         </div>
       </div>
-    </div>
+    </OverlayPrimitive>
   );
 };

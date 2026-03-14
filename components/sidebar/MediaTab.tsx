@@ -26,7 +26,7 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user) {
-      showError('Login required to upload images to Drive.'); // Use toast
+      showError(t.general.loginRequired); // Use toast
       return;
     }
 
@@ -40,17 +40,17 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
 
       const currentGallery = person.gallery || [];
       onUpdate(person.id, { gallery: [...currentGallery, driveUrl] }); // Store URL
-      showSuccess('Image uploaded to Drive successfully!'); // Toast success
+      showSuccess(t.modals.messages.success.uploadSuccess); // Toast success
     } catch (err) {
       console.error('Gallery upload failed', err);
-      showError('Failed to upload image to Drive.'); // Use toast
+      showError(t.modals.messages.error.import); // Use toast
     }
     e.target.value = '';
   };
 
   const handleDriveSelect = async () => {
     if (!user || user?.uid.startsWith('mock-')) {
-      showError('Drive Picker requires a real Google Login (Demo Mode active).'); // Use toast
+      showError(t.general.demoModeNote); // Use toast
       return;
     }
 
@@ -60,12 +60,12 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
       if (driveUrl) {
         const currentGallery = person.gallery || [];
         onUpdate(person.id, { gallery: [...currentGallery, driveUrl] });
-        showSuccess('Image picked from Drive successfully!'); // Toast success
+        showSuccess(t.modals.messages.success.uploadSuccess); // Toast success
       }
     } catch (err: any) {
       if (err !== 'Cancelled') {
         console.error(err);
-        showError('Failed to pick image from Drive.'); // Use toast
+        showError(t.modals.messages.error.import); // Use toast
       }
     } finally {
       setIsDriveLoading(false);
@@ -90,12 +90,10 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
       }
       const analysis = await analyzeImage(base64Image);
       // Append analysis to bio or alert
-      if (confirm(`Analysis Result:\n\n${analysis}\n\nAppend to biography?`)) {
-        onUpdate(person.id, { bio: (person.bio || '') + `\n\n[Photo Analysis]: ${analysis}` });
-        showSuccess('Image analysis appended to biography.'); // Toast success
-      }
+      onUpdate(person.id, { bio: (person.bio || '') + `\n\n[${t.sidebar.photoAnalysisLabel}]: ${analysis}` });
+      showSuccess(t.modals.messages.success.analysisAppended);
     } catch (e) {
-      showError('Analysis failed.'); // Use toast
+      showError(t.general.analysisFailed); // Use toast
     } finally {
       setAnalyzingImgIndex(null);
     }
@@ -104,7 +102,7 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
   const handleVoiceSave = async (audioBlob: Blob) => {
     // Accepts Blob
     if (!user) {
-      showError('Login required to save voice notes to Drive.'); // Use toast
+      showError(t.general.loginRequired); // Use toast
       return;
     }
     try {
@@ -115,10 +113,10 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
       );
       const currentNotes = person.voiceNotes || [];
       onUpdate(person.id, { voiceNotes: [...currentNotes, driveUrl] });
-      showSuccess('Voice note uploaded to Drive successfully!'); // Toast success
+      showSuccess(t.modals.messages.success.uploadSuccess); // Toast success
     } catch (err) {
       console.error('Voice note upload failed', err);
-      showError('Failed to upload voice note to Drive.'); // Use toast
+      showError(t.modals.messages.error.import); // Use toast
     }
   };
 
@@ -128,7 +126,7 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
   return (
     <div className='space-y-5'>
       {/* --- PHOTOS SECTION --- */}
-      <Card title={t.galleryTab}>
+      <Card title={t.sidebar.galleryTab}>
         <div className='flex justify-between items-center relative z-10 mb-3'>
           {isEditing && (
             <div className='flex gap-1.5 ms-auto'>
@@ -137,21 +135,21 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
                   onClick={handleDriveSelect}
                   disabled={isDriveLoading}
                   className='text-xs font-bold text-[var(--primary-600)] hover:underline flex items-center gap-1 disabled:opacity-50 px-2 py-1 rounded-full'
-                  title='Import from Google Drive'
+                  title={t.settings.importDrive}
                 >
                   {isDriveLoading ? (
                     <Loader2 className='w-3.5 h-3.5 animate-spin' />
                   ) : (
                     <Cloud className='w-3.5 h-3.5' />
                   )}
-                  <span className='hidden sm:inline'>Drive</span>
+                  <span className='hidden sm:inline'>{t.settings.drive}</span>
                 </button>
               )}
               <button
                 onClick={() => galleryInputRef.current?.click()}
                 className='text-xs font-bold text-[var(--primary-600)] hover:underline flex items-center gap-1 px-2 py-1 rounded-full'
               >
-                <Plus className='w-3.5 h-3.5' /> {t.addPhoto}
+                <Plus className='w-3.5 h-3.5' /> {t.sidebar.changePhoto}
               </button>
             </div>
           )}
@@ -162,13 +160,13 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
           accept='image/*'
           className='hidden'
           onChange={handleImageUpload}
-          aria-label={t.uploadPhoto || 'Upload Photo'}
+          aria-label={t.sidebar.changePhoto}
         />
 
         {!hasPhotos && !isEditing ? (
           <div className='text-center py-4 text-[var(--text-muted)] bg-[var(--theme-bg)]/50 rounded-xl border border-dashed border-[var(--border-main)] flex flex-col items-center'>
             <ImageIcon className='w-8 h-8 mb-2 opacity-50' />
-            <span className='text-sm'>{t.noPhotos}</span>
+            <span className='text-sm'>{t.sidebar.noPhotos}</span>
           </div>
         ) : (
           <div className='grid grid-cols-2 gap-2'>
@@ -183,7 +181,7 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
                   <button
                     onClick={() => handleAnalyzePhoto(idx, src)}
                     className='p-1.5 bg-white/20 hover:bg-white/40 backdrop-blur rounded-full text-white'
-                    title='AI Analyze'
+                    title={t.settings.aiAnalyze}
                   >
                     {analyzingImgIndex === idx ? (
                       <Loader2 className='w-4 h-4 animate-spin' />
@@ -199,7 +197,7 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
                         onUpdate(person.id, { gallery: newGallery });
                       }}
                       className='p-1.5 bg-red-500/80 hover:bg-red-600 text-white rounded-full'
-                      aria-label={t.delete || 'Delete'}
+                      aria-label={t.general.delete}
                     >
                       <X className='w-4 h-4' />
                     </button>
@@ -212,7 +210,7 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
       </Card>
 
       {/* --- AUDIO SECTION --- */}
-      <Card title={t.voiceMemories}>
+      <Card title={t.sidebar.voiceMemories}>
         <div className='flex justify-between items-center relative z-10 mb-3'>
           {isEditing && <VoiceRecorder onSave={handleVoiceSave} />}
         </div>
@@ -220,7 +218,7 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
         {!hasVoiceNotes && !isEditing ? (
           <div className='text-center py-4 text-[var(--text-muted)] bg-[var(--theme-bg)]/50 rounded-xl border border-dashed border-[var(--border-main)] flex flex-col items-center'>
             <Mic className='w-8 h-8 mb-2 opacity-50' />
-            <span className='text-sm'>{t.noRecordings}</span>
+            <span className='text-sm'>{t.sidebar.noRecordings}</span>
           </div>
         ) : (
           <div className='space-y-2'>
@@ -234,7 +232,7 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
                 </div>
                 <div className='flex-1 min-w-0'>
                   <div className='text-sm font-bold text-[var(--text-main)]'>
-                    Recording #{idx + 1}
+                    {t.settings.recording} #{idx + 1}
                   </div>
                   <audio ref={audioRef} src={note} controls className='w-full h-8 mt-1 border-0' />
                 </div>
@@ -246,7 +244,7 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
                       onUpdate(person.id, { voiceNotes: newNotes });
                     }}
                     className='p-2 text-[var(--text-muted)] hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors'
-                    aria-label={t.delete || 'Delete'}
+                    aria-label={t.general.delete}
                   >
                     <Trash2 className='w-4 h-4' />
                   </button>

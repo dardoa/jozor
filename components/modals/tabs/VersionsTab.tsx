@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from '../../../context/TranslationContext';
 import { Clock, Plus, Loader2, FileJson, RotateCcw, Pin, PinOff, Trash2 } from 'lucide-react';
 import { googleDriveService } from '../../../services/googleService';
 import { formatDistanceToNow } from 'date-fns';
@@ -6,6 +7,7 @@ import { ar } from 'date-fns/locale/ar';
 import { enUS } from 'date-fns/locale/en-US';
 import type { DriveFile } from '../../../types';
 import { showSuccess, showError } from '../../../utils/toast';
+import { ConfirmationModal } from '../../ConfirmationModal';
 
 interface VersionsTabProps {
     treeId: string;
@@ -17,10 +19,17 @@ interface VersionsTabProps {
 }
 
 export const VersionsTab: React.FC<VersionsTabProps> = ({ treeId, language, googleSync }) => {
+    const { t, dateLocale } = useTranslation();
     const [snapshots, setSnapshots] = useState<DriveFile[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [newLabel, setNewLabel] = useState('');
     const [isCreating, setIsCreating] = useState(false);
+    const [confirmConfig, setConfirmConfig] = useState<{ isOpen: boolean; title: string; message: string; onConfirm: () => void; type?: 'danger' | 'warning' | 'info' }>({
+        isOpen: false,
+        title: '',
+        message: '',
+        onConfirm: () => {},
+    });
 
     const fetchSnapshots = async () => {
         try {
@@ -29,7 +38,7 @@ export const VersionsTab: React.FC<VersionsTabProps> = ({ treeId, language, goog
             setSnapshots(files);
         } catch (err) {
             console.error('Failed to load snapshots:', err);
-            showError('Failed to load snapshots');
+            showError(t.modals.messages.error.snapshot);
         } finally {
             setIsLoading(false);
         }
@@ -45,24 +54,30 @@ export const VersionsTab: React.FC<VersionsTabProps> = ({ treeId, language, goog
             setIsCreating(true);
             await googleSync.handleCreateSnapshot(newLabel);
             setNewLabel('');
-            showSuccess('Snapshot created successfully');
+            showSuccess(t.modals.messages.success.snapshot);
             fetchSnapshots();
         } catch (err) {
-            showError('Failed to create snapshot');
+            showError(t.modals.messages.error.snapshot);
         } finally {
             setIsCreating(false);
         }
     };
 
-    const handleRestore = async (file: DriveFile) => {
-        if (window.confirm(language === 'ar' ? 'هل أنت متأكد؟ سيتم استعادة هذه النسخة.' : 'Are you sure? Current state will be replaced by this version.')) {
-            try {
-                await googleSync.handleRestoreSnapshot(file);
-                showSuccess('Restored successfully');
-            } catch (err) {
-                showError('Failed to restore');
+    const handleRestore = (file: DriveFile) => {
+        setConfirmConfig({
+            isOpen: true,
+            title: t.modals.versions.restore,
+            message: t.modals.treeManager.confirmRestoreVersion,
+            type: 'warning',
+            onConfirm: async () => {
+                try {
+                    await googleSync.handleRestoreSnapshot(file);
+                    showSuccess(t.modals.messages.success.restore);
+                } catch (err) {
+                    showError(t.modals.messages.error.load);
+                }
             }
-        }
+        });
     };
 
     const handleTogglePin = async (file: DriveFile) => {
@@ -82,24 +97,30 @@ export const VersionsTab: React.FC<VersionsTabProps> = ({ treeId, language, goog
                 resource: { name: newName }
             } as any));
             
-            showSuccess(isPinned ? 'Unpinned' : 'Pinned');
+            showSuccess(isPinned ? t.modals.versions?.unpinned || 'Unpinned' : t.modals.versions?.pinned || 'Pinned');
             fetchSnapshots();
         } catch (err) {
             console.error('Failed to toggle pin:', err);
-            showError('Failed to update pin status');
+            showError(t.modals.messages.error.rename);
         }
     };
 
-    const handleDelete = async (fileId: string) => {
-        if (!window.confirm(language === 'ar' ? 'هل أنت متأكد من حذف هذه النسخة؟' : 'Are you sure you want to delete this version?')) return;
-        
-        try {
-            await googleDriveService.deleteFile(fileId);
-            showSuccess('Deleted successfully');
-            fetchSnapshots();
-        } catch (err) {
-            showError('Failed to delete');
-        }
+    const handleDelete = (fileId: string) => {
+        setConfirmConfig({
+            isOpen: true,
+            title: t.modals.delete,
+            message: t.modals.treeManager.confirmDeleteVersion,
+            type: 'danger',
+            onConfirm: async () => {
+                try {
+                    await googleDriveService.deleteFile(fileId);
+                    showSuccess(t.modals.messages.success.deleteSuccess);
+                    fetchSnapshots();
+                } catch (err) {
+                    showError(t.modals.messages.error.delete);
+                }
+            }
+        });
     };
 
     return (
@@ -108,14 +129,14 @@ export const VersionsTab: React.FC<VersionsTabProps> = ({ treeId, language, goog
             <div className="bg-[var(--theme-surface)] rounded-xl p-4 border border-[var(--border-main)]">
                 <h4 className="text-sm font-semibold text-[var(--text-main)] mb-3 flex items-center gap-2">
                     <Plus className="w-4 h-4" />
-                    {language === 'ar' ? 'إنشاء نسخة احتياطية يدوية' : 'Create Manual Snapshot'}
+                    {t.modals.treeManager.createManualSnapshot}
                 </h4>
                 <div className="flex gap-2">
                     <input
                         type="text"
                         value={newLabel}
                         onChange={(e) => setNewLabel(e.target.value)}
-                        placeholder={language === 'ar' ? 'مثال: قبل التغييرات الكبيرة...' : 'e.g., Before massive changes...'}
+                        placeholder={t.modals.treeManager.snapshotLabelPlaceholder}
                         className="flex-1 px-3 py-2 rounded-lg border border-[var(--border-main)] bg-[var(--theme-bg)] text-[var(--text-main)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary-600)]"
                     />
                     <button
@@ -124,7 +145,7 @@ export const VersionsTab: React.FC<VersionsTabProps> = ({ treeId, language, goog
                         className="px-4 py-2 bg-[var(--primary-600)] text-white rounded-lg text-sm font-medium hover:bg-[var(--primary-500)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                     >
                         {isCreating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-                        {language === 'ar' ? 'حفظ' : 'Create'}
+                        {t.modals.versions.save}
                     </button>
                 </div>
             </div>
@@ -133,7 +154,7 @@ export const VersionsTab: React.FC<VersionsTabProps> = ({ treeId, language, goog
             <div>
                 <h4 className="text-sm font-semibold text-[var(--text-main)] mb-3 flex items-center gap-2">
                     <Clock className="w-4 h-4" />
-                    {language === 'ar' ? 'النسخ السابقة' : 'Previous Versions'}
+                    {t.modals.treeManager.previousVersions}
                 </h4>
 
                 {isLoading ? (
@@ -142,7 +163,7 @@ export const VersionsTab: React.FC<VersionsTabProps> = ({ treeId, language, goog
                     </div>
                 ) : snapshots.length === 0 ? (
                     <div className="text-center py-8 text-[var(--text-dim)] text-sm">
-                        {language === 'ar' ? 'لا توجد نسخ محفوظة بعد.' : 'No snapshots found yet.'}
+                        {t.modals.treeManager.noSnapshotsYet}
                     </div>
                 ) : (
                     <div className="space-y-2">
@@ -150,7 +171,7 @@ export const VersionsTab: React.FC<VersionsTabProps> = ({ treeId, language, goog
                             const isPinned = snap.name.startsWith('pinned_');
                             const cleanName = snap.name.replace('pinned_', '').replace('.json', '');
                             const parts = cleanName.split('_');
-                            const label = parts.slice(3).join(' ') || 'Untitled';
+                            const label = parts.slice(3).join(' ') || t.modals.versions.untitled;
                             const date = new Date(snap.modifiedTime);
 
                             return (
@@ -172,7 +193,7 @@ export const VersionsTab: React.FC<VersionsTabProps> = ({ treeId, language, goog
                                                 {isPinned && <Pin className="w-3 h-3 text-amber-500 fill-amber-500" />}
                                             </div>
                                             <p className="text-xs text-[var(--text-dim)]">
-                                                {formatDistanceToNow(date, { addSuffix: true, locale: language === 'ar' ? ar : enUS })}
+                                                {formatDistanceToNow(date, { addSuffix: true, locale: dateLocale })}
                                                 {' • '}
                                                 {date.toLocaleDateString()}
                                             </p>
@@ -186,7 +207,7 @@ export const VersionsTab: React.FC<VersionsTabProps> = ({ treeId, language, goog
                                                 ? 'text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/30' 
                                                 : 'text-[var(--text-dim)] hover:bg-[var(--theme-hover)]'
                                             }`}
-                                            title={isPinned ? 'Unpin Version' : 'Pin Version'}
+                                            title={isPinned ? t.modals.versions.untitled : t.modals.versions.untitled}
                                         >
                                             {isPinned ? <PinOff className="w-4 h-4" /> : <Pin className="w-4 h-4" />}
                                         </button>
@@ -195,13 +216,13 @@ export const VersionsTab: React.FC<VersionsTabProps> = ({ treeId, language, goog
                                             className="px-3 py-1.5 bg-[var(--primary-600)]/10 text-[var(--primary-600)] hover:bg-[var(--primary-600)] hover:text-white rounded-lg text-xs font-medium transition-all flex items-center gap-1"
                                         >
                                             <RotateCcw className="w-3 h-3" />
-                                            {language === 'ar' ? 'استعادة' : 'Restore'}
+                                            {t.modals.versions.restore}
                                         </button>
                                         {!isPinned && (
                                             <button
                                                 onClick={() => handleDelete(snap.id)}
                                                 className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                                                title="Delete"
+                                                title={t.modals.delete}
                                             >
                                                 <Trash2 className="w-4 h-4" />
                                             </button>
@@ -216,12 +237,20 @@ export const VersionsTab: React.FC<VersionsTabProps> = ({ treeId, language, goog
 
             <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
                 <p className="text-xs text-blue-800 dark:text-blue-200 leading-relaxed">
-                    💡 <strong>{language === 'ar' ? 'حول النسخ الاحتياطية:' : 'About Snapshots:'}</strong><br />
-                    {language === 'ar' 
-                        ? 'يتم حفظ النسخ في مجلد تطبيق مخفي على Google Drive. النسخ المثبتة (Pinned) لا يتم حذفها تلقائياً عند تنظيف السجل.' 
-                        : 'Snapshots are saved in a hidden app folder on Google Drive. Pinned versions are protected from auto-deletion during history cleanup.'}
+                    💡 <strong>{t.modals.treeManager.aboutSnapshotsTitle}</strong><br />
+                    {t.modals.treeManager.aboutSnapshotsBody}
                 </p>
             </div>
+
+            <ConfirmationModal
+                isOpen={confirmConfig.isOpen}
+                onClose={() => setConfirmConfig(prev => ({ ...prev, isOpen: false }))}
+                onConfirm={confirmConfig.onConfirm}
+                title={confirmConfig.title}
+                message={confirmConfig.message}
+                type={confirmConfig.type}
+                overlayId="versions-tab-confirm"
+            />
         </div>
     );
 };

@@ -55,7 +55,7 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = memo(
             </div>
             <button
               onClick={onClose}
-              aria-label={t.close || 'Close'}
+              aria-label={t.close}
               className='p-2 -mr-2 -mt-2 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-full transition-colors text-stone-400 hover:text-stone-600 dark:hover:text-stone-200'
             >
               <X className='w-5 h-5' />

@@ -39,7 +39,7 @@ export const PersonHeaderView = memo<PersonHeaderViewProps>(
     const fullName =
       [person.title, person.firstName, person.middleName, person.lastName, person.suffix]
         .filter(Boolean)
-        .join(' ') || 'Unnamed Person';
+        .join(' ') || t.sidebar.unnamedPerson;
     // Use configured format, default to ISO if not set (though settings usually has default)
     const dateFormat = settings.dateFormat || 'iso';
     const displayBirth = formatDate(person.birthDate, dateFormat);
@@ -160,7 +160,7 @@ export const PersonHeaderView = memo<PersonHeaderViewProps>(
                   <span>
                     {t.born}{' '}
                     <strong className='text-[var(--text-main)]'>
-                      {displayBirth || '?'}
+                      {displayBirth || t.sidebar.unknownDate}
                     </strong>
                     {person.birthPlace && (
                       <span className='text-[var(--text-muted)]'>
@@ -182,7 +182,7 @@ export const PersonHeaderView = memo<PersonHeaderViewProps>(
                     <span>
                       {t.died}{' '}
                       <strong className='text-[var(--text-main)]'>
-                        {displayDeath || '?'}
+                        {displayDeath || t.sidebar.unknownDate}
                       </strong>
                       {person.deathPlace && (
                         <span className='text-[var(--text-muted)]'>

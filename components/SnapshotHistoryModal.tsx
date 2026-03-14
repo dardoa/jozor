@@ -1,11 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { X, RotateCcw, Plus, Clock, FileJson, Trash2 } from 'lucide-react';
+import { X, RotateCcw, Plus, Clock, FileJson } from 'lucide-react';
 import { GoogleSyncStateAndActions, DriveFile, ThemeLanguageProps } from '../types';
 import { googleDriveService } from '../services/googleService';
 import { useAppStore } from '../store/useAppStore';
 import { formatDistanceToNow } from 'date-fns';
 import { ar } from 'date-fns/locale/ar';
 import { enUS } from 'date-fns/locale/en-US';
+import { OverlayPrimitive } from '../context/OverlayContext';
+import { useTranslation } from '../context/TranslationContext';
+import { showError, showSuccess } from '../utils/toast';
+import { ConfirmationModal } from './ConfirmationModal';
 
 interface SnapshotHistoryModalProps {
     isOpen: boolean;
@@ -20,10 +24,13 @@ export const SnapshotHistoryModal: React.FC<SnapshotHistoryModalProps> = ({
     googleSync,
     themeLanguage,
 }) => {
+    const { t, dateLocale } = useTranslation();
     const [snapshots, setSnapshots] = useState<DriveFile[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [newLabel, setNewLabel] = useState('');
     const [isCreating, setIsCreating] = useState(false);
+    const [isRestoreConfirmOpen, setRestoreConfirmOpen] = useState(false);
+    const [pendingRestoreFile, setPendingRestoreFile] = useState<DriveFile | null>(null);
 
     // Get currentTreeId from Zustand store
     const currentTreeId = useAppStore((state) => state.currentTreeId);
@@ -39,6 +46,7 @@ export const SnapshotHistoryModal: React.FC<SnapshotHistoryModalProps> = ({
             setSnapshots(files);
         } catch (e) {
             console.error('Failed to list snapshots', e);
+            showError(t.modals.messages.error.load);
         } finally {
             setIsLoading(false);
         }
@@ -53,32 +61,60 @@ export const SnapshotHistoryModal: React.FC<SnapshotHistoryModalProps> = ({
     const handleCreate = async () => {
         if (!newLabel.trim()) return;
         setIsCreating(true);
-        await googleSync.handleCreateSnapshot(newLabel);
-        setNewLabel('');
-        setIsCreating(false);
-        fetchSnapshots();
-    };
-
-    const handleRestore = async (file: DriveFile) => {
-        if (window.confirm('Are you sure? Current state will be backed up as "Safety_Before_Restore" first.')) {
-            await googleSync.handleRestoreSnapshot(file);
-            onClose();
+        try {
+            await googleSync.handleCreateSnapshot(newLabel);
+            setNewLabel('');
+            showSuccess(t.modals.messages.success.load);
+            await fetchSnapshots();
+        } catch (e) {
+            console.error('Create snapshot failed:', e);
+            showError(t.modals.messages.error.snapshot);
+        } finally {
+            setIsCreating(false);
         }
     };
 
-    if (!isOpen) return null;
+    const handleRestore = (file: DriveFile) => {
+        setPendingRestoreFile(file);
+        setRestoreConfirmOpen(true);
+    };
+
+    const confirmRestore = async () => {
+        if (!pendingRestoreFile) return;
+        try {
+            await googleSync.handleRestoreSnapshot(pendingRestoreFile);
+            onClose();
+        } catch (e) {
+            console.error('Restore failed:', e);
+            showError(t.modals.messages.error.load);
+        } finally {
+            setRestoreConfirmOpen(false);
+            setPendingRestoreFile(null);
+        }
+    };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-            <div className="bg-[var(--theme-bg)] rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col border border-[var(--border-main)] animate-in fade-in zoom-in-95 duration-200">
+        <OverlayPrimitive
+            isOpen={isOpen}
+            onClose={onClose}
+            id='snapshot-history-modal'
+        >
+            <div
+                className="bg-[var(--theme-bg)] rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col border border-[var(--border-main)] animate-in fade-in zoom-in-95 duration-200"
+                onClick={(e) => e.stopPropagation()}
+            >
 
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 border-b border-[var(--border-main)]">
                     <h2 className="text-xl font-bold flex items-center gap-2">
                         <Clock className="w-5 h-5 text-[var(--primary-600)]" />
-                        {themeLanguage.language === 'ar' ? 'سجل النسخ الاحتياطية' : 'Version History'}
+                        {t.modals.versions.title}
                     </h2>
-                    <button onClick={onClose} className="p-2 hover:bg-[var(--theme-hover)] rounded-full transition-colors">
+                    <button 
+                        onClick={onClose} 
+                        className="p-2 hover:bg-[var(--theme-hover)] rounded-full transition-colors"
+                        aria-label={t.common?.close}
+                    >
                         <X className="w-5 h-5" />
                     </button>
                 </div>
@@ -86,14 +122,14 @@ export const SnapshotHistoryModal: React.FC<SnapshotHistoryModalProps> = ({
                 {/* Create New Section */}
                 <div className="p-4 bg-[var(--theme-surface)] border-b border-[var(--border-main)]">
                     <label className="text-sm font-medium mb-1 block">
-                        {themeLanguage.language === 'ar' ? 'إنشاء نسخة يدوية' : 'Create Manual Snapshot'}
+                        {t.modals.versions.create}
                     </label>
                     <div className="flex gap-2">
                         <input
                             type="text"
                             value={newLabel}
                             onChange={(e) => setNewLabel(e.target.value)}
-                            placeholder={themeLanguage.language === 'ar' ? 'مثال: قبل دمج الفروع...' : 'e.g., Before massive merge...'}
+                            placeholder={t.modals.versions.snapshotLabelPlaceholder}
                             className="flex-1 px-3 py-2 rounded-lg border border-[var(--border-strong)] bg-[var(--theme-bg)] focus:ring-2 focus:ring-[var(--primary-500)] outline-none"
                         />
                         <button
@@ -101,7 +137,7 @@ export const SnapshotHistoryModal: React.FC<SnapshotHistoryModalProps> = ({
                             disabled={isCreating || !newLabel.trim()}
                             className="bg-[var(--primary-600)] text-white px-4 py-2 rounded-lg flex items-center gap-2 font-medium hover:bg-[var(--primary-700)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         >
-                            {isCreating ? 'Saving...' : <><Plus className="w-4 h-4" /> {themeLanguage.language === 'ar' ? 'حفظ' : 'Create'}</>}
+                            {isCreating ? t.modals.versions.save + '...' : <><Plus className="w-4 h-4" /> {t.modals.versions.save}</>}
                         </button>
                     </div>
                 </div>
@@ -109,21 +145,18 @@ export const SnapshotHistoryModal: React.FC<SnapshotHistoryModalProps> = ({
                 {/* List */}
                 <div className="flex-1 overflow-y-auto p-4 space-y-3">
                     {isLoading && (
-                        <div className="text-center py-8 text-[var(--text-dim)]">Loading history...</div>
+                        <div className="text-center py-8 text-[var(--text-dim)]">{t.modals.versions.loadingHistory}</div>
                     )}
 
                     {!isLoading && snapshots.length === 0 && (
                         <div className="text-center py-8 text-[var(--text-dim)]">
-                            {themeLanguage.language === 'ar' ? 'لا توجد نسخ محفوظة.' : 'No snapshots found.'}
+                            {t.modals.versions.noSnapshots}
                         </div>
                     )}
 
                     {snapshots.map((snap) => {
-                        // Parse label from filename: snapshot_[treeId]_[timestamp]_[label].json
                         const parts = snap.name.replace('.json', '').split('_');
-                        // Index 0=snapshot, 1=treeId, 2=timestamp, 3...=label
-                        // Reconstruct label if it contains underscores
-                        const label = parts.slice(3).join(' ') || 'Untitled';
+                        const label = parts.slice(3).join(' ') || t.modals.versions.untitled;
                         const date = new Date(snap.modifiedTime);
 
                         return (
@@ -134,7 +167,7 @@ export const SnapshotHistoryModal: React.FC<SnapshotHistoryModalProps> = ({
                                         {label}
                                     </span>
                                     <span className="text-xs text-[var(--text-dim)] mt-1">
-                                        {formatDistanceToNow(date, { addSuffix: true, locale: themeLanguage.language === 'ar' ? ar : enUS })}
+                                        {formatDistanceToNow(date, { addSuffix: true, locale: dateLocale })}
                                         {' • '}
                                         {date.toLocaleDateString()} {date.toLocaleTimeString()}
                                     </span>
@@ -144,10 +177,10 @@ export const SnapshotHistoryModal: React.FC<SnapshotHistoryModalProps> = ({
                                     <button
                                         onClick={() => handleRestore(snap)}
                                         className="px-3 py-1.5 text-xs font-medium bg-[var(--primary-100)] text-[var(--primary-700)] rounded hover:bg-[var(--primary-200)] flex items-center gap-1"
-                                        title="Restore this version"
+                                        title={t.modals.versions.restore}
                                     >
                                         <RotateCcw className="w-3 h-3" />
-                                        {themeLanguage.language === 'ar' ? 'استعادة' : 'Restore'}
+                                        {t.modals.versions.restore}
                                     </button>
                                 </div>
                             </div>
@@ -156,6 +189,16 @@ export const SnapshotHistoryModal: React.FC<SnapshotHistoryModalProps> = ({
                 </div>
 
             </div>
-        </div>
+
+            <ConfirmationModal
+                isOpen={isRestoreConfirmOpen}
+                onClose={() => setRestoreConfirmOpen(false)}
+                onConfirm={confirmRestore}
+                title={t.modals.versions.restore}
+                message={t.modals.versions.restoreConfirm}
+                type="warning"
+                overlayId="snapshot-history-restore-confirm"
+            />
+        </OverlayPrimitive>
     );
 };

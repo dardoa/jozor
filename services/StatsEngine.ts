@@ -26,6 +26,7 @@ export interface StatsData {
         person: { id: string; firstName: string; lastName: string; photoUrl?: string };
         daysUntil: number;
         ageTurning: number;
+        nextBirthday: string;
     }[];
 }
 
@@ -129,7 +130,8 @@ export class StatsEngine {
                             upcomingBirthdays.push({
                                 person: { id: p.id, firstName: p.firstName, lastName: p.lastName, photoUrl: p.photoUrl },
                                 daysUntil: diff,
-                                ageTurning: nextBday.getFullYear() - bDate.getFullYear()
+                                ageTurning: nextBday.getFullYear() - bDate.getFullYear(),
+                                nextBirthday: nextBday.toISOString()
                             });
                         }
                     }

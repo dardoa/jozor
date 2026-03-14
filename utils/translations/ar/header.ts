@@ -63,4 +63,11 @@ export const header = {
   showPassword: 'إظهار كلمة المرور',
   hidePassword: 'إخفاء كلمة المرور',
   historyLog: 'سجل العمليات',
+  categories: {
+    viewAndStory: '📖 عرض المحتوى',
+    analysisAndInsights: '🔍 التحليل والفحص',
+  },
+  admin: 'الإدارة',
+  toolsMenuAria: 'الأدوات',
+  importFile: 'استيراد ملف شجرة العائلة',
 };

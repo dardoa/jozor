@@ -32,9 +32,7 @@ export const ExportMenu = memo(({ onClose, onExport, onBack }: ExportMenuProps) 
       {!isOwner ? (
         <div className='p-4 text-center'>
           <p className='text-xs text-[var(--text-dim)] italic'>
-            {t.language === 'ar'
-              ? 'التصدير متاح لمالك الشجرة فقط.'
-              : 'Exporting is restricted to the tree owner.'}
+            {t.modals.export.ownerOnly}
           </p>
         </div>
       ) : (
@@ -67,10 +65,10 @@ export const ExportMenu = memo(({ onClose, onExport, onBack }: ExportMenuProps) 
 
           {/* Image formats */}
           <DropdownMenuItem onClick={() => onExport('png')} icon={<FileImage className='w-3.5 h-3.5' />}>
-            {t.language === 'ar' ? 'تصدير صورة عالية الدقة (PNG)' : 'Export High-Res PNG'}
+            label={t.modals.export.formats.png}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => onExport('jpeg')} icon={<FileImage className='w-3.5 h-3.5' />}>
-            {t.language === 'ar' ? 'تصدير صورة قياسية (JPEG)' : 'Export Standard JPEG'}
+            label={t.modals.export.formats.jpeg}
           </DropdownMenuItem>
 
           <DropdownMenuDivider />
@@ -80,7 +78,7 @@ export const ExportMenu = memo(({ onClose, onExport, onBack }: ExportMenuProps) 
             {t.printPdf}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => onExport('pdf')} icon={<FileText className='w-3.5 h-3.5' />}>
-            {t.language === 'ar' ? 'تصدير مستند (PDF)' : 'Export Document (PDF)'}
+            label={t.modals.export.formats.pdf}
           </DropdownMenuItem>
         </>
       )}

@@ -10,6 +10,7 @@ import { SupabaseStorageService } from '../../services/supabaseStorageService';
 import { updateUserProfile } from '../../services/supabaseTreeService';
 import { Button } from '../ui/Button';
 import { FormField } from '../ui/FormField';
+import { OverlayPrimitive } from '../../context/OverlayContext';
 
 interface GlobalSettingsModalProps {
     isOpen: boolean;
@@ -42,7 +43,7 @@ export const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen
         if (user) setDisplayName(user.displayName);
     }, [user]);
 
-    if (!isOpen || !user) return null;
+    if (!user) return null;
 
     const handleAvatarClick = () => fileInputRef.current?.click();
 
@@ -58,10 +59,10 @@ export const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen
             const updatedUser = { ...user, photoURL: publicUrl };
             useAppStore.setState({ user: updatedUser });
             await updateUserProfile(user.uid, user.email, { photoURL: publicUrl }, user.supabaseToken);
-            toast.success(t.avatarUpdateSuccess);
+            toast.success(t.modals.globalSettings.profile.avatarUpdateSuccess);
         } catch (error) {
             console.error('Failed to upload avatar:', error);
-            toast.error(language === 'ar' ? 'فشل تحديث الصورة' : 'Failed to update avatar');
+            toast.error(t.modals.globalSettings.profile.avatarUpdateError);
         } finally {
             setIsUploading(false);
         }
@@ -76,7 +77,7 @@ export const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen
             toast.success(t.preferencesSaveSuccess);
         } catch (error) {
             console.error('Failed to update profile:', error);
-            toast.error(language === 'ar' ? 'فشل حفظ التغييرات' : 'Failed to save changes');
+            toast.error(t.modals.globalSettings.profile.saveChangesError);
         } finally {
             setIsSaving(false);
         }
@@ -137,16 +138,20 @@ export const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen
             // 3. Logout
             await logout();
             onClose();
-            toast.success(language === 'ar' ? 'تم حذف الحساب بنجاح' : 'Account deleted successfully');
+            toast.success(t.modals.globalSettings.security.deleteSuccess);
         } catch (error) {
             console.error('Delete failed:', error);
             setIsDeleting(false);
-            toast.error(language === 'ar' ? 'فشل حذف الحساب' : 'Failed to delete account');
+            toast.error(t.modals.globalSettings.security.deleteError);
         }
     };
 
     return (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-300">
+        <OverlayPrimitive
+            isOpen={isOpen}
+            onClose={onClose}
+            id='global-settings-modal'
+        >
             <div className="bg-[var(--theme-bg)]/80 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
 
                 {/* Header */}
@@ -156,10 +161,14 @@ export const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen
                             <Settings className="w-5 h-5" />
                         </div>
                         <h2 className="text-xl font-bold text-[var(--text-main)]">
-                            {language === 'ar' ? 'الإعدادات العامة' : 'Global Settings'}
+                            {t.modals.globalSettings.title}
                         </h2>
                     </div>
-                    <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-all text-[var(--text-dim)]">
+                    <button 
+                        onClick={onClose} 
+                        className="p-2 hover:bg-white/10 rounded-full transition-all text-[var(--text-dim)]"
+                        aria-label={t.close}
+                    >
                         <X className="w-6 h-6" />
                     </button>
                 </div>
@@ -167,9 +176,9 @@ export const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen
                 {/* Tab Navigation */}
                 <div className="flex px-6 border-b border-white/5 bg-black/5">
                     {[
-                        { id: 'profile', icon: User, label: language === 'ar' ? 'الملف الشخصي' : 'Profile' },
-                        { id: 'preferences', icon: Settings, label: language === 'ar' ? 'التفضيلات' : 'Preferences' },
-                        { id: 'security', icon: ShieldAlert, label: language === 'ar' ? 'الأمان' : 'Security' },
+                        { id: 'profile', icon: User, label: t.modals.globalSettings.tabs.profile },
+                        { id: 'preferences', icon: Settings, label: t.modals.globalSettings.tabs.preferences },
+                        { id: 'security', icon: ShieldAlert, label: t.modals.globalSettings.tabs.security },
                     ].map(tab => (
                         <button
                             key={tab.id}
@@ -204,7 +213,7 @@ export const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen
                                         {/* Upload Overlay */}
                                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 text-white text-xs font-bold">
                                             <Camera className="w-6 h-6" />
-                                            <span>{language === 'ar' ? 'تغيير الصورة' : 'Change Photo'}</span>
+                                            <span>{t.modals.globalSettings.profile.changePhoto}</span>
                                         </div>
 
                                         {/* Progress Indicator */}
@@ -230,7 +239,7 @@ export const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen
 
                             <div className="space-y-4 pt-4">
                                 <FormField
-                                    label={language === 'ar' ? 'اسم العرض' : 'Display Name'}
+                                    label={t.modals.globalSettings.profile.displayName}
                                     value={displayName}
                                     onCommit={setDisplayName}
                                 />
@@ -239,7 +248,7 @@ export const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen
                                     onClick={handleSaveProfile}
                                     isLoading={isSaving}
                                 >
-                                    {language === 'ar' ? 'حفظ التغييرات' : 'Save Changes'}
+                                    {t.modals.globalSettings.profile.saveChanges}
                                 </Button>
                             </div>
                         </div>
@@ -255,10 +264,10 @@ export const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen
                                     </div>
                                     <div>
                                         <h4 className="font-bold text-sm text-[var(--text-main)]">
-                                            {language === 'ar' ? 'المظهر' : 'Appearance'}
+                                            {t.modals.globalSettings.preferences.appearance}
                                         </h4>
                                         <p className="text-[10px] text-[var(--text-dim)]">
-                                            {darkMode ? (language === 'ar' ? 'الوضع الليلي' : 'Dark Mode') : (language === 'ar' ? 'الوضع النهاري' : 'Light Mode')}
+                                            {darkMode ? t.modals.globalSettings.preferences.darkMode : t.modals.globalSettings.preferences.lightMode}
                                         </p>
                                     </div>
                                 </div>
@@ -278,7 +287,7 @@ export const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen
                                     </div>
                                     <div>
                                         <h4 className="font-bold text-sm text-[var(--text-main)]">
-                                            {language === 'ar' ? 'اللغة' : 'Language'}
+                                            {t.modals.globalSettings.preferences.language}
                                         </h4>
                                         <p className="text-[10px] text-[var(--text-dim)]">
                                             {language === 'en' ? 'English' : 'العربية'}
@@ -288,13 +297,15 @@ export const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen
                                 <div className="flex gap-2">
                                     <button
                                         onClick={() => setLanguage('en')}
-                                        className={`px-3 py-1 text-xs font-bold rounded-lg border transition-all ${language === 'en' ? 'bg-blue-500/20 border-blue-500 text-blue-500' : 'border-white/10 text-[var(--text-dim)]'}`}
+                                        data-active={language === 'en'}
+                                        className="px-3 py-1 text-xs font-bold rounded-lg border transition-all data-[active=true]:bg-blue-500/20 data-[active=true]:border-blue-500 data-[active=true]:text-blue-500 border-white/10 text-[var(--text-dim)]"
                                     >
                                         EN
                                     </button>
                                     <button
                                         onClick={() => setLanguage('ar')}
-                                        className={`px-3 py-1 text-xs font-bold rounded-lg border transition-all ${language === 'ar' ? 'bg-blue-500/20 border-blue-500 text-blue-500' : 'border-white/10 text-[var(--text-dim)]'}`}
+                                        data-active={language === 'ar'}
+                                        className="px-3 py-1 text-xs font-bold rounded-lg border transition-all data-[active=true]:bg-blue-500/20 data-[active=true]:border-blue-500 data-[active=true]:text-blue-500 border-white/10 text-[var(--text-dim)]"
                                     >
                                         AR
                                     </button>
@@ -309,10 +320,10 @@ export const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen
                                     </div>
                                     <div>
                                         <h4 className="font-bold text-sm text-[var(--text-main)]">
-                                            {language === 'ar' ? 'الجولة الإرشادية' : 'Interactive Tour'}
+                                            {t.modals.globalSettings.preferences.interactiveTour}
                                         </h4>
                                         <p className="text-[10px] text-[var(--text-dim)]">
-                                            {language === 'ar' ? 'إعادة تشغيل الجولة التعليمية' : 'Restart the onboarding guide'}
+                                            {t.modals.globalSettings.preferences.restartTour}
                                         </p>
                                     </div>
                                 </div>
@@ -324,7 +335,7 @@ export const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen
                                 >
                                     <span className="flex items-center gap-2">
                                         <Check className="w-3 h-3" />
-                                        {language === 'ar' ? 'إعادة' : 'Reset'}
+                                        {t.modals.globalSettings.preferences.reset}
                                     </span>
                                 </Button>
                             </div>
@@ -347,7 +358,7 @@ export const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen
                                         className="w-full h-12 rounded-2xl font-bold"
                                         onClick={() => setShowDeleteConfirm(true)}
                                     >
-                                        {language === 'ar' ? 'بدء إجراء الحذف' : 'Start Deletion Process'}
+                                        {t.modals.globalSettings.security.startDeletion}
                                     </Button>
                                 </div>
                             ) : (
@@ -355,7 +366,7 @@ export const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen
                                     <div className="text-center space-y-2">
                                         <h4 className="text-lg font-bold text-red-500">{t.deleteAccountPermanentTitle}</h4>
                                         <p className="text-xs text-[var(--text-dim)]">
-                                            {language === 'ar' ? 'اضغط مع الاستمرار على الزر أدناه لمدة 5 ثوانٍ للتأكيد.' : 'Hold the button below for 5 seconds to confirm.'}
+                                            {t.modals.globalSettings.security.deletionHold}
                                         </p>
                                     </div>
 
@@ -374,8 +385,7 @@ export const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen
                                                 className="absolute inset-0 bg-gradient-to-r from-red-600 to-red-500 opacity-90 transition-all duration-100 ease-linear pointer-events-none"
                                                 style={{
                                                     width: `${deleteProgress}%`,
-                                                    left: language === 'ar' ? 'auto' : 0,
-                                                    right: language === 'ar' ? 0 : 'auto'
+                                                    insetInlineStart: 0,
                                                 }}
                                             />
 
@@ -404,9 +414,7 @@ export const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen
                                         </Button>
 
                                         <p className="text-[10px] text-center text-red-400/80 font-medium italic">
-                                            {language === 'ar'
-                                                ? '* سيتم حذف جميع الأشجار والملفات المرفوعة نهائياً.'
-                                                : '* All owned trees and uploaded media will be destroyed permanently.'}
+                                            {t.modals.globalSettings.security.deletionWarning}
                                         </p>
                                     </div>
                                 </div>
@@ -436,7 +444,7 @@ export const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen
                         </div>
                         <div className="space-y-2">
                             <h4 className="text-lg font-bold text-[var(--text-main)]">
-                                {language === 'ar' ? 'إعادة الجولة' : 'Restart Tour'}
+                                {t.modals.globalSettings.restartTourModal.title}
                             </h4>
                             <p className="text-sm text-[var(--text-dim)] leading-relaxed">
                                 {t.tourRestartBody}
@@ -448,19 +456,19 @@ export const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen
                                 className="flex-1 rounded-xl font-bold"
                                 onClick={() => setShowTourConfirm(false)}
                             >
-                                {language === 'ar' ? 'إلغاء' : 'Cancel'}
+                                {t.cancel}
                             </Button>
                             <Button
                                 className="flex-1 rounded-xl bg-blue-500 hover:bg-blue-600 font-bold"
                                 onClick={handleResetTour}
                             >
-                                {language === 'ar' ? 'نعم، ابدأ' : 'Yes, Start'}
+                                {t.modals.globalSettings.restartTourModal.yes}
                             </Button>
                         </div>
                     </div>
                 </div>
             )}
-        </div>
+        </OverlayPrimitive>
     );
 };
 

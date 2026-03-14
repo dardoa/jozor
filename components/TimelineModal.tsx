@@ -3,6 +3,7 @@ import { Person, TimelineEvent } from '../types';
 import { X, Calendar, Baby, Heart, Ribbon, Info, Filter, FileText } from 'lucide-react';
 import { getDisplayDate } from '../utils/familyLogic';
 import { useTranslation } from '../context/TranslationContext';
+import { OverlayPrimitive } from '../context/OverlayContext';
 
 interface TimelineModalProps {
   isOpen: boolean;
@@ -145,11 +146,16 @@ export const TimelineModal = ({ isOpen, onClose, people, onSelectPerson }: Timel
       .sort((a, b) => (sortAsc ? a.year - b.year : b.year - a.year));
   }, [people, sortAsc, activeFilters, t]);
 
-  if (!isOpen) return null;
-
   return (
-    <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200'>
-      <div className='bg-white dark:bg-stone-800 rounded-xl shadow-2xl max-w-2xl w-full flex flex-col h-[85vh] border border-stone-200 dark:border-stone-700'>
+    <OverlayPrimitive
+      isOpen={isOpen}
+      onClose={onClose}
+      id='timeline-modal'
+    >
+      <div
+        className='bg-white dark:bg-stone-800 rounded-xl shadow-2xl max-w-2xl w-full flex flex-col h-[85vh] border border-stone-200 dark:border-stone-700'
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className='flex items-center justify-between p-4 border-b border-stone-200 dark:border-stone-700 bg-stone-50/50 dark:bg-stone-900/50'>
           <div className='flex items-center gap-2'>
@@ -167,7 +173,7 @@ export const TimelineModal = ({ isOpen, onClose, people, onSelectPerson }: Timel
             </button>
             <button
               onClick={onClose}
-              aria-label={t.close || 'Close'}
+              aria-label={t.close}
               className='p-2 hover:bg-stone-100 dark:hover:bg-stone-700 rounded-full transition-colors text-stone-400 hover:text-stone-600'
             >
               <X className='w-5 h-5' />
@@ -253,6 +259,6 @@ export const TimelineModal = ({ isOpen, onClose, people, onSelectPerson }: Timel
           )}
         </div>
       </div>
-    </div>
+    </OverlayPrimitive>
   );
 };

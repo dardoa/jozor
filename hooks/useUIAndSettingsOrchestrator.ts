@@ -50,7 +50,7 @@ export const useUIAndSettingsOrchestrator = (
     onOpenAdminHub,
   } = params;
 
-  const { language, setLanguage } = useTranslation();
+  const { t, language, setLanguage } = useTranslation();
   const { treeSettings, setTreeSettings } = useTreeSettings();
   const { darkMode, setDarkMode } = useThemeSync();
 
@@ -116,7 +116,7 @@ export const useUIAndSettingsOrchestrator = (
     onTriggerImportFile,
   };
 
-  const themeLanguage: ThemeLanguageProps = { darkMode, setDarkMode, language, setLanguage };
+  const themeLanguage: ThemeLanguageProps = { darkMode, setDarkMode, language, setLanguage, t };
 
   const viewSettings: ViewSettingsProps = {
     treeSettings,

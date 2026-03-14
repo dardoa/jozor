@@ -44,7 +44,7 @@ export const HeaderLeftSection: React.FC<HeaderLeftSectionProps> = memo(
             dir='ltr'
             aria-label={t.undo}
           >
-            <Undo className={`w-4 h-4 ${themeLanguage.language === 'ar' ? 'scale-x-[-1]' : ''}`} />
+            <Undo className="w-4 h-4 rtl:-scale-x-100" />
           </button>
           <div className='w-px h-3 bg-[var(--border-main)] mx-0.5'></div>
           <button
@@ -54,7 +54,7 @@ export const HeaderLeftSection: React.FC<HeaderLeftSectionProps> = memo(
             dir='ltr'
             aria-label={t.redo}
           >
-            <Redo className={`w-4 h-4 ${themeLanguage.language === 'ar' ? 'scale-x-[-1]' : ''}`} />
+            <Redo className="w-4 h-4 rtl:-scale-x-100" />
           </button>
         </div>
       </div>

@@ -37,7 +37,7 @@ export const QuickAddSpeedDial: React.FC<QuickAddSpeedDialProps> = ({
           type='button'
           onClick={() => setIsOpen(true)}
           className={`flex items-center justify-center shadow-sm hover:shadow-md active:scale-95 transition-all ${buttonClassName}`}
-          title={t.quickAdd || 'Quick Add'}
+          title={t.quickAdd}
         >
           <UserPlus className='w-3 h-3' />
           <span className='ms-1'>{t.quickAdd}</span>

@@ -102,8 +102,8 @@ export const TreeHUD: React.FC<TreeHUDProps> = ({
                 <button
                     onClick={() => setSettingsDrawerOpen(!isSettingsDrawerOpen)}
                     className={`p-2.5 backdrop-blur-md border rounded-full shadow-sm active:scale-95 transition-all group flex items-center justify-center w-10 h-10 ${isSettingsDrawerOpen ? 'bg-amber-500 border-amber-500 text-slate-900 shadow-amber-500/20 shadow-lg' : 'bg-white/70 dark:bg-slate-900/70 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:text-amber-600'}`}
-                    title={t.common?.settings || "View Settings"}
-                    aria-label={t.common?.settings || "View Settings"}
+                    title={t.general.advancedSettings}
+                    aria-label={t.general.advancedSettings}
                 >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"

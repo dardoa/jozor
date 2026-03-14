@@ -18,7 +18,8 @@ import {
   ExportType,
 } from '../types';
 import { useAppStore } from '../store/useAppStore';
-import { useKeyboardShortcuts } from './useKeyboardShortcuts';
+import { useNavigate } from 'react-router-dom';
+import { useKeyboardShortcuts, ShortcutMap } from './useKeyboardShortcuts';
 import { useUIAndSettingsOrchestrator } from './useUIAndSettingsOrchestrator';
 import { useExport } from './useExport';
 import { useModalOrchestrator } from './useModalOrchestrator';
@@ -110,16 +111,18 @@ export const useAppOrchestration = (isSharedMode: boolean = false): AppOrchestra
   const activePerson = people[focusId];
   const canUndo = history.length > 0;
   const canRedo = future.length > 0;
+  const navigate = useNavigate();
 
-  useKeyboardShortcuts(
-    canUndo,
-    undo,
-    canRedo,
-    redo,
-    welcomeScreen.showWelcome,
-    isPresentMode,
-    setIsPresentMode
-  );
+  const shortcuts: ShortcutMap = {
+    'ctrl+z': () => canUndo && undo(),
+    'ctrl+y': () => canRedo && redo(),
+    'ctrl+shift+z': () => canRedo && redo(),
+    'escape': () => isPresentMode && setIsPresentMode(false),
+    '?': () => navigate('/help'),
+    '/': () => navigate('/help'), // Alternative help shortcut
+  };
+
+  useKeyboardShortcuts(shortcuts, !welcomeScreen.showWelcome);
 
   // Auto-open sidebar ONLY when a new person is selected
   const lastFocusIdRef = useRef<string | null>(null);

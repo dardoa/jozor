@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import { HeaderProps } from '../types';
 import { useAppStore } from '../store/useAppStore';
+import { useTranslation } from '../context/TranslationContext';
 
 // Import sub-components
 import { HeaderLeftSection } from './header/HeaderLeftSection';
@@ -17,33 +18,35 @@ export const Header = memo<HeaderProps>(
     exportActions,
     searchProps,
   }) => {
-    const isLowGraphicsMode = useAppStore(state => state.treeSettings.isLowGraphicsMode);
-
-    const isRtl = themeLanguage.language === 'ar';
+    const { t, language } = useTranslation();
+    const isRtl = language === 'ar';
     const activeFile = auth.driveFiles.find((f) => f.id === auth.currentActiveDriveFileId) || null;
     const treeLabel = activeFile
-      ? (isRtl ? `الشجرة: ${activeFile.name}` : `Tree: ${activeFile.name}`)
-      : (isRtl ? 'شجرة غير مسماة' : 'Untitled tree');
+      ? `${t.header.treeLabelPrefix}${activeFile.name}`
+      : t.header.untitledTree;
 
     const role = viewSettings.currentUserRole;
-    const roleLabel =
+    const roleLabelPrefix = t.header.roleLabelPrefix;
+    const roleName =
       role === 'owner'
-        ? (isRtl ? 'دورك: مالك الشجرة' : 'Role: Tree owner')
+        ? t.header.roles.owner
         : role === 'editor'
-          ? (isRtl ? 'دورك: محرّر' : 'Role: Editor')
+          ? t.header.roles.editor
           : role === 'viewer'
-            ? (isRtl ? 'دورك: مشاهد' : 'Role: Viewer')
-            : (isRtl ? 'دورك: غير محدد' : 'Role: Unknown');
+            ? t.header.roles.viewer
+            : t.header.roles.unknown;
+    const roleLabel = `${roleLabelPrefix}${roleName}`;
 
     const syncState = auth.syncStatus.state;
-    const syncLabel =
+    const syncStatusLabel =
       syncState === 'saving'
-        ? (isRtl ? 'الحالة: جارٍ الحفظ' : 'Status: Saving…')
+        ? t.header.syncStatus.saving
         : syncState === 'error'
-          ? (isRtl ? 'الحالة: خطأ في المزامنة' : 'Status: Sync error')
+          ? t.header.syncStatus.error
           : syncState === 'offline'
-            ? (isRtl ? 'الحالة: غير متصل' : 'Status: Offline')
-            : (isRtl ? 'الحالة: متزامن' : 'Status: Synced');
+            ? t.header.syncStatus.offline
+            : t.header.syncStatus.synced;
+    const syncLabel = `${t.header.syncStatusPrefix}${syncStatusLabel}`;
 
     const syncColorClass =
       syncState === 'saving'
@@ -53,6 +56,8 @@ export const Header = memo<HeaderProps>(
           : syncState === 'offline'
             ? 'text-[var(--text-muted)]'
             : 'text-emerald-600';
+
+    const isLowGraphicsMode = useAppStore(state => state.treeSettings.isLowGraphicsMode);
 
     return (
       <header
@@ -84,7 +89,7 @@ export const Header = memo<HeaderProps>(
               <>
                 <span aria-hidden='true'>•</span>
                 <span className='px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 font-semibold'>
-                  {isRtl ? 'وضع تجريبي' : 'Demo mode'}
+                  {t.header.demoMode}
                 </span>
               </>
             )}

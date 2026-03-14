@@ -63,4 +63,11 @@ export const header = {
   showPassword: 'Show Password',
   hidePassword: 'Hide Password',
   historyLog: 'Activity History',
+  categories: {
+    viewAndStory: 'View & Story',
+    analysisAndInsights: 'Analysis & Insights',
+  },
+  admin: 'Admin',
+  toolsMenuAria: 'Tools Menu',
+  importFile: 'Import Family Tree File',
 };

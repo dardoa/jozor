@@ -61,11 +61,11 @@ export const Sidebar = memo<SidebarProps>(
 
     const tabs = useMemo(() => {
       const allTabs = [
-        { id: 'info', label: t.profile || 'Info', show: true, priority: 1 },
-        { id: 'partners', label: t.partners || 'Partners', show: !!(person.spouses && person.spouses.length > 0), priority: 3 },
-        { id: 'bio', label: t.biography || 'Bio', show: true, priority: 2 },
-        { id: 'contact', label: t.contact || 'Contact', show: true, priority: 4 },
-        { id: 'media', label: t.galleryTab || 'Media', show: true, priority: 5 },
+        { id: 'info', label: t.sidebar.profile, show: true, priority: 1 },
+        { id: 'partners', label: t.sidebar.partners, show: !!(person.spouses && person.spouses.length > 0), priority: 3 },
+        { id: 'bio', label: t.sidebar.biography, show: true, priority: 2 },
+        { id: 'contact', label: t.sidebar.contact, show: true, priority: 4 },
+        { id: 'media', label: t.sidebar.galleryTab, show: true, priority: 5 },
       ] as { id: 'info' | 'partners' | 'bio' | 'contact' | 'media'; label: string; show: boolean; priority: number }[];
 
       // Note: On mobile < 640px, SidebarTabs already handles the overflow-x-auto scroll.
@@ -115,14 +115,10 @@ export const Sidebar = memo<SidebarProps>(
         )}
 
         <aside
-          className={`fixed inset-x-0 bottom-0 sm:inset-y-0 z-[100] w-full sm:w-[450px] h-[75vh] sm:h-full bg-[var(--theme-bg)] border-t sm:border-t-0 border-[var(--border-main)] flex flex-col shadow-[0_-8px_30px_rgba(0,0,0,0.3)] transition-all duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] rounded-t-[32px] sm:rounded-none ${
-            isRtl 
-              ? 'sm:right-0 sm:left-auto sm:border-l' 
-              : 'sm:left-0 sm:right-auto sm:border-r'
-          } ${
+          className={`fixed inset-x-0 bottom-0 sm:inset-y-0 z-[100] w-full sm:w-[450px] h-[75vh] sm:h-full bg-[var(--theme-bg)] border-t sm:border-t-0 border-[var(--border-main)] flex flex-col shadow-[0_-8px_30px_rgba(0,0,0,0.3)] transition-all duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] rounded-t-[32px] sm:rounded-none sm:end-0 sm:start-auto sm:border-inline-start-0 ltr:sm:start-0 ltr:sm:end-auto ltr:sm:border-r rtl:sm:right-0 rtl:sm:left-auto rtl:sm:border-l ${
             isOpen
               ? 'translate-y-0 sm:translate-x-0'
-              : `translate-y-full ${isRtl ? 'sm:translate-x-full' : 'sm:-translate-x-full'} pointer-events-none`
+              : `translate-y-full ltr:sm:-translate-x-full rtl:sm:translate-x-full pointer-events-none`
           }`}
           style={{ 
             transform: (isDragging && isOpen) ? `translateY(${dragY}px)` : undefined,

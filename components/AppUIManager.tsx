@@ -10,10 +10,12 @@ import { useAppStore, loadFullState } from '../store/useAppStore';
 import { ModalManagerContainer } from './ModalManagerContainer';
 import { useAppOrchestration } from '../hooks/useAppOrchestration';
 import { NotFound } from './NotFound';
+import { useTranslation } from '../context/TranslationContext';
 
 const HelpCenter = React.lazy(() => import('./HelpCenter').then(m => ({ default: m.HelpCenter })));
 
 export const AppUIManager: React.FC = () => {
+  const { t } = useTranslation();
   const sharedMatch = useMatch('/tree/:ownerUid/:fileId');
   const isSharedMode = !!sharedMatch;
   const orchestrationObj = useAppOrchestration(isSharedMode);
@@ -171,10 +173,10 @@ export const AppUIManager: React.FC = () => {
         accept='.json,.ged,.jozor,.zip'
         className='hidden'
         onChange={onFileUpload}
-        aria-label='Import Family Tree File'
+        aria-label={t.header.importFile}
       />
 
-      <React.Suspense fallback={<div className="flex h-screen items-center justify-center bg-[var(--theme-bg)] text-[var(--text-main)] animate-pulse">Loading...</div>}>
+      <React.Suspense fallback={<div className="flex h-screen items-center justify-center bg-[var(--theme-bg)] text-[var(--text-main)] animate-pulse">{t.loading}</div>}>
         <Routes>
           <Route path="/help" element={<HelpCenter />} />
           <Route path="/support" element={<Navigate to="/help" replace />} />

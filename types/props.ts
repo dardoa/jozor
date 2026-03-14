@@ -15,6 +15,7 @@ export interface ThemeLanguageProps {
     setDarkMode: (v: boolean) => void;
     language: Language;
     setLanguage: (l: Language) => void;
+    t: any;
 }
 
 export interface AuthProps {
@@ -94,3 +95,5 @@ export interface HeaderProps {
     exportActions: ExportActionsProps;
     searchProps: SearchProps;
 }
+
+98: 

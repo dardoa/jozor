@@ -70,7 +70,7 @@ export const ShareModal = ({ isOpen, onClose, language, user, driveFileId, treeI
     if (!email.trim()) return;
 
     if (!user || (!driveFileId && !treeId)) {
-      showError('No active tree is selected for sharing.');
+      showError(t.modals.noActiveTree);
       return;
     }
 
@@ -98,10 +98,10 @@ export const ShareModal = ({ isOpen, onClose, language, user, driveFileId, treeI
 
       setCollaborators(merged);
       setEmail('');
-      showSuccess(t.inviteSent + ' ' + email);
+      showSuccess(t.modals.messages.success.invite.replace('{email}', email));
     } catch (err: any) {
       console.error('Failed to invite collaborator', err);
-      showError(err.message || 'Failed to invite collaborator');
+      showError(t.modals.messages.error.invite);
     }
   };
 
@@ -128,10 +128,10 @@ export const ShareModal = ({ isOpen, onClose, language, user, driveFileId, treeI
         ...remote.filter((c: Collaborator) => c.email.toLowerCase() !== user.email.toLowerCase()),
       ];
       setCollaborators(merged);
-      showSuccess('Collaborator removed.');
+      showSuccess(t.modals.messages.success.revoke);
     } catch (err: any) {
       console.error('Failed to remove collaborator', err);
-      showError('Failed to remove collaborator from DB.');
+      showError(t.modals.messages.error.revoke);
     }
   };
 
@@ -139,7 +139,7 @@ export const ShareModal = ({ isOpen, onClose, language, user, driveFileId, treeI
     if (!shareLink) return;
     navigator.clipboard.writeText(shareLink);
     setIsCopied(true);
-    showSuccess('Link copied to clipboard!'); // Toast success
+    showSuccess(t.modals.messages.success.copy); // Toast success
     setTimeout(() => setIsCopied(false), 2000);
   };
 
@@ -158,11 +158,11 @@ export const ShareModal = ({ isOpen, onClose, language, user, driveFileId, treeI
             <div className='p-1.5 bg-blue-100 dark:bg-blue-900/30 rounded-lg text-blue-600 dark:text-blue-400'>
               <Share2 className='w-5 h-5' />
             </div>
-            <h3 className='text-lg font-bold text-stone-800 dark:text-white'>{t.shareTree}</h3>
+            <h3 className='text-lg font-bold text-stone-800 dark:text-white'>{t.modals.shareLink}</h3>
           </div>
           <button
             onClick={onClose}
-            aria-label={t.close || 'Close'}
+            aria-label={t.general.close}
             className='p-2 hover:bg-stone-100 dark:hover:bg-stone-700 rounded-full transition-colors text-stone-400 hover:text-stone-600 dark:hover:text-stone-300'
           >
             <X className='w-5 h-5' />
@@ -173,7 +173,7 @@ export const ShareModal = ({ isOpen, onClose, language, user, driveFileId, treeI
           {/* Invite Section */}
           <div className='bg-white dark:bg-stone-800 pt-5 p-3 rounded-xl border border-stone-200 dark:border-stone-700 shadow-sm space-y-2 relative'>
             <h3 className='absolute top-[-12px] start-3 z-10 bg-white dark:bg-stone-800 px-2 text-[9px] font-bold text-stone-400 uppercase tracking-wider'>
-              {t.inviteCollaborator}
+              {t.modals.inviteCollaborator}
             </h3>
             <form onSubmit={handleInvite} className='flex gap-2'>
               <div className='flex-1 relative'>
@@ -181,7 +181,7 @@ export const ShareModal = ({ isOpen, onClose, language, user, driveFileId, treeI
                 <input
                   type='email'
                   required
-                  placeholder={t.emailPlaceholder}
+                  placeholder={t.modals.emailPlaceholder}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className='w-full ps-10 pe-3 py-2 bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-stone-900 dark:text-stone-100'
@@ -190,22 +190,18 @@ export const ShareModal = ({ isOpen, onClose, language, user, driveFileId, treeI
               <select
                 value={role}
                 onChange={(e) => setRole(e.target.value as any)}
-                aria-label={t.role || 'Role'}
+                aria-label={t.sidebar.role || 'Role'}
                 className='bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-lg text-sm px-3 text-stone-700 dark:text-stone-200 outline-none focus:border-blue-500'
               >
-                <option value='editor'>{t.editor}</option>
-                <option value='viewer'>{t.viewer}</option>
+                <option value='editor'>{t.modals.editor}</option>
+                <option value='viewer'>{t.modals.viewer}</option>
               </select>
               <button
                 type='submit'
                 className='bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-colors flex items-center gap-2'
               >
-                {language === 'ar' ? (
-                  <UserPlus className='w-4 h-4 scale-x-[-1]' />
-                ) : (
-                  <UserPlus className='w-4 h-4' />
-                )}
-                <span className='hidden sm:inline'>{t.sendInvite}</span>
+                <UserPlus className="w-4 h-4 rtl:-scale-x-100" />
+                <span className='hidden sm:inline'>{t.modals.sendInvite}</span>
               </button>
             </form>
           </div>
@@ -214,7 +210,7 @@ export const ShareModal = ({ isOpen, onClose, language, user, driveFileId, treeI
           <div className='p-3 bg-stone-50 dark:bg-stone-900/50 rounded-lg border border-dashed border-stone-200 dark:border-stone-700 flex items-center justify-between gap-3'>
             <div className='flex items-center gap-2 text-sm text-stone-600 dark:text-stone-400 overflow-hidden'>
               <Globe className='w-4 h-4 shrink-0' />
-              <span className='truncate'>{shareLink || 'Loading...'}</span>
+              <span className='truncate'>{shareLink}</span>
             </div>
             <button
               onClick={copyLink}
@@ -222,7 +218,7 @@ export const ShareModal = ({ isOpen, onClose, language, user, driveFileId, treeI
               className='text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline shrink-0 flex items-center gap-1 disabled:opacity-50'
             >
               {isCopied ? <Check className='w-3 h-3' /> : <Copy className='w-3 h-3' />}
-              {isCopied ? 'Copied' : 'Copy Link'}
+              {isCopied ? t.modals.copied : t.modals.copyLink}
             </button>
           </div>
 

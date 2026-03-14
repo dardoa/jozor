@@ -10,6 +10,7 @@ import { toPng } from 'html-to-image';
 import { useAppStore } from '../store/useAppStore';
 import { downloadFile } from '../utils/fileUtils';
 import { showError } from '../utils/toast';
+import { OverlayPrimitive } from '../context/OverlayContext';
 
 // Fix Leaflet Default Icon issue in Webpack/Vite
 import 'leaflet/dist/leaflet.css';
@@ -219,7 +220,7 @@ export const GeoMapModal: React.FC<GeoMapModalProps> = ({ isOpen, onClose, peopl
       downloadFile(brandedUrl, `jozor_map_${treeName.replace(/\s+/g, '_').toLowerCase()}.png`, 'image/png');
     } catch (err) {
       console.error('Export failed:', err);
-      showError('Failed to capture map snapshot');
+      showError(t.modals.messages.error.map);
     } finally {
       setIsExporting(false);
       setHideUIForExport(false);
@@ -289,25 +290,32 @@ export const GeoMapModal: React.FC<GeoMapModalProps> = ({ isOpen, onClose, peopl
   // Stable Canvas Renderer (Fixes infinite loop warning)
   const canvasRenderer = useMemo(() => L.canvas({ padding: 0.5 }), []);
 
-  if (!isOpen) return null;
-
   return (
-    <div className='fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-300'>
+    <OverlayPrimitive
+      isOpen={isOpen}
+      onClose={onClose}
+      id='geo-map-modal'
+      className='z-[100]'
+    >
       <style>{mapStyles}</style>
 
-      <div ref={containerRef} className='bg-[#0f172a] rounded-[32px] shadow-2xl max-w-6xl w-full h-[80vh] flex flex-col border border-white/10 overflow-hidden relative'>
+      <div
+        ref={containerRef}
+        className='bg-[#0f172a] rounded-[32px] shadow-2xl max-w-6xl w-full h-[80vh] flex flex-col border border-white/10 overflow-hidden relative'
+        onClick={(e) => e.stopPropagation()}
+      >
 
         {/* Header Overlay */}
         {!hideUIForExport && (
           <div className='absolute top-6 left-6 right-6 z-[1000] pointer-events-none flex justify-between items-start'>
             <div className="bg-white/10 backdrop-blur-xl p-4 rounded-2xl border border-white/10 shadow-2xl pointer-events-auto">
               <h3 className='text-lg font-black italic flex items-center gap-3 text-white tracking-tighter'>
-                <Globe className='w-6 h-6 text-blue-500' /> {t.geography?.toUpperCase() || 'GEO ANALYTICS'}
+                <Globe className='w-6 h-6 text-blue-500' /> {t.modals.geography?.toUpperCase()}
               </h3>
               <div className="flex gap-4 mt-2">
                 <div className="flex items-center gap-1.5">
                   <div className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_#3b82f6]"></div>
-                  <span className="text-[10px] font-bold text-white/50 uppercase">{rawLocations.length} Unique Locations</span>
+                  <span className="text-[10px] font-bold text-white/50 uppercase">{rawLocations.length} {t.modals.statistics.uniqueLocations}</span>
                 </div>
               </div>
             </div>
@@ -347,7 +355,7 @@ export const GeoMapModal: React.FC<GeoMapModalProps> = ({ isOpen, onClose, peopl
           {!hideUIForExport && (
             <div className='absolute bottom-8 right-8 z-[1000] w-64 bg-slate-900/60 backdrop-blur-2xl p-6 rounded-[24px] border border-white/10 shadow-2xl'>
               <h4 className='text-blue-400 text-xs font-black uppercase tracking-[0.2em] mb-4 flex items-center gap-2'>
-                <Users className='w-3 h-3' /> Lineage Hotspots
+                <Users className='w-3 h-3' /> {t.modals.statistics.migrationInsights}
               </h4>
               <div className="space-y-4">
                 {[...rawLocations].sort((a, b) => b.people.length - a.people.length).slice(0, 4).map((l) => (
@@ -376,12 +384,12 @@ export const GeoMapModal: React.FC<GeoMapModalProps> = ({ isOpen, onClose, peopl
               className='export-btn absolute bottom-8 left-8 z-[1000] flex items-center gap-3 px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-2xl transition-all active:scale-95 disabled:opacity-50'
             >
               {isExporting ? <Loader2 className='w-4 h-4 animate-spin' /> : <Camera className='w-4 h-4' />}
-              {isExporting ? 'Capturing...' : 'Export Image'}
+              {isExporting ? t.modals.capturing : t.modals.exportImage}
             </button>
           )}
         </div>
       </div>
-    </div>
+    </OverlayPrimitive>
   );
 };
 

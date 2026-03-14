@@ -15,6 +15,7 @@ import { DriveFileManagerModalProps } from '../types';
 import { useTranslation } from '../context/TranslationContext';
 import { showError, showSuccess } from '../utils/toast';
 import { format } from 'date-fns';
+import { OverlayPrimitive } from '../context/OverlayContext';
 
 export const DriveFileManagerModal = memo<DriveFileManagerModalProps>(
   ({
@@ -32,7 +33,7 @@ export const DriveFileManagerModal = memo<DriveFileManagerModalProps>(
     isListing,
     onImportLocalFile,
   }) => {
-    const { t, language } = useTranslation();
+    const { t, dateLocale } = useTranslation();
     const [newFileName, setNewFileName] = useState('');
     const [confirmOverwriteId, setConfirmOverwriteId] = useState<string | null>(null);
     const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
@@ -46,8 +47,6 @@ export const DriveFileManagerModal = memo<DriveFileManagerModalProps>(
         refreshDriveFiles();
       }
     }, [isOpen, refreshDriveFiles, newFileName, confirmOverwriteId, confirmDeleteId]);
-
-    if (!isOpen) return null;
 
     const handleSaveAsNew = async () => {
       if (!newFileName.trim()) {
@@ -74,11 +73,11 @@ export const DriveFileManagerModal = memo<DriveFileManagerModalProps>(
         // Delegate to parent so it can call loadFullState/useAppStore
         await onImportLocalFile(data);
 
-        showSuccess('File imported successfully!');
+        showSuccess(t.modals.messages.success.importSuccess);
         onClose();
       } catch (error) {
         console.error('Import error:', error);
-        showError('Failed to import file. Please check the file format.');
+        showError(t.modals.messages.success.importError);
       }
 
       // Reset input
@@ -107,7 +106,8 @@ export const DriveFileManagerModal = memo<DriveFileManagerModalProps>(
       try {
         return format(
           new Date(isoString),
-          language === 'ar' ? 'dd/MM/yyyy HH:mm' : 'MMM dd, yyyy HH:mm'
+          t.dateFnsInfo.format,
+          { locale: dateLocale }
         );
       } catch {
         return isoString;
@@ -115,8 +115,16 @@ export const DriveFileManagerModal = memo<DriveFileManagerModalProps>(
     };
 
     return (
-      <div className='fixed inset-0 z-[55] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200'>
-        <div className='bg-white dark:bg-stone-800 rounded-xl shadow-2xl max-w-2xl w-full overflow-hidden flex flex-col max-h-[85vh] animate-scale-in border border-stone-200 dark:border-stone-700'>
+      <OverlayPrimitive
+        isOpen={isOpen}
+        onClose={onClose}
+        id='drive-file-manager-modal'
+        backdropClassName='fixed inset-0 z-[55] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4'
+      >
+        <div
+          className='bg-white dark:bg-stone-800 rounded-xl shadow-2xl max-w-2xl w-full overflow-hidden flex flex-col max-h-[85vh] animate-scale-in border border-stone-200 dark:border-stone-700'
+          onClick={(e) => e.stopPropagation()}
+        >
           {/* Header */}
           <div className='flex items-center justify-between p-4 border-b border-stone-200 dark:border-stone-700 bg-stone-50/50 dark:bg-stone-900/50'>
             <div className='flex items-center gap-2'>
@@ -178,7 +186,7 @@ export const DriveFileManagerModal = memo<DriveFileManagerModalProps>(
                       onClick={handleImportClick}
                       disabled={isSaving}
                       className='p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-all active:scale-[0.95] flex items-center justify-center'
-                      title='Import local JSON'
+                      title={t.modals.importLocalJson}
                     >
                       <Upload className='w-5 h-5' />
                     </button>
@@ -207,7 +215,7 @@ export const DriveFileManagerModal = memo<DriveFileManagerModalProps>(
                 </div>
                 {files.length > 0 && (
                   <span className='text-[10px] font-bold px-2 py-0.5 bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400 rounded-full border border-stone-200 dark:border-stone-700'>
-                    {files.length} {t.backups || 'Backups'}
+                    {files.length} {t.modals.backups}
                   </span>
                 )}
               </div>
@@ -222,7 +230,7 @@ export const DriveFileManagerModal = memo<DriveFileManagerModalProps>(
                   <div className='p-4 bg-stone-100 dark:bg-stone-800 rounded-full mb-4'>
                     <Info className='w-8 h-8 opacity-40' />
                   </div>
-                  <h5 className='text-stone-600 dark:text-stone-300 font-bold mb-1'>{t.noBackups || 'No Backups Found'}</h5>
+                  <h5 className='text-stone-600 dark:text-stone-300 font-bold mb-1'>{t.modals.noBackups}</h5>
                   <p className='text-xs max-w-xs leading-relaxed'>{t.noDriveFiles}</p>
                 </div>
               ) : (
@@ -252,7 +260,7 @@ export const DriveFileManagerModal = memo<DriveFileManagerModalProps>(
                               {formatDate(file.modifiedTime)}
                             </span>
                             <span className='w-1 h-1 rounded-full bg-stone-300 dark:bg-stone-600' />
-                            <span className='opacity-80'>{t.backupFile || 'Backup File'}</span>
+                            <span className='opacity-80'>{t.modals.backupFile}</span>
                           </div>
                         </div>
 
@@ -326,7 +334,7 @@ export const DriveFileManagerModal = memo<DriveFileManagerModalProps>(
             </button>
           </div>
         </div>
-      </div>
+      </OverlayPrimitive>
     );
   }
 );

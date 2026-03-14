@@ -3,6 +3,7 @@ import { useTranslation } from '../../context/TranslationContext';
 import { LoginButton } from '../LoginButton';
 import { EmailLoginForm } from '../EmailLoginForm';
 import { X } from 'lucide-react';
+import { OverlayPrimitive } from '../../context/OverlayContext';
 
 interface UnifiedLoginModalProps {
     isOpen: boolean;
@@ -13,10 +14,13 @@ interface UnifiedLoginModalProps {
 export const UnifiedLoginModal: React.FC<UnifiedLoginModalProps> = memo(({ isOpen, onClose, onGoogleLogin }) => {
     const { t } = useTranslation();
 
-    if (!isOpen) return null;
-
     return (
-        <div className='fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-300'>
+        <OverlayPrimitive
+            isOpen={isOpen}
+            onClose={onClose}
+            id='login-modal'
+            className='fixed inset-0 z-[100] flex items-center justify-center p-4'
+        >
             <div
                 className='bg-stone-900 border border-white/10 rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col animate-in zoom-in-95 duration-300'
                 role='dialog'
@@ -27,12 +31,12 @@ export const UnifiedLoginModal: React.FC<UnifiedLoginModalProps> = memo(({ isOpe
                     <button
                         onClick={onClose}
                         className='p-1.5 rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition-colors order-2'
-                        aria-label='Close'
+                        aria-label={t.close}
                     >
                         <X className='w-5 h-5' />
                     </button>
                     <h2 className='text-lg font-bold text-white order-1'>
-                        {t.loginTitle || 'Welcome Back'}
+                        {t.loginTitle}
                     </h2>
                 </div>
 
@@ -43,7 +47,7 @@ export const UnifiedLoginModal: React.FC<UnifiedLoginModalProps> = memo(({ isOpe
                     {/* Google Login Section */}
                     <div className='flex flex-col gap-4'>
                         <p className='text-[10px] font-bold text-gray-500 uppercase tracking-widest text-center'>
-                            {t.quickLogin || 'Quick Access'}
+                            {t.quickLogin}
                         </p>
                         <div className='flex justify-center px-2'>
                             <LoginButton
@@ -60,7 +64,7 @@ export const UnifiedLoginModal: React.FC<UnifiedLoginModalProps> = memo(({ isOpe
                     <div className='flex items-center gap-4 px-2'>
                         <div className='h-px bg-white/5 flex-1'></div>
                         <span className='text-[10px] text-gray-500 font-bold uppercase tracking-widest px-2'>
-                            {t.or || 'OR'}
+                            {t.or}
                         </span>
                         <div className='h-px bg-white/5 flex-1'></div>
                     </div>
@@ -74,6 +78,6 @@ export const UnifiedLoginModal: React.FC<UnifiedLoginModalProps> = memo(({ isOpe
                     </div>
                 </div>
             </div>
-        </div>
+        </OverlayPrimitive>
     );
 });

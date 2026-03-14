@@ -4,6 +4,7 @@ import { useTranslation } from '../context/TranslationContext';
 import { Person, Gender, FamilyActionsProps } from '../types';
 import { CreateNewPersonSection } from './linkPersonModal/CreateNewPersonSection';
 import { SelectExistingPersonSection } from './linkPersonModal/SelectExistingPersonSection';
+import { OverlayPrimitive } from '../context/OverlayContext';
 
 interface LinkPersonModalProps {
   isOpen: boolean;
@@ -18,8 +19,6 @@ interface LinkPersonModalProps {
 export const LinkPersonModal: React.FC<LinkPersonModalProps> = memo(
   ({ isOpen, onClose, people, type, gender, currentPersonId, familyActions }) => {
     const { t } = useTranslation();
-
-    if (!isOpen) return null;
 
     const typeLabel =
       type === 'parent'
@@ -37,8 +36,15 @@ export const LinkPersonModal: React.FC<LinkPersonModalProps> = memo(
             : t.add;
 
     return (
-      <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200'>
-        <div className='bg-white dark:bg-stone-800 rounded-xl shadow-2xl max-w-md w-full overflow-hidden flex flex-col max-h-[85vh] animate-scale-in border border-stone-200 dark:border-stone-700'>
+      <OverlayPrimitive
+        isOpen={isOpen}
+        onClose={onClose}
+        id='link-person-modal'
+      >
+        <div
+          className='bg-white dark:bg-stone-800 rounded-xl shadow-2xl max-w-md w-full overflow-hidden flex flex-col max-h-[85vh] animate-scale-in border border-stone-200 dark:border-stone-700'
+          onClick={(e) => e.stopPropagation()}
+        >
           {/* Header */}
           <div className='flex items-center justify-between p-4 border-b border-stone-200 dark:border-stone-700 bg-stone-50/50 dark:bg-stone-900/50'>
             <div>
@@ -83,7 +89,7 @@ export const LinkPersonModal: React.FC<LinkPersonModalProps> = memo(
             />
           </div>
         </div>
-      </div>
+      </OverlayPrimitive>
     );
   }
 );

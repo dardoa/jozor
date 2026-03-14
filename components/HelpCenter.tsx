@@ -95,7 +95,7 @@ export const HelpCenter: React.FC = () => {
                             variant='ghost'
                             size='sm'
                             onClick={() => navigate('/')}
-                            leftIcon={<ArrowLeft className={`w-4 h-4 ${isRTL ? 'rotate-180' : ''}`} />}
+                            leftIcon={<ArrowLeft className="w-4 h-4 rtl:rotate-180" />}
                         >
                             {t.help.goHome}
                         </Button>

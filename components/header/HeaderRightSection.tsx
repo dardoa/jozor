@@ -15,10 +15,10 @@ import { ExportMenu } from './ExportMenu';
 
 export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(
   ({ themeLanguage, auth, viewSettings, toolsActions, exportActions, searchProps }) => {
-    const { t } = useTranslation();
+    const { t, language } = useTranslation();
     const isSettingsDrawerOpen = useAppStore(state => state.isSettingsDrawerOpen);
     const setSettingsDrawerOpen = useAppStore(state => state.setSettingsDrawerOpen);
-    const isRtl = themeLanguage.language === 'ar';
+    const isRtl = language === 'ar';
 
     return (
       <div
@@ -53,7 +53,7 @@ export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(
           {auth.user ? (
             <>
               {/* Advanced HUD Toggle - Universal Visualization Controls (Desktop Only) */}
-              <Tooltip content={isRtl ? 'تفضيلات العرض' : 'Visual Preferences'} position="bottom">
+              <Tooltip content={t.header.tooltips.visualPreferences} position="bottom">
                 <button
                   onClick={() => setSettingsDrawerOpen(!isSettingsDrawerOpen)}
                   className={`hidden sm:block p-2.5 rounded-xl hover:bg-[var(--card-bg)] hover:shadow-lg active:scale-95 transition-all duration-300 group border border-transparent hover:border-[var(--border-main)] ${isSettingsDrawerOpen ? 'bg-amber-500/10 border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.2)]' : ''}`}
@@ -64,7 +64,7 @@ export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(
 
               {/* Admin Hub (Gear) - Primary Management (Desktop Only, Action Bar handles mobile) */}
               {viewSettings.currentUserRole === 'owner' && (
-                <Tooltip content={isRtl ? 'مركز الإدارة' : 'Admin Hub'} position="bottom">
+                <Tooltip content={t.header.tooltips.adminHub} position="bottom">
                   <button
                     onClick={() => viewSettings.onOpenAdminHub?.()}
                     className='hidden sm:block p-2.5 rounded-xl hover:bg-[var(--card-bg)] hover:shadow-lg active:scale-95 transition-all duration-300 group border border-transparent hover:border-[var(--border-main)]'
@@ -75,7 +75,7 @@ export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(
               )}
 
               {/* Tools Menu - Analysis & Insights (Desktop Only, Action Bar handles mobile) */}
-              <Tooltip content={isRtl ? 'الأدوات' : 'Tools'} position="bottom">
+              <Tooltip content={t.header.tooltips.tools} position="bottom">
                 <Dropdown
                   trigger={
                     <button
@@ -85,7 +85,7 @@ export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(
                       <Wrench className='w-5 h-5 text-[var(--text-main)] group-hover:text-[var(--primary-500)] transition-colors' />
                     </button>
                   }
-                  align={isRtl ? 'start' : 'end'}
+                  align={t.dropdownAlign.start}
                 >
                   <ToolsMenu
                     onOpenModal={toolsActions.onOpenModal}
@@ -94,7 +94,7 @@ export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(
               </Tooltip>
 
               {/* Export Menu - Downloads & Sharing (Desktop Only) */}
-              <Tooltip content={isRtl ? 'تصدير' : 'Export'} position="bottom">
+              <Tooltip content={t.header.tooltips.export} position="bottom">
                 <Dropdown
                   trigger={
                     <button
@@ -104,7 +104,7 @@ export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(
                       <Download className='w-5 h-5 text-[var(--text-main)] group-hover:text-[var(--primary-500)] transition-colors' />
                     </button>
                   }
-                  align={isRtl ? 'start' : 'end'}
+                  align={t.dropdownAlign.start}
                 >
                   <ExportMenu
                     onExport={exportActions.handleExport}
@@ -128,7 +128,7 @@ export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(
                           className='w-full h-full object-cover'
                         />
                       ) : (
-                        (auth.user.displayName || auth.user.email || 'U')[0].toUpperCase()
+                        (auth.user.displayName || auth.user.email)[0].toUpperCase()
                       )}
                     </div>
                     <ChevronDown className='w-3 h-3 text-[var(--text-dim)] hidden sm:block' />

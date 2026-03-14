@@ -4,9 +4,11 @@ import { AccessControlTab } from './tabs/AccessControlTab';
 import { ActivityHistoryTab } from './tabs/ActivityHistoryTab';
 import { TreeSettingsTab } from './tabs/TreeSettingsTab';
 import { VersionsTab } from './tabs/VersionsTab';
+import { useTranslation } from '../../context/TranslationContext';
 import { useAppStore } from '../../store/useAppStore';
 import { deltaSyncService } from '../../services/deltaSyncService';
 import type { Person } from '../../types';
+import { OverlayPrimitive } from '../../context/OverlayContext';
 
 interface AdminHubModalProps {
     isOpen: boolean;
@@ -37,40 +39,29 @@ export const AdminHubModal = memo<AdminHubModalProps>(({
     onRootChanged
 }) => {
     const [activeTab, setActiveTab] = useState<TabType>('access');
-    const language = useAppStore((state) => state.language);
+    const { t, language } = useTranslation();
     const people = useAppStore((state) => state.people);
-
-    // Get required actions from the store or context (mocking for now if needed, but assuming they exist in orchestration)
-    // Actually, AdminHubModal in ModalManager gets props.
-    // I need to ensure orchestration provides these correctly.
-    // For now, I'll use a placeholder or check useAppOrchestration if I had it.
-    // But wait, the user wants the structure.
-
-    // We need to pass googleSync actions to VersionsTab.
-    // In ModalManager, googleSync is passed.
-    // Let's assume the component will be updated in ModalManager to pass these.
 
     // Force status refresh on open
     React.useEffect(() => {
         if (isOpen && treeId) {
-            // Trigger a light pull or status check
-            // deltaSyncService.pullUpdates(treeId).catch(console.error);
-            // Or just logging that admin hub opened
             console.log('Admin Hub Opened: Syncing Status...');
         }
     }, [isOpen, treeId]);
 
-    if (!isOpen) return null;
-
     const tabs = [
-        { id: 'access' as TabType, label: language === 'ar' ? 'الأعضاء والصلاحيات' : 'People & Access', icon: Users },
-        { id: 'activity' as TabType, label: language === 'ar' ? 'سجل العمليات' : 'Activity & History', icon: History },
-        { id: 'versions' as TabType, label: language === 'ar' ? 'النسخ الاحتياطية' : 'Versions (Snapshots)', icon: Clock },
-        { id: 'settings' as TabType, label: language === 'ar' ? 'إعدادات الشجرة' : 'Tree Settings', icon: Settings },
+        { id: 'access' as TabType, label: t.modals.adminHub.tabs.access, icon: Users },
+        { id: 'activity' as TabType, label: t.modals.adminHub.tabs.activity, icon: History },
+        { id: 'versions' as TabType, label: t.modals.adminHub.tabs.versions, icon: Clock },
+        { id: 'settings' as TabType, label: t.modals.adminHub.tabs.settings, icon: Settings },
     ];
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md p-4 animate-in fade-in duration-300">
+        <OverlayPrimitive
+            isOpen={isOpen}
+            onClose={onClose}
+            id="admin-hub-modal"
+        >
             <div className="bg-[var(--theme-bg)] rounded-2xl shadow-2xl w-full max-w-5xl max-h-[85vh] flex flex-col border border-[var(--border-main)] animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
 
                 {/* Header */}
@@ -81,16 +72,17 @@ export const AdminHubModal = memo<AdminHubModalProps>(({
                         </div>
                         <div>
                             <h2 className="text-xl font-bold text-[var(--text-main)]">
-                                {language === 'ar' ? 'مركز التحكم الإداري' : 'Admin Hub'}
+                                {t.modals.adminHub.title}
                             </h2>
                             <p className="text-xs text-[var(--text-dim)]">
-                                {treeName || (language === 'ar' ? 'إدارة شجرة العائلة' : 'Family Tree Management')} • {currentUserRole.toUpperCase()}
+                                {treeName || t.modals.adminHub.subtitle} • {currentUserRole.toUpperCase()}
                             </p>
                         </div>
                     </div>
                     <button
                         onClick={onClose}
                         className="p-2 hover:bg-[var(--theme-hover)] rounded-full transition-all text-[var(--text-dim)] hover:text-[var(--text-main)] active:scale-90"
+                        aria-label={t.close}
                     >
                         <X className="w-6 h-6" />
                     </button>
@@ -162,13 +154,11 @@ export const AdminHubModal = memo<AdminHubModalProps>(({
                 {/* Footer */}
                 <div className="p-4 border-t border-[var(--border-main)] bg-[var(--theme-surface)]/30 flex justify-end">
                     <p className="text-[10px] text-[var(--text-dim)] italic">
-                        {language === 'ar'
-                            ? 'مركز التحجم متاح لمالكي الشجرة فقط.'
-                            : 'Admin Hub is only available to tree owners.'}
+                        {t.modals.adminHub.footerNote}
                     </p>
                 </div>
             </div>
-        </div>
+        </OverlayPrimitive>
     );
 });
 

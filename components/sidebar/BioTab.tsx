@@ -32,14 +32,13 @@ interface BioTabProps {
 export const BioTab = memo<BioTabProps>(({ person, people, isEditing, onUpdate }) => {
   const { t } = useTranslation();
   const [isGenerating, setIsGenerating] = useState(false);
-  const [bioTone, setBioTone] = useState('Standard');
+  const [bioTone, setBioTone] = useState('standard');
 
   // State for Sources
   const [newSourceTitle, setNewSourceTitle] = useState('');
   const [newSourceUrl, setNewSourceUrl] = useState('');
   const [newSourceDate, setNewSourceDate] = useState('');
   const [newSourceType, setNewSourceType] = useState('');
-  // const [showSourcesSection, setShowSourcesSection] = useState(true); // Removed
 
   // State for Events
   const [newEventTitle, setNewEventTitle] = useState('');
@@ -47,7 +46,6 @@ export const BioTab = memo<BioTabProps>(({ person, people, isEditing, onUpdate }
   const [newEventPlace, setNewEventPlace] = useState('');
   const [newEventDescription, setNewEventDescription] = useState('');
   const [newEventType, setNewEventType] = useState('');
-  // const [showEventsSection, setShowEventsSection] = useState(true); // Removed
 
   const handleChange = (field: keyof Person, value: any) => {
     onUpdate(person.id, { [field]: value });
@@ -56,10 +54,10 @@ export const BioTab = memo<BioTabProps>(({ person, people, isEditing, onUpdate }
   const handleGenerateBio = async () => {
     setIsGenerating(true);
     try {
-      const bio = await generateBiography(person, people, bioTone);
+      const bio = await generateBiography(person, people, t.personFields.tones[bioTone as keyof typeof t.personFields.tones]);
       handleChange('bio', bio);
     } catch {
-      showError('Failed to generate bio. Check API Key.');
+      showError(t.modals.messages.error.bio);
     } finally {
       setIsGenerating(false);
     }
@@ -84,7 +82,7 @@ export const BioTab = memo<BioTabProps>(({ person, people, isEditing, onUpdate }
       setNewSourceUrl('');
       setNewSourceDate('');
       setNewSourceType('');
-      showSuccess('Source added successfully!');
+      showSuccess(t.modals.messages.success.sourceAdded);
     }
   };
 
@@ -98,7 +96,7 @@ export const BioTab = memo<BioTabProps>(({ person, people, isEditing, onUpdate }
   const handleRemoveSource = (id: string) => {
     const filteredSources = (person.sources || []).filter((source) => source.id !== id);
     onUpdate(person.id, { sources: filteredSources });
-    showSuccess('Source removed successfully!');
+    showSuccess(t.modals.messages.success.sourceRemoved);
   };
 
   // --- Event Handlers ---
@@ -118,7 +116,7 @@ export const BioTab = memo<BioTabProps>(({ person, people, isEditing, onUpdate }
       setNewEventPlace('');
       setNewEventDescription('');
       setNewEventType('');
-      showSuccess('Event added successfully!');
+      showSuccess(t.modals.messages.success.eventAdded);
     }
   };
 
@@ -132,44 +130,46 @@ export const BioTab = memo<BioTabProps>(({ person, people, isEditing, onUpdate }
   const handleRemoveEvent = (id: string) => {
     const filteredEvents = (person.events || []).filter((event) => event.id !== id);
     onUpdate(person.id, { events: filteredEvents });
-    showSuccess('Event removed successfully!');
+    showSuccess(t.modals.messages.success.eventRemoved);
   };
 
   return (
     <div className='space-y-4'>
       {/* --- WORK & INTERESTS --- */}
-      <Card title={t.workInterests}>
+      <Card title={t.personFields.workInterests}>
         {!hasWorkInterests && !isEditing ? (
           <div className='text-center py-4 text-[var(--text-muted)] bg-[var(--theme-bg)]/50 rounded-xl border border-dashed border-[var(--border-main)] flex flex-col items-center'>
             <Info className='w-8 h-8 mb-2 opacity-50' />
             <span className='text-sm'>
-              {t.noWorkInterests || 'No work or interests information available.'}
+              {t.modals.noWorkInterests}
             </span>
           </div>
         ) : (
           <>
             <FormField
-              label={t.profession}
+              label={t.personFields.profession}
               value={person.profession}
               onCommit={(v: string) => handleChange('profession', v)}
               disabled={!isEditing}
+              placeholder={isEditing ? t.personFields.professionPlaceholder : ''}
               labelWidthClass='w-24'
             />
 
             <FormField
-              label={t.company}
+              label={t.personFields.company}
               value={person.company}
               onCommit={(v: string) => handleChange('company', v)}
               disabled={!isEditing}
+              placeholder={isEditing ? t.personFields.companyPlaceholder : ''}
               labelWidthClass='w-24'
             />
 
             <FormField
-              label={t.interests}
+              label={t.personFields.interests}
               value={person.interests}
               onCommit={(v: string) => handleChange('interests', v)}
               disabled={!isEditing}
-              placeholder={isEditing ? 'e.g. Golf, Cooking' : ''}
+              placeholder={isEditing ? t.personFields.interestsPlaceholder : ''}
               labelWidthClass='w-24'
             />
           </>
@@ -177,22 +177,22 @@ export const BioTab = memo<BioTabProps>(({ person, people, isEditing, onUpdate }
       </Card>
 
       {/* --- BIOGRAPHY --- */}
-      <Card title={t.biography}>
+      <Card title={t.personFields.biography}>
         <div className='flex justify-between items-center relative z-10 mb-3'>
           {isEditing && (
             <div className='flex items-center gap-2 ms-auto'>
-              <span className='text-[9px] text-[var(--text-dim)]'>{t.tone}:</span>
+              <span className='text-[9px] text-[var(--text-dim)]'>{t.personFields.tone}:</span>
               <select
                 value={bioTone}
                 onChange={(e) => setBioTone(e.target.value)}
-                aria-label={t.tone || 'Tone'}
+                aria-label={t.personFields.tone}
                 className='text-[8px] border border-[var(--border-main)] rounded-lg px-2 py-0.5 bg-[var(--theme-bg)] outline-none focus:border-[var(--primary-500)] text-[var(--text-main)] h-6'
               >
-                <option value='Standard'>Standard</option>
-                <option value='Formal'>Formal</option>
-                <option value='Storyteller'>Storyteller</option>
-                <option value='Humorous'>Humorous</option>
-                <option value='Journalistic'>Journalistic</option>
+                <option value='standard'>{t.personFields.tones.standard}</option>
+                <option value='formal'>{t.personFields.tones.formal}</option>
+                <option value='storyteller'>{t.personFields.tones.storyteller}</option>
+                <option value='humorous'>{t.personFields.tones.humorous}</option>
+                <option value='journalistic'>{t.personFields.tones.journalistic}</option>
               </select>
               <button
                 onClick={handleGenerateBio}
@@ -204,7 +204,7 @@ export const BioTab = memo<BioTabProps>(({ person, people, isEditing, onUpdate }
                 ) : (
                   <Sparkles className='w-2.5 h-2.5' />
                 )}
-                {isGenerating ? '...' : t.generate}
+                {isGenerating ? '...' : t.personFields.generate}
               </button>
             </div>
           )}
@@ -216,42 +216,42 @@ export const BioTab = memo<BioTabProps>(({ person, people, isEditing, onUpdate }
             value={person.bio}
             onCommit={(v: string) => handleChange('bio', v)}
             className='w-full px-2.5 py-1.5 border border-[var(--border-main)] rounded-lg text-xs outline-none focus:border-[var(--primary-500)] transition-colors bg-[var(--card-bg)] text-[var(--text-main)] disabled:bg-transparent disabled:border-transparent disabled:px-0 disabled:cursor-default disabled:font-medium'
-            placeholder={isEditing ? t.writeBio : t.noBio}
+            placeholder={isEditing ? t.personFields.writeBio : t.personFields.noBio}
           />
         ) : (
           <div className='text-sm text-[var(--text-main)] leading-relaxed'>
             {person.bio ? (
               <div className='space-y-2' dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(person.bio) }} />
             ) : (
-              <p className='text-[var(--text-muted)] italic'>{t.noBio}</p>
+              <p className='text-[var(--text-muted)] italic'>{t.personFields.noBio}</p>
             )}
           </div>
         )}
       </Card>
 
       {/* --- SOURCES SECTION --- */}
-      <Card title={t.sourcesTab}>
+      <Card title={t.personFields.sourcesTab}>
         {isEditing && (
           <div className='mb-4 p-3 bg-[var(--theme-bg)]/50 rounded-xl border border-dashed border-[var(--border-main)] space-y-2'>
             <FormField
-              label={t.sourceTitle}
+              label={t.personFields.sourceTitle}
               value={newSourceTitle}
               onCommit={setNewSourceTitle}
-              placeholder={t.sourceTitlePlaceholder}
+              placeholder={t.personFields.sourceTitlePlaceholder}
               className='!h-7 !text-xs'
               labelWidthClass='w-20'
             />
             <FormField
-              label={t.sourceUrl}
+              label={t.personFields.sourceUrl}
               value={newSourceUrl}
               onCommit={setNewSourceUrl}
-              placeholder='https://example.com'
+              placeholder='https://...'
               type='url'
               className='!h-7 !text-xs'
               labelWidthClass='w-20'
             />
             <FormField
-              label={t.sourceDate}
+              label={t.personFields.sourceDate}
               value={newSourceDate}
               onCommit={setNewSourceDate}
               placeholder='YYYY-MM-DD'
@@ -259,10 +259,10 @@ export const BioTab = memo<BioTabProps>(({ person, people, isEditing, onUpdate }
               labelWidthClass='w-20'
             />
             <FormField
-              label={t.sourceType}
+              label={t.personFields.sourceType}
               value={newSourceType}
               onCommit={setNewSourceType}
-              placeholder={t.sourceTypePlaceholder}
+              placeholder={t.personFields.sourceTypePlaceholder}
               className='!h-7 !text-xs'
               labelWidthClass='w-20'
             />
@@ -271,7 +271,7 @@ export const BioTab = memo<BioTabProps>(({ person, people, isEditing, onUpdate }
               disabled={!newSourceTitle.trim()}
               className='w-full py-2 bg-[var(--primary-600)] hover:bg-[var(--primary-700)] disabled:bg-[var(--border-main)] text-[var(--primary-text)] rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition-all mt-3'
             >
-              <Plus className='w-4 h-4' /> {t.addSource}
+              <Plus className='w-4 h-4' /> {t.personFields.addSource}
             </button>
           </div>
         )}
@@ -279,7 +279,7 @@ export const BioTab = memo<BioTabProps>(({ person, people, isEditing, onUpdate }
         {!hasSources && !isEditing ? (
           <div className='text-center py-4 text-[var(--text-muted)] bg-[var(--theme-bg)]/50 rounded-xl border border-dashed border-[var(--border-main)] flex flex-col items-center'>
             <BookOpen className='w-8 h-8 mb-2 opacity-50' />
-            <span className='text-sm'>{t.noSources}</span>
+            <span className='text-sm'>{t.personFields.noSources}</span>
           </div>
         ) : (
           <div className='space-y-3'>
@@ -291,7 +291,7 @@ export const BioTab = memo<BioTabProps>(({ person, people, isEditing, onUpdate }
                 {isEditing ? (
                   <div className='space-y-1.5'>
                     <FormField
-                      label={t.sourceTitle}
+                      label={t.personFields.sourceTitle}
                       value={source.title}
                       onCommit={(v: string) => handleUpdateSource(source.id, 'title', v)}
                       disabled={!isEditing}
@@ -299,7 +299,7 @@ export const BioTab = memo<BioTabProps>(({ person, people, isEditing, onUpdate }
                       labelWidthClass='w-20'
                     />
                     <FormField
-                      label={t.sourceUrl}
+                      label={t.personFields.sourceUrl}
                       value={source.url || ''}
                       onCommit={(v: string) => handleUpdateSource(source.id, 'url', v)}
                       disabled={!isEditing}
@@ -308,7 +308,7 @@ export const BioTab = memo<BioTabProps>(({ person, people, isEditing, onUpdate }
                       labelWidthClass='w-20'
                     />
                     <FormField
-                      label={t.sourceDate}
+                      label={t.personFields.sourceDate}
                       value={source.date || ''}
                       onCommit={(v: string) => handleUpdateSource(source.id, 'date', v)}
                       disabled={!isEditing}
@@ -316,7 +316,7 @@ export const BioTab = memo<BioTabProps>(({ person, people, isEditing, onUpdate }
                       labelWidthClass='w-20'
                     />
                     <FormField
-                      label={t.sourceType}
+                      label={t.personFields.sourceType}
                       value={source.type || ''}
                       onCommit={(v: string) => handleUpdateSource(source.id, 'type', v)}
                       disabled={!isEditing}
@@ -327,7 +327,7 @@ export const BioTab = memo<BioTabProps>(({ person, people, isEditing, onUpdate }
                       onClick={() => handleRemoveSource(source.id)}
                       className='w-full py-1.5 bg-red-500/10 text-red-600 dark:text-red-400 rounded-lg text-xs font-bold hover:bg-red-500/20 transition-colors flex items-center justify-center gap-2 mt-2'
                     >
-                      <Trash2 className='w-3.5 h-3.5' /> {t.removeSource}
+                      <Trash2 className='w-3.5 h-3.5' /> {t.personFields.removeSource}
                     </button>
                   </div>
                 ) : (
@@ -366,44 +366,44 @@ export const BioTab = memo<BioTabProps>(({ person, people, isEditing, onUpdate }
       </Card>
 
       {/* --- EVENTS SECTION --- */}
-      <Card title={t.eventsTab}>
+      <Card title={t.personFields.eventsTab}>
         {isEditing && (
           <div className='mb-4 p-3 bg-[var(--theme-bg)]/50 rounded-xl border border-dashed border-[var(--border-main)] space-y-2'>
             <FormField
-              label={t.eventTitle}
+              label={t.personFields.eventTitle}
               value={newEventTitle}
               onCommit={setNewEventTitle}
-              placeholder={t.eventTitlePlaceholder}
+              placeholder={t.personFields.eventTitlePlaceholder}
               className='!h-7 !text-xs'
               labelWidthClass='w-20'
             />
             <div className='flex items-center gap-2'>
               <label className='w-20 shrink-0 text-xs text-[var(--text-muted)] font-medium'>
-                {t.eventDate}
+                {t.personFields.eventDate}
               </label>
               <DateSelect value={newEventDate} onChange={setNewEventDate} />
             </div>
             <FormField
-              label={t.eventPlace}
+              label={t.personFields.eventPlace}
               value={newEventPlace}
               onCommit={setNewEventPlace}
-              placeholder={t.eventPlacePlaceholder}
+              placeholder={t.personFields.eventPlacePlaceholder}
               className='!h-7 !text-xs'
               labelWidthClass='w-20'
             />
             <FormField
-              label={t.eventType}
+              label={t.personFields.eventType}
               value={newEventType}
               onCommit={setNewEventType}
-              placeholder={t.eventTypePlaceholder}
+              placeholder={t.personFields.eventTypePlaceholder}
               className='!h-7 !text-xs'
               labelWidthClass='w-20'
             />
             <FormField
-              label={t.eventDescription}
+              label={t.personFields.eventDescription}
               value={newEventDescription}
               onCommit={setNewEventDescription}
-              placeholder={t.eventDescriptionPlaceholder}
+              placeholder={t.personFields.eventDescriptionPlaceholder}
               isTextArea={true}
               rows={2}
               className='!text-xs'
@@ -414,7 +414,7 @@ export const BioTab = memo<BioTabProps>(({ person, people, isEditing, onUpdate }
               disabled={!newEventTitle.trim() || !newEventDate.trim()}
               className='w-full py-2 bg-[var(--primary-600)] hover:bg-[var(--primary-700)] disabled:bg-[var(--border-main)] text-[var(--primary-text)] rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition-all mt-3'
             >
-              <Plus className='w-4 h-4' /> {t.addEvent}
+              <Plus className='w-4 h-4' /> {t.personFields.addEvent}
             </button>
           </div>
         )}
@@ -422,7 +422,7 @@ export const BioTab = memo<BioTabProps>(({ person, people, isEditing, onUpdate }
         {!hasEvents && !isEditing ? (
           <div className='text-center py-4 text-[var(--text-muted)] bg-[var(--theme-bg)]/50 rounded-xl border border-dashed border-[var(--border-main)] flex flex-col items-center'>
             <Calendar className='w-8 h-8 mb-2 opacity-50' />
-            <span className='text-sm'>{t.noEventsAdded}</span>
+            <span className='text-sm'>{t.personFields.noEventsAdded}</span>
           </div>
         ) : (
           <div className='space-y-3'>
@@ -434,7 +434,7 @@ export const BioTab = memo<BioTabProps>(({ person, people, isEditing, onUpdate }
                 {isEditing ? (
                   <div className='space-y-1.5'>
                     <FormField
-                      label={t.eventTitle}
+                      label={t.personFields.eventTitle}
                       value={event.title}
                       onCommit={(v: string) => handleUpdateEvent(event.id, 'title', v)}
                       disabled={!isEditing}
@@ -443,7 +443,7 @@ export const BioTab = memo<BioTabProps>(({ person, people, isEditing, onUpdate }
                     />
                     <div className='flex items-center gap-2'>
                       <label className='w-20 shrink-0 text-xs text-[var(--text-muted)] font-medium'>
-                        {t.eventDate}
+                        {t.personFields.eventDate}
                       </label>
                       <DateSelect
                         value={event.date}
@@ -452,7 +452,7 @@ export const BioTab = memo<BioTabProps>(({ person, people, isEditing, onUpdate }
                       />
                     </div>
                     <FormField
-                      label={t.eventPlace}
+                      label={t.personFields.eventPlace}
                       value={event.place || ''}
                       onCommit={(v: string) => handleUpdateEvent(event.id, 'place', v)}
                       disabled={!isEditing}
@@ -460,7 +460,7 @@ export const BioTab = memo<BioTabProps>(({ person, people, isEditing, onUpdate }
                       labelWidthClass='w-20'
                     />
                     <FormField
-                      label={t.eventType}
+                      label={t.personFields.eventType}
                       value={event.type || ''}
                       onCommit={(v: string) => handleUpdateEvent(event.id, 'type', v)}
                       disabled={!isEditing}
@@ -468,7 +468,7 @@ export const BioTab = memo<BioTabProps>(({ person, people, isEditing, onUpdate }
                       labelWidthClass='w-20'
                     />
                     <FormField
-                      label={t.eventDescription}
+                      label={t.personFields.eventDescription}
                       value={event.description || ''}
                       onCommit={(v: string) => handleUpdateEvent(event.id, 'description', v)}
                       disabled={!isEditing}
@@ -481,7 +481,7 @@ export const BioTab = memo<BioTabProps>(({ person, people, isEditing, onUpdate }
                       onClick={() => handleRemoveEvent(event.id)}
                       className='w-full py-1.5 bg-red-500/10 text-red-600 dark:text-red-400 rounded-lg text-xs font-bold hover:bg-red-500/20 transition-colors flex items-center justify-center gap-2 mt-2'
                     >
-                      <Trash2 className='w-3.5 h-3.5' /> {t.removeEvent}
+                      <Trash2 className='w-3.5 h-3.5' /> {t.personFields.removeEvent}
                     </button>
                   </div>
                 ) : (

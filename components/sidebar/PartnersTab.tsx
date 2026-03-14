@@ -127,7 +127,7 @@ export const PartnersTab = memo<PartnersTabProps>(
                             e.target.value as RelationshipInfo['type']
                           )
                         }
-                        aria-label={t.relationshipType || 'Relationship Type'}
+                        aria-label={t.relationshipType}
                         className='flex-1 h-7 bg-[var(--card-bg)] border border-[var(--border-main)] rounded-lg text-xs px-2 outline-none focus:border-[var(--primary-500)] disabled:bg-transparent disabled:border-transparent disabled:px-0 disabled:font-medium text-[var(--text-main)]'
                       >
                         <option value='married'>{t.married}</option>

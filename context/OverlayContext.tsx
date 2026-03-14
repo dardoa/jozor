@@ -160,6 +160,7 @@ interface OverlayPrimitiveProps {
   withBackdrop?: boolean;
   backdropClassName?: string;
   contentClassName?: string;
+  className?: string; // Shorthand for backdropClassName
 }
 
 export const OverlayPrimitive: React.FC<OverlayPrimitiveProps> = ({
@@ -170,6 +171,7 @@ export const OverlayPrimitive: React.FC<OverlayPrimitiveProps> = ({
   withBackdrop = true,
   backdropClassName,
   contentClassName,
+  className,
 }) => {
   const { register, unregister } = useOverlayManager();
   const contentRef = useRef<HTMLDivElement>(null);
@@ -204,7 +206,7 @@ export const OverlayPrimitive: React.FC<OverlayPrimitiveProps> = ({
 
   return (
     <div
-      className={backdropClassName ?? 'fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4'}
+      className={className ?? backdropClassName ?? 'fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4'}
       onClick={onClose}
     >
       <div

@@ -1,38 +1,43 @@
 import { useEffect } from 'react';
 
+type KeyHandler = (e: KeyboardEvent) => void;
+
+export interface ShortcutMap {
+  [key: string]: KeyHandler;
+}
+
 /**
  * Hook to handle global keyboard shortcuts.
- * Supports Undo (Ctrl+Z), Redo (Ctrl+Y or Ctrl+Shift+Z), and Present Mode exit (Esc).
+ * Supports simple keys (like '?') and combinations (like 'ctrl+z').
  */
-export const useKeyboardShortcuts = (
-  canUndo: boolean,
-  undo: () => void,
-  canRedo: boolean,
-  redo: () => void,
-  showWelcome: boolean,
-  isPresentMode: boolean,
-  setIsPresentMode: (v: boolean) => void
-) => {
+export const useKeyboardShortcuts = (shortcuts: ShortcutMap, active = true) => {
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (showWelcome) return;
-      if (['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement).tagName)) return;
+    if (!active) return;
 
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement).tagName)) return;
+      if ((e.target as HTMLElement).isContentEditable) return;
+
+      const key = e.key.toLowerCase();
       const isCmd = e.ctrlKey || e.metaKey;
-      if (isCmd && e.key === 'z') {
+      const isShift = e.shiftKey;
+
+      let combo = '';
+      if (isCmd) combo += 'ctrl+';
+      if (isShift) combo += 'shift+';
+      combo += key;
+
+      // Try specific combo first, then the base key
+      const handler = shortcuts[combo] || shortcuts[key];
+
+      if (handler) {
+        // Only prevent default if it's one of our shortcuts
         e.preventDefault();
-        if (e.shiftKey) {
-          if (canRedo) redo();
-        } else {
-          if (canUndo) undo();
-        }
-      } else if (isCmd && e.key === 'y') {
-        e.preventDefault();
-        if (canRedo) redo();
+        handler(e);
       }
-      if (e.key === 'Escape' && isPresentMode) setIsPresentMode(false);
     };
+
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [canUndo, undo, canRedo, redo, showWelcome, isPresentMode, setIsPresentMode]);
+  }, [shortcuts, active]);
 };

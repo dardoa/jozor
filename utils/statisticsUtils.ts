@@ -96,8 +96,8 @@ export function findDisconnectedPeople(people: Record<string, Person>): Person[]
  */
 export function findDateErrors(
     people: Record<string, Person>
-): Array<{ person: Person; error: string }> {
-    const errors: Array<{ person: Person; error: string }> = [];
+): Array<{ person: Person; errorKey: string; params?: Record<string, any> }> {
+    const errors: Array<{ person: Person; errorKey: string; params?: Record<string, any> }> = [];
 
     Object.values(people).forEach((person) => {
         // Check birth after death
@@ -108,7 +108,7 @@ export function findDateErrors(
             if (birth > death) {
                 errors.push({
                     person,
-                    error: 'Birth date is after death date',
+                    errorKey: 'bornAfterDeath',
                 });
             }
         }
@@ -126,7 +126,11 @@ export function findDateErrors(
                     if (ageDiff < 13) {
                         errors.push({
                             person,
-                            error: `Parent "${parent.firstName} ${parent.lastName}" was too young (${ageDiff} years) when this person was born`,
+                            errorKey: 'parentYoungerThanChild',
+                            params: {
+                                name: `${parent.firstName} ${parent.lastName}`,
+                                age: ageDiff,
+                            },
                         });
                     }
                 }
@@ -138,14 +142,14 @@ export function findDateErrors(
         if (person.birthDate && new Date(person.birthDate) > today) {
             errors.push({
                 person,
-                error: 'Birth date is in the future',
+                errorKey: 'futureBirth',
             });
         }
 
         if (person.deathDate && new Date(person.deathDate) > today) {
             errors.push({
                 person,
-                error: 'Death date is in the future',
+                errorKey: 'futureDeath',
             });
         }
     });
@@ -156,18 +160,17 @@ export function findDateErrors(
 /**
  * Find people with missing critical data
  */
-export function findMissingData(people: Record<string, Person>): Array<{
-    person: Person;
-    missing: string[];
-}> {
+export function findMissingData(
+    people: Record<string, Person>
+): Array<{ person: Person; missing: Array<{ key: string }> }> {
     return Object.values(people)
         .map((person) => {
-            const missing: string[] = [];
+            const missing: Array<{ key: string }> = [];
             const hasName = person.firstName || person.lastName;
 
-            if (!hasName) missing.push('Name');
-            if (!person.birthDate) missing.push('Birth Date');
-            if (!person.photoUrl) missing.push('Photo');
+            if (!hasName) missing.push({ key: 'name' });
+            if (!person.birthDate) missing.push({ key: 'birthDate' });
+            if (!person.photoUrl) missing.push({ key: 'photo' });
 
             return { person, missing };
         })

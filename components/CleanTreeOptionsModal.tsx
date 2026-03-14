@@ -2,12 +2,11 @@ import React, { memo } from 'react';
 import { X, Plus, Upload, AlertTriangle } from 'lucide-react'; // Import AlertTriangle icon
 import { CleanTreeOptionsModalProps } from '../types';
 import { useTranslation } from '../context/TranslationContext';
+import { OverlayPrimitive } from '../context/OverlayContext';
 
 export const CleanTreeOptionsModal: React.FC<CleanTreeOptionsModalProps> = memo(
   ({ isOpen, onClose, onStartNewTree, onTriggerImportFile }) => {
     const { t } = useTranslation();
-
-    if (!isOpen) return null;
 
     const handleStartNew = () => {
       onStartNewTree();
@@ -20,8 +19,15 @@ export const CleanTreeOptionsModal: React.FC<CleanTreeOptionsModalProps> = memo(
     };
 
     return (
-      <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200'>
-        <div className='bg-white dark:bg-stone-800 rounded-xl shadow-2xl max-w-md w-full overflow-hidden flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-200 border border-stone-200 dark:border-stone-700'>
+      <OverlayPrimitive
+        isOpen={isOpen}
+        onClose={onClose}
+        id='clean-tree-options-modal'
+      >
+        <div
+          className='bg-white dark:bg-stone-800 rounded-xl shadow-2xl max-w-md w-full overflow-hidden flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-200 border border-stone-200 dark:border-stone-700'
+          onClick={(e) => e.stopPropagation()}
+        >
           {/* Header */}
           <div className='flex items-center justify-between p-4 border-b border-stone-200 dark:border-stone-700 bg-stone-50/50 dark:bg-stone-900/50'>
             <div>
@@ -90,7 +96,7 @@ export const CleanTreeOptionsModal: React.FC<CleanTreeOptionsModalProps> = memo(
             </button>
           </div>
         </div>
-      </div>
+      </OverlayPrimitive>
     );
   }
 );

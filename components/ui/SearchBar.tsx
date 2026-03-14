@@ -108,7 +108,7 @@ export const SearchBar = ({ people, onFocusPerson, className = '' }: SearchBarPr
                                     <button
                                         key={person.id}
                                         onClick={() => handleSelect(person.id)}
-                                        className="w-full flex items-center p-3 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-all group/item text-left"
+                                        className="w-full flex items-center p-3 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-all group/item text-start"
                                     >
                                         <div className={`w-10 h-10 rounded-full border-2 ${genderColor} overflow-hidden flex-shrink-0 mr-3`}>
                                             {person.photoUrl ? (

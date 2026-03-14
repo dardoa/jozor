@@ -9,8 +9,9 @@ import { DEFAULT_TREE_SETTINGS } from '../../constants';
 import { useTranslation } from '../../context/TranslationContext';
 import { TreeSettings } from '../../types';
 import { OverlayPrimitive } from '../../context/OverlayContext';
+import { ConfirmationModal } from '../ConfirmationModal';
 
-const SectionHeader = ({ icon: Icon, label, onReset, language }: { icon: any, label: string, onReset?: () => void, language: string }) => (
+const SectionHeader = ({ icon: Icon, label, onReset, t }: { icon: any, label: string, onReset?: () => void, t: any }) => (
     <div className="flex items-center justify-between mb-4 mt-6 first:mt-0">
         <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-amber-500 flex items-center gap-2.5">
             <Icon className="w-4 h-4" />
@@ -22,7 +23,7 @@ const SectionHeader = ({ icon: Icon, label, onReset, language }: { icon: any, la
                 onClick={onReset}
                 className="text-[9px] font-bold uppercase tracking-widest text-slate-400 hover:text-amber-400 px-2 py-1 rounded-full hover:bg-white/5 transition-colors"
             >
-                {language === 'ar' ? 'إعادة ضبط' : 'Reset'}
+                {t.settings.resetSection}
             </button>
         )}
     </div>
@@ -66,17 +67,17 @@ const SliderField = ({ label, value, onChange, min, max, step, unit, icon: Icon 
     </div>
 );
 
-const LayoutContent = ({ isRtl, treeSettings, updateSetting, resetSection, localWidth, setLocalWidth, localTextSize, setLocalTextSize, localSpacingX, setLocalSpacingX, localSpacingY, setLocalSpacingY, language }: any) => (
+const LayoutContent = ({ isRtl, treeSettings, updateSetting, resetSection, localWidth, setLocalWidth, localTextSize, setLocalTextSize, localSpacingX, setLocalSpacingX, localSpacingY, setLocalSpacingY, t }: any) => (
     <>
         {/* Section: Chart Type */}
         <div>
-            <SectionHeader icon={Grid} label={isRtl ? 'تخطيط الشجرة' : 'Layout Engine'} onReset={() => resetSection('layout')} language={language} />
+            <SectionHeader icon={Grid} label={t.settings.layoutEngine} onReset={() => resetSection('layout')} t={t} />
             <div className="grid grid-cols-2 gap-2 mb-4">
                 {[
-                    { id: 'descendant', label: isRtl ? 'سلالة' : 'Descendant', icon: Layout },
-                    { id: 'fan', label: isRtl ? 'مروحي' : 'Fan/Radial', icon: RotateCcw },
-                    { id: 'pedigree', label: isRtl ? 'نسب' : 'Pedigree', icon: Move },
-                    { id: 'force', label: isRtl ? 'ديناميكي' : 'Dynamic', icon: Activity },
+                    { id: 'descendant', label: t.modals.types.descendant, icon: Layout },
+                    { id: 'fan', label: t.modals.types.fan, icon: RotateCcw },
+                    { id: 'pedigree', label: t.modals.types.pedigree, icon: Move },
+                    { id: 'force', label: t.modals.types.force, icon: Activity },
                 ].map(opt => (
                     <button
                         key={opt.id}
@@ -91,9 +92,9 @@ const LayoutContent = ({ isRtl, treeSettings, updateSetting, resetSection, local
             {treeSettings.chartType !== 'force' && (
                 <div className="bg-black/20 p-1 rounded-xl flex gap-1">
                     {[
-                        { id: 'vertical', label: isRtl ? 'رأسي' : 'Vertical' },
-                        { id: 'horizontal', label: isRtl ? 'أفقي' : 'Horizontal' },
-                        { id: 'radial', label: isRtl ? 'قطري' : 'Radial' }
+                        { id: 'vertical', label: t.general.vertical },
+                        { id: 'horizontal', label: t.general.horizontal },
+                        { id: 'radial', label: t.general.radial }
                     ].map(mode => (
                         <button
                             key={mode.id}
@@ -109,28 +110,28 @@ const LayoutContent = ({ isRtl, treeSettings, updateSetting, resetSection, local
 
         {/* Section: Metrics */}
         <div>
-            <SectionHeader icon={Move} label={isRtl ? 'المقاييس' : 'Visual Metrics'} onReset={() => resetSection('metrics')} language={language} />
+            <SectionHeader icon={Move} label={t.settings.visualMetrics} onReset={() => resetSection('metrics')} t={t} />
             <div className="space-y-1 bg-white/5 rounded-2xl p-2">
-                <SliderField label="Box Width" value={localWidth} onChange={setLocalWidth} min={120} max={300} step={10} unit="PX" icon={Type} />
-                <SliderField label="Text Size" value={localTextSize} onChange={setLocalTextSize} min={8} max={20} step={1} unit="PX" icon={Type} />
-                <SliderField label="H-Spacing" value={localSpacingX} onChange={setLocalSpacingX} min={40} max={400} step={10} unit="PX" icon={Move} />
-                <SliderField label="V-Spacing" value={localSpacingY} onChange={setLocalSpacingY} min={40} max={400} step={10} unit="PX" icon={Move} />
+                <SliderField label={t.settings.boxWidth} value={localWidth} onChange={setLocalWidth} min={120} max={300} step={10} unit="PX" icon={Type} />
+                <SliderField label={t.settings.textSize} value={localTextSize} onChange={setLocalTextSize} min={8} max={20} step={1} unit="PX" icon={Type} />
+                <SliderField label={t.settings.hSpacing} value={localSpacingX} onChange={setLocalSpacingX} min={40} max={400} step={10} unit="PX" icon={Move} />
+                <SliderField label={t.settings.vSpacing} value={localSpacingY} onChange={setLocalSpacingY} min={40} max={400} step={10} unit="PX" icon={Move} />
             </div>
         </div>
 
         {/* Section: Nodes & Lines */}
         <div>
-            <SectionHeader icon={Spline} label={isRtl ? 'العُقَد والروابط' : 'Nodes & Lines'} onReset={() => resetSection('nodesLines')} language={language} />
+            <SectionHeader icon={Spline} label={t.settings.nodesLines} onReset={() => resetSection('nodesLines')} t={t} />
             <div className="space-y-1 bg-white/5 rounded-2xl p-2">
                 {treeSettings.chartType !== 'fan' && treeSettings.chartType !== 'force' && (
                     <Checkbox
-                        label={isRtl ? 'نمط عقد مضغوطة للعائلات الكبيرة' : 'Compact nodes for dense trees'}
+                        label={t.settings.compactNodes}
                         value={!!treeSettings.isCompact}
                         onChange={v => updateSetting('isCompact', v)}
                     />
                 )}
                 <SliderField
-                    label={isRtl ? 'عدد الأجيال المعروضة' : 'Visible generations'}
+                    label={t.settings.visibleGenerations}
                     value={treeSettings.generationLimit}
                     onChange={v => updateSetting('generationLimit', v)}
                     min={1}
@@ -143,7 +144,7 @@ const LayoutContent = ({ isRtl, treeSettings, updateSetting, resetSection, local
                     <>
                         <div className="h-px bg-white/5 my-2 mx-3" />
                         <div className="px-3 py-1 space-y-2">
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{isRtl ? 'شكل الروابط' : 'Line style'}</span>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.settings.lineStyle}</span>
                             <div className="grid grid-cols-3 gap-1">
                                 {['curved', 'straight', 'step'].map(st => (
                                     <button
@@ -156,13 +157,13 @@ const LayoutContent = ({ isRtl, treeSettings, updateSetting, resetSection, local
                                 ))}
                             </div>
                         </div>
-                        <SliderField label="Line thickness" value={treeSettings.lineThickness || 2} onChange={v => updateSetting('lineThickness', v)} min={1} max={6} step={1} unit="px" />
+                        <SliderField label={t.settings.lineThickness} value={treeSettings.lineThickness || 2} onChange={v => updateSetting('lineThickness', v)} min={1} max={6} step={1} unit="px" />
                     </>
                 )}
 
                 <div className="h-px bg-white/5 my-2 mx-3" />
                 <div className="px-3 py-1 space-y-2">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{isRtl ? 'منطق ألوان العقد' : 'Node color logic'}</span>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.settings.nodeColorLogic}</span>
                     <div className="grid grid-cols-3 gap-1">
                         {['gender', 'lineage', 'none'].map(logic => (
                             <button
@@ -181,30 +182,30 @@ const LayoutContent = ({ isRtl, treeSettings, updateSetting, resetSection, local
         {/* Section: Advanced Graph */}
         {(treeSettings.chartType === 'force' || treeSettings.chartType === 'descendant') && (
             <div>
-                <SectionHeader icon={Activity} label={isRtl ? 'مخطط متقدم' : 'Advanced Graph'} onReset={() => resetSection('advancedGraph')} language={language} />
+                <SectionHeader icon={Activity} label={t.settings.advancedGraph} onReset={() => resetSection('advancedGraph')} t={t} />
                 <div className="space-y-1 bg-white/5 rounded-2xl p-2">
                     {treeSettings.chartType === 'force' && (
                         <>
-                            <Checkbox label={isRtl ? 'تفعيل فيزياء مخطط القوة' : 'Enable force physics'} value={!!treeSettings.enableForcePhysics} onChange={v => updateSetting('enableForcePhysics', v)} />
-                            {treeSettings.enableForcePhysics && <SliderField label="Time scale" value={treeSettings.timeScaleFactor || 5} onChange={v => updateSetting('timeScaleFactor', v)} min={1} max={10} step={1} unit="x" />}
+                            <Checkbox label={t.settings.enableForcePhysics} value={!!treeSettings.enableForcePhysics} onChange={v => updateSetting('enableForcePhysics', v)} />
+                            {treeSettings.enableForcePhysics && <SliderField label={t.settings.timeScale} value={treeSettings.timeScaleFactor || 5} onChange={v => updateSetting('timeScaleFactor', v)} min={1} max={10} step={1} unit="x" />}
                         </>
                     )}
-                    <Checkbox label={isRtl ? 'تمييز فرع التركيز' : 'Highlight focus branch'} value={!!treeSettings.highlightBranch} onChange={v => updateSetting('highlightBranch', v)} />
+                    <Checkbox label={t.settings.highlightFocus} value={!!treeSettings.highlightBranch} onChange={v => updateSetting('highlightBranch', v)} />
                 </div>
             </div>
         )}
     </>
 );
 
-const VisualsContent = ({ isRtl, treeSettings, updateSetting, resetSection, applyPreset, darkMode, setDarkMode, language, setLanguage }: any) => (
+const VisualsContent = ({ isRtl, treeSettings, updateSetting, resetSection, applyPreset, darkMode, setDarkMode, language, setLanguage, t }: any) => (
     <>
         {/* Global Presets */}
         <div className="bg-white/5 rounded-2xl p-3 border border-white/5">
-            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400 mb-2 text-center">{isRtl ? 'أنماط جاهزة' : 'Global Presets'}</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400 mb-2 text-center">{t.settings.presets}</p>
             <div className="grid grid-cols-3 gap-2">
                 {['simple', 'detailed', 'print'].map(p => (
                     <button key={p} onClick={() => applyPreset(p as any)} className="px-2 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-[10px] font-black uppercase tracking-widest text-slate-200">
-                        {p}
+                        {t.general[p] || p}
                     </button>
                 ))}
             </div>
@@ -212,7 +213,7 @@ const VisualsContent = ({ isRtl, treeSettings, updateSetting, resetSection, appl
 
         {/* Visibility */}
         <div>
-            <SectionHeader icon={Eye} label={isRtl ? 'الظهور' : 'Visibility'} onReset={() => resetSection('visibility')} language={language} />
+            <SectionHeader icon={Eye} label={t.settings.visibility} onReset={() => resetSection('visibility')} t={t} />
             {/* Select All / Deselect All */}
             <div className="flex justify-end mb-2">
                 {(() => {
@@ -230,37 +231,35 @@ const VisualsContent = ({ isRtl, treeSettings, updateSetting, resetSection, appl
                             }}
                             className="text-[9px] font-black text-amber-400 hover:text-amber-300 uppercase tracking-widest px-2 py-1 rounded-lg hover:bg-white/5 transition-colors"
                         >
-                            {allOn
-                                ? (isRtl ? 'إلغاء الكل' : 'Deselect All')
-                                : (isRtl ? 'تحديد الكل' : 'Select All')}
+                            {allOn ? t.settings.deselectAll : t.settings.selectAll}
                         </button>
                     );
                 })()}
             </div>
             <div className="space-y-1">
-                <Checkbox label={isRtl ? 'الاسم الأول' : 'First Name'} value={!!treeSettings.showFirstName} onChange={v => updateSetting('showFirstName', v)} />
-                <Checkbox label={isRtl ? 'اسم العائلة' : 'Last Name'} value={!!treeSettings.showLastName} onChange={v => updateSetting('showLastName', v)} />
-                <Checkbox label={isRtl ? 'التواريخ' : 'Show Dates'} value={!!treeSettings.showDates} onChange={v => updateSetting('showDates', v)} icon={Clock} />
-                <Checkbox label={isRtl ? 'الصور' : 'Show Photos'} value={!!treeSettings.showPhotos} onChange={v => updateSetting('showPhotos', v)} icon={Eye} />
-                <Checkbox label={isRtl ? 'الجنس' : 'Show Gender'} value={!!treeSettings.showGender} onChange={v => updateSetting('showGender', v)} />
-                <Checkbox label={isRtl ? 'المتوفين' : 'Show Deceased'} value={!!treeSettings.showDeceased} onChange={v => updateSetting('showDeceased', v)} icon={Ghost} />
-                <Checkbox label={isRtl ? 'الخريطة المصغرة' : 'Show Minimap'} value={!!treeSettings.showMinimap} onChange={v => updateSetting('showMinimap', v)} icon={Grid} />
+                <Checkbox label={t.sidebar.firstName} value={!!treeSettings.showFirstName} onChange={v => updateSetting('showFirstName', v)} />
+                <Checkbox label={t.sidebar.lastName} value={!!treeSettings.showLastName} onChange={v => updateSetting('showLastName', v)} />
+                <Checkbox label={t.sidebar.dates} value={!!treeSettings.showDates} onChange={v => updateSetting('showDates', v)} icon={Clock} />
+                <Checkbox label={t.sidebar.photos} value={!!treeSettings.showPhotos} onChange={v => updateSetting('showPhotos', v)} icon={Eye} />
+                <Checkbox label={t.sidebar.gender} value={!!treeSettings.showGender} onChange={v => updateSetting('showGender', v)} />
+                <Checkbox label={t.sidebar.deceased} value={!!treeSettings.showDeceased} onChange={v => updateSetting('showDeceased', v)} icon={Ghost} />
+                <Checkbox label={t.sidebar.minimap} value={!!treeSettings.showMinimap} onChange={v => updateSetting('showMinimap', v)} icon={Grid} />
             </div>
         </div>
 
         {/* Appearance */}
         <div>
-            <SectionHeader icon={Palette} label={isRtl ? 'المظهر العام' : 'Global Appearance'} onReset={() => resetSection('appearance')} language={language} />
+            <SectionHeader icon={Palette} label={t.settings.appearance} onReset={() => resetSection('appearance')} t={t} />
             <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-2">
                     <button onClick={() => setDarkMode(!darkMode)} className={`flex items-center justify-between px-4 py-3 rounded-2xl border ${darkMode ? 'bg-white/10 text-white' : 'bg-white/5 text-slate-400'}`}>
-                        <span className="text-[10px] font-black uppercase">{darkMode ? 'Dark' : 'Light'}</span>
+                        <span className="text-[10px] font-black uppercase">{darkMode ? t.general.darkMode : t.general.lightMode}</span>
                         {darkMode ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
                     </button>
-                    <button onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')} className="px-4 py-3 rounded-2xl bg-white/5 text-slate-400 font-black uppercase text-[10px] font-black uppercase tracking-widest">{language === 'en' ? 'Arabic' : 'English'}</button>
+                    <button onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')} className="px-4 py-3 rounded-2xl bg-white/5 text-slate-400 font-black uppercase text-[10px] tracking-widest">{t.general.languageName}</button>
                 </div>
                 <div className="p-3 bg-white/5 rounded-2xl space-y-2">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase">{isRtl ? 'لون النمط' : 'Theme Color'}</label>
+                    <label className="text-[10px] font-bold text-slate-500 uppercase">{t.settings.themeColor}</label>
                     <div className="flex gap-2">
                         {['#E1AD01', '#3b82f6', '#10b981', '#ef4444'].map(c => (
                             <button key={c} onClick={() => updateSetting('themeColor', c)} className={`flex-1 h-8 rounded-lg border-2 ${treeSettings.themeColor === c ? 'border-white' : 'border-transparent'}`} style={{ backgroundColor: c }} />
@@ -269,7 +268,7 @@ const VisualsContent = ({ isRtl, treeSettings, updateSetting, resetSection, appl
                 </div>
                 {/* Date Format */}
                 <div className="p-3 bg-white/5 rounded-2xl space-y-2">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase">{isRtl ? 'تنسيق التاريخ' : 'Date Format'}</label>
+                    <label className="text-[10px] font-bold text-slate-500 uppercase">{t.sidebar.dateFormat}</label>
                     <div className="grid grid-cols-4 gap-1">
                         {(['iso', 'eu', 'us', 'long'] as const).map(fmt => (
                             <button
@@ -280,9 +279,9 @@ const VisualsContent = ({ isRtl, treeSettings, updateSetting, resetSection, appl
                                         ? 'bg-amber-500/30 border-amber-400 text-amber-100'
                                         : 'bg-white/0 border-white/5 text-slate-400 hover:text-slate-200 hover:border-white/20'}`}
                             >
-                                {fmt === 'iso' ? 'ISO' :
-                                    fmt === 'eu' ? 'EU' :
-                                        fmt === 'us' ? 'US' : (isRtl ? 'طويل' : 'Long')}
+                                {fmt === 'iso' ? t.settings.dateFormats.iso :
+                                    fmt === 'eu' ? t.settings.dateFormats.eu :
+                                        fmt === 'us' ? t.settings.dateFormats.us : t.settings.dateFormats.long}
                             </button>
                         ))}
                     </div>
@@ -297,12 +296,12 @@ const VisualsContent = ({ isRtl, treeSettings, updateSetting, resetSection, appl
     </>
 );
 
-const PerformanceContent = ({ isRtl, treeSettings, updateSetting, resetSection, language }: any) => (
+const PerformanceContent = ({ isRtl, treeSettings, updateSetting, resetSection, t }: any) => (
     <div className="space-y-6">
-        <SectionHeader icon={Zap} label={isRtl ? 'الأداء' : 'Performance'} onReset={() => resetSection('performance')} language={language} />
+        <SectionHeader icon={Zap} label={t.settings.performance} onReset={() => resetSection('performance')} t={t} />
         <div className="space-y-4">
-            <Checkbox label={isRtl ? 'وضع رسومات خفيفة' : 'Low-Graphics Mode'} value={!!treeSettings.isLowGraphicsMode} onChange={v => updateSetting('isLowGraphicsMode', v)} icon={Zap} />
-            <p className="px-3 text-[9px] font-bold text-slate-500 uppercase tracking-tight">{isRtl ? 'يقلل من تأثيرات الشفافية والتحريك' : 'Disables blurs & heavy animations'}</p>
+            <Checkbox label={t.settings.lowGraphics} value={!!treeSettings.isLowGraphicsMode} onChange={v => updateSetting('isLowGraphicsMode', v)} icon={Zap} />
+            <p className="px-3 text-[9px] font-bold text-slate-500 uppercase tracking-tight">{t.settings.lowGraphicsDesc}</p>
         </div>
     </div>
 );
@@ -321,13 +320,15 @@ export const SettingsDrawer = memo(() => {
     const [localWidth, setLocalWidth] = useState(treeSettings.nodeWidth);
     const [localTextSize, setLocalTextSize] = useState(treeSettings.textSize);
     const [activeTab, setActiveTab] = useState<'visuals' | 'layout' | 'performance'>('layout');
+    const [isResetConfirmOpen, setResetConfirmOpen] = useState(false);
 
     const handleReset = () => {
-        if (!window.confirm(language === 'ar'
-            ? 'هل تريد إعادة ضبط جميع الإعدادات للقيم الافتراضية؟'
-            : 'Reset all settings to defaults?'
-        )) return;
+        setResetConfirmOpen(true);
+    };
+
+    const handleConfirmReset = () => {
         setTreeSettings(DEFAULT_TREE_SETTINGS);
+        setResetConfirmOpen(false);
     };
 
     const resetSection = (
@@ -515,7 +516,8 @@ export const SettingsDrawer = memo(() => {
         treeSettings,
         updateSetting,
         resetSection,
-        language
+        language,
+        t
     };
 
     return (
@@ -534,8 +536,7 @@ export const SettingsDrawer = memo(() => {
 
             {/* Drawer */}
             <div
-                className={`w-full max-w-[360px] h-full bg-slate-900/95 border-s border-white/10 shadow-[-] transition-transform duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] pointer-events-auto overflow-hidden flex flex-col ${isSettingsDrawerOpen ? 'translate-x-0' : (isRtl ? '-translate-x-full' : 'translate-x-full')} ${treeSettings.isLowGraphicsMode ? '' : 'backdrop-blur-2xl'}`}
-                style={{ direction: 'ltr' /* Keep internal layout consistent, text elements handle RTL */ }}
+                className={`w-full max-w-[360px] h-full bg-slate-900/95 border-s border-white/10 shadow-[-] transition-transform duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] pointer-events-auto overflow-hidden flex flex-col ${isSettingsDrawerOpen ? 'translate-x-0' : 'translate-x-full rtl:-translate-x-full'} ${treeSettings.isLowGraphicsMode ? '' : 'backdrop-blur-2xl'}`}
             >
                 {/* Header */}
                 <div className="flex-none p-6 flex items-center justify-between border-b border-white/5 bg-white/5">
@@ -545,16 +546,16 @@ export const SettingsDrawer = memo(() => {
                         </div>
                         <div>
                             <h2 className="text-sm font-black uppercase tracking-widest text-white">
-                                {isRtl ? 'الإعدادات' : 'Tree Settings'}
+                                {t.settings.title}
                             </h2>
                             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">
-                                {isRtl ? 'تخصيص العرض والأداء' : 'Customize view & performance'}
+                                {t.settings.subtitle}
                             </p>
                         </div>
                     </div>
                     <button
                         onClick={() => setSettingsDrawerOpen(false)}
-                        aria-label={isRtl ? 'إغلاق الإعدادات' : 'Close Settings'}
+                        aria-label={t.settings.close}
                         className="p-2.5 hover:bg-white/10 rounded-full transition-all text-slate-400 hover:text-white"
                     >
                         <X className="w-5 h-5" />
@@ -566,9 +567,9 @@ export const SettingsDrawer = memo(() => {
                     {/* Tab Navigation */}
                     <div className="flex bg-white/5 p-1 rounded-2xl mb-2 sticky top-0 z-10 backdrop-blur-md border border-white/5">
                         {[
-                            { id: 'layout', label: isRtl ? 'التخطيط' : 'Layout', icon: Grid },
-                            { id: 'visuals', label: isRtl ? 'المظهر' : 'Visuals', icon: Palette },
-                            { id: 'performance', label: isRtl ? 'الأداء' : 'Perf', icon: Zap },
+                            { id: 'layout', label: t.settings.layout, icon: Grid },
+                            { id: 'visuals', label: t.settings.visuals, icon: Palette },
+                            { id: 'performance', label: t.settings.performance, icon: Zap },
                         ].map((tab) => (
                             <button
                                 key={tab.id}
@@ -623,10 +624,20 @@ export const SettingsDrawer = memo(() => {
                 {/* Footer */}
                 <div className={`p-6 border-t border-white/10 bg-black/40 ${treeSettings.isLowGraphicsMode ? '' : 'backdrop-blur-md'}`}>
                     <button onClick={handleReset} className="w-full flex items-center justify-center gap-2 py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">
-                        <RotateCcw className="w-3.5 h-3.5" /> {isRtl ? 'إعادة ضبط بالكامل' : 'Global Reset'}
+                        <RotateCcw className="w-3.5 h-3.5" /> {t.settings.resetAll}
                     </button>
                 </div>
             </div>
+
+            <ConfirmationModal
+                isOpen={isResetConfirmOpen}
+                onClose={() => setResetConfirmOpen(false)}
+                onConfirm={handleConfirmReset}
+                title={t.settings.resetAll}
+                message={t.settings.resetConfirm}
+                type="danger"
+                overlayId="reset-settings-confirm"
+            />
 
             <style>{`
                 input[type=range]::-webkit-slider-thumb {

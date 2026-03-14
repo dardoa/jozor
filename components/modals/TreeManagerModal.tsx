@@ -7,6 +7,7 @@ import { showError, showSuccess } from '../../utils/toast';
 import { getShareSettings, inviteCollaborator, removeCollaborator, updateCollaboratorRole } from '../../services/shareService';
 import { Collaborator } from '../../types';
 import { activityService } from '../../services/activityService';
+import { OverlayPrimitive } from '../../context/OverlayContext';
 
 interface TreeManagerModalProps {
     isOpen: boolean;
@@ -39,12 +40,12 @@ export const TreeManagerModal: React.FC<TreeManagerModalProps> = ({ isOpen, onCl
             const [owned, shared] = await Promise.all([
                 fetchTreesForUser(ownerId, userEmail).catch(e => {
                     console.error('fetchTreesForUser failed', e);
-                    showError(`Failed to load owned trees: ${e.message}`);
+                    showError(t.modals.messages.error.load);
                     return [] as TreeSummary[];
                 }),
                 fetchSharedTrees(ownerId, userEmail).catch(e => {
                     console.error('fetchSharedTrees failed', e);
-                    showError(`Failed to load shared trees: ${e.message}`);
+                    showError(t.modals.messages.error.load);
                     return [] as SharedTreeSummary[];
                 })
             ]);
@@ -52,7 +53,7 @@ export const TreeManagerModal: React.FC<TreeManagerModalProps> = ({ isOpen, onCl
             setSharedTrees(shared);
         } catch (e) {
             console.error('loadTrees: Unexpected error', e);
-            showError('Failed to load trees');
+            showError(t.modals.messages.error.load);
         } finally {
             setLoading(false);
         }
@@ -70,12 +71,12 @@ export const TreeManagerModal: React.FC<TreeManagerModalProps> = ({ isOpen, onCl
             setIsProcessing(treeId);
             await renameTree(treeId, ownerId, userEmail, editName.trim());
             void activityService.logAction(treeId, 'RENAME_TREE', { newName: editName.trim() });
-            showSuccess(t.success || 'Name updated successfully');
+            showSuccess(t.modals.messages.success.rename);
             setEditingId(null);
             await loadTrees();
         } catch (e) {
             console.error('Rename failed', e);
-            showError('Rename failed');
+            showError(t.modals.messages.error.rename);
         } finally {
             setIsProcessing(null);
         }
@@ -98,10 +99,10 @@ export const TreeManagerModal: React.FC<TreeManagerModalProps> = ({ isOpen, onCl
             setCurrentUserRole(role);
             onTreeSelected(treeId);
             onClose();
-            showSuccess(t.success || 'Tree loaded successfully');
+            showSuccess(t.modals.messages.success.load);
         } catch (e) {
             console.error('Failed to open tree', e);
-            showError('Failed to open tree');
+            showError(t.modals.messages.error.open);
         } finally {
             setIsProcessing(null);
         }
@@ -112,12 +113,12 @@ export const TreeManagerModal: React.FC<TreeManagerModalProps> = ({ isOpen, onCl
             setIsProcessing(treeId);
             await deleteWholeTree(treeId, ownerId, userEmail);
             void activityService.logAction(treeId, 'DELETE_PERSON', { note: 'Tree deleted' }); // Fallback or specific log
-            showSuccess(t.success || 'Tree deleted successfully');
+            showSuccess(t.modals.messages.success.delete);
             setConfirmDelete(null);
             await loadTrees();
         } catch (e) {
             console.error('Delete failed', e);
-            showError('Delete failed');
+            showError(t.modals.messages.error.delete);
         } finally {
             setIsProcessing(null);
         }
@@ -133,7 +134,7 @@ export const TreeManagerModal: React.FC<TreeManagerModalProps> = ({ isOpen, onCl
             setCollaborators(remote);
         } catch (e) {
             console.error('Failed to load collaborators', e);
-            showError('Failed to load collaborators');
+            showError(t.modals.messages.error.collaborators);
         } finally {
             setLoadingCollabs(false);
         }
@@ -153,9 +154,9 @@ export const TreeManagerModal: React.FC<TreeManagerModalProps> = ({ isOpen, onCl
             }, useAppStore.getState().user?.supabaseToken);
             setCollaborators(remote);
             setInviteEmail('');
-            showSuccess(`Invited ${inviteEmail}`);
+            showSuccess(t.modals.messages.success.invite.replace('{email}', inviteEmail));
         } catch (e: any) {
-            showError(e.message || 'Failed to invite');
+            showError(t.modals.messages.error.invite);
         } finally {
             setIsProcessing(null);
         }
@@ -172,9 +173,9 @@ export const TreeManagerModal: React.FC<TreeManagerModalProps> = ({ isOpen, onCl
                 role: newRole
             }, useAppStore.getState().user?.supabaseToken);
             setCollaborators(remote);
-            showSuccess('Role updated');
+            showSuccess(t.modals.messages.success.role);
         } catch (e) {
-            showError('Failed to update role');
+            showError(t.modals.messages.error.role);
         } finally {
             setIsProcessing(null);
         }
@@ -190,18 +191,20 @@ export const TreeManagerModal: React.FC<TreeManagerModalProps> = ({ isOpen, onCl
                 email
             }, useAppStore.getState().user?.supabaseToken);
             setCollaborators(remote);
-            showSuccess('Access revoked');
+            showSuccess(t.modals.messages.success.revoke);
         } catch (e) {
-            showError('Failed to revoke access');
+            showError(t.modals.messages.error.revoke);
         } finally {
             setIsProcessing(null);
         }
     };
 
-    if (!isOpen) return null;
-
     return (
-        <div className='fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-all animate-in fade-in duration-300'>
+        <OverlayPrimitive
+            isOpen={isOpen}
+            onClose={onClose}
+            id='tree-manager-modal'
+        >
             <div
                 className='relative w-full max-w-2xl bg-white dark:bg-stone-900 rounded-3xl shadow-2xl overflow-hidden border border-stone-200 dark:border-stone-800 animate-in zoom-in-95 duration-300'
                 onClick={(e) => e.stopPropagation()}
@@ -222,16 +225,17 @@ export const TreeManagerModal: React.FC<TreeManagerModalProps> = ({ isOpen, onCl
                             </div>
                             <div>
                                 <h3 className='text-xl font-black text-stone-900 dark:text-white tracking-tight'>
-                                    {accessTreeId ? 'Manage Access' : (t.manageTrees || 'Manage Family Trees')}
+                                    {accessTreeId ? t.modals.treeManager.manageAccess : t.modals.manageTrees}
                                 </h3>
                                 <p className='text-xs text-stone-500 dark:text-stone-400 font-medium'>
-                                    {accessTreeId ? 'Control permissions for this tree' : (t.manageTreesDesc || 'Rename or delete your database trees')}
+                                    {accessTreeId ? t.modals.treeManager.accessDesc : t.modals.manageTreesDesc}
                                 </p>
                             </div>
                         </div>
                         <button
                             onClick={() => accessTreeId ? setAccessTreeId(null) : onClose()}
                             className='p-2.5 rounded-xl hover:bg-stone-200/50 dark:hover:bg-stone-700/50 text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 transition-all active:scale-90'
+                            aria-label={accessTreeId ? t.common.back : t.common.close}
                         >
                             {accessTreeId ? <Play className='w-5 h-5 rotate-180' /> : <X className='w-5 h-5' />}
                         </button>
@@ -249,7 +253,7 @@ export const TreeManagerModal: React.FC<TreeManagerModalProps> = ({ isOpen, onCl
                                     <input
                                         required
                                         type='email'
-                                        placeholder='Enter collaborator email...'
+                                        placeholder={t.modals.treeManager.invitePlaceholder}
                                         value={inviteEmail}
                                         onChange={(e) => setInviteEmail(e.target.value)}
                                         className='w-full ps-10 pe-4 py-3 bg-stone-50 dark:bg-stone-800/50 border border-stone-200 dark:border-stone-700 rounded-2xl text-sm font-bold text-stone-900 dark:text-white outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all'
@@ -261,8 +265,8 @@ export const TreeManagerModal: React.FC<TreeManagerModalProps> = ({ isOpen, onCl
                                         onChange={(e) => setInviteRole(e.target.value as any)}
                                         className='flex-1 sm:flex-none bg-stone-50 dark:bg-stone-800/50 border border-stone-200 dark:border-stone-700 rounded-2xl px-4 text-sm font-bold text-stone-700 dark:text-stone-200 outline-none'
                                     >
-                                        <option value='editor'>Editor</option>
-                                        <option value='viewer'>Viewer</option>
+                                        <option value='editor'>{t.modals.editor}</option>
+                                        <option value='viewer'>{t.modals.viewer}</option>
                                     </select>
                                     <button
                                         type='submit'
@@ -270,19 +274,19 @@ export const TreeManagerModal: React.FC<TreeManagerModalProps> = ({ isOpen, onCl
                                         className='px-6 py-3 bg-stone-900 dark:bg-blue-600 text-white rounded-2xl font-black text-sm hover:shadow-xl transition-all active:scale-95 disabled:opacity-50 flex items-center gap-2'
                                     >
                                         {isProcessing === 'invite' ? <Loader2 className='w-4 h-4 animate-spin' /> : <UserPlus className='w-4 h-4' />}
-                                        Invite
+                                        {t.modals.treeManager.invite}
                                     </button>
                                 </div>
                             </form>
 
                             {/* Collaborators List */}
                             <div className='space-y-3'>
-                                <h5 className='text-[10px] font-black uppercase tracking-widest text-stone-400 px-1'>Active Collaborators</h5>
+                                <h5 className='text-[10px] font-black uppercase tracking-widest text-stone-400 px-1'>{t.modals.treeManager.activeCollaborators}</h5>
                                 {loadingCollabs ? (
                                     <div className='flex justify-center py-12'><Loader2 className='w-8 h-8 animate-spin text-stone-300' /></div>
                                 ) : collaborators.length === 0 ? (
                                     <div className='p-8 text-center text-stone-400 bg-stone-50/50 dark:bg-stone-800/20 rounded-2xl border border-dashed border-stone-200 dark:border-stone-800'>
-                                        No collaborators yet.
+                                        {t.modals.treeManager.noCollaborators}
                                     </div>
                                 ) : (
                                     <div className='grid gap-3'>
@@ -294,7 +298,7 @@ export const TreeManagerModal: React.FC<TreeManagerModalProps> = ({ isOpen, onCl
                                                     </div>
                                                     <div>
                                                         <p className='text-sm font-black text-stone-900 dark:text-white truncate max-w-[150px] sm:max-w-xs'>{c.email}</p>
-                                                        <p className='text-[10px] font-bold text-stone-400 uppercase tracking-widest'>{c.role}</p>
+                                                        <p className='text-[10px] font-bold text-stone-400 uppercase tracking-widest'>{c.role === 'editor' ? t.modals.editor : t.modals.viewer}</p>
                                                     </div>
                                                 </div>
                                                 <div className='flex items-center gap-2'>
@@ -306,14 +310,15 @@ export const TreeManagerModal: React.FC<TreeManagerModalProps> = ({ isOpen, onCl
                                                             onChange={(e) => handleRoleChange(c.email, e.target.value as any)}
                                                             className='bg-transparent text-xs font-black text-blue-500 hover:text-blue-600 outline-none cursor-pointer p-1'
                                                         >
-                                                            <option value='editor'>Editor</option>
-                                                            <option value='viewer'>Viewer</option>
+                                                            <option value='editor'>{t.modals.editor}</option>
+                                                            <option value='viewer'>{t.modals.viewer}</option>
                                                         </select>
                                                     )}
                                                     <button
                                                         onClick={() => handleRevoke(c.email)}
                                                         disabled={isProcessing === `revoke-${c.email}`}
                                                         className='p-2 text-red-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all'
+                                                        aria-label={t.modals.delete}
                                                     >
                                                         {isProcessing === `revoke-${c.email}` ? <Loader2 className='w-4 h-4 animate-spin' /> : <Trash2 className='w-4 h-4' />}
                                                     </button>
@@ -321,11 +326,12 @@ export const TreeManagerModal: React.FC<TreeManagerModalProps> = ({ isOpen, onCl
                                             </div>
                                         ))}
                                     </div>
-                                )}
+                                ) }
                             </div>
                         </div>
                     ) : (
                         <div className='space-y-8'>
+                            {/* Same content as before */}
                             {loading ? (
                                 <div className='flex flex-col items-center justify-center py-16 text-stone-400'>
                                     <Loader2 className='w-10 h-10 animate-spin mb-4 text-emerald-500' />
@@ -334,7 +340,7 @@ export const TreeManagerModal: React.FC<TreeManagerModalProps> = ({ isOpen, onCl
                             ) : trees.length === 0 && sharedTrees.length === 0 ? (
                                 <div className='text-center py-16 text-stone-400 bg-stone-50/50 dark:bg-stone-800/20 rounded-2xl border border-dashed border-stone-200 dark:border-stone-700'>
                                     <TreePine className='w-12 h-12 mx-auto mb-4 opacity-20' />
-                                    <p className='text-sm'>{t.noTreesFound || 'No trees found in database'}</p>
+                                    <p className='text-sm'>{t.modals.noTreesFound}</p>
                                 </div>
                             ) : (
                                 <>
@@ -343,7 +349,7 @@ export const TreeManagerModal: React.FC<TreeManagerModalProps> = ({ isOpen, onCl
                                         <div className='space-y-4'>
                                             <h4 className='text-xs font-black text-stone-400 dark:text-stone-500 uppercase tracking-widest px-1 flex items-center gap-2'>
                                                 <div className='w-1 h-3 bg-emerald-500 rounded-full'></div>
-                                                {t.myTrees || 'My Trees'}
+                                                {t.modals.treeManager.myTrees}
                                             </h4>
                                             <div className='grid grid-cols-1 gap-4'>
                                                 {trees.map(tree => (
@@ -377,7 +383,7 @@ export const TreeManagerModal: React.FC<TreeManagerModalProps> = ({ isOpen, onCl
                                         <div className='space-y-4'>
                                             <h4 className='text-xs font-black text-stone-400 dark:text-stone-500 uppercase tracking-widest px-1 flex items-center gap-2'>
                                                 <div className='w-1 h-3 bg-blue-500 rounded-full'></div>
-                                                {t.sharedWithMe || 'Shared With Me'}
+                                                {t.modals.treeManager.sharedWithMe}
                                             </h4>
                                             <div className='grid grid-cols-1 gap-4'>
                                                 {sharedTrees.map(tree => (
@@ -407,11 +413,11 @@ export const TreeManagerModal: React.FC<TreeManagerModalProps> = ({ isOpen, onCl
                         onClick={onClose}
                         className='px-6 py-2.5 bg-stone-900 dark:bg-stone-700 text-white rounded-2xl text-sm font-bold hover:shadow-xl hover:shadow-stone-900/20 dark:hover:shadow-none transition-all active:scale-95'
                     >
-                        {t.close || 'Close'}
+                        {t.close}
                     </button>
                 </div>
             </div>
-        </div>
+        </OverlayPrimitive>
     );
 };
 
@@ -509,7 +515,7 @@ const TreeItem: React.FC<TreeItemProps> = ({
                             <button
                                 onClick={() => onManageAccess?.(tree.id)}
                                 className='p-2 text-stone-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all'
-                                title='Manage Access'
+                                aria-label={t.modals.treeManager.manageAccess}
                             >
                                 <Users className='w-4 h-4' />
                             </button>
@@ -519,14 +525,14 @@ const TreeItem: React.FC<TreeItemProps> = ({
                                     setEditName?.(tree.name);
                                 }}
                                 className='p-2 text-stone-400 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-lg transition-all'
-                                title={t.rename || 'Rename'}
+                                aria-label={t.modals.rename}
                             >
                                 <Edit2 className='w-4 h-4' />
                             </button>
                             <button
                                 onClick={() => setConfirmDelete?.(tree.id)}
                                 className='p-2 text-stone-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all'
-                                title={t.delete || 'Delete'}
+                                aria-label={t.modals.delete}
                             >
                                 <Trash2 className='w-4 h-4' />
                             </button>
@@ -543,8 +549,8 @@ const TreeItem: React.FC<TreeItemProps> = ({
                             <AlertCircle className='w-6 h-6' />
                         </div>
                         <div>
-                            <p className='text-xs font-black uppercase tracking-wider mb-0.5 opacity-80'>{t.confirmDelete || 'Confirm Delete'}</p>
-                            <p className='text-sm font-bold'>{t.areYouSure || 'Are you absolutely sure?'}</p>
+                            <p className='text-xs font-black uppercase tracking-wider mb-0.5 opacity-80'>{t.modals.confirmDelete}</p>
+                            <p className='text-sm font-bold'>{t.modals.areYouSure}</p>
                         </div>
                     </div>
                     <div className='flex items-center gap-2'>
@@ -552,14 +558,14 @@ const TreeItem: React.FC<TreeItemProps> = ({
                             onClick={() => setConfirmDelete?.(null)}
                             className='px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold transition-all border border-white/20'
                         >
-                            {t.cancel || 'Cancel'}
+                            {t.common.cancel}
                         </button>
                         <button
                             onClick={() => handleDelete?.(tree.id)}
                             disabled={isProcessing === tree.id}
                             className='px-4 py-2 bg-white text-red-600 hover:bg-red-50 rounded-xl text-xs font-black transition-all shadow-lg active:scale-95 disabled:opacity-50'
                         >
-                            {isProcessing === tree.id ? <Loader2 className='w-3 h-3 animate-spin mx-2' /> : (t.delete || 'Delete')}
+                            {isProcessing === tree.id ? <Loader2 className='w-3 h-3 animate-spin mx-2' /> : t.modals.delete}
                         </button>
                     </div>
                 </div>

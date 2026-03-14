@@ -25,22 +25,20 @@ export const NotFound: React.FC = () => {
 
         <div className='space-y-3'>
           <h1 className='text-3xl sm:text-4xl font-black tracking-tight text-[var(--theme-text)]'>
-            {language === 'ar' ? 'عذراً، الصفحة غير موجودة!' : 'Oops, Page Not Found!'}
+            {t.modals.notFound.title}
           </h1>
           <p className='text-[var(--theme-text-muted)] text-sm sm:text-base max-w-[300px] mx-auto leading-relaxed'>
-            {language === 'ar'
-              ? 'يبدو أنك ضللت الطريق. الرابط الذي تبحث عنه غير متاح أو تم نقله.'
-              : 'It seems you\'ve wandered off the path. The link you are looking for is unavailable or has been moved.'}
+            {t.modals.notFound.description}
           </p>
         </div>
 
         <div className='flex flex-col sm:flex-row gap-3 pt-4 sm:pt-8 w-full max-w-[350px] mx-auto'>
           <button
             onClick={() => navigate(-1)}
-            className='flex-1 px-6 py-3.5 bg-[var(--card-bg)] hover:bg-[var(--card-bg-hover)] border border-white/5 text-[var(--theme-text)] rounded-2xl font-bold text-sm transition-all shadow-sm active:scale-95 flex items-center justify-center gap-2'
+            className='flex-1 px-6 py-3.5 bg-[var(--card-bg)] hover:bg-[var(--card-bg-hover)] border border-white/5 text-[var(--theme-text)] rounded-2xl font-bold text-sm transition-all shadow-sm active:scale-95 flex items-center justify-center gap-2 group'
           >
-            {language === 'ar' ? <ArrowLeft className='w-4 h-4 mr-2' /> : <ArrowLeft className='w-4 h-4 ml-2' />}
-            {language === 'ar' ? 'الرجوع للخلف' : 'Go Back'}
+            <ArrowLeft className='w-4 h-4 rtl:rotate-180 transition-transform group-hover:-translate-x-1 rtl:group-hover:translate-x-1' />
+            {t.modals.notFound.goBack}
           </button>
           
           <button
@@ -48,7 +46,7 @@ export const NotFound: React.FC = () => {
             className='flex-1 px-6 py-3.5 bg-[var(--brand-color)] hover:brightness-110 text-white rounded-2xl font-bold text-sm transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2'
           >
             <Home className='w-4 h-4' />
-            {language === 'ar' ? 'الرئيسية' : 'Home'}
+            {t.modals.notFound.goHome}
           </button>
         </div>
 
@@ -57,7 +55,7 @@ export const NotFound: React.FC = () => {
           className='w-full text-center text-[var(--theme-text-muted)] hover:text-[var(--brand-color)] text-sm font-medium transition-colors flex items-center justify-center gap-2 pt-4'
         >
           <HelpCircle className='w-4 h-4' />
-          {language === 'ar' ? 'تحتاج إلى مساعدة؟ اذهب لمركز المساعدة' : 'Need help? Visit Help Center'}
+          {t.modals.notFound.needHelp}
         </button>
       </div>
     </div>

@@ -4,6 +4,7 @@ import { activityService, ActivityLog } from '../../../services/activityService'
 import { formatDistanceToNow } from 'date-fns';
 import { ar } from 'date-fns/locale/ar';
 import { enUS } from 'date-fns/locale/en-US';
+import { useTranslation } from '../../../context/TranslationContext';
 
 interface ActivityHistoryTabProps {
     treeId: string;
@@ -16,9 +17,11 @@ export const ActivityHistoryTab: React.FC<ActivityHistoryTabProps> = ({
     language,
     onNavigateToPerson,
 }) => {
+    const { t, dateLocale } = useTranslation();
     const [logs, setLogs] = useState<ActivityLog[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [hasMore, setHasMore] = useState(true);
+    const [page, setPage] = useState(0);
 
     useEffect(() => {
         loadInitialLogs();
@@ -38,9 +41,10 @@ export const ActivityHistoryTab: React.FC<ActivityHistoryTabProps> = ({
     const loadInitialLogs = async () => {
         try {
             setIsLoading(true);
-            const fetchedLogs = await activityService.fetchLogs(treeId, 20);
+            const fetchedLogs = await activityService.fetchLogs(treeId, 0, 20);
             setLogs(fetchedLogs);
             setHasMore(fetchedLogs.length === 20);
+            setPage(0);
         } catch (error) {
             console.error('Failed to load activity logs:', error);
         } finally {
@@ -53,10 +57,11 @@ export const ActivityHistoryTab: React.FC<ActivityHistoryTabProps> = ({
 
         try {
             setIsLoading(true);
-            const oldestLog = logs[logs.length - 1];
-            const moreLogs = await activityService.fetchLogs(treeId, 20, oldestLog.created_at);
+            const nextPage = page + 1;
+            const moreLogs = await activityService.fetchLogs(treeId, nextPage, 20);
             setLogs((prev) => [...prev, ...moreLogs]);
             setHasMore(moreLogs.length === 20);
+            setPage(nextPage);
         } catch (error) {
             console.error('Failed to load more logs:', error);
         } finally {
@@ -83,8 +88,8 @@ export const ActivityHistoryTab: React.FC<ActivityHistoryTabProps> = ({
     return (
         <div className="space-y-4">
             <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-[var(--text-main)]">Activity Log</h3>
-                <p className="text-xs text-[var(--text-dim)]">{logs.length} activities</p>
+                <h3 className="text-lg font-semibold text-[var(--text-main)]">{t.modals.activityTab.title}</h3>
+                <p className="text-xs text-[var(--text-dim)]">{logs.length} {t.modals.activityTab.count}</p>
             </div>
 
             {isLoading && logs.length === 0 ? (
@@ -93,23 +98,23 @@ export const ActivityHistoryTab: React.FC<ActivityHistoryTabProps> = ({
                 </div>
             ) : logs.length === 0 ? (
                 <div className="text-center py-12 text-[var(--text-dim)] text-sm">
-                    No activity yet. Start making changes to see them here!
+                    {t.modals.activityTab.noActivity}
                 </div>
             ) : (
                 <div className="space-y-2">
                     {logs.map((log) => (
                         <div
                             key={log.id}
-                            className={`p-3 rounded-lg border ${getActionColor(log.action)} transition-all hover:shadow-sm cursor-pointer`}
-                            onClick={() => log.person_id && onNavigateToPerson?.(log.person_id)}
+                            className={`p-3 rounded-lg border ${getActionColor(log.action_type)} transition-all hover:shadow-sm cursor-pointer`}
+                            onClick={() => (log.details.person_id as string) && onNavigateToPerson?.(log.details.person_id as string)}
                         >
                             <div className="flex items-start gap-3">
                                 <div className="w-8 h-8 rounded-full bg-[var(--primary-600)]/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                    {getActionIcon(log.action)}
+                                    {getActionIcon(log.action_type)}
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <p className="text-sm font-medium text-[var(--text-main)]">
-                                        {log.action}
+                                        {log.action_type}
                                     </p>
                                     <div className="flex items-center gap-2 mt-1">
                                         <p className="text-xs text-[var(--text-dim)]">
@@ -119,7 +124,7 @@ export const ActivityHistoryTab: React.FC<ActivityHistoryTabProps> = ({
                                         <p className="text-xs text-[var(--text-dim)]">
                                             {formatDistanceToNow(new Date(log.created_at), {
                                                 addSuffix: true,
-                                                locale: language === 'ar' ? ar : enUS,
+                                                locale: dateLocale,
                                             })}
                                         </p>
                                     </div>
@@ -139,7 +144,7 @@ export const ActivityHistoryTab: React.FC<ActivityHistoryTabProps> = ({
                             ) : (
                                 <>
                                     <ChevronDown className="w-4 h-4" />
-                                    Load More
+                                    {t.modals.activityTab.loadMore}
                                 </>
                             )}
                         </button>
@@ -149,7 +154,7 @@ export const ActivityHistoryTab: React.FC<ActivityHistoryTabProps> = ({
 
             <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 mt-4">
                 <p className="text-xs text-blue-800 dark:text-blue-200">
-                    💡 <strong>Tip:</strong> Click on any activity to navigate to that person in the tree.
+                    💡 <strong>{t.sidebar.tipsTitle || 'Tip'}:</strong> {t.modals.activityTab.tip}
                 </p>
             </div>
         </div>

@@ -1,9 +1,8 @@
-'use client';
-
 import React, { memo } from 'react';
-import { X, Cloud, HardDriveUpload, HardDriveDownload, AlertTriangle } from 'lucide-react';
+import { X, Cloud, HardDriveUpload, HardDriveDownload } from 'lucide-react';
 import { GoogleSyncChoiceModalProps } from '../types';
 import { useTranslation } from '../context/TranslationContext';
+import { OverlayPrimitive } from '../context/OverlayContext';
 
 export const GoogleSyncChoiceModal: React.FC<GoogleSyncChoiceModalProps> = memo(
   ({
@@ -15,8 +14,6 @@ export const GoogleSyncChoiceModal: React.FC<GoogleSyncChoiceModalProps> = memo(
     driveFileId,
   }) => {
     const { t } = useTranslation();
-
-    if (!isOpen) return null;
 
     const handleLoadClick = () => {
       if (onOpenDriveManager) {
@@ -30,8 +27,15 @@ export const GoogleSyncChoiceModal: React.FC<GoogleSyncChoiceModalProps> = memo(
     };
 
     return (
-      <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200'>
-        <div className='bg-white dark:bg-stone-800 rounded-xl shadow-2xl max-w-md w-full overflow-hidden flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-200 border border-stone-200 dark:border-stone-700'>
+      <OverlayPrimitive
+        isOpen={isOpen}
+        onClose={onClose}
+        id='google-sync-choice-modal'
+      >
+        <div
+          className='bg-white dark:bg-stone-800 rounded-xl shadow-2xl max-w-md w-full overflow-hidden flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-200 border border-stone-200 dark:border-stone-700'
+          onClick={(e) => e.stopPropagation()}
+        >
           {/* Header */}
           <div className='flex items-center justify-between p-4 border-b border-stone-200 dark:border-stone-700 bg-stone-50/50 dark:bg-stone-900/50'>
             <div className='flex items-center gap-2'>
@@ -100,7 +104,7 @@ export const GoogleSyncChoiceModal: React.FC<GoogleSyncChoiceModalProps> = memo(
             </button>
           </div>
         </div>
-      </div>
+      </OverlayPrimitive>
     );
   }
 );

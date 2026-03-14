@@ -22,25 +22,25 @@ export const MobileActionBar: React.FC<MobileActionBarProps> = ({
   const buttons = [
     {
       id: 'center',
-      label: t.center || 'Center',
+      label: t.general.center,
       icon: Target,
       onClick: onCenterView,
     },
     {
       id: 'admin',
-      label: isRtl ? 'الإدارة' : 'Admin',
+      label: t.header.tooltips.adminHub,
       icon: Settings,
       onClick: onOpenAdmin,
     },
     {
       id: 'tools',
-      label: t.tools || 'Tools',
+      label: t.general.tools,
       icon: Wrench,
       onClick: onOpenTools,
     },
     {
       id: 'delete',
-      label: t.delete || 'Delete',
+      label: t.general.delete,
       icon: Trash2,
       onClick: onDelete,
     },
@@ -49,10 +49,10 @@ export const MobileActionBar: React.FC<MobileActionBarProps> = ({
   // Logic: [Center] -> [Rel] -> [Tools] -> [Delete]
   // In RTL, we want Center to stay near the thumb (right in RTL), but we reverse the array if we use justify-around/between
   // Actually, if we want [Center][Rel][Tools][Delete] in RTL it should be rendered in that order from right to left.
-  const displayButtons = isRtl ? [...buttons].reverse() : buttons;
+  const displayButtons = buttons;
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-[80] bg-[var(--theme-bg)] border-t border-[var(--border-main)] shadow-[0_-8px_20px_rgba(0,0,0,0.1)] px-3 pt-2 pb-[calc(1.2rem+env(safe-area-inset-bottom))] flex justify-around items-center gap-2 sm:hidden">
+    <nav className="fixed inset-x-0 bottom-0 z-[80] bg-[var(--theme-bg)] border-t border-[var(--border-main)] shadow-[0_-8px_20px_rgba(0,0,0,0.1)] px-3 pt-2 pb-[calc(1.2rem+env(safe-area-inset-bottom))] flex flex-row rtl:flex-row-reverse justify-around items-center gap-2 sm:hidden">
       {displayButtons.map((btn) => {
         const isActive = activeTab === btn.id;
         const Icon = btn.icon;

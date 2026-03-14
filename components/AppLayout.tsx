@@ -10,6 +10,9 @@ import ActivityLogDrawer from './ActivityLogDrawer';
 import { OnboardingTour } from './OnboardingTour';
 import { SettingsDrawer } from './ui/SettingsDrawer';
 import { MobileActionBar } from './ui/MobileActionBar';
+import { ExportProgressOverlay } from './ui/ExportProgressOverlay';
+import { SyncStatusRibbon } from './ui/SyncStatusRibbon';
+import { PresentModeExitButton } from './ui/PresentModeExitButton';
 import { ConfirmationModal } from './ConfirmationModal';
 import { useAppStore } from '../store/useAppStore';
 import { useTranslation } from '../context/TranslationContext';
@@ -88,7 +91,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   const handleDeleteConfirm = () => {
     if (activePerson) {
       appState.deletePerson(activePerson.id);
-      showSuccess(t.personDeletedSuccess || 'Person deleted successfully!');
+      showSuccess(t.personDeletedSuccess);
     }
     setDeleteModalOpen(false);
     setSidebarOpen(false);
@@ -111,45 +114,11 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
         />
       )}
 
-      {isPresentMode && (
-        <button
-          onClick={() => setIsPresentMode(false)}
-          className='fixed top-4 right-4 z-[100] bg-black/50 text-white px-4 py-2 rounded-full backdrop-blur hover:bg-black/70 flex items-center gap-2'
-        >
-          <X className='w-4 h-4' /> {t.exitPresentMode || 'Exit Present Mode'}
-        </button>
-      )}
+      {isPresentMode && <PresentModeExitButton onExit={() => setIsPresentMode(false)} />}
 
-      {!isPresentMode && googleSync.isSyncing && (
-        <div
-          className={`absolute top-16 start-1/2 -translate-x-1/2 z-50 text-white text-xs px-3 py-1 rounded-b-lg shadow-lg flex items-center gap-2 ${googleSync.isDemoMode ? 'bg-orange-500' : 'bg-[var(--primary-600)] animate-pulse'}`}
-        >
-          {googleSync.isDemoMode
-            ? 'Saving locally...'
-            : themeLanguage.language === 'ar'
-              ? 'جاري المزامنة...'
-              : 'Syncing...'}
-        </div>
-      )}
+      {!isPresentMode && <SyncStatusRibbon isSyncing={googleSync.isSyncing} isDemoMode={googleSync.isDemoMode} />}
 
-      {/* Export Progress Overlay */}
-      {isExporting && (
-        <div className='fixed inset-0 z-[200] bg-black/40 backdrop-blur-sm flex items-center justify-center animate-in fade-in duration-300'>
-          <div className='bg-[var(--theme-bg)] p-8 rounded-2xl shadow-2xl border border-[var(--border-main)] flex flex-col items-center gap-4 max-w-sm text-center'>
-            <div className='w-12 h-12 border-4 border-[var(--primary-600)]/20 border-t-[var(--primary-600)] rounded-full animate-spin' />
-            <div>
-              <h3 className='font-bold text-lg mb-1'>
-                {themeLanguage?.language === 'ar' ? 'جاري تصدير الملف...' : 'Generating Export...'}
-              </h3>
-              <p className='text-sm text-[var(--text-dim)]'>
-                {themeLanguage?.language === 'ar'
-                  ? 'برجاء الانتظار، يتم تصوير الشجرة بدقة عالية (300 DPI)...'
-                  : 'Capturing High-Resolution (300 DPI) Family Tree Snapshot...'}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
+      <ExportProgressOverlay />
 
       <div
         className='flex flex-1 overflow-hidden relative transition-all duration-300'
@@ -180,7 +149,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
           rel='noopener noreferrer'
           className='hover:underline hover:text-[var(--primary-600)] transition-colors'
         >
-          Privacy Policy
+          {t.general.footer.privacyPolicy}
         </a>
         <span aria-hidden='true'>•</span>
         <a
@@ -189,14 +158,14 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
           rel='noopener noreferrer'
           className='hover:underline hover:text-[var(--primary-600)] transition-colors'
         >
-          Terms of Service
+          {t.general.footer.termsOfService}
         </a>
         <span aria-hidden='true'>•</span>
         <Link
           to='/help'
           className='hover:underline hover:text-[var(--primary-600)] transition-colors'
         >
-          {themeLanguage.language === 'ar' ? 'مركز المساعدة' : 'Help Center'}
+          {t.general.footer.helpCenter}
         </Link>
       </footer>
 
@@ -264,8 +233,8 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
           isOpen={deleteModalOpen}
           onClose={() => setDeleteModalOpen(false)}
           onConfirm={handleDeleteConfirm}
-          title={t.deletePerson || 'Delete Person'}
-          message={`${t.personDeleteConfirm || 'Are you sure you want to delete this person?'} (${activePerson.firstName} ${activePerson.lastName})`}
+          title={t.deletePerson}
+          message={`${t.personDeleteConfirm} (${activePerson.firstName} ${activePerson.lastName})`}
         />
       )}
     </>
