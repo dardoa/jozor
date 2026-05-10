@@ -1,0 +1,74 @@
+import { useAppStore } from '../../store/useAppStore';
+import { logError, logInfo } from '../../utils/errorLogger';
+import type { DeltaOperation } from './SyncTypes';
+import type { ConflictResolver } from './ConflictResolver';
+import { applyIncomingOps } from './applyIncomingOps';
+import { backgroundTreePersistence } from './BackgroundTreePersistence';
+import { clientInstanceId } from './syncInstance';
+
+export class DeltaOperationApplier {
+    private incomingProcessingQueue: Promise<void> = Promise.resolve();
+    private snapshotCounter = 0;
+
+    constructor(private readonly resolver: ConflictResolver) {}
+
+    async processIncomingBatch(batch: DeltaOperation[]): Promise<void> {
+        this.incomingProcessingQueue = this.incomingProcessingQueue.then(async () => {
+            const { lastSyncedVersion } = useAppStore.getState();
+            const sequential = this.resolver.processIncoming(batch, lastSyncedVersion);
+
+            if (sequential.length === 0) return;
+
+            await new Promise<void>((resolve) => {
+                requestAnimationFrame(async () => {
+                    try {
+                        const state = useAppStore.getState();
+                        const { applyOperationToMap } = await import('../../utils/syncUtils');
+
+                        const result = applyIncomingOps({
+                            people: state.people,
+                            ops: sequential,
+                            deletedPersonIds: state.deletedPersonIds,
+                            lastSyncedVersion: state.lastSyncedVersion,
+                            applyOperationToMap,
+                            excludeClientId: clientInstanceId,
+                            onSkipBlacklisted: ({ op, targetId }) => {
+                                logInfo('DeltaSyncService ghostNodeGuard', 'Skipping operation for blacklisted person.', {
+                                    type: op.type,
+                                    personId: targetId,
+                                    version: op.version_seq,
+                                });
+                            },
+                        });
+
+                        result.syncingNodeIdsToRemove.forEach((id) => state.removeSyncingNode(id));
+
+                        state.setPeople(result.people, false);
+                        if (result.treeMetadata.focusId && result.people[result.treeMetadata.focusId]) {
+                            state.setFocusId(result.treeMetadata.focusId);
+                        }
+                        if (result.treeMetadata.name) {
+                            state.setTreeName(result.treeMetadata.name);
+                        }
+                        state.setLastSyncedVersion(result.maxVersion);
+
+                        this.snapshotCounter += sequential.length;
+                        if (this.snapshotCounter >= 50) {
+                            this.snapshotCounter = 0;
+                            backgroundTreePersistence.scheduleSnapshot(result.people);
+                            state.incrementOpCount(-state.opCount);
+                        } else {
+                            backgroundTreePersistence.scheduleSave(result.people);
+                        }
+                    } catch (err) {
+                        logError('DeltaSyncService processIncomingBatch', err, { category: 'SYNC', severity: 'HIGH' });
+                    } finally {
+                        resolve();
+                    }
+                });
+            });
+        });
+
+        return this.incomingProcessingQueue;
+    }
+}

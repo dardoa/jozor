@@ -1,0 +1,39 @@
+import { memo } from 'react';
+import { NodeContainer } from './tree/node/NodeContainer';
+import { type NodeContainerProps, areNodeContainerPropsEqual } from './tree/node/nodeContainerProps';
+
+export const NodeComponent = memo<NodeContainerProps>(({
+    node,
+    index,
+    isFocused,
+    isHighlighted,
+    onSelect,
+    onNodeContextMenu,
+    settings,
+    zoomScale,
+    nodeWidth,
+    nodeHeight,
+    isPulsing,
+    isDimmed,
+    isPathHighlighted,
+    showParentNavigation,
+}) => (
+    <NodeContainer
+        node={node}
+        index={index}
+        isFocused={isFocused}
+        isHighlighted={isHighlighted}
+        onSelect={onSelect}
+        onNodeContextMenu={onNodeContextMenu}
+        settings={settings}
+        zoomScale={zoomScale}
+        nodeWidth={nodeWidth}
+        nodeHeight={nodeHeight}
+        isPulsing={isPulsing}
+        isDimmed={isDimmed}
+        isPathHighlighted={isPathHighlighted}
+        showParentNavigation={showParentNavigation}
+    />
+), areNodeContainerPropsEqual);
+
+NodeComponent.displayName = 'NodeComponent';

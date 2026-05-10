@@ -1,0 +1,26 @@
+export const relationships = {
+  parents: 'الآباء',
+  spouses: 'الأزواج',
+  children: 'الأبناء',
+  siblings: 'الأشقاء', // New translation
+  married: 'متزوج',
+  divorced: 'مطلق',
+  engaged: 'مخطوب',
+  separated: 'منفصل',
+  startDate: 'تاريخ البدء',
+  startPlace: 'مكان البدء',
+  endDate: 'تاريخ الانتهاء',
+  endPlace: 'مكان الانتهاء',
+  place: 'المكان',
+  since: 'منذ',
+  partners: 'الشركاء',
+  noPartners: 'لم تتم إضافة شركاء بعد.',
+  noParents: 'لم تتم إضافة آباء بعد.',
+  noChildren: 'لم تتم إضافة أطفال بعد.',
+  noSiblings: 'لم تتم إضافة أشقاء بعد.', // New translation
+  viewProfile: 'عرض الملف الشخصي',
+  confirmUnlink: 'هل أنت متأكد أنك تريد إزالة هذه العلاقة؟',
+  removeRelation: 'إزالة العلاقة',
+  familyRelationships: 'العلاقات العائلية',
+  noRelatives: 'لا توجد أقارب مضافون بعد.',
+};

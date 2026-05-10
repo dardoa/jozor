@@ -1,0 +1,126 @@
+/* CSS for Charts */
+.chart-cursor-grab {
+  cursor: grab;
+}
+
+.chart-cursor-grabbing {
+  cursor: grabbing;
+}
+
+.fan-chart-container {
+  overflow: visible;
+  pointer-events: none;
+}
+
+.fan-chart-label {
+  color: var(--card-text);
+  pointer-events: none;
+}
+
+.fan-chart-node {
+  pointer-events: none;
+}
+
+.fan-chart-circle {
+  border-color: #c4a882;
+  background-color: #f5efe4;
+}
+
+.fan-chart-circle.male {
+  border-color: #8b6914;
+}
+
+.fan-chart-icon {
+  color: #c4a882;
+}
+
+.fan-chart-icon.male {
+  color: #8b6914;
+}
+
+.fan-chart-text {
+  color: #2c1810;
+}
+
+.fan-chart-text.male {
+  color: #2c1810;
+}
+
+/* FanChart Filter */
+.fan-root-shadow {
+  filter: url(#shadow);
+}
+
+/* Pedigree/Descendant Chart Node Styles */
+.pedigree-node {
+  border-color: var(--gender-female-border);
+  background-color: var(--gender-female-bg);
+}
+
+.pedigree-node.male {
+  border-color: var(--gender-male-border);
+  background-color: var(--gender-male-bg);
+}
+
+.family-pod-bg {
+  fill: rgba(245, 239, 228, 0.9);
+  stroke: rgba(196, 168, 130, 0.85);
+  stroke-width: 1.5;
+  rx: 32;
+  ry: 32;
+  pointer-events: none;
+  filter: drop-shadow(0 0 20px rgba(196, 168, 130, 0.15));
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[data-theme='dark'] .family-pod-bg {
+  fill: rgba(44, 26, 14, 0.92);
+  stroke: rgba(74, 46, 20, 0.95);
+  filter: drop-shadow(0 16px 48px rgba(44, 24, 16, 0.5));
+}
+
+@keyframes pulse-ring {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 20px rgba(245, 158, 11, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+}
+
+.animate-pulse-ring {
+  animation: pulse-ring 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  border-color: #c9952a !important;
+  border-width: 2px !important;
+  z-index: 50;
+}
+
+/* Enhanced Force Chart Links */
+.force-link {
+  transition: all 0.3s ease;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.force-link:hover {
+  opacity: 1 !important;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+}
+
+.force-link-glow {
+  transition: all 0.3s ease;
+  filter: blur(2px);
+}
+
+/* CSS Variables for Link Colors */
+:root {
+  --marriage-link-stroke: #c4a882;
+  --marriage-link-glow: #c9952a;
+  --parent-link-stroke: rgba(196, 168, 130, 0.5);
+  --parent-link-glow: rgba(201, 149, 42, 0.3);
+  --link-line-stroke: rgba(196, 168, 130, 0.5);
+}
+
+[data-theme='dark'] {
+  --marriage-link-stroke: rgba(196, 168, 130, 0.6);
+  --marriage-link-glow: rgba(201, 149, 42, 0.5);
+  --parent-link-stroke: rgba(74, 46, 20, 0.92);
+  --parent-link-glow: rgba(201, 149, 42, 0.35);
+  --link-line-stroke: rgba(196, 168, 130, 0.4);
+}

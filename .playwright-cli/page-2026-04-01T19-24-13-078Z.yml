@@ -1,0 +1,24 @@
+- generic [active] [ref=e1]:
+  - img
+  - generic [ref=e8]:
+    - generic [ref=e9]:
+      - img
+      - generic [ref=e10]:
+        - generic [ref=e11]:
+          - generic [ref=e12]:
+            - img [ref=e14]
+            - heading "Family Tree Dashboard" [level=1] [ref=e19]
+          - paragraph [ref=e20]: Select an existing tree or start a new heritage journey.
+        - generic [ref=e21]:
+          - button "Sign Out" [ref=e22] [cursor=pointer]
+          - button "Add" [ref=e23] [cursor=pointer]:
+            - img [ref=e24]
+            - text: Add
+          - button "Restore" [ref=e25] [cursor=pointer]:
+            - img [ref=e26]
+            - text: Restore
+      - generic [ref=e29]:
+        - img [ref=e30]
+        - paragraph [ref=e32]: No trees found in database
+        - button "Start your first tree here" [ref=e33] [cursor=pointer]
+    - paragraph [ref=e35]: Powered by Jozor Premium Engine

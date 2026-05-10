@@ -1,0 +1,72 @@
+- generic [active] [ref=e1]:
+  - img
+  - generic [ref=e3]:
+    - generic [ref=e123]:
+      - generic:
+        - img
+      - button "العربية" [ref=e124] [cursor=pointer]:
+        - img [ref=e125]
+        - generic [ref=e129]: العربية
+      - generic [ref=e131]:
+        - generic [ref=e132]:
+          - generic [ref=e133]: Jozor
+          - generic [ref=e135]:
+            - heading "Welcome to Jozor." [level=1] [ref=e136]
+            - paragraph [ref=e137]: Your digital family tree. Preserve your heritage, connect generations, and discover your roots.
+          - generic [ref=e138]:
+            - generic [ref=e139]:
+              - img [ref=e141]
+              - heading "Start a New Tree" [level=2] [ref=e142]
+              - paragraph [ref=e143]: Your data is saved locally and can be synced to Google Drive.
+            - generic [ref=e144]:
+              - img [ref=e146]
+              - heading "Import File" [level=2] [ref=e149]
+              - paragraph [ref=e150]: OR
+        - generic [ref=e151]:
+          - img "Jozor Logo" [ref=e153]
+          - heading "Sign In" [level=2] [ref=e154]
+          - paragraph [ref=e155]: Your data is saved locally and can be synced to Google Drive.
+          - generic [ref=e156]:
+            - button "Sign In" [ref=e157] [cursor=pointer]
+            - button "Start a New Tree" [ref=e158] [cursor=pointer]:
+              - img [ref=e160]
+              - text: Start a New Tree
+            - button "Import File" [ref=e161] [cursor=pointer]:
+              - img [ref=e163]
+              - text: Import File
+          - generic [ref=e168]: OR
+          - paragraph [ref=e170]: Your digital family tree. Preserve your heritage, connect generations, and discover your roots.
+    - dialog [ref=e58]:
+      - generic [ref=e59]:
+        - button "Close" [ref=e60] [cursor=pointer]:
+          - img [ref=e61]
+        - heading "Welcome Back" [level=2] [ref=e64]
+      - generic [ref=e65]:
+        - generic [ref=e66]:
+          - paragraph [ref=e67]: Quick Access
+          - button "Login with Google" [ref=e69] [cursor=pointer]:
+            - img [ref=e70]
+            - generic [ref=e75]: Login with Google
+        - generic [ref=e78]: OR
+        - generic [ref=e81]:
+          - generic [ref=e82]:
+            - button [ref=e83] [cursor=pointer]:
+              - img [ref=e84]
+            - heading "Sign Up" [level=2] [ref=e113]
+          - generic [ref=e171]: Email address "codex.supabase.1775070870@example.com" is invalid
+          - generic [ref=e87]:
+            - generic [ref=e114]:
+              - img [ref=e115]
+              - textbox "John Doe" [ref=e118]: Codex Verify
+            - generic [ref=e88]:
+              - img [ref=e89]
+              - textbox "name@example.com" [ref=e92]: codex.supabase.1775070870@example.com
+            - generic [ref=e93]:
+              - img [ref=e94]
+              - textbox "••••••••" [ref=e97]: Supabase123!
+              - button "Show Password" [ref=e98] [cursor=pointer]:
+                - img [ref=e99]
+            - button "Sign Up" [ref=e119] [cursor=pointer]
+          - generic [ref=e120]:
+            - generic [ref=e121]: Already have an account?
+            - button "Login" [ref=e122] [cursor=pointer]

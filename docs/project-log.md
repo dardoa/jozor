@@ -1,0 +1,497 @@
+# Project Log
+
+## M-007b-4 - Remove Legacy JSON Snapshot System (Archive-Only)
+
+- Task ID: `M-007b-4`
+- Title: `Remove Legacy JSON Snapshot System (Archive-Only)`
+- Summary:
+  - Simplified the snapshot system by removing the remaining legacy JSON snapshot paths.
+  - Made snapshot creation, listing, and restore archive-only around `.jozor` files.
+  - Kept the main tree JSON system unchanged.
+- Files changed:
+  - `hooks/useGoogleSync.ts`
+  - `services/storageProvider.ts`
+  - `services/googleDriveProvider.ts`
+  - `services/google/interfaces.ts`
+  - `services/google/GoogleDriveService.ts`
+- Architectural impact:
+  - Snapshot restore is now a single archive-based path.
+  - The provider snapshot layer is now Blob-only.
+  - Snapshot listing is restricted to `.jozor` archives only.
+- Snapshot behavior:
+  - `saveSnapshot(...)` now accepts archive blobs only.
+  - Snapshot restore always uses `loadSnapshotFileRaw(...)` plus `restoreBlueprintArchive(...)`.
+  - Legacy JSON snapshot branching and JSON snapshot filtering were removed.
+- Verification:
+  - `typecheck`: pass
+- Notes:
+  - Main tree file save/load remains JSON-based and was not modified.
+  - `archiveService`, `archiveRestoreService`, and `loadFullState(...)` were left unchanged.
+
+## M-007b-3 - Snapshot Creation Cutover (Blueprint Archive)
+
+- Task ID: `M-007b-3`
+- Title: `Snapshot Creation Cutover (Blueprint Archive)`
+- Summary:
+  - Switched snapshot creation from JSON payloads to blueprint archive blobs.
+  - Reused the existing provider archive-snapshot support without changing provider APIs in this phase.
+  - Kept restore compatibility by relying on the earlier format-aware routing between `.json` and `.jozor`.
+- Files changed:
+  - `hooks/useGoogleSync.ts`
+- Architectural impact:
+  - New snapshots are now created through `buildBlueprintArchive(...)` and stored as archive snapshots.
+  - The safety snapshot taken before restore was also cut over to archive format.
+  - JSON snapshot support remains available for previously stored snapshots.
+- Snapshot behavior:
+  - Snapshot creation now saves through `storageProvider.saveSnapshot(blob, treeId, label, 'archive')`.
+  - Listing and rotation continue working through the earlier dual-format provider support.
+  - `loadFullState(...)` and the main restore/store contract were left unchanged.
+- Verification:
+  - `typecheck`: pass
+- Notes:
+  - A local `buildSnapshotArchive(fullState, label)` helper was added in `useGoogleSync.ts`.
+  - This phase changed snapshot creation only; provider APIs were not modified here.
+
+## M-007b-2 - Snapshot Restore Routing (JSON vs Archive)
+
+- Task ID: `M-007b-2`
+- Title: `Snapshot Restore Routing (JSON vs Archive)`
+- Summary:
+  - Made snapshot restore format-aware without changing provider logic or snapshot creation.
+  - Preserved the existing JSON restore path exactly as before.
+  - Added archive snapshot routing through the blueprint archive restore service.
+- Files changed:
+  - `hooks/useGoogleSync.ts`
+- Architectural impact:
+  - `handleRestoreSnapshot(...)` now routes by snapshot filename format.
+  - `.jozor` snapshots load through `loadSnapshotFileRaw(...)` and `restoreBlueprintArchive(...)`.
+  - Legacy JSON snapshots still load through the existing `loadFile(...)` plus `loadFullState(...)` path.
+- Restore behavior:
+  - Archive restore warnings are logged without failing the restore flow.
+  - Object URL cleanup was added for the archive-restore lifecycle so temporary media URLs do not accumulate indefinitely.
+- Verification:
+  - `typecheck`: pass
+- Notes:
+  - No provider-layer changes were made in this phase.
+  - No snapshot creation cutover was performed in this phase.
+  - This task completed restore routing only.
+
+## M-007b-1 - Provider Snapshot Dual-Format Support (Non-Breaking)
+
+- Task ID: `M-007b-1`
+- Title: `Provider Snapshot Dual-Format Support (Non-Breaking)`
+- Summary:
+  - Extended the storage provider snapshot surface to support both JSON and archive snapshot formats.
+  - Preserved JSON snapshot behavior as the default path.
+  - Added raw snapshot blob loading support for future archive restore work.
+- Files changed:
+  - `services/storageProvider.ts`
+  - `services/googleDriveProvider.ts`
+  - `services/google/interfaces.ts`
+  - `services/google/GoogleDriveService.ts`
+- Architectural impact:
+  - Snapshot handling in the provider layer now supports dual-format evolution without changing the main file APIs.
+  - Snapshot listing now includes both `.json` and `.jozor` files under the existing tree-specific naming prefix.
+  - Main Drive file operations remain JSON-only and unchanged.
+- Snapshot compatibility behavior:
+  - `saveSnapshot(...)` still defaults to JSON behavior with the existing upload path.
+  - Archive snapshot support is now available through `Blob` payloads with `format='archive'`.
+  - `loadSnapshotFileRaw(fileId)` was added for future archive snapshot restore routing.
+- Verification:
+  - `typecheck`: pass
+- Notes:
+  - No restore-flow changes were made.
+  - No current snapshot creation path was cut over in this phase.
+  - This task prepared the provider layer only; actual archive snapshot adoption remains a later step.
+
+## M-007b - Archive Cutover (Snapshot + Export Creation) - Phase 1
+
+- Task ID: `M-007b`
+- Title: `Archive Cutover (Snapshot + Export Creation)`
+- Phase: `Phase 1 - Export cutover only`
+- Summary:
+  - Switched the `.jozor` export creation path to the new blueprint archive builder.
+  - Preserved the existing export UX, download flow, and output filename.
+  - Kept snapshot creation and Drive-backed snapshot storage untouched in this phase.
+- Files changed:
+  - `hooks/useExport.ts`
+- Architectural impact:
+  - `useExport` now builds `.jozor` exports through `services/archiveService.ts`.
+  - Export output now follows the blueprint archive layout with `tree.json`, `manifest.json`, and `media/*`.
+  - No snapshot cutover was attempted because the current Drive snapshot path still depends on JSON storage and JSON restore behavior.
+- Verification:
+  - `typecheck`: pass
+- Notes:
+  - No Base64 was reintroduced into archive JSON.
+  - No `storageProvider`, Google Drive provider, snapshot logic, or restore routing changes were made.
+  - Snapshot cutover remains a future phase that will require provider-layer Blob support and coordinated restore-path updates.
+
+## M-008b - Archive Restore System (Blueprint Format)
+
+- Task ID: `M-008b`
+- Title: `Archive Restore System (Blueprint Format)`
+- Summary:
+  - Added a new additive restore service for blueprint archives without changing the legacy importer.
+  - Implemented restore parsing for `tree.json`, `manifest.json`, `media/avatars/*`, and `media/gallery/*`.
+  - Reconstructed runtime media using browser-safe object URLs instead of Base64 payloads.
+- Files changed:
+  - `services/archiveRestoreService.ts`
+- Architectural impact:
+  - Introduced a new services-layer restore boundary for blueprint archives.
+  - Kept `utils/archiveLogic.ts` and current import UI wiring untouched.
+  - Restore output is shaped for Zustand-first loading through `FullState`, not direct Supabase writes.
+- Restore behavior:
+  - Returns restored `state`, parsed `manifest`, accumulated `warnings`, and `revokeObjectUrls()`.
+  - Missing avatar or gallery files are tolerated safely and reported in `warnings`.
+  - Runtime media references are rebuilt with object URLs created from archive blobs.
+- Verification:
+  - `typecheck`: pass
+- Notes:
+  - `voiceNotes` are restored as empty because the current blueprint archive format does not carry them.
+  - This task implemented restore parsing only and did not perform legacy cutover or UI integration.
+
+## M-009 - Visible Tree Highlighting Refactor
+
+- Task ID: `M-009`
+- Title: `Visible Tree Highlighting Refactor`
+- Summary:
+  - Refactored visible-tree highlighting so the final highlighting result is resolved in the layout controller instead of the render component.
+  - Removed highlight-specific chart-model mapping ownership from the highlighting helper.
+  - Aligned the highlighting pipeline more closely with the minimap architecture pattern while preserving current fallback behavior.
+- Files changed:
+  - `components/FamilyTree.tsx`
+  - `domain/visibleTreeHighlighting.ts`
+  - `hooks/useFamilyTreeLayoutController.ts`
+- Architectural impact:
+  - `FamilyTree` is now passive for highlight delivery.
+  - Visible-tree highlighting vs legacy fallback vs radial suppression is resolved in `useFamilyTreeLayoutController.ts`.
+  - `visibleTreeHighlighting.ts` no longer owns local chart-model mapping semantics.
+  - `FamilyTree.tsx` no longer contains highlight suppression branching.
+- Verification:
+  - `typecheck`: pass
+- Status:
+  - Code complete
+  - QA completed after focused regression follow-up
+- Notes:
+  - No `ChartType` changes were made.
+  - Minimap behavior and layout core were left untouched.
+  - A post-refactor regression was found and fixed in `useFamilyTreeLayoutController.ts` where `highlightedPath` read `activeChartType` before initialization.
+  - The fix was minimal: move `activeChartType`, `layoutKind`, and `chartModel` initialization above the `highlightedPath` memo.
+  - Follow-up investigation for Case 3 (`fan/radial` with `visibleTreeHighlighting = false`) found no additional code bug.
+  - The temporary `isLoading` hang reproduced only in the secondary QA environment and was traced to QA timing during immediate scenario seeding plus chart-mode switching, not to the flag-off suppression path itself.
+  - No extra code change was required for Case 3 beyond the focused initialization-order fix.
+
+## M-008 - Backup Rotation Policy (Keep Last 3 Snapshots)
+
+- Task ID: `M-008`
+- Title: `Backup Rotation Policy (Keep Last 3 Snapshots)`
+- Summary:
+  - Updated the existing snapshot cleanup policy to retain only the newest 3 snapshots per tree.
+  - Reused the existing provider-layer cleanup flow instead of introducing new hook-level deletion logic.
+  - Preserved current snapshot ordering and error-handling behavior.
+- Files changed:
+  - `services/google/GoogleDriveService.ts`
+- Architectural impact:
+  - `storageProvider.cleanupSnapshots(treeId)` now enforces the retention rule globally through the provider layer.
+  - No hook changes were made in `useGoogleSync`.
+  - No `storageProvider` API changes or snapshot-format changes were introduced.
+- Retention behavior:
+  - Snapshot ordering still relies on `modifiedTime desc`.
+  - Cleanup deletes snapshots after index `3`, keeping only the latest 3 per tree.
+  - Cleanup remains scoped per tree through the existing `treeId` filtering path.
+- Verification:
+  - `typecheck`: pass
+- Notes:
+  - This task changed retention only.
+  - Archive integration and retention configurability remain out of scope.
+
+## M-007 - Snapshot -> Archive System
+
+- Task ID: `M-007`
+- Title: `Snapshot -> Archive System`
+- Summary:
+  - Added a new canonical archive builder in the services layer.
+  - Implemented blueprint-compliant archive generation with `tree.json`, `manifest.json`, `media/avatars/*`, and `media/gallery/*`.
+  - Kept archive JSON data-only by separating media references into `manifest.json` instead of embedding Base64 payloads.
+- Files changed:
+  - `services/archiveService.ts`
+- Architectural impact:
+  - Introduced the new archive-generation boundary without changing legacy import/export wiring.
+  - Preserved `utils/archiveLogic.ts` as the old archive path for now, so cutover remains a later task.
+  - Did not modify `services/supabaseTreeService.ts`, snapshot UI behavior, or restore logic.
+- Determinism notes:
+  - Sorted people before archive assembly.
+  - Sorted object keys before serializing `tree.json` and `manifest.json`.
+  - Stabilized `createdAt` from snapshot metadata when available, or from the provided override.
+- Verification:
+  - `typecheck`: pass
+- Notes:
+  - This task implemented archive generation only.
+  - Legacy archive replacement and runtime cutover were intentionally deferred to a later task.
+
+## M-001 - Move Gemini API access to Vercel proxy (cleanup + verification)
+
+- Task ID: `M-001`
+- Title: `Move Gemini API access to Vercel proxy (cleanup + verification)`
+- Summary:
+  - Removed legacy AI endpoints that were no longer part of the approved architecture.
+  - Cleaned direct Gemini references from helper and test files that still implied direct provider usage.
+  - Enforced the proxy-only flow by keeping active AI calls routed through `/api/ai-proxy`.
+- Files changed:
+  - `api/gemini.ts`
+  - `api/ai/generate-content.ts`
+  - `api/check-env.ts`
+  - `test-gemini-direct.js`
+  - `test-api.html`
+  - `services/geminiService.ts`
+- Security impact:
+  - Removed client-side API key exposure paths and legacy direct-provider usage paths from the approved M-001 scope.
+- Final state:
+  - All active AI calls go through `/api/ai-proxy`.
+- Verification results:
+  - `typecheck`: pass
+  - `lint`: pass (warnings outside scope)
+  - `tests`: pass
+- Notes:
+  - The task was already partially implemented before the Phase 0 audit, so this work completed the cleanup and verification pass rather than introducing the proxy flow from scratch.
+
+## M-002 - Remove Firebase remnants from codebase
+
+- Task ID: `M-002`
+- Title: `Remove Firebase remnants from codebase`
+- Summary:
+  - Removed Firebase-specific wording from active auth-related API responses and comments.
+  - Removed stale Firebase env typings that were no longer used by the application.
+  - Cleaned Firebase-era auth failure wording in the targeted live collaboration Playwright spec.
+- Files changed:
+  - `api/auth/session.ts`
+  - `api/auth/exchange.ts`
+  - `vite-env.d.ts`
+  - `tests/e2e/collaboration-live.spec.ts`
+  - `services/supabaseTreeService.ts`
+- Architectural impact:
+  - Supabase remains the only auth system.
+  - Firebase remnants were removed from active code, comments, and env typings.
+- Verification:
+  - `typecheck`: pass
+  - `lint`: pass (warnings outside scope)
+  - `targeted Playwright spec`: skipped due to live environment gating
+- Notes:
+  - The task was a cleanup/remnants task, not an auth migration.
+
+## M-004A - Safe additive shared type updates
+
+- Task ID: `M-004A`
+- Title: `Safe additive shared type updates`
+- Summary:
+  - Added `privacyMode` to `TreeSettings`.
+  - Added `BackupManifest`.
+  - Added `NotificationType`.
+- Files changed:
+  - `types.ts`
+- Architectural note:
+  - `ChartType` was intentionally left unchanged.
+  - `AppNotification` ownership remains in `store/slices/uiSlice.ts` for now.
+- Verification:
+  - `typecheck`: pass
+- Notes:
+  - This task was split out from `M-004` to avoid breaking runtime consumers.
+
+## M-004B1 - Safe type-module bridge consolidation
+
+- Task ID: `M-004B1`
+- Title: `Safe type-module bridge consolidation`
+- Summary:
+  - Replaced duplicated shared type definitions in internal types modules with re-export bridges from `types.ts`.
+- Files changed:
+  - `types/common.ts`
+  - `types/tree.ts`
+  - `types/visualization.ts`
+- Architectural note:
+  - `types.ts` remains the single source of truth for the consolidated shared types in this phase.
+  - Runtime files were intentionally not modified.
+- Types consolidated in this phase:
+  - `ChartType`
+  - `ExportType`
+  - `UserProfile`
+  - `DriveFile`
+  - `Collaborator`
+  - `TreeNode`
+  - `FanArc`
+- Verification:
+  - `typecheck`: pass
+- Notes:
+  - `TreeSettings`, `ModalType`, `TreeLink`, and `AppNotification` were explicitly deferred.
+
+## M-004B2A - TreeLink ownership reconciliation
+
+- Task ID: `M-004B2A`
+- Title: `TreeLink ownership reconciliation`
+- Summary:
+  - Resolved `TreeLink` ownership to `types.ts`.
+  - Removed unused `sourceCoords` from the duplicate internal type surface.
+  - Replaced the duplicate definition in `types/visualization.ts` with a re-export bridge.
+- Files changed:
+  - `types/visualization.ts`
+- Final TreeLink shape:
+  - `source`
+  - `target`
+  - `type`
+  - `customOrigin?`
+- Architectural note:
+  - `types.ts` is now the single source of truth for `TreeLink`.
+  - No runtime files were modified.
+- Verification:
+  - `typecheck`: pass
+- Notes:
+  - `sourceCoords` was removed because no runtime consumers were found.
+
+## M-004B2B1 - ModalType runtime inventory reconciliation
+
+- Task ID: `M-004B2B1`
+- Title: `ModalType runtime inventory reconciliation`
+- Summary:
+  - Aligned `ModalType` with the real runtime modal inventory.
+  - Added missing active modal keys.
+  - Removed stale modal keys.
+  - Synchronized `types.ts` and `types/common.ts`.
+- Files changed:
+  - `types.ts`
+  - `types/common.ts`
+- Final ModalType inventory:
+  - `calculator`
+  - `stats`
+  - `chat`
+  - `consistency`
+  - `timeline`
+  - `share`
+  - `map`
+  - `login`
+  - `snapshotHistory`
+  - `adminHub`
+  - `globalSettings`
+  - `migrationMap`
+- Architectural note:
+  - `ModalType` now reflects the authoritative runtime modal inventory.
+  - No runtime logic files were modified.
+- Verification:
+  - `typecheck`: pass
+- Notes:
+  - `story` and `layoutSettings` were removed as stale keys.
+  - This task reconciled inventory only and did not change modal behavior.
+
+## M-004B2B2 - ModalType bridge consolidation
+
+- Task ID: `M-004B2B2`
+- Title: `ModalType bridge consolidation`
+- Summary:
+  - Removed duplicate `ModalType` ownership from `types/common.ts`.
+  - Made `types.ts` the single source of truth for `ModalType`.
+  - Replaced the duplicate definition with a re-export bridge.
+- Files changed:
+  - `types/common.ts`
+- Architectural note:
+  - `types.ts` is now the canonical owner of `ModalType`.
+  - No runtime files or modal behavior were changed.
+- Verification:
+  - `typecheck`: pass
+- Notes:
+  - This task followed inventory reconciliation from `M-004B2B1`.
+  - Bridge consolidation was limited to the types layer only.
+
+## M-004 - Shared Types Consolidation (COMPLETED)
+
+- Summary:
+  - Established `types.ts` as the single source of truth for shared types.
+  - Removed duplicate type ownership across internal modules.
+  - Consolidated low-risk shared types using bridge re-exports.
+  - Reconciled `TreeLink` ownership and removed unused fields.
+  - Reconciled `ModalType` against runtime inventory.
+  - Converted `types/common.ts` into a bridge surface.
+- Completed sub-tasks:
+  - `M-004A`
+  - `M-004B1`
+  - `M-004B2A`
+  - `M-004B2B1`
+  - `M-004B2B2`
+- Architectural result:
+  - Clear type ownership boundaries.
+  - Reduced drift between modules.
+  - Safer future refactoring surface.
+- Deferred:
+  - `TreeSettings` consolidation moved to a future task due to runtime coupling.
+
+## ChartType Migration Status Summary
+
+- Migration objective:
+  - Introduce a controlled, behavior-preserving migration path from raw legacy `ChartType` checks toward adapter-based runtime classification, without changing rendering behavior, fallback behavior, or the public type surface yet.
+- Completed safe replacements by file:
+  - `hooks/useFamilyTreeLayoutController.ts`
+  - `components/FamilyTree.tsx`
+  - `utils/layout.worker.ts`
+  - `utils/treeLayout.ts`
+- Adapter work completed:
+  - Preserved existing adapter functions:
+    - `getChartTypeTarget(chartType)`
+    - `isLegacyFanChartType(chartType)`
+    - `isLegacyFocusFamilyChartType(chartType)`
+  - Added:
+    - `ChartLayoutKind = 'descendant' | 'pedigree' | 'force' | 'radial'`
+    - `getChartLayoutKind(chartType)`
+  - Current adapter mapping:
+    - `'descendant' -> 'descendant'`
+    - `'pedigree' -> 'pedigree'`
+    - `'force' -> 'force'`
+    - `'fan' -> 'radial'`
+- Files and areas intentionally not migrated:
+  - `types.ts`
+  - `types/tree.ts`
+  - broader controller logic in `hooks/useFamilyTreeLayoutController.ts`
+  - broader rendering logic in `components/FamilyTree.tsx`
+  - routing structure in `utils/layout.worker.ts`
+  - fallback behavior in `utils/treeLayout.ts`
+- Current safe-limit status per file:
+  - `hooks/useFamilyTreeLayoutController.ts`: safe isolated fan-related replacements complete; further migration remains blocked by meaningful `descendant`, `force`, and flag semantics
+  - `components/FamilyTree.tsx`: safe isolated fan-related replacements complete; further migration remains blocked by behavior-sensitive prop wiring, flags, and pass-through state
+  - `utils/layout.worker.ts`: safe isolated classification replacements complete for fan and force classification; routing branches remain intentionally unchanged
+  - `utils/treeLayout.ts`: safe isolated classification replacements complete for descendant and pedigree branch checks; fallback remains intentionally unchanged
+- Blocked areas:
+  - narrowing `ChartType`
+  - removing legacy `ChartType` values from the public type surface
+  - changing fallback behavior in `utils/treeLayout.ts`
+  - removing or consolidating force behavior
+  - removing force-related settings fields
+- Why blocked:
+  - legacy `ChartType` values still remain in active runtime usage paths
+  - fallback behavior is part of behavior preservation and was intentionally left unchanged
+  - force semantics are still active runtime behavior and must not be collapsed prematurely
+- Recommended next phase:
+  - continue with a coordinated routing audit rather than more isolated substitutions
+  - evaluate whether worker and tree layout routing can move from isolated classification replacement to controlled branch adoption while keeping fallback behavior unchanged
+  - do not change `types.ts` yet
+  - do not remove legacy `ChartType` values yet
+- Current state summary:
+  - adapter boundary is now established
+  - multiple low-risk isolated classifications have been migrated successfully
+  - fallback behavior remains intentionally unchanged
+  - legacy `ChartType` values still remain in the type surface and runtime contract
+
+### Fallback Semantic Contract
+
+- In `utils/treeLayout.ts`, fallback is defined as a `non-pedigree compatibility route`.
+- It is not a user-facing default layout.
+- It is not equivalent to descendant identity.
+- Current runtime behavior remains unchanged.
+- `force` and `radial` may currently degrade through this route in `treeLayout.ts`, but this is compatibility behavior only, not architectural identity.
+- After the explicit radial compatibility branch, fallback is now effectively reduced to force-only compatibility behavior for the current supported layout kinds.
+- `descendant`, `pedigree`, and `radial` are now explicitly handled before fallback.
+- `force` is now the only remaining unresolved compatibility-routed kind in `treeLayout.ts`.
+
+### Radial Semantic Contract In TreeLayout
+
+- In `utils/treeLayout.ts`, `radial` is defined as an explicitly recognized compatibility-routed layout kind.
+- `radial` is not descendant identity.
+- `radial` is not pedigree identity.
+- `radial` is not yet a true explicit route in `treeLayout.ts`.
+- `radial` currently resolves through the non-pedigree compatibility route.
+- This is transitional compatibility behavior, not final architectural identity.

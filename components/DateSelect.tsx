@@ -1,0 +1,165 @@
+import React, { useEffect, useRef, useState, memo } from 'react';
+import { EMPTY_STRING } from '../constants';
+import { useTranslation } from '../context/TranslationContext';
+
+interface DateSelectProps {
+  value: string;
+  onChange: (value: string) => void;
+  onBlur?: () => void;
+  disabled?: boolean;
+  placeholder?: string;
+}
+
+export const DateSelect: React.FC<DateSelectProps> = memo(({ value, onChange, onBlur, disabled }) => {
+  const { t } = useTranslation();
+  const [day, setDay] = useState('');
+  const [month, setMonth] = useState('');
+  const [year, setYear] = useState('');
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Parse value on mount or change
+  useEffect(() => {
+    if (!value) {
+      if (day !== '') setTimeout(() => setDay(''), 0);
+      if (month !== '') setTimeout(() => setMonth(''), 0);
+      if (year !== '') setTimeout(() => setYear(''), 0);
+      return;
+    }
+
+    const parts = value.split('-');
+    // Format assumed: YYYY-MM-DD or YYYY-MM or YYYY
+    const newYear = parts[0] || EMPTY_STRING;
+    const newMonth = parts[1] || EMPTY_STRING;
+    const newDay = parts[2] || EMPTY_STRING;
+
+    if (year !== newYear) setTimeout(() => setYear(newYear), 0);
+    if (month !== newMonth) setTimeout(() => setMonth(newMonth), 0);
+    if (day !== newDay) setTimeout(() => setDay(newDay), 0);
+  }, [value, day, month, year]);
+
+  const updateDate = (d: string, m: string, y: string) => {
+    // Logic:
+    // If Year is empty -> return empty (clears date)
+    // If Year exists, construct string based on what else exists.
+    // We allow partial dates (e.g. "1990" or "1990-05")
+
+    const cleanYear = y.trim();
+
+    if (!cleanYear) {
+      onChange('');
+      return;
+    }
+
+    let dateStr = cleanYear;
+    if (m) {
+      dateStr += `-${m}`;
+      if (d) {
+        dateStr += `-${d}`;
+      }
+    }
+
+    onChange(dateStr);
+  };
+
+  const handleDayChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = e.target.value;
+    setDay(val);
+    updateDate(val, month, year);
+  };
+
+  const handleMonthChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = e.target.value;
+    setMonth(val);
+    // If clearing month, we must clear day too to maintain hierarchy (YYYY-MM-DD)
+    const newDay = val === '' ? '' : day;
+    if (val === '') setDay('');
+    updateDate(newDay, val, year);
+  };
+
+  const handleYearChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setYear(val);
+    updateDate(day, month, val);
+  };
+
+  const handleBlur = (event: React.FocusEvent<HTMLElement>) => {
+    if (containerRef.current?.contains(event.relatedTarget as Node)) {
+      return;
+    }
+
+    onBlur?.();
+  };
+
+  const inputBaseClass =
+    'h-7 px-2.5 py-1 border border-stone-300 dark:border-stone-600 rounded-lg text-xs focus:border-teal-500 outline-none transition-colors bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100';
+  const disabledClass =
+    'disabled:bg-transparent disabled:border-transparent disabled:px-0 disabled:cursor-default disabled:font-medium disabled:text-stone-800 dark:disabled:text-stone-200';
+
+  const months = [
+    { v: '01', l: t.jan },
+    { v: '02', l: t.feb },
+    { v: '03', l: t.mar },
+    { v: '04', l: t.apr },
+    { v: '05', l: t.may },
+    { v: '06', l: t.jun },
+    { v: '07', l: t.jul },
+    { v: '08', l: t.aug },
+    { v: '09', l: t.sep },
+    { v: '10', l: t.oct },
+    { v: '11', l: t.nov },
+    { v: '12', l: t.dec },
+  ];
+
+  const days = Array.from({ length: 31 }, (_, i) => {
+    const d = (i + 1).toString().padStart(2, '0');
+    return d;
+  });
+
+  return (
+    <div ref={containerRef} className='flex items-center gap-2 flex-1'>
+      {/* Day Select */}
+      <select
+        value={day}
+        onChange={handleDayChange}
+        onBlur={handleBlur}
+        disabled={disabled || !month} // Disable day if no month selected
+        className={`w-12 ${inputBaseClass} ${disabledClass}`}
+      >
+        <option value=''>{t.date?.day}</option>
+        {days.map((d) => (
+          <option key={d} value={d}>
+            {parseInt(d)}
+          </option>
+        ))}
+      </select>
+
+      {/* Month Select */}
+      <select
+        value={month}
+        onChange={handleMonthChange}
+        onBlur={handleBlur}
+        disabled={disabled}
+        className={`w-16 ${inputBaseClass} ${disabledClass}`}
+      >
+        <option value=''>{t.date?.month}</option>
+        {months.map((m) => (
+          <option key={m.v} value={m.v}>
+            {m.l}
+          </option>
+        ))}
+      </select>
+
+      {/* Year Input */}
+      <input
+        type='text'
+        value={year}
+        onChange={handleYearChange}
+        onBlur={handleBlur}
+        disabled={disabled}
+        placeholder={t.date?.year}
+        maxLength={4}
+        className={`w-16 text-center ${inputBaseClass} ${disabledClass}`}
+      />
+    </div>
+  );
+});

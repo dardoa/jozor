@@ -1,0 +1,208 @@
+- generic [ref=e1]:
+  - img
+  - generic [ref=e3]:
+    - link "Skip to main content" [ref=e52] [cursor=pointer]:
+      - /url: "#main-content"
+    - banner [ref=e53]:
+      - generic [ref=e54]:
+        - button "Close details" [ref=e55] [cursor=pointer]:
+          - img [ref=e56]
+        - link "Jozor" [ref=e59] [cursor=pointer]:
+          - generic [ref=e60]:
+            - img "Jozor Logo"
+          - heading "Jozor" [level=1] [ref=e62]
+        - group "History Controls" [ref=e63]:
+          - button "Undo" [disabled] [ref=e64]:
+            - img [ref=e65]
+          - button "Redo" [disabled] [ref=e69]:
+            - img [ref=e70]
+      - generic [ref=e74]:
+        - generic [ref=e75]: "Tree: Vault QA Tree"
+        - generic [ref=e76]: ·
+        - generic [ref=e77]: "Role: Tree owner"
+        - generic [ref=e78]: ·
+        - generic [ref=e79]: "Status: Synced"
+      - navigation "Main Navigation" [ref=e80]:
+        - search "Search..." [ref=e81]:
+          - generic [ref=e83]:
+            - img [ref=e84]
+            - combobox "Search people..." [ref=e87]
+        - group "Tools" [ref=e88]:
+          - group "Tools" [ref=e316]:
+            - button "Tools" [ref=e319] [cursor=pointer]:
+              - img [ref=e321]
+          - button "Notifications" [ref=e325] [cursor=pointer]:
+            - img [ref=e326]
+          - button "Open The Vault" [ref=e329] [cursor=pointer]:
+            - img [ref=e330]
+          - button "مالك" [ref=e333] [cursor=pointer]
+          - button "Account" [ref=e335] [cursor=pointer]:
+            - generic [ref=e336]: E
+            - img [ref=e337]
+    - main [ref=e103]:
+      - generic [ref=e104]:
+        - generic:
+          - generic:
+            - img
+        - generic [ref=e107]:
+          - button "Preferences" [ref=e108] [cursor=pointer]:
+            - img [ref=e109]
+          - button "Zoom In" [ref=e110] [cursor=pointer]:
+            - img [ref=e111]
+          - button "Zoom Out" [ref=e114] [cursor=pointer]:
+            - img [ref=e115]
+          - button "Reset Zoom" [ref=e118] [cursor=pointer]:
+            - img [ref=e119]
+          - button "Fit to Screen" [ref=e124] [cursor=pointer]:
+            - img [ref=e125]
+        - img [ref=e128]:
+          - generic [ref=e344] [cursor=pointer]:
+            - img "Avatar placeholder" [ref=e347]
+            - heading "Me" [level=3] [ref=e351]: Me
+    - complementary "Person details" [ref=e145]:
+      - tablist "Profile" [ref=e148]:
+        - tab "About Person" [selected] [ref=e149] [cursor=pointer]: About Person
+        - tab "Links" [ref=e151] [cursor=pointer]
+        - tab "Gallery" [ref=e152] [cursor=pointer]
+      - tabpanel "About Person" [ref=e155]:
+        - generic [ref=e156]:
+          - generic [ref=e158]:
+            - generic [ref=e159]:
+              - generic [ref=e160]:
+                - img [ref=e164] [cursor=pointer]
+                - generic [ref=e167]:
+                  - heading "Me" [level=2] [ref=e169]
+                  - generic [ref=e170]:
+                    - generic [ref=e172]: Male
+                    - generic [ref=e174]:
+                      - img [ref=e175]
+                      - generic [ref=e178]:
+                        - text: Born
+                        - strong [ref=e179]: "?"
+              - generic [ref=e181]:
+                - generic [ref=e182]: Quick Actions
+                - generic [ref=e183]:
+                  - button "Quick Add" [ref=e355] [cursor=pointer]:
+                    - img [ref=e356]
+                    - generic [ref=e359]: Quick Add
+                  - button "View on Map" [ref=e184] [cursor=pointer]:
+                    - img [ref=e185]
+                    - text: View on Map
+                  - button "Timeline" [ref=e188] [cursor=pointer]:
+                    - img [ref=e189]
+                    - text: Timeline
+            - heading "Family Relationships" [level=3] [ref=e192]
+          - generic [ref=e195]:
+            - generic [ref=e196]:
+              - heading "Work & Interests" [level=3] [ref=e197]
+              - generic [ref=e199]:
+                - img [ref=e201]
+                - generic [ref=e203]: No work or interests information available.
+            - generic [ref=e204]:
+              - button "Biography" [ref=e205] [cursor=pointer]:
+                - generic [ref=e206]:
+                  - img [ref=e208]
+                  - generic [ref=e211]: Biography
+                - img [ref=e212]
+              - generic [ref=e217]:
+                - img [ref=e219]
+                - generic [ref=e221]: No biography available.
+            - generic [ref=e222]:
+              - button "Sources" [ref=e223] [cursor=pointer]:
+                - generic [ref=e224]:
+                  - img [ref=e226]
+                  - generic [ref=e228]: Sources
+                - img [ref=e229]
+              - generic [ref=e233]:
+                - img [ref=e235]
+                - generic [ref=e237]: No sources added yet.
+            - generic [ref=e238]:
+              - button "Events" [ref=e239] [cursor=pointer]:
+                - generic [ref=e240]:
+                  - img [ref=e242]
+                  - generic [ref=e244]: Events
+                - img [ref=e245]
+              - generic [ref=e249]:
+                - img [ref=e251]
+                - generic [ref=e253]: No custom events added yet.
+          - generic [ref=e255]:
+            - heading "Contact" [level=3] [ref=e256]
+            - generic [ref=e258]:
+              - img [ref=e259]
+              - generic [ref=e261]: No contact information available.
+      - generic [ref=e263]:
+        - button "Delete Person" [ref=e360] [cursor=pointer]:
+          - img [ref=e266]
+        - button "Edit Details" [ref=e361] [cursor=pointer]:
+          - img [ref=e271]
+    - generic [ref=e363]:
+      - generic [ref=e364]:
+        - generic [ref=e365]:
+          - img [ref=e367]
+          - generic [ref=e370]:
+            - heading "The Vault" [level=2] [ref=e371]
+            - paragraph [ref=e372]: Technical Operations
+        - button "Close" [active] [ref=e373] [cursor=pointer]:
+          - img [ref=e374]
+      - generic [ref=e377]:
+        - navigation [ref=e378]:
+          - button "Tree Management" [ref=e379] [cursor=pointer]:
+            - img [ref=e380]
+            - generic [ref=e385]: Tree Management
+          - button "Tree Statistics" [ref=e386] [cursor=pointer]:
+            - img [ref=e387]
+            - generic [ref=e389]: Tree Statistics
+          - button "Export & Cloud Management" [ref=e390] [cursor=pointer]:
+            - img [ref=e391]
+            - generic [ref=e393]: Export & Cloud Management
+          - button "Members" [ref=e394] [cursor=pointer]:
+            - img [ref=e395]
+            - generic [ref=e400]: Members
+          - button "Security" [ref=e401] [cursor=pointer]:
+            - img [ref=e402]
+            - generic [ref=e405]: Security
+        - generic [ref=e407]:
+          - generic [ref=e408]:
+            - generic [ref=e409]:
+              - generic [ref=e410]:
+                - generic [ref=e411]:
+                  - img [ref=e413]
+                  - generic [ref=e418]:
+                    - paragraph [ref=e419]: Active Tree
+                    - heading "Vault QA Tree" [level=3] [ref=e420]
+                - generic [ref=e421]:
+                  - generic [ref=e422]: "Role: Tree owner"
+                  - generic [ref=e423]: a0bb5146-187e-448c-aae0-ff61ecf5bc8a
+                  - generic [ref=e424]: "Owned: 1"
+                  - generic [ref=e425]: "Shared: 0"
+              - generic [ref=e426]:
+                - button "New Tree" [ref=e427] [cursor=pointer]:
+                  - img [ref=e429]
+                  - text: New Tree
+                - button "Import" [ref=e430] [cursor=pointer]:
+                  - img [ref=e432]
+                  - text: Import
+                - button "Refresh" [ref=e435] [cursor=pointer]:
+                  - img [ref=e437]
+                  - text: Refresh
+            - generic [ref=e442]:
+              - img [ref=e443]
+              - paragraph [ref=e446]: Tree switching, creation, rename, and deletion now live here as the single management workspace.
+          - generic [ref=e447]:
+            - heading "Owned Trees" [level=4] [ref=e448]
+            - generic [ref=e451]:
+              - generic [ref=e452]:
+                - generic [ref=e453]:
+                  - heading "e2e's Family Tree" [level=5] [ref=e454]
+                  - generic [ref=e455]: Active
+                - paragraph [ref=e456]: Updated 4/9/2026
+              - generic [ref=e457]:
+                - button "Open tree" [disabled] [ref=e458]:
+                  - img [ref=e459]
+                - button "Rename tree" [ref=e461] [cursor=pointer]:
+                  - img [ref=e462]
+                - button "Delete tree" [ref=e464] [cursor=pointer]:
+                  - img [ref=e465]
+          - generic [ref=e468]:
+            - heading "Shared Trees" [level=4] [ref=e469]
+            - paragraph [ref=e470]: No shared trees yet.

@@ -1,0 +1,145 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+const authenticateUserMock = vi.fn();
+const listSubscriptionsForUserServerMock = vi.fn();
+const removeSubscriptionByEndpointServerMock = vi.fn();
+const setVapidDetailsMock = vi.fn();
+const sendNotificationMock = vi.fn();
+
+vi.mock('../../utils/authUtils', () => ({
+  authenticateUser: (...args: unknown[]) => authenticateUserMock(...args),
+}));
+
+vi.mock('../../services/pushSubscriptionService', () => ({
+  listSubscriptionsForUserServer: (...args: unknown[]) => listSubscriptionsForUserServerMock(...args),
+  removeSubscriptionByEndpointServer: (...args: unknown[]) => removeSubscriptionByEndpointServerMock(...args),
+}));
+
+vi.mock('web-push', () => ({
+  default: {
+    setVapidDetails: (...args: unknown[]) => setVapidDetailsMock(...args),
+    sendNotification: (...args: unknown[]) => sendNotificationMock(...args),
+  },
+}));
+
+import handler from '../push-notifier';
+
+const createResponse = () => {
+  const response = {
+    statusCode: 200,
+    headers: {} as Record<string, string[]>,
+    body: undefined as unknown,
+    setHeader(name: string, value: string[]) {
+      this.headers[name] = value;
+    },
+    status(code: number) {
+      this.statusCode = code;
+      return this;
+    },
+    json(payload: unknown) {
+      this.body = payload;
+      return this;
+    },
+  };
+
+  return response;
+};
+
+describe('push-notifier API', () => {
+  const originalEnv = process.env;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    process.env = {
+      ...originalEnv,
+      VAPID_PUBLIC_KEY: 'public-key',
+      VAPID_PRIVATE_KEY: 'private-key',
+      VAPID_SUBJECT: 'mailto:test@example.com',
+      CRON_SECRET: 'cron-secret',
+    };
+  });
+
+  it('sends notifications to all stored subscriptions for the authenticated user', async () => {
+    authenticateUserMock.mockResolvedValue({ uid: 'user-1', email: 'user@example.com' });
+    listSubscriptionsForUserServerMock.mockResolvedValue([
+      {
+        endpoint: 'https://push.example/1',
+        keys: { p256dh: 'p256dh-1', auth: 'auth-1' },
+      },
+    ]);
+    sendNotificationMock.mockResolvedValue(undefined);
+
+    const req = {
+      method: 'POST',
+      headers: { authorization: 'Bearer token' },
+      body: { title: 'Hello', body: 'World' },
+    };
+    const res = createResponse();
+
+    await handler(req as never, res as never);
+
+    expect(res.statusCode).toBe(200);
+    expect(setVapidDetailsMock).toHaveBeenCalledWith(
+      'mailto:test@example.com',
+      'public-key',
+      'private-key'
+    );
+    expect(sendNotificationMock).toHaveBeenCalledTimes(1);
+    expect(res.body).toEqual({
+      sent: 1,
+      pruned: 0,
+      totalSubscriptions: 1,
+    });
+  });
+
+  it('prunes expired subscriptions when the push provider returns 410', async () => {
+    authenticateUserMock.mockResolvedValue({ uid: 'user-1', email: 'user@example.com' });
+    listSubscriptionsForUserServerMock.mockResolvedValue([
+      {
+        endpoint: 'https://push.example/expired',
+        keys: { p256dh: 'p256dh-1', auth: 'auth-1' },
+      },
+    ]);
+    sendNotificationMock.mockRejectedValue({ statusCode: 410 });
+
+    const req = {
+      method: 'POST',
+      headers: { authorization: 'Bearer token' },
+      body: { title: 'Hello', body: 'World' },
+    };
+    const res = createResponse();
+
+    await handler(req as never, res as never);
+
+    expect(removeSubscriptionByEndpointServerMock).toHaveBeenCalledWith('https://push.example/expired');
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toEqual({
+      sent: 0,
+      pruned: 1,
+      totalSubscriptions: 1,
+    });
+  });
+
+  it('allows an internal admin call to target a user via the cron secret', async () => {
+    listSubscriptionsForUserServerMock.mockResolvedValue([
+      {
+        endpoint: 'https://push.example/internal',
+        keys: { p256dh: 'p256dh-1', auth: 'auth-1' },
+      },
+    ]);
+    sendNotificationMock.mockResolvedValue(undefined);
+
+    const req = {
+      method: 'POST',
+      headers: { authorization: 'Bearer cron-secret' },
+      body: { userId: 'user-2', title: 'System', body: 'Reminder' },
+    };
+    const res = createResponse();
+
+    await handler(req as never, res as never);
+
+    expect(authenticateUserMock).not.toHaveBeenCalled();
+    expect(listSubscriptionsForUserServerMock).toHaveBeenCalledWith('user-2');
+    expect(res.statusCode).toBe(200);
+  });
+});

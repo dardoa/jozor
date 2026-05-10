@@ -1,0 +1,10 @@
+- generic [active] [ref=e1]:
+  - img
+  - generic [ref=e5]:
+    - img [ref=e7]
+    - heading "Login Required" [level=2] [ref=e10]
+    - paragraph [ref=e11]: You need to be logged in to access this shared family tree.
+    - button "Login with Google" [ref=e12] [cursor=pointer]:
+      - img [ref=e13]
+      - text: Login with Google
+    - button "Go to Home" [ref=e16] [cursor=pointer]

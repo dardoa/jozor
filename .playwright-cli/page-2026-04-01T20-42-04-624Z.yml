@@ -1,0 +1,75 @@
+- generic [ref=e1]:
+  - img
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - generic:
+        - img
+      - button "العربية" [ref=e5] [cursor=pointer]:
+        - img [ref=e6]
+        - generic [ref=e10]: العربية
+      - generic [ref=e12]:
+        - generic [ref=e13]:
+          - generic [ref=e14]: Jozor
+          - generic [ref=e16]:
+            - heading "Welcome to Jozor." [level=1] [ref=e17]
+            - paragraph [ref=e18]: Your digital family tree. Preserve your heritage, connect generations, and discover your roots.
+          - generic [ref=e19]:
+            - generic [ref=e20]:
+              - img [ref=e22]
+              - heading "Start a New Tree" [level=2] [ref=e23]
+              - paragraph [ref=e24]: Your data is saved locally and can be synced to Google Drive.
+            - generic [ref=e25]:
+              - img [ref=e27]
+              - heading "Import File" [level=2] [ref=e30]
+              - paragraph [ref=e31]: OR
+        - generic [ref=e32]:
+          - img "Jozor Logo" [ref=e34]
+          - heading "Sign In" [level=2] [ref=e35]
+          - paragraph [ref=e36]: Your data is saved locally and can be synced to Google Drive.
+          - generic [ref=e37]:
+            - button "Sign In" [ref=e38] [cursor=pointer]
+            - button "Start a New Tree" [ref=e39] [cursor=pointer]:
+              - img [ref=e41]
+              - text: Start a New Tree
+            - button "Import File" [ref=e42] [cursor=pointer]:
+              - img [ref=e44]
+              - text: Import File
+          - generic [ref=e49]: OR
+          - paragraph [ref=e51]: Your digital family tree. Preserve your heritage, connect generations, and discover your roots.
+    - dialog [ref=e54]:
+      - generic [ref=e55]:
+        - button "Close" [active] [ref=e56] [cursor=pointer]:
+          - img [ref=e57]
+        - heading "Welcome Back" [level=2] [ref=e60]
+      - generic [ref=e61]:
+        - generic [ref=e62]:
+          - paragraph [ref=e63]: Quick Access
+          - button "Login with Google" [ref=e65] [cursor=pointer]:
+            - img [ref=e66]
+            - generic [ref=e71]: Login with Google
+        - generic [ref=e74]: OR
+        - generic [ref=e77]:
+          - generic [ref=e78]:
+            - button [ref=e79] [cursor=pointer]:
+              - img [ref=e80]
+            - heading "Login" [level=2] [ref=e82]
+          - generic [ref=e83]:
+            - generic [ref=e84]:
+              - img [ref=e85]
+              - textbox "name@example.com" [ref=e88]
+            - generic [ref=e89]:
+              - img [ref=e90]
+              - textbox "••••••••" [ref=e93]
+              - button "Show Password" [ref=e94] [cursor=pointer]:
+                - img [ref=e95]
+            - generic [ref=e98]:
+              - generic [ref=e99] [cursor=pointer]:
+                - generic [ref=e100]:
+                  - checkbox "Remember Me" [ref=e101]
+                  - img
+                - generic [ref=e102]: Remember Me
+              - button "Forgot Password?" [ref=e103] [cursor=pointer]
+            - button "Login" [ref=e104] [cursor=pointer]
+          - generic [ref=e106]:
+            - generic [ref=e107]: Don't have an account?
+            - button "Sign Up" [ref=e108] [cursor=pointer]

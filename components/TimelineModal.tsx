@@ -1,0 +1,301 @@
+import { useMemo, useState } from 'react';
+import { Person, TimelineEvent, Language } from '../types';
+import {
+  X,
+  Calendar,
+  Baby,
+  Heart,
+  Ribbon,
+  Info,
+  Filter,
+  FileText,
+  Home,
+  MapPin,
+} from 'lucide-react';
+import { getDisplayDate } from '../utils/familyLogic';
+import { useTranslation } from '../context/TranslationContext';
+import { OverlayPrimitive } from '../context/OverlayContext';
+import { Button } from './ui/Button';
+import { EmptyState } from './ui/EmptyState';
+
+interface TimelineModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  people: Record<string, Person>;
+  onSelectPerson: (id: string) => void;
+  language?: Language;
+}
+
+type EventTypeMeta = {
+  label: string;
+  chipClass: string;
+  iconWrapClass: string;
+  icon: typeof Baby;
+};
+
+export const TimelineModal = ({ isOpen, onClose, people, onSelectPerson }: TimelineModalProps) => {
+  const { t } = useTranslation();
+  const [sortAsc, setSortAsc] = useState(true);
+  const [activeFilters, setActiveFilters] = useState<Set<TimelineEvent['type']>>(
+    new Set(['birth', 'death', 'marriage', 'custom'])
+  );
+
+  const toggleFilter = (type: TimelineEvent['type']) => {
+    setActiveFilters((prev) => {
+      const next = new Set(prev);
+      if (next.has(type)) next.delete(type);
+      else next.add(type);
+      return next;
+    });
+  };
+
+  const eventTypes = useMemo(
+    () => [
+      { id: 'birth' as const, label: t.births, icon: <Baby className='h-3.5 w-3.5' />, tone: 'bg-emerald-50 text-emerald-700' },
+      { id: 'death' as const, label: t.deaths, icon: <Ribbon className='h-3.5 w-3.5' />, tone: 'bg-stone-100 text-stone-700' },
+      { id: 'marriage' as const, label: t.marriages, icon: <Heart className='h-3.5 w-3.5' />, tone: 'bg-rose-50 text-rose-700' },
+      { id: 'custom' as const, label: t.customEvents, icon: <FileText className='h-3.5 w-3.5' />, tone: 'bg-[#edf3f8] text-[#526b82]' },
+    ],
+    [t]
+  );
+
+  const eventTypeMeta = useMemo<Record<TimelineEvent['type'], EventTypeMeta>>(
+    () => ({
+      birth: {
+        label: t.birth,
+        chipClass: 'bg-emerald-50 text-emerald-700',
+        iconWrapClass: 'bg-emerald-50 text-emerald-700',
+        icon: Baby,
+      },
+      death: {
+        label: t.deaths,
+        chipClass: 'bg-stone-100 text-stone-700',
+        iconWrapClass: 'bg-stone-100 text-stone-700',
+        icon: Ribbon,
+      },
+      marriage: {
+        label: t.marriage,
+        chipClass: 'bg-rose-50 text-rose-700',
+        iconWrapClass: 'bg-rose-50 text-rose-700',
+        icon: Heart,
+      },
+      custom: {
+        label: t.customEvents,
+        chipClass: 'bg-[#edf3f8] text-[#526b82]',
+        iconWrapClass: 'bg-[#edf3f8] text-[#526b82]',
+        icon: Home,
+      },
+    }),
+    [t]
+  );
+
+  const events = useMemo(() => {
+    const list: TimelineEvent[] = [];
+
+    Object.values(people).forEach((person) => {
+      if (person.birthDate) {
+        const y = parseInt(getDisplayDate(person.birthDate));
+        if (!isNaN(y)) {
+          list.push({
+            year: y,
+            dateStr: person.birthDate,
+            type: 'birth',
+            personId: person.id,
+            label: `${t.born}: ${person.firstName} ${person.lastName}`,
+            subLabel: person.birthPlace,
+          });
+        }
+      }
+
+      if (person.isDeceased && person.deathDate) {
+        const y = parseInt(getDisplayDate(person.deathDate));
+        if (!isNaN(y)) {
+          list.push({
+            year: y,
+            dateStr: person.deathDate,
+            type: 'death',
+            personId: person.id,
+            label: `${t.died}: ${person.firstName} ${person.lastName}`,
+            subLabel: person.deathPlace,
+          });
+        }
+      }
+
+      if (person.partnerDetails) {
+        Object.entries(person.partnerDetails).forEach(([spouseId, info]) => {
+          if (info.startDate && person.id < spouseId) {
+            const y = parseInt(getDisplayDate(info.startDate));
+            if (!isNaN(y)) {
+              const spouse = people[spouseId];
+              list.push({
+                year: y,
+                dateStr: info.startDate,
+                type: 'marriage',
+                personId: person.id,
+                relatedId: spouseId,
+                label: `${t.marriage}: ${person.firstName} & ${spouse?.firstName}`,
+                subLabel: info.startPlace,
+              });
+            }
+          }
+        });
+      }
+
+      person.events?.forEach((event) => {
+        const y = parseInt(getDisplayDate(event.date));
+        if (!isNaN(y)) {
+          list.push({
+            year: y,
+            dateStr: event.date,
+            type: 'custom',
+            personId: person.id,
+            label: event.title,
+            subLabel: event.place || event.description,
+          });
+        }
+      });
+    });
+
+    return list
+      .filter((event) => activeFilters.has(event.type))
+      .sort((a, b) => {
+        if (sortAsc && a.year !== b.year) return a.year - b.year;
+        if (!sortAsc && a.year !== b.year) return b.year - a.year;
+        return sortAsc ? a.dateStr.localeCompare(b.dateStr) : b.dateStr.localeCompare(a.dateStr);
+      });
+  }, [people, sortAsc, activeFilters, t]);
+
+  const groupedEvents = useMemo(() => {
+    const groups = new Map<number, TimelineEvent[]>();
+    events.forEach((event) => {
+      const current = groups.get(event.year) || [];
+      current.push(event);
+      groups.set(event.year, current);
+    });
+    return Array.from(groups.entries()).map(([year, yearEvents]) => ({ year, events: yearEvents }));
+  }, [events]);
+
+  return (
+    <OverlayPrimitive isOpen={isOpen} onClose={onClose} id='timeline-modal'>
+      <div
+        className='ds-overlay-card flex h-[92dvh] w-full max-w-2xl flex-col overflow-hidden bg-[#FAF7F2] sm:h-[88vh] sm:rounded-[24px] shadow-[var(--shadow-lg)]'
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className='ds-modal-header flex items-center justify-between bg-[#F6F1E7]'>
+          <div className='flex items-center gap-2'>
+            <div className='rounded-xl bg-[#a67c37]/10 p-2 text-[#a67c37]'>
+              <Calendar className='h-5 w-5' />
+            </div>
+            <h3 className='text-[16px] font-semibold tracking-[0.2px] text-slate-800'>{t.familyTimeline}</h3>
+          </div>
+          <div className='flex items-center gap-2'>
+            <Button onClick={() => setSortAsc(!sortAsc)} variant='secondary' size='sm' className='text-xs'>
+              {sortAsc ? t.oldestFirst : t.newestFirst}
+            </Button>
+            <button
+              onClick={onClose}
+              aria-label={t.close}
+              className='inline-flex h-9 w-9 items-center justify-center rounded-full text-[var(--text-muted)] transition-colors hover:bg-white/80 hover:text-[var(--text-main)]'
+            >
+              <X className='h-5 w-5' />
+            </button>
+          </div>
+        </div>
+
+        <div className='flex flex-wrap gap-2 border-b border-black/[0.05] bg-[#F6F1E7]/90 p-4'>
+          <span className='me-2 flex items-center gap-1 text-xs font-bold uppercase text-[var(--text-muted)]'>
+            <Filter className='h-3.5 w-3.5' /> {t.filterBy}:
+          </span>
+          {eventTypes.map((type) => (
+            <button
+              key={type.id}
+              onClick={() => toggleFilter(type.id)}
+              className={`flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium transition-all ${
+                activeFilters.has(type.id) ? `${type.tone} shadow-sm` : 'bg-white/70 text-slate-500 hover:bg-white'
+              }`}
+            >
+              {type.icon} {type.label}
+            </button>
+          ))}
+        </div>
+
+        <div className='relative flex-1 overflow-y-auto bg-[#FAF7F2] p-4 sm:p-6'>
+          {groupedEvents.length === 0 ? (
+            <EmptyState
+              icon={<Info className='h-6 w-6' />}
+              title={t.familyTimeline}
+              description={t.noEvents}
+              className='mx-auto mt-16 max-w-md'
+            />
+          ) : (
+            <div className='relative mx-auto max-w-xl space-y-8'>
+              <div className='absolute bottom-0 start-[15px] top-0 w-px bg-black/[0.08]' />
+              {groupedEvents.map((group) => (
+                <section key={group.year} className='relative space-y-4'>
+                  <div className='sticky top-0 z-10 ms-10 w-fit rounded-full bg-[#F6F1E7]/95 px-3 py-1 text-[12px] font-semibold tracking-[0.18px] text-slate-600 backdrop-blur-sm'>
+                    {group.year}
+                  </div>
+
+                  <div className='space-y-4'>
+                    {group.events.map((evt, idx) => {
+                      const meta = eventTypeMeta[evt.type];
+                      const EventIcon = meta.icon;
+                      const showNotes = evt.type === 'custom' && !!evt.subLabel;
+
+                      return (
+                        <div key={`${group.year}-${idx}-${evt.personId}`} className='relative ps-10'>
+                          <div className='absolute start-[7px] top-5 h-4 w-4 rounded-full bg-[#FAF7F2] ring-4 ring-[#FAF7F2]'>
+                            <div className='h-full w-full rounded-full bg-[#C8AE7D]' />
+                          </div>
+
+                          <button
+                            type='button'
+                            onClick={() => {
+                              onSelectPerson(evt.personId);
+                              onClose();
+                            }}
+                            className='w-full rounded-[22px] bg-[#F9F7F3] p-4 text-start shadow-[0_2px_10px_rgba(0,0,0,0.03)] transition-all duration-200 ease-in-out hover:bg-[#f6f1e8]'
+                          >
+                            <div className='flex items-start justify-between gap-3'>
+                              <div className='min-w-0 space-y-3'>
+                                <div className='flex flex-wrap items-center gap-2'>
+                                  <span className={`inline-flex min-h-8 items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium ${meta.chipClass}`}>
+                                    <EventIcon className='h-3.5 w-3.5' />
+                                    {meta.label}
+                                  </span>
+                                </div>
+
+                                <div className='space-y-1.5'>
+                                  <p className='text-[15px] font-semibold text-slate-800'>{evt.label}</p>
+                                  <div className='flex flex-wrap items-center gap-3 text-[13px] font-semibold text-slate-700'>
+                                    <span>{evt.dateStr}</span>
+                                    {evt.subLabel && !showNotes ? (
+                                      <span className='inline-flex items-center gap-1.5 text-slate-600'>
+                                        <MapPin className='h-3.5 w-3.5 text-slate-400' />
+                                        {evt.subLabel}
+                                      </span>
+                                    ) : null}
+                                  </div>
+                                </div>
+
+                                {showNotes ? <p className='text-[12px] leading-relaxed text-slate-500/85'>{evt.subLabel}</p> : null}
+                              </div>
+
+                              <div className={`hidden h-9 w-9 shrink-0 items-center justify-center rounded-full sm:inline-flex ${meta.iconWrapClass}`}>
+                                <EventIcon className='h-4 w-4' />
+                              </div>
+                            </div>
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </section>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </OverlayPrimitive>
+  );
+};

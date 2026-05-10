@@ -1,0 +1,266 @@
+import type React from 'react';
+import type {
+    ExportType,
+    Gender,
+    Language,
+    ModalType,
+    SyncStatus,
+    UserProfile,
+} from './common';
+import type { Person } from './person';
+import type { DriveFile, TreeSettings } from './tree';
+
+export interface HelpTranslations {
+    title: string;
+    description: string;
+    categories: {
+        gettingStarted: { title: string; desc: string; items: { q: string; a: string }[] };
+        toolsFeatures: { title: string; desc: string; items: { q: string; a: string }[] };
+        privacySharing: { title: string; desc: string; items: { q: string; a: string }[] };
+    };
+    contactSupport: string;
+    supportEmail: string;
+    goHome: string;
+    restartTour: string;
+    zoomIn: string;
+    zoomOut: string;
+    resetZoom: string;
+    fitToScreen: string;
+    advancedSettings: string;
+}
+
+export interface HistoryControlsProps {
+    onUndo: () => void;
+    onRedo: () => void;
+    canUndo: boolean;
+    canRedo: boolean;
+}
+
+export interface ThemeLanguageProps {
+    darkMode: boolean;
+    setDarkMode: (v: boolean) => void;
+    language: Language;
+    setLanguage: (l: Language) => void;
+    t?: (key: string, fallback?: string) => string;
+}
+
+export interface AuthProps {
+    user: UserProfile | null;
+    isDemoMode: boolean;
+    onLogin: (returnTo?: string) => Promise<void>;
+    onLogout: () => Promise<void>;
+    stopSyncing: () => void;
+    onLoadCloudData: (fileId: string) => Promise<void>;
+    onSaveNewCloudFile: () => Promise<void>;
+    driveFiles: DriveFile[];
+    currentActiveDriveFileId: string | null;
+    fileOwnerUid: string | null;
+    refreshDriveFiles: () => Promise<void>;
+    handleLoadDriveFile: (fileId: string, ownerUid?: string) => Promise<void>;
+    handleSaveAsNewDriveFile: (fileName: string) => Promise<void>;
+    handleOverwriteExistingDriveFile: (fileId: string, silent?: boolean) => Promise<void>;
+    handleDeleteDriveFile: (fileId: string) => Promise<void>;
+    isSavingDriveFile: boolean;
+    isDeletingDriveFile: boolean;
+    isListingDriveFiles: boolean;
+    hasSessionError: boolean;
+    isAuthorized: boolean;
+    handleCreateSnapshot: (label: string) => Promise<void>;
+    handleRestoreSnapshot: (snapshot: DriveFile) => Promise<void>;
+    onOpenDriveFileManager: () => void;
+    onOpenTreeManager: () => void;
+    onOpenLoginModal: (returnTo?: string) => Promise<void>;
+    syncStatus: SyncStatus;
+    onExport?: (type: ExportType) => void;
+    onSaveToGoogleDrive?: () => Promise<void>;
+    onOpenActivityLog?: () => void;
+}
+
+export interface ViewSettingsProps {
+    treeSettings: TreeSettings;
+    setTreeSettings: (s: TreeSettings) => void;
+    onPresent: () => void;
+    onOpenSnapshotHistory?: () => void;
+    currentUserRole: 'owner' | 'editor' | 'viewer' | null;
+    isAdvancedBarOpen: boolean;
+    setAdvancedBarOpen: (v: boolean) => void;
+}
+
+export interface ToolsActionsProps {
+    onOpenModal: (modalType: ModalType) => void;
+}
+
+export interface HeaderGlobalActionsProps {
+    onOpenTreeControlCenter: () => void;
+    onOpenGlobalSettings: () => void;
+    onOpenDiagnostics: () => void;
+    onOpenShare: () => void;
+    onOpenCleanTree: () => void;
+    onOpenTreeManager: () => void;
+    onOpenDriveFileManager: () => void;
+    onOpenSnapshotHistory: () => void;
+    onOpenActivityLog: () => void;
+}
+
+export interface ExportActionsProps {
+    handleExport: (type: ExportType) => Promise<void>;
+}
+
+export interface SearchProps {
+    people: Record<string, Person>;
+    onFocusPerson: (id: string) => void;
+}
+
+export interface MutationActionResult {
+    success: boolean;
+    error?: string;
+}
+
+export type PersonUpdateHandler = (
+    id: string,
+    updates: Partial<Person>
+) => MutationActionResult | Promise<MutationActionResult>;
+
+export interface FamilyActionsProps {
+    onAddParent: (
+        gender: Gender,
+        relatedPersonId?: string
+    ) => MutationActionResult | Promise<MutationActionResult>;
+    onAddSpouse: (gender: Gender) => MutationActionResult | Promise<MutationActionResult>;
+    onAddChild: (
+        gender: Gender,
+        relatedPersonId?: string
+    ) => MutationActionResult | Promise<MutationActionResult>;
+    onAddFirstPerson: (gender: Gender) => MutationActionResult | Promise<MutationActionResult>;
+    onRemoveRelationship?: (
+        targetId: string,
+        relativeId: string,
+        type: 'parent' | 'spouse' | 'child'
+    ) => MutationActionResult | Promise<MutationActionResult>;
+    onLinkPerson: (
+        existingId: string,
+        type: 'parent' | 'spouse' | 'child' | null,
+        relatedPersonId?: string
+    ) => MutationActionResult | Promise<MutationActionResult>;
+}
+
+export interface HeaderProps {
+    toggleSidebar: () => void;
+    sidebarOpen: boolean;
+    hasActivePerson: boolean;
+    historyControls: HistoryControlsProps;
+    themeLanguage: ThemeLanguageProps;
+    auth: AuthProps;
+    viewSettings: ViewSettingsProps;
+    toolsActions: ToolsActionsProps;
+    exportActions: ExportActionsProps;
+    searchProps: SearchProps;
+    globalActions: HeaderGlobalActionsProps;
+}
+
+export interface HeaderRightSectionProps {
+    themeLanguage: ThemeLanguageProps;
+    auth: AuthProps;
+    viewSettings: ViewSettingsProps;
+    searchProps: SearchProps;
+    globalActions: HeaderGlobalActionsProps;
+}
+
+export interface HeaderLeftSectionProps {
+    themeLanguage: ThemeLanguageProps;
+    toggleSidebar: () => void;
+    sidebarOpen: boolean;
+    hasActivePerson: boolean;
+    historyControls: HistoryControlsProps;
+}
+
+export type SearchInputWithResultsProps = SearchProps;
+
+export interface ViewSettingsMenuProps {
+    settings: TreeSettings;
+    onUpdate: (s: TreeSettings) => void;
+    onClose?: () => void;
+    onPresent: () => void;
+    onOpenLayoutSettings?: () => void;
+    onOpenSnapshotHistory?: () => void;
+}
+
+export interface SearchResultsProps {
+    results: Person[];
+    query?: string;
+    activeResultId?: string | null;
+    onFocus: (id: string) => void;
+    onClose: () => void;
+    onHighlight?: (id: string | null) => void;
+}
+
+export interface CleanTreeOptionsModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    onStartNewTree: () => void;
+    onTriggerImportFile: () => void;
+    language: Language;
+}
+
+export interface GoogleSyncChoiceModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    onLoadCloud: (fileId: string) => Promise<void>;
+    onSaveNewCloud: () => Promise<void>;
+    onOpenDriveManager?: () => void;
+    driveFileId: string | null;
+}
+
+export interface DriveFileManagerModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    files: DriveFile[];
+    currentActiveFileId: string | null;
+    onLoadFile: (fileId: string) => Promise<void>;
+    onSaveAsNewFile: (fileName: string) => Promise<void>;
+    onOverwriteExistingFile: (fileId: string) => Promise<void>;
+    onDeleteFile: (fileId: string) => Promise<void>;
+    refreshDriveFiles: () => Promise<void>;
+    isSaving: boolean;
+    isDeleting: boolean;
+    isListing: boolean;
+    onImportLocalFile: (data: unknown) => Promise<void>;
+}
+
+export interface SidebarFooterProps {
+    person: Person;
+    isEditing: boolean;
+    setIsEditing: (v: boolean) => void;
+    onDelete: (id: string) => void;
+    canEdit?: boolean;
+    isOwner?: boolean;
+}
+
+export interface QuickAddAction {
+    icon: React.ReactNode;
+    label: string;
+    onClick: () => void;
+    colorClasses: string;
+    buttonClassName?: string;
+}
+
+export interface CreateNewPersonSectionProps {
+    type: 'parent' | 'spouse' | 'child' | null;
+    gender: Gender | null;
+    familyActions: FamilyActionsProps;
+    relatedPersonId?: string;
+    requiresRelatedPerson?: boolean;
+    onClose: () => void;
+}
+
+export interface SelectExistingPersonSectionProps {
+    people: Record<string, Person>;
+    type: 'parent' | 'spouse' | 'child' | null;
+    gender: Gender | null;
+    currentPersonId: string;
+    familyActions: FamilyActionsProps;
+    relatedPersonId?: string;
+    requiresRelatedPerson?: boolean;
+    autoFocusSearch?: boolean;
+    onClose: () => void;
+}

@@ -1,0 +1,7 @@
+- generic [active] [ref=e1]:
+  - img
+  - generic [ref=e6]:
+    - img [ref=e8]
+    - heading "تسجيل الدخول مطلوب" [level=2] [ref=e10]
+    - paragraph [ref=e11]: لقبول هذه الدعوة، يجب عليك تسجيل الدخول أولاً بحسابك الخاص المرتبط بالبريد الإلكتروني المدعو.
+    - button "الذهاب لتسجيل الدخول" [ref=e12] [cursor=pointer]

@@ -1,0 +1,295 @@
+import { StateCreator } from 'zustand';
+import { Person } from '../../types';
+import { INITIAL_ROOT_ID, SAMPLE_FAMILY } from '../../constants';
+import { validatePerson, createPerson } from '../../utils/familyLogic';
+import {
+    performAddChild,
+    performAddParent,
+    performAddSpouse,
+    performDeletePerson,
+    performLinkPerson,
+    performRemoveRelationship,
+} from '../../utils/treeOperations';
+import { AppStore } from '../storeTypes';
+
+export interface FamilySlice {
+    // State
+    people: Record<string, Person>;
+    locations: Record<string, import('../../types').LocationData>;
+    focusId: string;
+    searchTarget: { id: string; timestamp: number } | null;
+    treeName: string;
+    peopleVersion: number;
+    /**
+     * Blacklist of person IDs deleted in this session.
+     * Prevents the sync engine from re-adding deleted persons via stale ADD_NODE operations.
+     */
+    deletedPersonIds: Set<string>;
+
+    // Actions
+    setTreeName: (name: string) => void;
+    setPeople: (people: Record<string, Person>, addToHistory?: boolean) => void;
+    setFocusId: (id: string) => void;
+    setSearchTarget: (id: string | null) => void;
+    updatePerson: (id: string, updates: Partial<Person>, bypassSync?: boolean, addToHistory?: boolean) => void;
+    deletePerson: (id: string, bypassSync?: boolean, addToHistory?: boolean) => void;
+    addParent: (gender: 'male' | 'female', bypassSync?: boolean, relatedPersonId?: string) => { updatedPeople: Record<string, Person>; newId: string } | null;
+    addSpouse: (gender: 'male' | 'female', bypassSync?: boolean) => { updatedPeople: Record<string, Person>; newId: string } | null;
+    addChild: (gender: 'male' | 'female', bypassSync?: boolean, relatedPersonId?: string) => { updatedPeople: Record<string, Person>; newId: string } | null;
+    removeRelationship: (targetId: string, relativeId: string, type: 'parent' | 'spouse' | 'child', bypassSync?: boolean, addToHistory?: boolean) => void;
+    linkPerson: (existingId: string, type: 'parent' | 'spouse' | 'child' | null, bypassSync?: boolean, addToHistory?: boolean, relatedPersonId?: string) => void;
+    loadCloudData: (cloudPeople: Record<string, Person>) => void;
+    startNewTree: () => void;
+    handleImport: (importedPeople: Record<string, Person>) => void;
+    addFirstPerson: (gender: 'male' | 'female') => void;
+    
+    // Locations
+    addLocation: (placeName: string, data: import('../../types').LocationData) => void;
+    updateLocationStatus: (placeName: string, status: import('../../types').LocationStatus) => void;
+}
+
+const resolveValidFocusId = (people: Record<string, Person>, preferredFocusId: string): string =>
+    preferredFocusId && people[preferredFocusId]
+        ? preferredFocusId
+        : Object.keys(people)[0] || INITIAL_ROOT_ID;
+
+export const createFamilySlice: StateCreator<AppStore, [["zustand/devtools", never]], [], FamilySlice> = (set, get) => ({
+    // Initial State
+    people: SAMPLE_FAMILY,
+    locations: {},
+    focusId: INITIAL_ROOT_ID,
+    searchTarget: null,
+    treeName: 'Family Lineage',
+    peopleVersion: 0,
+    deletedPersonIds: new Set<string>(),
+
+    // Actions
+    setTreeName: (name) => set({ treeName: name }),
+
+    setPeople: (people, addToHistory = true) => {
+        const current = get().people;
+        const deletedIds = get().deletedPersonIds;
+        
+        let filteredPeople = people;
+        if (deletedIds.size > 0) {
+            filteredPeople = Object.fromEntries(
+                Object.entries(people).filter(([id]) => !deletedIds.has(id))
+            );
+        }
+
+        if (addToHistory) get().pushToHistory(current);
+
+        set((state) => ({
+            people: filteredPeople,
+            peopleVersion: state.peopleVersion + 1,
+            focusId: resolveValidFocusId(filteredPeople, state.focusId),
+        }));
+    },
+
+    setFocusId: (id) => set({ focusId: id }),
+
+    setSearchTarget: (id) => {
+        if (id) {
+            (get() as any).triggerPulse?.(id);
+        }
+        set({ searchTarget: id ? { id, timestamp: Date.now() } : null });
+    },
+
+    updatePerson: (id: string, updates: Partial<Person>, _bypassSync = false, addToHistory = true) => {
+        if (get().currentUserRole === 'viewer') throw new Error('Unauthorized: Viewers cannot edit.');
+        const currentPeople = get().people;
+        const validated = validatePerson({ ...currentPeople[id], ...updates });
+        
+        if (addToHistory) get().pushToHistory(currentPeople);
+
+        set((state) => ({
+            people: { ...state.people, [id]: validated },
+            peopleVersion: state.peopleVersion + 1,
+        }));
+    },
+
+    deletePerson: (id: string, _bypassSync = false, addToHistory = true) => {
+        if (get().currentUserRole === 'viewer') throw new Error('Unauthorized: Viewers cannot delete.');
+        const currentPeople = get().people;
+        const { focusId } = get();
+        const newPeople = performDeletePerson(currentPeople, id);
+        if (newPeople === currentPeople) return;
+
+        const nextFocusId =
+            focusId === id ? Object.keys(newPeople)[0] || INITIAL_ROOT_ID : focusId;
+
+        const newDeletedPersonIds = new Set(get().deletedPersonIds);
+        newDeletedPersonIds.add(id);
+
+        if (addToHistory) get().pushToHistory(currentPeople);
+
+        set((state) => ({
+            people: newPeople,
+            peopleVersion: state.peopleVersion + 1,
+            focusId: nextFocusId,
+            deletedPersonIds: newDeletedPersonIds,
+        }));
+    },
+
+    addParent: (gender, _bypassSync = false, relatedPersonId) => {
+        if (get().currentUserRole === 'viewer') throw new Error('Unauthorized: Viewers cannot add parents.');
+        const currentPeople = get().people;
+        const { focusId } = get();
+        const res = performAddParent(currentPeople, focusId, gender, relatedPersonId);
+        if (!res) return null;
+
+        get().pushToHistory(currentPeople);
+
+        set({
+            people: res.updatedPeople,
+            peopleVersion: get().peopleVersion + 1,
+            focusId: res.newId,
+        });
+
+        return res;
+    },
+
+    addSpouse: (gender, _bypassSync = false) => {
+        if (get().currentUserRole === 'viewer') throw new Error('Unauthorized: Viewers cannot add spouses.');
+        const currentPeople = get().people;
+        const { focusId } = get();
+        const res = performAddSpouse(currentPeople, focusId, gender);
+        if (!res) return null;
+
+        get().pushToHistory(currentPeople);
+
+        set({
+            people: res.updatedPeople,
+            peopleVersion: get().peopleVersion + 1,
+            focusId: res.newId,
+        });
+
+        return res;
+    },
+
+    addChild: (gender, _bypassSync = false, relatedPersonId) => {
+        if (get().currentUserRole === 'viewer') throw new Error('Unauthorized: Viewers cannot add children.');
+        const currentPeople = get().people;
+        const { focusId } = get();
+        const res = performAddChild(currentPeople, focusId, gender, relatedPersonId);
+        if (!res) return null;
+
+        get().pushToHistory(currentPeople);
+
+        set({
+            people: res.updatedPeople,
+            peopleVersion: get().peopleVersion + 1,
+            focusId: res.newId,
+        });
+
+        return res;
+    },
+
+    removeRelationship: (targetId, relativeId, type, _bypassSync = false, addToHistory = true) => {
+        if (get().currentUserRole === 'viewer') throw new Error('Unauthorized: Viewers cannot remove relationships.');
+        const currentPeople = get().people;
+        const updatedPeople = performRemoveRelationship(currentPeople, targetId, relativeId, type);
+
+        if (addToHistory) get().pushToHistory(currentPeople);
+
+        set((state) => ({
+            people: updatedPeople,
+            peopleVersion: state.peopleVersion + 1,
+        }));
+    },
+
+    linkPerson: (existingId, type, _bypassSync = false, addToHistory = true, relatedPersonId) => {
+        if (get().currentUserRole === 'viewer') throw new Error('Unauthorized: Viewers cannot link persons.');
+        if (!type) return;
+
+        const currentPeople = get().people;
+        const { focusId } = get();
+        const updatedPeople = performLinkPerson(currentPeople, focusId, existingId, type, relatedPersonId);
+
+        if (addToHistory) get().pushToHistory(currentPeople);
+
+        set((state) => ({
+            people: updatedPeople,
+            peopleVersion: state.peopleVersion + 1,
+        }));
+    },
+
+    loadCloudData: (cloudPeople) => {
+        const deletedIds = get().deletedPersonIds;
+        
+        let filteredPeople = cloudPeople;
+        if (deletedIds.size > 0) {
+            filteredPeople = Object.fromEntries(
+                Object.entries(cloudPeople).filter(([id]) => !deletedIds.has(id))
+            );
+        }
+
+        set((state) => ({
+            people: filteredPeople,
+            peopleVersion: state.peopleVersion + 1,
+            focusId: resolveValidFocusId(filteredPeople, state.focusId),
+        }));
+        
+        get().clearHistory();
+    },
+
+    startNewTree: () => {
+        set((state) => ({
+            people: SAMPLE_FAMILY,
+            peopleVersion: state.peopleVersion + 1,
+            focusId: INITIAL_ROOT_ID,
+        }));
+        get().clearHistory();
+    },
+
+    handleImport: (importedPeople) => {
+        const deletedIds = get().deletedPersonIds;
+        
+        let filteredPeople = importedPeople;
+        if (deletedIds.size > 0) {
+            filteredPeople = Object.fromEntries(
+                Object.entries(importedPeople).filter(([id]) => !deletedIds.has(id))
+            );
+        }
+
+        set((state) => ({
+            people: filteredPeople,
+            peopleVersion: state.peopleVersion + 1,
+            focusId: resolveValidFocusId(filteredPeople, state.focusId),
+        }));
+        get().clearHistory();
+    },
+
+    addFirstPerson: (gender) => {
+        if (get().currentUserRole === 'viewer') throw new Error('Unauthorized: Viewers cannot add people.');
+        const currentPeople = get().people;
+        const newPerson = {
+            ...createPerson(gender),
+            firstName: 'Me',
+            lastName: '',
+        };
+
+        get().pushToHistory(currentPeople);
+
+        set((state) => ({
+            people: { [newPerson.id]: newPerson },
+            peopleVersion: state.peopleVersion + 1,
+            focusId: newPerson.id,
+        }));
+    },
+
+    addLocation: (placeName, data) => set((state) => ({
+        locations: { ...state.locations, [placeName]: data }
+    })),
+
+    updateLocationStatus: (placeName, status) => set((state) => {
+        const loc = state.locations[placeName];
+        if (!loc) return state;
+        return {
+            locations: {
+                ...state.locations,
+                [placeName]: { ...loc, status }
+            }
+        };
+    }),
+});

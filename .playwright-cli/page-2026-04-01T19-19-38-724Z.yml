@@ -1,0 +1,37 @@
+- generic [active] [ref=e1]:
+  - img
+  - generic [ref=e277]:
+    - generic:
+      - img
+    - button "العربية" [ref=e278] [cursor=pointer]:
+      - img [ref=e279]
+      - generic [ref=e283]: العربية
+    - generic [ref=e285]:
+      - generic [ref=e286]:
+        - generic [ref=e287]: Jozor
+        - generic [ref=e289]:
+          - heading "Welcome to Jozor." [level=1] [ref=e290]
+          - paragraph [ref=e291]: Your digital family tree. Preserve your heritage, connect generations, and discover your roots.
+        - generic [ref=e292]:
+          - generic [ref=e293]:
+            - img [ref=e295]
+            - heading "Start a New Tree" [level=2] [ref=e296]
+            - paragraph [ref=e297]: Your data is saved locally and can be synced to Google Drive.
+          - generic [ref=e298]:
+            - img [ref=e300]
+            - heading "Import File" [level=2] [ref=e303]
+            - paragraph [ref=e304]: OR
+      - generic [ref=e305]:
+        - img "Jozor Logo" [ref=e307]
+        - heading "Sign In" [level=2] [ref=e308]
+        - paragraph [ref=e309]: Your data is saved locally and can be synced to Google Drive.
+        - generic [ref=e310]:
+          - button "Sign In" [ref=e311] [cursor=pointer]
+          - button "Start a New Tree" [ref=e312] [cursor=pointer]:
+            - img [ref=e314]
+            - text: Start a New Tree
+          - button "Import File" [ref=e315] [cursor=pointer]:
+            - img [ref=e317]
+            - text: Import File
+        - generic [ref=e322]: OR
+        - paragraph [ref=e324]: Your digital family tree. Preserve your heritage, connect generations, and discover your roots.

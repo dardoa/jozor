@@ -1,0 +1,7 @@
+- generic [active] [ref=e1]:
+  - img
+  - generic [ref=e5]:
+    - img [ref=e7]
+    - heading "تسجيل الدخول مطلوب" [level=2] [ref=e9]
+    - paragraph [ref=e10]: يجب تسجيل الدخول باستخدام حساب جوجل للوصول إلى هذه الصفحة.
+    - button "تسجيل الدخول بجوجل" [ref=e11] [cursor=pointer]

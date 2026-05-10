@@ -1,0 +1,240 @@
+import { act } from '@testing-library/react';
+import { beforeEach, describe, expect, it } from 'vitest';
+import { loadFullState, useAppStore } from '../useAppStore';
+import {
+  isPersistableNotification,
+  sanitizePersistedNotifications,
+} from '../slices/uiSlice';
+import { DEFAULT_PERSON_TEMPLATE } from '../../constants';
+import type { Person } from '../../types';
+
+const buildPerson = (id: string, firstName: string): Person => ({
+  ...DEFAULT_PERSON_TEMPLATE,
+  id,
+  firstName,
+});
+
+describe('loadFullState', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    act(() => {
+      useAppStore.getState().clearNotifications();
+      useAppStore.getState().setUser(null);
+    });
+  });
+
+  it('hydrates treeName into the store from loaded state', () => {
+    act(() => {
+      useAppStore.getState().setTreeName('Original Tree');
+    });
+
+    act(() => {
+      loadFullState({ treeName: 'Shared Oak' });
+    });
+
+    expect(useAppStore.getState().treeName).toBe('Shared Oak');
+  });
+
+  it('upserts notifications by dedupeKey', () => {
+    act(() => {
+      useAppStore.getState().clearNotifications();
+      useAppStore.getState().enqueueNotification({
+        type: 'info',
+        source: 'system',
+        title: 'First title',
+        body: 'First body',
+        dedupeKey: 'notification:1',
+      });
+      useAppStore.getState().enqueueNotification({
+        type: 'info',
+        source: 'activity-log',
+        title: 'Updated title',
+        body: 'Updated body',
+        dedupeKey: 'notification:1',
+      });
+    });
+
+    const notifications = useAppStore.getState().notifications;
+    expect(notifications).toHaveLength(1);
+    expect(notifications[0].title).toBe('Updated title');
+    expect(notifications[0].body).toBe('Updated body');
+    expect(notifications[0].source).toBe('activity-log');
+  });
+
+  it('persists only eligible notification types', () => {
+    expect(isPersistableNotification({
+      id: 'integrity-1',
+      type: 'integrity',
+      source: 'integrity',
+      title: 'Integrity',
+      body: 'Body',
+      createdAt: '2026-03-27T12:00:00.000Z',
+      updatedAt: '2026-03-27T12:00:00.000Z',
+      timestamp: Date.now(),
+      read: false,
+    })).toBe(true);
+
+    expect(isPersistableNotification({
+      id: 'birthday-1',
+      type: 'birthday',
+      source: 'heritage',
+      title: 'Birthday',
+      body: 'Body',
+      createdAt: '2026-03-27T12:00:00.000Z',
+      updatedAt: '2026-03-27T12:00:00.000Z',
+      timestamp: Date.now(),
+      read: false,
+    })).toBe(false);
+  });
+
+  it('hydrates only persisted notifications from localStorage', () => {
+    localStorage.setItem('jozor_persisted_notifications:user-1', JSON.stringify([
+      {
+        id: 'inv-1',
+        type: 'invitation',
+        source: 'invitation-hydration',
+        title: 'Invite',
+        body: 'Pending',
+        createdAt: '2026-03-27T12:00:00.000Z',
+        updatedAt: '2026-03-27T12:00:00.000Z',
+        timestamp: Date.now(),
+        read: false,
+        actionable: true,
+        invitationId: 'invitation-1',
+        invitationStatus: 'pending',
+      },
+      {
+        id: 'birthday-1',
+        type: 'birthday',
+        source: 'heritage',
+        title: 'Birthday',
+        body: 'Anniversary',
+        createdAt: '2026-03-27T12:00:00.000Z',
+        updatedAt: '2026-03-27T12:00:00.000Z',
+        timestamp: Date.now(),
+        read: false,
+      },
+    ]));
+
+    act(() => {
+      useAppStore.getState().hydrateNotificationsFromStorage('user-1');
+    });
+
+    const notifications = useAppStore.getState().notifications;
+    expect(notifications).toHaveLength(1);
+    expect(notifications[0].id).toBe('inv-1');
+    expect(notifications[0].type).toBe('invitation');
+  });
+
+  it('keeps persisted notifications scoped to the active user', () => {
+    localStorage.setItem('jozor_persisted_notifications:user-a', JSON.stringify([
+      {
+        id: 'owner-a',
+        type: 'info',
+        source: 'owner-realtime',
+        title: 'Owner A',
+        body: 'Body A',
+        createdAt: '2026-03-27T12:00:00.000Z',
+        updatedAt: '2026-03-27T12:00:00.000Z',
+        timestamp: Date.now(),
+        read: false,
+      },
+    ]));
+    localStorage.setItem('jozor_persisted_notifications:user-b', JSON.stringify([
+      {
+        id: 'owner-b',
+        type: 'info',
+        source: 'owner-realtime',
+        title: 'Owner B',
+        body: 'Body B',
+        createdAt: '2026-03-27T12:00:00.000Z',
+        updatedAt: '2026-03-27T12:00:00.000Z',
+        timestamp: Date.now(),
+        read: false,
+      },
+    ]));
+
+    act(() => {
+      useAppStore.getState().hydrateNotificationsFromStorage('user-b');
+    });
+
+    expect(useAppStore.getState().notifications).toHaveLength(1);
+    expect(useAppStore.getState().notifications[0].id).toBe('owner-b');
+  });
+
+  it('drops expired notifications during sanitization', () => {
+    const notifications = sanitizePersistedNotifications([
+      {
+        id: 'expired-1',
+        type: 'integrity',
+        source: 'integrity',
+        title: 'Expired',
+        body: 'Old',
+        createdAt: '2026-03-27T12:00:00.000Z',
+        updatedAt: '2026-03-27T12:00:00.000Z',
+        expiresAt: '2026-03-26T12:00:00.000Z',
+        timestamp: Date.now(),
+        read: false,
+      },
+      {
+        id: 'active-1',
+        type: 'info',
+        source: 'activity-log',
+        title: 'Active',
+        body: 'Fresh',
+        createdAt: '2026-03-27T12:00:00.000Z',
+        updatedAt: '2026-03-27T12:00:00.000Z',
+        expiresAt: '2026-03-28T12:00:00.000Z',
+        timestamp: Date.now(),
+        read: false,
+      },
+    ], Date.parse('2026-03-27T12:00:00.000Z'));
+
+    expect(notifications).toHaveLength(1);
+    expect(notifications[0].id).toBe('active-1');
+  });
+
+  it('preserves the current focus when background people updates keep that person', () => {
+    act(() => {
+      useAppStore.setState((state) => ({
+        ...state,
+        people: {
+          'person-1': buildPerson('person-1', 'One'),
+          'person-2': buildPerson('person-2', 'Two'),
+        },
+        focusId: 'person-2',
+      }));
+    });
+
+    act(() => {
+      useAppStore.getState().setPeople({
+        'person-1': buildPerson('person-1', 'One updated'),
+        'person-2': buildPerson('person-2', 'Two updated'),
+        'person-3': buildPerson('person-3', 'Three'),
+      }, false);
+    });
+
+    expect(useAppStore.getState().focusId).toBe('person-2');
+  });
+
+  it('falls back to a valid focus only when the current focused person disappears', () => {
+    act(() => {
+      useAppStore.setState((state) => ({
+        ...state,
+        people: {
+          'person-1': buildPerson('person-1', 'One'),
+          'person-2': buildPerson('person-2', 'Two'),
+        },
+        focusId: 'person-2',
+      }));
+    });
+
+    act(() => {
+      useAppStore.getState().setPeople({
+        'person-1': buildPerson('person-1', 'One updated'),
+      }, false);
+    });
+
+    expect(useAppStore.getState().focusId).toBe('person-1');
+  });
+});
