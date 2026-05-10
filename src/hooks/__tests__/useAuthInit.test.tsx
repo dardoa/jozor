@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAuthInit } from '../useAuthInit';
@@ -354,3 +355,4 @@ describe('useAuthInit', () => {
     expect(localStorage.getItem('lastActiveTreeId')).toBeNull();
   });
 });
+

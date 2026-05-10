@@ -245,8 +245,23 @@ export const AppUIManager: React.FC = () => {
 
       <React.Suspense
         fallback={
-          <div className='flex h-screen items-center justify-center bg-[var(--theme-bg)] text-[var(--text-main)]'>
-            <div className='ds-empty-state text-sm font-medium'>{t.loading}</div>
+          <div className='fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[var(--theme-bg)]'>
+            <style>
+              {`
+                @keyframes jozor-pulse {
+                  0%, 100% { transform: scale(0.9); opacity: 0.6; }
+                  50% { transform: scale(1.1); opacity: 1; }
+                }
+                .animate-jozor-pulse {
+                  animation: jozor-pulse 2s ease-in-out infinite;
+                }
+              `}
+            </style>
+            <img 
+              src="/jozor-icon.svg" 
+              alt="Loading..." 
+              className="w-[180px] h-[180px] md:w-[220px] md:h-[220px] animate-jozor-pulse object-contain drop-shadow-2xl"
+            />
           </div>
         }
       >
@@ -290,7 +305,7 @@ export const AppUIManager: React.FC = () => {
 
       {isVaultOpen ? (
         <React.Suspense fallback={null}>
-          <TheVaultDrawer googleSync={googleSync} auth={auth} exportActions={exportActions} toolsActions={toolsActions} onOpenDiagnostics={() => useAppStore.getState().setDiagnosticsDrawerOpen(true)} onOpenActivityLog={() => setActivityLogOpen(true)} onOpenCleanTree={modals.onOpenCleanTreeOptions} />
+          <TheVaultDrawer googleSync={googleSync} auth={auth} exportActions={exportActions} toolsActions={toolsActions} onOpenDiagnostics={() => useAppStore.getState().setDiagnosticsDrawerOpen(true)} onOpenActivityLog={() => (useAppStore.getState() as any).setActivityLogOpen(true)} onOpenCleanTree={modals.onOpenCleanTreeOptions} />
         </React.Suspense>
       ) : null}
 

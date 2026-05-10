@@ -221,7 +221,7 @@ export const PersonHeaderView = memo<PersonHeaderViewProps>(
             onClick={() => onOpenModal('map')}
             className={`${baseButtonClasses} bg-[var(--surface-subtle)] text-[var(--text-main)]`}
           >
-            <MapPin className='w-3.5 h-3.5' /> {t.viewOnMap}
+            <MapPin className='w-3.5 h-3.5' /> {(t as any).viewOnMap}
           </button>
           <button
             onClick={() => onOpenModal('timeline')}

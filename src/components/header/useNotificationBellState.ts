@@ -149,7 +149,7 @@ export const useNotificationBellState = ({
     markAllRead,
     updateNotification,
     removeNotification,
-    setFocusId,
+    setFocusId: setFocusId as any,
     setSearchTarget,
     activeFilter,
     busyInvitationId,

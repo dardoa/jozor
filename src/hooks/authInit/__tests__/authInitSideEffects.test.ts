@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
   clearLastActiveTreeId,
@@ -22,4 +23,5 @@ describe('authInitSideEffects', () => {
     expect(localStorage.getItem('lastActiveTreeId')).toBeNull();
   });
 });
+
 

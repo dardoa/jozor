@@ -333,7 +333,7 @@ export function useV3RendererPipeline({
       graph,
       focusId,
       people,
-      { maxDepth: resolveMaxDepth(pipelineSettings) },
+      { maxDepth: resolveMaxDepth(pipelineSettings as any) },
     );
     const collapsedOwnerIds = deriveCollapsedOwnerIds(collapsePoints, focusId);
     const semanticsSnapshot = applyCollapseSemantics(

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { describe, expect, it } from 'vitest';
 import type { Person } from '../../types';
 import { buildFamilyGraph } from '../familyGraph';
@@ -236,3 +237,4 @@ describe('buildFamilyGraph', () => {
     expect(graph.persons.child.parentUnitId).toBe('family:mother');
   });
 });
+

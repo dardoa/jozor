@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
@@ -109,3 +110,4 @@ describe('HeaderRightSection', () => {
     expect(screen.getByText('Account menu content')).toBeInTheDocument();
   });
 });
+

@@ -10,6 +10,7 @@ import { authTokenService } from '../services/authTokenService';
 import { supabaseAuthService } from '../services/supabaseAuthService';
 import { claimCollaboratorMemberships } from '../services/supabaseTreeAccessService';
 import { fetchUserProfile } from '../services/supabaseProfileService';
+import { dismissNativeSplash } from '../utils/nativeSplash';
 
 /**
  * Applies the current Supabase session to the auth slice so refresh restores
@@ -43,6 +44,8 @@ const applySessionToStore = async (session: Session | null) => {
       lastErrorAt: null,
       lastErrorRetryable: undefined,
     });
+    // No user session → dismiss the native splash immediately so login screen can show
+    dismissNativeSplash();
     store.setAuthLoading(false);
     return;
   }
@@ -70,7 +73,7 @@ const applySessionToStore = async (session: Session | null) => {
     lastErrorAt: null,
     lastErrorRetryable: undefined,
   });
-  store.setAuthLoading(false);
+  // DO NOT set authLoading to false here. Let executeAuthInitPlan handle it after tree is loaded!
 
   // BACKGROUND PARALLEL REFINEMENT:
   // Profile metadata and collaborator memberships are fetched concurrently.
@@ -136,13 +139,13 @@ export const useSessionBootstrap = () => {
 
     void supabaseAuthService
       .getSession()
-      .then(({ data }) => {
+      .then(({ data }: any) => {
         if (!active) return;
         if (!authEventHandled) {
           void handleAuthSession(data.session);
         }
       })
-      .catch((error) => {
+      .catch((error: any) => {
         if (!active) return;
         console.warn('Failed to restore Supabase session:', error);
         const store = useAppStore.getState();
@@ -155,6 +158,7 @@ export const useSessionBootstrap = () => {
           lastErrorAt: new Date(),
           lastErrorRetryable: true,
         });
+        dismissNativeSplash();
         store.setAuthLoading(false);
       });
 

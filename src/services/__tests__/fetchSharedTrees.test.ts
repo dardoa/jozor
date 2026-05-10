@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { getSupabaseWithAuthMock } = vi.hoisted(() => {
@@ -116,3 +117,4 @@ describe('fetchSharedTrees', () => {
     expect(result[0]?.id).toBe('tree-2');
   });
 });
+

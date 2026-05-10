@@ -31,7 +31,7 @@ export const ContactTab = memo<ContactTabProps>(({ person, isEditing, onUpdate }
           <FormField
             label={t.email}
             value={person.email}
-            onCommit={(v: string) => handleChange('email', v)}
+            onCommit={(v) => handleChange('email', v as string)}
             disabled={!isEditing}
             type='email'
             labelWidthClass='w-24'
@@ -40,7 +40,7 @@ export const ContactTab = memo<ContactTabProps>(({ person, isEditing, onUpdate }
           <FormField
             label={t.website}
             value={person.website}
-            onCommit={(v: string) => handleChange('website', v)}
+            onCommit={(v) => handleChange('website', v as string)}
             disabled={!isEditing}
             type='url'
             labelWidthClass='w-24'
@@ -49,7 +49,7 @@ export const ContactTab = memo<ContactTabProps>(({ person, isEditing, onUpdate }
           <FormField
             label={t.blog}
             value={person.blog}
-            onCommit={(v: string) => handleChange('blog', v)}
+            onCommit={(v) => handleChange('blog', v as string)}
             disabled={!isEditing}
             type='url'
             labelWidthClass='w-24'
@@ -58,7 +58,7 @@ export const ContactTab = memo<ContactTabProps>(({ person, isEditing, onUpdate }
           <FormField
             label={t.address}
             value={person.address}
-            onCommit={(v: string) => handleChange('address', v)}
+            onCommit={(v) => handleChange('address', v as string)}
             disabled={!isEditing}
             isTextArea={true}
             rows={2}

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useSidebarAutoOpenOnFocus } from '../useSidebarAutoOpenOnFocus';
@@ -59,3 +60,4 @@ describe('useSidebarAutoOpenOnFocus', () => {
     expect(setSidebarOpen).not.toHaveBeenCalled();
   });
 });
+

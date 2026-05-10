@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React from 'react';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
@@ -63,3 +64,4 @@ describe('ProtectedRoute', () => {
     expect(screen.getByText('Protected Content')).toBeInTheDocument();
   });
 });
+

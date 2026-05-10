@@ -17,7 +17,7 @@ export const MobileActionBar: React.FC<MobileActionBarProps> = ({
   activeTab = null,
 }) => {
   const { t } = useTranslation();
-  const text = t as Record<string, string>;
+  const text = t as unknown as Record<string, string>;
 
   const runWithFeedback = (action: () => void) => {
     if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
@@ -63,7 +63,7 @@ export const MobileActionBar: React.FC<MobileActionBarProps> = ({
             key={btn.id}
             type="button"
             onClick={() => runWithFeedback(btn.onClick)}
-            disabled={btn.disabled}
+            disabled={(btn as any).disabled}
             aria-label={btn.label}
             aria-current={isActive ? 'page' : undefined}
             title={btn.label}

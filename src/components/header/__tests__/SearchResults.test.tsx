@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { SearchResults } from '../SearchResults';
@@ -55,3 +56,4 @@ describe('SearchResults', () => {
     expect(screen.getAllByText('No results')).toHaveLength(2);
   });
 });
+

@@ -8,6 +8,7 @@ import type { Person, UserProfile } from '../../types';
 import type { SharedTreeSummary } from '../../services/supabaseTreeTypes';
 import type { AuthInitPlan } from './authInitDecision';
 import type { AuthInitTreeLoadHandlers } from './authInitTreeLoad';
+import { dismissNativeSplash } from '../../utils/nativeSplash';
 
 interface RoutePersonBranchRefs {
   inFlightRef: MutableRefObject<string | null>;
@@ -26,6 +27,12 @@ interface ExecuteAuthInitPlanParams {
   treeLoadHandlers: AuthInitTreeLoadHandlers;
   routePersonBranchRefs: RoutePersonBranchRefs;
 }
+
+// Utility: dismiss native splash + wait at least 1500ms before releasing authLoading.
+const dismissLoadingWithDelay = (setAuthLoading: (value: boolean) => void) => {
+  dismissNativeSplash();
+  setTimeout(() => setAuthLoading(false), 1500);
+};
 
 export const executeAuthInitPlan = ({
   plan,
@@ -52,17 +59,19 @@ export const executeAuthInitPlan = ({
           plan.invalidTreeId,
           people,
           setCurrentTreeId
-        );
+        ).finally(() => dismissLoadingWithDelay(setAuthLoading));
       }
       return;
 
     case 'APPLY_ROUTE_FOCUS_ONLY':
       setFocusId(plan.focusId);
       setShowWelcome(false);
+      dismissLoadingWithDelay(setAuthLoading);
       return;
 
     case 'HIDE_WELCOME_ONLY':
       setShowWelcome(false);
+      dismissLoadingWithDelay(setAuthLoading);
       return;
 
     case 'BOOTSTRAP_ROUTE_TREE':
@@ -75,7 +84,8 @@ export const executeAuthInitPlan = ({
             if (role === null) throw new Error('No access to the requested tree.');
             treeLoadHandlers.handleTreeLoadSuccess(full, role, plan.treeId);
           })
-          .catch((err) => treeLoadHandlers.handleTreeLoadError(err, 'SUPABASE_FETCH_ROUTE_TREE_ERROR'));
+          .catch((err) => treeLoadHandlers.handleTreeLoadError(err, 'SUPABASE_FETCH_ROUTE_TREE_ERROR'))
+          .finally(() => dismissLoadingWithDelay(setAuthLoading));
       }
       return;
 
@@ -111,7 +121,7 @@ export const executeAuthInitPlan = ({
             if (routePersonBranchRefs.inFlightRef.current === routePersonRequestKey) {
               routePersonBranchRefs.inFlightRef.current = null;
             }
-            setAuthLoading(false);
+            dismissLoadingWithDelay(setAuthLoading);
           });
       }
       return;
@@ -126,7 +136,8 @@ export const executeAuthInitPlan = ({
             if (role === null) throw new Error('No access to the last active tree.');
             treeLoadHandlers.handleTreeLoadSuccess(full, role, plan.treeId);
           })
-          .catch((err) => treeLoadHandlers.handleTreeLoadError(err, 'SUPABASE_FETCH_TREE_ERROR'));
+          .catch((err) => treeLoadHandlers.handleTreeLoadError(err, 'SUPABASE_FETCH_TREE_ERROR'))
+          .finally(() => dismissLoadingWithDelay(setAuthLoading));
       }
       return;
 
@@ -142,11 +153,13 @@ export const executeAuthInitPlan = ({
           .catch((err) => {
             logError('SUPABASE_FETCH_SHARED_TREES_ERROR', err, { showToast: false });
             setShowWelcome(false);
-          });
+          })
+          .finally(() => dismissLoadingWithDelay(setAuthLoading));
         return;
       }
 
       setShowWelcome(false);
+      dismissLoadingWithDelay(setAuthLoading);
       return;
   }
 };

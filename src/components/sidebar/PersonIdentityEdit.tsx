@@ -47,7 +47,7 @@ export const PersonIdentityEdit = memo<PersonIdentityEditProps>(({ person, onUpd
       const updates: Partial<Person> = {};
       (Object.keys(extracted) as Array<keyof Person>).forEach((key) => {
         if (extracted[key] !== undefined && extracted[key] !== null && extracted[key] !== '') {
-          updates[key] = extracted[key];
+          updates[key] = extracted[key] as any;
         }
       });
       onUpdate(person.id, updates);
@@ -127,13 +127,13 @@ export const PersonIdentityEdit = memo<PersonIdentityEditProps>(({ person, onUpd
           <FormField
             label={t.firstName}
             value={person.firstName}
-            onCommit={(v: string) => handleChange('firstName', v)}
+            onCommit={(v) => handleChange('firstName', v as string)}
             labelWidthClass='w-24'
           />
           <FormField
             label={t.middleName}
             value={person.middleName}
-            onCommit={(v: string) => handleChange('middleName', v)}
+            onCommit={(v) => handleChange('middleName', v as string)}
             labelWidthClass='w-24'
           />
 
@@ -142,7 +142,7 @@ export const PersonIdentityEdit = memo<PersonIdentityEditProps>(({ person, onUpd
               <FormField
                 label={t.lastName}
                 value={person.lastName}
-                onCommit={(v: string) => handleChange('lastName', v)}
+                onCommit={(v) => handleChange('lastName', v as string)}
                 labelWidthClass='w-24'
               />
             </div>
@@ -163,13 +163,13 @@ export const PersonIdentityEdit = memo<PersonIdentityEditProps>(({ person, onUpd
               <FormField
                 label={t.birthName}
                 value={person.birthName}
-                onCommit={(v: string) => handleChange('birthName', v)}
+                onCommit={(v) => handleChange('birthName', v as string)}
                 labelWidthClass='w-24'
               />
               <FormField
                 label={t.nickName}
                 value={person.nickName}
-                onCommit={(v: string) => handleChange('nickName', v)}
+                onCommit={(v) => handleChange('nickName', v as string)}
                 labelWidthClass='w-24'
               />
               <div className='flex gap-2'>
@@ -177,7 +177,7 @@ export const PersonIdentityEdit = memo<PersonIdentityEditProps>(({ person, onUpd
                   <FormField
                     label={t.title}
                     value={person.title}
-                    onCommit={(v: string) => handleChange('title', v)}
+                    onCommit={(v) => handleChange('title', v as string)}
                     labelWidthClass='w-24'
                   />
                 </div>
@@ -185,7 +185,7 @@ export const PersonIdentityEdit = memo<PersonIdentityEditProps>(({ person, onUpd
                   <FormField
                     label={t.suffix}
                     value={person.suffix}
-                    onCommit={(v: string) => handleChange('suffix', v)}
+                    onCommit={(v) => handleChange('suffix', v as string)}
                     labelWidthClass='w-24'
                   />
                 </div>

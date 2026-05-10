@@ -11,9 +11,9 @@ export const ContentSection = React.memo(({ open, onToggle, settingsText, t }: {
   const updateField = useTreeAppearanceStore((state) => state.updateField);
   const showPlaces = contentVisibility.places.enabled;
   const namesLabel = settingsText.names || t.names || settingsText.nameFields || 'Names';
-  const middleNameLabel = (t.settings?.showMiddleName as string) || 'Middle Name';
-  const nicknameLabel = (t.settings?.showNickname as string) || 'Nickname';
-  const suffixLabel = (t.settings?.showSuffix as string) || 'Suffix';
+  const middleNameLabel = ((t.settings as any)?.showMiddleName as string) || 'Middle Name';
+  const nicknameLabel = ((t.settings as any)?.showNickname as string) || 'Nickname';
+  const suffixLabel = ((t.settings as any)?.showSuffix as string) || 'Suffix';
 
   return (
     <SectionShell

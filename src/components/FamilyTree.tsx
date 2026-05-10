@@ -1,5 +1,5 @@
 import React, { useImperativeHandle, useRef } from 'react';
-import type { NonForceChartType, Person, TreeSettings } from '../types';
+import type { Person, TreeSettings } from '../types';
 import { useTranslation } from '../context/TranslationContext';
 import { FamilyTreeCanvas } from './tree/FamilyTreeCanvas';
 import { useTreeInteraction } from '../hooks/useTreeInteraction';
@@ -69,7 +69,7 @@ export const FamilyTree = React.memo(React.forwardRef<SVGSVGElement, FamilyTreeP
 
   useLayoutModeTransition({
     layoutMode: settings.layoutMode,
-    gRef,
+    gRef: gRef as any,
   });
 
   const { handleZoomIn, handleZoomOut, handleResetZoom, handleFitToScreen, zoomScale, zoomX, zoomY } = useTreeInteraction({
@@ -104,7 +104,7 @@ export const FamilyTree = React.memo(React.forwardRef<SVGSVGElement, FamilyTreeP
       return null;
     }
 
-    const minimapChartType = activeChartType as NonForceChartType;
+    const minimapChartType = activeChartType as any;
 
     return buildMinimapGraphFromLayout({
       chartType: minimapChartType,
@@ -149,13 +149,13 @@ export const FamilyTree = React.memo(React.forwardRef<SVGSVGElement, FamilyTreeP
       isLoading,
       chartModel,
       activeLayoutSummary: {
-        nodeCount: activeLayout && typeof activeLayout === 'object' && 'nodes' in (activeLayout as Record<string, unknown>)
+        nodeCount: activeLayout && typeof activeLayout === 'object' && 'nodes' in (activeLayout as any)
           ? (activeLayout as { nodes?: unknown[] }).nodes?.length ?? 0
           : 0,
-        linkCount: activeLayout && typeof activeLayout === 'object' && 'links' in (activeLayout as Record<string, unknown>)
+        linkCount: activeLayout && typeof activeLayout === 'object' && 'links' in (activeLayout as any)
           ? (activeLayout as { links?: unknown[] }).links?.length ?? 0
           : 0,
-        fanArcCount: activeLayout && typeof activeLayout === 'object' && 'fanArcs' in (activeLayout as Record<string, unknown>)
+        fanArcCount: activeLayout && typeof activeLayout === 'object' && 'fanArcs' in (activeLayout as any)
           ? (activeLayout as { fanArcs?: unknown[] }).fanArcs?.length ?? 0
           : 0,
       },

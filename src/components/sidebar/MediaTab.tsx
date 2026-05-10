@@ -125,7 +125,7 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
                 ) : (
                    <Plus className='w-3.5 h-3.5' />
                 )}
-                {t.addPhoto || 'Add Photo'}
+                {(t as any).addPhoto || 'Add Photo'}
               </button>
             </div>
           )}
@@ -136,7 +136,7 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
           accept='image/*'
           className='hidden'
           onChange={handleImageUpload}
-          aria-label={t.addPhoto || 'Add Photo'}
+          aria-label={(t as any).addPhoto || 'Add Photo'}
         />
 
         {!hasPhotos && !isEditing ? (
@@ -153,7 +153,7 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
 
               return (
                 <div
-                  key={item.id || idx}
+                  key={(item as any).id || idx}
                   className='relative group rounded-xl overflow-hidden border border-[var(--border-soft)] aspect-square bg-[var(--surface-subtle)] shadow-[var(--shadow-sm)] cursor-zoom-in'
                   onClick={() => setSelectedImgIndex(idx)}
                 >
@@ -169,8 +169,8 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (typeof item === 'object' && item.id) {
-                            removePhoto(person.id, item.id);
+                          if (typeof item === 'object' && (item as any).id) {
+                            removePhoto(person.id, (item as any).id);
                           } else {
                             const newGallery = [...gallery];
                             newGallery.splice(idx, 1);
@@ -184,9 +184,9 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
                       </button>
                     )}
                   </div>
-                  {item.caption && (
+                  {(item as any).caption && (
                     <div className='absolute bottom-0 inset-x-0 bg-black/60 text-white text-[10px] p-1 truncate backdrop-blur-sm'>
-                      {item.caption}
+                      {(item as any).caption}
                     </div>
                   )}
                 </div>

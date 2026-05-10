@@ -42,18 +42,18 @@ export const TreeMenu = memo<TreeMenuProps>(
     showCleanTree,
   }) => {
     const { t } = useTranslation();
-    const settingsText = t.settings as Record<string, string>;
+    const settingsText = t.settings as unknown as Record<string, string>;
     const diagnosticsLabel = settingsText.diagnostics || 'Diagnostics';
 
       return (
       <DropdownContent className="w-72" aria-label={t.shareTree}>
-        <DropdownMenuHeader icon={<FolderTree className="w-3 h-3" />} label={(t as Record<string, string>).treeMenu || 'Tree'} />
+        <DropdownMenuHeader icon={<FolderTree className="w-3 h-3" />} label={(t as unknown as Record<string, string>).treeMenu || 'Tree'} />
 
         <DropdownMenuItem
           onClick={onOpenTreeControlCenter}
           icon={<FolderTree className="w-4 h-4" />}
-          label={(t as Record<string, string>).treeControlCenterTitle || 'Tree Control Center'}
-          subLabel={(t as Record<string, string>).treeControlCenterHint || 'Open the new unified workspace for overview, access, versions, and diagnostics.'}
+          label={(t as unknown as Record<string, string>).treeControlCenterTitle || 'Tree Control Center'}
+          subLabel={(t as unknown as Record<string, string>).treeControlCenterHint || 'Open the new unified workspace for overview, access, versions, and diagnostics.'}
         />
 
         <DropdownMenuDivider />

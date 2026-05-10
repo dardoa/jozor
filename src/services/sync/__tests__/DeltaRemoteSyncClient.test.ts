@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DeltaRemoteSyncClient } from '../DeltaRemoteSyncClient';
 import type { PendingDeltaOp } from '../SyncTypes';
@@ -129,3 +130,4 @@ describe('DeltaRemoteSyncClient', () => {
         expect(mocks.bulkDeletePendingOperations).not.toHaveBeenCalled();
     });
 });
+

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
@@ -144,3 +145,4 @@ describe('TreeSettingsTab', () => {
     expect(screen.getByRole('button', { name: 'Change Root' })).toBeInTheDocument();
   });
 });
+

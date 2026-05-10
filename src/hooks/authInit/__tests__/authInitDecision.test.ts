@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { describe, it, expect } from 'vitest';
 import { getAuthInitPlan, AuthInitContext } from '../authInitDecision';
 
@@ -75,3 +76,4 @@ describe('getAuthInitPlan', () => {
         expect(plan.type).toBe('FETCH_SHARED_TREES_PROMPT');
     });
 });
+

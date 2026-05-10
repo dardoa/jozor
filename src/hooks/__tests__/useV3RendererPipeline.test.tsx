@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { renderHook } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { useV3RendererPipeline } from '../useV3RendererPipeline';
@@ -134,3 +135,4 @@ describe('useV3RendererPipeline memoization', () => {
     expect(result.current?.projectedNodes.map((node) => node.personId)).toEqual([root.id]);
   });
 });
+

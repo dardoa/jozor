@@ -181,7 +181,7 @@ export const AppPersonOverlays: React.FC<AppPersonOverlaysProps> = ({
             closeNodeContextMenu();
             triggerDelete(id);
           }}
-          currentUserRole={currentUserRole}
+          currentUserRole={currentUserRole as any}
         />
       )}
 

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
@@ -123,3 +124,4 @@ describe('AccessControlTab', () => {
     expect(await screen.findByText(/Owner access remains fixed and cannot be reassigned from this panel\./)).toBeInTheDocument();
   });
 });
+

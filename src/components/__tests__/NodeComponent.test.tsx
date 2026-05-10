@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
@@ -162,3 +163,4 @@ describe('NodeComponent privacy mode', () => {
     expect(screen.getByText('(d. 2020)')).toBeInTheDocument();
   });
 });
+

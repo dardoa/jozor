@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
@@ -38,3 +39,4 @@ describe('SyncStatusRibbon', () => {
     expect(ribbon.closest('div')?.className).toContain('bg-orange-500');
   });
 });
+

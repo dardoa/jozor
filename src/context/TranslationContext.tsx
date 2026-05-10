@@ -54,11 +54,8 @@ export const TranslationProvider: React.FC<{ children: React.ReactNode }> = ({ c
   );
 
   if (!t) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-[var(--surface-app)] text-sm font-semibold text-[var(--text-muted)]">
-        Loading...
-      </div>
-    );
+    // Native splash in index.html covers this state
+    return null;
   }
 
   return (

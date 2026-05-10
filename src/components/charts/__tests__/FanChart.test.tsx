@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
@@ -106,3 +107,4 @@ describe('FanChart privacy mode', () => {
     expect(screen.getByLabelText('Privacy placeholder: female youth')).toBeInTheDocument();
   });
 });
+

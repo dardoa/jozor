@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
@@ -105,3 +106,4 @@ describe('SyncStatusIndicator', () => {
     expect(screen.getByRole('button', { name: 'Sync Status' }).querySelector('span')).toHaveClass('bg-gray-500');
   });
 });
+

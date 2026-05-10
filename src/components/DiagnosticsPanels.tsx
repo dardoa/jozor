@@ -53,14 +53,14 @@ const getInvitationDiagnosticsText = (t: SettingsTranslator): InvitationDiagnost
 });
 
 const getNotificationDiagnosticsText = (t: SettingsTranslator): NotificationDiagnosticsText => ({
-  notificationDiagnostics: (t.settings as Record<string, string>).notificationDiagnostics || 'Notification Diagnostics',
-  lastNotificationEventLabel: (t.settings as Record<string, string>).lastNotificationEventLabel || 'Last Notification Event',
-  lastNotificationTypeLabel: (t.settings as Record<string, string>).lastNotificationTypeLabel || 'Last Notification Type',
-  lastNotificationSourceLabel: (t.settings as Record<string, string>).lastNotificationSourceLabel || 'Last Notification Source',
-  lastNotificationTargetLabel: (t.settings as Record<string, string>).lastNotificationTargetLabel || 'Last Notification Target',
-  lastNotificationDedupLabel: (t.settings as Record<string, string>).lastNotificationDedupLabel || 'Last Notification Key',
-  lastNotificationSkipLabel: (t.settings as Record<string, string>).lastNotificationSkipLabel || 'Last Skipped Notification',
-  noNotificationActivity: (t.settings as Record<string, string>).noNotificationActivity || 'None',
+  notificationDiagnostics: (t.settings as unknown as Record<string, string>).notificationDiagnostics || 'Notification Diagnostics',
+  lastNotificationEventLabel: (t.settings as unknown as Record<string, string>).lastNotificationEventLabel || 'Last Notification Event',
+  lastNotificationTypeLabel: (t.settings as unknown as Record<string, string>).lastNotificationTypeLabel || 'Last Notification Type',
+  lastNotificationSourceLabel: (t.settings as unknown as Record<string, string>).lastNotificationSourceLabel || 'Last Notification Source',
+  lastNotificationTargetLabel: (t.settings as unknown as Record<string, string>).lastNotificationTargetLabel || 'Last Notification Target',
+  lastNotificationDedupLabel: (t.settings as unknown as Record<string, string>).lastNotificationDedupLabel || 'Last Notification Key',
+  lastNotificationSkipLabel: (t.settings as unknown as Record<string, string>).lastNotificationSkipLabel || 'Last Skipped Notification',
+  noNotificationActivity: (t.settings as unknown as Record<string, string>).noNotificationActivity || 'None',
 });
 
 export const DiagnosticsPanels: React.FC<{ includeTelemetry?: boolean; includeMaintenance?: boolean }> = ({

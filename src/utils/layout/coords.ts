@@ -54,7 +54,7 @@ export const getPointCoords = (
 
     // Layout-owned coordinate modifier: applies only to non-radial layouts and
     // is independent from force simulation behavior.
-    if (settings.enableTimeOffset && !isRadial) {
+    if ((settings as any).enableTimeOffset && !isRadial) {
         const personBirthYear = getBirthYear(d.data.person);
         if (personBirthYear !== 9999 && oldestBirthYear !== Infinity) {
             // Ensure spacing is numeric to prevent logic errors

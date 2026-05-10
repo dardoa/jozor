@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Jozor | Family Tree</title>
   <!-- Update favicon to SVG -->
-  <link rel="icon" type="image/svg+xml" href="/logo.svg" />
+  <link rel="icon" type="image/png" href="/favicon.png" />
   <link rel="manifest" href="/manifest.json" />
   <meta name="theme-color" content="#2C1810" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -435,6 +435,33 @@
 </head>
 
 <body>
+  <!-- Native Splash Screen: shown immediately, hidden by JS when app is ready -->
+  <div id="jozor-splash" style="
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--theme-bg, #fafaf9);
+    transition: opacity 0.4s ease;
+  ">
+    <style>
+      @keyframes jozor-pulse-native {
+        0%, 100% { transform: scale(0.9); opacity: 0.6; }
+        50% { transform: scale(1.1); opacity: 1; }
+      }
+      #jozor-splash img {
+        width: 200px;
+        height: 200px;
+        object-fit: contain;
+        animation: jozor-pulse-native 2s ease-in-out infinite;
+        filter: drop-shadow(0 8px 24px rgba(0,0,0,0.12));
+      }
+    </style>
+    <img src="/jozor-icon.svg" alt="Jozor" />
+  </div>
+
   <svg width="0" height="0" style="position: absolute;">
     <defs>
       <!-- Heritage Parchment Pattern -->

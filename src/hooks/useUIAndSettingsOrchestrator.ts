@@ -114,7 +114,7 @@ export const useUIAndSettingsOrchestrator = (
     onTriggerImportFile,
   };
 
-  const themeLanguage: ThemeLanguageProps = { darkMode, setDarkMode, language, setLanguage, t };
+  const themeLanguage: ThemeLanguageProps = { darkMode, setDarkMode, language, setLanguage, t: t as any };
 
   const viewSettings: ViewSettingsProps = {
     treeSettings,

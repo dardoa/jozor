@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React from 'react';
 import { describe, it, expect } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
@@ -177,3 +178,4 @@ describe('useUIAndSettingsOrchestrator', () => {
     expect(focused.textContent).toBe('person-2');
   });
 });
+

@@ -47,7 +47,7 @@ const getLifeEventMeta = (type: string | undefined, t: TranslationSchema) => {
 
   if (normalized.includes('birth') || normalized.includes('ولاد')) {
     return {
-      label: t.birth,
+      label: (t as any).birth,
       chipClass: 'bg-[#edf3f8] text-[#526b82] shadow-sm',
       icon: Baby,
     };

@@ -6,6 +6,7 @@ import type { AuthProps } from '../../types';
 import { useTranslation } from '../../context/TranslationContext';
 import { EmailLoginForm } from '../EmailLoginForm';
 import { LoginButton } from '../LoginButton';
+import { Logo } from '../Logo';
 
 export const MinimalLogin: React.FC<{ auth: AuthProps }> = ({ auth }) => {
   const { t } = useTranslation();
@@ -19,11 +20,9 @@ export const MinimalLogin: React.FC<{ auth: AuthProps }> = ({ auth }) => {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-[var(--theme-bg)] text-center p-6 w-full absolute inset-0 z-50">
-      <div className="bg-[var(--theme-surface)] border border-[var(--border-main)] rounded-2xl shadow-xl p-8 max-w-sm w-full mx-auto flex flex-col items-center gap-6 animate-in zoom-in-95 duration-300">
-        <div className="w-16 h-16 bg-[var(--primary-100)] dark:bg-[var(--primary-900)] text-[var(--primary-600)] dark:text-[var(--primary-400)] rounded-full flex items-center justify-center mb-2">
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-          </svg>
+      <div className="bg-[var(--theme-surface)] border border-[var(--border-main)] rounded-2xl shadow-xl p-8 max-w-md w-full mx-auto flex flex-col items-center gap-6 animate-in zoom-in-95 duration-300">
+        <div className="flex justify-center mb-6 w-full px-2">
+          <Logo variant="white" className="h-[160px] md:h-[180px] w-full object-contain" />
         </div>
 
         <div className="space-y-2">
@@ -36,7 +35,7 @@ export const MinimalLogin: React.FC<{ auth: AuthProps }> = ({ auth }) => {
         {!showEmailForm ? (
           <div className="w-full flex flex-col gap-3">
             <LoginButton
-              onLogin={handleGoogleLogin}
+              onLogin={async () => { handleGoogleLogin(); }}
               label={t.loginGoogle}
             />
 

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const {
@@ -151,3 +152,4 @@ describe('notificationActionService', () => {
     expect(showSuccessMock).toHaveBeenCalledWith('Invitation declined.');
   });
 });
+

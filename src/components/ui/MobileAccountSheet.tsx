@@ -70,7 +70,7 @@ export const MobileAccountSheet = memo(({
   onOpenGlobalSettings,
 }: MobileAccountSheetProps) => {
   const { t } = useTranslation();
-  const text = t as Record<string, string>;
+  const text = t as unknown as Record<string, string>;
   const accountLabel = text.accountMenu || t.accountProfile;
 
   if (!isOpen) return null;

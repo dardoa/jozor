@@ -62,7 +62,7 @@ export const TimelineModal = ({ isOpen, onClose, people, onSelectPerson }: Timel
   const eventTypeMeta = useMemo<Record<TimelineEvent['type'], EventTypeMeta>>(
     () => ({
       birth: {
-        label: t.birth,
+        label: (t as any).births || (t as any).birth,
         chipClass: 'bg-emerald-50 text-emerald-700',
         iconWrapClass: 'bg-emerald-50 text-emerald-700',
         icon: Baby,

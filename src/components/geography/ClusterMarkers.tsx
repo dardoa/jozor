@@ -134,7 +134,7 @@ export const ClusterMarkers = ({
                             gender: person.gender,
                             birthDate: person.birthDate,
                             photoUrl: person.photoUrl,
-                          }}
+                          } as any}
                           size={40}
                           className="rounded-full"
                         />

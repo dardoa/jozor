@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { pruneActivityLogs, pruneTreeOperations } from '../operationalMaintenanceService';
 
@@ -86,3 +87,4 @@ describe('operationalMaintenanceService', () => {
     );
   });
 });
+

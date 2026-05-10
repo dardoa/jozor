@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { act } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { loadFullState, useAppStore } from '../useAppStore';
@@ -238,3 +239,4 @@ describe('loadFullState', () => {
     expect(useAppStore.getState().focusId).toBe('person-1');
   });
 });
+

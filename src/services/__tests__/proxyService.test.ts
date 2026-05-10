@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { fetchTreeMock } = vi.hoisted(() => ({
@@ -229,3 +230,4 @@ describe('proxyService.loadSharedFile', () => {
     ).rejects.toThrow('Your session has expired. Please sign in again.');
   });
 });
+

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { describe, expect, it } from 'vitest';
 import type { Person } from '../../types';
 import { buildFamilyGraph } from '../familyGraph';
@@ -96,3 +97,4 @@ describe('buildLayoutSemanticsSnapshot', () => {
     expect(snapshot.personRoles.shared.role).toBe('canonical');
   });
 });
+

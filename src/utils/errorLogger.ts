@@ -196,7 +196,7 @@ export function logError(
 
   if (showToast && toastMessage) {
     try {
-      showToast.error(toastMessage);
+      (showToast as any).error(toastMessage);
     } catch {
       // Toast fallback.
     }

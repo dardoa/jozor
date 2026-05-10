@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { JOZOR_SUPABASE_TOKEN_KEY } from '../supabaseConfig';
 import { authTokenService } from '../authTokenService';
@@ -38,4 +39,5 @@ describe('authTokenService', () => {
     expect(sessionReader).toHaveBeenCalledTimes(1);
   });
 });
+
 

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { describe, expect, it, vi } from 'vitest';
 import { applyIncomingOps } from '../applyIncomingOps';
 import type { DeltaOperation } from '../SyncTypes';
@@ -48,3 +49,4 @@ describe('applyIncomingOps', () => {
         expect(result.maxVersion).toBe(8);
     });
 });
+

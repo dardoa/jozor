@@ -14,7 +14,7 @@ export const applyOperationToMap = (people: Record<string, Person>, op: DeltaOpe
         switch (type) {
             case 'UPDATE_PROP': {
                 const { id, updates } = payload;
-                if (newPeople[id]) {
+                if (id && newPeople[id]) {
                     newPeople[id] = validatePerson({ ...newPeople[id], ...updates });
                 }
                 break;
@@ -46,21 +46,22 @@ export const applyOperationToMap = (people: Record<string, Person>, op: DeltaOpe
             }
             case 'DELETE_NODE': {
                 const { id } = payload;
+                if (!id) break;
                 delete newPeople[id];
                 // Clean up references in other nodes
                 Object.keys(newPeople).forEach(pid => {
                     const p = { ...newPeople[pid] };
                     let changed = false;
-                    if (p.parents?.includes(id)) { p.parents = p.parents.filter(x => x !== id); changed = true; }
-                    if (p.children?.includes(id)) { p.children = p.children.filter(x => x !== id); changed = true; }
-                    if (p.spouses?.includes(id)) { p.spouses = p.spouses.filter(x => x !== id); changed = true; }
+                    if (p.parents?.includes(id as string)) { p.parents = p.parents.filter(x => x !== id); changed = true; }
+                    if (p.children?.includes(id as string)) { p.children = p.children.filter(x => x !== id); changed = true; }
+                    if (p.spouses?.includes(id as string)) { p.spouses = p.spouses.filter(x => x !== id); changed = true; }
                     if (changed) newPeople[pid] = p;
                 });
                 break;
             }
             case 'ADD_RELATION': {
                 const { focusId, existingId, type: relType } = payload;
-                if (newPeople[focusId] && newPeople[existingId]) {
+                if (focusId && existingId && newPeople[focusId] && newPeople[existingId]) {
                     const personA = { ...newPeople[focusId] };
                     const personB = { ...newPeople[existingId] };
 
@@ -87,14 +88,14 @@ export const applyOperationToMap = (people: Record<string, Person>, op: DeltaOpe
             }
             case 'DELETE_RELATION': {
                 const { targetId, relativeId, type: relType } = payload;
-                if (newPeople[targetId]) {
+                if (targetId && newPeople[targetId]) {
                     const p = { ...newPeople[targetId] };
                     if (relType === 'parent') p.parents = p.parents?.filter(x => x !== relativeId);
                     if (relType === 'child') p.children = p.children?.filter(x => x !== relativeId);
                     if (relType === 'spouse') p.spouses = p.spouses?.filter(x => x !== relativeId);
                     newPeople[targetId] = p;
                 }
-                if (newPeople[relativeId]) {
+                if (relativeId && newPeople[relativeId]) {
                     const p = { ...newPeople[relativeId] };
                     if (relType === 'parent') p.children = p.children?.filter(x => x !== targetId);
                     if (relType === 'child') p.parents = p.parents?.filter(x => x !== targetId);

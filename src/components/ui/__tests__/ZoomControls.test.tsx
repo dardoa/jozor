@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { ZoomControls } from '../ZoomControls';
@@ -49,3 +50,4 @@ describe('ZoomControls', () => {
     expect(container.firstChild).not.toHaveClass('absolute');
   });
 });
+

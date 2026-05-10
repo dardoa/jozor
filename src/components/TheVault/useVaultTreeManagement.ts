@@ -148,7 +148,7 @@ export const useVaultTreeManagement = ({
       loading: 'messages.loading.open',
       success: 'messages.success.load',
       error: (err) => extractErrorText(err) || 'messages.error.open'
-    }).finally(() => {
+    }).unwrap().finally(() => {
       setBusyTreeId(null);
     });
   }, [currentUser, navigate, onTreeOpened, setCurrentTreeId, setCurrentUserRole, setVaultOpen]);
@@ -161,7 +161,7 @@ export const useVaultTreeManagement = ({
         import('../../utils/familyLogic'),
         import('../../services/supabaseTreeMutationService'),
       ]);
-      const rootPerson = { ...createPerson('male'), firstName: t.general?.me || 'Me', lastName: '' };
+      const rootPerson = { ...createPerson('male'), firstName: (t as any).general?.me || 'Me', lastName: '' };
       const newTreeId = await createTreeWithRootAtomic(
         currentUser.uid,
         currentUser.email,
@@ -177,10 +177,10 @@ export const useVaultTreeManagement = ({
       loading: 'messages.loading.save',
       success: 'messages.success.load',
       error: (err) => extractErrorText(err) || 'messages.error.load'
-    }).finally(() => {
+    }).unwrap().finally(() => {
       setBusyTreeId(null);
     });
-  }, [currentUser, handleOpenTree, t.general, t.newTreeName]);
+  }, [currentUser, handleOpenTree, (t as any).general, t.newTreeName]);
 
   const handleImportFile = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -203,7 +203,7 @@ export const useVaultTreeManagement = ({
       loading: 'messages.loading.import',
       success: 'messages.success.importSuccess',
       error: (err) => extractErrorText(err) || 'messages.error.import'
-    }).finally(() => {
+    }).unwrap().finally(() => {
       setBusyTreeId(null);
       if (fileInputRef.current) fileInputRef.current.value = '';
     });
@@ -228,7 +228,7 @@ export const useVaultTreeManagement = ({
       success: 'messages.success.rename',
       options: { variables: { name: trimmedName } },
       error: (err) => extractErrorText(err) || 'messages.error.rename'
-    }).finally(() => {
+    }).unwrap().finally(() => {
       setBusyTreeId(null);
     });
   }, [currentTreeId, currentUser, editTreeName, loadTrees, setTreeName]);
@@ -252,7 +252,7 @@ export const useVaultTreeManagement = ({
       loading: 'messages.loading.delete',
       success: 'messages.success.delete',
       error: (err) => extractErrorText(err) || 'messages.error.delete'
-    }).finally(() => {
+    }).unwrap().finally(() => {
       setBusyTreeId(null);
     });
   }, [currentTreeId, currentUser, deleteTreeId, loadTrees, navigate, setCurrentTreeId]);

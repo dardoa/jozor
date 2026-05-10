@@ -326,7 +326,7 @@ function getOrCreateParentNode(
     role.type !== 'spouse' &&
     Boolean(canonicalOriginFamilyId) &&
     canonicalOriginFamilyId !== familyId &&
-    semantics.familyDecisions[canonicalOriginFamilyId]?.renderMode === 'canonical';
+    semantics.familyDecisions[canonicalOriginFamilyId as string]?.renderMode === 'canonical';
   const isFemaleLineageReference = people?.[personId]?.gender === 'female';
   const shouldRenderAsLocalReference =
     personId !== familyOwnerId &&

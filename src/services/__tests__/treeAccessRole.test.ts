@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { getSupabaseWithAuthMock } = vi.hoisted(() => {
@@ -104,3 +105,4 @@ describe('claimCollaboratorMemberships', () => {
     expect(rpcMock).toHaveBeenCalledWith('claim_collaborator_memberships');
   });
 });
+

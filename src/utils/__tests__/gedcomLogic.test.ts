@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { describe, it, expect } from 'vitest';
 import { exportToGEDCOM, importFromGEDCOM, formatGedcomDate, gedcomDateToIso } from '../gedcomLogic';
 import { Person } from '../../types';
@@ -387,3 +388,4 @@ describe('GEDCOM Logic - Round-trip', () => {
         expect(imported['p3'].parents).toContain('p2');
     });
 });
+

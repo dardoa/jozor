@@ -154,7 +154,7 @@ export const Checkbox = ({ label, value, onChange, icon: Icon }: CheckboxProps) 
                         backgroundColor: value ? 'rgba(255,255,255,0.14)' : 'transparent',
                     }}
                 >
-                    <Icon className="h-3.5 w-3.5" style={{ color: value ? '#FFFFFF' : 'var(--text-dim)' }} />
+                    <Icon {...{ className: "h-3.5 w-3.5", color: value ? '#FFFFFF' : 'var(--text-dim)' } as any} />
                 </div>
             )}
             <span className="text-xs font-semibold leading-none" style={{ color: value ? '#FFFFFF' : 'var(--text-dim)' }}>{label}</span>
@@ -172,7 +172,7 @@ export const SliderField = ({ label, value, onChange, min, max, step, unit, icon
     <div className="flex flex-col gap-2 px-3 py-2">
         <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-                {Icon && <Icon className="h-3.5 w-3.5" style={{ color: 'var(--color-accent-500)' }} />}
+                {Icon && <Icon {...{ className: "h-3.5 w-3.5", color: "var(--color-accent-500)" } as any} />}
                 <span className="text-sm font-medium" style={{ color: 'var(--text-dim)' }}>{label}</span>
             </div>
             <span className="text-xs font-bold" style={{ color: 'var(--color-accent-500)' }}>{valueLabel ?? `${value}${unit}`}</span>

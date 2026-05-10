@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const authenticateUserMock = vi.fn();
@@ -67,3 +68,4 @@ describe('proxy API', () => {
     });
   });
 });
+

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React from 'react';
 import { render } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -138,3 +139,4 @@ describe('FamilyTreeChartRenderer memoization', () => {
     expect(v3ChartMock).toHaveBeenCalledTimes(1);
   });
 });
+

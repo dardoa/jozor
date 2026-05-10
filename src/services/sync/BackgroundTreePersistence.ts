@@ -39,7 +39,7 @@ export class BackgroundTreePersistence {
         }
 
         const idleWindow = window as IdleWindow;
-        if (idleWindow.requestIdleCallback) {
+        if ((idleWindow as any).requestIdleCallback) {
             this.idleHandle = idleWindow.requestIdleCallback(
                 () => void this.flush(),
                 { timeout: IDLE_TIMEOUT_MS }
@@ -55,7 +55,7 @@ export class BackgroundTreePersistence {
 
         if (typeof window !== 'undefined') {
             const idleWindow = window as IdleWindow;
-            if (idleWindow.cancelIdleCallback && idleWindow.requestIdleCallback) {
+            if (typeof (idleWindow as any).cancelIdleCallback === 'function' && typeof (idleWindow as any).requestIdleCallback === 'function') {
                 idleWindow.cancelIdleCallback(this.idleHandle);
             } else {
                 window.clearTimeout(this.idleHandle);

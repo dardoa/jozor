@@ -20,6 +20,7 @@ export const LoginButton: React.FC<LoginButtonProps> = memo(({ onLogin, label })
   };
 
   return (
+    <>
     <Button
       onClick={handleClick}
       disabled={isLoading}
@@ -50,5 +51,26 @@ export const LoginButton: React.FC<LoginButtonProps> = memo(({ onLogin, label })
       )}
       <span>{label}</span>
     </Button>
+    {isLoading && (
+      <div className='fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[var(--theme-bg)] animate-in fade-in duration-300'>
+        <style>
+          {`
+            @keyframes jozor-pulse {
+              0%, 100% { transform: scale(0.9); opacity: 0.6; }
+              50% { transform: scale(1.1); opacity: 1; }
+            }
+            .animate-jozor-pulse {
+              animation: jozor-pulse 2s ease-in-out infinite;
+            }
+          `}
+        </style>
+        <img 
+          src="/jozor-icon.svg" 
+          alt="Loading..." 
+          className="w-[180px] h-[180px] md:w-[220px] md:h-[220px] animate-jozor-pulse object-contain drop-shadow-2xl"
+        />
+      </div>
+    )}
+    </>
   );
 });

@@ -123,7 +123,7 @@ export const TreeSelector: React.FC<TreeSelectorProps> = ({
       setCreating(true);
       const rootPerson = {
         ...createPerson('male'),
-        firstName: t.general?.me || 'Me',
+        firstName: (t as any).general?.me || 'Me',
         lastName: '',
       };
       const newTreeId = await createTreeWithRootAtomic(ownerId, userEmail, t.newTreeName, rootPerson, supabaseToken);

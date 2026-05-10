@@ -60,8 +60,8 @@ export const Sidebar = memo<SidebarProps>(
 
     // Reset tab if partners tab becomes invalid
     useEffect(() => {
-      if (activeTab === 'partners' && spouseCount === 0) {
-        const timer = setTimeout(() => setActiveTab('info'), 0);
+      if ((activeTab as string) === 'partners' && spouseCount === 0) {
+        const timer = setTimeout(() => setActiveTab('info' as any), 0);
         return () => clearTimeout(timer);
       }
       return undefined;
@@ -185,7 +185,7 @@ export const Sidebar = memo<SidebarProps>(
             </div>
           ) : (
             <>
-              {activeTab === 'info' && (
+              {(activeTab as string) === 'info' && (
                 <div id="sidebar-panel-info" role="tabpanel" aria-labelledby="sidebar-tab-info">
                   <InfoTab
                     person={person}
@@ -194,23 +194,23 @@ export const Sidebar = memo<SidebarProps>(
                     canEdit={canEdit}
                     onUpdate={onUpdate}
                     onSelect={onSelect}
-                    onOpenModal={onOpenModal}
+                    onOpenModal={onOpenModal as any}
                     familyActions={familyActions}
                     settings={settings}
                   />
                 </div>
               )}
-              {activeTab === 'partners' && (
+              {(activeTab as string) === 'partners' && (
                 <div id="sidebar-panel-partners" role="tabpanel" aria-labelledby="sidebar-tab-partners">
                   <PartnersTab person={person} people={people} onSelect={onSelect} isEditing={isEditing} onUpdate={onUpdate} />
                 </div>
               )}
-              {activeTab === 'bio' && (
+              {(activeTab as string) === 'bio' && (
                 <div id="sidebar-panel-bio" role="tabpanel" aria-labelledby="sidebar-tab-bio">
                   <BioTab person={person} onUpdate={onUpdate} people={people} isEditing={isEditing} />
                 </div>
               )}
-              {activeTab === 'contact' && (
+              {(activeTab as string) === 'contact' && (
                 <div id="sidebar-panel-contact" role="tabpanel" aria-labelledby="sidebar-tab-contact">
                   <ContactTab person={person} onUpdate={onUpdate} isEditing={isEditing} />
                 </div>

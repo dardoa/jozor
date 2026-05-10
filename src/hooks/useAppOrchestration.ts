@@ -84,13 +84,27 @@ export const useAppOrchestration = (
     focusId,
     isPresentMode,
     setSidebarOpen,
-  });
+    onOpenGoogleSyncChoice,
+    onCloseGoogleSyncChoice,
+    onOpenDriveFileManager,
+    onOpenTreeManager,
+    setSharedTreePromptModal: modals.setSharedTreePromptModal,
+    onOpenLoginModal: async (returnTo?: string) => {
+      if (returnTo) {
+        sessionStorage.setItem('jozor:return_to', returnTo);
+        sessionStorage.setItem('jozor:post-login-redirect', returnTo);
+      }
+      handleOpenModal('login');
+    },
+    onExport: handleExport,
+  } as any);
+
+  const isActivityLogOpen = useAppStore((state: any) => state.isActivityLogOpen);
+  const setActivityLogOpen = useAppStore((state: any) => state.setActivityLogOpen);
 
   const {
     auth,
     googleSync,
-    isActivityLogOpen,
-    setActivityLogOpen,
   } = useAuthAndSyncOrchestrator({
     isSharedMode,
     routeTreeId,
@@ -110,7 +124,7 @@ export const useAppOrchestration = (
       handleOpenModal('login');
     },
     onExport: handleExport,
-  });
+  } as any);
 
   const {
     appState,

@@ -8,7 +8,7 @@ import type {
 } from '../../types';
 import type { TreeSummary, SharedTreeSummary } from '../../services/supabaseTreeTypes';
 import type { TranslationSchema } from '../../utils/translationLoader';
-import type { VaultTreePanelLabels } from './VaultTreesPanel';
+import type { VaultTreesPanelLabels } from './VaultTreesPanel';
 import type { TreeRow } from './TreeListItem';
 
 export type VaultTab = 'cloud' | 'security' | 'export-data' | 'export-visual' | 'trees' | 'members' | 'stats';
@@ -51,7 +51,7 @@ export interface VaultRenderContext {
   editingTreeId: string | null;
   editTreeName: string;
   isPasswordResetting: boolean;
-  treePanelLabels: VaultTreePanelLabels;
+  treePanelLabels: VaultTreesPanelLabels;
   onCloseVault: () => void;
   onOpenTool: (modalType: Parameters<ToolsActionsProps['onOpenModal']>[0]) => void;
   onResetPassword: () => void;

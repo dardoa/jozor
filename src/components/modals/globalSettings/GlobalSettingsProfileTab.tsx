@@ -36,7 +36,7 @@ export const GlobalSettingsProfileTab = ({
         onClick={handleAvatarClick}
       >
         <div className="flex h-32 w-32 items-center justify-center overflow-hidden rounded-[var(--radius-2xl)] border border-[var(--border-soft)] bg-[var(--surface-panel-subtle)] shadow-[var(--shadow-md)]">
-          {user.photoURL ? (
+          {user?.photoURL ? (
             <img src={user.photoURL} alt={t.avatarAlt} className="w-full h-full object-cover" />
           ) : (
             <User className="w-12 h-12 text-[var(--text-dim)]" />
@@ -62,8 +62,8 @@ export const GlobalSettingsProfileTab = ({
         />
       </div>
       <div className="text-center">
-        <h3 className="font-bold text-[var(--text-main)]">{user.displayName}</h3>
-        <p className="text-xs text-[var(--text-dim)]">{user.email}</p>
+        <h3 className="font-bold text-[var(--text-main)]">{user?.displayName}</h3>
+        <p className="text-xs text-[var(--text-dim)]">{user?.email}</p>
       </div>
     </div>
 
@@ -71,7 +71,7 @@ export const GlobalSettingsProfileTab = ({
       <FormField
         label={t.globalSettings.profile.displayName}
         value={displayName}
-        onCommit={setDisplayName}
+        onCommit={(v) => setDisplayName(v as string)}
       />
       <Button
         className="w-full h-12 rounded-2xl font-bold"

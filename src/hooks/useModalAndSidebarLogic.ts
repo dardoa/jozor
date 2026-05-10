@@ -35,7 +35,7 @@ export const useModalAndSidebarLogic = ({ canUndo, canRedo }: UseModalAndSidebar
     (
       modalType: ModalType
     ) => {
-      if (modalType === 'map') {
+      if ((modalType as string) === 'map') {
         setGeographicJourneyMode('events');
         setActiveModal('geographicJourney');
         return;

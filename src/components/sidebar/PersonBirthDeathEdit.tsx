@@ -91,7 +91,7 @@ export const PersonBirthDeathEdit = memo<PersonBirthDeathEditProps>(({ person, o
               <FormField
                 label=''
                 value={person.birthSource}
-                onCommit={(v: string) => handleChange('birthSource', v)}
+                onCommit={(v) => handleChange('birthSource', v as string)}
                 placeholder={t.sourcePlaceholder}
                 className='!h-7 !text-xs placeholder:italic'
                 labelWidthClass='hidden'
@@ -142,7 +142,7 @@ export const PersonBirthDeathEdit = memo<PersonBirthDeathEditProps>(({ person, o
                   <FormField
                     label=''
                     value={person.deathSource}
-                    onCommit={(v: string) => handleChange('deathSource', v)}
+                    onCommit={(v) => handleChange('deathSource', v as string)}
                     placeholder={t.sourcePlaceholder}
                     className='!h-7 !text-xs placeholder:italic'
                     labelWidthClass='hidden'

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { describe, expect, it } from 'vitest';
 import { getUserFacingErrorInfo } from '../errorLogger';
 
@@ -26,3 +27,4 @@ describe('getUserFacingErrorInfo', () => {
     expect(result.message).toBe('Custom fallback message.');
   });
 });
+

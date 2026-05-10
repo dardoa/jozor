@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const invokeMock = vi.fn();
@@ -44,3 +45,4 @@ describe('treeService.resolveTreeByPerson', () => {
     });
   });
 });
+

@@ -71,7 +71,7 @@ export const ActiveModalRenderer = ({ modal, locations }: ActiveModalRendererPro
         isOpen={true}
         onClose={closeModal}
         people={modal.people}
-        locations={locations}
+        locations={locations as any}
         language={modal.language}
         initialMode={modal.geographicJourneyMode}
         onSelectPerson={(id) => {

@@ -125,7 +125,7 @@ export const DateSelect: React.FC<DateSelectProps> = memo(({ value, onChange, on
         disabled={disabled || !month} // Disable day if no month selected
         className={`w-12 ${inputBaseClass} ${disabledClass}`}
       >
-        <option value=''>{t.date?.day}</option>
+        <option value=''>{(t as any).date?.day}</option>
         {days.map((d) => (
           <option key={d} value={d}>
             {parseInt(d)}
@@ -141,7 +141,7 @@ export const DateSelect: React.FC<DateSelectProps> = memo(({ value, onChange, on
         disabled={disabled}
         className={`w-16 ${inputBaseClass} ${disabledClass}`}
       >
-        <option value=''>{t.date?.month}</option>
+        <option value=''>{(t as any).date?.month}</option>
         {months.map((m) => (
           <option key={m.v} value={m.v}>
             {m.l}
@@ -156,7 +156,7 @@ export const DateSelect: React.FC<DateSelectProps> = memo(({ value, onChange, on
         onChange={handleYearChange}
         onBlur={handleBlur}
         disabled={disabled}
-        placeholder={t.date?.year}
+        placeholder={(t as any).date?.year}
         maxLength={4}
         className={`w-16 text-center ${inputBaseClass} ${disabledClass}`}
       />

@@ -77,8 +77,8 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(
             </div>
 
             <div className='ds-panel relative rounded-[var(--radius-2xl)] p-6 text-center shadow-[var(--shadow-lg)] sm:p-8'>
-              <div className='mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-[var(--radius-xl)] border border-[var(--primary-600)]/18 bg-[var(--primary-600)]/10 shadow-[var(--shadow-sm)] ring-4 ring-[var(--primary-600)]/8'>
-                <Logo className='h-10 w-10 text-[var(--primary-600)]' />
+              <div className='mx-auto mb-6 flex justify-center w-full'>
+                <Logo variant="white" className='h-[160px] md:h-[180px] w-full object-contain' />
               </div>
 
               <h2 className='text-2xl font-black tracking-tight text-[var(--text-main)]'>

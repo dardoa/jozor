@@ -1,4 +1,4 @@
-﻿import React, { memo } from 'react';
+import React, { memo } from 'react';
 import { Undo, Redo, Menu, X } from 'lucide-react';
 import { Logo } from '../Logo';
 import { HeaderLeftSectionProps } from '../../types';
@@ -31,12 +31,9 @@ export const HeaderLeftSection: React.FC<HeaderLeftSectionProps> = memo(
           role='link'
           aria-label={t.appTitle}
         >
-          <div className='bg-[var(--primary-600)]/10 p-2 rounded-xl border border-[var(--primary-600)]/20 shadow-sm hidden md:block group-hover:scale-105 transition-transform'>
-            <Logo className='w-6 h-6 text-[var(--primary-600)]' />
+          <div className='block group-hover:scale-105 transition-transform'>
+            <Logo variant="dark" className='h-[40px] md:h-[55px] w-auto max-w-[140px] sm:max-w-[220px] object-contain' />
           </div>
-          <h1 className='text-xl font-bold tracking-tight font-sans text-[var(--text-main)] hidden sm:block'>
-            {t.appTitle}
-          </h1>
         </div>
 
         {/* History Controls */}

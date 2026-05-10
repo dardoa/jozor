@@ -1,7 +1,12 @@
 import React, { useState, memo } from 'react';
 import { useTranslation } from '../context/TranslationContext';
 
-export const Logo: React.FC<{ className?: string }> = memo(({ className }) => {
+export interface LogoProps {
+  className?: string;
+  variant?: 'dark' | 'white';
+}
+
+export const Logo: React.FC<LogoProps> = memo(({ className = '', variant = 'dark' }) => {
   const { t } = useTranslation();
   const [imgError, setImgError] = useState(false);
 
@@ -30,11 +35,16 @@ export const Logo: React.FC<{ className?: string }> = memo(({ className }) => {
     );
   }
 
+  const logoSrc = variant === 'white' ? '/logo-bilingual-white.svg' : '/logo-bilingual-dark.svg';
+  // القيمة التقريبية للـ aspect-ratio لتجنب الـ Layout Shift (يمكن تعديلها لو كانت أبعاد الشعار مختلفة)
+  const ratio = '10 / 3'; 
+
   return (
     <img
-      src='/logo.svg'
-      alt={t.logoAlt}
+      src={logoSrc}
+      alt={t.logoAlt || 'شعار جذور - Jozor Logo'}
       className={`object-contain ${className}`}
+      style={{ aspectRatio: ratio }}
       onError={() => setImgError(true)}
     />
   );

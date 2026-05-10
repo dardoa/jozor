@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useAppOrchestration } from '../useAppOrchestration';
@@ -100,3 +101,4 @@ describe('useAppOrchestration Integration', () => {
         expect(result.current.appState.people[targetId].lastName).toBe('Name');
     });
 });
+

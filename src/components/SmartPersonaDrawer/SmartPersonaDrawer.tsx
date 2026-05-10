@@ -82,7 +82,7 @@ export const SmartPersonaDrawer = memo<SmartPersonaDrawerProps>(
     });
 
     const handleAboutModalOpen = useCallback((modalType: AboutModalType) => {
-      onOpenModal(modalType);
+      onOpenModal(modalType as any);
     }, [onOpenModal]);
 
     return (

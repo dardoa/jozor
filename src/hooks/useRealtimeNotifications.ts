@@ -124,14 +124,14 @@ export const useRealtimeNotifications = (
           if (!alreadyExists) {
             addedNotificationCount += 1;
             deliverNotificationWithPolicy(
-              addNotification,
+              addNotification as any,
               createPendingInvitationNotificationSpec({
                 isRtl: language === 'ar',
                 invitationId: invitation.id,
                 treeId: invitation.tree_id,
                 ownerUid: invitation.invited_by,
                 role: invitation.role,
-                status: invitation.status,
+                status: 'pending',
                 source: 'invitation-hydration',
                 expiresAt: invitation.expires_at,
               })
@@ -176,21 +176,21 @@ export const useRealtimeNotifications = (
 
         if (invitation.status === 'pending') {
           deliverNotificationWithPolicy(
-            addNotification,
+            addNotification as any,
             createPendingInvitationNotificationSpec({
               isRtl: language === 'ar',
               invitationId: invitation.id,
               treeId: invitation.tree_id,
               ownerUid: invitation.invited_by,
               role: invitation.role,
-              status: invitation.status,
+              status: 'pending',
               source: 'invitation-realtime',
               expiresAt: invitation.expires_at,
             })
           );
         } else if (invitation.status === 'accepted') {
           deliverNotificationWithPolicy(
-            addNotification,
+            addNotification as any,
             createAcceptedSelfNotificationSpec({
               isRtl: language === 'ar',
               invitationId: invitation.id,
@@ -244,7 +244,7 @@ export const useRealtimeNotifications = (
         });
 
         deliverNotificationWithPolicy(
-          addNotification,
+          addNotification as any,
           createOwnerInvitationOutcomeNotificationSpec({
             isRtl: language === 'ar',
             invitationId: invitation.id,
@@ -279,7 +279,7 @@ export const useRealtimeNotifications = (
             const role = (log.details.role as string | undefined) || 'viewer';
 
             deliverNotificationWithPolicy(
-              addNotification,
+              addNotification as any,
               createOwnerInvitationOutcomeNotificationSpec({
                 isRtl: language === 'ar',
                 invitationId: String(log.details.invitationId ?? 'unknown'),
@@ -309,7 +309,7 @@ export const useRealtimeNotifications = (
         const hourBucket = getChangeBucketHour(operation.created_at);
         const copy = getTreeChangeCopy(language === 'ar', operation.type);
 
-        deliverNotificationWithPolicy(addNotification, {
+        deliverNotificationWithPolicy(addNotification as any, {
           notification: {
             type: 'info',
             source: 'tree-realtime',

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -90,3 +91,4 @@ describe('BioSourcesSection', () => {
     expect(screen.queryByRole('link')).not.toBeInTheDocument();
   });
 });
+

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
@@ -95,3 +96,4 @@ describe('LinkPersonModal', () => {
     expect(screen.getAllByText('Only Spouse').length).toBeGreaterThan(0);
   });
 });
+

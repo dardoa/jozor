@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { searchService } from '../searchService';
 import { Person } from '../../types';
@@ -51,3 +52,4 @@ describe('Inference Search Service', () => {
     expect(results.length).toBe(0);
   });
 });
+

@@ -53,7 +53,7 @@ export const SnapshotHistoryModal: React.FC<SnapshotHistoryModalProps> = ({
 
         <SnapshotHistoryCreateSection
           label={t.versions.create}
-          placeholder={t.versions.snapshotLabelPlaceholder}
+          placeholder={(t as any).versions?.snapshotLabelPlaceholder}
           saveLabel={t.versions.save}
           newLabel={newLabel}
           isCreating={isCreating}

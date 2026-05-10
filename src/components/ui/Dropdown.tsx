@@ -151,7 +151,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
             'aria-haspopup': 'menu',
             'aria-expanded': isOpen,
             'aria-controls': isOpen ? contentId : undefined,
-          })
+          } as any)
         : (
           <button
             type="button"

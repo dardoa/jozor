@@ -61,7 +61,7 @@ export const useDrivePersistence = ({
           throw new Error('File is empty or corrupted');
         }
 
-        loadDrivePayloadIntoStore(cloudData);
+        loadDrivePayloadIntoStore(cloudData as any);
 
         setCurrentActiveDriveFileId(fileId);
         showToast.success('File loaded successfully from Google Drive.');

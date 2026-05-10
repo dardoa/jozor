@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { fireEvent, render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { describe, expect, it, vi } from 'vitest';
@@ -47,3 +48,4 @@ describe('HeaderLeftSection', () => {
     expect(baseProps.toggleSidebar).toHaveBeenCalledTimes(1);
   });
 });
+

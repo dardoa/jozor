@@ -44,7 +44,7 @@ export const EmailLoginForm: React.FC<EmailLoginFormProps> = ({ onSuccess, onCan
         const loadingMsg = mode === 'login' ? 'messages.loading.load' : mode === 'signup' ? 'messages.loading.save' : 'messages.loading.load';
         const successMsg = mode === 'login' ? 'loginSuccess' : mode === 'signup' ? 'loginSuccess' : 'resetSuccess';
 
-        showToast.promise(authAction(), {
+        showToast.promise(authAction().finally(() => setAuthLoading(false)), {
             loading: loadingMsg,
             success: (data) => {
                 if (mode === 'login' || mode === 'signup') {
@@ -55,7 +55,6 @@ export const EmailLoginForm: React.FC<EmailLoginFormProps> = ({ onSuccess, onCan
                 return successMsg;
             },
             error: (err: any) => err instanceof Error ? err.message : 'authErrors.generic',
-            finally: () => setAuthLoading(false),
         });
     };
 

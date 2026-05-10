@@ -81,9 +81,9 @@ export const MobileTreeSheet = memo(({
   showCleanTree,
 }: MobileTreeSheetProps) => {
   const { t } = useTranslation();
-  const settingsText = t.settings as Record<string, string>;
+  const settingsText = t.settings as unknown as Record<string, string>;
   const diagnosticsLabel = settingsText.diagnostics || 'Diagnostics';
-  const treeLabel = (t as Record<string, string>).treeMenu || 'Tree';
+  const treeLabel = (t as unknown as Record<string, string>).treeMenu || 'Tree';
 
   if (!isOpen) return null;
 
@@ -110,12 +110,12 @@ export const MobileTreeSheet = memo(({
         <div className="flex-1 space-y-5 overflow-y-auto bg-[var(--surface-app)]/70 p-4">
           <section className="space-y-3">
             <h3 className="px-1 text-[11px] font-bold uppercase tracking-wider text-[var(--text-dim)] opacity-50">
-              {(t as Record<string, string>).treeControlCenterTitle || 'Tree Control Center'}
+              {(t as unknown as Record<string, string>).treeControlCenterTitle || 'Tree Control Center'}
             </h3>
             <SheetAction
               icon={<FolderTree className="h-5 w-5" />}
-              label={(t as Record<string, string>).treeControlCenterTitle || 'Tree Control Center'}
-              subLabel={(t as Record<string, string>).treeControlCenterHint || 'Open the new unified workspace for overview, access, versions, and diagnostics.'}
+              label={(t as unknown as Record<string, string>).treeControlCenterTitle || 'Tree Control Center'}
+              subLabel={(t as unknown as Record<string, string>).treeControlCenterHint || 'Open the new unified workspace for overview, access, versions, and diagnostics.'}
               onClick={closeThen(onOpenTreeControlCenter)}
             />
           </section>

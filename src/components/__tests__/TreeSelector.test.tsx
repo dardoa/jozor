@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
@@ -125,3 +126,4 @@ describe('TreeSelector', () => {
     expect(mockShowSuccess).toHaveBeenCalledWith('messages.success.load');
   });
 });
+

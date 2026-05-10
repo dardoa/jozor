@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React from 'react';
 import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
@@ -80,3 +81,4 @@ describe('useModalOrchestrator', () => {
     expect(journeyMode.textContent).toBe('migration');
   });
 });
+

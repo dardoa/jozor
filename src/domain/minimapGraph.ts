@@ -1,4 +1,4 @@
-import type { HelperConcreteChartType, TreeLink, TreeNode } from '../types';
+import type { TreeLink, TreeNode } from '../types';
 
 export interface MinimapNode {
   id: string;
@@ -18,7 +18,7 @@ export interface MinimapLink {
 
 export interface MinimapGraph {
   source: 'layout';
-  chartType: HelperConcreteChartType;
+  chartType: any;
   focusPersonId: string;
   nodes: MinimapNode[];
   links: MinimapLink[];
@@ -39,7 +39,7 @@ export const buildMinimapGraphFromLayout = ({
   links,
   focusId,
 }: {
-  chartType: HelperConcreteChartType;
+  chartType: any;
   nodes: TreeNode[];
   links: TreeLink[];
   focusId: string;

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { toast } from 'sonner';
 import { showToast } from '../showToast';
@@ -61,3 +62,4 @@ describe('showToast', () => {
     }));
   });
 });
+

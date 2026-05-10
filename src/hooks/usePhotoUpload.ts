@@ -60,13 +60,12 @@ export const usePhotoUpload = (): UsePhotoUploadReturn => {
       treeActions.updatePerson(personId, { 
         photoUrl: uploadResult.publicUrl,
         photoPath: uploadResult.photoPath,
-        photoVersion: uploadResult.photoVersion,
-        avatarUrl: ''
+        photoVersion: uploadResult.photoVersion
       });
 
       showToast.success('Photo uploaded successfully');
     } catch (error: unknown) {
-      logError('PHOTO_UPLOAD_FAILED', error, { showToast: false, personId, treeId: currentTreeId });
+      logError('PHOTO_UPLOAD_FAILED', error, { showToast: false, metadata: { personId, treeId: currentTreeId } });
       const msg = error instanceof Error ? error.message : 'Unknown error';
       showToast.error(`Failed to upload photo: ${msg}`);
     } finally {
@@ -96,13 +95,12 @@ export const usePhotoUpload = (): UsePhotoUploadReturn => {
       treeActions.updatePerson(personId, { 
         photoUrl: '', 
         photoPath: '', 
-        photoVersion: 0,
-        avatarUrl: ''
+        photoVersion: 0
       });
 
       showToast.success('photoRemoved');
     } catch (error: unknown) {
-      logError('PHOTO_DELETE_FAILED', error, { showToast: false, personId, treeId: currentTreeId });
+      logError('PHOTO_DELETE_FAILED', error, { showToast: false, metadata: { personId, treeId: currentTreeId } });
       showToast.error('Failed to remove photo from server');
     } finally {
       setIsUploading(false);

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { describe, expect, it } from 'vitest';
 import type { Person } from '../../types';
 import { DEFAULT_PERSON_TEMPLATE } from '../../constants';
@@ -54,3 +55,4 @@ describe('relationshipRules', () => {
     expect(resolveCoParentForLinkedChild(people, 'focus', 'child', 'manual-spouse')).toBe('manual-spouse');
   });
 });
+

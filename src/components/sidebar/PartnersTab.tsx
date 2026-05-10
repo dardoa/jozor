@@ -149,7 +149,7 @@ export const PartnersTab = memo<PartnersTabProps>(
                       <FormField
                         label={t.place}
                         value={details.startPlace || EMPTY_STRING}
-                        onCommit={(v: string) => handlePartnerUpdate(spouseId, 'startPlace', v)}
+                        onCommit={(v) => handlePartnerUpdate(spouseId, 'startPlace', v as string)}
                         disabled={!isEditing}
                         placeholder={t.place}
                         className='!h-7 !text-xs'
@@ -173,7 +173,7 @@ export const PartnersTab = memo<PartnersTabProps>(
                           <FormField
                             label={t.place}
                             value={details.endPlace || EMPTY_STRING}
-                            onCommit={(v: string) => handlePartnerUpdate(spouseId, 'endPlace', v)}
+                            onCommit={(v) => handlePartnerUpdate(spouseId, 'endPlace', v as string)}
                             disabled={!isEditing}
                             placeholder={t.place}
                             className='!h-7 !text-xs'

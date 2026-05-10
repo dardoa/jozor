@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DEFAULT_PERSON_TEMPLATE } from '../../constants';
@@ -126,3 +127,4 @@ describe('useFamilyTreeLayoutController highlightedPath stability', () => {
     expect(result.current.highlightedPath?.has(grandchild.id)).toBe(true);
   });
 });
+

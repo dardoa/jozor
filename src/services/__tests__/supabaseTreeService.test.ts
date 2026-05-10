@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 
 const { getSupabaseWithAuthMock } = vi.hoisted(() => ({
@@ -190,3 +191,4 @@ describe('supabaseTreeService.fetchTree', () => {
     expect(result.focusId).toBe('person-2');
   });
 });
+

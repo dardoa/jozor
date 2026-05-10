@@ -159,19 +159,19 @@ const resolveMessage = (keyOrMessage: string, options?: ToastOptions) => {
 
 export const showToast = {
   success: (key: TranslationKey | Omit<string, TranslationKey>, options?: ToastOptions) => {
-    toast.success(resolveMessage(key, options), options);
+    toast.success(resolveMessage(key as string, options), options);
   },
   error: (key: TranslationKey | Omit<string, TranslationKey>, options?: ToastOptions) => {
-    toast.error(resolveMessage(key, options), options);
+    toast.error(resolveMessage(key as string, options), options);
   },
   info: (key: TranslationKey | Omit<string, TranslationKey>, options?: ToastOptions) => {
-    toast.info(resolveMessage(key, options), options);
+    toast.info(resolveMessage(key as string, options), options);
   },
   warning: (key: TranslationKey | Omit<string, TranslationKey>, options?: ToastOptions) => {
-    toast.warning(resolveMessage(key, options), options);
+    toast.warning(resolveMessage(key as string, options), options);
   },
   loading: (key: TranslationKey | Omit<string, TranslationKey>, options?: ToastOptions) => {
-    return toast.loading(resolveMessage(key, options), options);
+    return toast.loading(resolveMessage(key as string, options), options);
   },
   promise: <T>(
     promise: Promise<T> | (() => Promise<T>),

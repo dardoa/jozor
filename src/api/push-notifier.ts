@@ -38,8 +38,8 @@ const buildPayload = (body: Required<Pick<PushNotifierBody, 'title' | 'body'>> &
   JSON.stringify({
     title: body.title,
     body: body.body,
-    icon: body.icon || '/logo.svg',
-    badge: body.badge || '/logo.svg',
+    icon: body.icon || '/favicon.png',
+    badge: body.badge || '/favicon.png',
     tag: body.tag || 'jozor-push-notification',
     data: {
       url: body.url || '/',

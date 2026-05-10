@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { MobileActionBar } from '../MobileActionBar';
@@ -42,3 +43,4 @@ describe('MobileActionBar', () => {
     expect(activeButton).toHaveAttribute('aria-current', 'page');
   });
 });
+

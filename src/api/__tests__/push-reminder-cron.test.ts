@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const listSubscribedUserIdsServerMock = vi.fn();
@@ -197,3 +198,4 @@ describe('push-reminder-cron API', () => {
     );
   });
 });
+

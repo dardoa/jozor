@@ -33,19 +33,19 @@ export const useGallery = (): UseGalleryReturn => {
         file,
         uid: user.uid,
         email: user.email,
-        token: useAppStore.getState().supabaseToken || undefined
+        token: (useAppStore.getState() as any).supabaseToken || undefined
       });
 
       const person = useAppStore.getState().people[personId];
       const currentGallery = Array.isArray(person?.gallery) ? person.gallery : [];
       
       treeActions.updatePerson(personId, {
-        gallery: [...currentGallery, newItem]
+        gallery: [...currentGallery, newItem] as any
       });
 
       showToast.success('Photo added to gallery');
     } catch (error: unknown) {
-      logError('GALLERY_UPLOAD_FAILED', error, { personId, treeId: currentTreeId });
+      logError('GALLERY_UPLOAD_FAILED', error, { metadata: { personId, treeId: currentTreeId } });
       showToast.error('Failed to upload to gallery');
     } finally {
       setIsUploading(false);
@@ -69,13 +69,13 @@ export const useGallery = (): UseGalleryReturn => {
       const { SupabaseGalleryService } = await import('../services/supabaseGalleryService');
       
       // 1. Physical delete from Storage
-      if (itemToRemove.path) {
-        await SupabaseGalleryService.deleteFromGallery(
-          itemToRemove.path,
-          user.uid,
-          user.email,
-          useAppStore.getState().supabaseToken || undefined
-        );
+      if ((itemToRemove as any).path) {
+        await SupabaseGalleryService.deleteGalleryItem({
+          path: (itemToRemove as any).path,
+          uid: user.uid,
+          email: user.email,
+          token: (useAppStore.getState() as any).supabaseToken || undefined
+        });
       }
 
       // 2. Metadata update in DB
@@ -89,7 +89,7 @@ export const useGallery = (): UseGalleryReturn => {
 
       showToast.success('Photo removed from gallery');
     } catch (error: unknown) {
-      logError('GALLERY_DELETE_FAILED', error, { personId, treeId: currentTreeId });
+      logError('GALLERY_DELETE_FAILED', error, { metadata: { personId, treeId: currentTreeId } });
       showToast.error('Failed to remove photo');
     } finally {
       setIsUploading(false);

@@ -52,7 +52,7 @@ const deliverToast = (toastSpec: NotificationDeliverySpec['toast']) => {
     return;
   }
 
-  showToast(toastSpec.message, {
+  (showToast as any)(toastSpec.message, {
     duration: toastSpec.duration,
     icon: toastSpec.icon,
     style: {

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
@@ -33,3 +34,4 @@ describe('SmartAvatar', () => {
     expect(screen.getByRole('img', { name: 'Changed Jozor' }).getAttribute('style')).toBe(firstBackground);
   });
 });
+

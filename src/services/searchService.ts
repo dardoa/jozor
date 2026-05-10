@@ -315,7 +315,7 @@ export const searchService = {
                     const city = normalizeArabic(intent.locationCity);
                     candidates = candidates.filter(p => 
                         normalizeArabic(p.birthPlace || '').includes(city) || 
-                        normalizeArabic(p.currentLocation || '').includes(city)
+                        normalizeArabic((p as any).currentLocation || '').includes(city)
                     );
                 } else if (intent.logicType === 'CATEGORICAL') {
                     inferenceSucceeded = true;

@@ -310,7 +310,7 @@ export const TheVaultDrawer: React.FC<TheVaultDrawerProps> = ({
               />
             ) : (
               <VaultDesktopNavigation
-                items={navItems}
+                items={navItems as any}
                 activeTab={vaultTab}
                 onSelect={setVaultTab}
               />

@@ -89,7 +89,7 @@ export const useTreeSettings = () => {
     debounceRef.current = setTimeout(async () => {
       try {
         const persistedSettings = buildPersistedTreeSettings(treeSettings);
-        await updateTreeSettings(currentTreeId, user.uid, user.email, persistedSettings);
+        await updateTreeSettings(currentTreeId, user.uid, user.email, persistedSettings as any);
       } catch (e) {
         logError('useTreeSettings syncSupabase', e, {
           category: 'SYNC',

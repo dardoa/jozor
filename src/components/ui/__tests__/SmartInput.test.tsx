@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { SmartInput, SmartTextarea } from '../SmartInput';
@@ -24,3 +25,4 @@ describe('SmartInput primitives', () => {
     expect(textarea.className).toContain('ds-input');
   });
 });
+

@@ -28,21 +28,21 @@ export const useSupabaseSync = () => {
     // Use supabaseToken (Supabase JWT) as the subscription guard — supabaseAccessToken is the backup.
     const supabaseToken = user?.supabaseToken ?? null;
 
-    const handleRemoteOperation = useCallback((op: unknown) => {
-        logInfo('SUPABASE_REMOTE_OPERATION_RECEIVED', { op });
-        deltaSyncService.applyOperation(op);
+    const handleRemoteOperation = useCallback((op: any) => {
+        logInfo('SYNC', 'SUPABASE_REMOTE_OPERATION_RECEIVED', { op });
+        deltaSyncService.applyOperation(op as any);
     }, []);
 
     // Realtime Delta Sync Lifecycle
     useEffect(() => {
         if (!currentTreeId || isDemoMode || !supabaseToken || syncState !== 'synced') return;
 
-        logInfo('SUPABASE_REALTIME_SUBSCRIBED', { treeId: currentTreeId });
+        logInfo('SYNC', 'SUPABASE_REALTIME_SUBSCRIBED', { treeId: currentTreeId });
         const channel = deltaSyncService.subscribeToTreeOperations(currentTreeId, handleRemoteOperation);
 
         return () => {
             if (channel) {
-                logInfo('SUPABASE_REALTIME_UNSUBSCRIBED', { treeId: currentTreeId });
+                logInfo('SYNC', 'SUPABASE_REALTIME_UNSUBSCRIBED', { treeId: currentTreeId });
                 channel.unsubscribe();
             }
         };
@@ -52,7 +52,7 @@ export const useSupabaseSync = () => {
     useEffect(() => {
         if (!currentTreeId || isDemoMode || !supabaseToken || syncState !== 'synced' || (!user?.email && !user?.uid)) return;
 
-        logInfo('SUPABASE_PERMISSION_SUBSCRIBED', { treeId: currentTreeId });
+        logInfo('SYNC', 'SUPABASE_PERMISSION_SUBSCRIBED', { treeId: currentTreeId });
         const channel = deltaSyncService.subscribeToPermissions(currentTreeId, (permissionEvent: unknown) => {
             if (!permissionEvent) return;
 
@@ -67,7 +67,7 @@ export const useSupabaseSync = () => {
             }
 
             if (payload.eventType === 'DELETE') {
-                logWarn('SUPABASE_ROLE_REVOKED', { treeId: currentTreeId, email: user.email });
+                logWarn('SYNC', 'SUPABASE_ROLE_REVOKED', { metadata: { treeId: currentTreeId, email: user.email } });
                 deltaSyncService.handlePermissionRevoked(currentTreeId);
                 setCurrentUserRole(null);
                 setCurrentTreeId(null);
@@ -77,7 +77,7 @@ export const useSupabaseSync = () => {
             }
 
             if (payload.role === 'editor' || payload.role === 'viewer') {
-                logInfo('SUPABASE_ROLE_UPDATED', { treeId: currentTreeId, role: payload.role });
+                logInfo('SYNC', 'SUPABASE_ROLE_UPDATED', { treeId: currentTreeId, role: payload.role });
                 if (payload.role === 'viewer' && (currentUserRole === 'owner' || currentUserRole === 'editor')) {
                     deltaSyncService.handlePermissionReadOnly(currentTreeId);
                     showToast.error('Your access is now view-only. Editing has been disabled.');
@@ -86,13 +86,13 @@ export const useSupabaseSync = () => {
                 }
                 setCurrentUserRole(payload.role);
             } else {
-                logWarn('SUPABASE_ROLE_MISSING_FOR_USER', { treeId: currentTreeId, email: user.email, payload });
+                logWarn('SYNC', 'SUPABASE_ROLE_MISSING_FOR_USER', { metadata: { treeId: currentTreeId, email: user.email, payload } });
             }
         });
 
         return () => {
             if (channel) {
-                logInfo('SUPABASE_PERMISSION_UNSUBSCRIBED', { treeId: currentTreeId });
+                logInfo('SYNC', 'SUPABASE_PERMISSION_UNSUBSCRIBED', { treeId: currentTreeId });
                 channel.unsubscribe();
             }
         };

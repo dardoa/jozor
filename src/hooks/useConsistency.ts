@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useAppStore } from '../store/useAppStore';
-// @ts-expect-error - consistency logic needs access to internal state
+
 // - Vite worker import
 import ConsistencyWorker from '../services/ConsistencyWorker?worker';
 

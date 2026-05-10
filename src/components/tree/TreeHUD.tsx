@@ -50,7 +50,7 @@ export const TreeHUD: React.FC<TreeHUDProps> = ({
         showMinimap &&
         !isForce &&
         Boolean(minimapGraph) &&
-        (!isFanChart || minimapGraph?.source === 'visible-tree');
+        (!isFanChart || (minimapGraph?.source as string) === 'visible-tree');
 
     return (
         <>

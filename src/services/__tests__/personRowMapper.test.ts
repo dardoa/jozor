@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { describe, expect, it } from 'vitest';
 import type { Person } from '../../types';
 import { mapDbPersonRowToPerson, mapPersonToDbRow } from '../personRowMapper';
@@ -105,3 +106,4 @@ describe('personRowMapper', () => {
     expect(restored.children).toEqual([]);
   });
 });
+

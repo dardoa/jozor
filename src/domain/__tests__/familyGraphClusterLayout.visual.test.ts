@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { existsSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import type { Person } from '../../types';
@@ -209,3 +210,4 @@ describe.skip('real tree visual invariants', () => {
     expect(issues.slice(0, 30)).toEqual([]);
   });
 });
+

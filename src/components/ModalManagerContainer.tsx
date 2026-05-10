@@ -77,7 +77,7 @@ export const ModalManagerContainer: React.FC<ModalManagerContainerProps> = memo(
 
             // Case 1: FullState format { version, people, settings, ... }
             if (importedData.people && typeof importedData.people === 'object') {
-              const fullState = importedData as FullState;
+              const fullState = importedData as unknown as FullState;
               loadFullState(fullState);
               return;
             }

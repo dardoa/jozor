@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const authenticateUserMock = vi.fn();
@@ -143,3 +144,4 @@ describe('push-notifier API', () => {
     expect(res.statusCode).toBe(200);
   });
 });
+

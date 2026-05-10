@@ -156,7 +156,7 @@ export const GeographicJourneyModal: React.FC<GeographicJourneyModalProps> = ({
               <div className={`mt-4 flex flex-wrap gap-2 ${isRtl ? 'justify-end' : ''}`}>
                 <button type="button" onClick={() => setMode('events')} className={modeButtonClass(mode === 'events')}>
                   <MapPin className="h-4 w-4" />
-                  {t.viewOnMap}
+                  {(t as any).viewOnMap}
                 </button>
                 <button
                   type="button"
@@ -164,7 +164,7 @@ export const GeographicJourneyModal: React.FC<GeographicJourneyModalProps> = ({
                   className={modeButtonClass(mode === 'migration')}
                 >
                   <Route className="h-4 w-4" />
-                  {(t as Record<string, string>).migrationMap || 'Migration Map'}
+                  {(t as unknown as Record<string, string>).migrationMap || 'Migration Map'}
                 </button>
               </div>
             </div>
@@ -253,7 +253,7 @@ export const GeographicJourneyModal: React.FC<GeographicJourneyModalProps> = ({
                 <Users className="h-3 w-3" />
                 {mode === 'events'
                   ? t.statistics.uniqueLocations
-                  : (t as Record<string, string>).migrationMap || 'Migration Map'}
+                  : (t as unknown as Record<string, string>).migrationMap || 'Migration Map'}
               </h4>
               <div className="space-y-4">
                 {mode === 'events'

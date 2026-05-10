@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { describe, it, expect } from 'vitest';
 import { buildLayoutSemanticsSnapshot } from '../domain/familyGraphSemantics';
 import { FamilyGraph } from '../domain/familyGraphTypes';
@@ -93,3 +94,4 @@ describe('Family Tree Semantics - Real Data Test', () => {
     expect(snapshot.personRoles["5e05643e-8190-49e0-bec8-ea485e438b93"].role).toBe('canonical');
   });
 });
+

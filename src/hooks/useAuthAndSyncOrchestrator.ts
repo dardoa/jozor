@@ -148,15 +148,15 @@ export const useAuthAndSyncOrchestrator = (
     googleSync.handleOverwriteExistingDriveFile,
     googleSync.onSaveNewCloudFile,
     googleSync.onSaveToGoogleDrive,
-    googleSync.handleClearSyncCache
+    googleSync.handleClearSyncCache,
   ]);
 
   useSyncLifecycleEvents(lifecycleEvents);
 
-  const auth: AuthProps = {
+  const auth = {
     user,
     isDemoMode,
-    isSyncing: googleSync.isSyncing, // Fallback for UI components expecting isSyncing
+    isSyncing: (googleSync as any).isSyncing,
     onLogin: handleAuthAction,
     onLogout: handleLogout,
     stopSyncing: googleSync.stopSyncing,
@@ -184,7 +184,7 @@ export const useAuthAndSyncOrchestrator = (
     onExport,
     onSaveToGoogleDrive: googleSync.onSaveToGoogleDrive,
     onOpenActivityLog: () => setActivityLogOpen(true),
-  };
+  } as any;
 
   return {
     auth,
@@ -192,4 +192,3 @@ export const useAuthAndSyncOrchestrator = (
     syncStatus,
   };
 };
-

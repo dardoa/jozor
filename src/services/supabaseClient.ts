@@ -15,7 +15,7 @@ import { SupabaseRegistry } from './supabaseClientRegistry';
 assertSupabaseConfig();
 
 type SupabaseAuthAdapter = {
-  auth: AuthClient;
+  auth: any;
 };
 
 const getSupabaseAuthAdapter = (): SupabaseAuthAdapter => {

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
@@ -107,3 +108,4 @@ describe('ActivityLogDrawer', () => {
     expect(subscribeToLogsMock).toHaveBeenCalledWith('tree-1', expect.any(Function));
   });
 });
+

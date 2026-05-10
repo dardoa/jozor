@@ -8,26 +8,6 @@ import type {
   TreeSettings,
   UserProfile,
 } from '../types';
-import type {
-  VisibleTreePedigreeValidationOptions,
-  VisibleTreePedigreeValidationRun,
-} from '../domain/legacy/visibleTree/visibleTreePedigreeValidation';
-import type {
-  VisibleTreeFanValidationOptions,
-  VisibleTreeFanValidationRun,
-} from '../domain/legacy/visibleTree/visibleTreeFanValidation';
-import type {
-  VisibleTreeStatsValidationOptions,
-  VisibleTreeStatsValidationRun,
-} from '../domain/legacy/visibleTree/visibleTreeStatsValidation';
-import type {
-  VisibleTreeHighlightingValidationOptions,
-  VisibleTreeHighlightingValidationRun,
-} from '../domain/legacy/visibleTree/visibleTreeHighlightingValidation';
-import type {
-  VisibleTreeDescendantValidationOptions,
-  VisibleTreeDescendantValidationRun,
-} from '../domain/legacy/visibleTree/visibleTreeDescendantValidation';
 import { deltaSyncService } from '../services/deltaSyncService';
 import { loadFullState, useAppStore } from '../store/useAppStore';
 
@@ -71,21 +51,6 @@ type JozorDebugApi = {
   seedNotifications: (
     notifications: Array<Omit<AppNotification, 'id' | 'timestamp' | 'read' | 'createdAt' | 'updatedAt'>>
   ) => void;
-  validateVisibleTreePedigree: (
-    options?: VisibleTreePedigreeValidationOptions
-  ) => Promise<VisibleTreePedigreeValidationRun>;
-  validateVisibleTreeFan: (
-    options?: VisibleTreeFanValidationOptions
-  ) => Promise<VisibleTreeFanValidationRun>;
-  validateVisibleTreeStats: (
-    options?: VisibleTreeStatsValidationOptions
-  ) => Promise<VisibleTreeStatsValidationRun>;
-  validateVisibleTreeHighlighting: (
-    options?: VisibleTreeHighlightingValidationOptions
-  ) => Promise<VisibleTreeHighlightingValidationRun>;
-  validateVisibleTreeDescendant: (
-    options?: VisibleTreeDescendantValidationOptions
-  ) => Promise<VisibleTreeDescendantValidationRun>;
   getLayoutSnapshot: () => Promise<unknown>;
   clearPersistedScenario: () => void;
   resetScenario: () => void;
@@ -272,77 +237,6 @@ export const useJozorDebugApi = (setShowWelcome: (show: boolean) => void) => {
         notifications.forEach((notification) => {
           state.enqueueNotification(notification);
         });
-      },
-      validateVisibleTreePedigree: async (options) => {
-        const { runVisibleTreePedigreeValidation, logVisibleTreePedigreeValidationRun } =
-          await importDevOnlyModule<typeof import('../domain/legacy/visibleTree/visibleTreePedigreeValidation')>(
-            '/domain/legacy/visibleTree/visibleTreePedigreeValidation.ts'
-          );
-        const state = useAppStore.getState();
-        const run = runVisibleTreePedigreeValidation({
-          people: state.people,
-          activeFocusPersonId: state.focusId,
-          baseSettings: state.treeSettings,
-          options,
-        });
-        return logVisibleTreePedigreeValidationRun(run);
-      },
-      validateVisibleTreeFan: async (options) => {
-        const { runVisibleTreeFanValidation, logVisibleTreeFanValidationRun } =
-          await importDevOnlyModule<typeof import('../domain/legacy/visibleTree/visibleTreeFanValidation')>(
-            '/domain/legacy/visibleTree/visibleTreeFanValidation.ts'
-          );
-        const state = useAppStore.getState();
-        const run = runVisibleTreeFanValidation({
-          people: state.people,
-          activeFocusPersonId: state.focusId,
-          baseSettings: state.treeSettings,
-          options,
-        });
-        return logVisibleTreeFanValidationRun(run);
-      },
-      validateVisibleTreeStats: async (options) => {
-        const { runVisibleTreeStatsValidation, logVisibleTreeStatsValidationRun } =
-          await importDevOnlyModule<typeof import('../domain/legacy/visibleTree/visibleTreeStatsValidation')>(
-            '/domain/legacy/visibleTree/visibleTreeStatsValidation.ts'
-          );
-        const state = useAppStore.getState();
-        const run = runVisibleTreeStatsValidation({
-          people: state.people,
-          validationErrors: state.validationErrors,
-          activeFocusPersonId: state.focusId,
-          baseSettings: state.treeSettings,
-          options,
-        });
-        return logVisibleTreeStatsValidationRun(run);
-      },
-      validateVisibleTreeHighlighting: async (options) => {
-        const { runVisibleTreeHighlightingValidation, logVisibleTreeHighlightingValidationRun } =
-          await importDevOnlyModule<typeof import('../domain/legacy/visibleTree/visibleTreeHighlightingValidation')>(
-            '/domain/legacy/visibleTree/visibleTreeHighlightingValidation.ts'
-          );
-        const state = useAppStore.getState();
-        const run = runVisibleTreeHighlightingValidation({
-          people: state.people,
-          activeFocusPersonId: state.focusId,
-          baseSettings: state.treeSettings,
-          options,
-        });
-        return logVisibleTreeHighlightingValidationRun(run);
-      },
-      validateVisibleTreeDescendant: async (options) => {
-        const { runVisibleTreeDescendantValidation, logVisibleTreeDescendantValidationRun } =
-          await importDevOnlyModule<typeof import('../domain/legacy/visibleTree/visibleTreeDescendantValidation')>(
-            '/domain/legacy/visibleTree/visibleTreeDescendantValidation.ts'
-          );
-        const state = useAppStore.getState();
-        const run = runVisibleTreeDescendantValidation({
-          people: state.people,
-          activeFocusPersonId: state.focusId,
-          baseSettings: state.treeSettings,
-          options,
-        });
-        return logVisibleTreeDescendantValidationRun(run);
       },
       getLayoutSnapshot: async () => {
         const layoutDebug = (window as Window & { __JOZOR_LAYOUT_DEBUG__?: unknown })

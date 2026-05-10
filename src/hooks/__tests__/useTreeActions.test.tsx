@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { renderHook, act } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useTreeActions } from '../useTreeActions';
@@ -169,3 +170,4 @@ describe('useTreeActions', () => {
     );
   });
 });
+

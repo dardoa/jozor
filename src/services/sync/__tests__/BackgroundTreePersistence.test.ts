@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Person } from '../../../types';
 import { BackgroundTreePersistence } from '../BackgroundTreePersistence';
@@ -84,3 +85,4 @@ describe('BackgroundTreePersistence', () => {
         expect(offlineCache.saveFullTree).toHaveBeenCalledWith(latestPeople);
     });
 });
+

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React from 'react';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
@@ -337,3 +338,4 @@ describe('NotificationBell', () => {
     expect(screen.queryByText('General info 6')).not.toBeInTheDocument();
   });
 });
+

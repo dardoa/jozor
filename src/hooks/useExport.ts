@@ -136,7 +136,7 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
                     downloadFile(dataUrl, `family_tree.${extension}`, mime);
                 }
             } catch (e: unknown) {
-                logError('EXPORT_FAILED', e, { showToast: false, type });
+                logError('EXPORT_FAILED', e, { showToast: false, metadata: { type } });
                 const message = e instanceof Error ? e.message : 'Check console';
                 showToast.error(`Failed: ${message}`);
             } finally {
@@ -187,7 +187,7 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
  */
 async function convertSupabaseImagesToBase64(svg: SVGSVGElement, authHeaders: { token: string }) {
     const images = Array.from(svg.querySelectorAll('image'));
-    logInfo('EXPORT_IMAGE_CONVERSION_STARTED', { imageCount: images.length });
+    logInfo('EXPORT', 'EXPORT_IMAGE_CONVERSION_STARTED', { imageCount: images.length });
 
     // Concurrency Control: Process in batches of 5 to prevent network/memory flooding
     const BATCH_SIZE = 5;
@@ -221,15 +221,14 @@ async function convertSupabaseImagesToBase64(svg: SVGSVGElement, authHeaders: { 
                     reader.readAsDataURL(blob);
                 });
             } catch (e) {
-                logWarn('EXPORT_IMAGE_CONVERSION_WARNING', {
-                    url,
-                    error: e instanceof Error ? e.message : String(e),
+                logWarn('EXPORT', 'EXPORT_IMAGE_CONVERSION_WARNING', {
+                    metadata: { url, error: e instanceof Error ? e.message : String(e) }
                 });
             }
         }));
     }
 
-    logInfo('EXPORT_IMAGE_CONVERSION_COMPLETED', { imageCount: images.length });
+    logInfo('EXPORT', 'EXPORT_IMAGE_CONVERSION_COMPLETED', { imageCount: images.length });
 }
 
 async function applyWatermark(dataUrl: string, text: string, format: string): Promise<string> {

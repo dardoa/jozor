@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { describe, expect, it, vi } from 'vitest';
 import { buildScheduledBirthdayNotifications, parseFullBirthDate } from '../scheduledNotifications';
 import type { Person } from '../../types';
@@ -109,4 +110,5 @@ describe('scheduledNotifications', () => {
     expect(notifications[0].spec.notification.body).toContain('would have turned 86');
   });
 });
+
 

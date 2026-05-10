@@ -98,7 +98,7 @@ export const useNodeViewModel = ({
     nodeWidth,
     nodeHeight,
     isLOD,
-    isReference: node.isReference,
+    isReference: Boolean(node.isReference),
     showReferenceBadge,
     isFocused,
     isHighlighted,
@@ -117,7 +117,7 @@ export const useNodeViewModel = ({
     shouldRenderPhoto,
     photoSource,
     photoAlt,
-    privacyMode: settings.privacyMode,
+    privacyMode: Boolean((settings as any).privacyMode),
     isDeceased: person.isDeceased,
     privacyPlaceholder: {
       Icon: privacyPlaceholder.Icon,
@@ -130,7 +130,7 @@ export const useNodeViewModel = ({
     showGender: settings.showGender,
     onFocusPerson,
     showParentNavigation,
-  }), [
+  }) as any, [
     borderColor,
     hasErrors,
     imageBlockHeightPx,

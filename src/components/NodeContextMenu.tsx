@@ -69,11 +69,11 @@ export const NodeContextMenu: React.FC<NodeContextMenuProps> = ({
 
     const canEdit = currentUserRole === 'owner' || currentUserRole === 'editor';
     const isRtl = language === 'ar';
-    const detailsLabel = canEdit ? t.editDetails : ((t.viewDetails as string | undefined) ?? 'View Details');
-    const linkExistingLabel = (t.linkExistingPerson as string | undefined) ?? 'Link Existing Person';
+    const detailsLabel = canEdit ? t.editDetails : (((t as any).viewDetails as string | undefined) ?? 'View Details');
+    const linkExistingLabel = ((t as any).linkExistingPerson as string | undefined) ?? 'Link Existing Person';
     const deleteLabel = t.deletePerson ?? 'Delete Person';
-    const sonLabel = t.addSon ?? (t.addChild as string | undefined) ?? 'Add Son';
-    const daughterLabel = t.addDaughter ?? (t.addChild as string | undefined) ?? 'Add Daughter';
+    const sonLabel = (t as any).addSon ?? ((t as any).addChild as string | undefined) ?? 'Add Son';
+    const daughterLabel = (t as any).addDaughter ?? ((t as any).addChild as string | undefined) ?? 'Add Daughter';
     const estimatedMenuWidth = 260;
     const estimatedMenuHeight = view === 'linkExisting' ? 320 : 360;
     const clampedTop = Math.max(12, Math.min(y, window.innerHeight - estimatedMenuHeight));

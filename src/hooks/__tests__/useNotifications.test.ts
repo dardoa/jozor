@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { runDataIntegrityCheck, runHeritageCheck } from '../useNotifications';
 
@@ -74,3 +75,4 @@ describe('useNotifications telemetry helpers', () => {
     );
   });
 });
+

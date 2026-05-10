@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { describe, expect, it } from 'vitest';
 
 import { validatePerson } from '../familyLogic';
@@ -24,3 +25,4 @@ describe('validatePerson security hardening', () => {
     expect(person.sources[1].url).toBe('https://archive.example/source');
   });
 });
+

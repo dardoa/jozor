@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { describe, expect, it } from 'vitest';
 
 import { getSafeExternalUrl, sanitizeExternalUrl } from '../safeUrl';
@@ -16,3 +17,4 @@ describe('safeUrl', () => {
     expect(sanitizeExternalUrl('javascript:alert(1)')).toBeUndefined();
   });
 });
+

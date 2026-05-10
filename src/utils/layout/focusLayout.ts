@@ -358,6 +358,7 @@ export function calculateFocusLayout(
         uniqueKey,
         x: node.x,
         y: node.y + dy,
+        originX: node.x,
         originY: node.y,
         isCollapsed: collapsedIds.has(uniqueKey),
       });
@@ -379,7 +380,7 @@ export function calculateV3FocusLayout(
   const clusterLayout = buildFamilyGraphClusterLayout(graph, semanticsSnapshot, focusId, people);
   const edgeEntities = generateClusterLayoutEdges(clusterLayout);
 
-  const nodes: TreeNode[] = Object.values(clusterLayout.nodes)
+  const nodes = Object.values(clusterLayout.nodes)
     .map((entity) => {
       const personData = people[entity.personId];
       if (!personData) return null;
@@ -389,12 +390,12 @@ export function calculateV3FocusLayout(
         x: entity.x,
         y: entity.y,
         data: personData,
-        type: entity.personId === focusId ? 'focus' : 'ancestor',
+        type: (entity.personId === focusId ? 'focus' : 'ancestor') as TreeNode['type'],
         depth: Math.abs(entity.generation),
         isReference: entity.renderRole === 'reference',
       } satisfies TreeNode;
     })
-    .filter((node): node is TreeNode => Boolean(node));
+    .filter((node) => Boolean(node)) as unknown as TreeNode[];
 
   const resolveEntityId = (
     personId: string | null | undefined,
@@ -411,7 +412,7 @@ export function calculateV3FocusLayout(
       ?.entityId ?? null;
   };
 
-  const links: TreeLink[] = edgeEntities
+  const links = edgeEntities
     .map((edge, index) => {
       const familyId = edge.metadata.familyId;
       const cluster = clusterLayout.clusters[familyId];
@@ -447,10 +448,9 @@ export function calculateV3FocusLayout(
         target: targetId,
         type: edge.type === 'partner-link' ? 'marriage' : 'parent-child',
         pathData: edge.pathData,
-        key: `${sourceId}-${targetId}-${index}` as any,
       };
     })
-    .filter((link): link is TreeLink => Boolean(link));
+    .filter((link) => Boolean(link)) as unknown as TreeLink[];
 
   const legacy = calculateFocusLayout(focusId, people, settings, collapsedIds);
 

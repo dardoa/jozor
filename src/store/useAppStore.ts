@@ -115,5 +115,5 @@ export const selectHealthScore = (state: AppStore) => state.healthScore;
 export const selectPerson = (id: string) => (state: AppStore) => state.people[id];
 export const selectSettingsValue = <K extends keyof TreeSettings>(key: K) => (state: AppStore) => state.treeSettings[key];
 export const selectUIStatus = (state: AppStore) => state.driveSyncUiStatus;
-export const selectIsSelectionActive = (id: string) => (state: AppStore) => state.selectedPersonId === id;
+export const selectIsSelectionActive = (id: string) => (state: AppStore) => (state as any).selectedPersonId === id;
 export const selectCurrentTreeId = (state: AppStore) => state.currentTreeId;

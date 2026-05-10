@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { searchService } from '../searchService';
 import { normalizeArabic } from '../../utils/search/arabicUtils';
@@ -78,3 +79,4 @@ describe('Search Service & NLP Utilities', () => {
         });
     });
 });
+

@@ -1,5 +1,5 @@
 import type { NavigateFunction } from 'react-router-dom';
-import type { AppNotification, User } from '../../types';
+import type { AppNotification, UserProfile as User } from '../../types';
 import type { TranslationSchema } from '../../utils/translationLoader';
 
 export type NotificationFilter = 'all' | 'invitations' | 'updates';

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useSyncStatus } from '../useSyncStatus';
@@ -30,3 +31,4 @@ describe('useSyncStatus', () => {
     expect(result.current.syncStatus.errorMessage).toBeUndefined();
   });
 });
+

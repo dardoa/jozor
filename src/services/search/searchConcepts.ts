@@ -7,6 +7,7 @@ export type SearchIntent =
     | 'rel_uncles_maternal' | 'rel_aunts_maternal'
     | 'rel_cousins_paternal_uncle' | 'rel_cousins_paternal_aunt'
     | 'rel_cousins_maternal_uncle' | 'rel_cousins_maternal_aunt'
+    | 'rel_grandparents' | 'rel_grandmothers'
     | 'loc_indicator' | 'none';
 
 export type LogicType = 'CATEGORICAL' | 'RELATIONAL' | 'LOCATIONAL';

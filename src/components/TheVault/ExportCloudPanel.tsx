@@ -183,7 +183,7 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                   <Icon className="h-4 w-4" />
                 </div>
                 <div className="min-w-0">
-                  <div className="text-sm font-semibold text-slate-800">{t[action.labelKey] || action.id}</div>
+                  <div className="text-sm font-semibold text-slate-800">{(t as any)[action.labelKey] || action.id}</div>
                 </div>
               </button>
             );
