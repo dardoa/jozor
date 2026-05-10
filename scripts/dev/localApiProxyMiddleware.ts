@@ -89,7 +89,7 @@ const handleAiProxy = async (
   body: LocalProxyBody
 ) => {
   try {
-    const { default: aiProxyHandler } = await import('../api/ai-proxy');
+    const { default: aiProxyHandler } = await import('../src/api/ai-proxy');
     const localResponse = createLocalResponse(res);
     req.body = body;
 
@@ -109,7 +109,7 @@ const handleAuthExchange = async (
   body: LocalProxyBody
 ) => {
   try {
-    const { default: authExchangeHandler } = await import('../api/auth/exchange');
+    const { default: authExchangeHandler } = await import('../src/api/auth/exchange');
     const localResponse = createLocalResponse(res);
     req.body = body;
     await (authExchangeHandler as any)(req, localResponse);

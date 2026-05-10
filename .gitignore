@@ -49,3 +49,10 @@ playwright/.cache/
 .vercel/
 .cache/
 .eslintcache
+lint*.json
+
+# IDE and AI Tooling
+.cursor/
+.codex-*/
+.playwright-cli/
+tmp-*/

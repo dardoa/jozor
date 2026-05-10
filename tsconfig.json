@@ -22,12 +22,11 @@
     "esModuleInterop": true,
     "paths": {
       "@/*": [
-        "./*"
+        "./src/*"
       ]
     }
   },
   "include": [
-    ".",
-    "vite-env.d.ts"
+    "src"
   ]
 }

@@ -2,7 +2,7 @@ import * as path from 'path';
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import { visualizer } from 'rollup-plugin-visualizer';
-import { createLocalApiProxyMiddleware } from './dev/localApiProxyMiddleware';
+import { createLocalApiProxyMiddleware } from './scripts/dev/localApiProxyMiddleware';
 
 export default defineConfig(({ mode }) => {
   console.log('\x1b[36m%s\x1b[0m', '🛡️ Jozor Security: Initializing configuration...');
@@ -100,7 +100,7 @@ export default defineConfig(({ mode }) => {
     },
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, '.'),
+        '@': path.resolve(__dirname, './src'),
       },
     },
     test: {
