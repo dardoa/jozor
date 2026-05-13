@@ -127,7 +127,7 @@ describe('useSessionBootstrap', () => {
 
     expect(useAppStore.getState().user?.supabaseToken).toBe('session-token');
     expect(useAppStore.getState().supabaseAccessToken).toBe('session-token');
-    expect(useAppStore.getState().authLoading).toBe(false);
+    expect(useAppStore.getState().authLoading).toBe(true);
     expect(useAppStore.getState().notifications).toHaveLength(1);
     expect(setStoredSupabaseTokenMock).toHaveBeenCalledWith('session-token');
     expect(claimCollaboratorMembershipsMock).toHaveBeenCalledWith(

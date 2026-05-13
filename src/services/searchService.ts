@@ -1,7 +1,6 @@
 import type Fuse from 'fuse.js';
 import { Person } from '../types';
-import { logInfo } from '../utils/errorLogger';
-import { normalizeArabic } from '../utils/search/arabicUtils';
+import { normalizeArabic, stripArabicPrefixes } from '../utils/search/arabicUtils';
 import { parseSearchQuery, ParsedIntent } from './search/queryParser';
 import { getDisplayDate } from '../utils/familyLogic';
 
@@ -9,12 +8,22 @@ let fuse: Fuse<Person> | null = null;
 let indexedPeople: Person[] = [];
 let fuseLoader: Promise<typeof import('fuse.js').default> | null = null;
 
+export type SearchMatchType = 'exact' | 'fuzzy';
+
+export interface SearchResult {
+    person: Person;
+    score: number;
+    matchType: SearchMatchType;
+    reason?: string;
+}
+
 const FUSE_OPTIONS = {
-    threshold: 0.35,
+    threshold: 0.28,
     distance: 100,
     ignoreLocation: true,
     minMatchCharLength: 2,
     keys: [
+        { name: 'normalizedFullName', weight: 0.6 },
         { name: 'normalizedFirstName', weight: 0.4 },
         { name: 'normalizedLastName', weight: 0.3 },
         { name: 'normalizedMiddleName', weight: 0.2 },
@@ -30,6 +39,199 @@ const loadFuse = async () => {
     return fuseLoader;
 };
 
+const SEARCH_STOP_WORDS = new Set([
+    'of',
+    'the',
+    'and',
+    'with',
+    'a',
+    'an',
+    'عن',
+    'على',
+    'في',
+    'من',
+    'هو',
+    'هي',
+    'هذا',
+    'هذه',
+    'اسم',
+    'صاحب',
+    'صاحبة',
+]);
+
+const normalizeSearchText = (text: string | undefined): string =>
+    stripArabicPrefixes(normalizeArabic(text || '')).replace(/\s+/g, ' ').trim();
+
+const getPersonFullName = (person: Person): string => {
+    const extended = person as Person & { fatherName?: string; familyName?: string };
+    return [
+        person.firstName,
+        person.middleName || extended.fatherName,
+        person.lastName || extended.familyName,
+    ].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
+};
+
+const getPersonNameVariants = (person: Person): string[] => {
+    const full = normalizeSearchText(getPersonFullName(person));
+    const first = normalizeSearchText(person.firstName);
+    const middle = normalizeSearchText(person.middleName || (person as Person & { fatherName?: string }).fatherName || '');
+    const last = normalizeSearchText(person.lastName || (person as Person & { familyName?: string }).familyName || '');
+    const nick = normalizeSearchText(person.nickName || '');
+
+    return Array.from(new Set([
+        full,
+        [first, last].filter(Boolean).join(' '),
+        [first, middle].filter(Boolean).join(' '),
+        nick,
+        [nick, last].filter(Boolean).join(' '),
+    ].map(normalizeSearchText).filter(Boolean)));
+};
+
+const getPersonNameTokens = (person: Person) => ({
+    first: normalizeSearchText(person.firstName),
+    middle: normalizeSearchText(person.middleName || ''),
+    last: normalizeSearchText(person.lastName),
+    nick: normalizeSearchText(person.nickName || ''),
+    full: normalizeSearchText(getPersonFullName(person)),
+});
+
+const tokenizeSearchQuery = (query: string): string[] =>
+    normalizeSearchText(query)
+        .split(/\s+/)
+        .filter((token) => token && !SEARCH_STOP_WORDS.has(token));
+
+const levenshteinDistance = (a: string, b: string): number => {
+    if (a === b) return 0;
+    if (!a) return b.length;
+    if (!b) return a.length;
+
+    const previous = Array.from({ length: b.length + 1 }, (_, index) => index);
+    const current = new Array<number>(b.length + 1);
+
+    for (let i = 1; i <= a.length; i += 1) {
+        current[0] = i;
+        for (let j = 1; j <= b.length; j += 1) {
+            const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+            current[j] = Math.min(
+                current[j - 1] + 1,
+                previous[j] + 1,
+                previous[j - 1] + cost
+            );
+        }
+        previous.splice(0, previous.length, ...current);
+    }
+
+    return previous[b.length];
+};
+
+const isNormalizedNameMatch = (query: string, candidate: string): boolean => {
+    if (!query || !candidate) return false;
+    if (candidate === query) return true;
+    if (candidate.startsWith(`${query} `) || query.startsWith(`${candidate} `)) return true;
+    if (` ${candidate} `.includes(` ${query} `)) return true;
+
+    const queryWords = query.split(/\s+/).filter(Boolean);
+    const candidateWords = candidate.split(/\s+/).filter(Boolean);
+    if (queryWords.length >= 2 && queryWords.every((word) => candidateWords.includes(word))) {
+        return true;
+    }
+
+    const maxDistance = query.length <= 6 ? 1 : query.length <= 14 ? 2 : 3;
+    return levenshteinDistance(query, candidate) <= maxDistance;
+};
+
+const uniqueResults = (results: SearchResult[], limit: number): SearchResult[] => {
+    const seen = new Set<string>();
+    return results
+        .sort((a, b) => b.score - a.score)
+        .filter((result) => {
+            if (seen.has(result.person.id)) return false;
+            seen.add(result.person.id);
+            return true;
+        })
+        .slice(0, limit);
+};
+
+const runExactNameSearch = (query: string, people: Person[], limit: number): SearchResult[] => {
+    const normalizedQuery = normalizeSearchText(query);
+    const tokens = tokenizeSearchQuery(query);
+    if (!normalizedQuery || tokens.length === 0) return [];
+
+    const isShortSingleToken = tokens.length === 1 && tokens[0].length <= 3;
+    const results: SearchResult[] = [];
+
+    for (const person of people) {
+        const name = getPersonNameTokens(person);
+        let score = 0;
+        let reason = '';
+
+        if (name.full === normalizedQuery) {
+            score = 100;
+            reason = 'full-name';
+        } else if (tokens.length >= 2 && isNormalizedNameMatch(normalizedQuery, name.full)) {
+            score = name.full.startsWith(normalizedQuery) ? 96 : 92;
+            reason = 'full-name-partial';
+        } else if (tokens.length === 1) {
+            const token = tokens[0];
+            if (name.first === token) {
+                score = 98;
+                reason = 'first-name';
+            } else if (name.nick === token) {
+                score = 96;
+                reason = 'nickname';
+            } else if (!isShortSingleToken && name.last === token) {
+                score = 88;
+                reason = 'last-name';
+            } else if (token.length >= 3 && name.first.startsWith(token)) {
+                score = 82;
+                reason = 'first-name-prefix';
+            } else if (!isShortSingleToken && token.length >= 3 && name.full.split(/\s+/).some((part) => part.startsWith(token))) {
+                score = 76;
+                reason = 'name-token-prefix';
+            }
+        } else {
+            const nameParts = [name.first, name.middle, name.last, name.nick].filter(Boolean);
+            const allTokensMatch = tokens.every((token) =>
+                nameParts.some((part) => part === token || part.startsWith(token))
+            );
+
+            if (allTokensMatch) {
+                score = tokens.length >= 2 && name.first === tokens[0] && name.last === tokens[tokens.length - 1]
+                    ? 94
+                    : 86;
+                reason = 'name-token-match';
+            }
+        }
+
+        if (score > 0) {
+            results.push({ person, score, matchType: 'exact', reason });
+        }
+    }
+
+    return uniqueResults(results, limit);
+};
+
+const runFuzzySearch = async (query: string, people: Person[], limit: number): Promise<SearchResult[]> => {
+    const normalizedQuery = normalizeSearchText(query);
+    if (!normalizedQuery) return [];
+
+    const FuseConstructor = await loadFuse();
+    const strictOptions = normalizedQuery.length <= 4
+        ? { ...FUSE_OPTIONS, threshold: 0.18, keys: FUSE_OPTIONS.keys.slice(0, 4) }
+        : FUSE_OPTIONS;
+    const searchFuse = new FuseConstructor(people, { ...strictOptions, includeScore: true });
+
+    return searchFuse.search(normalizedQuery)
+        .map((result) => ({
+            person: result.item,
+            score: Math.round((1 - (result.score ?? 1)) * 70),
+            matchType: 'fuzzy' as const,
+            reason: 'fuse',
+        }))
+        .filter((result) => normalizedQuery.length > 4 || result.score >= 62)
+        .slice(0, limit);
+};
+
 const calculateAge = (birthDate: string): number | null => {
     if (!birthDate) return null;
     const year = parseInt(getDisplayDate(birthDate), 10);
@@ -37,46 +239,30 @@ const calculateAge = (birthDate: string): number | null => {
     return new Date().getFullYear() - year;
 };
 
-/**
- * Finds target persons using strict tiered matching:
- * 1. Single word: Match firstName
- * 2. Two words: Match firstName AND lastName (ignore middle)
- * 3. Three words: Match firstName AND middleName AND lastName
- */
 const findTargetPeople = async (name: string, people: Person[]): Promise<Person[]> => {
-    const normalizedQuery = normalizeArabic(name);
+    const normalizedQuery = normalizeSearchText(name);
     const words = normalizedQuery.split(/\s+/).filter(Boolean);
     
     if (words.length === 0) return [];
 
     return people.filter(p => {
-        const pFirst = normalizeArabic(p.firstName);
-        const pMiddle = normalizeArabic(p.middleName || '');
-        const pLast = normalizeArabic(p.lastName);
+        const nameTokens = getPersonNameTokens(p);
+        const variants = getPersonNameVariants(p);
 
         if (words.length === 1) {
-            // Rule: Match First Name only
-            return pFirst === words[0];
+            return nameTokens.first === words[0] || nameTokens.nick === words[0];
         }
 
-        if (words.length === 2) {
-            // Rule: Match First AND Last (ignore middle)
-            // Note: Use fuzzy for Last name to handle Al-Qarji vs Al-Qairji if needed? 
-            // The user said "Match First and Last", I'll start with exact but allow 1 char difference for typos.
-            const lastMatch = pLast === words[1] || (pLast.length > 3 && words[1].length > 3 && 
-                              (pLast.includes(words[1]) || words[1].includes(pLast)));
-            return pFirst === words[0] && lastMatch;
+        if (variants.some((variant) => isNormalizedNameMatch(normalizedQuery, variant))) {
+            return true;
         }
 
-        if (words.length >= 3) {
-            // Rule: Match First, Middle, and Last
-            const lastWord = words[words.length - 1];
-            const middleWord = words[1];
-            const lastMatch = pLast === lastWord || pLast.includes(lastWord);
-            return pFirst === words[0] && pMiddle.includes(middleWord) && lastMatch;
+        if (words.length >= 2 && nameTokens.first !== words[0] && nameTokens.nick !== words[0]) {
+            return false;
         }
 
-        return false;
+        const fullWords = nameTokens.full.split(/\s+/).filter(Boolean);
+        return words.every((word) => fullWords.includes(word));
     });
 };
 
@@ -84,6 +270,7 @@ export const searchService = {
     async updateSearchIndex(people: Person[]) {
         indexedPeople = people.map(p => ({
             ...p,
+            normalizedFullName: normalizeSearchText(getPersonFullName(p)),
             normalizedFirstName: normalizeArabic(p.firstName),
             normalizedLastName: normalizeArabic(p.lastName),
             normalizedMiddleName: normalizeArabic(p.middleName || ''),
@@ -95,13 +282,18 @@ export const searchService = {
         fuse = new FuseConstructor(indexedPeople, FUSE_OPTIONS);
     },
 
-    async search(query: string, limit = 20): Promise<Person[]> {
+    async search(query: string, limit = 20): Promise<SearchResult[]> {
         if (!query.trim()) return [];
         
         const parsed = parseSearchQuery(query);
         let candidates = indexedPeople;
         let intentDetected = parsed.intents.length > 0;
         let inferenceSucceeded = false;
+
+        if (!intentDetected) {
+            const exactResults = runExactNameSearch(query, indexedPeople, limit);
+            if (exactResults.length > 0) return exactResults;
+        }
 
         // 1. Process Relational and Locational Intents (Inference Layer)
         if (intentDetected) {
@@ -312,10 +504,10 @@ export const searchService = {
                     }
                 } else if (intent.logicType === 'LOCATIONAL' && intent.locationCity) {
                     inferenceSucceeded = true;
-                    const city = normalizeArabic(intent.locationCity);
+                    const city = normalizeSearchText(intent.locationCity);
                     candidates = candidates.filter(p => 
-                        normalizeArabic(p.birthPlace || '').includes(city) || 
-                        normalizeArabic((p as any).currentLocation || '').includes(city)
+                        normalizeSearchText(p.birthPlace || '').includes(city) || 
+                        normalizeSearchText((p as any).currentLocation || '').includes(city)
                     );
                 } else if (intent.logicType === 'CATEGORICAL') {
                     inferenceSucceeded = true;
@@ -336,10 +528,7 @@ export const searchService = {
 
         // 2. FALLBACK Control
         if (!inferenceSucceeded && !intentDetected) {
-            const FuseConstructor = await loadFuse();
-            const fallbackFuse = new FuseConstructor(indexedPeople, FUSE_OPTIONS);
-            const results = fallbackFuse.search(normalizeArabic(query));
-            return results.slice(0, limit).map(r => r.item);
+            return runFuzzySearch(query, indexedPeople, limit);
         }
 
         if (intentDetected && !inferenceSucceeded) {
@@ -348,12 +537,16 @@ export const searchService = {
 
         // 3. Final Fuzzy Search on remaining text if any
         if (parsed.remainingText && candidates.length > 0) {
-            const FuseConstructor = await loadFuse();
-            const tempFuse = new FuseConstructor(candidates, FUSE_OPTIONS);
-            const results = tempFuse.search(normalizeArabic(parsed.remainingText));
-            return results.slice(0, limit).map(r => r.item);
+            const exactWithinCandidates = runExactNameSearch(parsed.remainingText, candidates, limit);
+            if (exactWithinCandidates.length > 0) return exactWithinCandidates;
+            return runFuzzySearch(parsed.remainingText, candidates, limit);
         }
 
-        return candidates.slice(0, limit);
+        return candidates.slice(0, limit).map((person) => ({
+            person,
+            score: 90,
+            matchType: 'exact',
+            reason: 'intent',
+        }));
     }
 };

@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SearchInputWithResults } from '../SearchInputWithResults';
 
 const setSearchTargetMock = vi.fn();
+const triggerPulseMock = vi.fn();
 const searchMock = vi.fn();
 
 vi.mock('../../../context/TranslationContext', () => ({
@@ -19,8 +20,11 @@ vi.mock('../../../context/TranslationContext', () => ({
 }));
 
 vi.mock('../../../store/useAppStore', () => ({
-  useAppStore: (selector: (state: { setSearchTarget: typeof setSearchTargetMock }) => unknown) =>
-    selector({ setSearchTarget: setSearchTargetMock }),
+  useAppStore: (selector: (state: {
+    setSearchTarget: typeof setSearchTargetMock;
+    triggerPulse: typeof triggerPulseMock;
+  }) => unknown) =>
+    selector({ setSearchTarget: setSearchTargetMock, triggerPulse: triggerPulseMock }),
 }));
 
 vi.mock('../../../services/searchService', () => ({
@@ -39,12 +43,16 @@ describe('SearchInputWithResults', () => {
     const onFocusPerson = vi.fn();
     searchMock.mockResolvedValue([
       {
+        score: 100,
+        matchType: 'exact',
+        person: {
         id: 'person-1',
         firstName: 'Amina',
         lastName: 'Saleh',
         gender: 'female',
         birthDate: '1988',
         birthPlace: 'Riyadh',
+        },
       },
     ]);
 
@@ -55,11 +63,12 @@ describe('SearchInputWithResults', () => {
     fireEvent.change(input, { target: { value: 'ami' } });
 
     expect(input).toHaveAttribute('aria-expanded', 'true');
-    expect(await screen.findByText(/b\. 1988 (\||Â·) Riyadh/)).toBeInTheDocument();
+    expect(await screen.findByRole('option', { name: /amina saleh/i })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('option', { name: /amina saleh/i }));
 
     expect(onFocusPerson).toHaveBeenCalledWith('person-1');
+    expect(triggerPulseMock).toHaveBeenCalledWith('person-1');
     expect(setSearchTargetMock).toHaveBeenCalledWith('person-1');
     expect(screen.queryByRole('option', { name: /amina saleh/i })).not.toBeInTheDocument();
   });
@@ -100,20 +109,28 @@ describe('SearchInputWithResults', () => {
     const onFocusPerson = vi.fn();
     searchMock.mockResolvedValue([
       {
+        score: 100,
+        matchType: 'exact',
+        person: {
         id: 'person-1',
         firstName: 'Amina',
         lastName: 'Saleh',
         gender: 'female',
         birthDate: '1988',
         birthPlace: 'Riyadh',
+        },
       },
       {
+        score: 90,
+        matchType: 'exact',
+        person: {
         id: 'person-2',
         firstName: 'Khalid',
         lastName: 'Saleh',
         gender: 'male',
         birthDate: '1984',
         birthPlace: 'Jeddah',
+        },
       },
     ]);
 
@@ -125,17 +142,22 @@ describe('SearchInputWithResults', () => {
     await screen.findByRole('option', { name: /amina saleh/i });
     fireEvent.keyDown(input, { key: 'ArrowDown' });
 
-    expect(input).toHaveAttribute('aria-activedescendant', 'search-result-option-person-1');
-    expect(screen.getByRole('option', { name: /amina saleh/i })).toHaveAttribute('aria-selected', 'true');
+    await waitFor(() => {
+      expect(input).toHaveAttribute('aria-activedescendant', 'search-result-option-person-1');
+      expect(screen.getByRole('option', { name: /amina saleh/i })).toHaveAttribute('aria-selected', 'true');
+    });
 
     fireEvent.keyDown(input, { key: 'ArrowDown' });
 
-    expect(input).toHaveAttribute('aria-activedescendant', 'search-result-option-person-2');
-    expect(screen.getByRole('option', { name: /khalid saleh/i })).toHaveAttribute('aria-selected', 'true');
+    await waitFor(() => {
+      expect(input).toHaveAttribute('aria-activedescendant', 'search-result-option-person-2');
+      expect(screen.getByRole('option', { name: /khalid saleh/i })).toHaveAttribute('aria-selected', 'true');
+    });
 
     fireEvent.keyDown(input, { key: 'Enter' });
 
     expect(onFocusPerson).toHaveBeenCalledWith('person-2');
+    expect(triggerPulseMock).toHaveBeenCalledWith('person-2');
     expect(setSearchTargetMock).toHaveBeenCalledWith('person-2');
     expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
   });

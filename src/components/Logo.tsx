@@ -9,6 +9,7 @@ export interface LogoProps {
 export const Logo: React.FC<LogoProps> = memo(({ className = '', variant = 'dark' }) => {
   const { t } = useTranslation();
   const [imgError, setImgError] = useState(false);
+  const [aspectRatio, setAspectRatio] = useState<string>();
 
   // إذا حدث خطأ في تحميل ملف SVG الخارجي، نعرض الشعار البرمجي كبديل
   if (imgError) {
@@ -36,15 +37,19 @@ export const Logo: React.FC<LogoProps> = memo(({ className = '', variant = 'dark
   }
 
   const logoSrc = variant === 'white' ? '/logo-bilingual-white.svg' : '/logo-bilingual-dark.svg';
-  // القيمة التقريبية للـ aspect-ratio لتجنب الـ Layout Shift (يمكن تعديلها لو كانت أبعاد الشعار مختلفة)
-  const ratio = '10 / 3'; 
 
   return (
     <img
       src={logoSrc}
       alt={t.logoAlt || 'شعار جذور - Jozor Logo'}
       className={`object-contain ${className}`}
-      style={{ aspectRatio: ratio }}
+      style={aspectRatio ? { aspectRatio } : undefined}
+      onLoad={(event) => {
+        const { naturalWidth, naturalHeight } = event.currentTarget;
+        if (naturalWidth > 0 && naturalHeight > 0) {
+          setAspectRatio(`${naturalWidth} / ${naturalHeight}`);
+        }
+      }}
       onError={() => setImgError(true)}
     />
   );

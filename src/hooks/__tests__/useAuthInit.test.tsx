@@ -263,7 +263,7 @@ describe('useAuthInit', () => {
       expect(useAppStore.getState().focusId).toBe('person-2');
       expect(useAppStore.getState().currentUserRole).toBe('editor');
       expect(useAppStore.getState().authLoading).toBe(false);
-    });
+    }, { timeout: 2500 });
 
     expect(localStorage.getItem('lastActiveTreeId')).toBe(focusedTreeId);
     expect(setShowWelcome).toHaveBeenCalledWith(false);

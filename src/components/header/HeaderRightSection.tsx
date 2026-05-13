@@ -1,7 +1,6 @@
 ﻿import React, { memo } from 'react';
 import { ChevronDown, Settings } from 'lucide-react';
 import { LoginButton } from '../LoginButton';
-import { SearchInputWithResults } from './SearchInputWithResults';
 import { Dropdown } from '../ui/Dropdown';
 import { useTranslation } from '../../context/TranslationContext';
 import { HeaderRightSectionProps } from '../../types';
@@ -10,6 +9,7 @@ import { NotificationBell } from './NotificationBell';
 import { AccountMenu } from './AccountMenu';
 import { useAppStore } from '../../store/useAppStore';
 import { useTreePermissions } from '../../hooks/useTreePermissions';
+import { KindiSearchTrigger } from '../../features/kindi';
 
 const HeaderMenuTrigger = ({ icon, label, testId, ...buttonProps }: { icon: React.ReactNode; label: string; testId?: string } & React.ButtonHTMLAttributes<HTMLButtonElement>) => (
   <button
@@ -40,7 +40,7 @@ export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(({ the
   return (
     <div className='flex items-center gap-1.5 md:gap-2.5' role='navigation' aria-label={t.mainNavigation}>
       <div className='flex items-center gap-2' role='search' aria-label={t.search}>
-        <SearchInputWithResults people={searchProps.people} onFocusPerson={searchProps.onFocusPerson} />
+        <KindiSearchTrigger people={searchProps.people} onFocusPerson={searchProps.onFocusPerson} />
       </div>
 
       <div className='flex items-center gap-0.5 sm:gap-1.5' role='group' aria-label={t.accountProfile}>

@@ -88,9 +88,11 @@ export const Sidebar = memo<SidebarProps>(
     const startYRef = useRef(0);
 
     const handleTouchStart = (e: React.TouchEvent) => {
-      // Only allow dragging from the top area or handle
+      // Only initiate drag from the handle or non-scrollable areas
       const target = e.target as HTMLElement;
+      // Block drag if inside a scrollable content area or interactive element
       if (target.closest('.no-drag')) return;
+      if (target.closest('button, a, input, select, textarea')) return;
       
       startYRef.current = e.touches[0].clientY;
       setIsDragging(true);
@@ -100,13 +102,16 @@ export const Sidebar = memo<SidebarProps>(
       if (!isDragging) return;
       const currentY = e.touches[0].clientY;
       const deltaY = Math.max(0, currentY - startYRef.current);
-      setDragY(deltaY);
+      // Only start dragging after 10px threshold to avoid accidental dismissal
+      if (deltaY > 10) {
+        setDragY(deltaY);
+      }
     };
 
     const handleTouchEnd = () => {
       if (!isDragging) return;
       setIsDragging(false);
-      if (dragY > 100) {
+      if (dragY > 80) {
         onClose();
       }
       setDragY(0);

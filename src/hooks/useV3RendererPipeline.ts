@@ -235,8 +235,16 @@ function buildPeopleLayoutSignature(people: Record<string, Person>): string {
 
   for (let i = 0; i < keys.length; i++) {
     const p = people[keys[i]];
-    // Structural fields: parents, spouses, children, gender
-    const str = `${p.id}:${p.gender}:${(p.parents?.length || 0)}:${(p.spouses?.length || 0)}:${(p.children?.length || 0)}`;
+    const str = [
+      p.id,
+      p.gender,
+      p.birthDate ?? '',
+      p.deathDate ?? '',
+      p.isDeceased ? '1' : '0',
+      (p.parents ?? []).join(','),
+      (p.spouses ?? []).join(','),
+      (p.children ?? []).join(','),
+    ].join(':');
     
     // Simple fast DJB2-like hash
     for (let j = 0; j < str.length; j++) {

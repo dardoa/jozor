@@ -4,7 +4,7 @@ import type { FamilyActionsProps, Gender, MutationActionResult } from '../types'
 interface FamilyActionBindingsOptions {
   handleOpenLinkModal: (type: 'parent' | 'spouse' | 'child', gender: Gender) => void;
   addParent: (gender: Gender, relatedPersonId?: string) => MutationActionResult | Promise<MutationActionResult>;
-  addSpouse: (gender: Gender) => MutationActionResult | Promise<MutationActionResult>;
+  addSpouse: (gender: Gender, relatedPersonId?: string) => MutationActionResult | Promise<MutationActionResult>;
   addChild: (gender: Gender, relatedPersonId?: string) => MutationActionResult | Promise<MutationActionResult>;
   addFirstPerson: (gender: Gender) => MutationActionResult | Promise<MutationActionResult>;
   removeRelationship: (targetId: string, relativeId: string, type: 'parent' | 'spouse' | 'child') => MutationActionResult | Promise<MutationActionResult>;
@@ -50,7 +50,7 @@ export function useFamilyActionBindings({
 
   const coreFamilyActions = useMemo<FamilyActionsProps>(() => ({
     onAddParent: (gender: Gender, relatedPersonId?: string) => addParent(gender, relatedPersonId),
-    onAddSpouse: (gender: Gender) => addSpouse(gender),
+    onAddSpouse: (gender: Gender, relatedPersonId?: string) => addSpouse(gender, relatedPersonId),
     onAddChild: (gender: Gender, relatedPersonId?: string) => addChild(gender, relatedPersonId),
     onAddFirstPerson: (gender: Gender) => addFirstPerson(gender),
     onRemoveRelationship: (targetId: string, relativeId: string, type: 'parent' | 'spouse' | 'child') => removeRelationship(targetId, relativeId, type),

@@ -20,6 +20,12 @@ export class LinkPersonCommand implements TreeCommand {
         const store = context.getState();
         const focusId = store.focusId;
         const preLinkPeople = store.people;
+        const preLinkFocusId = store.focusId;
+        const rollback = () => {
+            const rollbackStore = context.getState();
+            rollbackStore.setPeople(preLinkPeople, false);
+            rollbackStore.setFocusId(preLinkFocusId);
+        };
 
         // 1. Validation
         const blockingIssues = checkRelationshipAction({
@@ -61,6 +67,7 @@ export class LinkPersonCommand implements TreeCommand {
                         type: this.type
                     });
                     if (primaryQueued === false) {
+                        rollback();
                         return { success: false, error: 'The relationship was added locally, but could not be queued for sync.' };
                     }
 
@@ -79,6 +86,7 @@ export class LinkPersonCommand implements TreeCommand {
                                 type: 'spouse'
                             });
                             if (relationQueued === false) {
+                                rollback();
                                 return { success: false, error: 'The relationship was added locally, but could not be queued for sync.' };
                             }
                         }
@@ -91,6 +99,7 @@ export class LinkPersonCommand implements TreeCommand {
                                 type: 'child'
                             });
                             if (relationQueued === false) {
+                                rollback();
                                 return { success: false, error: 'The relationship was added locally, but could not be queued for sync.' };
                             }
                         }
@@ -105,6 +114,7 @@ export class LinkPersonCommand implements TreeCommand {
                     });
                 } catch (error) {
                     console.error('Failed to sync ADD_RELATION via DeltaSync:', error);
+                    rollback();
                     return {
                         success: false,
                         error: error instanceof Error ? error.message : 'The relationship was added locally, but sync failed.',

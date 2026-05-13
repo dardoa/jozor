@@ -38,6 +38,7 @@ import { NotFound } from './NotFound';
 import { useTranslation } from '../context/TranslationContext';
 import { InvitePage } from './InvitePage';
 import { ProtectedRoute } from './ProtectedRoute';
+import { MobileActionBar } from './ui/MobileActionBar';
 
 const HelpCenter = React.lazy(() =>
   import('./HelpCenter').then((m) => ({ default: m.HelpCenter }))
@@ -95,6 +96,10 @@ export const AppUIManager: React.FC = () => {
   const setCurrentUserRole = useAppStore((state) => state.setCurrentUserRole);
   const authLoading = useAppStore((state) => state.authLoading);
   const isVaultOpen = useAppStore((state) => state.isVaultOpen);
+  const setVaultOpen = useAppStore((state) => state.setVaultOpen);
+  const setVaultTab = useAppStore((state) => state.setVaultTab);
+  const darkMode = useAppStore((state) => state.darkMode);
+  const setDarkMode = useAppStore((state) => state.setDarkMode);
   useJozorDebugApi(welcomeScreen.setShowWelcome);
 
   const { fileInputRef, onFileUpload, showWelcome, handleStartNewTree } = welcomeScreen;
@@ -189,17 +194,30 @@ export const AppUIManager: React.FC = () => {
         return <NotFound />;
       }
       return (
-        <TreeSelector
-          ownerId={auth.user.uid}
-          userEmail={auth.user.email || EMPTY_STRING}
-          currentTreeId={currentTreeId}
-          supabaseToken={auth.user.supabaseToken}
-          onLogout={auth.onLogout}
-          onTreeSelected={(id, role) => {
-            setCurrentTreeId(id);
-            setCurrentUserRole(role);
-          }}
-        />
+        <>
+          <TreeSelector
+            ownerId={auth.user.uid}
+            userEmail={auth.user.email || EMPTY_STRING}
+            currentTreeId={currentTreeId}
+            supabaseToken={auth.user.supabaseToken}
+            onLogout={auth.onLogout}
+            onTreeSelected={(id, role) => {
+              setCurrentTreeId(id);
+              setCurrentUserRole(role);
+            }}
+          />
+          {/* Show mobile bottom bar in TreeSelector too */}
+          <MobileActionBar
+            activeTab={null}
+            canAddPerson
+            onOpenVault={() => {
+              setVaultTab('trees');
+              setVaultOpen(true);
+            }}
+            onOpenAppearance={() => setDarkMode(!darkMode)}
+            onAddPerson={handleStartNewTree}
+          />
+        </>
       );
     }
 

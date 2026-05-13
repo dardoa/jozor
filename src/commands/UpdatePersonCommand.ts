@@ -15,6 +15,7 @@ export class UpdatePersonCommand implements TreeCommand {
         const store = context.getState();
         const currentPeople = store.people;
         const currentPerson = currentPeople[this.id];
+        const previousPerson = currentPerson;
 
         if (!currentPerson) {
             return { success: false, error: 'Person not found.' };
@@ -50,6 +51,7 @@ export class UpdatePersonCommand implements TreeCommand {
             if (treeId) {
                 const queued = await context.syncService.debouncedPush(treeId, this.id, this.updates);
                 if (queued === false) {
+                    context.getState().updatePerson(this.id, previousPerson, true, false);
                     return { success: false, error: 'The change was applied locally, but could not be queued for sync.' };
                 }
             } else {

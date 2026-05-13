@@ -39,7 +39,7 @@ export function useAppTreeBindings({
   const { sidebarFamilyActions, coreFamilyActions } = useFamilyActionBindings({
     handleOpenLinkModal,
     addParent: (gender, relatedPersonId) => treeActions.addParent(gender, relatedPersonId),
-    addSpouse: (gender) => treeActions.addSpouse(gender),
+    addSpouse: (gender, relatedPersonId) => treeActions.addSpouse(gender, relatedPersonId),
     addChild: (gender, relatedPersonId) => treeActions.addChild(gender, relatedPersonId),
     addFirstPerson: (gender) => treeActions.addFirstPerson(gender),
     removeRelationship: (targetId, relativeId, type) =>

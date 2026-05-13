@@ -1,103 +1,178 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Jozor
 
-# Run and deploy your AI Studio app
+Jozor is a modern family-tree application for building, exploring, and preserving rich family archives. It combines an interactive tree renderer, structured person profiles, collaboration workflows, local-first persistence, cloud synchronization, and multilingual UI support.
 
-This contains everything you need to run your app locally.
+The project is a React + TypeScript application backed by Supabase, with optional Google Drive integrations for backups and archive workflows.
 
-View your app in AI Studio: https://ai.studio/apps/drive/1S95Wj-7U9dl4dQkXhoavNqcySiEdhpe2
+## What Jozor Does
 
-## Architectural Highlights
+- Build and edit family trees with people, partners, parents, children, and relationship links.
+- Render large family graphs with the V3 tree renderer and supporting chart modes.
+- Open detailed person profiles with biography, contact, media, relationships, notes, and contextual actions.
+- Search people using a multilingual intent-aware search pipeline.
+- Manage trees, backups, imports, collaboration, and settings through The Vault and management surfaces.
+- Support shared trees, invitations, roles, and realtime collaboration notifications.
+- Preserve work locally and synchronize changes through a delta-based sync pipeline.
+- Provide Arabic and English UI resources with dynamic locale loading.
 
-We have implemented several key architectural patterns to ensure performance, scalability, and code quality:
+## Architecture Overview
 
-- **Web Worker Implementation**: Computationally heavy tasks, such as Family Tree layout calculations (D3 Force Simulation), are offloaded to a dedicated Web Worker (`treeLayout.worker.ts`). This ensures the main UI thread remains unblocked, providing a smooth and responsive user experience even with large datasets.
-- **Local-First & IndexedDB**: We utilize `idb-keyval` to interact with IndexedDB for robust local storage. This allows for storing larger datasets (like family trees and user preferences) directly in the browser with better performance than `localStorage`.
-- **Strict Typing & Dependency Injection**: The codebase enforces Strict TypeScript checks for type safety. We also use a Dependency Injection (DI) pattern for our services (e.g., `GoogleDriveService`, `GoogleAuthService`), making the application modular and easily testable.
-- **Geographic Intelligence Cache**: We utilize a 3-tier caching sequence (Zustand -> Supabase Global Cache -> Nominatim API) to intelligently geocode historical family places while respecting API rate limits and preserving user location constraints globally.
+The codebase follows a layered architecture with feature-oriented islands where it improves maintainability.
 
-## VisibleTree Baseline
+```text
+src/
+  api/          Local/API handlers used by serverless and dev flows
+  commands/     User-facing mutation commands for tree operations
+  components/   React UI, drawers, modals, renderers, header, vault, sidebar
+  context/      App-level React contexts such as translation and overlays
+  domain/       Pure family-tree domain logic and layout semantics
+  hooks/        Orchestration hooks connecting UI, store, services, and routing
+  services/     Supabase, sync, Google Drive, search, storage, notifications
+  store/        Zustand stores and slices
+  types/        Shared TypeScript domain, state, and UI types
+  utils/        General utilities, translations, layout helpers
+```
 
-VisibleTree is now the default internal semantic layer for:
+Supporting folders:
 
-- `pedigree`
-- `fan`
-- `descendant`
-- minimap in ancestry modes
-- ancestry-mode highlighting
-- visible-view KPIs:
-  - Total Members
-  - Generation Depth
-  - Vitality
+```text
+docs/            Operational notes, runbooks, and architecture references
+scripts/         Developer and maintenance scripts
+supabase/        Migrations, diagnostics, and edge functions
+tests/e2e/       Playwright end-to-end tests
+legacy_archive/ Archived legacy code kept outside the production source tree
+public/          Static public assets
+```
 
-Legacy layout and analytics paths remain in place as rollback-only fallbacks. The `VITE_VISIBLE_TREE_*` flags are now enabled by default and only need to be set to `false` when intentionally rolling back a specific path during internal validation or incident response.
+## Key Technical Patterns
 
-Additional baseline notes:
+- **Delta Sync as the mutation backbone**: core tree changes flow through delta operations and a sync queue.
+- **Sovereign client access**: Supabase access is centralized through registry/client helpers rather than scattered client construction.
+- **Local-first behavior**: browser storage and offline cache layers protect user work during connectivity changes.
+- **Lazy-loaded heavy surfaces**: large modals, drawers, export tools, maps, and secondary panels are split from the initial bundle where practical.
+- **Domain isolation**: family graph semantics and layout rules live in `src/domain` and are tested independently.
+- **Feature shells**: larger UI areas such as The Vault, Header, Sidebar, Tree Control, and Modals are split into subcomponents and controller hooks.
 
-- [VisibleTree Baseline](D:/AppDEV/Jozor1.1/docs/visible-tree-baseline.md)
+## Prerequisites
 
-## Run Locally
+- Node.js 20.x
+- npm
+- A configured Supabase project for cloud-backed development
+- Optional Google Cloud OAuth credentials for Google Drive features
 
-**Prerequisites:** Node.js
+## Local Setup
 
-1.  Install dependencies:
-    `npm install`
-2.  **Configure Google Client ID (IMPORTANT for Google Drive features):**
-    Create a `.env.local` file in the root of your project and add your Google Client ID:
-    `VITE_GOOGLE_CLIENT_ID=YOUR_GOOGLE_CLIENT_ID_HERE`
-    You can obtain a Google Client ID from the Google Cloud Console (APIs & Services > Credentials). Ensure you enable the Google Drive API.
-3.  **Securely configure Gemini API Key (IMPORTANT for AI features):**
-    The Gemini API key should **NOT** be exposed on the client-side. To use AI features, you must:
-    - **Implement a backend proxy server** that handles all calls to the Google Gemini API.
-    - Store your `GEMINI_API_KEY` securely on this backend server (e.g., as an environment variable).
-    - Modify `src/services/geminiService.ts` to make `fetch` requests to your backend proxy instead of directly using `@google/genai` client.
-    - For local development, you might still use a `.env.local` file for your backend, but ensure it's never bundled into the frontend.
-4.  Run the app:
-    `npm run dev`
+Install dependencies:
+
+```bash
+npm install
+```
+
+Create a local environment file from the example:
+
+```bash
+cp .env.example .env.local
+```
+
+Fill only the values required for your local environment. Do not commit secrets, access tokens, service-role keys, or private credentials.
+
+Start the development server:
+
+```bash
+npm run dev
+```
+
+## Available Scripts
+
+```bash
+npm run dev              # Start Vite dev server
+npm run build            # Build production assets
+npm run preview          # Preview production build locally
+npm run typecheck        # Run TypeScript checks
+npm run lint             # Run ESLint
+npm run lint:fix         # Run ESLint with autofix
+npm run test             # Run unit/integration tests
+npm run test:e2e         # Run Playwright E2E tests
+npm run test:e2e:smoke   # Run the smoke E2E suite
+```
 
 ## Quality Gates
 
-The repository now includes a GitHub Actions CI workflow at [.github/workflows/ci.yml](/D:/AppDEV/Jozor1.1/.github/workflows/ci.yml). On pushes and pull requests, it validates:
+Before opening a pull request, run:
 
-- `npm run typecheck`
-- `npm run lint`
-- `npm run test`
-- `npm run test:e2e:smoke`
+```bash
+npm run typecheck
+npm run test
+npm run build
+```
 
-If Playwright fails in CI, the workflow uploads `playwright-report` and `test-results` as artifacts for debugging.
+For UI-heavy changes, also run:
 
-Operational runbooks:
+```bash
+npm run test:e2e:smoke
+```
 
-- [`docs/release-readiness-checklist.md`](/D:/AppDEV/Jozor1.1/docs/release-readiness-checklist.md)
-- [`docs/supabase-bootstrap-runbook.md`](/D:/AppDEV/Jozor1.1/docs/supabase-bootstrap-runbook.md)
-- [`docs/supabase-audit-checklist.md`](/D:/AppDEV/Jozor1.1/docs/supabase-audit-checklist.md)
+The repository includes tests across:
 
-## Live Collaboration E2E
+- domain graph semantics
+- sync queue and remote sync behavior
+- search parsing and inference
+- store slices and orchestration hooks
+- major UI surfaces and interaction flows
+- API and development proxy handlers
 
-For a real multi-user Supabase/Firebase collaboration check, set these environment variables before running the test:
+## Supabase
 
-- `E2E_OWNER_EMAIL`
-- `E2E_OWNER_PASSWORD`
-- `E2E_EDITOR_EMAIL`
-- `E2E_EDITOR_PASSWORD`
+Database migrations live in:
 
-Then run:
+```text
+supabase/migrations/
+```
 
-- `npm run test:e2e:collab:live`
+Useful operational references:
 
-This suite signs in two real users, shares a real DB tree, verifies viewer restrictions, promotes the collaborator to editor, and confirms the edit persists after reload.
+- [Supabase bootstrap runbook](docs/supabase-bootstrap-runbook.md)
+- [Supabase migration history repair](docs/supabase-migration-history-repair.md)
+- [Release readiness checklist](docs/release-readiness-checklist.md)
 
-## Recommended Local Validation
+Never place Supabase service-role keys or private database credentials in frontend code.
 
-Before opening a pull request, run the same high-value checks locally:
+## E2E Collaboration Testing
 
-1.  `npm run typecheck`
-2.  `npm run lint`
-3.  `npm run test`
-4.  `npm run test:e2e:smoke`
+The live collaboration suite requires real test accounts configured through environment variables:
 
-For cross-browser verification when changing interaction-heavy UI, also run:
+```text
+E2E_OWNER_EMAIL
+E2E_OWNER_PASSWORD
+E2E_EDITOR_EMAIL
+E2E_EDITOR_PASSWORD
+```
 
-- `npx playwright test tests/e2e/app-smoke.spec.ts --project=firefox`
-- `npx playwright test tests/e2e/app-smoke.spec.ts --project=webkit`
+Run:
+
+```bash
+npm run test:e2e:collab:live
+```
+
+This verifies shared-tree access, role transitions, editor permissions, and persistence after reload.
+
+## Security Notes
+
+- Keep secrets in local environment files or deployment secret stores only.
+- Do not expose provider API keys directly in browser code.
+- Route AI/provider calls through controlled backend or serverless endpoints.
+- Treat database migrations and security-definer functions as security-sensitive changes.
+- Keep archived legacy code outside `src` unless intentionally restoring a path.
+
+## Project Maintenance
+
+- Maintenance-only scripts belong in `scripts/maintenance`.
+- Generated logs, reports, build outputs, and temporary files should stay out of version control.
+- Legacy code should remain under `legacy_archive` until intentionally removed or restored.
+- New tests should generally live in a nearby `__tests__` folder for consistency.
+
+## Documentation
+
+Additional project notes and operational guides are available in `docs/`.
+
+For architecture changes, prefer small focused refactors with tests over broad folder reshuffles.

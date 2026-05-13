@@ -110,6 +110,28 @@ describe('useTreeActions', () => {
     });
   });
 
+  it('rolls back a local update when the sync queue rejects it', async () => {
+    debouncedPushMock.mockResolvedValueOnce(false);
+    const { result } = renderHook(() => useTreeActions());
+
+    let updateResult;
+    await act(async () => {
+      updateResult = await result.current.updatePerson('person-1', {
+        firstName: 'After',
+        bio: 'Fresh bio',
+      });
+    });
+
+    const restored = useAppStore.getState().people['person-1'];
+    expect(updateResult).toEqual({
+      success: false,
+      error: 'The change was applied locally, but could not be queued for sync.',
+    });
+    expect(restored.firstName).toBe('Before');
+    expect(restored.bio).toBe('Old bio');
+    expect(saveFullTreeMock).not.toHaveBeenCalled();
+  });
+
   it('deletes the person locally, removes the IndexedDB record, and syncs the cloud deletion', async () => {
     const { result } = renderHook(() => useTreeActions());
 
@@ -127,6 +149,24 @@ describe('useTreeActions', () => {
       'DELETE_NODE',
       { id: 'person-1' }
     );
+  });
+
+  it('rolls back a local delete when the sync queue rejects it', async () => {
+    pushOperationMock.mockResolvedValueOnce(false);
+    const { result } = renderHook(() => useTreeActions());
+
+    let deleteResult;
+    await act(async () => {
+      deleteResult = await result.current.deletePerson('person-1');
+    });
+
+    expect(deleteResult).toEqual({
+      success: false,
+      error: 'The person was deleted locally, but could not be queued for sync.',
+    });
+    expect(useAppStore.getState().people['person-1']).toBeDefined();
+    expect(useAppStore.getState().focusId).toBe('person-1');
+    expect(saveFullTreeMock).not.toHaveBeenCalled();
   });
 
   it('adds the first person via sovereign delta operations only', async () => {

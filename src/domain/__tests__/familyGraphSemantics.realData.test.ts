@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { describe, it, expect } from 'vitest';
-import { buildLayoutSemanticsSnapshot } from '../domain/familyGraphSemantics';
-import { FamilyGraph } from '../domain/familyGraphTypes';
+import { buildLayoutSemanticsSnapshot } from '../familyGraphSemantics';
+import { FamilyGraph } from '../familyGraphTypes';
 
 describe('Family Tree Semantics - Real Data Test', () => {
   const testData = {

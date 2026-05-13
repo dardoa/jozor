@@ -24,8 +24,8 @@ vi.mock('../../../context/TranslationContext', () => ({
   }),
 }));
 
-vi.mock('../SearchInputWithResults', () => ({
-  SearchInputWithResults: () => <div data-testid="search-input" />,
+vi.mock('../../../features/kindi', () => ({
+  KindiSearchTrigger: () => <div data-testid="kindi-search-trigger" />,
 }));
 
 vi.mock('../../SyncStatusIndicator', () => ({

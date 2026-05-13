@@ -187,7 +187,7 @@ describe('DiagnosticsDrawer', () => {
     pruneActivityLogsMock.mockResolvedValue(3);
   });
 
-  it('shows diagnostics and maintenance actions for the tree owner', () => {
+  it('shows diagnostics and maintenance actions for the tree owner', async () => {
     render(<DiagnosticsDrawer />);
 
     expect(screen.getByText('Sync Diagnostics')).toBeInTheDocument();
@@ -205,8 +205,8 @@ describe('DiagnosticsDrawer', () => {
     expect(screen.getByText('inv-1')).toBeInTheDocument();
     expect(screen.getByText('owned-realtime:revoked')).toBeInTheDocument();
     expect(screen.getByText(/invitee@example.com/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Prune Old Sync Operations' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Prune Old Activity Logs' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Prune Old Sync Operations' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Prune Old Activity Logs' })).toBeInTheDocument();
   });
 
   it('shows invitation telemetry errors when present', () => {
@@ -222,20 +222,20 @@ describe('DiagnosticsDrawer', () => {
     mockState.invitationTelemetry.lastErrorMessage = undefined;
   });
 
-  it('hides maintenance actions for non-owners', () => {
+  it('hides maintenance actions for non-owners', async () => {
     mockState.currentUserRole = 'editor';
 
     render(<DiagnosticsDrawer />);
 
     expect(screen.queryByRole('button', { name: 'Prune Old Sync Operations' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Prune Old Activity Logs' })).not.toBeInTheDocument();
-    expect(screen.getByText('Maintenance tools are available only to the tree owner while a tree is open.')).toBeInTheDocument();
+    expect(await screen.findByText('Maintenance tools are available only to the tree owner while a tree is open.')).toBeInTheDocument();
   });
 
   it('runs the tree operation cleanup action', async () => {
     render(<DiagnosticsDrawer />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Prune Old Sync Operations' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Prune Old Sync Operations' }));
 
     await waitFor(() => {
       expect(pruneTreeOperationsMock).toHaveBeenCalledWith(
@@ -253,7 +253,7 @@ describe('DiagnosticsDrawer', () => {
   it('shows success feedback when activity log cleanup completes', async () => {
     render(<DiagnosticsDrawer />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Prune Old Activity Logs' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Prune Old Activity Logs' }));
 
     await waitFor(() => {
       expect(pruneActivityLogsMock).toHaveBeenCalledWith(
@@ -279,7 +279,7 @@ describe('DiagnosticsDrawer', () => {
 
     render(<DiagnosticsDrawer />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Prune Old Sync Operations' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Prune Old Sync Operations' }));
 
     await waitFor(() => {
       expect(showErrorMock).toHaveBeenCalledWith(
@@ -300,8 +300,8 @@ describe('DiagnosticsDrawer', () => {
 
     render(<DiagnosticsDrawer />);
 
-    const pruneOperationsButton = screen.getByRole('button', { name: 'Prune Old Sync Operations' });
-    const pruneActivityButton = screen.getByRole('button', { name: 'Prune Old Activity Logs' });
+    const pruneOperationsButton = await screen.findByRole('button', { name: 'Prune Old Sync Operations' });
+    const pruneActivityButton = await screen.findByRole('button', { name: 'Prune Old Activity Logs' });
 
     fireEvent.click(pruneOperationsButton);
 
@@ -323,7 +323,7 @@ describe('DiagnosticsDrawer', () => {
   it('opens the clear sync confirmation from diagnostics', async () => {
     render(<DiagnosticsDrawer />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Clear Pending Syncs' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Clear Pending Syncs' }));
     fireEvent.click(screen.getAllByRole('button', { name: 'Clear Pending Syncs' })[1]);
 
     await waitFor(() => {

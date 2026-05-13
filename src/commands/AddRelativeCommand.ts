@@ -10,24 +10,36 @@ export class AddRelativeCommand implements TreeCommand {
         private readonly type: RelativeType,
         private readonly gender: 'male' | 'female',
         private readonly relatedPersonId?: string,
-        private readonly bypassSync: boolean = false
+        private readonly bypassSync: boolean = false,
+        private readonly targetPersonId?: string
     ) {}
 
     public async execute(context: CommandContext): Promise<MutationActionResult> {
         const store = context.getState();
-        const focusId = store.focusId;
+        const focusId = this.targetPersonId
+            || (this.type === 'spouse' && this.relatedPersonId
+            ? this.relatedPersonId
+            : store.focusId);
+        const previousPeople = store.people;
+        const previousFocusId = store.focusId;
+
+        const rollback = () => {
+            const rollbackStore = context.getState();
+            rollbackStore.setPeople(previousPeople, false);
+            rollbackStore.setFocusId(previousFocusId);
+        };
 
         // 1. Pure Mutation in Store
         let res;
         switch (this.type) {
             case 'parent':
-                res = store.addParent(this.gender, this.bypassSync, this.relatedPersonId);
+                res = store.addParent(this.gender, this.bypassSync, this.relatedPersonId, focusId);
                 break;
             case 'spouse':
-                res = store.addSpouse(this.gender, this.bypassSync);
+                res = store.addSpouse(this.gender, this.bypassSync, this.relatedPersonId);
                 break;
             case 'child':
-                res = store.addChild(this.gender, this.bypassSync, this.relatedPersonId);
+                res = store.addChild(this.gender, this.bypassSync, this.relatedPersonId, focusId);
                 break;
         }
 
@@ -53,6 +65,7 @@ export class AddRelativeCommand implements TreeCommand {
                         type: this.type 
                     });
                     if (nodeQueued === false) {
+                        rollback();
                         return { success: false, error: `The ${this.type} was added locally, but could not be queued for sync.` };
                     }
 
@@ -68,6 +81,7 @@ export class AddRelativeCommand implements TreeCommand {
                                 type: 'spouse'
                             });
                             if (relationQueued === false) {
+                                rollback();
                                 return { success: false, error: 'The relationship was added locally, but could not be queued for sync.' };
                             }
                         }
@@ -80,6 +94,7 @@ export class AddRelativeCommand implements TreeCommand {
                                 type: 'child'
                             });
                             if (relationQueued === false) {
+                                rollback();
                                 return { success: false, error: 'The relationship was added locally, but could not be queued for sync.' };
                             }
                         }
@@ -94,6 +109,7 @@ export class AddRelativeCommand implements TreeCommand {
                     });
                 } catch (error) {
                     console.error(`Failed to sync ${this.type} via DeltaSync:`, error);
+                    rollback();
                     return {
                         success: false,
                         error: error instanceof Error ? error.message : `The ${this.type} was added locally, but sync failed.`,

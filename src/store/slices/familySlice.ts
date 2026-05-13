@@ -33,9 +33,9 @@ export interface FamilySlice {
     setSearchTarget: (id: string | null) => void;
     updatePerson: (id: string, updates: Partial<Person>, bypassSync?: boolean, addToHistory?: boolean) => void;
     deletePerson: (id: string, bypassSync?: boolean, addToHistory?: boolean) => void;
-    addParent: (gender: 'male' | 'female', bypassSync?: boolean, relatedPersonId?: string) => { updatedPeople: Record<string, Person>; newId: string } | null;
-    addSpouse: (gender: 'male' | 'female', bypassSync?: boolean) => { updatedPeople: Record<string, Person>; newId: string } | null;
-    addChild: (gender: 'male' | 'female', bypassSync?: boolean, relatedPersonId?: string) => { updatedPeople: Record<string, Person>; newId: string } | null;
+    addParent: (gender: 'male' | 'female', bypassSync?: boolean, relatedPersonId?: string, targetPersonId?: string) => { updatedPeople: Record<string, Person>; newId: string } | null;
+    addSpouse: (gender: 'male' | 'female', bypassSync?: boolean, relatedPersonId?: string) => { updatedPeople: Record<string, Person>; newId: string } | null;
+    addChild: (gender: 'male' | 'female', bypassSync?: boolean, relatedPersonId?: string, targetPersonId?: string) => { updatedPeople: Record<string, Person>; newId: string } | null;
     removeRelationship: (targetId: string, relativeId: string, type: 'parent' | 'spouse' | 'child', bypassSync?: boolean, addToHistory?: boolean) => void;
     linkPerson: (existingId: string, type: 'parent' | 'spouse' | 'child' | null, bypassSync?: boolean, addToHistory?: boolean, relatedPersonId?: string) => void;
     loadCloudData: (cloudPeople: Record<string, Person>) => void;
@@ -131,11 +131,12 @@ export const createFamilySlice: StateCreator<AppStore, [["zustand/devtools", nev
         }));
     },
 
-    addParent: (gender, _bypassSync = false, relatedPersonId) => {
+    addParent: (gender, _bypassSync = false, relatedPersonId, targetPersonId) => {
         if (get().currentUserRole === 'viewer') throw new Error('Unauthorized: Viewers cannot add parents.');
         const currentPeople = get().people;
         const { focusId } = get();
-        const res = performAddParent(currentPeople, focusId, gender, relatedPersonId);
+        const targetId = targetPersonId || focusId;
+        const res = performAddParent(currentPeople, targetId, gender, relatedPersonId);
         if (!res) return null;
 
         get().pushToHistory(currentPeople);
@@ -149,11 +150,12 @@ export const createFamilySlice: StateCreator<AppStore, [["zustand/devtools", nev
         return res;
     },
 
-    addSpouse: (gender, _bypassSync = false) => {
+    addSpouse: (gender, _bypassSync = false, relatedPersonId) => {
         if (get().currentUserRole === 'viewer') throw new Error('Unauthorized: Viewers cannot add spouses.');
         const currentPeople = get().people;
         const { focusId } = get();
-        const res = performAddSpouse(currentPeople, focusId, gender);
+        const targetId = relatedPersonId || focusId;
+        const res = performAddSpouse(currentPeople, targetId, gender);
         if (!res) return null;
 
         get().pushToHistory(currentPeople);
@@ -167,11 +169,12 @@ export const createFamilySlice: StateCreator<AppStore, [["zustand/devtools", nev
         return res;
     },
 
-    addChild: (gender, _bypassSync = false, relatedPersonId) => {
+    addChild: (gender, _bypassSync = false, relatedPersonId, targetPersonId) => {
         if (get().currentUserRole === 'viewer') throw new Error('Unauthorized: Viewers cannot add children.');
         const currentPeople = get().people;
         const { focusId } = get();
-        const res = performAddChild(currentPeople, focusId, gender, relatedPersonId);
+        const targetId = targetPersonId || focusId;
+        const res = performAddChild(currentPeople, targetId, gender, relatedPersonId);
         if (!res) return null;
 
         get().pushToHistory(currentPeople);

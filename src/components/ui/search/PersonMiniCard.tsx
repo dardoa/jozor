@@ -8,13 +8,23 @@ interface PersonMiniCardProps {
     person: Person;
     query?: string;
     onClick: () => void;
+    id?: string;
+    role?: 'option';
+    'aria-selected'?: boolean;
 }
 
 /**
  * A rich result card for the search engine.
  * Displays photo, name (with father's name logic), age, and highlights matches.
  */
-export const PersonMiniCard: React.FC<PersonMiniCardProps> = ({ person, query, onClick }) => {
+export const PersonMiniCard: React.FC<PersonMiniCardProps> = ({
+    person,
+    query,
+    onClick,
+    id,
+    role,
+    'aria-selected': ariaSelected,
+}) => {
     const years = getYears(person);
     const genderColor = person.gender === 'male' ? 'border-blue-400' : 'border-pink-400';
     
@@ -44,6 +54,10 @@ export const PersonMiniCard: React.FC<PersonMiniCardProps> = ({ person, query, o
 
     return (
         <button
+            id={id}
+            role={role}
+            aria-selected={ariaSelected}
+            aria-label={displayName}
             onClick={onClick}
             className="w-full flex items-center p-3 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-all group/item text-start border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
         >

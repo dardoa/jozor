@@ -38,6 +38,9 @@ export const SearchResults = memo(({ query, results, onFocus, onClose, activeRes
                     className={`rounded-xl transition-all ${activeResultId === p.id ? 'bg-primary-50/50 dark:bg-primary-900/10' : ''}`}
                 >
                     <PersonMiniCard
+                        id={`search-result-option-${p.id}`}
+                        role="option"
+                        aria-selected={activeResultId === p.id}
                         person={p}
                         query={query}
                         onClick={() => {

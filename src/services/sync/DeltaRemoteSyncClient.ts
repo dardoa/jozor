@@ -199,9 +199,6 @@ export class DeltaRemoteSyncClient {
                         break;
                 }
             } catch (err) {
-                // We log the error but don't rethrow. The tree_operations table is the sovereign 
-                // source of truth; if the projection fails (e.g. due to a missing column in the 
-                // people table), we still want to commit the operation to the delta log.
                 logError('Sync Projection Failure', err, {
                     category: 'SYNC',
                     severity: 'MEDIUM',
@@ -212,6 +209,7 @@ export class DeltaRemoteSyncClient {
                         hint: 'Projection update failed. The delta log will still be attempted.'
                     }
                 });
+                throw err;
             }
         }
     }

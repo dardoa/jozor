@@ -48,9 +48,10 @@ export const useTreeActions = () => {
     const addParent = async (
         gender: 'male' | 'female',
         relatedPersonId?: string,
-        bypassSync = false
+        bypassSync = false,
+        targetPersonId?: string
     ): Promise<MutationActionResult> => {
-        const command = new AddRelativeCommand('parent', gender, relatedPersonId, bypassSync);
+        const command = new AddRelativeCommand('parent', gender, relatedPersonId, bypassSync, targetPersonId);
         return await CommandExecutor.execute(command);
     };
 
@@ -64,18 +65,20 @@ export const useTreeActions = () => {
 
     const addSpouse = async (
         gender: 'male' | 'female',
+        relatedPersonId?: string,
         bypassSync = false
     ): Promise<MutationActionResult> => {
-        const command = new AddRelativeCommand('spouse', gender, undefined, bypassSync);
+        const command = new AddRelativeCommand('spouse', gender, relatedPersonId, bypassSync);
         return await CommandExecutor.execute(command);
     };
 
     const addChild = async (
         gender: 'male' | 'female',
         relatedPersonId?: string,
-        bypassSync = false
+        bypassSync = false,
+        targetPersonId?: string
     ): Promise<MutationActionResult> => {
-        const command = new AddRelativeCommand('child', gender, relatedPersonId, bypassSync);
+        const command = new AddRelativeCommand('child', gender, relatedPersonId, bypassSync, targetPersonId);
         return await CommandExecutor.execute(command);
     };
 

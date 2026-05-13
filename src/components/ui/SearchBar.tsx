@@ -51,7 +51,7 @@ export const SearchBar = ({ people, onFocusPerson, className = '' }: SearchBarPr
         const timeoutId = setTimeout(() => {
             void searchService.search(query, 10).then((nextResults) => {
                 if (searchRequestIdRef.current !== requestId) return;
-                setResults(nextResults);
+                setResults(nextResults.map((result) => result.person));
             });
         }, 150); // Small debounce for typing
 

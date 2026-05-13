@@ -42,7 +42,7 @@ export const usePersonSearchController = ({
 
     void searchService.search(query).then((results) => {
       if (searchRequestIdRef.current !== requestId) return;
-      setSearchResults(results);
+      setSearchResults(results.map((result) => result.person));
       setActiveIndex(-1);
     });
   }, []);
