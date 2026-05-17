@@ -1,127 +1,94 @@
-# Jozor
+# Jozor 2.0.0
 
-Jozor is a modern family-tree application for building, exploring, and preserving rich family archives. It combines an interactive tree renderer, structured person profiles, collaboration workflows, local-first persistence, cloud synchronization, and multilingual UI support.
+Jozor is a modern family-tree application for building, exploring, collaborating on, and preserving rich family archives. It combines an interactive graph renderer, structured person details, realtime collaboration, local-first persistence, cloud synchronization, media archives, and an assistant-driven search and command experience.
 
-The project is a React + TypeScript application backed by Supabase, with optional Google Drive integrations for backups and archive workflows.
+The project is a React 19 + TypeScript + Vite application backed by Supabase. Optional integrations support Google Drive backups and AI-assisted command planning through controlled backend endpoints.
 
-## What Jozor Does
+## Product Scope
 
-- Build and edit family trees with people, partners, parents, children, and relationship links.
-- Render large family graphs with the V3 tree renderer and supporting chart modes.
-- Open detailed person profiles with biography, contact, media, relationships, notes, and contextual actions.
-- Search people using a multilingual intent-aware search pipeline.
-- Manage trees, backups, imports, collaboration, and settings through The Vault and management surfaces.
-- Support shared trees, invitations, roles, and realtime collaboration notifications.
-- Preserve work locally and synchronize changes through a delta-based sync pipeline.
-- Provide Arabic and English UI resources with dynamic locale loading.
+Jozor helps families:
 
-## Architecture Overview
+- Build family trees with parents, children, partners, relatives, and reference-aware graph rendering.
+- Explore large trees through an interactive canvas, zoom controls, details panels, and alternate chart views.
+- Maintain detailed person profiles with identity, biography, relationships, media, sources, places, and notes.
+- Search people and family data using Arabic/English-aware parsing and confidence-ranked results.
+- Use Kindi, the in-app assistant, for conversational search and guarded tree commands.
+- Collaborate through shared trees, invitations, roles, notifications, discussions, and activity history.
+- Preserve archives through The Vault, snapshots, imports, exports, media handling, and backups.
+- Synchronize work through a delta-based sync pipeline with local-first behavior.
 
-The codebase follows a layered architecture with feature-oriented islands where it improves maintainability.
+## Architecture
+
+Jozor now follows a feature-based architecture. Shared primitives remain in top-level folders, while large product areas live in self-contained modules under `src/features`.
 
 ```text
 src/
-  api/          Local/API handlers used by serverless and dev flows
-  commands/     User-facing mutation commands for tree operations
-  components/   React UI, drawers, modals, renderers, header, vault, sidebar
-  context/      App-level React contexts such as translation and overlays
-  domain/       Pure family-tree domain logic and layout semantics
-  hooks/        Orchestration hooks connecting UI, store, services, and routing
-  services/     Supabase, sync, Google Drive, search, storage, notifications
-  store/        Zustand stores and slices
-  types/        Shared TypeScript domain, state, and UI types
+  api/          Local and serverless API handlers
+  commands/     User-facing mutation commands
+  components/   Shared UI, app shell, header, icons, tree primitives
+  context/      App-level React contexts
+  domain/       Pure family-tree domain and graph logic
+  features/     Product features with their own UI, hooks, logic, services, tests
+  hooks/        App orchestration hooks
+  services/     Shared platform services: Supabase, sync, search, storage, AI, notifications
+  store/        Zustand store and slices
+  types/        Shared TypeScript types
   utils/        General utilities, translations, layout helpers
 ```
 
-Supporting folders:
+Current feature modules:
 
 ```text
-docs/            Operational notes, runbooks, and architecture references
-scripts/         Developer and maintenance scripts
-supabase/        Migrations, diagnostics, and edge functions
-tests/e2e/       Playwright end-to-end tests
-legacy_archive/ Archived legacy code kept outside the production source tree
-public/          Static public assets
+src/features/
+  activity-log
+  diagnostics
+  discussions
+  drive-file-manager
+  geography
+  kindi
+  landing
+  settings
+  sharing
+  smart-persona
+  statistics
+  the-vault
+  tree-control
+  tree-manager
 ```
 
-## Key Technical Patterns
+Each feature should expose its public surface through `index.ts`. Cross-feature imports should use that public API unless there is a deliberate low-level service exception.
 
-- **Delta Sync as the mutation backbone**: core tree changes flow through delta operations and a sync queue.
-- **Sovereign client access**: Supabase access is centralized through registry/client helpers rather than scattered client construction.
-- **Local-first behavior**: browser storage and offline cache layers protect user work during connectivity changes.
-- **Lazy-loaded heavy surfaces**: large modals, drawers, export tools, maps, and secondary panels are split from the initial bundle where practical.
-- **Domain isolation**: family graph semantics and layout rules live in `src/domain` and are tested independently.
-- **Feature shells**: larger UI areas such as The Vault, Header, Sidebar, Tree Control, and Modals are split into subcomponents and controller hooks.
+## Key Systems
 
-## Prerequisites
+### Kindi Assistant
 
-- Node.js 20.x
-- npm
-- A configured Supabase project for cloud-backed development
-- Optional Google Cloud OAuth credentials for Google Drive features
+Kindi lives in `src/features/kindi` and is split into:
 
-## Local Setup
+- `components/`: overlay, trigger, confidence UI.
+- `hooks/`: controller, messages, search flow, execution flow, command planning, AI planning, voice input.
+- `logic/`: intent routing, lexicon, privacy redaction, locale strings, learning traces, executive planning.
+- `services/`: AI planning and learning-log helpers.
 
-Install dependencies:
+Kindi is designed as a guarded command interface. It can search, ask for clarification, show confirmation cards, execute approved actions, and fall back to optional AI planning without giving AI direct authority over database IDs.
 
-```bash
-npm install
-```
+### Discussions
 
-Create a local environment file from the example:
+The discussions feature provides tree-scoped family conversations with:
 
-```bash
-cp .env.example .env.local
-```
+- realtime message loading and subscription
+- reply support
+- online member indicators
+- message deletion rules
+- local search across loaded messages
+- length validation and server-side migration constraints
 
-Fill only the values required for your local environment. Do not commit secrets, access tokens, service-role keys, or private credentials.
+### Sync and Persistence
 
-Start the development server:
+Core tree changes flow through command objects and delta sync services. The app uses local-first storage and a queue-backed remote sync model so user work can survive reloads and transient connectivity issues.
 
-```bash
-npm run dev
-```
+### Supabase
 
-## Available Scripts
-
-```bash
-npm run dev              # Start Vite dev server
-npm run build            # Build production assets
-npm run preview          # Preview production build locally
-npm run typecheck        # Run TypeScript checks
-npm run lint             # Run ESLint
-npm run lint:fix         # Run ESLint with autofix
-npm run test             # Run unit/integration tests
-npm run test:e2e         # Run Playwright E2E tests
-npm run test:e2e:smoke   # Run the smoke E2E suite
-```
-
-## Quality Gates
-
-Before opening a pull request, run:
-
-```bash
-npm run typecheck
-npm run test
-npm run build
-```
-
-For UI-heavy changes, also run:
-
-```bash
-npm run test:e2e:smoke
-```
-
-The repository includes tests across:
-
-- domain graph semantics
-- sync queue and remote sync behavior
-- search parsing and inference
-- store slices and orchestration hooks
-- major UI surfaces and interaction flows
-- API and development proxy handlers
-
-## Supabase
+Supabase is used for authentication, relational data, realtime updates, invitations, collaboration, learning logs, discussions, storage metadata, and sync projection.
 
 Database migrations live in:
 
@@ -129,50 +96,108 @@ Database migrations live in:
 supabase/migrations/
 ```
 
-Useful operational references:
+Keep service-role keys and provider secrets out of frontend code. Use environment files locally and deployment secret stores in hosted environments.
 
-- [Supabase bootstrap runbook](docs/supabase-bootstrap-runbook.md)
-- [Supabase migration history repair](docs/supabase-migration-history-repair.md)
-- [Release readiness checklist](docs/release-readiness-checklist.md)
+## Local Development
 
-Never place Supabase service-role keys or private database credentials in frontend code.
+### Requirements
 
-## E2E Collaboration Testing
+- Node.js 20.x
+- npm
+- A configured Supabase project for cloud-backed flows
+- Optional Google/Gemini credentials for Drive and AI-assisted features
 
-The live collaboration suite requires real test accounts configured through environment variables:
-
-```text
-E2E_OWNER_EMAIL
-E2E_OWNER_PASSWORD
-E2E_EDITOR_EMAIL
-E2E_EDITOR_PASSWORD
-```
-
-Run:
+### Install
 
 ```bash
+npm install
+```
+
+Create a local environment file:
+
+```bash
+cp .env.example .env.local
+```
+
+Fill only the values needed for your local setup. Never commit secrets, API keys, access tokens, or service-role credentials.
+
+### Run
+
+```bash
+npm run dev
+```
+
+## Scripts
+
+```bash
+npm run dev              # Start Vite development server
+npm run build            # Build production assets
+npm run preview          # Preview the production build
+npm run typecheck        # Run TypeScript checks
+npm run lint             # Run ESLint
+npm run lint:fix         # Run ESLint with autofix
+npm run test             # Run Vitest tests
+npm run test:e2e         # Run Playwright tests
+npm run test:e2e:smoke   # Run the smoke E2E suite
+```
+
+Useful focused suites:
+
+```bash
+npm run test:shared-tree:unit
+npm run test:shared-tree:smoke
+npm run test:telemetry
 npm run test:e2e:collab:live
 ```
 
-This verifies shared-tree access, role transitions, editor permissions, and persistence after reload.
+The live collaboration suite requires test accounts configured through local environment variables.
 
-## Security Notes
+## Quality Gates
 
-- Keep secrets in local environment files or deployment secret stores only.
-- Do not expose provider API keys directly in browser code.
-- Route AI/provider calls through controlled backend or serverless endpoints.
-- Treat database migrations and security-definer functions as security-sensitive changes.
-- Keep archived legacy code outside `src` unless intentionally restoring a path.
+Before merging meaningful changes, run:
 
-## Project Maintenance
+```bash
+npm run typecheck
+npm run test
+npm run build
+```
 
-- Maintenance-only scripts belong in `scripts/maintenance`.
-- Generated logs, reports, build outputs, and temporary files should stay out of version control.
-- Legacy code should remain under `legacy_archive` until intentionally removed or restored.
-- New tests should generally live in a nearby `__tests__` folder for consistency.
+For UI-heavy or interaction-heavy changes, also run:
+
+```bash
+npm run test:e2e:smoke
+```
+
+For database changes:
+
+```bash
+npx supabase db push --dry-run --linked
+```
+
+Then apply intentionally:
+
+```bash
+npx supabase db push --linked --yes
+```
+
+## Security and Privacy
+
+- Do not expose service-role keys or provider secrets to the browser.
+- Route AI/provider calls through controlled backend or dev proxy endpoints.
+- Keep AI planning privacy-preserving: redact names before external planning when possible, then resolve identities locally.
+- Treat RLS policies, security-definer functions, storage policies, and migrations as security-sensitive code.
+- Keep legacy or archived code outside active product paths unless intentionally restoring it.
+
+## Repository Hygiene
+
+- Shared UI belongs in `src/components`.
+- Feature-specific UI, hooks, logic, and tests belong in `src/features/<feature>`.
+- Large modals, drawers, and panels should be owned by a feature rather than placed in the shared component layer.
+- Tests should generally live near the code they verify, usually in `__tests__`.
+- Generated output, temporary logs, local reports, and build artifacts should stay out of version control.
 
 ## Documentation
 
-Additional project notes and operational guides are available in `docs/`.
+Operational notes and architecture references live in `docs/`.
 
-For architecture changes, prefer small focused refactors with tests over broad folder reshuffles.
+When evolving the architecture, prefer focused migrations with type checks and tests over broad reshuffles. Keep feature boundaries explicit, public APIs small, and data ownership clear.
