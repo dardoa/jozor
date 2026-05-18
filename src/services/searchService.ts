@@ -280,20 +280,70 @@ const findTargetPeople = async (name: string, people: Person[]): Promise<Person[
     });
 };
 
+const mappedPeopleCache = new Map<string, { ref: Person; mapped: any }>();
+
 export const searchService = {
     async updateSearchIndex(people: Person[]) {
-        indexedPeople = people.map(p => ({
-            ...p,
-            normalizedFullName: normalizeSearchText(getPersonFullName(p)),
-            normalizedFirstName: normalizeArabic(p.firstName),
-            normalizedLastName: normalizeArabic(p.lastName),
-            normalizedMiddleName: normalizeArabic(p.middleName || ''),
-            normalizedNickName: normalizeArabic(p.nickName || ''),
-            normalizedBirthPlace: normalizeArabic(p.birthPlace || '')
-        } as any));
+        // Prune deleted people from cache to prevent memory leaks
+        if (mappedPeopleCache.size > people.length * 2) {
+            const currentIds = new Set(people.map(p => p.id));
+            for (const cachedId of mappedPeopleCache.keys()) {
+                if (!currentIds.has(cachedId)) {
+                    mappedPeopleCache.delete(cachedId);
+                }
+            }
+        }
+
+        const CHUNK_SIZE = 1000;
+        const mappedList: any[] = [];
+        let missesCount = 0;
+
+        for (let i = 0; i < people.length; i++) {
+            const p = people[i];
+            const cached = mappedPeopleCache.get(p.id);
+            if (cached && cached.ref === p) {
+                mappedList.push(cached.mapped);
+            } else {
+                const mapped = {
+                    ...p,
+                    normalizedFullName: normalizeSearchText(getPersonFullName(p)),
+                    normalizedFirstName: normalizeArabic(p.firstName),
+                    normalizedLastName: normalizeArabic(p.lastName),
+                    normalizedMiddleName: normalizeArabic(p.middleName || ''),
+                    normalizedNickName: normalizeArabic(p.nickName || ''),
+                    normalizedBirthPlace: normalizeArabic(p.birthPlace || '')
+                } as any;
+                mappedPeopleCache.set(p.id, { ref: p, mapped });
+                mappedList.push(mapped);
+                missesCount++;
+
+                // Yield control to prevent blocking the main thread on heavy chunks
+                if (missesCount > 0 && missesCount % CHUNK_SIZE === 0) {
+                    if (typeof requestIdleCallback !== 'undefined') {
+                        await new Promise<void>(resolve => requestIdleCallback(() => resolve()));
+                    } else {
+                        await new Promise<void>(resolve => setTimeout(resolve, 0));
+                    }
+                }
+            }
+        }
+
+        indexedPeople = mappedList;
 
         const FuseConstructor = await loadFuse();
-        fuse = new FuseConstructor(indexedPeople, FUSE_OPTIONS);
+        
+        // Defer Fuse index building to idle frame or next event loop cycle to guarantee UI fluidness
+        if (typeof requestIdleCallback !== 'undefined') {
+            await new Promise<void>(resolve => requestIdleCallback(() => {
+                fuse = new FuseConstructor(indexedPeople, FUSE_OPTIONS);
+                resolve();
+            }));
+        } else {
+            await new Promise<void>(resolve => setTimeout(() => {
+                fuse = new FuseConstructor(indexedPeople, FUSE_OPTIONS);
+                resolve();
+            }, 0));
+        }
     },
 
     async search(query: string, limit = 20): Promise<SearchResult[]> {

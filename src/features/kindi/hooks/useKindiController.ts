@@ -88,9 +88,18 @@ export const useKindiController = ({ people, onFocusPerson }: UseKindiController
     setConfirmationStatus: setMessageConfirmationStatus,
   });
 
-
   useEffect(() => {
-    void searchService.updateSearchIndex(peopleList);
+    let active = true;
+    const timer = setTimeout(() => {
+      if (active) {
+        void searchService.updateSearchIndex(peopleList);
+      }
+    }, 150);
+
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
   }, [peopleList]);
 
   const focusPerson = useCallback((personId: string) => {
@@ -100,7 +109,6 @@ export const useKindiController = ({ people, onFocusPerson }: UseKindiController
     triggerPulse(personId);
     setIsOpen(false);
   }, [onFocusPerson, setSearchTarget, triggerPulse]);
-
 
   const requestMissingAddName = useCallback((request: PendingAddNameRequest) => {
     const targetPerson = request.plan.targetPersonId
