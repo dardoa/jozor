@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { Person } from '../../../types';
 import type { KindiRoutedIntent } from '../types';
+import { routeKindiIntent } from '../logic/intentRouter';
 import {
   createKindiExecutivePlan,
   extractKindiTargetText,
@@ -9,7 +10,7 @@ import {
   parseKindiCommand,
   parseKindiProvidedName,
   resolveKindiCommandTarget,
-} from '../kindiExecutivePlanner';
+} from '../logic/kindiExecutivePlanner';
 
 const person = (id: string, firstName: string): Person => ({
   id,
@@ -57,6 +58,15 @@ const routed = (kind: KindiRoutedIntent['kind'], query: string): KindiRoutedInte
 });
 
 describe('createKindiExecutivePlan', () => {
+  it('does not build execution plans for greetings', () => {
+    expect(createKindiExecutivePlan(
+      routed('GREETING', 'مرحبا'),
+      [person('p1', 'Mahmoud')],
+      'fallback',
+      [person('p1', 'Mahmoud')]
+    )).toBeNull();
+  });
+
   it('plans adding a named son to the matched person', () => {
     const plan = createKindiExecutivePlan(
       routed('ACTION', 'add son named Adam to Mahmoud'),
@@ -321,6 +331,65 @@ describe('createKindiExecutivePlan', () => {
       .toEqual(['ma']);
   });
 
+  it('plans a one-sentence Arabic son add with compound target and provided child name', () => {
+    const target = {
+      ...person('mk', 'محمد'),
+      middleName: 'خير',
+      lastName: 'القرجي',
+    };
+    const query = 'أضف ابن لمحمد خير القرجي اسمه أمير';
+
+    expect(parseKindiCommand(query)).toMatchObject({
+      relation: 'child',
+      gender: 'male',
+      targetMention: 'محمد خير القرجي',
+      newPersonName: { firstName: 'أمير' },
+    });
+
+    expect(createKindiExecutivePlan(
+      routed('ACTION', query),
+      [],
+      'fallback',
+      [target]
+    )).toMatchObject({
+      type: 'ADD',
+      relation: 'child',
+      gender: 'male',
+      targetPersonId: 'mk',
+      targetPersonName: 'محمد خير القرجي',
+      name: { firstName: 'أمير' },
+    });
+  });
+
+  it('plans a one-sentence Arabic wife add without reading the new name as target text', () => {
+    const target = {
+      ...person('mk', 'محمد'),
+      middleName: 'خير',
+      lastName: 'القرجي',
+    };
+    const query = 'أضف زوجة لمحمد خير القرجي اسمها نورة';
+
+    expect(parseKindiCommand(query)).toMatchObject({
+      relation: 'spouse',
+      gender: 'female',
+      targetMention: 'محمد خير القرجي',
+      newPersonName: { firstName: 'نورة' },
+    });
+
+    expect(createKindiExecutivePlan(
+      routed('ACTION', query),
+      [],
+      'fallback',
+      [target]
+    )).toMatchObject({
+      type: 'ADD',
+      relation: 'spouse',
+      gender: 'female',
+      targetPersonId: 'mk',
+      name: { firstName: 'نورة' },
+    });
+  });
+
   it('plans birth date updates without treating the date as a name', () => {
     const plan = createKindiExecutivePlan(
       routed('UPDATE', 'update birth date for Mahmoud to 1980-01-01'),
@@ -404,6 +473,70 @@ describe('createKindiExecutivePlan', () => {
     });
   });
 
+  it('plans Arabic profession updates against the named subject', () => {
+    const target = person('p1', 'محمود');
+
+    expect(createKindiExecutivePlan(
+      routed('UPDATE', 'عدل مهنة محمود إلى مهندس'),
+      [target],
+      'fallback',
+      [target]
+    )).toEqual({
+      type: 'UPDATE',
+      personId: 'p1',
+      updates: { profession: 'مهندس' },
+    });
+  });
+
+  it('plans compound Arabic profile updates without treating update clauses as the target name', () => {
+    const target = { ...person('p1', 'محمود'), lastName: 'القرجي' };
+
+    expect(createKindiExecutivePlan(
+      routed('UPDATE', 'عدل بيانات محمود القرجي صار يسكن بالرياض وخلي كنيته أبو حمود'),
+      [target],
+      'fallback',
+      [target]
+    )).toEqual({
+      type: 'UPDATE',
+      personId: 'p1',
+      updates: {
+        residence: 'الرياض',
+        nickName: 'أبو حمود',
+      },
+    });
+  });
+
+  it('plans Arabic biography addendum updates with colloquial add markers', () => {
+    const target = { ...person('p1', 'محمود'), lastName: 'القرجي' };
+
+    expect(createKindiExecutivePlan(
+      routed('UPDATE', 'عدل السيرة الذاتية لمحمود القرجي ضيف صاحب الظل الطويل'),
+      [target],
+      'fallback',
+      [target]
+    )).toEqual({
+      type: 'UPDATE',
+      personId: 'p1',
+      updates: {
+        bio: 'صاحب الظل الطويل',
+      },
+    });
+  });
+
+  it('plans Arabic delete commands against the resolved person', () => {
+    const target = { ...person('p1', 'محمد'), lastName: 'القرجي' };
+
+    expect(createKindiExecutivePlan(
+      routed('DELETE', 'احذف محمد القرجي'),
+      [target],
+      'fallback',
+      [target]
+    )).toEqual({
+      type: 'DELETE',
+      personId: 'p1',
+    });
+  });
+
   it('plans delete actions against the resolved subject', () => {
     const target = person('p1', 'Sami');
     const plan = createKindiExecutivePlan(
@@ -416,6 +549,124 @@ describe('createKindiExecutivePlan', () => {
     expect(plan).toEqual({
       type: 'DELETE',
       personId: 'p1',
+    });
+  });
+
+  it('plans colloquial Arabic wife commands as spouse additions', () => {
+    const target = {
+      ...person('p-saher', 'ساهر'),
+      lastName: 'القرجي',
+    };
+    const routed = routeKindiIntent('حط مرا لساهر القرجي اسمها زينب الجنوب');
+    const plan = createKindiExecutivePlan(routed, [], undefined, {
+      allPeople: [target],
+    });
+
+    expect(routed.kind).toBe('ACTION');
+    expect(plan).toMatchObject({
+      type: 'ADD',
+      relation: 'spouse',
+      gender: 'female',
+      targetPersonId: 'p-saher',
+      name: {
+        firstName: 'زينب',
+        lastName: 'الجنوب',
+      },
+    });
+  });
+
+  it('plans Arabic compound register commands with inline profile details', () => {
+    const routed = routeKindiIntent('سجلي زاد ابن عبد الله القرجي مولود في مكة مواليد 2010 ويشتغل مدرس');
+    const plan = createKindiExecutivePlan(routed, [], 'focus-1', []);
+
+    expect(routed.kind).toBe('ACTION');
+    expect(parseKindiCommand(routed.query)).toMatchObject({
+      newPersonName: {
+        firstName: 'زاد',
+        lastName: 'ابن عبد الله القرجي',
+      },
+      initialUpdates: {
+        profession: 'مدرس',
+        birthPlace: 'مكة',
+        birthDate: '2010',
+      },
+    });
+    expect(plan).toMatchObject({
+      type: 'ADD',
+      targetPersonId: 'focus-1',
+      name: {
+        firstName: 'زاد',
+        lastName: 'ابن عبد الله القرجي',
+      },
+      initialUpdates: {
+        profession: 'مدرس',
+        birthPlace: 'مكة',
+        birthDate: '2010',
+      },
+    });
+  });
+
+  it('stops explicit Arabic add targets before inline profile details', () => {
+    const target = {
+      ...person('abdullah-1', 'عبد'),
+      middleName: 'الله',
+      lastName: 'القرجي',
+    };
+    const query = 'ضيف زاد ابن لعبد الله القرجي مولود في كفرنبل ويشتغل مدرس';
+    const routed = routeKindiIntent(query);
+    const plan = createKindiExecutivePlan(routed, [], 'focus-1', [target]);
+
+    expect(routed.kind).toBe('ACTION');
+    expect(parseKindiCommand(query)).toMatchObject({
+      relation: 'child',
+      gender: 'male',
+      targetMention: 'عبد الله القرجي',
+      newPersonName: {
+        firstName: 'زاد',
+      },
+      initialUpdates: {
+        birthPlace: 'كفرنبل',
+        profession: 'مدرس',
+      },
+    });
+    expect(plan).toMatchObject({
+      type: 'ADD',
+      relation: 'child',
+      gender: 'male',
+      targetPersonId: 'abdullah-1',
+      initialUpdates: {
+        birthPlace: 'كفرنبل',
+        profession: 'مدرس',
+      },
+    });
+  });
+
+  it('separates birth place from birth year and profession in Arabic add commands', () => {
+    const target = {
+      ...person('abdullah-1', 'عبد'),
+      middleName: 'الله',
+      lastName: 'القرجي',
+    };
+    const query = 'ضيف زاد ابن لعبد الله القرجي مولود في كفرنبل عام 1970 يشتغل مدرس';
+    const routed = routeKindiIntent(query);
+    const plan = createKindiExecutivePlan(routed, [], 'focus-1', [target]);
+
+    expect(parseKindiCommand(query)).toMatchObject({
+      targetMention: 'عبد الله القرجي',
+      initialUpdates: {
+        birthPlace: 'كفرنبل',
+        birthDate: '1970',
+        profession: 'مدرس',
+      },
+    });
+    expect(plan).toMatchObject({
+      type: 'ADD',
+      targetPersonId: 'abdullah-1',
+      initialUpdates: {
+        birthPlace: 'كفرنبل',
+        birthDate: '1970',
+        profession: 'مدرس',
+      },
     });
   });
 });

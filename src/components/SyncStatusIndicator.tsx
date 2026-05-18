@@ -1,6 +1,6 @@
 import React, { Suspense, lazy, useRef, useState } from 'react';
 import { ShieldCheck } from 'lucide-react';
-import { useSyncStatus } from '../hooks/useSyncStatus';
+import { useSyncStatus } from '../hooks/sync/useSyncStatus';
 import { useTranslation } from '../context/TranslationContext';
 import { getSyncStatusDotClass } from './syncStatusPresentation';
 

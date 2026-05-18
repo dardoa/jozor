@@ -1,6 +1,5 @@
-﻿import React, { memo } from 'react';
-import { ChevronDown, Settings } from 'lucide-react';
-import { LoginButton } from '../LoginButton';
+import React, { memo } from 'react';
+import { ChevronDown, Settings, MessageSquare } from 'lucide-react';
 import { Dropdown } from '../ui/Dropdown';
 import { useTranslation } from '../../context/TranslationContext';
 import { HeaderRightSectionProps } from '../../types';
@@ -8,7 +7,7 @@ import { SyncStatusIndicator } from '../SyncStatusIndicator';
 import { NotificationBell } from './NotificationBell';
 import { AccountMenu } from './AccountMenu';
 import { useAppStore } from '../../store/useAppStore';
-import { useTreePermissions } from '../../hooks/useTreePermissions';
+import { useTreePermissions } from '../../hooks/tree/useTreePermissions';
 import { KindiSearchTrigger } from '../../features/kindi';
 
 const HeaderMenuTrigger = ({ icon, label, testId, ...buttonProps }: { icon: React.ReactNode; label: string; testId?: string } & React.ButtonHTMLAttributes<HTMLButtonElement>) => (
@@ -31,7 +30,7 @@ export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(({ the
   const setSettingsDrawerOpen = useAppStore((state) => state.setSettingsDrawerOpen);
   const { role } = useTreePermissions();
 
-  const openVault = (tab: 'cloud' | 'security' | 'export-data' | 'export-visual' | 'trees' | 'members' | 'stats' = 'trees') => {
+  const openVault = (tab: 'cloud' | 'security' | 'trees' | 'members' | 'stats' = 'trees') => {
     setSettingsDrawerOpen(false);
     setVaultTab(tab);
     setVaultOpen(true);
@@ -47,7 +46,6 @@ export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(({ the
         {auth.user ? (
           <>
             <NotificationBell />
-
             <SyncStatusIndicator onOpenVault={() => openVault('cloud')} title='Open The Vault Cloud' />
 
             {role && (
@@ -82,17 +80,13 @@ export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(({ the
             </Dropdown>
           </>
         ) : (
-          <>
-            <Dropdown
-              trigger={<HeaderMenuTrigger icon={<Settings className="w-5 h-5" />} label={(t as unknown as Record<string, string>).accountMenu || t.accountProfile} testId="account-menu-trigger" />}
-              align='end'
-            >
-              <AccountMenu themeLanguage={themeLanguage} user={null} onLogin={auth.onOpenLoginModal} onLogout={auth.onLogout} />
-            </Dropdown>
-            <div className="hidden sm:block">
-              <LoginButton onLogin={auth.onOpenLoginModal} label={t.loginGoogle} />
-            </div>
-          </>
+          // Guest mode: only show the settings/account dropdown, no redundant Google login button
+          <Dropdown
+            trigger={<HeaderMenuTrigger icon={<Settings className="w-5 h-5" />} label={(t as unknown as Record<string, string>).accountMenu || t.accountProfile} testId="account-menu-trigger" />}
+            align='end'
+          >
+            <AccountMenu themeLanguage={themeLanguage} user={null} onLogin={auth.onOpenLoginModal} onLogout={auth.onLogout} />
+          </Dropdown>
         )}
       </div>
     </div>

@@ -1,7 +1,6 @@
 import React, { memo } from 'react';
 import { Logo } from './Logo';
 import { Plus, Upload, Languages } from 'lucide-react';
-import { useAppUIStore } from '../store/useAppUIStore';
 import { useTranslation } from '../context/TranslationContext';
 import { useAppStore } from '../store/useAppStore';
 import { Button } from './ui/Button';
@@ -15,7 +14,7 @@ interface WelcomeScreenProps {
 export const WelcomeScreen: React.FC<WelcomeScreenProps> = memo(
   ({ onStartNew, onImport, onLogin }) => {
     const { t, language, setLanguage } = useTranslation();
-    const isLowGraphicsMode = useAppUIStore(state => state.isLowGraphicsMode);
+    const isLowGraphicsMode = useAppStore(state => state.isLowGraphicsMode);
 
     return (
       <div className='fixed inset-0 z-[var(--z-index-modal)] overflow-y-auto bg-[var(--surface-app)] text-[var(--text-main)]'>

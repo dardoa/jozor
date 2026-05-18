@@ -4,7 +4,7 @@ import { Language } from './../types';
 import { general as enGeneral } from './translations/en/general';
 import { personFields as enPersonFields } from './translations/en/personFields';
 import { relationships as enRelationships } from './translations/en/relationships';
-import { sidebar as enSidebar } from './translations/en/sidebar';
+import { personDetails as enPersonDetails } from './translations/en/personDetails';
 import { header as enHeader } from './translations/en/header';
 import { modals as enModals } from './translations/en/modals';
 import { alerts as enAlerts } from './translations/en/alerts';
@@ -19,7 +19,7 @@ import { notifications as enNotifications } from './translations/en/notification
 import { general as arGeneral } from './translations/ar/general';
 import { personFields as arPersonFields } from './translations/ar/personFields';
 import { relationships as arRelationships } from './translations/ar/relationships';
-import { sidebar as arSidebar } from './translations/ar/sidebar';
+import { personDetails as arPersonDetails } from './translations/ar/personDetails';
 import { header as arHeader } from './translations/ar/header';
 import { modals as arModals } from './translations/ar/modals';
 import { alerts as arAlerts } from './translations/ar/alerts';
@@ -35,7 +35,7 @@ const en = {
   ...enGeneral,
   ...enPersonFields,
   ...enRelationships,
-  ...enSidebar,
+  ...enPersonDetails,
   ...enHeader,
   ...enModals,
   ...enAlerts,
@@ -52,7 +52,7 @@ const ar = {
   ...arGeneral,
   ...arPersonFields,
   ...arRelationships,
-  ...arSidebar,
+  ...arPersonDetails,
   ...arHeader,
   ...arModals,
   ...arAlerts,

@@ -14,9 +14,13 @@ export const MinimalLogin: React.FC<{ auth: AuthProps }> = ({ auth }) => {
   const [showEmailForm, setShowEmailForm] = React.useState(false);
 
   const handleGoogleLogin = () => {
-    const returnTo = sessionStorage.getItem('jozor:return_to') || sessionStorage.getItem('jozor:post-login-redirect') || undefined;
+    // Save current location as returnTo before Google OAuth redirect
+    const returnTo = sessionStorage.getItem('jozor:return_to') 
+      || sessionStorage.getItem('jozor:post-login-redirect') 
+      || '/';
     auth.onLogin(returnTo);
   };
+
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-[var(--theme-bg)] text-center p-6 w-full absolute inset-0 z-50">

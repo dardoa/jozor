@@ -87,7 +87,6 @@ export const general = {
   focus: 'التركيز',
   photos: 'الصور',
   gender: 'الجنس',
-  minimap: 'خريطة التصفح المصغرة',
   marriageDate: 'تاريخ الزواج',
   marriagePlace: 'مكان الزواج',
   burialPlace: 'مكان الدفن',
@@ -295,7 +294,6 @@ export const general = {
     },
     lineStyleOptions: {
       curved: 'منحني',
-      straight: 'مستقيم',
       step: 'زوايا',
     },
     nodeColorLogicOptions: {
@@ -579,6 +577,9 @@ export const general = {
       shareRoleChange: 'تم تعديل صلاحيات مستخدم',
       shareRoleChangeDetails: 'تم تغيير صلاحية {email} إلى {role}',
       default: 'تم تنفيذ إجراء على الشجرة',
+      renameTree: 'تم تغيير اسم الشجرة من {oldName} إلى {newName}',
+      discussionMessage: 'أرسل رسالة جديدة في لوحة المناقشات',
+      settingsUpdate: 'تم تحديث إعدادات وخيارات الشجرة',
     },
     roles: {
       editor: 'محرر',

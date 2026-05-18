@@ -1,5 +1,3 @@
-import { Person } from '../../types';
-import { validatePerson } from '../../utils/familyLogic';
 import { GoogleDrivePayload } from './interfaces';
 
 type DriveApiError = Error & { status?: number; result?: { error?: { code?: number } } };
@@ -17,10 +15,6 @@ export const getDriveErrorStatus = (error: unknown): number | undefined => {
 export const getDriveErrorMessage = (error: unknown, fallback: string): string => {
     if (error instanceof Error && error.message) return error.message;
     return fallback;
-};
-
-export const isLegacyPeopleMap = (value: GoogleDrivePayload): value is Record<string, Person> => {
-    return Object.values(value).some((entry) => validatePerson(entry as Person).id !== undefined);
 };
 
 export const buildSnapshotFileName = (treeId: string, label: string, timestamp = new Date()): string => {

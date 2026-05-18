@@ -1,7 +1,6 @@
 import { Person, DriveFile, UserProfile } from '../../types';
 
 export type GoogleDrivePayload =
-    | Record<string, Person>
     | { people: Record<string, Person> }
     | Record<string, unknown>;
 

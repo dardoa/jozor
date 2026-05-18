@@ -3,12 +3,16 @@ import { TreeSettings } from '../../types';
 import { DEFAULT_TREE_SETTINGS } from '../../constants';
 
 export interface SettingsSlice {
-    // State
+    /**
+     * Persistence target for cloud/Drive sync.
+     * UI rendering reads from useAppStore().appearance (appearanceSlice).
+     */
     treeSettings: TreeSettings;
     darkMode: boolean;
     language: 'en' | 'ar';
     exportStatus: { isExporting: boolean; progress?: number; format?: string };
     isActivityLogOpen: boolean;
+    isLowGraphicsMode: boolean;
 
     // Actions
     setTreeSettings: (settings: TreeSettings | ((prev: TreeSettings) => TreeSettings)) => void;
@@ -17,6 +21,7 @@ export interface SettingsSlice {
     importSettings: (settings: Partial<SettingsSlice>) => void;
     setExportStatus: (status: { isExporting: boolean; progress?: number; format?: string }) => void;
     setActivityLogOpen: (open: boolean) => void;
+    setIsLowGraphicsMode: (isLow: boolean) => void;
 }
 
 export const createSettingsSlice: StateCreator<SettingsSlice> = (set) => ({
@@ -28,6 +33,17 @@ export const createSettingsSlice: StateCreator<SettingsSlice> = (set) => ({
         : 'ar',
     exportStatus: { isExporting: false },
     isActivityLogOpen: false,
+    isLowGraphicsMode: (() => {
+        if (typeof window === 'undefined') return false;
+        try {
+            const legacyStorage = localStorage.getItem('jozor-ui-storage');
+            if (legacyStorage) {
+                const parsed = JSON.parse(legacyStorage);
+                return !!parsed?.state?.isLowGraphicsMode;
+            }
+        } catch { /* ignore */ }
+        return false;
+    })(),
 
     // Actions
     setTreeSettings: (settings) => set((state) => ({
@@ -48,4 +64,15 @@ export const createSettingsSlice: StateCreator<SettingsSlice> = (set) => ({
     importSettings: (settings) => set((state) => ({ ...state, ...settings })),
     setExportStatus: (status) => set({ exportStatus: status }),
     setActivityLogOpen: (open) => set({ isActivityLogOpen: open }),
+    setIsLowGraphicsMode: (isLow) => set(() => {
+        if (typeof window !== 'undefined') {
+            try {
+                const existing = localStorage.getItem('jozor-ui-storage');
+                const parsed = existing ? JSON.parse(existing) : { state: {} };
+                parsed.state = { ...parsed.state, isLowGraphicsMode: isLow };
+                localStorage.setItem('jozor-ui-storage', JSON.stringify(parsed));
+            } catch { /* ignore */ }
+        }
+        return { isLowGraphicsMode: isLow };
+    }),
 });

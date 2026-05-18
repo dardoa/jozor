@@ -1,15 +1,16 @@
-// @ts-nocheck
 import React from 'react';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { DiagnosticsDrawer } from '../DiagnosticsDrawer';
+import { DiagnosticsDrawer } from '../../features/diagnostics';
 
-const pruneTreeOperationsMock = vi.fn();
-const pruneActivityLogsMock = vi.fn();
-const showErrorMock = vi.fn();
-const showLoadingMock = vi.fn(() => 'toast-1');
-const updateToastMock = vi.fn();
-const clearOutgoingQueueMock = vi.fn();
+const { pruneTreeOperationsMock, pruneActivityLogsMock, showErrorMock, showLoadingMock, updateToastMock, clearOutgoingQueueMock } = vi.hoisted(() => ({
+  pruneTreeOperationsMock: vi.fn(),
+  pruneActivityLogsMock: vi.fn(),
+  showErrorMock: vi.fn(),
+  showLoadingMock: vi.fn(() => 'toast-1'),
+  updateToastMock: vi.fn(),
+  clearOutgoingQueueMock: vi.fn(),
+}));
 
 const mockState = {
   isDiagnosticsDrawerOpen: true,
@@ -24,8 +25,8 @@ const mockState = {
     pendingCount: 0,
     errorMessage: undefined,
     lastErrorCategory: undefined,
-    lastErrorAt: null,
-    lastErrorRetryable: undefined,
+    lastErrorAt: null as Date | null,
+    lastErrorRetryable: undefined as boolean | undefined,
   },
   invitationTelemetry: {
     lastHydratedAt: new Date('2026-03-27T12:00:00.000Z'),
@@ -44,8 +45,8 @@ const mockState = {
     lastOwnerEventEmail: 'invitee@example.com',
     lastOwnerEventRole: 'viewer',
     lastOwnerEventInvitationId: 'inv-2',
-    lastErrorAt: null,
-    lastErrorMessage: undefined,
+    lastErrorAt: null as Date | null,
+    lastErrorMessage: undefined as string | undefined,
   },
   notificationTelemetry: {
     lastEventAt: new Date('2026-03-27T11:55:00.000Z'),
@@ -163,9 +164,9 @@ vi.mock('../../utils/showToast', () => ({
   showToast: Object.assign(
     vi.fn(),
     {
-      error: (...args: unknown[]) => showErrorMock(...args),
-      loading: (...args: unknown[]) => showLoadingMock(...args),
-      success: (...args: unknown[]) => updateToastMock(...args),
+      error: (...args: any[]) => showErrorMock(...args),
+      loading: showLoadingMock as any,
+      success: (...args: any[]) => updateToastMock(...args),
       promise: vi.fn(),
     }
   )
@@ -331,4 +332,3 @@ describe('DiagnosticsDrawer', () => {
     });
   });
 });
-

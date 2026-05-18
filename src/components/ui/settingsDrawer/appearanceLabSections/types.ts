@@ -1,5 +1,5 @@
 export type SectionId = 'theme' | 'appearance' | 'layout' | 'content' | 'advanced';
-export type AdvancedTabId = 'engine' | 'details' | 'performance';
+export type AdvancedTabId = 'details' | 'performance';
 
 export type AppearanceLabPerson = {
   id: string;

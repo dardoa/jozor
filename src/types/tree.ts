@@ -14,12 +14,11 @@ export interface TreeSettings {
     showMiddleName: boolean;
     showLastName: boolean;
     showNickname: boolean;
-    showMinimap: boolean;
     layoutMode: 'vertical' | 'horizontal' | 'radial';
     isCompact: boolean;
     chartType: ChartType;
     theme: AppTheme;
-    lineStyle?: 'curved' | 'straight' | 'step';
+    lineStyle?: 'curved' | 'step';
     lineThickness?: number;
     showDeceased: boolean;
     showGender?: boolean;
@@ -92,4 +91,17 @@ export interface Tree {
     ownerId: string;
     createdAt: string;
     updatedAt: string;
+}
+
+export interface TreeDiscussionMessage {
+    id: string;
+    treeId: string;
+    userId: string;
+    userEmail: string;
+    content: string;
+    replyToEventId?: string;
+    replyToMessageId?: string;
+    replyToUserName?: string;
+    replyToContent?: string;
+    createdAt: string;
 }

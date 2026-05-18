@@ -3,7 +3,7 @@ import { Search, X, Mic, MicOff, Command } from 'lucide-react';
 import { Person } from '../../types';
 import { searchService } from '../../services/searchService';
 import { PersonMiniCard } from './search/PersonMiniCard';
-import { useSpeechToText } from '../../hooks/useSpeechToText';
+import { useSpeechToText } from '../../hooks/utils/useSpeechToText';
 import { useTranslation } from '../../context/TranslationContext';
 import { useAppStore } from '../../store/useAppStore';
 import { toast } from 'sonner';

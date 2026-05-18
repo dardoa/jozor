@@ -118,7 +118,7 @@ export const getYears = (p: Person, _format: 'iso' | 'eu' | 'us' | 'long' = 'iso
   // Except if `p.birthDate` is `1990-01-01`, `getDisplayDate` returns `1990`.
   // This seems correct for nodes.
 
-  // However, Sidebar InfoTab shows full dates.
+  // However, Details panel InfoTab shows full dates.
 
   // So I will NOT change `getYears` to return full dates, because that would clutter the node.
   // I will leave `getYears` as is (returning years).

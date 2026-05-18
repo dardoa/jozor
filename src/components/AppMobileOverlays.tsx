@@ -8,7 +8,7 @@ import { OnboardingTour } from './OnboardingTour';
 interface AppMobileOverlaysProps {
   isPresentMode: boolean;
   canEditActiveTree: boolean;
-  setSidebarOpen: (v: boolean) => void;
+  setDetailsPanelOpen: (v: boolean) => void;
   openVaultTab: (tab: 'trees' | 'members' | 'security' | 'cloud' | 'stats') => void;
   openAppearanceLab: () => void;
   openAddPersonModal: () => void;
@@ -17,7 +17,7 @@ interface AppMobileOverlaysProps {
 export const AppMobileOverlays: React.FC<AppMobileOverlaysProps> = ({
   isPresentMode,
   canEditActiveTree,
-  setSidebarOpen,
+  setDetailsPanelOpen,
   openVaultTab,
   openAppearanceLab,
   openAddPersonModal,
@@ -28,7 +28,7 @@ export const AppMobileOverlays: React.FC<AppMobileOverlaysProps> = ({
   return (
     <>
       <ExportProgressOverlay />
-      <OnboardingTour setSidebarOpen={setSidebarOpen} />
+      <OnboardingTour setDetailsPanelOpen={setDetailsPanelOpen} />
 
       {!isPresentMode && (
         <MobileActionBar

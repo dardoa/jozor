@@ -1,7 +1,7 @@
 import JSZip from 'jszip';
 import { Person } from '../types';
 import { validatePerson } from './familyLogic';
-import { fetchDriveFileAsBlob } from '../services/googleService';
+import { googleMediaService } from '../services/googleService';
 import { OFFLINE_VIEWER_HTML } from './archiveTemplates';
 
 // Helper to extract base64 data
@@ -114,7 +114,7 @@ export const exportToJozorArchive = async (
         p.photoUrl = `images/${filename}`;
       } else if (p.photoUrl.startsWith('http')) {
         try {
-          const blob = await fetchDriveFileAsBlob(p.photoUrl);
+          const blob = await googleMediaService.fetchFileAsBlob(p.photoUrl);
           const mime = blob.type;
           const ext = getExtension(mime);
           const filename = `${p.id}_profile.${ext}`;
@@ -140,7 +140,7 @@ export const exportToJozorArchive = async (
           newGallery.push(`images/${filename}`);
         } else if (imgStr.startsWith('http')) {
           try {
-            const blob = await fetchDriveFileAsBlob(imgStr);
+            const blob = await googleMediaService.fetchFileAsBlob(imgStr);
             const mime = blob.type;
             const ext = getExtension(mime);
             const filename = `${p.id}_gallery_${newGallery.length}.${ext}`;
@@ -167,7 +167,7 @@ export const exportToJozorArchive = async (
           newVoiceNotes.push(`audio/${filename}`);
         } else if (audioStr.startsWith('http')) {
           try {
-            const blob = await fetchDriveFileAsBlob(audioStr);
+            const blob = await googleMediaService.fetchFileAsBlob(audioStr);
             const mime = blob.type;
             const ext = getExtension(mime);
             const filename = `${p.id}_voice_${newVoiceNotes.length}.${ext}`;

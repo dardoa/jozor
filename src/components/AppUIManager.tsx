@@ -16,13 +16,13 @@ import { isUuid } from '../utils/isUuid';
 
 import { EMPTY_STRING } from '../constants';
 
-import { SharedTreeLoader } from './SharedTreeLoader';
+import { SharedTreeLoader } from '../features/tree-manager';
 
-import { WelcomeScreen } from './WelcomeScreen';
+import { LandingPage } from '../features/landing';
 
 import { AppLayout } from './AppLayout';
 
-import { TreeSelector } from './TreeSelector';
+import { TreeSelector } from '../features/tree-manager';
 
 import { useAppStore, loadFullState } from '../store/useAppStore';
 
@@ -30,8 +30,8 @@ import { ModalManagerContainer } from './ModalManagerContainer';
 import { BootstrapStatusScreen } from './app/BootstrapStatusScreen';
 import { MinimalLogin } from './app/MinimalLogin';
 
-import { useAppOrchestration } from '../hooks/useAppOrchestration';
-import { useJozorDebugApi } from '../hooks/useJozorDebugApi';
+import { useAppOrchestration } from '../hooks/ui/useAppOrchestration';
+import { useJozorDebugApi } from '../hooks/utils/useJozorDebugApi';
 
 import { NotFound } from './NotFound';
 
@@ -44,20 +44,19 @@ const HelpCenter = React.lazy(() =>
   import('./HelpCenter').then((m) => ({ default: m.HelpCenter }))
 );
 const TheVaultDrawer = React.lazy(() =>
-  import('./TheVault/TheVaultDrawer').then((m) => ({ default: m.TheVaultDrawer }))
+  import('../features/the-vault').then((m) => ({ default: m.TheVaultDrawer }))
 );
 
 export const AppUIManager: React.FC = () => {
   const { t } = useTranslation();
 
-  const legacySharedMatch = useMatch('/tree/:ownerUid/:fileId');
   const dbSharedMatch = useMatch('/tree/db/:ownerUid/:fileId');
   const canonicalTreeMatch = useMatch('/tree/:treeId');
   const canonicalPersonMatch = useMatch('/person/:personId');
   const shareTokenMatch = useMatch('/shared/:shareToken');
   const location = useLocation();
 
-  const isSharedMode = !!legacySharedMatch || !!dbSharedMatch || !!shareTokenMatch;
+  const isSharedMode = !!dbSharedMatch || !!shareTokenMatch;
   const routeTreeId = canonicalTreeMatch?.params.treeId ?? null;
   const routePersonId = canonicalPersonMatch?.params.personId ?? null;
   const routeReturnTo =
@@ -80,12 +79,12 @@ export const AppUIManager: React.FC = () => {
     toolsActions,
     exportActions,
     searchProps,
-    sidebarFamilyActions,
+    detailsPanelFamilyActions,
     coreFamilyActions,
     isPresentMode,
     setIsPresentMode,
-    sidebarOpen,
-    setSidebarOpen,
+    detailsPanelOpen,
+    setDetailsPanelOpen,
     auth,
     svgRef,
     onAddPerson,
@@ -98,6 +97,7 @@ export const AppUIManager: React.FC = () => {
   const isVaultOpen = useAppStore((state) => state.isVaultOpen);
   const setVaultOpen = useAppStore((state) => state.setVaultOpen);
   const setVaultTab = useAppStore((state) => state.setVaultTab);
+  const setActivityLogOpen = useAppStore((state) => state.setActivityLogOpen);
   const darkMode = useAppStore((state) => state.darkMode);
   const setDarkMode = useAppStore((state) => state.setDarkMode);
   useJozorDebugApi(welcomeScreen.setShowWelcome);
@@ -127,7 +127,6 @@ export const AppUIManager: React.FC = () => {
     treeName?: string
   ) => {
     if (isDbTree) {
-      // Modern DB-centric sharing (independent of Google Drive)
       if (isUuid(fileId)) {
         setCurrentTreeId(fileId);
         setCurrentUserRole(role);
@@ -147,22 +146,18 @@ export const AppUIManager: React.FC = () => {
       });
       navigate(`/tree/${fileId}`, { replace: true });
       welcomeScreen.setShowWelcome(false);
-    } else {
-      // Legacy Drive-centric sharing
-      googleSync
-        .handleLoadDriveFile(fileId)
-        .catch((e) => {
-          console.error('Failed to handle shared tree load via Google Sync', e);
-        })
-        .finally(() => {
-          navigate('/', { replace: true });
-          welcomeScreen.setShowWelcome(false);
-        });
     }
   };
 
   const renderMainLayout = () => {
-    if (authLoading && !auth.user) {
+    // Guard: if OAuth callback params exist in the URL, wait for auth to resolve
+    // This prevents the flash of LandingPage before Supabase picks up the session
+    const isOAuthCallback =
+      location.hash.includes('access_token') ||
+      location.search.includes('code=') ||
+      location.search.includes('error=');
+
+    if (authLoading || (isOAuthCallback && !auth.user)) {
       return (
         <BootstrapStatusScreen
           title={t.authBootstrapTitle}
@@ -173,7 +168,7 @@ export const AppUIManager: React.FC = () => {
 
     if (showWelcome) {
       return (
-        <WelcomeScreen
+        <LandingPage
           onStartNew={handleStartNewTree}
           onImport={welcomeScreen.onTriggerImportFile}
           onLogin={() => auth.onOpenLoginModal(routeReturnTo)}
@@ -237,12 +232,12 @@ export const AppUIManager: React.FC = () => {
         toolsActions={toolsActions}
         exportActions={exportActions}
         searchProps={searchProps}
-        sidebarFamilyActions={sidebarFamilyActions}
+        detailsPanelFamilyActions={detailsPanelFamilyActions}
         coreFamilyActions={coreFamilyActions}
         isPresentMode={isPresentMode}
         setIsPresentMode={setIsPresentMode}
-        sidebarOpen={sidebarOpen}
-        setSidebarOpen={setSidebarOpen}
+        detailsPanelOpen={detailsPanelOpen}
+        setDetailsPanelOpen={setDetailsPanelOpen}
         auth={auth}
         svgRef={svgRef}
         onAddPerson={onAddPerson}
@@ -288,7 +283,6 @@ export const AppUIManager: React.FC = () => {
           <Route path='/support' element={<Navigate to='/help' replace />} />
           <Route path='/shared/:shareToken' element={<InvitePage />} />
 
-          {/* Clean DB tree route (new format) */}
           <Route
             path='/tree/db/:ownerUid/:fileId'
             element={
@@ -301,21 +295,9 @@ export const AppUIManager: React.FC = () => {
             }
           />
 
-          {/* Legacy route: redirects ?type=db to the DB route and disables old Drive links. */}
-          <Route
-            path='/tree/:ownerUid/:fileId'
-            element={
-              <LegacySharedTreeRedirect
-                auth={auth}
-                onLoadComplete={handleSharedTreeLoaded}
-                onCancel={() => navigate('/', { replace: true })}
-              />
-            }
-          />
           <Route path='/tree/:treeId' element={<ProtectedRoute>{renderMainLayout()}</ProtectedRoute>} />
           <Route path='/person/:personId' element={<ProtectedRoute>{renderMainLayout()}</ProtectedRoute>} />
           <Route path="/login" element={<LoginRouteElement auth={auth} />} />
-          <Route path="/invite/:token" element={<LegacyInviteRedirect />} />
           <Route path='/' element={renderMainLayout()} />
           <Route path='*' element={<NotFound />} />
         </Routes>
@@ -323,7 +305,15 @@ export const AppUIManager: React.FC = () => {
 
       {isVaultOpen ? (
         <React.Suspense fallback={null}>
-          <TheVaultDrawer googleSync={googleSync} auth={auth} exportActions={exportActions} toolsActions={toolsActions} onOpenDiagnostics={() => useAppStore.getState().setDiagnosticsDrawerOpen(true)} onOpenActivityLog={() => (useAppStore.getState() as any).setActivityLogOpen(true)} onOpenCleanTree={modals.onOpenCleanTreeOptions} />
+          <TheVaultDrawer
+            googleSync={googleSync}
+            auth={auth}
+            exportActions={exportActions}
+            toolsActions={toolsActions}
+            onOpenDiagnostics={() => useAppStore.getState().setDiagnosticsDrawerOpen(true)}
+            onOpenActivityLog={() => setActivityLogOpen(true)}
+            onOpenCleanTree={modals.onOpenCleanTreeOptions}
+          />
         </React.Suspense>
       ) : null}
 
@@ -377,50 +367,6 @@ const SharedTreeRouteWrapper: React.FC<SharedTreeRouteWrapperProps> = ({
   );
 };
 
-/**
- * LegacySharedTreeRedirect
- * Handles old links: /tree/:ownerUid/:fileId?type=db
- * If ?type=db is present → redirects to /tree/db/:ownerUid/:fileId (new clean route)
- * Otherwise shows a disabled-state screen for old Drive sharing links.
- */
-const LegacySharedTreeRedirect: React.FC<SharedTreeRouteWrapperProps> = ({
-  onCancel,
-}) => {
-  const { ownerUid, fileId } = useParams<{ ownerUid: string; fileId: string }>();
-  const location = useLocation();
-  const searchParams = new URLSearchParams(location.search);
-  const inviteToken = searchParams.get('invite');
-  const isDbTree = searchParams.get('type') === 'db';
-
-  if (!ownerUid || !fileId) return <Navigate to='/' replace />;
-  if (inviteToken) {
-    return <Navigate to={`/shared/${inviteToken}`} replace />;
-  }
-
-  // Upgrade old link to the clean URL format
-  if (isDbTree) {
-    return <Navigate to={`/tree/db/${ownerUid}/${fileId}`} replace />;
-  }
-
-  return (
-    <div className='flex min-h-screen items-center justify-center bg-[var(--theme-bg)] px-6 text-center text-[var(--text-main)]'>
-      <div className='max-w-md rounded-xl border border-[var(--border-color)] bg-[var(--card-bg)] p-6 shadow-[var(--shadow-sm)]'>
-        <h1 className='text-lg font-semibold'>Legacy Drive sharing is disabled</h1>
-        <p className='mt-2 text-sm text-[var(--text-muted)]'>
-          Ask the owner to send the database-backed shared tree link.
-        </p>
-        <button
-          type='button'
-          className='mt-5 rounded-md bg-[var(--accent-color)] px-4 py-2 text-sm font-medium text-white'
-          onClick={onCancel}
-        >
-          Return home
-        </button>
-      </div>
-    </div>
-  );
-};
-
 const LoginRouteElement: React.FC<{ auth: AuthProps }> = ({ auth }) => {
   const { t } = useTranslation();
   const authLoading = useAppStore((state) => state.authLoading);
@@ -445,8 +391,3 @@ const LoginRouteElement: React.FC<{ auth: AuthProps }> = ({ auth }) => {
   return <MinimalLogin auth={auth} />;
 };
 
-const LegacyInviteRedirect: React.FC = () => {
-  const { token } = useParams<{ token: string }>();
-  if (!token) return <Navigate to='/' replace />;
-  return <Navigate to={`/shared/${token}`} replace />;
-};

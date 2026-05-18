@@ -32,12 +32,13 @@ const RootComponent: React.FC = () => {
   );
 };
 
-import { THEME_COLOR_VARIABLE_KEYS, useTreeAppearanceStore } from './store/useTreeAppearanceStore';
+import { THEME_COLOR_VARIABLE_KEYS } from './domain/appearance/appearanceEngine';
 
 const ThemeDomSync: React.FC = () => {
   const darkMode = useAppStore((state) => state.darkMode);
-  const theme = useAppStore((state) => state.treeSettings.theme);
-  const themeCssVariables = useTreeAppearanceStore((state) => state.cssVariables);
+  // READ: appearance.theme.themeStyle drives the legacy DOM class (theme-heritage/modernPure/etc)
+  const themeStyle = useAppStore((state) => state.appearance.theme.themeStyle);
+  const themeCssVariables = useAppStore((state) => state.appearance.cssVariables);
 
   React.useLayoutEffect(() => {
     const root = document.documentElement;
@@ -46,8 +47,8 @@ const ThemeDomSync: React.FC = () => {
     root.classList.toggle('dark', darkMode);
 
     // 2. Theme Classes
-    root.classList.remove('theme-modern', 'theme-vintage', 'theme-blueprint');
-    root.classList.add(`theme-${theme}`);
+    root.classList.remove('theme-modern', 'theme-vintage', 'theme-blueprint', 'theme-heritage', 'theme-modernPure', 'theme-artistic', 'theme-custom');
+    root.classList.add(`theme-${themeStyle}`);
 
     // 3. CSS Variables (Appearance Lab)
     const isDarkActive = darkMode || root.classList.contains('dark');
@@ -69,7 +70,7 @@ const ThemeDomSync: React.FC = () => {
         root.style.setProperty(variable, value);
       });
     }
-  }, [darkMode, theme, themeCssVariables]);
+  }, [darkMode, themeStyle, themeCssVariables]);
 
   return null;
 };

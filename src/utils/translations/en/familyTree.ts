@@ -5,7 +5,6 @@ export const familyTree = {
   showDates: 'Show Dates',
   showMiddleName: 'Show Middle Name',
   showLastName: 'Show Last Name',
-  showMinimap: 'Show Minimap',
   layoutMode: 'Layout Mode',
   vertical: 'Vertical',
   horizontal: 'Horizontal',

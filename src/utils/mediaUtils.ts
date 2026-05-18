@@ -2,15 +2,13 @@ import { Person } from '../types';
 import { supabaseUrl } from '../services/supabaseConfig';
 
 /**
- * Generates the correct photo URL for a person based on the new path-based 
- * architecture with backward compatibility for legacy URL strings.
+ * Generates the correct photo URL for a person based on the path-based media fields.
  */
 export const getPersonPhoto = (person: Partial<Person> | null | undefined): string | null => {
     if (!person) return null;
 
-    // 1. Prefer the new path-based system for deterministic caching
-    const path = person.photoPath || (person as any).photo_path;
-    const version = person.photoVersion || (person as any).photo_version;
+    const path = person.photoPath;
+    const version = person.photoVersion;
 
     if (path) {
         // Clean path to prevent double "avatars/" prefix
@@ -19,18 +17,17 @@ export const getPersonPhoto = (person: Partial<Person> | null | undefined): stri
         return version ? `${baseUrl}?v=${version}` : baseUrl;
     }
 
-    // 2. Fallback to existing photoUrl or avatarUrl if available
-    return person.photoUrl || (person as any).avatarUrl || null;
+    // Fallback to direct public URLs when the row does not yet have a storage path.
+    return person.photoUrl || null;
 };
 
 /**
  * Resolves a gallery image URL.
- * Supports both legacy string URLs and new GalleryItem objects.
+ * Supports direct string URLs and GalleryItem objects.
  */
 export const getGalleryImageUrl = (item: any): string | null => {
     if (!item) return null;
 
-    // If it's a legacy string URL
     if (typeof item === 'string') return item;
 
     // If it's the new GalleryItem object

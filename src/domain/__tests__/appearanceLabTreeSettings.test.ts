@@ -1,7 +1,7 @@
-// @ts-nocheck
+
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_APPEARANCE_STATE } from '../../store/useTreeAppearanceStore';
-import { mapAppearanceLabStateToTreeSettings } from '../appearanceLabTreeSettings';
+import { DEFAULT_APPEARANCE_STATE } from '../appearance/appearanceEngine';
+import { mapAppearanceLabStateToTreeSettings } from '../appearance/appearanceSettingsAdapter';
 
 describe('mapAppearanceLabStateToTreeSettings', () => {
   it('maps Appearance Lab state into the canonical visual TreeSettings patch', () => {

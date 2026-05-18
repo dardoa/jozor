@@ -1,12 +1,9 @@
-import type { Person } from '../../types';
 import { FILE_NAME } from '../../constants';
-import { validatePerson } from '../../utils/familyLogic';
 import { logError, logInfo, logWarn } from '../../utils/errorLogger';
 import type { GoogleDrivePayload } from './interfaces';
 import {
     getDriveErrorMessage,
     getDriveErrorStatus,
-    isLegacyPeopleMap,
 } from './googleDriveServiceUtils';
 
 export class DrivePayloadClient {
@@ -29,14 +26,6 @@ export class DrivePayloadClient {
 
             if (!parsed || typeof parsed !== 'object') {
                 throw new Error('Invalid data format from Google Drive');
-            }
-
-            if (!('version' in parsed) && !('metadata' in parsed) && isLegacyPeopleMap(parsed)) {
-                const validated: Record<string, Person> = {};
-                Object.entries(parsed).forEach(([key, value]) => {
-                    validated[key] = validatePerson(value as Person);
-                });
-                return { people: validated };
             }
 
             return parsed;

@@ -1,4 +1,4 @@
-// @ts-nocheck
+
 import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
@@ -56,7 +56,7 @@ describe('SearchInputWithResults', () => {
       },
     ]);
 
-    render(<SearchInputWithResults people={[]} onFocusPerson={onFocusPerson} />);
+    render(<SearchInputWithResults people={{}} onFocusPerson={onFocusPerson} />);
 
     const input = screen.getByRole('combobox', { name: 'Search people' });
     fireEvent.focus(input);
@@ -76,7 +76,7 @@ describe('SearchInputWithResults', () => {
   it('shows an empty state when no search results are found', async () => {
     searchMock.mockResolvedValue([]);
 
-    render(<SearchInputWithResults people={[]} onFocusPerson={vi.fn()} />);
+    render(<SearchInputWithResults people={{}} onFocusPerson={vi.fn()} />);
 
     const input = screen.getByRole('combobox', { name: 'Search people' });
     fireEvent.focus(input);
@@ -92,7 +92,7 @@ describe('SearchInputWithResults', () => {
   it('clears the search query from the clear button', () => {
     searchMock.mockResolvedValue([]);
 
-    render(<SearchInputWithResults people={[]} onFocusPerson={vi.fn()} />);
+    render(<SearchInputWithResults people={{}} onFocusPerson={vi.fn()} />);
 
     const input = screen.getByRole('combobox', { name: 'Search people' });
     fireEvent.focus(input);
@@ -134,7 +134,7 @@ describe('SearchInputWithResults', () => {
       },
     ]);
 
-    render(<SearchInputWithResults people={[]} onFocusPerson={onFocusPerson} />);
+    render(<SearchInputWithResults people={{}} onFocusPerson={onFocusPerson} />);
 
     const input = screen.getByRole('combobox', { name: 'Search people' });
     fireEvent.focus(input);

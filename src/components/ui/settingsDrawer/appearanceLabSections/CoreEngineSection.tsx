@@ -1,10 +1,9 @@
 import React from 'react';
 import { Sparkles } from 'lucide-react';
 import { useShallow } from 'zustand/react/shallow';
-import { useTreeAppearanceStore } from '../../../../store/useTreeAppearanceStore';
+import { useAppStore } from '../../../../store/useAppStore';
 import {
   CHART_TYPE_OPTIONS,
-  LAYOUT_MODE_OPTIONS,
   SectionHeader,
   type SettingsTextOptions,
   type SettingsTranslator,
@@ -12,10 +11,12 @@ import {
 import { activeStyle, inactiveStyle } from './sectionStyles';
 
 export const CoreEngineSection = React.memo(({ settingsText, t }: { settingsText: SettingsTextOptions & Record<string, string>; t: SettingsTranslator }) => {
-  const { treeMode, orientation } = useTreeAppearanceStore(
-    useShallow((state) => ({ treeMode: state.coreEngine.treeMode, orientation: state.coreEngine.orientation }))
+  // READ: from appearanceSlice
+  const { treeMode } = useAppStore(
+    useShallow((state) => ({ treeMode: state.appearance.coreEngine.treeMode }))
   );
-  const updateField = useTreeAppearanceStore((state) => state.updateField);
+  // WRITE: directly to appearanceSlice
+  const updateField = useAppStore((state) => state.updateAppearanceField);
 
   return (
     <section className="rounded-[24px] bg-transparent shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
@@ -43,34 +44,7 @@ export const CoreEngineSection = React.memo(({ settingsText, t }: { settingsText
             })}
           </div>
         </div>
-        {treeMode === 'focus' ? (
-          <div className="space-y-3">
-            <div className="text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--text-muted)]">
-              {settingsText.orientation || 'Orientation'}
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {LAYOUT_MODE_OPTIONS.filter((mode) => mode.id !== 'radial').map((mode) => (
-                <button
-                  key={mode.id}
-                  type="button"
-                  onClick={() => updateField('coreEngine.orientation', mode.id as 'vertical' | 'horizontal')}
-                  className="inline-flex min-h-9 items-center gap-2 rounded-full border px-3 py-1.5 text-[11px] font-medium transition-all duration-200"
-                  style={{
-                    backgroundColor: orientation === mode.id ? 'rgba(166,124,55,0.12)' : 'rgba(255,255,255,0.45)',
-                    color: orientation === mode.id ? 'var(--color-accent-500)' : 'var(--text-muted)',
-                    borderColor: orientation === mode.id ? 'rgba(166,124,55,0.26)' : 'rgba(0,0,0,0.06)',
-                    boxShadow: 'none',
-                  }}
-                >
-                  <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full border" style={{ borderColor: 'currentColor' }}>
-                    {orientation === mode.id ? <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: 'currentColor' }} /> : null}
-                  </span>
-                  {t[mode.labelKey]}
-                </button>
-              ))}
-            </div>
-          </div>
-        ) : null}
+
       </div>
     </section>
   );

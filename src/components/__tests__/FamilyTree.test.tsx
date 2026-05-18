@@ -1,9 +1,9 @@
-// @ts-nocheck
+
 import React from 'react';
 import { render, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { describe, it, expect, vi } from 'vitest';
-import { FamilyTree } from '../FamilyTree';
+import { FamilyTree } from '../tree/FamilyTree';
 import { Person, TreeSettings } from '../../types';
 
 vi.mock('../../context/TranslationContext', () => ({
@@ -50,7 +50,7 @@ class WorkerMock {
     terminate() { }
 }
 
-global.Worker = WorkerMock as typeof Worker;
+global.Worker = WorkerMock as unknown as typeof Worker;
 
 // Mock d3 to avoid timer/transition issues in JSDOM
 vi.mock('d3', async () => {
@@ -117,10 +117,8 @@ const mockPeople: Record<string, Person> = {
 
 const mockSettings: TreeSettings = {
     layoutMode: 'vertical',
-    chartType: 'descendant',
-      showMinimap: false,
-      enableForcePhysics: false,
-      enableTimeOffset: false,
+    chartType: 'focus',
+
       theme: 'modern',
       showPhotos: true,
     showFirstName: true,
@@ -155,14 +153,14 @@ describe('FamilyTree Component', () => {
                 focusId="1"
                 onSelect={() => { }}
                 settings={mockSettings}
-                isSidebarOpen={false}
+                isDetailsPanelOpen={false}
                 onPresent={() => { }}
                 onOpenSnapshotHistory={undefined}
-                svgRef={React.createRef<SVGSVGElement>()}
+                ref={React.createRef<SVGSVGElement>()}
                 activeModal={null}
-                setSidebarOpen={() => { }}
+                setDetailsPanelOpen={() => { }}
                 onOpenLinkModal={() => { }}
-                onOpenModal={() => { }}
+
             />
         );
         // Check if SVG is present
@@ -180,14 +178,14 @@ describe('FamilyTree Component', () => {
                 focusId="1"
                 onSelect={() => { }}
                 settings={mockSettings}
-                isSidebarOpen={false}
+                isDetailsPanelOpen={false}
                 onPresent={() => { }}
                 onOpenSnapshotHistory={undefined}
-                svgRef={React.createRef<SVGSVGElement>()}
+                ref={React.createRef<SVGSVGElement>()}
                 activeModal={null}
-                setSidebarOpen={() => { }}
+                setDetailsPanelOpen={() => { }}
                 onOpenLinkModal={() => { }}
-                onOpenModal={() => { }}
+
             />
         );
 
@@ -199,4 +197,3 @@ describe('FamilyTree Component', () => {
         });
     });
 });
-

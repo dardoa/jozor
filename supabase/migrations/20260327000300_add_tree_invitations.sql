@@ -1,5 +1,8 @@
 BEGIN;
 
+-- Ensure pgcrypto is enabled in the extensions schema
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 CREATE TABLE IF NOT EXISTS public.tree_invitations (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   tree_id UUID NOT NULL REFERENCES public.trees(id) ON DELETE CASCADE,
@@ -54,7 +57,7 @@ BEGIN
   END IF;
 
   v_token := replace(gen_random_uuid()::text, '-', '') || replace(gen_random_uuid()::text, '-', '');
-  v_token_hash := encode(digest(v_token, 'sha256'), 'hex');
+  v_token_hash := encode(extensions.digest(v_token, 'sha256'), 'hex');
 
   INSERT INTO public.tree_invitations (
     tree_id,
@@ -88,7 +91,7 @@ DECLARE
 BEGIN
   v_caller_id := public.current_user_id_text();
   v_caller_email := lower(coalesce(auth.jwt() ->> 'email', ''));
-  v_token_hash := encode(digest(p_invite_token, 'sha256'), 'hex');
+  v_token_hash := encode(extensions.digest(p_invite_token, 'sha256'), 'hex');
 
   SELECT *
   INTO v_invitation

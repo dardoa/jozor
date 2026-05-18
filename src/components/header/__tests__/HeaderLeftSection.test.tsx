@@ -1,4 +1,4 @@
-// @ts-nocheck
+
 import { fireEvent, render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { describe, expect, it, vi } from 'vitest';
@@ -21,10 +21,10 @@ describe('HeaderLeftSection', () => {
     themeLanguage: {
       language: 'en',
       setLanguage: vi.fn(),
-      theme: 'modern',
-      setTheme: vi.fn(),
+      darkMode: false,
+      setDarkMode: vi.fn(),
     },
-    toggleSidebar: vi.fn(),
+    toggleDetailsPanel: vi.fn(),
     historyControls: {
       canUndo: false,
       canRedo: false,
@@ -33,19 +33,18 @@ describe('HeaderLeftSection', () => {
     },
   };
 
-  it('disables the sidebar trigger when no active person is available', () => {
-    render(<HeaderLeftSection {...baseProps} sidebarOpen={false} hasActivePerson={false} />);
+  it('disables the details trigger when no active person is available', () => {
+    render(<HeaderLeftSection {...baseProps as any} detailsPanelOpen={false} hasActivePerson={false} />);
 
     expect(screen.getByRole('button', { name: 'Select a person to view details' })).toBeDisabled();
   });
 
   it('uses a details-specific label and toggles when an active person exists', () => {
-    render(<HeaderLeftSection {...baseProps} sidebarOpen={false} hasActivePerson />);
+    render(<HeaderLeftSection {...baseProps as any} detailsPanelOpen={false} hasActivePerson />);
 
     const trigger = screen.getByRole('button', { name: 'Open details' });
     fireEvent.click(trigger);
 
-    expect(baseProps.toggleSidebar).toHaveBeenCalledTimes(1);
+    expect(baseProps.toggleDetailsPanel).toHaveBeenCalledTimes(1);
   });
 });
-

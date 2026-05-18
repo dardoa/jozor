@@ -36,12 +36,10 @@ interface ManifestShape {
 }
 
 /**
- * Restores a blueprint archive into runtime state without reviving legacy
- * Base64 media payloads.
+ * Restores a blueprint archive into runtime state.
  *
  * Why: the new archive contract separates tree data from media files, so
- * restore must rebuild browser-usable media references from blobs while
- * keeping the legacy importer untouched for older archive formats.
+ * restore must rebuild browser-usable media references from blobs.
  */
 export const restoreBlueprintArchive = async (
   archive: Blob,

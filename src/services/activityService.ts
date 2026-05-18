@@ -13,7 +13,9 @@ export type ActivityActionType =
     | 'SHARE_INVITE_ACCEPT'
     | 'SHARE_INVITE_DECLINE'
     | 'SHARE_REVOKE'
-    | 'SHARE_ROLE_CHANGE';
+    | 'SHARE_ROLE_CHANGE'
+    | 'TREE_DISCUSSION_MESSAGE'
+    | 'TREE_SETTINGS_UPDATE';
 
 export interface ActivityLog {
     id: string;

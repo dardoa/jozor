@@ -1,10 +1,10 @@
-// @ts-nocheck
+
 import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { describe, expect, it, vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
-import { TreeSelector } from '../TreeSelector';
+import { TreeSelector } from '../../features/tree-manager';
 
 const mockFetchTreesForUser = vi.fn();
 const mockFetchSharedTrees = vi.fn();
@@ -71,6 +71,8 @@ vi.mock('../../utils/showToast', () => ({
 vi.mock('../../utils/errorLogger', () => ({
   getUserFacingErrorInfo: (_error: unknown, fallback: string) => ({ message: fallback }),
   logError: vi.fn(),
+  logInfo: vi.fn(),
+  logWarn: vi.fn(),
 }));
 
 describe('TreeSelector', () => {
@@ -126,4 +128,3 @@ describe('TreeSelector', () => {
     expect(mockShowSuccess).toHaveBeenCalledWith('messages.success.load');
   });
 });
-

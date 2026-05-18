@@ -1,7 +1,7 @@
 import React from 'react';
 import { SlidersHorizontal, Type, Waypoints } from 'lucide-react';
 import { useShallow } from 'zustand/react/shallow';
-import { useTreeAppearanceStore } from '../../../../store/useTreeAppearanceStore';
+import { useAppStore } from '../../../../store/useAppStore';
 import {
   Checkbox,
   formatBranchPersonLabel,
@@ -33,34 +33,29 @@ export const AdvancedSection = React.memo(({
   sortedPeople: AppearanceLabPerson[];
   unnamedPersonLabel: string;
 }) => {
-  const { treeMode, advanced } = useTreeAppearanceStore(
-    useShallow((state) => ({ treeMode: state.coreEngine.treeMode, advanced: state.advanced }))
+  // READ: from appearanceSlice
+  const { treeMode, advanced } = useAppStore(
+    useShallow((state) => ({ treeMode: state.appearance.coreEngine.treeMode, advanced: state.appearance.advanced }))
   );
-  const updateField = useTreeAppearanceStore((state) => state.updateField);
+  // WRITE: directly to appearanceSlice
+  const updateField = useAppStore((state) => state.updateAppearanceField);
 
   return (
     <SectionShell
       id="advanced"
       icon={SlidersHorizontal}
       title={settingsText.advancedSettings || 'Advanced Settings'}
-      caption={`${settingsText.engine || 'Engine'} • ${settingsText.details || 'Details'} • ${settingsText.performance || 'Performance'}`}
+      caption={`${settingsText.details || 'Details'} • ${settingsText.performance || 'Performance'}`}
       open={open}
       onToggle={onToggle}
     >
       <div className="flex overflow-x-auto rounded-2xl bg-white/35 p-1 whitespace-nowrap scrollbar-hide">
-        {(['engine', 'details', 'performance'] as const).map((tab) => (
+        {(['details', 'performance'] as const).map((tab) => (
           <button key={tab} type="button" onClick={() => setAdvancedTab(tab)} className="min-h-11 flex-1 rounded-xl px-4 py-2 text-xs font-semibold transition-all duration-200" style={advancedTab === tab ? activeStyle : inactiveStyle}>
             {settingsText[tab] || tab}
           </button>
         ))}
       </div>
-      {advancedTab === 'engine' ? (
-        <div className="space-y-4">
-          <div className="rounded-[20px] bg-white/28 p-4 text-[12px] leading-relaxed text-[var(--text-muted)] shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
-            {settingsText.layoutEngine || 'Layout Engine'}
-          </div>
-        </div>
-      ) : null}
       {advancedTab === 'details' ? (
         <div className="space-y-4">
           <div className="grid gap-3 rounded-[20px] bg-white/28 p-3 shadow-[0_2px_10px_rgba(0,0,0,0.02)] sm:grid-cols-2">

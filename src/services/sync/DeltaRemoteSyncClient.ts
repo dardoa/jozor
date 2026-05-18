@@ -206,6 +206,10 @@ export class DeltaRemoteSyncClient {
                         opType: op.type,
                         treeId: op.tree_id,
                         targetId: op.payload.id || op.payload.person?.id,
+                        focusId: op.payload.focusId,
+                        existingId: op.payload.existingId,
+                        relativeId: op.payload.relativeId,
+                        relationType: op.payload.type,
                         hint: 'Projection update failed. The delta log will still be attempted.'
                     }
                 });
@@ -311,12 +315,34 @@ export class DeltaRemoteSyncClient {
     }
 
     private async upsertRelationship(client: SupabaseTreeClient, relationship: RelationshipRow): Promise<void> {
+        await this.ensureRelationshipPeopleProjected(client, relationship);
+
         const { error } = await client
             .from('relationships')
             .upsert(relationship, {
                 onConflict: 'tree_id,person_id,relative_id,type',
                 ignoreDuplicates: true,
             });
+
+        if (error) throw error;
+    }
+
+    private async ensureRelationshipPeopleProjected(
+        client: SupabaseTreeClient,
+        relationship: RelationshipRow
+    ): Promise<void> {
+        const people = useAppStore.getState().people ?? {};
+        const participantIds = Array.from(new Set([relationship.person_id, relationship.relative_id]));
+        const rows = participantIds
+            .map((personId) => people[personId])
+            .filter((person): person is Person => !!person?.id)
+            .map((person) => mapPersonToDbRow(person, relationship.tree_id));
+
+        if (rows.length === 0) return;
+
+        const { error } = await client
+            .from('people')
+            .upsert(rows, { onConflict: 'id' });
 
         if (error) throw error;
     }

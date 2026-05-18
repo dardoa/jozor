@@ -8,11 +8,9 @@ import {
   FamilyActionsProps,
   ThemeLanguageProps,
   FullState,
-  Person,
   AuthProps,
 } from '../types';
 import { loadFullState } from '../store/useAppStore';
-import { validatePerson } from '../utils/familyLogic';
 
 interface ModalManagerContainerProps {
   appState: AppStateAndActions;
@@ -82,32 +80,7 @@ export const ModalManagerContainer: React.FC<ModalManagerContainerProps> = memo(
               return;
             }
 
-            // Case 2: Legacy format: Record<string, Person>
-            const values = Object.values(importedData);
-            const looksLikePeople = values.some(
-              (v: unknown) =>
-                v &&
-                typeof v === 'object' &&
-                (v as Person).id &&
-                typeof (v as Person).firstName === 'string'
-            );
-
-            if (!looksLikePeople) {
-              throw new Error('No valid people data found in imported file');
-            }
-
-            const importedPeople = importedData as Record<string, Person>;
-            const validated: Record<string, Person> = {};
-            Object.keys(importedPeople).forEach((k) => {
-              validated[k] = validatePerson(importedPeople[k]);
-            });
-
-            if (Object.keys(validated).length === 0) {
-              throw new Error('No valid data after validation');
-            }
-
-            const focusId = Object.keys(validated)[0] ?? undefined;
-            loadFullState({ people: validated, focusId } as Partial<FullState> as FullState);
+            throw new Error('Imported files must use the current Jozor full-state format.');
           } catch (e) {
             console.error('Local import failed', e);
             // Leave user feedback to the caller (DriveFileManagerModal already shows toasts)

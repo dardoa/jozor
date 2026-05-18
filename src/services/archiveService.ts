@@ -26,9 +26,8 @@ const EMPTY_TIMESTAMP = '1970-01-01T00:00:00.000Z';
 /**
  * Builds the new blueprint-compliant Jozor archive format.
  *
- * Why: the project is transitioning away from legacy snapshot/export files that
- * mixed runtime JSON with provider-specific media references. The archive
- * service creates a portable package with a deterministic file layout so later
+ * Why: the archive service creates a portable package with a deterministic
+ * file layout so later
  * backup/restore steps can treat archives as a stable contract rather than a
  * UI-specific export detail.
  */

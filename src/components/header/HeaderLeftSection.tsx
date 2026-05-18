@@ -5,25 +5,25 @@ import { HeaderLeftSectionProps } from '../../types';
 import { useTranslation } from '../../context/TranslationContext';
 
 export const HeaderLeftSection: React.FC<HeaderLeftSectionProps> = memo(
-  ({ themeLanguage: _themeLanguage, toggleSidebar, sidebarOpen, hasActivePerson, historyControls }) => {
+  ({ themeLanguage: _themeLanguage, toggleDetailsPanel, detailsPanelOpen, hasActivePerson, historyControls }) => {
     const { t } = useTranslation();
-    const detailsLabel = sidebarOpen
+    const detailsLabel = detailsPanelOpen
       ? (t.closeDetails || 'Close details')
       : (t.openDetails || 'Open details');
     const inactiveLabel = t.selectPersonForDetails || 'Select a person to view details';
-    const sidebarTriggerLabel = hasActivePerson ? detailsLabel : inactiveLabel;
+    const detailsTriggerLabel = hasActivePerson ? detailsLabel : inactiveLabel;
 
     return (
       <div className='flex items-center gap-3 md:gap-6'>
         <button
           type="button"
-          onClick={toggleSidebar}
+          onClick={toggleDetailsPanel}
           className='p-3 md:p-2 text-[var(--text-muted)] hover:bg-[var(--theme-bg)] rounded-xl transition-colors disabled:opacity-35 disabled:cursor-not-allowed disabled:hover:bg-transparent'
-          aria-label={sidebarTriggerLabel}
-          title={sidebarTriggerLabel}
+          aria-label={detailsTriggerLabel}
+          title={detailsTriggerLabel}
           disabled={!hasActivePerson}
         >
-          {sidebarOpen ? <X className='w-5 h-5' /> : <Menu className='w-5 h-5' />}
+          {detailsPanelOpen ? <X className='w-5 h-5' /> : <Menu className='w-5 h-5' />}
         </button>
         <div
           className='flex items-center gap-3 select-none cursor-pointer group'
@@ -66,4 +66,3 @@ export const HeaderLeftSection: React.FC<HeaderLeftSectionProps> = memo(
     );
   }
 );
-

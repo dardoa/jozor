@@ -1,4 +1,4 @@
-// @ts-nocheck
+
 import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
@@ -45,8 +45,6 @@ describe('MobileAccountSheet', () => {
           setLanguage,
           darkMode: false,
           setDarkMode,
-          theme: 'modern',
-          setTheme: vi.fn(),
         }}
         user={{
           uid: 'user-1',

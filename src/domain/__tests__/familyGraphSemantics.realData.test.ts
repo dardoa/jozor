@@ -1,7 +1,7 @@
-// @ts-nocheck
+
 import { describe, it, expect } from 'vitest';
 import { buildLayoutSemanticsSnapshot } from '../familyGraphSemantics';
-import { FamilyGraph } from '../familyGraphTypes';
+
 
 describe('Family Tree Semantics - Real Data Test', () => {
   const testData = {
@@ -46,7 +46,7 @@ describe('Family Tree Semantics - Real Data Test', () => {
   };
 
   // Mock Family Graph from data
-  const familyGraph: FamilyGraph = {
+  const familyGraph: any = {
     people: testData.people as any,
     families: {
       "fam-mahmoud-nouriya": {

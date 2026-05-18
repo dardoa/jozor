@@ -79,11 +79,12 @@ export const useNodeViewModel = ({
     () => buildNodeMetaLines(person, settings, isLOD),
     [isLOD, person, settings],
   );
+  const photoPath = person.photoPath;
+  const photoVersion = person.photoVersion;
+
   const photoSource = useMemo(
     () => getPersonPhoto(person),
-    // Keep parity with existing NodeComponent deps (including legacy snake_case fields).
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    [person.photoPath, person.photoVersion, (person as any).photo_path, (person as any).photo_version],
+    [photoPath, photoVersion],
   );
   const shouldRenderPhoto = settings.showPhotos && !settings.privacyMode && Boolean(photoSource) && !isLOD;
   const photoAlt = useMemo(

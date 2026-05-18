@@ -1,4 +1,4 @@
-// @ts-nocheck
+
 import { act } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { loadFullState, useAppStore } from '../useAppStore';
@@ -237,6 +237,24 @@ describe('loadFullState', () => {
     });
 
     expect(useAppStore.getState().focusId).toBe('person-1');
+  });
+
+  it('persists isLowGraphicsMode to localStorage and updates state', () => {
+    act(() => {
+      useAppStore.getState().setIsLowGraphicsMode(true);
+    });
+
+    expect(useAppStore.getState().isLowGraphicsMode).toBe(true);
+    
+    const stored = JSON.parse(localStorage.getItem('jozor-ui-storage') || '{}');
+    expect(stored.state?.isLowGraphicsMode).toBe(true);
+
+    act(() => {
+      useAppStore.getState().setIsLowGraphicsMode(false);
+    });
+
+    const storedFalse = JSON.parse(localStorage.getItem('jozor-ui-storage') || '{}');
+    expect(storedFalse.state?.isLowGraphicsMode).toBe(false);
   });
 });
 

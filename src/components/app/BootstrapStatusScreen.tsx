@@ -4,12 +4,9 @@ export const BootstrapStatusScreen: React.FC<{
   title: string;
   description: string;
   fullscreen?: boolean;
-}> = ({ fullscreen = true }) => {
-  // In fullscreen mode, the native splash (#jozor-splash in index.html) covers this.
-  if (fullscreen) return null;
-
+}> = ({ title, description, fullscreen = true }) => {
   return (
-    <div className='flex h-full min-h-[320px] flex-col items-center justify-center bg-[var(--theme-bg)]/60 px-6 py-10'>
+    <div className={`flex flex-col items-center justify-center bg-[var(--theme-bg)] px-6 py-10 ${fullscreen ? 'fixed inset-0 z-[100]' : 'h-full min-h-[320px]'}`}>
       <style>
         {`
           @keyframes jozor-pulse {
@@ -21,11 +18,17 @@ export const BootstrapStatusScreen: React.FC<{
           }
         `}
       </style>
-      <img 
-        src="/jozor-icon.svg" 
-        alt="Loading..." 
-        className="w-[180px] h-[180px] md:w-[220px] md:h-[220px] animate-jozor-pulse object-contain drop-shadow-2xl"
-      />
+      <div className="flex flex-col items-center gap-8 max-w-sm text-center">
+        <img 
+          src="/jozor-icon.svg" 
+          alt="Loading..." 
+          className="w-[120px] h-[120px] md:w-[160px] md:h-[160px] animate-jozor-pulse object-contain drop-shadow-2xl"
+        />
+        <div className="space-y-2 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <h1 className="text-2xl font-bold text-[var(--text-main)]">{title}</h1>
+          <p className="text-[var(--text-muted)] text-sm leading-relaxed">{description}</p>
+        </div>
+      </div>
     </div>
   );
 };

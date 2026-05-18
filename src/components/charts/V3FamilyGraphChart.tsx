@@ -12,7 +12,7 @@
 import React from 'react';
 import type { Person, TreeSettings } from '../../types';
 import type { CollapsePoint } from '../../utils/layout/constants';
-import { useV3RendererPipeline } from '../../hooks/useV3RendererPipeline';
+import { useV3RendererPipeline } from '../../hooks/tree/useV3RendererPipeline';
 import { V3FamilyGraphRenderer } from './V3FamilyGraphRenderer';
 
 interface V3FamilyGraphChartProps {

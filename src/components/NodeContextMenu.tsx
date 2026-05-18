@@ -67,7 +67,8 @@ export const NodeContextMenu: React.FC<NodeContextMenuProps> = ({
     const menuRef = useRef<HTMLDivElement>(null);
     const [view, setView] = useState<'main' | 'linkExisting'>('main');
 
-    const canEdit = currentUserRole === 'owner' || currentUserRole === 'editor';
+    // null = guest/local mode → same rights as owner locally
+    const canEdit = currentUserRole === 'owner' || currentUserRole === 'editor' || currentUserRole === null;
     const isRtl = language === 'ar';
     const detailsLabel = canEdit ? t.editDetails : (((t as any).viewDetails as string | undefined) ?? 'View Details');
     const linkExistingLabel = ((t as any).linkExistingPerson as string | undefined) ?? 'Link Existing Person';

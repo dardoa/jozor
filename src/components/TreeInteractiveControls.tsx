@@ -5,12 +5,9 @@ interface ZoomIndicatorProps {
 }
 
 /**
- * TreeInteractiveControls - NOW A PURE UI DISPLAY
+ * TreeInteractiveControls - pure zoom display
  * 
- * This component has been stripped of all D3/Zoom logic.
  * The core interaction engine has been unified into useTreeInteraction.ts.
- * 
- * This component now only serves as a visual indicator for the current zoom level.
  */
 export const ZoomIndicator: React.FC<ZoomIndicatorProps> = ({ zoomScale }) => {
     const percentage = Math.round(zoomScale * 100);
@@ -23,15 +20,4 @@ export const ZoomIndicator: React.FC<ZoomIndicatorProps> = ({ zoomScale }) => {
             {percentage}%
         </div>
     );
-};
-
-// Legacy Export for compatibility if needed (deprecated)
-export const useTreeInteractiveControls = () => {
-    console.warn('[Jozor] useTreeInteractiveControls is deprecated. Use useTreeInteraction instead.');
-    return {
-        handleZoomIn: () => {},
-        handleZoomOut: () => {},
-        handleResetZoom: () => {},
-        zoomScale: 1,
-    };
 };

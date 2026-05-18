@@ -40,7 +40,7 @@ export const header = {
   consistencyChecker: 'Consistency Checker',
   relationshipCalculator: 'Relationship Calculator',
   presentMode: 'Present Mode',
-  toggleSidebar: 'Toggle Sidebar',
+
   openDetails: 'Open details',
   closeDetails: 'Close details',
   selectPersonForDetails: 'Select a person to view details',

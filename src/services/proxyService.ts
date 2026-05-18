@@ -4,9 +4,6 @@ import { fetchTree } from './supabaseTreeReadService';
 import { authTokenService } from './authTokenService';
 
 const PROXY_API = '/api/proxy';
-const LEGACY_DRIVE_SHARING_DISABLED_MESSAGE =
-  'Legacy Google Drive shared links are no longer supported. Ask the owner to share the database-backed tree link.';
-
 export interface SharedTreePayload {
   people: Record<string, Person>;
   treeName?: string;
@@ -22,7 +19,7 @@ export const loadSharedFile = async (
   supabaseToken?: string
 ): Promise<SharedTreePayload> => {
   if (!isDbTree) {
-    throw new Error(LEGACY_DRIVE_SHARING_DISABLED_MESSAGE);
+    throw new Error('Shared tree links must use the database-backed route.');
   }
 
   const token = supabaseToken || authTokenService.getStoredSupabaseToken();

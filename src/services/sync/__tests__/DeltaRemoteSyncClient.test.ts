@@ -1,4 +1,4 @@
-// @ts-nocheck
+
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DeltaRemoteSyncClient } from '../DeltaRemoteSyncClient';
 import type { PendingDeltaOp } from '../SyncTypes';
@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
     bulkDeletePendingOperations: vi.fn(),
     setSyncStatus: vi.fn(),
     incrementOpCount: vi.fn(),
+    people: {} as Record<string, Person>,
 }));
 
 vi.mock('../../supabaseClient', () => ({
@@ -46,6 +47,7 @@ vi.mock('../../../store/useAppStore', () => ({
                 supabaseToken: 'token-1',
             },
             syncStatus: { state: 'saving', pendingCount: 1 },
+            people: mocks.people,
             setSyncStatus: mocks.setSyncStatus,
             incrementOpCount: mocks.incrementOpCount,
         })),
@@ -73,7 +75,7 @@ const addNodeOp: PendingDeltaOp = {
             parents: ['parent-1'],
             spouses: [],
             children: [],
-        } as Person,
+        } as any,
     },
     created_at: '2026-05-09T00:00:00.000Z',
     localId: 7,
@@ -86,6 +88,7 @@ describe('DeltaRemoteSyncClient', () => {
         mocks.upsertPeople.mockResolvedValue({ error: null });
         mocks.upsertRelationships.mockResolvedValue({ error: null });
         mocks.bulkDeletePendingOperations.mockResolvedValue(undefined);
+        mocks.people = {};
     });
 
     it('persists ADD_NODE to both the operation log and the readable tree projection', async () => {
@@ -116,6 +119,67 @@ describe('DeltaRemoteSyncClient', () => {
             }
         );
         expect(mocks.bulkDeletePendingOperations).toHaveBeenCalledWith([7]);
+    });
+
+    it('projects local relationship participants before inserting an ADD_RELATION row', async () => {
+        const client = new DeltaRemoteSyncClient(() => 0, vi.fn());
+        const focusPerson = {
+            id: 'focus-1',
+            firstName: 'Focus',
+            lastName: 'One',
+            gender: 'male',
+            parents: [],
+            spouses: ['existing-1'],
+            children: [],
+        } as any;
+        const existingPerson = {
+            id: 'existing-1',
+            firstName: 'Existing',
+            lastName: 'One',
+            gender: 'female',
+            parents: [],
+            spouses: ['focus-1'],
+            children: [],
+        } as any;
+        mocks.people = {
+            [focusPerson.id]: focusPerson,
+            [existingPerson.id]: existingPerson,
+        };
+
+        const result = await client.flushOutgoingBatch([{
+            tree_id: addNodeOp.tree_id,
+            user_id: 'user-1',
+            type: 'ADD_RELATION',
+            payload: {
+                focusId: focusPerson.id,
+                existingId: existingPerson.id,
+                type: 'spouse',
+            },
+            created_at: '2026-05-09T00:00:00.000Z',
+            localId: 8,
+        }], null);
+
+        expect(result).toEqual({ success: true, shouldRetry: false });
+        expect(mocks.upsertPeople).toHaveBeenCalledWith(
+            [
+                expect.objectContaining({ id: focusPerson.id, tree_id: addNodeOp.tree_id }),
+                expect.objectContaining({ id: existingPerson.id, tree_id: addNodeOp.tree_id }),
+            ],
+            { onConflict: 'id' }
+        );
+        expect(mocks.upsertRelationships).toHaveBeenCalledWith(
+            {
+                tree_id: addNodeOp.tree_id,
+                person_id: focusPerson.id,
+                relative_id: existingPerson.id,
+                type: 'spouse',
+            },
+            {
+                onConflict: 'tree_id,person_id,relative_id,type',
+                ignoreDuplicates: true,
+            }
+        );
+        expect(mocks.bulkDeletePendingOperations).toHaveBeenCalledWith([8]);
     });
 
     it('does not acknowledge the batch when the readable projection fails', async () => {

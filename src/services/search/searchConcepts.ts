@@ -19,6 +19,7 @@ export interface ConceptDefinition {
 }
 
 export const SEARCH_CONCEPTS: ConceptDefinition[] = [
+    { id: 'rel_spouses', logicType: 'RELATIONAL', keywords: ['مرت', 'مرته', 'مرا', 'مرة', 'مره', 'زوجة', 'زوج', 'جوز', 'جوزها', 'جوزة'] },
     { id: 'children', logicType: 'CATEGORICAL', keywords: ['أطفال', 'اطفال', 'اطفال صغار', 'بزارين', 'children', 'child', 'kids'] },
     { id: 'seniors', logicType: 'CATEGORICAL', keywords: ['مسنين', 'كبار السن', 'senior', 'seniors', 'elderly'] },
     { id: 'females', logicType: 'CATEGORICAL', keywords: ['نساء', 'اناث', 'إناث', 'حريم', 'بنات', 'female', 'females', 'women'] },
@@ -34,7 +35,7 @@ export const SEARCH_CONCEPTS: ConceptDefinition[] = [
     { id: 'rel_granddaughters', logicType: 'RELATIONAL', keywords: ['حفيدات', 'granddaughters of', 'granddaughters'] },
     { id: 'rel_grandsons', logicType: 'RELATIONAL', keywords: ['حفيد', 'أحفاد ذكور', 'grandsons of', 'grandsons'] },
 
-    { id: 'rel_spouses', logicType: 'RELATIONAL', keywords: ['زوجات', 'ازواج', 'أزواج', 'نسوان', 'زوجة', 'زوج', 'spouses of', 'spouses', 'wife of', 'husband of'] },
+    { id: 'rel_spouses', logicType: 'RELATIONAL', keywords: ['زوجات', 'ازواج', 'أزواج', 'نسوان', 'زوجة', 'زوج', 'جوز', 'جوزها', 'جوزة', 'spouses of', 'spouses', 'wife of', 'husband of'] },
     { id: 'rel_siblings', logicType: 'RELATIONAL', keywords: ['اخوة', 'إخوة', 'اخوان', 'خوان', 'اشقاء', 'أشقاء', 'siblings of', 'siblings'] },
 
     { id: 'rel_grandparents', logicType: 'RELATIONAL', keywords: ['أجداد', 'اجداد', 'جد', 'grandparents of', 'grandparents'] },

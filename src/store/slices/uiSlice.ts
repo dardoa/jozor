@@ -24,14 +24,14 @@ export interface UISlice {
     setAdminHubTab: (tab: 'access' | 'activity' | 'versions' | 'settings') => void;
     pulseTargetId: string | null;
     triggerPulse: (id: string) => void;
-    personSidebarTab: import('../../types').PersonSidebarTabId;
-    setPersonSidebarTab: (tab: import('../../types').PersonSidebarTabId) => void;
-    isPersonSidebarEditing: boolean;
-    setPersonSidebarEditing: (editing: boolean) => void;
+    smartPersonaTab: import('../../types').SmartPersonaTabId;
+    setSmartPersonaTab: (tab: import('../../types').SmartPersonaTabId) => void;
+    isSmartPersonaEditing: boolean;
+    setSmartPersonaEditing: (editing: boolean) => void;
     isVaultOpen: boolean;
     setVaultOpen: (open: boolean) => void;
-    vaultTab: 'cloud' | 'security' | 'export-data' | 'export-visual' | 'trees' | 'members' | 'stats';
-    setVaultTab: (tab: 'cloud' | 'security' | 'export-data' | 'export-visual' | 'trees' | 'members' | 'stats') => void;
+    vaultTab: 'cloud' | 'security' | 'trees' | 'members' | 'stats';
+    setVaultTab: (tab: 'cloud' | 'security' | 'trees' | 'members' | 'stats') => void;
     // Notifications
     notifications: AppNotification[];
     enqueueNotification: (n: Omit<AppNotification, 'id' | 'timestamp' | 'read' | 'createdAt' | 'updatedAt'>) => void;
@@ -119,12 +119,12 @@ export const createUISlice: StateCreator<AppStore, [["zustand/devtools", never]]
     setTreeControlCenterOpen: (open) => set({ isTreeControlCenterOpen: open }),
     adminHubTab: 'access',
     setAdminHubTab: (tab) => set({ adminHubTab: tab }),
-    personSidebarTab: 'about',
-    setPersonSidebarTab: (tab) => set({ personSidebarTab: tab }),
+    smartPersonaTab: 'about',
+    setSmartPersonaTab: (tab) => set({ smartPersonaTab: tab }),
     smartPersonaSize: 'closed',
     setSmartPersonaSize: (size) => set({ smartPersonaSize: size }),
-    isPersonSidebarEditing: false,
-    setPersonSidebarEditing: (editing) => set({ isPersonSidebarEditing: editing }),
+    isSmartPersonaEditing: false,
+    setSmartPersonaEditing: (editing) => set({ isSmartPersonaEditing: editing }),
     isVaultOpen: false,
     setVaultOpen: (open) => set({ isVaultOpen: open }),
     vaultTab: 'trees',

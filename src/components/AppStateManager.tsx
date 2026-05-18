@@ -1,14 +1,13 @@
 import * as React from 'react';
 import { useEffect, useRef } from 'react';
 import { useAppStore } from '../store/useAppStore';
-import { useSessionBootstrap } from '../hooks/useSessionBootstrap';
-import { useConsistency } from '../hooks/useConsistency';
-import { useGeocodingSync } from '../hooks/useGeocodingSync';
-import { useNotifications } from '../hooks/useNotifications';
-import { useRealtimeNotifications } from '../hooks/useRealtimeNotifications';
-import { useWebPush } from '../hooks/useWebPush';
+import { useSessionBootstrap } from '../hooks/auth/useSessionBootstrap';
+import { useConsistency } from '../hooks/sync/useConsistency';
+import { useGeocodingSync } from '../features/geography';
+import { useNotifications } from '../hooks/sync/useNotifications';
+import { useRealtimeNotifications } from '../hooks/sync/useRealtimeNotifications';
+import { useWebPush } from '../hooks/sync/useWebPush';
 import { AppUIManager } from './AppUIManager';
-import { localStorageMigrationService } from '../services/legacy/localStorageMigrationService';
 
 const BootstrapSplash: React.FC = () => (
   <div className="flex h-screen items-center justify-center bg-[var(--theme-bg)]">
@@ -39,10 +38,6 @@ export const AppStateManager: React.FC = () => {
   useRealtimeNotifications(user, currentTreeId);
 
   const shouldShowBootstrapSplash = !user?.uid && authLoading;
-
-  useEffect(() => {
-    void localStorageMigrationService.migrateFromLocalStorage();
-  }, []);
 
   useEffect(() => {
     if (user?.uid && !hasLoggedUidAvailabilityRef.current) {

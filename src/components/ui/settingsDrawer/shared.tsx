@@ -31,7 +31,6 @@ export type VisibilitySettingKey =
     | 'showGender'
     | 'showOccupation'
     | 'showDeceased'
-    | 'showMinimap'
     | 'privacyMode';
 
 export type SettingsTextOptions = {
@@ -59,7 +58,7 @@ export const LAYOUT_MODE_OPTIONS: Array<{ id: LayoutMode; labelKey: 'vertical' |
     { id: 'horizontal', labelKey: 'horizontal' },
     { id: 'radial', labelKey: 'radial' },
 ];
-export const LINE_STYLE_OPTIONS: LineStyle[] = ['curved', 'straight', 'step'];
+export const LINE_STYLE_OPTIONS: LineStyle[] = ['step', 'curved'];
 export const NODE_COLOR_LOGIC_OPTIONS: BoxColorLogic[] = ['gender', 'lineage', 'none'];
 export const THEME_OPTIONS: AppTheme[] = ['modern', 'vintage', 'blueprint', 'dark'];
 export const VISIBILITY_SETTING_KEYS: VisibilitySettingKey[] = [
@@ -82,7 +81,6 @@ export const VISIBILITY_SETTING_KEYS: VisibilitySettingKey[] = [
     'showGender',
     'showOccupation',
     'showDeceased',
-    'showMinimap',
     'privacyMode',
 ];
 export const DATE_FORMAT_OPTIONS: DateFormat[] = ['iso', 'eu', 'us', 'long'];

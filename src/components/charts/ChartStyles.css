@@ -22,28 +22,29 @@
 }
 
 .fan-chart-circle {
-  border-color: #c4a882;
-  background-color: #f5efe4;
+  border-color: var(--fan-circle-border, #c4a882);
+  background-color: var(--fan-female-bg, #f5efe4);
 }
 
 .fan-chart-circle.male {
-  border-color: #8b6914;
+  border-color: var(--fan-circle-border, #c4a882);
+  background-color: var(--fan-male-bg, #d5e8f0);
 }
 
 .fan-chart-icon {
-  color: #c4a882;
+  color: var(--fan-circle-border, #c4a882);
 }
 
 .fan-chart-icon.male {
-  color: #8b6914;
+  color: var(--fan-circle-border, #c4a882);
 }
 
 .fan-chart-text {
-  color: #2c1810;
+  color: var(--fan-text, #2c1810);
 }
 
 .fan-chart-text.male {
-  color: #2c1810;
+  color: var(--fan-text, #2c1810);
 }
 
 /* FanChart Filter */

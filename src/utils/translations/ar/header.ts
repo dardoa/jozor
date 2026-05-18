@@ -40,7 +40,7 @@ export const header = {
   consistencyChecker: 'مدقق الاتساق',
   relationshipCalculator: 'حاسبة القرابة',
   presentMode: 'وضع العرض التقديمي',
-  toggleSidebar: 'تبديل الشريط الجانبي',
+
   openDetails: 'فتح التفاصيل',
   closeDetails: 'إغلاق التفاصيل',
   selectPersonForDetails: 'اختر شخصاً لعرض التفاصيل',

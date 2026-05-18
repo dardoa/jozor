@@ -1,7 +1,6 @@
 import React, { useMemo } from 'react';
 import type { FanArc, Person, TreeNode, TreeSettings } from '../../types';
 import type { CollapsePoint } from '../../utils/layout/constants';
-import type { MinimapGraph } from '../../domain/minimapGraph';
 import { TreeLoader } from './TreeLoader';
 import { TreeHUD } from './TreeHUD';
 import {
@@ -11,14 +10,14 @@ import {
   type FamilyTreeChartViewport,
   type FamilyTreeRendererMode,
 } from './FamilyTreeChartRenderer';
-import { useTreeCssVariables } from '../../hooks/useTreeCssVariables';
-import { useTreeRenderDiagnostics } from '../../hooks/useTreeRenderDiagnostics';
+import { useTreeCssVariables } from '../../hooks/ui/useTreeCssVariables';
+import { useTreeRenderDiagnostics } from '../../hooks/ui/useTreeRenderDiagnostics';
 
 interface FamilyTreeCanvasProps {
   people: Record<string, Person>;
   focusId: string;
   settings: TreeSettings;
-  isSidebarOpen: boolean;
+  isDetailsPanelOpen: boolean;
   hasBlockingOverlay?: boolean;
   wrapperRef: React.RefObject<HTMLDivElement | null>;
   svgRef: React.RefObject<SVGSVGElement | null>;
@@ -27,7 +26,6 @@ interface FamilyTreeCanvasProps {
   activeLayout: any;
   displayNodes: TreeNode[];
   displayFanArcs: FanArc[];
-  minimapGraph: MinimapGraph | null;
   displayCollapsePoints: CollapsePoint[];
   highlightedPath?: Set<string>;
   zoomScale: number;
@@ -50,7 +48,7 @@ export const FamilyTreeCanvas: React.FC<FamilyTreeCanvasProps> = ({
   people,
   focusId,
   settings,
-  isSidebarOpen,
+  isDetailsPanelOpen,
   hasBlockingOverlay = false,
   wrapperRef,
   svgRef,
@@ -59,7 +57,6 @@ export const FamilyTreeCanvas: React.FC<FamilyTreeCanvasProps> = ({
   activeLayout,
   displayNodes,
   displayFanArcs,
-  minimapGraph,
   displayCollapsePoints,
   highlightedPath,
   zoomScale,
@@ -78,7 +75,7 @@ export const FamilyTreeCanvas: React.FC<FamilyTreeCanvasProps> = ({
   t,
 }) => {
   const rendererMode: FamilyTreeRendererMode = isFanChart ? 'radial' : 'tree';
-  const treeCssVariables = useTreeCssVariables();
+  const { canvasBg, canvasOverlay, ...treeCssVariables } = useTreeCssVariables();
 
   const chartData = useMemo<FamilyTreeChartData>(() => ({
     people,
@@ -120,19 +117,17 @@ export const FamilyTreeCanvas: React.FC<FamilyTreeCanvasProps> = ({
       className="flex-1 h-full overflow-hidden relative cursor-move select-none transition-all duration-500 ease-in-out pb-[72px] sm:pb-0"
       style={{
         ...treeCssVariables,
-        backgroundColor: 'var(--tree-canvas-bg)',
-        backgroundImage: 'var(--tree-canvas-overlay)',
+        backgroundColor: canvasBg,
+        backgroundImage: canvasOverlay,
         backgroundBlendMode: 'normal',
       }}
     >
       {isLoading && <TreeLoader />}
 
       <TreeHUD
-        minimapGraph={minimapGraph}
-        showMinimap={settings.showMinimap}
         isFanChart={isFanChart}
         isForce={isForce}
-        isSidebarOpen={isSidebarOpen}
+        isDetailsPanelOpen={isDetailsPanelOpen}
         hasBlockingOverlay={hasBlockingOverlay}
         onOpenPreferences={onOpenPreferences}
         onZoomIn={onZoomIn}

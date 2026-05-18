@@ -1,11 +1,11 @@
-// @ts-nocheck
+
 import { describe, expect, it } from 'vitest';
 import type { Person } from '../../types';
 import { buildFamilyGraph } from '../familyGraph';
 
 function createPerson(overrides: Partial<Person> & Pick<Person, 'id'>): Person {
   return {
-    id: overrides.id,
+
     title: '',
     firstName: '',
     middleName: '',

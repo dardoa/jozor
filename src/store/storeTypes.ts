@@ -5,5 +5,7 @@ import { UISlice } from './slices/uiSlice';
 import { SyncMetaSlice } from './slices/syncMetaSlice';
 import { TreeHealthSlice } from './slices/treeHealthSlice';
 import { HistorySlice } from './slices/historySlice';
+import { DiscussionSlice } from '../features/discussions';
+import { AppearanceSlice } from './slices/appearanceSlice';
 
-export type AppStore = FamilySlice & SettingsSlice & AuthSlice & UISlice & SyncMetaSlice & TreeHealthSlice & HistorySlice;
+export type AppStore = FamilySlice & SettingsSlice & AuthSlice & UISlice & SyncMetaSlice & TreeHealthSlice & HistorySlice & DiscussionSlice & AppearanceSlice;

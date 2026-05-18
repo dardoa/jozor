@@ -1,4 +1,4 @@
-// @ts-nocheck
+
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { fetchTreeMock } = vi.hoisted(() => ({
@@ -88,44 +88,44 @@ describe('proxyService.loadSharedFile', () => {
     expect(result.treeName).toBe('Live Walnut');
   });
 
-  it('fails early for legacy Google Drive shared links without calling the proxy', async () => {
+  it('fails early for non-database shared links without calling the proxy', async () => {
     const fetchMock = vi.mocked(fetch);
 
     await expect(loadSharedFile('file-7', false, 'explicit-token-123')).rejects.toThrow(
-      'Legacy Google Drive shared links are no longer supported.'
+      'Shared tree links must use the database-backed route.'
     );
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it('does not require a token before blocking a legacy shared tree', async () => {
+  it('does not require a token before blocking a non-database shared tree', async () => {
     await expect(loadSharedFile('file-9', false)).rejects.toThrow(
-      'Legacy Google Drive shared links are no longer supported.'
+      'Shared tree links must use the database-backed route.'
     );
   });
 
-  it('does not call the proxy for disabled legacy not-found scenarios', async () => {
+  it('does not call the proxy for non-database not-found scenarios', async () => {
     const fetchMock = vi.mocked(fetch);
 
     await expect(loadSharedFile('file-404', false, 'token-404')).rejects.toThrow(
-      'Legacy Google Drive shared links are no longer supported.'
+      'Shared tree links must use the database-backed route.'
     );
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it('does not call the proxy for disabled legacy permission scenarios', async () => {
+  it('does not call the proxy for non-database permission scenarios', async () => {
     const fetchMock = vi.mocked(fetch);
 
     await expect(loadSharedFile('file-403', false, 'token-403')).rejects.toThrow(
-      'Legacy Google Drive shared links are no longer supported.'
+      'Shared tree links must use the database-backed route.'
     );
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it('does not call the proxy for disabled legacy expired-session scenarios', async () => {
+  it('does not call the proxy for non-database expired-session scenarios', async () => {
     const fetchMock = vi.mocked(fetch);
 
     await expect(loadSharedFile('file-401', false, 'token-401')).rejects.toThrow(
-      'Legacy Google Drive shared links are no longer supported.'
+      'Shared tree links must use the database-backed route.'
     );
     expect(fetchMock).not.toHaveBeenCalled();
   });

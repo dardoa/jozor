@@ -18,18 +18,18 @@ import type {
 } from '../types';
 
 const SmartPersonaDrawer = React.lazy(() =>
-  import('./SmartPersonaDrawer/SmartPersonaDrawer').then((module) => ({ default: module.SmartPersonaDrawer }))
+  import('../features/smart-persona').then((module) => ({ default: module.SmartPersonaDrawer }))
 );
 
 interface AppPersonOverlaysProps {
   appState: AppStateAndActions;
   modals: ModalStateAndActions;
   toolsActions: ToolsActionsProps;
-  sidebarFamilyActions: FamilyActionsProps;
+  detailsPanelFamilyActions: FamilyActionsProps;
   auth: AuthProps;
   isPresentMode: boolean;
-  sidebarOpen: boolean;
-  setSidebarOpen: (v: boolean) => void;
+  detailsPanelOpen: boolean;
+  setDetailsPanelOpen: (v: boolean) => void;
   focusAndNavigate: (personId: string) => void;
   effectiveTreeSettings: TreeSettings;
   canEditActiveTree: boolean;
@@ -41,11 +41,11 @@ export const AppPersonOverlays: React.FC<AppPersonOverlaysProps> = ({
   appState,
   modals,
   toolsActions,
-  sidebarFamilyActions,
+  detailsPanelFamilyActions,
   auth,
   isPresentMode,
-  sidebarOpen,
-  setSidebarOpen,
+  detailsPanelOpen,
+  setDetailsPanelOpen,
   focusAndNavigate,
   effectiveTreeSettings,
   canEditActiveTree,
@@ -87,13 +87,13 @@ export const AppPersonOverlays: React.FC<AppPersonOverlaysProps> = ({
     }
     setPendingDeletePersonId(null);
     setDeleteModalOpen(false);
-    setSidebarOpen(false);
-  }, [activePerson?.id, appState, navigate, pendingDeletePersonId, setSidebarOpen, t]);
+    setDetailsPanelOpen(false);
+  }, [activePerson?.id, appState, navigate, pendingDeletePersonId, setDetailsPanelOpen, t]);
 
-  const openPersonSidebar = React.useCallback(
+  const openPersonDetailsPanel = React.useCallback(
     (personId: string, options?: { tab?: 'about' | 'links' | 'media'; isEditing?: boolean } | 'view' | 'edit') => {
       focusAndNavigate(personId);
-      setSidebarOpen(true);
+      setDetailsPanelOpen(true);
 
       let tab: 'about' | 'links' | 'media' = 'about';
       let isEditing = false;
@@ -105,11 +105,11 @@ export const AppPersonOverlays: React.FC<AppPersonOverlaysProps> = ({
         isEditing = true;
       }
 
-      useAppStore.getState().setPersonSidebarTab(tab);
-      useAppStore.getState().setPersonSidebarEditing(isEditing);
+      useAppStore.getState().setSmartPersonaTab(tab);
+      useAppStore.getState().setSmartPersonaEditing(isEditing);
       closeNodeContextMenu();
     },
-    [closeNodeContextMenu, focusAndNavigate, setSidebarOpen]
+    [closeNodeContextMenu, focusAndNavigate, setDetailsPanelOpen]
   );
 
   const handleSetAsRoot = React.useCallback(async (id: string) => {
@@ -139,7 +139,7 @@ export const AppPersonOverlays: React.FC<AppPersonOverlaysProps> = ({
 
   return (
     <>
-      {activePerson && !isPresentMode && sidebarOpen && (
+      {activePerson && !isPresentMode && detailsPanelOpen && (
         <React.Suspense fallback={null}>
           <SmartPersonaDrawer
             person={activePerson}
@@ -147,13 +147,13 @@ export const AppPersonOverlays: React.FC<AppPersonOverlaysProps> = ({
             onUpdate={appState.updatePerson}
             onDelete={triggerDelete}
             onSelect={focusAndNavigate}
-            isOpen={sidebarOpen}
-            onClose={() => setSidebarOpen(false)}
+            isOpen={detailsPanelOpen}
+            onClose={() => setDetailsPanelOpen(false)}
             onOpenModal={toolsActions.onOpenModal}
             user={auth.user}
             canEdit={canEditActiveTree}
             isOwner={isTreeOwner}
-            familyActions={sidebarFamilyActions}
+            familyActions={detailsPanelFamilyActions}
             settings={effectiveTreeSettings}
           />
         </React.Suspense>
@@ -170,7 +170,7 @@ export const AppPersonOverlays: React.FC<AppPersonOverlaysProps> = ({
             modals.handleOpenLinkModal(type, gender, { initialMode: 'create' });
           }}
           onOpenDetails={(id, mode) => {
-            openPersonSidebar(id, { tab: 'about', isEditing: mode === 'edit' && canEditActiveTree });
+            openPersonDetailsPanel(id, { tab: 'about', isEditing: mode === 'edit' && canEditActiveTree });
           }}
           onLinkExisting={(type, gender) => {
             closeNodeContextMenu();

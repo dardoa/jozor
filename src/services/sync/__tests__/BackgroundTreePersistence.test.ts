@@ -1,4 +1,4 @@
-// @ts-nocheck
+
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Person } from '../../../types';
 import { BackgroundTreePersistence } from '../BackgroundTreePersistence';
@@ -11,7 +11,7 @@ vi.mock('../OfflineCache', () => ({
     },
 }));
 
-const people = {
+const people: any = {
     p1: {
         id: 'p1',
         firstName: 'A',
@@ -22,7 +22,7 @@ const people = {
         spouses: [],
         order: 0,
     },
-} satisfies Record<string, Person>;
+};
 
 describe('BackgroundTreePersistence', () => {
     beforeEach(() => {
@@ -67,14 +67,14 @@ describe('BackgroundTreePersistence', () => {
 
     it('coalesces multiple queued saves into the latest people map', async () => {
         const persistence = new BackgroundTreePersistence();
-        const latestPeople = {
+        const latestPeople: any = {
             ...people,
             p2: {
                 ...people.p1,
                 id: 'p2',
                 firstName: 'B',
             },
-        } satisfies Record<string, Person>;
+        };
 
         persistence.scheduleSave(people);
         persistence.scheduleSave(latestPeople);

@@ -1,4 +1,4 @@
-// @ts-nocheck
+
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const authenticateUserMock = vi.fn();
@@ -49,7 +49,7 @@ describe('proxy API', () => {
     createSupabaseClientForUserMock.mockReturnValue({});
   });
 
-  it('returns 410 for disabled legacy Drive fileId sharing links', async () => {
+  it('requires treeId for shared tree proxy reads', async () => {
     const req = {
       method: 'GET',
       headers: { authorization: 'Bearer token' },
@@ -59,12 +59,9 @@ describe('proxy API', () => {
 
     await handler(req as never, res as never);
 
-    expect(res.statusCode).toBe(410);
+    expect(res.statusCode).toBe(400);
     expect(res.body).toEqual({
-      error: {
-        message: 'Legacy Google Drive proxy sharing has been disabled. Use a database-backed shared tree link.',
-        code: 'LEGACY_DRIVE_SHARING_DISABLED',
-      },
+      error: 'treeId is required',
     });
   });
 });

@@ -1,4 +1,4 @@
-// @ts-nocheck
+
 import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
@@ -9,7 +9,7 @@ import type { SyncStatus } from '../../types';
 const useSyncStatusMock = vi.fn();
 const syncTooltipMock = vi.fn();
 
-vi.mock('../../hooks/useSyncStatus', () => ({
+vi.mock('../../hooks/sync/useSyncStatus', () => ({
   useSyncStatus: () => useSyncStatusMock(),
 }));
 

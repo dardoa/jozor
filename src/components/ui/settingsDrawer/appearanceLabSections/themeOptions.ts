@@ -1,4 +1,4 @@
-import { THEME_PALETTE_OPTIONS } from '../../../../store/useTreeAppearanceStore';
+import { THEME_PALETTE_OPTIONS } from '../../../../domain/appearance/appearanceEngine';
 
 export const radiusValueToMode = (radius: number) => (radius >= 20 ? 'grand' : 'soft');
 export const radiusModeToValue = (mode: 'soft' | 'grand') => (mode === 'grand' ? 24 : 16);

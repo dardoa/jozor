@@ -5,13 +5,11 @@ import type {
   AIProxyRequest,
   AncestorChatAIRequestData,
   BiographyAIRequestData,
+  KindiPlanAIRequestData,
 } from '../types/ai';
 
 export const config = { runtime: 'edge' };
 
-const GOOGLE_AI_KEY = process.env.GOOGLE_AI_KEY || process.env.GEMINI_API_KEY;
-const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const resolveAllowedOrigin = () => {
   const candidate = process.env.APP_ORIGIN ?? process.env.VITE_APP_ORIGIN;
   if (typeof candidate === 'string' && candidate.trim()) {
@@ -30,6 +28,13 @@ function logServerError(context: string, error: unknown) {
   console.error(`[${context}] ${message}`, { stack });
 }
 
+function isInvalidProviderKeyError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return message.includes('API_KEY_INVALID')
+    || message.toLowerCase().includes('api key expired')
+    || message.toLowerCase().includes('api key not valid');
+}
+
 type AIUsagePeriod = 'daily' | 'monthly';
 
 interface AIUsageReservation {
@@ -42,12 +47,15 @@ interface AIUsageReservation {
 }
 
 function getSupabaseAdminClient(): SupabaseClient {
-  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !serviceRoleKey) {
     throw new Error('Supabase service role is not configured for AI usage enforcement.');
   }
 
   if (!supabaseAdminClient) {
-    supabaseAdminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+    supabaseAdminClient = createClient(supabaseUrl, serviceRoleKey, {
       auth: {
         persistSession: false,
         autoRefreshToken: false,
@@ -149,12 +157,106 @@ User message:
 ${newMessage}`;
 }
 
-function getOperationPrompt(body: AIProxyRequest): { prompt: string; image?: AIProxyImagePayload } {
+function getKindiPlanPrompt(data: KindiPlanAIRequestData): string {
+  const redactedText = String(data.redactedText || '').trim();
+
+  return `You are Kindi's strict classifier and planning parser for the Jozor family-tree app.
+Classify the user's redacted message and, only when it is a clear executable family-tree command, include a draft plan.
+You are not a chat assistant and you never write the final user-facing answer.
+
+Hard rules:
+- Return exactly one valid JSON object and nothing else.
+- Do not use markdown or code fences.
+- Never output person IDs, database IDs, UUIDs, or invented identifiers.
+- Never invent names. Preserve redaction tokens such as [NAME_1] and [NAME_2] exactly as received.
+- If the message is not a clear executable command, return category only and do not include a draft.
+- Use confidence from 0 to 1.
+- Use targetMention for the existing person being acted on.
+- Use newPersonName only for the new person being added.
+- Use updates only for fields explicitly stated by the user.
+- Classify greetings, general help, irrelevant/off-topic messages, and unclear family messages instead of inventing a plan.
+
+Allowed JSON shape:
+{
+  "category": "EXECUTABLE_COMMAND" | "FAMILY_QUERY" | "SUPPORT" | "GREETING" | "IRRELEVANT" | "UNCLEAR",
+  "draft": {
+    "intent": "ADD" | "UPDATE" | "DELETE" | "QUERY" | "UNKNOWN",
+    "relation": "parent" | "child" | "spouse" | "son" | "daughter" | "wife" | "husband" | "father" | "mother",
+    "gender": "male" | "female" | "M" | "F",
+    "targetMention": "[NAME_1]",
+    "newPersonName": "[NAME_2]",
+    "updates": {
+      "firstName": "string",
+      "middleName": "string",
+      "lastName": "string",
+      "nickName": "string",
+      "birthDate": "YYYY-MM-DD or YYYY",
+      "birthPlace": "string",
+      "deathDate": "YYYY-MM-DD or YYYY",
+      "deathPlace": "string",
+      "residence": "string",
+      "profession": "string",
+      "bio": "string"
+    },
+    "missingFields": ["string"],
+    "confidence": 0.0
+  },
+  "clarifyingQuestion": "short Arabic question when category is UNCLEAR or FAMILY_QUERY",
+  "confidence": 0.0
+}
+
+Examples:
+Input: "أضف ابن ل[NAME_1] اسمه [NAME_2]"
+Output: {"category":"EXECUTABLE_COMMAND","draft":{"intent":"ADD","relation":"son","gender":"male","targetMention":"[NAME_1]","newPersonName":"[NAME_2]","missingFields":[],"confidence":0.95},"confidence":0.95}
+
+Input: "add wife for [NAME_1] named [NAME_2]"
+Output: {"category":"EXECUTABLE_COMMAND","draft":{"intent":"ADD","relation":"wife","gender":"female","targetMention":"[NAME_1]","newPersonName":"[NAME_2]","missingFields":[],"confidence":0.95},"confidence":0.95}
+
+Input: "عدل مهنة [NAME_1] إلى طبيب"
+Output: {"category":"EXECUTABLE_COMMAND","draft":{"intent":"UPDATE","targetMention":"[NAME_1]","updates":{"profession":"طبيب"},"missingFields":[],"confidence":0.9},"confidence":0.9}
+
+Input: "عدل السيرة الذاتية ل[NAME_1] اضف انه صاحب اكبر كرشة"
+Output: {"category":"EXECUTABLE_COMMAND","draft":{"intent":"UPDATE","targetMention":"[NAME_1]","updates":{"bio":"صاحب اكبر كرشة"},"missingFields":[],"confidence":0.86},"confidence":0.86}
+
+Input: "احذف [NAME_1]"
+Output: {"category":"EXECUTABLE_COMMAND","draft":{"intent":"DELETE","targetMention":"[NAME_1]","missingFields":[],"confidence":0.9},"confidence":0.9}
+
+Input: "أضف ابن ل[NAME_1]"
+Output: {"category":"EXECUTABLE_COMMAND","draft":{"intent":"ADD","relation":"son","gender":"male","targetMention":"[NAME_1]","missingFields":["newPersonName"],"confidence":0.85},"confidence":0.85}
+
+Input: "مرحبا كيندي"
+Output: {"category":"GREETING","confidence":0.95}
+
+Input: "كيف أضيف زوجة؟"
+Output: {"category":"SUPPORT","confidence":0.9}
+
+Input: "ما حالة الطقس؟"
+Output: {"category":"IRRELEVANT","confidence":0.95}
+
+Input: "محمود من طرف أمه"
+Output: {"category":"UNCLEAR","clarifyingQuestion":"هل تريد البحث عن محمود، أم تعديل علاقة تخص طرف الأم؟","confidence":0.65}
+
+Redacted user command:
+"""${redactedText}"""`;
+}
+
+interface OperationPromptConfig {
+  prompt: string;
+  image?: AIProxyImagePayload;
+  preferredModels?: string[];
+}
+
+function getOperationPrompt(body: AIProxyRequest): OperationPromptConfig {
   switch (body.operation) {
     case 'biography':
       return { prompt: getBiographyPrompt(body.data) };
     case 'ancestor_chat':
       return { prompt: getAncestorChatPrompt(body.data) };
+    case 'kindi_plan':
+      return {
+        prompt: getKindiPlanPrompt(body.data),
+        preferredModels: ['gemini-1.5-flash'],
+      };
     case 'extract_person_data':
     case 'family_story':
       return { prompt: body.prompt };
@@ -167,8 +269,10 @@ function getOperationPrompt(body: AIProxyRequest): { prompt: string; image?: AIP
   }
 }
 
-async function generateViaProvider(prompt: string, image?: AIProxyImagePayload) {
-  if (!GOOGLE_AI_KEY) {
+async function generateViaProvider(prompt: string, image?: AIProxyImagePayload, preferredModels: string[] = []) {
+  const googleAIKey = process.env.GOOGLE_AI_KEY || process.env.GEMINI_API_KEY;
+
+  if (!googleAIKey) {
     throw new Error('AI provider key is not configured on the server.');
   }
 
@@ -177,8 +281,9 @@ async function generateViaProvider(prompt: string, image?: AIProxyImagePayload) 
   }
 
   const { GoogleGenerativeAI } = await import('@google/generative-ai');
-  const genAI = new GoogleGenerativeAI(GOOGLE_AI_KEY);
+  const genAI = new GoogleGenerativeAI(googleAIKey);
   const modelsToTry = [
+    ...preferredModels,
     'gemini-2.0-flash-lite',
     'gemini-2.0-flash',
     'gemini-2.5-flash-lite',
@@ -203,6 +308,10 @@ async function generateViaProvider(prompt: string, image?: AIProxyImagePayload) 
         return { result: text, model: modelName };
       }
     } catch (error) {
+      if (isInvalidProviderKeyError(error)) {
+        throw new Error('AI provider API key is invalid or expired. Renew GEMINI_API_KEY or GOOGLE_AI_KEY and restart the dev server.');
+      }
+
       lastError = error;
       logServerError('API_AI_PROXY_MODEL', error);
     }
@@ -252,7 +361,7 @@ export default async function handler(req: Request) {
 
   try {
     const body = (await req.json()) as AIProxyRequest;
-    const { prompt, image } = getOperationPrompt(body);
+    const { prompt, image, preferredModels } = getOperationPrompt(body);
     const usage = await reserveAIUsage(user.uid);
 
     if (!usage.allowed) {
@@ -271,7 +380,7 @@ export default async function handler(req: Request) {
       }, { status: 429, headers: corsHeaders });
     }
 
-    const response = await generateViaProvider(prompt, image);
+    const response = await generateViaProvider(prompt, image, preferredModels);
     return Response.json({
       ...response,
       usage: {

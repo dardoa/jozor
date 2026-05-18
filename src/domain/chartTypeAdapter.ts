@@ -8,7 +8,7 @@ import type { ChartType } from '../types';
  */
 export type ChartModel = 'focus' | 'radial';
 
-export function normalizeChartType(chartType: ChartType | null | undefined): ChartModel {
+export function normalizeChartType(chartType: string | null | undefined): ChartModel {
   return chartType === 'radial' ? 'radial' : 'focus';
 }
 
@@ -28,11 +28,11 @@ export function getChartModel(chartType: ChartType): ChartModel {
  * Visible-tree eligibility check.
  *
  * Why retained: FamilyTree.tsx and useFamilyTreeLayoutController read this
- * to decide minimap and highlighting paths. The legacy pedigree/fan concrete
- * types are gone — only 'focus' and 'radial' are valid.
+ * to decide chart model and highlighting paths. The legacy pedigree/fan concrete
+ * types are gone - only 'focus' and 'radial' are valid.
  *
  * @param chartType - The active ChartType.
- * @returns model, allowVisibleTree (always false now — VisibleTree pipeline removed),
+ * @returns model, allowVisibleTree (always false now - VisibleTree pipeline removed),
  *          and concreteType (always null).
  */
 export interface VisibleTreeEligibility {

@@ -3,7 +3,7 @@ import { useTranslation } from '../context/TranslationContext';
 
 export interface LogoProps {
   className?: string;
-  variant?: 'dark' | 'white';
+  variant?: 'dark' | 'white' | 'color';
 }
 
 export const Logo: React.FC<LogoProps> = memo(({ className = '', variant = 'dark' }) => {
@@ -36,7 +36,9 @@ export const Logo: React.FC<LogoProps> = memo(({ className = '', variant = 'dark
     );
   }
 
-  const logoSrc = variant === 'white' ? '/logo-bilingual-white.svg' : '/logo-bilingual-dark.svg';
+  const logoSrc = variant === 'white' 
+    ? '/logo-bilingual-white.svg' 
+    : '/logo-bilingual-dark.svg';
 
   return (
     <img

@@ -1,4 +1,4 @@
-// @ts-nocheck
+
 import { describe, it, expect } from 'vitest';
 import { buildSyncSuccess, buildSyncError, buildSyncSaving } from '../syncStatusHelpers';
 import { SyncStatus } from '../../../types';

@@ -1,5 +1,5 @@
 import { TreeSettings } from '../../../types';
-import { ThemeDensity, ThemeFontMode, ThemePaletteId, ThemeRadiusMode } from '../../../store/useTreeAppearanceStore';
+import { ThemeDensity, ThemeFontMode, ThemePaletteId, ThemeRadiusMode } from '../../../domain/appearance/appearanceEngine';
 import { normalizeChartType } from '../../../domain/chartTypeAdapter';
 
 export type VisualPresetId = 'heritage' | 'modernPure' | 'artistic';
@@ -129,7 +129,7 @@ export const buildVisualControlState = ({
         nodeDetails: {
             textSize: treeSettings.textSize,
             generationLimit: treeSettings.generationLimit,
-            lineStyle: treeSettings.lineStyle ?? 'curved',
+            lineStyle: treeSettings.lineStyle ?? 'step',
             lineThickness: treeSettings.lineThickness ?? 2,
             boxColorLogic: treeSettings.boxColorLogic,
             compactNodes: Boolean(treeSettings.isCompact),

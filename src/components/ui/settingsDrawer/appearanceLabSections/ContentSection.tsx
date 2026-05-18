@@ -1,14 +1,16 @@
 import React from 'react';
 import { Eye } from 'lucide-react';
 import { useShallow } from 'zustand/react/shallow';
-import { useTreeAppearanceStore } from '../../../../store/useTreeAppearanceStore';
+import { useAppStore } from '../../../../store/useAppStore';
 import { Checkbox, type SettingsTextOptions, type SettingsTranslator } from '../shared';
 import { SectionShell } from './sectionStyles';
 import type { SectionId } from './types';
 
 export const ContentSection = React.memo(({ open, onToggle, settingsText, t }: { open: boolean; onToggle: (id: SectionId) => void; settingsText: SettingsTextOptions & Record<string, string>; t: SettingsTranslator }) => {
-  const contentVisibility = useTreeAppearanceStore(useShallow((state) => state.contentVisibility));
-  const updateField = useTreeAppearanceStore((state) => state.updateField);
+  // READ: from appearanceSlice
+  const contentVisibility = useAppStore(useShallow((state) => state.appearance.contentVisibility));
+  // WRITE: directly to appearanceSlice
+  const updateField = useAppStore((state) => state.updateAppearanceField);
   const showPlaces = contentVisibility.places.enabled;
   const namesLabel = settingsText.names || t.names || settingsText.nameFields || 'Names';
   const middleNameLabel = ((t.settings as any)?.showMiddleName as string) || 'Middle Name';

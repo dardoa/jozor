@@ -1,4 +1,4 @@
-// @ts-nocheck
+
 import { describe, it, expect } from 'vitest';
 import { sanitizeOutgoingBatch } from '../sanitizeBatch';
 import { PendingDeltaOp } from '../SyncTypes';

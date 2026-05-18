@@ -1,16 +1,18 @@
 import React from 'react';
 import { Grid3X3, LayoutTemplate, MoveHorizontal, MoveVertical, Waypoints } from 'lucide-react';
 import { useShallow } from 'zustand/react/shallow';
-import { useTreeAppearanceStore } from '../../../../store/useTreeAppearanceStore';
+import { useAppStore } from '../../../../store/useAppStore';
 import { SectionHeader, SliderField, type SettingsTextOptions, type SettingsTranslator } from '../shared';
 import { SectionShell, valueTone } from './sectionStyles';
 import type { SectionId } from './types';
 
 export const LayoutSection = React.memo(({ open, onToggle, settingsText, t }: { open: boolean; onToggle: (id: SectionId) => void; settingsText: SettingsTextOptions & Record<string, string>; t: SettingsTranslator }) => {
-  const { zoom, horizontalSpread, verticalSpread } = useTreeAppearanceStore(
-    useShallow((state) => ({ zoom: state.layout.zoom, horizontalSpread: state.layout.horizontalSpread, verticalSpread: state.layout.verticalSpread }))
+  // READ: from appearanceSlice
+  const { zoom, horizontalSpread, verticalSpread } = useAppStore(
+    useShallow((state) => ({ zoom: state.appearance.layout.zoom, horizontalSpread: state.appearance.layout.horizontalSpread, verticalSpread: state.appearance.layout.verticalSpread }))
   );
-  const updateField = useTreeAppearanceStore((state) => state.updateField);
+  // WRITE: directly to appearanceSlice
+  const updateField = useAppStore((state) => state.updateAppearanceField);
 
   return (
     <SectionShell

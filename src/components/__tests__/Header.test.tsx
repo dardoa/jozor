@@ -1,9 +1,9 @@
-// @ts-nocheck
+
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { describe, expect, it, vi } from 'vitest';
-import { Header } from '../Header';
+import { Header } from '../header/Header';
 import type { HeaderProps } from '../../types';
 
 const mockAppStoreState = {
@@ -12,17 +12,9 @@ const mockAppStoreState = {
 };
 
 vi.mock('../../store/useAppStore', () => ({
-  useAppStore: vi.fn((selector: (state: {
-    currentTreeId: string | null;
-    treeName: string;
-  }) => unknown) => selector(mockAppStoreState)),
+  useAppStore: vi.fn((selector: any) => selector(mockAppStoreState)),
 }));
 
-vi.mock('../../store/useAppUIStore', () => ({
-  useAppUIStore: vi.fn((selector: (state: {
-    isLowGraphicsMode: boolean;
-  }) => unknown) => selector({ isLowGraphicsMode: false })),
-}));
 
 vi.mock('../../context/TranslationContext', () => ({
   useTranslation: () => ({
@@ -56,9 +48,9 @@ vi.mock('../header/HeaderRightSection', () => ({
   HeaderRightSection: () => <div data-testid="header-right" />,
 }));
 
-const buildHeaderProps = (): HeaderProps => ({
-  toggleSidebar: vi.fn(),
-  sidebarOpen: false,
+const buildHeaderProps = (): any => ({
+  toggleDetailsPanel: vi.fn(),
+  detailsPanelOpen: false,
   hasActivePerson: true,
   historyControls: {
     canUndo: false,
@@ -69,8 +61,6 @@ const buildHeaderProps = (): HeaderProps => ({
   themeLanguage: {
     language: 'en',
     setLanguage: vi.fn(),
-    theme: 'modern',
-    setTheme: vi.fn(),
   },
   auth: {
     user: {
@@ -81,7 +71,6 @@ const buildHeaderProps = (): HeaderProps => ({
       supabaseToken: 'token-1',
     },
     isDemoMode: false,
-    isSyncing: false,
     onLogin: vi.fn(async () => {}),
     onLogout: vi.fn(async () => {}),
     stopSyncing: vi.fn(),
@@ -184,10 +173,7 @@ describe('Header', () => {
 
   it('falls back to the active drive file name when no tree is active in the store', async () => {
     const { useAppStore } = await import('../../store/useAppStore');
-    vi.mocked(useAppStore).mockImplementation((selector: (state: {
-      currentTreeId: string | null;
-      treeName: string;
-    }) => unknown) =>
+    vi.mocked(useAppStore).mockImplementation((selector: any) =>
       selector({
         currentTreeId: null,
         treeName: '',
@@ -198,4 +184,3 @@ describe('Header', () => {
     expect(screen.getByText('Tree: Family Archive')).toBeInTheDocument();
   });
 });
-

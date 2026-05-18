@@ -15,8 +15,3 @@ export const googleMediaService = new GoogleMediaService(googleApiService, googl
 // Re-export types if needed by consumers
 export * from './google/interfaces';
 
-// Legacy exports for backward compatibility
-export const initializeGoogleApi = () => googleApiService.initialize();
-export const fetchDriveFileAsBlob = (url: string) =>
-    googleMediaService.fetchFileAsBlob(url);
-

@@ -10,16 +10,18 @@ import type {
   ModalStateAndActions,
 } from '../types';
 
-const ActivityLogDrawer = React.lazy(() => import('./ActivityLogDrawer'));
+const ActivityLogDrawer = React.lazy(() => import('../features/activity-log').then(m => ({ default: m.ActivityLogDrawer })));
 const DiagnosticsDrawer = React.lazy(() =>
-  import('./DiagnosticsDrawer').then((module) => ({ default: module.DiagnosticsDrawer }))
+  import('../features/diagnostics').then((module) => ({ default: module.DiagnosticsDrawer }))
 );
 const SettingsDrawer = React.lazy(() =>
   import('./ui/SettingsDrawer').then((module) => ({ default: module.SettingsDrawer }))
 );
 const TreeControlCenter = React.lazy(() =>
-  import('./treeControl/TreeControlCenter').then((module) => ({ default: module.TreeControlCenter }))
+  import('../features/tree-control').then((module) => ({ default: module.TreeControlCenter }))
 );
+const TreeDiscussionDrawer = React.lazy(() => import('../features/discussions').then(m => ({ default: m.TreeDiscussionDrawer })));
+import { DiscussionListener } from '../features/discussions';
 
 interface AppSystemOverlaysProps {
   appState: AppStateAndActions;
@@ -49,6 +51,8 @@ export const AppSystemOverlays: React.FC<AppSystemOverlaysProps> = ({
   const setDiagnosticsDrawerOpen = useAppStore((state) => state.setDiagnosticsDrawerOpen);
   const isTreeControlCenterOpen = useAppStore((state) => state.isTreeControlCenterOpen);
   const setTreeControlCenterOpen = useAppStore((state) => state.setTreeControlCenterOpen);
+  const isDiscussionOpen = useAppStore((state) => state.isDiscussionOpen);
+  const setDiscussionOpen = useAppStore((state) => state.setDiscussionOpen);
   const treeName = useAppStore((state) => state.treeName);
   const setTreeName = useAppStore((state) => state.setTreeName);
   const currentRootName = focusId ? [people[focusId]?.firstName, people[focusId]?.lastName].filter(Boolean).join(' ').trim() : EMPTY_STRING;
@@ -116,6 +120,16 @@ export const AppSystemOverlays: React.FC<AppSystemOverlaysProps> = ({
               setTreeControlCenterOpen(false);
               setDiagnosticsDrawerOpen(true);
             }}
+          />
+        </React.Suspense>
+      ) : null}
+      <DiscussionListener />
+      {isDiscussionOpen ? (
+        <React.Suspense fallback={null}>
+          <TreeDiscussionDrawer
+            isOpen={isDiscussionOpen}
+            onClose={() => setDiscussionOpen(false)}
+            treeId={appState.currentTreeId || EMPTY_STRING}
           />
         </React.Suspense>
       ) : null}

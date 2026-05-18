@@ -1,5 +1,5 @@
 import { useAppStore } from '../../store/useAppStore';
-import { buildPersistedTreeSettings } from '../../domain/appearanceLabPersistence';
+import { buildPersistedTreeSettings } from '../../domain/appearance/appearancePersistence';
 import { FullState, Person } from '../../types';
 import { logWarn } from '../../utils/errorLogger';
 
@@ -18,7 +18,7 @@ export const DriveSerializationService = {
       people: state.people,
       focusId: state.focusId,
       settings: {
-        treeSettings: buildPersistedTreeSettings(state.treeSettings),
+        treeSettings: buildPersistedTreeSettings(state.treeSettings, state.appearance),
         darkMode: state.darkMode,
         language: state.language
       },

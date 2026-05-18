@@ -1,8 +1,8 @@
-// @ts-nocheck
+
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { NodeComponent } from '../NodeComponent';
+import { NodeComponent } from '../tree/node/NodeComponent';
 import type { Person, TreeNode, TreeSettings } from '../../types';
 import { DEFAULT_TREE_SETTINGS } from '../../constants';
 
@@ -75,8 +75,7 @@ const renderNode = (
     id: person.id,
     x: 100,
     y: 100,
-    generation: 0,
-    person,
+    type: 'focus',
     data: person,
     isReference: false,
   };

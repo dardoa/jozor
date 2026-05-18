@@ -1,7 +1,7 @@
 import { AppStore } from '../store/storeTypes';
 import { MutationActionResult } from '../types';
 import { deltaSyncService } from '../services/deltaSyncService';
-import { activityService } from '../services/activityService';
+import { activityService } from '../features/activity-log';
 import { storageService } from '../services/storageService';
 import { searchService } from '../services/searchService';
 

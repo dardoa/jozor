@@ -1,7 +1,7 @@
 import { general } from './en/general';
 import { personFields } from './en/personFields';
 import { relationships } from './en/relationships';
-import { sidebar } from './en/sidebar';
+import { personDetails } from './en/personDetails';
 import { header } from './en/header';
 import { modals } from './en/modals';
 import { alerts } from './en/alerts';
@@ -11,12 +11,13 @@ import { smartInput } from './en/smartInput';
 import { familyTree } from './en/familyTree';
 import { helpEn } from './en/help';
 import { notifications } from './en/notifications';
+import { landingPageEn } from './en/landingPage';
 
 export const en = {
   ...general,
   ...personFields,
   ...relationships,
-  ...sidebar,
+  ...personDetails,
   ...header,
   ...modals,
   ...alerts,
@@ -26,6 +27,7 @@ export const en = {
   ...familyTree,
   notifications,
   help: helpEn,
+  landingPage: landingPageEn,
 };
 
 export type EnglishTranslation = typeof en;

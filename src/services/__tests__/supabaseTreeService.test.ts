@@ -1,4 +1,4 @@
-// @ts-nocheck
+
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 
 const { getSupabaseWithAuthMock } = vi.hoisted(() => ({

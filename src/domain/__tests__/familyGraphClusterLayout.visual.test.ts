@@ -1,4 +1,4 @@
-// @ts-nocheck
+
 import { existsSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import type { Person } from '../../types';
@@ -34,7 +34,7 @@ interface VisualIssue {
 
 function loadRealTreePeople(): Record<string, Person> {
   const raw = JSON.parse(readFileSync(REAL_TREE_PATH, 'utf8')) as TreeJsonPayload | Record<string, Person>;
-  return 'people' in raw && raw.people ? raw.people : raw as Record<string, Person>;
+  return ('people' in raw && raw.people ? raw.people : raw) as Record<string, Person>;
 }
 
 function boxesOverlap(a: ClusterLayoutNode, b: ClusterLayoutNode): boolean {

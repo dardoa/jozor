@@ -2,6 +2,7 @@ import type { Person } from '../types';
 import { logError } from '../utils/errorLogger';
 import { mapPersonToDbRow } from './personRowMapper';
 import { getTreeClient } from './supabaseTreeClient';
+import { activityService } from '../features/activity-log';
 
 export const createTreeWithRootAtomic = async (
   ownerId: string,
@@ -48,6 +49,9 @@ export const renameTree = async (treeId: string, ownerId: string, userEmail: str
     .eq('id', treeId);
 
   if (error) throw error;
+
+  // Log activity
+  activityService.logAction(treeId, 'RENAME_TREE', { newName: name });
 };
 
 export const updateTreeRoot = async (treeId: string, newRootId: string, ownerId: string, userEmail: string, token?: string): Promise<void> => {
@@ -81,6 +85,9 @@ export const updateTreeSettings = async (
     });
     throw error;
   }
+
+  // Log activity
+  activityService.logAction(treeId, 'TREE_SETTINGS_UPDATE', { settings });
 };
 
 export const deleteWholeTree = async (treeId: string, ownerId: string, userEmail: string, token?: string): Promise<void> => {

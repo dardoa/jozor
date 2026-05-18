@@ -13,6 +13,12 @@ interface LocalApiProxyEnv {
   VITE_SUPABASE_URL?: string;
   SUPABASE_SERVICE_ROLE_KEY?: string;
   ENABLE_LOCAL_API_PROXY?: string;
+  GOOGLE_AI_KEY?: string;
+  GEMINI_API_KEY?: string;
+  VITE_KINDI_AI_ENABLED?: string;
+  APP_ORIGIN?: string;
+  VITE_APP_ORIGIN?: string;
+  NODE_ENV?: string;
 }
 
 const getErrorMessage = (error: unknown): string => error instanceof Error ? error.message : 'Unknown error';
@@ -83,21 +89,74 @@ const createLocalResponse = (res: ServerResponse): LocalResponse => {
   return localResponse as LocalResponse;
 };
 
+const createFetchHeaders = (req: IncomingMessage): Headers => {
+  const headers = new Headers();
+  for (const [key, value] of Object.entries(req.headers)) {
+    if (Array.isArray(value)) {
+      headers.set(key, value.join(', '));
+    } else if (typeof value === 'string') {
+      headers.set(key, value);
+    }
+  }
+  return headers;
+};
+
+const sendFetchResponse = async (res: ServerResponse, response: Response) => {
+  res.statusCode = response.status;
+  response.headers.forEach((value, key) => {
+    res.setHeader(key, value);
+  });
+  res.end(Buffer.from(await response.arrayBuffer()));
+};
+
+const createEdgeRequest = (
+  req: IncomingMessage,
+  body: LocalProxyBody,
+  originalUrl: string
+): Request => {
+  const requestUrl = new URL(originalUrl, `http://${req.headers.host || 'localhost'}`);
+  const method = req.method || 'GET';
+  const headers = createFetchHeaders(req);
+
+  return new Request(requestUrl, {
+    method,
+    headers,
+    body: method === 'GET' || method === 'HEAD' ? undefined : JSON.stringify(body),
+  });
+};
+
+const handleCheckEnv = (res: ServerResponse, env: LocalApiProxyEnv) => {
+  sendJson(res, 200, {
+    hasProviderKey: Boolean(env.GOOGLE_AI_KEY || env.GEMINI_API_KEY),
+    hasSupabaseServiceRole: Boolean(env.SUPABASE_SERVICE_ROLE_KEY),
+    kindiAIClientFlag: env.VITE_KINDI_AI_ENABLED === 'true',
+    appOrigin: env.APP_ORIGIN || env.VITE_APP_ORIGIN || null,
+    env: env.NODE_ENV || process.env.NODE_ENV || 'development',
+  });
+};
+
+const syncProcessEnv = (env: LocalApiProxyEnv) => {
+  Object.entries(env).forEach(([key, value]) => {
+    if (typeof value === 'string') {
+      process.env[key] = value;
+    }
+  });
+};
+
 const handleAiProxy = async (
   req: LocalRequest,
   res: ServerResponse,
-  body: LocalProxyBody
+  body: LocalProxyBody,
+  originalUrl: string,
+  env: LocalApiProxyEnv
 ) => {
   try {
+    syncProcessEnv(env);
     const { default: aiProxyHandler } = await import('../../src/api/ai-proxy');
-    const localResponse = createLocalResponse(res);
-    req.body = body;
-
-    if (typeof aiProxyHandler === 'function' && aiProxyHandler.length === 1) {
-      await (aiProxyHandler as any)(req);
-    } else {
-      await (aiProxyHandler as any)(req, localResponse);
-    }
+    const response = await (aiProxyHandler as (request: Request) => Promise<Response>)(
+      createEdgeRequest(req, body, originalUrl)
+    );
+    await sendFetchResponse(res, response);
   } catch (error: unknown) {
     sendJson(res, 500, { error: getErrorMessage(error) });
   }
@@ -181,7 +240,12 @@ export const createLocalApiProxyMiddleware = (env: LocalApiProxyEnv): Plugin => 
       res.setHeader('Content-Type', 'application/json');
 
       if (pathName === '/api/ai-proxy') {
-        await handleAiProxy(req as LocalRequest, res, body);
+        await handleAiProxy(req as LocalRequest, res, body, originalUrl, env);
+        return;
+      }
+
+      if (pathName === '/api/check-env') {
+        handleCheckEnv(res, env);
         return;
       }
 

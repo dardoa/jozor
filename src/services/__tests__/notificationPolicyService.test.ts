@@ -1,4 +1,4 @@
-// @ts-nocheck
+
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { showToastMock, showSuccessMock } = vi.hoisted(() => ({

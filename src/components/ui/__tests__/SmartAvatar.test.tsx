@@ -1,16 +1,19 @@
-// @ts-nocheck
+
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import type { Person } from '../../../types';
 import { SmartAvatar } from '../SmartAvatar';
 
-const basePerson: Pick<Person, 'id' | 'firstName' | 'lastName' | 'gender' | 'birthDate' | 'photoUrl'> = {
+const basePerson: Pick<Person, 'id' | 'firstName' | 'lastName' | 'gender' | 'birthDate' | 'photoUrl' | 'parents' | 'children' | 'spouses'> = {
   id: 'person-123',
   firstName: 'Noura',
   lastName: 'Jozor',
   gender: 'female',
   birthDate: '1984-05-01',
+  parents: [],
+  children: [],
+  spouses: [],
 };
 
 describe('SmartAvatar', () => {

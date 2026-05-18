@@ -1,4 +1,4 @@
-// @ts-nocheck
+
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
   clearLastActiveTreeId,

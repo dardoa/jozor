@@ -13,13 +13,15 @@ export default async function handler(_req: VercelRequest, res: VercelResponse) 
   }
 
   try {
-    const hasProviderKey = !!process.env.GOOGLE_AI_KEY;
+    const hasProviderKey = !!(process.env.GOOGLE_AI_KEY || process.env.GEMINI_API_KEY);
     const hasSupabaseServiceRole = !!process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const kindiAIClientFlag = process.env.VITE_KINDI_AI_ENABLED === 'true';
     const appOrigin = process.env.APP_ORIGIN || process.env.VITE_APP_ORIGIN || null;
 
     return res.status(200).json({
       hasProviderKey,
       hasSupabaseServiceRole,
+      kindiAIClientFlag,
       appOrigin,
       env: process.env.NODE_ENV,
     });

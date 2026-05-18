@@ -1,17 +1,24 @@
 import React from 'react';
 import { Circle, Palette, Type, Waypoints } from 'lucide-react';
 import { useShallow } from 'zustand/react/shallow';
-import { useTreeAppearanceStore } from '../../../../store/useTreeAppearanceStore';
+import { useAppStore } from '../../../../store/useAppStore';
 import { SectionHeader, type SettingsTextOptions, type SettingsTranslator } from '../shared';
 import { activeStyle, inactiveStyle, SectionShell } from './sectionStyles';
-import { radiusModeToValue, radiusValueToMode, THEME_DENSITY_OPTIONS, THEME_FONT_OPTIONS, THEME_RADIUS_OPTIONS } from './themeOptions';
+import { THEME_DENSITY_OPTIONS, THEME_FONT_OPTIONS, THEME_RADIUS_OPTIONS } from './themeOptions';
 import type { SectionId } from './types';
 
 export const AppearanceSection = React.memo(({ open, onToggle, settingsText, t }: { open: boolean; onToggle: (id: SectionId) => void; settingsText: SettingsTextOptions & Record<string, string>; t: SettingsTranslator }) => {
-  const { typography, cornerRadius, density } = useTreeAppearanceStore(
-    useShallow((state) => ({ typography: state.appearance.typography, cornerRadius: state.appearance.cornerRadius, density: state.appearance.density }))
+  // READ: from appearanceSlice
+  const { fontMode, radiusMode, density } = useAppStore(
+    useShallow((state) => ({ 
+      fontMode: state.appearance.fontMode, 
+      radiusMode: state.appearance.radiusMode, 
+      density: state.appearance.density 
+    }))
   );
-  const updateField = useTreeAppearanceStore((state) => state.updateField);
+  const setAppearanceFontMode = useAppStore((state) => state.setAppearanceFontMode);
+  const setAppearanceDensity = useAppStore((state) => state.setAppearanceDensity);
+  const setAppearanceRadiusMode = useAppStore((state) => state.setAppearanceRadiusMode);
 
   return (
     <SectionShell
@@ -28,7 +35,7 @@ export const AppearanceSection = React.memo(({ open, onToggle, settingsText, t }
           {THEME_FONT_OPTIONS.map((option) => {
             const sampleFont = option.id === 'classic' ? 'var(--font-family-serif)' : 'var(--font-family-sans)';
             return (
-              <button key={option.id} type="button" onClick={() => updateField('appearance.typography', option.id)} className="flex min-h-[88px] flex-col items-start justify-between rounded-[20px] px-4 py-4 text-start transition-all duration-200 active:scale-95" style={typography === option.id ? activeStyle : inactiveStyle}>
+              <button key={option.id} type="button" onClick={() => { setAppearanceFontMode(option.id as any); }} className="flex min-h-[88px] flex-col items-start justify-between rounded-[20px] px-4 py-4 text-start transition-all duration-200 active:scale-95" style={fontMode === option.id ? activeStyle : inactiveStyle}>
                 <div className="text-[11px] font-bold uppercase tracking-[0.08em] opacity-75">{option.label}</div>
                 <div className="text-[24px] font-semibold leading-none" style={{ fontFamily: sampleFont }}>Aa</div>
               </button>
@@ -43,9 +50,9 @@ export const AppearanceSection = React.memo(({ open, onToggle, settingsText, t }
             <button
               key={option.id}
               type="button"
-              onClick={() => updateField('appearance.cornerRadius', radiusModeToValue(option.id as 'soft' | 'grand'))}
+              onClick={() => { setAppearanceRadiusMode(option.id as any); }}
               className={`flex min-h-12 min-w-12 items-center justify-center px-4 py-3 transition-all duration-200 active:scale-95 ${option.id === 'soft' ? 'rounded-2xl' : 'rounded-[28px]'}`}
-              style={radiusValueToMode(cornerRadius) === option.id ? activeStyle : inactiveStyle}
+              style={radiusMode === option.id ? activeStyle : inactiveStyle}
               aria-label={option.label}
             >
               <Circle className="h-4 w-4" />
@@ -57,7 +64,7 @@ export const AppearanceSection = React.memo(({ open, onToggle, settingsText, t }
         <SectionHeader icon={Waypoints} label={settingsText.densitySpacing || 'Density'} t={t} />
         <div className="flex flex-wrap gap-3">
           {THEME_DENSITY_OPTIONS.filter((option) => option.id !== 'airy').map((option) => (
-            <button key={option.id} type="button" onClick={() => updateField('appearance.density', option.id)} className="flex min-h-12 min-w-12 items-center justify-center rounded-2xl px-4 py-3 transition-all duration-200 active:scale-95" style={density === option.id ? activeStyle : inactiveStyle} aria-label={option.label}>
+            <button key={option.id} type="button" onClick={() => { setAppearanceDensity(option.id as any); }} className="flex min-h-12 min-w-12 items-center justify-center rounded-2xl px-4 py-3 transition-all duration-200 active:scale-95" style={density === option.id ? activeStyle : inactiveStyle} aria-label={option.label}>
               <Waypoints className={option.id === 'compact' ? 'h-3.5 w-3.5' : 'h-4.5 w-4.5'} />
             </button>
           ))}

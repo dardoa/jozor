@@ -5,12 +5,12 @@ import { useAppStore } from '../store/useAppStore';
 
 interface OnboardingTourRuntimeProps {
     forceStartToken: number;
-    setSidebarOpen: (open: boolean) => void;
+    setDetailsPanelOpen: (open: boolean) => void;
 }
 
 const TOUR_STORAGE_KEY = 'jozor_onboarding_completed';
 
-export const OnboardingTourRuntime: React.FC<OnboardingTourRuntimeProps> = ({ forceStartToken, setSidebarOpen }) => {
+export const OnboardingTourRuntime: React.FC<OnboardingTourRuntimeProps> = ({ forceStartToken, setDetailsPanelOpen }) => {
     const { t } = useTranslation();
     const user = useAppStore((state) => state.user);
     const updateTourStatus = useAppStore((state) => state.updateTourStatus);
@@ -75,7 +75,7 @@ export const OnboardingTourRuntime: React.FC<OnboardingTourRuntimeProps> = ({ fo
             localStorage.setItem(TOUR_STORAGE_KEY, 'true');
         } else if (type === EVENTS.STEP_AFTER || type === EVENTS.TARGET_NOT_FOUND) {
             if (index === 3 && action === ACTIONS.NEXT) {
-                setSidebarOpen(true);
+                setDetailsPanelOpen(true);
             }
 
             if (action === ACTIONS.NEXT) {

@@ -1,4 +1,4 @@
-// @ts-nocheck
+
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_PERSON_TEMPLATE } from '../../constants';
 import type { Person } from '../../types';

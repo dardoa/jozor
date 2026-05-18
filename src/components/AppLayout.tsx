@@ -2,15 +2,15 @@ import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
 
-import { FamilyTree } from './FamilyTree';
+import { FamilyTree } from './tree/FamilyTree';
 import { TreeErrorBoundary } from './TreeErrorBoundary';
-import { Header } from './Header';
+import { Header } from './header/Header';
 import { SyncStatusRibbon } from './ui/SyncStatusRibbon';
 import { PresentModeExitButton } from './ui/PresentModeExitButton';
 import { AppOverlays } from './AppOverlays';
 import { useAppStore, selectIsSyncing } from '../store/useAppStore';
 import { useTranslation } from '../context/TranslationContext';
-import { useTreeAppearanceAdapter } from '../hooks/useTreeAppearanceAdapter';
+import { useTreeAppearanceAdapter } from '../hooks/utils/useTreeAppearanceAdapter';
 import {
   AppStateAndActions,
   ModalStateAndActions,
@@ -37,12 +37,12 @@ interface AppLayoutProps {
   toolsActions: ToolsActionsProps;
   exportActions: ExportActionsProps;
   searchProps: SearchProps;
-  sidebarFamilyActions: FamilyActionsProps;
+  detailsPanelFamilyActions: FamilyActionsProps;
   coreFamilyActions: FamilyActionsProps;
   isPresentMode: boolean;
   setIsPresentMode: (v: boolean) => void;
-  sidebarOpen: boolean;
-  setSidebarOpen: (v: boolean) => void;
+  detailsPanelOpen: boolean;
+  setDetailsPanelOpen: (v: boolean) => void;
   auth: AuthProps;
   svgRef: React.RefObject<SVGSVGElement | null>;
   onAddPerson: () => void;
@@ -59,12 +59,12 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   toolsActions,
   exportActions,
   searchProps,
-  sidebarFamilyActions,
+  detailsPanelFamilyActions,
   coreFamilyActions,
   isPresentMode,
   setIsPresentMode,
-  sidebarOpen,
-  setSidebarOpen,
+  detailsPanelOpen,
+  setDetailsPanelOpen,
   auth,
   svgRef,
   onAddPerson,
@@ -80,7 +80,8 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   }), [legacyTreeSettings, adapterPatch]);
 
   const currentUserRole = viewSettings.currentUserRole;
-  const canEditActiveTree = currentUserRole === 'owner' || currentUserRole === 'editor';
+  // null = guest/local mode → full local edit rights (no cloud access possible without token)
+  const canEditActiveTree = currentUserRole === 'owner' || currentUserRole === 'editor' || currentUserRole === null;
   const isTreeOwner = currentUserRole === 'owner';
   const isSettingsDrawerOpen = useAppStore((state) => state.isSettingsDrawerOpen);
   const setSettingsDrawerOpen = useAppStore((state) => state.setSettingsDrawerOpen);
@@ -105,6 +106,11 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
     },
     [navigate, setFocusId]
   );
+
+  const routedSearchProps = React.useMemo<SearchProps>(() => ({
+    ...searchProps,
+    onFocusPerson: focusAndNavigate,
+  }), [focusAndNavigate, searchProps]);
 
   const handleNodeContextMenu = (e: React.MouseEvent, id: string) => {
     e.preventDefault();
@@ -150,8 +156,8 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
       </a>
       {!isPresentMode && (
         <Header
-          toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-          sidebarOpen={sidebarOpen}
+          toggleDetailsPanel={() => setDetailsPanelOpen(!detailsPanelOpen)}
+          detailsPanelOpen={detailsPanelOpen}
           hasActivePerson={!!activePerson}
           historyControls={historyControls}
           themeLanguage={themeLanguage}
@@ -159,7 +165,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
           viewSettings={viewSettings}
           toolsActions={toolsActions}
           exportActions={exportActions}
-          searchProps={searchProps}
+          searchProps={routedSearchProps}
           globalActions={{
             onOpenTreeControlCenter: openTreeControlCenter,
             onOpenGlobalSettings: modals.onOpenGlobalSettings,
@@ -192,14 +198,14 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
             onSelect={focusAndNavigate}
             settings={effectiveTreeSettings}
             onOpenPreferences={openAppearanceLab}
-            hasBlockingOverlay={sidebarOpen || isSettingsDrawerOpen || isDiagnosticsDrawerOpen || isTreeControlCenterOpen}
+            hasBlockingOverlay={detailsPanelOpen || isSettingsDrawerOpen || isDiagnosticsDrawerOpen || isTreeControlCenterOpen}
             ref={svgRef}
             activeModal={modals.activeModal}
-            setSidebarOpen={setSidebarOpen}
+            setDetailsPanelOpen={setDetailsPanelOpen}
             onOpenLinkModal={modals.handleOpenLinkModal}
             onPresent={viewSettings.onPresent}
             onOpenSnapshotHistory={viewSettings.onOpenSnapshotHistory}
-            isSidebarOpen={sidebarOpen}
+            isDetailsPanelOpen={detailsPanelOpen}
             onAddFirstPerson={coreFamilyActions.onAddFirstPerson}
             onNodeContextMenu={handleNodeContextMenu}
           />
@@ -215,11 +221,11 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
         googleSync={googleSync}
         viewSettings={viewSettings}
         toolsActions={toolsActions}
-        sidebarFamilyActions={sidebarFamilyActions}
+        detailsPanelFamilyActions={detailsPanelFamilyActions}
         auth={auth}
         isPresentMode={isPresentMode}
-        sidebarOpen={sidebarOpen}
-        setSidebarOpen={setSidebarOpen}
+        detailsPanelOpen={detailsPanelOpen}
+        setDetailsPanelOpen={setDetailsPanelOpen}
         focusAndNavigate={focusAndNavigate}
         openVaultTab={openVaultTab}
         openAppearanceLab={openAppearanceLab}

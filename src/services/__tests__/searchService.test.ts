@@ -100,6 +100,17 @@ describe('Search Service & NLP Utilities', () => {
             expect(parsed.intents.map(intent => intent.id)).toContain('females');
             expect(parsed.intents.map(intent => intent.id)).toContain('deceased');
         });
+        it('detects colloquial Arabic spouse relationship queries', () => {
+            const parsed = parseSearchQuery('جوز ريم');
+            expect(parsed.intents.map(intent => intent.id)).toContain('rel_spouses');
+            expect(parsed.intents[0]).toMatchObject({ targetName: 'ريم' });
+        });
+        it('detects local dialect wife queries such as "مرت محمود"', () => {
+            const parsed = parseSearchQuery('مرت محمود');
+            expect(parsed.intents.map(intent => intent.id)).toContain('rel_spouses');
+            expect(parsed.intents[0]).toMatchObject({ targetName: 'محمود' });
+            expect(parsed.remainingText).toBe('');
+        });
     });
 
     describe('searchService logic', () => {
@@ -133,8 +144,22 @@ describe('Search Service & NLP Utilities', () => {
             expect(results[0]).toMatchObject({
                 person: expect.objectContaining({ firstName: 'لينا' }),
                 matchType: 'exact',
+                confidence: 'exact',
             });
             expect(results.some(result => result.person.firstName === 'زيناد')).toBe(false);
+        });
+
+        it('exposes raw Fuse confidence metadata for fuzzy matches', async () => {
+            const results = await searchService.search('Johns');
+
+            expect(results.length).toBeGreaterThan(0);
+            expect(results[0]).toMatchObject({
+                person: expect.objectContaining({ firstName: 'John' }),
+                matchType: 'fuzzy',
+                reason: 'fuse',
+            });
+            expect(results[0].fuseScore).toEqual(expect.any(Number));
+            expect(['high', 'medium', 'low']).toContain(results[0].confidence);
         });
 
         it('matches compound names through normalized full-name search', async () => {
@@ -167,6 +192,57 @@ describe('Search Service & NLP Utilities', () => {
             expect(prefix[0]).toMatchObject({
                 person: expect.objectContaining({ id: 'compound' }),
                 matchType: 'exact',
+            });
+        });
+
+        it('finds spouses through colloquial Arabic spouse queries', async () => {
+            const reem = makePerson({
+                id: 'reem',
+                firstName: 'ريم',
+                lastName: 'القرجي',
+                gender: 'female',
+                spouses: ['husband'],
+            });
+            const husband = makePerson({
+                id: 'husband',
+                firstName: 'سامي',
+                lastName: 'القرجي',
+                gender: 'male',
+                spouses: ['reem'],
+            });
+
+            await searchService.updateSearchIndex([reem, husband]);
+
+            const results = await searchService.search('جوز ريم');
+            expect(results).toHaveLength(1);
+            expect(results[0]).toMatchObject({
+                person: expect.objectContaining({ id: 'husband' }),
+                reason: 'intent',
+            });
+        });
+        it('finds wives through local dialect spouse queries', async () => {
+            const mahmoud = makePerson({
+                id: 'mahmoud',
+                firstName: 'محمود',
+                lastName: 'القرجي',
+                gender: 'male',
+                spouses: ['wife'],
+            });
+            const wife = makePerson({
+                id: 'wife',
+                firstName: 'فاطمة',
+                lastName: 'القرجي',
+                gender: 'female',
+                spouses: ['mahmoud'],
+            });
+
+            await searchService.updateSearchIndex([mahmoud, wife]);
+
+            const results = await searchService.search('مرت محمود');
+            expect(results).toHaveLength(1);
+            expect(results[0]).toMatchObject({
+                person: expect.objectContaining({ id: 'wife' }),
+                reason: 'intent',
             });
         });
     });

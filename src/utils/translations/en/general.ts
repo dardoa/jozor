@@ -87,7 +87,6 @@ export const general = {
   focus: 'Focus',
   photos: 'Photos',
   gender: 'Gender',
-  minimap: 'Minimap',
   marriageDate: 'Marriage Date',
   marriagePlace: 'Marriage Place',
   burialPlace: 'Burial Place',
@@ -295,7 +294,6 @@ export const general = {
     },
     lineStyleOptions: {
       curved: 'Curved',
-      straight: 'Straight',
       step: 'Step',
     },
     nodeColorLogicOptions: {
@@ -578,6 +576,9 @@ export const general = {
       shareRoleChange: 'Updated collaborator role',
       shareRoleChangeDetails: 'Updated {email} to {role}',
       default: 'Performed an action',
+      renameTree: 'Renamed tree from {oldName} to {newName}',
+      discussionMessage: 'Sent a new message in the discussion panel',
+      settingsUpdate: 'Updated tree configuration and options',
     },
     roles: {
       editor: 'editor',

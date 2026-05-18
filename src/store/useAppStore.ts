@@ -8,8 +8,10 @@ import { createUISlice } from './slices/uiSlice';
 import { createSyncMetaSlice } from './slices/syncMetaSlice';
 import { createTreeHealthSlice } from './slices/treeHealthSlice';
 import { createHistorySlice } from './slices/historySlice';
+import { createDiscussionSlice } from '../features/discussions';
 import { AppStore } from './storeTypes';
-import { hydrateAppearanceLabFromLegacy } from '../domain/appearanceLabPersistence';
+import { createAppearanceSlice } from './slices/appearanceSlice';
+import { hydrateAppearanceLabFromLegacy } from '../domain/appearance/appearanceHydration';
 import { normalizeChartType } from '../domain/chartTypeAdapter';
 
 /** State shape when loading from file (people + settings + focusId). */
@@ -23,18 +25,6 @@ export interface LoadedState {
     treeName?: string;
 }
 
-function isPersonLike(v: unknown): v is Record<string, unknown> & { id?: string; firstName?: string } {
-    return typeof v === 'object' && v !== null && 'id' in v && 'firstName' in v;
-}
-
-function isLegacyPeopleFormat(state: unknown): state is Record<string, Person> {
-    if (!state || typeof state !== 'object') return false;
-    const obj = state as Record<string, unknown>;
-    if (obj.version != null || obj.metadata != null) return false;
-    if (obj.people != null && typeof obj.people === 'object' && !Array.isArray(obj.people)) return false;
-    return Object.values(obj).some(isPersonLike);
-}
-
 // Create the store with all slices combined
 export const useAppStore = create<AppStore>()(
     devtools(
@@ -46,6 +36,8 @@ export const useAppStore = create<AppStore>()(
             ...createSyncMetaSlice(...args),
             ...createTreeHealthSlice(...args),
             ...createHistorySlice(...args),
+            ...createDiscussionSlice(...args),
+            ...createAppearanceSlice(...args),
         }),
         { name: 'AppStore' }
     ),
@@ -58,11 +50,6 @@ export const loadFullState = (fullState: unknown) => {
         if (fullState == null) return;
 
         const start = useAppStore.getState();
-
-        if (isLegacyPeopleFormat(fullState)) {
-            start.loadCloudData(fullState as Record<string, Person>);
-            return;
-        }
 
         const state = fullState as LoadedState;
         if (state.people) {
@@ -115,5 +102,8 @@ export const selectHealthScore = (state: AppStore) => state.healthScore;
 export const selectPerson = (id: string) => (state: AppStore) => state.people[id];
 export const selectSettingsValue = <K extends keyof TreeSettings>(key: K) => (state: AppStore) => state.treeSettings[key];
 export const selectUIStatus = (state: AppStore) => state.driveSyncUiStatus;
-export const selectIsSelectionActive = (id: string) => (state: AppStore) => (state as any).selectedPersonId === id;
+export const selectIsSelectionActive = (id: string) => (state: AppStore & { selectedPersonId?: string | null }) => state.selectedPersonId === id;
 export const selectCurrentTreeId = (state: AppStore) => state.currentTreeId;
+
+
+

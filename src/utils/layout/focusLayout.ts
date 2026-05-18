@@ -4,7 +4,7 @@
  * Calculates the "Focus Mode" tree layout.
  *
  * Philosophy: A pure function. No class instances, no global state, no
- * dependency on any legacy VisibleTree pipeline. Given raw people data and a
+ * dependency on archived rendering pipelines. Given raw people data and a
  * selected person ID, it returns the complete set of positioned nodes and
  * links needed to render the tree.
  *
@@ -452,7 +452,7 @@ export function calculateV3FocusLayout(
     })
     .filter((link) => Boolean(link)) as unknown as TreeLink[];
 
-  const legacy = calculateFocusLayout(focusId, people, settings, collapsedIds);
+  const fallbackLayout = calculateFocusLayout(focusId, people, settings, collapsedIds);
 
-  return { nodes, links, collapsePoints: legacy.collapsePoints };
+  return { nodes, links, collapsePoints: fallbackLayout.collapsePoints };
 }

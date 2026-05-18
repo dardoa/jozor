@@ -1,10 +1,10 @@
-// @ts-nocheck
+
 import { describe, it, expect } from 'vitest';
 import { exportToGEDCOM, importFromGEDCOM, formatGedcomDate, gedcomDateToIso } from '../gedcomLogic';
 import { Person } from '../../types';
 
 // Mock Data
-const mockPerson: Person = {
+const mockPerson: any = {
     id: 'p1',
     firstName: 'John',
     lastName: 'Doe',

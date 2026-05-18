@@ -1,7 +1,7 @@
 export type Gender = 'male' | 'female';
 export type RelationshipStatus = 'married' | 'divorced' | 'engaged' | 'separated';
 export type Language = 'en' | 'ar';
-export type ChartType = 'focus' | 'radial' | 'descendant' | 'force';
+export type ChartType = 'focus' | 'radial';
 export type AppTheme = 'modern' | 'vintage' | 'blueprint' | 'dark';
 export type SyncState = 'checking' | 'synced' | 'saving' | 'error' | 'offline';
 
@@ -112,7 +112,7 @@ export type ModalType =
     | 'globalSettings'
     | 'migrationMap';
 
-export type PersonSidebarTabId = 'about' | 'links' | 'media';
+export type SmartPersonaTabId = 'about' | 'links' | 'media';
 
 export type ExportType = 'jozor' | 'json' | 'gedcom' | 'ics' | 'print' | 'png' | 'pdf' | 'svg' | 'jpeg';
 

@@ -35,7 +35,7 @@ export const SearchResults = memo(({ query, results, onFocus, onClose, activeRes
                 <div 
                     key={p.id}
                     onMouseEnter={() => onHighlight?.(p.id)}
-                    className={`rounded-xl transition-all ${activeResultId === p.id ? 'bg-primary-50/50 dark:bg-primary-900/10' : ''}`}
+                    className={`rounded-xl transition-all ${activeResultId === p.id ? 'bg-[var(--primary-600)]/10' : ''}`}
                 >
                     <PersonMiniCard
                         id={`search-result-option-${p.id}`}

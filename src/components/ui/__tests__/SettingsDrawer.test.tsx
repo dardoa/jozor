@@ -1,9 +1,10 @@
-// @ts-nocheck
+
 import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SettingsDrawer } from '../SettingsDrawer';
 import { DEFAULT_TREE_SETTINGS } from '../../../constants';
+import { DEFAULT_APPEARANCE_STATE } from '../../../domain/appearance/appearanceEngine';
 
 const mockState = {
   isSettingsDrawerOpen: true,
@@ -15,6 +16,8 @@ const mockState = {
   },
   treeSettings: DEFAULT_TREE_SETTINGS,
   setTreeSettings: vi.fn(),
+  // appearance slice is now read by section components
+  appearance: DEFAULT_APPEARANCE_STATE,
 };
 
 vi.mock('../../../store/useAppStore', () => ({
@@ -143,7 +146,6 @@ vi.mock('../../../context/TranslationContext', () => ({
       gender: 'Gender',
       profession: 'Occupation',
       deceased: 'Deceased',
-      minimap: 'Minimap',
     },
   }),
 }));
@@ -161,6 +163,7 @@ describe('SettingsDrawer', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockState.treeSettings = DEFAULT_TREE_SETTINGS;
+    mockState.appearance = DEFAULT_APPEARANCE_STATE;
   });
 
   it('renders the appearance lab surface without the old tab navigation', async () => {
@@ -175,17 +178,15 @@ describe('SettingsDrawer', () => {
     expect(screen.queryByRole('tab')).not.toBeInTheDocument();
   });
 
-  it('shows focus and radial chart mode options plus orientation choices', () => {
+  it('shows focus and radial chart mode options', () => {
     render(<SettingsDrawer />);
 
     expect(screen.getByText('Tree Mode')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Focus' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Radial' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Vertical' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Horizontal' })).toBeInTheDocument();
   });
 
-  it('shows visible content controls and removes legacy time-offset copy', async () => {
+  it('shows visible content controls and removes old time-offset copy', async () => {
     render(<SettingsDrawer />);
 
     fireEvent.click(await screen.findByRole('button', { name: /Visible Content/i }));
@@ -199,6 +200,13 @@ describe('SettingsDrawer', () => {
 
   it('reveals advanced branch controls from the advanced section', async () => {
     mockState.treeSettings = { ...DEFAULT_TREE_SETTINGS, highlightBranch: true };
+    mockState.appearance = {
+      ...DEFAULT_APPEARANCE_STATE,
+      advanced: {
+        ...DEFAULT_APPEARANCE_STATE.advanced,
+        layoutEngine: { highlightBranch: true, highlightedBranchRootId: null },
+      },
+    };
 
     render(<SettingsDrawer />);
 
@@ -208,5 +216,26 @@ describe('SettingsDrawer', () => {
     expect(screen.getByText('Focus Options')).toBeInTheDocument();
     expect(screen.getByText('Highlight Focus Branch')).toBeInTheDocument();
   });
-});
 
+  it('shows only step and curved line style controls', async () => {
+    render(<SettingsDrawer />);
+
+    fireEvent.click(await screen.findByRole('button', { name: /Advanced Settings/i }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Details' }));
+
+    expect(screen.getByRole('button', { name: 'step' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'curved' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'straight' })).not.toBeInTheDocument();
+  });
+
+  it('does not show the empty advanced engine tab', async () => {
+    render(<SettingsDrawer />);
+
+    fireEvent.click(await screen.findByRole('button', { name: /Advanced Settings/i }));
+
+    expect(screen.getByRole('button', { name: 'Details' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Performance' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Engine' })).not.toBeInTheDocument();
+    expect(screen.queryByText('Layout Engine')).not.toBeInTheDocument();
+  });
+});

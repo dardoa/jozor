@@ -42,34 +42,6 @@ const FanArcNode = ({
 }: FanArcNodeProps) => {
   const longPressTimerRef = useRef<number | null>(null);
   const skipNextClickRef = useRef(false);
-  const path = arcGen(d);
-  if (!path) return null;
-
-  const isRoot = d.depth === 0;
-  const isPlaceholder = d.id.startsWith('placeholder');
-  const angle = ((d.startAngle + d.endAngle) * 90) / Math.PI - 90;
-  const rotate = angle;
-
-  let fillColor;
-  if (isRoot) {
-    fillColor = 'var(--card-bg)';
-  } else if (isPlaceholder) {
-    fillColor = 'var(--card-bg-subtle)';
-  } else {
-    if (person.gender === 'male') {
-      fillColor = d.depth % 2 === 0 ? 'var(--gender-male-bg-alt)' : 'var(--gender-male-bg)';
-    } else {
-      fillColor = d.depth % 2 === 0 ? 'var(--gender-female-bg-alt)' : 'var(--gender-female-bg)';
-    }
-  }
-
-  const arcWidth = (d.endAngle - d.startAngle) * d.outerRadius;
-  const showText = (isRoot || arcWidth > 15) && !isPlaceholder;
-
-  const effectiveStroke = isPathHighlighted ? '#f59e0b' : 'var(--card-border)';
-  const effectiveStrokeWidth = isPathHighlighted ? 2.5 : 1.5;
-  const privacyPlaceholderColor = 'var(--card-border, #C4A882)';
-  const privacyPlaceholder = getPrivacyPlaceholderDescriptor(person);
 
   const clearLongPressTimer = useCallback(() => {
     if (longPressTimerRef.current !== null) {
@@ -96,6 +68,35 @@ const FanArcNode = ({
       } as React.MouseEvent, person.id);
     }, 500);
   }, [clearLongPressTimer, onNodeContextMenu, person.id]);
+
+  const path = arcGen(d);
+  if (!path) return null;
+
+  const isRoot = d.depth === 0;
+  const isPlaceholder = d.id.startsWith('placeholder');
+  const angle = ((d.startAngle + d.endAngle) * 90) / Math.PI - 90;
+  const rotate = angle;
+
+  let fillColor;
+  if (isRoot) {
+    fillColor = 'var(--fan-circle-bg, var(--card-bg))';
+  } else if (isPlaceholder) {
+    fillColor = 'var(--card-bg-subtle)';
+  } else {
+    if (person.gender === 'male') {
+      fillColor = d.depth % 2 === 0 ? 'var(--fan-male-bg-alt)' : 'var(--fan-male-bg)';
+    } else {
+      fillColor = d.depth % 2 === 0 ? 'var(--fan-female-bg-alt)' : 'var(--fan-female-bg)';
+    }
+  }
+
+  const arcWidth = (d.endAngle - d.startAngle) * d.outerRadius;
+  const showText = (isRoot || arcWidth > 15) && !isPlaceholder;
+
+  const effectiveStroke = isPathHighlighted ? '#f59e0b' : 'var(--fan-circle-border, var(--card-border))';
+  const effectiveStrokeWidth = isPathHighlighted ? 2.5 : 1.5;
+  const privacyPlaceholderColor = 'var(--fan-circle-border, #C4A882)';
+  const privacyPlaceholder = getPrivacyPlaceholderDescriptor(person);
 
   return (
     <g
@@ -157,7 +158,7 @@ const FanArcNode = ({
           >
             {privacyMode ? (
               <div
-                style={{ background: '#FAF7F2' }}
+                style={{ background: 'var(--fan-circle-bg, var(--card-bg))' }}
                 className='w-full h-full flex items-center justify-center'
               >
                 <privacyPlaceholder.Icon

@@ -142,11 +142,11 @@ export interface AppOrchestrationReturn {
     toolsActions: ToolsActionsProps;
     exportActions: ExportActionsProps;
     searchProps: SearchProps;
-    sidebarFamilyActions: FamilyActionsProps;
+    detailsPanelFamilyActions: FamilyActionsProps;
     isPresentMode: boolean;
     setIsPresentMode: (v: boolean) => void;
-    sidebarOpen: boolean;
-    setSidebarOpen: (v: boolean) => void;
+    detailsPanelOpen: boolean;
+    setDetailsPanelOpen: (v: boolean) => void;
     isActivityLogOpen: boolean;
     setActivityLogOpen: (v: boolean) => void;
     auth: AuthProps;

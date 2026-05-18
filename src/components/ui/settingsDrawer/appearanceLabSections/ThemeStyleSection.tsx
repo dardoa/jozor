@@ -1,6 +1,6 @@
 import React from 'react';
 import { Sparkles } from 'lucide-react';
-import { useTreeAppearanceStore } from '../../../../store/useTreeAppearanceStore';
+import { useAppStore } from '../../../../store/useAppStore';
 import { PRESET_DEFINITIONS, type VisualPresetId } from '../appearanceLabModel';
 import type { SettingsTextOptions } from '../shared';
 import { activeStyle, inactiveStyle, SectionShell } from './sectionStyles';
@@ -17,8 +17,10 @@ export const ThemeStyleSection = React.memo(({
   settingsText: SettingsTextOptions & Record<string, string>;
   palettePreviewById: Record<string, string[]>;
 }) => {
-  const activePreset = useTreeAppearanceStore((state) => state.meta.activePreset);
-  const applyLabPreset = useTreeAppearanceStore((state) => state.applyPreset);
+  // READ: from appearanceSlice
+  const activePreset = useAppStore((state) => state.appearance.meta.activePreset);
+  // WRITE: directly to appearanceSlice
+  const applyLabPreset = useAppStore((state) => state.applyAppearancePreset);
   const coreLabel = activePreset === 'custom'
     ? settingsText.customLabel || 'Custom'
     : settingsText[activePreset] || PRESET_DEFINITIONS.find((preset) => preset.id === activePreset)?.id || activePreset;

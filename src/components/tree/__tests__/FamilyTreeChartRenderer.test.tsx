@@ -1,4 +1,4 @@
-// @ts-nocheck
+
 import React from 'react';
 import { render } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -58,14 +58,13 @@ const buildPerson = (overrides: Partial<Person> = {}): Person => ({
 });
 
 const settings = {
-  chartType: 'descendant',
+  chartType: 'focus',
   showPhotos: true,
   showFirstName: true,
   showDates: true,
   showMiddleName: true,
   showLastName: true,
   showNickname: true,
-  showMinimap: false,
   layoutMode: 'vertical',
   isCompact: false,
   theme: 'modern',

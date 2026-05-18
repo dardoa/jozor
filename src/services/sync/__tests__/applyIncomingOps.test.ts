@@ -1,10 +1,10 @@
-// @ts-nocheck
+
 import { describe, expect, it, vi } from 'vitest';
 import { applyIncomingOps } from '../applyIncomingOps';
 import type { DeltaOperation } from '../SyncTypes';
 import type { Person } from '../../../types';
 
-const root: Person = {
+const root: any = {
     id: 'person-1',
     firstName: 'Root',
     lastName: '',

@@ -1,6 +1,6 @@
 import { useAppStore } from '../store/useAppStore';
 import { deltaSyncService } from '../services/deltaSyncService';
-import { activityService } from '../services/activityService';
+import { activityService } from '../features/activity-log';
 import { storageService } from '../services/storageService';
 import { searchService } from '../services/searchService';
 import { CommandContext, TreeCommand } from './types';

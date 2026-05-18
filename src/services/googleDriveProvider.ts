@@ -10,9 +10,6 @@ import type { GoogleDrivePayload } from './google/interfaces';
  * every caller.
  */
 export class GoogleDriveProvider {
-  /**
-   * Mirrors the legacy "latest file" lookup behind the provider boundary.
-   */
   async findLatestFile(): Promise<string | null> {
     return googleDriveService.findLatestJozorFile();
   }

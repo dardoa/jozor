@@ -1,4 +1,4 @@
-// @ts-nocheck
+
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { SearchResults } from '../SearchResults';
@@ -17,20 +17,20 @@ describe('SearchResults', () => {
   it('renders a listbox with option rows and focuses a person on click', () => {
     const onFocus = vi.fn();
     const onClose = vi.fn();
-    const result: Person = {
+    const result: any = {
       id: 'p-1',
       firstName: 'Root',
       lastName: 'Person',
       gender: 'male',
       birthDate: '1980-01-01',
-      spouseIds: [],
-      childIds: [],
-      parentIds: [],
-      siblings: [],
+      spouses: [],
+      children: [],
+      parents: [],
     };
 
     render(
       <SearchResults
+        query="root"
         results={[result]}
         onFocus={onFocus}
         onClose={onClose}
@@ -49,7 +49,7 @@ describe('SearchResults', () => {
   });
 
   it('shows the empty state when there are no results', () => {
-    render(<SearchResults results={[]} onFocus={vi.fn()} onClose={vi.fn()} />);
+    render(<SearchResults query="test" results={[]} onFocus={vi.fn()} onClose={vi.fn()} />);
 
     expect(screen.getByRole('listbox')).toBeInTheDocument();
     expect(screen.getByRole('status')).toHaveTextContent('No results');

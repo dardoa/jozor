@@ -1,9 +1,0 @@
-node_modules
-dist
-legacy_archive
-output
-scratch
-playwright-report
-test-results
-.next
-.turbo

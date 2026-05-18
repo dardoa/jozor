@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
 
 interface OnboardingTourProps {
-    setSidebarOpen: (open: boolean) => void;
+    setDetailsPanelOpen: (open: boolean) => void;
 }
 
 const TOUR_STORAGE_KEY = 'jozor_onboarding_completed';
@@ -12,7 +12,7 @@ const OnboardingTourRuntime = React.lazy(() =>
     import('./OnboardingTourRuntime').then((module) => ({ default: module.OnboardingTourRuntime }))
 );
 
-export const OnboardingTour: React.FC<OnboardingTourProps> = ({ setSidebarOpen }) => {
+export const OnboardingTour: React.FC<OnboardingTourProps> = ({ setDetailsPanelOpen }) => {
     const user = useAppStore((state) => state.user);
     const [shouldLoadTour, setShouldLoadTour] = useState(false);
     const [forceStartToken, setForceStartToken] = useState(0);
@@ -50,7 +50,7 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ setSidebarOpen }
 
     return (
         <React.Suspense fallback={null}>
-            <OnboardingTourRuntime forceStartToken={forceStartToken} setSidebarOpen={setSidebarOpen} />
+            <OnboardingTourRuntime forceStartToken={forceStartToken} setDetailsPanelOpen={setDetailsPanelOpen} />
         </React.Suspense>
     );
 };

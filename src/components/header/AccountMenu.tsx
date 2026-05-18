@@ -1,8 +1,9 @@
 import { memo } from 'react';
-import { Languages, LogIn, LogOut, Moon, Settings, Sun } from 'lucide-react';
+import { FolderArchive, Languages, LogIn, LogOut, Moon, Settings, Sun } from 'lucide-react';
 import { DropdownContent, DropdownMenuDivider, DropdownMenuHeader, DropdownMenuItem } from '../ui/DropdownMenu';
 import { useTranslation } from '../../context/TranslationContext';
 import type { ThemeLanguageProps, UserProfile } from '../../types';
+import { useAppStore } from '../../store/useAppStore';
 
 interface AccountMenuProps {
   themeLanguage: ThemeLanguageProps;
@@ -17,6 +18,14 @@ export const AccountMenu = memo<AccountMenuProps>(
   ({ themeLanguage, user, onLogin, onLogout }) => {
     const { t } = useTranslation();
     const accountLabel = t.accountMenu || t.accountProfile;
+    const setVaultOpen = useAppStore((state) => state.setVaultOpen);
+    const setVaultTab = useAppStore((state) => state.setVaultTab);
+
+    const handleOpenVault = () => {
+      // Guest → stats tab; Logged in → trees tab
+      setVaultTab(user ? 'trees' : 'stats');
+      setVaultOpen(true);
+    };
 
     return (
       <DropdownContent className="w-64" aria-label={accountLabel}>
@@ -34,6 +43,7 @@ export const AccountMenu = memo<AccountMenuProps>(
           </>
         )}
 
+        {/* Preferences */}
         <DropdownMenuHeader icon={<Languages className="w-3 h-3" />} label={t.accountPreferences} />
         <DropdownMenuItem
           onClick={() => themeLanguage.setLanguage(themeLanguage.language === 'en' ? 'ar' : 'en')}
@@ -45,21 +55,32 @@ export const AccountMenu = memo<AccountMenuProps>(
             </span>
           }
         />
-
         <DropdownMenuItem
           onClick={() => themeLanguage.setDarkMode(!themeLanguage.darkMode)}
           icon={themeLanguage.darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           label={themeLanguage.darkMode ? t.switchToLightMode : t.switchToDarkMode}
         />
 
+        {/* Vault — accessible to both guest and logged-in users */}
+        <DropdownMenuDivider />
+        <DropdownMenuHeader icon={<FolderArchive className="w-3 h-3" />} label={t.vaultTitle || 'The Vault'} />
+        <DropdownMenuItem
+          onClick={handleOpenVault}
+          icon={<FolderArchive className="w-4 h-4" />}
+          label={t.vaultTitle || 'The Vault'}
+          subLabel={
+            user
+              ? (t.vaultSubtitle || 'Manage your trees and backups')
+              : 'الإحصائيات والتصدير المحلي'
+          }
+        />
+
+        {/* Session */}
         <DropdownMenuDivider />
         <DropdownMenuHeader icon={user ? <LogOut className="w-3 h-3" /> : <LogIn className="w-3 h-3" />} label={t.sessionLabel} />
-
         {user ? (
           <DropdownMenuItem
-            onClick={() => {
-              void onLogout();
-            }}
+            onClick={() => { void onLogout(); }}
             icon={<LogOut className="w-4 h-4" />}
             label={t.signOut}
             colorClass="text-[var(--danger-500)] hover:bg-[var(--danger-500)]/10"
@@ -68,9 +89,7 @@ export const AccountMenu = memo<AccountMenuProps>(
           />
         ) : (
           <DropdownMenuItem
-            onClick={() => {
-              void onLogin();
-            }}
+            onClick={() => { void onLogin(); }}
             icon={<LogIn className="w-4 h-4" />}
             label={t.signIn}
             colorClass="text-[var(--primary-600)] hover:bg-[var(--primary-600)]/10"

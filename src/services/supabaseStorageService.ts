@@ -82,12 +82,12 @@ export const SupabaseStorageService = {
                 .from('avatars')
                 .getPublicUrl(filePath);
 
-            // 5. Update DB (Backward compatibility: update both URL and PATH)
+            // 5. Update DB media fields.
             const { error: dbError } = await client
                 .from('people')
                 .update({ 
-                    photo_url: publicUrl, // For legacy consumers
-                    photo_path: filePath, // For new logic
+                    photo_url: publicUrl,
+                    photo_path: filePath,
                     photo_version: nextVersion 
                 } as any)
                 .eq('id', personId)

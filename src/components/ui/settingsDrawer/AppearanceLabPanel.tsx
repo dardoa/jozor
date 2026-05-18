@@ -1,7 +1,8 @@
 /**
- * SOURCE OF TRUTH: Appearance Lab control panel.
+ * Appearance Lab control panel.
  *
- * useTreeAppearanceStore  - authoritative source for all tree-local visual controls and theme tokens.
+ * Phase 5 (final): All reads/writes go through useAppStore().appearance.
+ * Types and constants live in src/domain/appearance/appearanceEngine.ts.
  */
 import React, { useCallback, useMemo } from 'react';
 import { SettingsTextOptions, SettingsTranslator } from './shared';
@@ -44,7 +45,7 @@ export const AppearanceLabPanel = ({
 }: AppearanceLabPanelProps) => {
     const settingsText = t.settings as unknown as SettingsTextOptions & Record<string, string>;
     const [openSection, setOpenSection] = React.useState<SectionId | null>('theme');
-    const [advancedTab, setAdvancedTab] = React.useState<AdvancedTabId>('engine');
+    const [advancedTab, setAdvancedTab] = React.useState<AdvancedTabId>('details');
 
     const toggleSection = useCallback((id: SectionId) => {
         setOpenSection((previous) => {
@@ -62,7 +63,7 @@ export const AppearanceLabPanel = ({
         });
     }, [people]);
 
-    const palettePreviewById = useMemo(buildPalettePreviewById, []);
+    const palettePreviewById = useMemo(() => buildPalettePreviewById(), []);
     const sectionFallback = (
         <div className="rounded-[24px] border border-[var(--border-soft)] bg-[var(--surface-panel)] p-4 shadow-[var(--shadow-sm)]">
             <div className="h-4 w-36 rounded-full bg-[var(--surface-subtle)]" />
@@ -70,8 +71,7 @@ export const AppearanceLabPanel = ({
         </div>
     );
 
-    // NOTE: useSyncThemeStoreFromAppearanceLab removed as useTreeAppearanceStore 
-    // now manages CSS tokens and visual toggles as a single unified state.
+    // Phase 5: All CSS tokens and visual toggles are managed by useAppStore().appearance.
 
     return (
         <div className="space-y-4">

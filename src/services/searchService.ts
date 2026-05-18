@@ -9,16 +9,19 @@ let indexedPeople: Person[] = [];
 let fuseLoader: Promise<typeof import('fuse.js').default> | null = null;
 
 export type SearchMatchType = 'exact' | 'fuzzy';
+export type SearchConfidence = 'exact' | 'high' | 'medium' | 'low';
 
 export interface SearchResult {
     person: Person;
     score: number;
     matchType: SearchMatchType;
+    confidence?: SearchConfidence;
+    fuseScore?: number;
     reason?: string;
 }
 
 const FUSE_OPTIONS = {
-    threshold: 0.28,
+    threshold: 0.42,
     distance: 100,
     ignoreLocation: true,
     minMatchCharLength: 2,
@@ -152,6 +155,12 @@ const uniqueResults = (results: SearchResult[], limit: number): SearchResult[] =
         .slice(0, limit);
 };
 
+const getFuzzyConfidence = (fuseScore: number): SearchConfidence => {
+    if (fuseScore < 0.1) return 'high';
+    if (fuseScore < 0.4) return 'medium';
+    return 'low';
+};
+
 const runExactNameSearch = (query: string, people: Person[], limit: number): SearchResult[] => {
     const normalizedQuery = normalizeSearchText(query);
     const tokens = tokenizeSearchQuery(query);
@@ -204,7 +213,7 @@ const runExactNameSearch = (query: string, people: Person[], limit: number): Sea
         }
 
         if (score > 0) {
-            results.push({ person, score, matchType: 'exact', reason });
+            results.push({ person, score, matchType: 'exact', confidence: 'exact', reason });
         }
     }
 
@@ -222,12 +231,17 @@ const runFuzzySearch = async (query: string, people: Person[], limit: number): P
     const searchFuse = new FuseConstructor(people, { ...strictOptions, includeScore: true });
 
     return searchFuse.search(normalizedQuery)
-        .map((result) => ({
-            person: result.item,
-            score: Math.round((1 - (result.score ?? 1)) * 70),
-            matchType: 'fuzzy' as const,
-            reason: 'fuse',
-        }))
+        .map((result) => {
+            const fuseScore = result.score ?? 1;
+            return {
+                person: result.item,
+                score: Math.round((1 - fuseScore) * 70),
+                matchType: 'fuzzy' as const,
+                confidence: getFuzzyConfidence(fuseScore),
+                fuseScore,
+                reason: 'fuse',
+            };
+        })
         .filter((result) => normalizedQuery.length > 4 || result.score >= 62)
         .slice(0, limit);
 };
@@ -546,6 +560,7 @@ export const searchService = {
             person,
             score: 90,
             matchType: 'exact',
+            confidence: 'exact',
             reason: 'intent',
         }));
     }

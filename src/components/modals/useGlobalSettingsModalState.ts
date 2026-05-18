@@ -5,7 +5,6 @@ import { EMPTY_STRING } from '../../constants';
 import { useTranslation } from '../../context/TranslationContext';
 import { deleteUserAccount, updateUserProfile } from '../../services/supabaseProfileService';
 import { useAppStore } from '../../store/useAppStore';
-import { useAppUIStore } from '../../store/useAppUIStore';
 
 export type GlobalSettingsTab = 'profile' | 'preferences' | 'security';
 
@@ -16,8 +15,8 @@ export const useGlobalSettingsModalState = (onClose: () => void) => {
   const setDarkMode = useAppStore((state) => state.setDarkMode);
   const updateTourStatus = useAppStore((state) => state.updateTourStatus);
   const logout = useAppStore((state) => state.logout);
-  const isLowGraphicsMode = useAppUIStore((state) => state.isLowGraphicsMode);
-  const setIsLowGraphicsMode = useAppUIStore((state) => state.setIsLowGraphicsMode);
+  const isLowGraphicsMode = useAppStore((state) => state.isLowGraphicsMode);
+  const setIsLowGraphicsMode = useAppStore((state) => state.setIsLowGraphicsMode);
 
   const [activeTab, setActiveTab] = useState<GlobalSettingsTab>('profile');
   const [displayName, setDisplayName] = useState(user?.displayName || EMPTY_STRING);

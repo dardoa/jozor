@@ -1,10 +1,3 @@
-/**
- * TRANSITIONAL BRIDGE: SettingsDrawer — Appearance Lab entry point.
- *
- * This drawer renders AppearanceLabPanel exclusively.
- * The legacy panel imports (LayoutPanel, VisibilityPanel, AppearancePanel, etc.) have been
- * removed; those files are deprecated dead code (Phase 3, 2026-04-12).
- */
 import React, { memo } from 'react';
 import { RotateCcw, Settings, X } from 'lucide-react';
 import { OverlayPrimitive } from '../../context/OverlayContext';
@@ -12,7 +5,7 @@ import { useTranslation } from '../../context/TranslationContext';
 import { useAppStore } from '../../store/useAppStore';
 import { ConfirmationModal } from '../ConfirmationModal';
 import { AppearanceLabPanel } from './settingsDrawer/AppearanceLabPanel';
-import { useGlobalReset } from '../../hooks/useGlobalReset';
+import { useGlobalReset } from '../../hooks/sync/useGlobalReset';
 
 export const SettingsDrawer = memo(() => {
     const isSettingsDrawerOpen = useAppStore(state => state.isSettingsDrawerOpen);

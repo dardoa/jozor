@@ -3,7 +3,7 @@ import type { Person, TreeNode, TreeSettings } from '../../types';
 import type {
   V3CollapseControl,
   V3RendererPipeline,
-} from '../../hooks/useV3RendererPipeline';
+} from '../../hooks/tree/useV3RendererPipeline';
 import type { EdgeEntity, EdgeEntityType } from '../../domain/familyGraphClusterLayout';
 import {
   NODE_HEIGHT_COMPACT,
@@ -11,10 +11,12 @@ import {
   NODE_WIDTH_COMPACT,
   NODE_WIDTH_DEFAULT,
 } from '../../utils/layout/constants';
-import { NodeComponent } from '../NodeComponent';
+import { NodeComponent } from '../tree/node/NodeComponent';
 
 const FAMILY_DOT_RADIUS = 6;
 const MIN_SIBLING_BAR_HALF_PX = 16;
+const CURVED_CORNER_RADIUS = 18;
+const CURVED_PARENT_CARD_CLEARANCE = 14;
 const COLLAPSE_CONTROLS_ENABLED = false;
 const noopSelect = () => undefined;
 const noopContextMenu = () => undefined;
@@ -96,21 +98,77 @@ function extractPathPoints(pathData: string): Array<{ x: number; y: number }> {
   return points.filter((point) => Number.isFinite(point.x) && Number.isFinite(point.y));
 }
 
+function distanceBetweenPoints(left: { x: number; y: number }, right: { x: number; y: number }): number {
+  return Math.hypot(right.x - left.x, right.y - left.y);
+}
+
+function pointAlongSegment(
+  from: { x: number; y: number },
+  to: { x: number; y: number },
+  distance: number,
+): { x: number; y: number } {
+  const segmentLength = distanceBetweenPoints(from, to);
+  if (segmentLength <= 0) return from;
+
+  const ratio = Math.min(1, Math.max(0, distance / segmentLength));
+  return {
+    x: from.x + (to.x - from.x) * ratio,
+    y: from.y + (to.y - from.y) * ratio,
+  };
+}
+
+function formatPathPoint(point: { x: number; y: number }): string {
+  return `${Number(point.x.toFixed(2))} ${Number(point.y.toFixed(2))}`;
+}
+
+function buildRoundedOrthogonalPath(points: Array<{ x: number; y: number }>): string {
+  if (points.length < 3) return `M ${formatPathPoint(points[0])} L ${formatPathPoint(points[points.length - 1])}`;
+
+  const commands: string[] = [`M ${formatPathPoint(points[0])}`];
+
+  for (let index = 1; index < points.length - 1; index += 1) {
+    const previous = points[index - 1];
+    const corner = points[index];
+    const next = points[index + 1];
+    const previousDistance = distanceBetweenPoints(previous, corner);
+    const nextDistance = distanceBetweenPoints(corner, next);
+
+    if (previousDistance <= 0 || nextDistance <= 0) {
+      commands.push(`L ${formatPathPoint(corner)}`);
+      continue;
+    }
+
+    const isStraightThrough =
+      Math.abs((corner.x - previous.x) * (next.y - corner.y) - (corner.y - previous.y) * (next.x - corner.x)) < 0.01;
+
+    if (isStraightThrough) {
+      commands.push(`L ${formatPathPoint(corner)}`);
+      continue;
+    }
+
+    const radius = Math.min(CURVED_CORNER_RADIUS, previousDistance / 2, nextDistance / 2);
+    const beforeCorner = pointAlongSegment(corner, previous, radius);
+    const afterCorner = pointAlongSegment(corner, next, radius);
+
+    commands.push(`L ${formatPathPoint(beforeCorner)}`);
+    commands.push(`Q ${formatPathPoint(corner)} ${formatPathPoint(afterCorner)}`);
+  }
+
+  commands.push(`L ${formatPathPoint(points[points.length - 1])}`);
+  return commands.join(' ');
+}
+
 function resolveLinePath(edge: EdgeEntity, scaledPath: string, lineStyle: V3LineStyle): string {
   if (edge.type === 'sibling-bar' || lineStyle === 'step') return scaledPath;
 
   const points = extractPathPoints(scaledPath);
-  if (points.length < 2) return scaledPath;
+  if (points.length < 3) return scaledPath;
 
-  const start = points[0];
-  const end = points[points.length - 1];
+  return buildRoundedOrthogonalPath(points);
+}
 
-  if (lineStyle === 'straight') {
-    return `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
-  }
-
-  const midY = start.y + (end.y - start.y) / 2;
-  return `M ${start.x} ${start.y} C ${start.x} ${midY} ${end.x} ${midY} ${end.x} ${end.y}`;
+function normalizeV3LineStyle(lineStyle: TreeSettings['lineStyle'] | undefined): V3LineStyle {
+  return lineStyle === 'curved' ? 'curved' : 'step';
 }
 
 function resolveStrokeStyle(
@@ -127,6 +185,104 @@ function resolveStrokeStyle(
     ...base,
     strokeWidth: Math.max(1, requestedThickness + widthOffset),
   };
+}
+
+type V3ResolvedEdgePath = {
+  edge: EdgeEntity;
+  style: { stroke: string; strokeWidth: number; dashArray?: string };
+  scaledPath: string;
+};
+
+function hasInvalidPath(pathData: string | undefined | null): boolean {
+  return typeof pathData !== 'string'
+    || pathData.trim() === ''
+    || pathData.includes('NaN')
+    || pathData.includes('undefined');
+}
+
+function buildCurvedFamilyConnectorPath(
+  trunkStart: { x: number; y: number },
+  childEnd: { x: number; y: number },
+  startDrop: number,
+): string {
+  const curveStart = {
+    x: trunkStart.x,
+    y: Math.min(childEnd.y, trunkStart.y + startDrop),
+  };
+  const verticalDistance = childEnd.y - curveStart.y;
+  const controlY = curveStart.y + verticalDistance * 0.52;
+
+  return [
+    `M ${formatPathPoint(trunkStart)}`,
+    `L ${formatPathPoint(curveStart)}`,
+    `C ${formatPathPoint({ x: curveStart.x, y: controlY })}`,
+    `${formatPathPoint({ x: childEnd.x, y: controlY })}`,
+    `${formatPathPoint(childEnd)}`,
+  ].join(' ');
+}
+
+function buildCurvedFamilyEdgePaths(
+  edgeEntities: EdgeEntity[],
+  scaleX: ScaleX,
+  lineThickness: number | undefined,
+  nodeHeight: number,
+): V3ResolvedEdgePath[] {
+  const trunksByFamily = new Map<string, { edge: EdgeEntity; start: { x: number; y: number } }>();
+  const childDropFamilies = new Set<string>();
+  const parentClearanceDrop = nodeHeight / 2 + CURVED_PARENT_CARD_CLEARANCE;
+
+  edgeEntities.forEach((edge) => {
+    if (edge.type === 'child-drop' && !hasInvalidPath(edge.pathData)) {
+      childDropFamilies.add(edge.metadata.familyId);
+    }
+
+    if (edge.type !== 'family-trunk' || hasInvalidPath(edge.pathData)) return;
+
+    const points = extractPathPoints(scalePathX(edge.pathData, scaleX));
+    const start = points[0];
+    if (!start) return;
+
+    trunksByFamily.set(edge.metadata.familyId, { edge, start });
+  });
+
+  return edgeEntities
+    .map((edge): V3ResolvedEdgePath | null => {
+      const style = resolveStrokeStyle(edge.type, lineThickness);
+      const hasCurvedFamilyReplacement = trunksByFamily.has(edge.metadata.familyId)
+        && childDropFamilies.has(edge.metadata.familyId);
+
+      if (edge.type === 'sibling-bar' && hasCurvedFamilyReplacement) {
+        return null;
+      }
+
+      if (edge.type === 'family-trunk' && hasCurvedFamilyReplacement) {
+        return null;
+      }
+
+      if (edge.type === 'child-drop') {
+        const trunk = trunksByFamily.get(edge.metadata.familyId);
+        if (trunk && !hasInvalidPath(edge.pathData)) {
+          const points = extractPathPoints(scalePathX(edge.pathData, scaleX));
+          const childEnd = points[points.length - 1];
+          if (childEnd) {
+            const scaledPath = buildCurvedFamilyConnectorPath(trunk.start, childEnd, parentClearanceDrop);
+            return scaledPath.includes('NaN') || scaledPath.includes('undefined')
+              ? null
+              : { edge, style, scaledPath };
+          }
+        }
+      }
+
+      if (hasInvalidPath(edge.pathData)) return null;
+
+      const scaledPath = resolveLinePath(
+        edge,
+        normalizeSiblingBarPath(edge, scalePathX(edge.pathData, scaleX)),
+        'curved',
+      );
+      return hasInvalidPath(scaledPath) ? null : { edge, style, scaledPath };
+    })
+    .filter((edgePath): edgePath is V3ResolvedEdgePath => edgePath !== null);
 }
 
 function buildTreeNodes(
@@ -218,8 +374,8 @@ const V3CanvasBackground = memo<V3CanvasBackgroundProps>(({
     height={canvasHeight}
     rx={16}
     ry={16}
-    fill="#f8fafc"
-    stroke="#e2e8f0"
+    fill="transparent"
+    stroke="var(--tree-node-border)"
   />
 ));
 
@@ -230,36 +386,33 @@ interface V3EdgesLayerProps {
   scaleX: ScaleX;
   lineStyle: V3LineStyle;
   lineThickness?: number;
+  nodeHeight: number;
 }
 
-const V3EdgesLayer = memo<V3EdgesLayerProps>(({ edgeEntities, scaleX, lineStyle, lineThickness }) => {
-  const edgePaths = useMemo(() => (
-    edgeEntities
-      .map((edge) => {
+const V3EdgesLayer = memo<V3EdgesLayerProps>(({ edgeEntities, scaleX, lineStyle, lineThickness, nodeHeight }) => {
+  const edgePaths = useMemo(() => {
+    if (lineStyle === 'curved') {
+      return buildCurvedFamilyEdgePaths(edgeEntities, scaleX, lineThickness, nodeHeight);
+    }
+
+    return edgeEntities
+      .map((edge): V3ResolvedEdgePath | null => {
         const style = resolveStrokeStyle(edge.type, lineThickness);
         const rawPath = edge.pathData;
 
-        if (typeof rawPath !== 'string' || rawPath.trim() === '' || rawPath.includes('undefined')) {
-          return null;
-        }
+        if (hasInvalidPath(rawPath)) return null;
 
         const scaledPath = resolveLinePath(
           edge,
           normalizeSiblingBarPath(edge, scalePathX(rawPath, scaleX)),
           lineStyle,
         );
-        if (!scaledPath || scaledPath.includes('NaN') || scaledPath.includes('undefined')) {
-          return null;
-        }
+        if (hasInvalidPath(scaledPath)) return null;
 
         return { edge, style, scaledPath };
       })
-      .filter((edgePath): edgePath is {
-        edge: EdgeEntity;
-        style: { stroke: string; strokeWidth: number; dashArray?: string };
-        scaledPath: string;
-      } => edgePath !== null)
-  ), [edgeEntities, lineStyle, lineThickness, scaleX]);
+      .filter((edgePath): edgePath is V3ResolvedEdgePath => edgePath !== null);
+  }, [edgeEntities, lineStyle, lineThickness, nodeHeight, scaleX]);
 
   return (
     <g 
@@ -496,8 +649,9 @@ export const V3FamilyGraphRenderer: React.FC<V3FamilyGraphRendererProps> = ({
       <V3EdgesLayer
         edgeEntities={edgeEntities}
         scaleX={scaleX}
-        lineStyle={settings.lineStyle ?? 'curved'}
+        lineStyle={normalizeV3LineStyle(settings.lineStyle)}
         lineThickness={settings.lineThickness}
+        nodeHeight={nodeHeight}
       />
       <V3FamilyDotsLayer familyNodes={familyNodes} scaleX={scaleX} />
       <V3CollapseControlsLayer

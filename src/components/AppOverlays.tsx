@@ -22,11 +22,11 @@ interface AppOverlaysProps {
     onOpenSnapshotHistory?: () => void;
   };
   toolsActions: ToolsActionsProps;
-  sidebarFamilyActions: FamilyActionsProps;
+  detailsPanelFamilyActions: FamilyActionsProps;
   auth: AuthProps;
   isPresentMode: boolean;
-  sidebarOpen: boolean;
-  setSidebarOpen: (v: boolean) => void;
+  detailsPanelOpen: boolean;
+  setDetailsPanelOpen: (v: boolean) => void;
   focusAndNavigate: (personId: string) => void;
   openVaultTab: (tab: 'trees' | 'members' | 'security' | 'cloud' | 'stats') => void;
   openAppearanceLab: () => void;
@@ -42,11 +42,11 @@ export const AppOverlays: React.FC<AppOverlaysProps> = ({
   googleSync,
   viewSettings,
   toolsActions,
-  sidebarFamilyActions,
+  detailsPanelFamilyActions,
   auth,
   isPresentMode,
-  sidebarOpen,
-  setSidebarOpen,
+  detailsPanelOpen,
+  setDetailsPanelOpen,
   focusAndNavigate,
   openVaultTab,
   openAppearanceLab,
@@ -60,11 +60,11 @@ export const AppOverlays: React.FC<AppOverlaysProps> = ({
       appState={appState}
       modals={modals}
       toolsActions={toolsActions}
-      sidebarFamilyActions={sidebarFamilyActions}
+      detailsPanelFamilyActions={detailsPanelFamilyActions}
       auth={auth}
       isPresentMode={isPresentMode}
-      sidebarOpen={sidebarOpen}
-      setSidebarOpen={setSidebarOpen}
+      detailsPanelOpen={detailsPanelOpen}
+      setDetailsPanelOpen={setDetailsPanelOpen}
       focusAndNavigate={focusAndNavigate}
       effectiveTreeSettings={effectiveTreeSettings}
       canEditActiveTree={canEditActiveTree}
@@ -83,7 +83,7 @@ export const AppOverlays: React.FC<AppOverlaysProps> = ({
     <AppMobileOverlays
       isPresentMode={isPresentMode}
       canEditActiveTree={canEditActiveTree}
-      setSidebarOpen={setSidebarOpen}
+      setDetailsPanelOpen={setDetailsPanelOpen}
       openVaultTab={openVaultTab}
       openAppearanceLab={openAppearanceLab}
       openAddPersonModal={openAddPersonModal}

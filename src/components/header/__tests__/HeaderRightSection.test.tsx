@@ -1,11 +1,9 @@
-// @ts-nocheck
 import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { describe, expect, it, vi } from 'vitest';
 
 import { HeaderRightSection } from '../HeaderRightSection';
-import type { HeaderRightSectionProps } from '../../../types';
 
 vi.mock('../../../context/TranslationContext', () => ({
   useTranslation: () => ({
@@ -40,7 +38,7 @@ vi.mock('../AccountMenu', () => ({
   AccountMenu: () => <div>Account menu content</div>,
 }));
 
-const buildProps = (): HeaderRightSectionProps => ({
+const buildProps = (): any => ({
   themeLanguage: {
     language: 'en',
     setLanguage: vi.fn(),
@@ -48,7 +46,7 @@ const buildProps = (): HeaderRightSectionProps => ({
     setDarkMode: vi.fn(),
     theme: 'modern',
     setTheme: vi.fn(),
-  } as never,
+  },
   auth: {
     user: {
       uid: 'user-1',
@@ -60,20 +58,17 @@ const buildProps = (): HeaderRightSectionProps => ({
     onOpenLoginModal: vi.fn(async () => {}),
     onLogout: vi.fn(async () => {}),
     onSaveToGoogleDrive: vi.fn(async () => {}),
-  } as never,
+  },
   viewSettings: {
     currentUserRole: 'owner',
-  } as never,
-  toolsActions: {
-    onOpenModal: vi.fn(),
-  } as never,
+  },
   exportActions: {
     handleExport: vi.fn(async () => {}),
-  } as never,
+  },
   searchProps: {
     people: [],
     onFocusPerson: vi.fn(),
-  } as never,
+  },
   globalActions: {
     onOpenTreeControlCenter: vi.fn(),
     onOpenDiagnostics: vi.fn(),
@@ -84,7 +79,7 @@ const buildProps = (): HeaderRightSectionProps => ({
     onOpenActivityLog: vi.fn(),
     onOpenCleanTree: vi.fn(),
     onOpenGlobalSettings: vi.fn(),
-  } as never,
+  },
 });
 
 describe('HeaderRightSection', () => {
@@ -110,4 +105,3 @@ describe('HeaderRightSection', () => {
     expect(screen.getByText('Account menu content')).toBeInTheDocument();
   });
 });
-

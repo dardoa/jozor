@@ -29,12 +29,17 @@ export interface AIProxyImagePayload {
   mimeType: string;
 }
 
+export interface KindiPlanAIRequestData {
+  redactedText: string;
+}
+
 export type AIProxyRequest =
   | { operation: 'biography'; data: BiographyAIRequestData }
   | { operation: 'ancestor_chat'; data: AncestorChatAIRequestData }
   | { operation: 'extract_person_data'; prompt: string }
   | { operation: 'family_story'; prompt: string }
-  | { operation: 'analyze_image'; prompt: string; image: AIProxyImagePayload };
+  | { operation: 'analyze_image'; prompt: string; image: AIProxyImagePayload }
+  | { operation: 'kindi_plan'; data: KindiPlanAIRequestData };
 
 export interface AIProxyResponse {
   result: string;

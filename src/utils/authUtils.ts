@@ -1,9 +1,9 @@
 import CryptoJS from 'crypto-js';
-import type { SupabaseClient } from '@supabase/supabase-js';
-import { SupabaseRegistry } from '../services/supabaseClientRegistry';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { resolvedSupabaseKey, resolvedSupabaseUrl } from '../services/supabaseConfig';
 
 const SUPABASE_JWT_SECRET = process.env.SUPABASE_JWT_SECRET;
+let directAuthClient: SupabaseClient | null = null;
 
 export interface AuthenticatedUser {
     uid: string;
@@ -25,10 +25,17 @@ export function createSupabaseClientForUser(user: { uid: string; email: string |
         throw new Error('Action requires a valid internal Supabase JWT');
     }
 
-    return SupabaseRegistry.getSdk({
-        uid: user.uid,
-        email: user.email ?? undefined,
-        token: user.token,
+    return createClient(resolvedSupabaseUrl, resolvedSupabaseKey, {
+        auth: {
+            persistSession: false,
+            autoRefreshToken: false,
+            detectSessionInUrl: false,
+        },
+        global: {
+            headers: {
+                Authorization: `Bearer ${user.token}`,
+            },
+        },
     });
 }
 
@@ -87,7 +94,15 @@ function getSupabaseAuthClient(): SupabaseClient | null {
         return null;
     }
 
-    return SupabaseRegistry.getSdk();
+    directAuthClient ??= createClient(resolvedSupabaseUrl, resolvedSupabaseKey, {
+        auth: {
+            persistSession: false,
+            autoRefreshToken: false,
+            detectSessionInUrl: false,
+        },
+    });
+
+    return directAuthClient;
 }
 
 /**

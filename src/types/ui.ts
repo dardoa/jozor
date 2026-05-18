@@ -145,8 +145,8 @@ export interface FamilyActionsProps {
 }
 
 export interface HeaderProps {
-    toggleSidebar: () => void;
-    sidebarOpen: boolean;
+    toggleDetailsPanel: () => void;
+    detailsPanelOpen: boolean;
     hasActivePerson: boolean;
     historyControls: HistoryControlsProps;
     themeLanguage: ThemeLanguageProps;
@@ -168,8 +168,8 @@ export interface HeaderRightSectionProps {
 
 export interface HeaderLeftSectionProps {
     themeLanguage: ThemeLanguageProps;
-    toggleSidebar: () => void;
-    sidebarOpen: boolean;
+    toggleDetailsPanel: () => void;
+    detailsPanelOpen: boolean;
     hasActivePerson: boolean;
     historyControls: HistoryControlsProps;
 }
@@ -227,7 +227,7 @@ export interface DriveFileManagerModalProps {
     onImportLocalFile: (data: unknown) => Promise<void>;
 }
 
-export interface SidebarFooterProps {
+export interface PersonaFooterProps {
     person: Person;
     isEditing: boolean;
     setIsEditing: (v: boolean) => void;

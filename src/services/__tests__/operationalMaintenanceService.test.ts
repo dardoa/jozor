@@ -1,14 +1,15 @@
-// @ts-nocheck
+
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { pruneActivityLogs, pruneTreeOperations } from '../operationalMaintenanceService';
 
-const rpcMock = vi.fn();
-const getSupabaseWithAuthMock = vi.fn(() => ({
-  rpc: rpcMock,
-}));
+const { rpcMock, getSupabaseWithAuthMock } = vi.hoisted(() => {
+  const rpcMock = vi.fn();
+  const getSupabaseWithAuthMock = vi.fn(() => ({ rpc: rpcMock }));
+  return { rpcMock, getSupabaseWithAuthMock };
+});
 
 vi.mock('../supabaseClient', () => ({
-  getSupabaseWithAuth: (...args: unknown[]) => getSupabaseWithAuthMock(...args),
+  getSupabaseWithAuth: getSupabaseWithAuthMock as any,
 }));
 
 vi.mock('../../utils/errorLogger', () => ({
