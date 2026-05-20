@@ -79,10 +79,6 @@ export default defineConfig(({ mode }) => {
 
             if (!id.includes('node_modules')) return undefined;
 
-            if (id.includes('lucide-react')) {
-              return 'vendor-icons';
-            }
-
             if (
               id.includes('leaflet') ||
               id.includes('react-leaflet') ||
