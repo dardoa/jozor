@@ -1,7 +1,8 @@
 import { TreeCommand, CommandContext } from './types';
-import { MutationActionResult } from '../types';
+import { MutationActionResult, Person } from '../types';
 import { checkPersonSuggestions, describeSmartCheckIssue } from '../domain/smartChecker';
 import { showToast } from '../utils/showToast';
+import { validatePerson } from '../utils/familyLogic';
 
 export type RelativeType = 'parent' | 'spouse' | 'child';
 
@@ -11,7 +12,8 @@ export class AddRelativeCommand implements TreeCommand {
         private readonly gender: 'male' | 'female',
         private readonly relatedPersonId?: string,
         private readonly bypassSync: boolean = false,
-        private readonly targetPersonId?: string
+        private readonly targetPersonId?: string,
+        private readonly initialUpdates?: Partial<Person>
     ) {}
 
     public async execute(context: CommandContext): Promise<MutationActionResult> {
@@ -50,7 +52,18 @@ export class AddRelativeCommand implements TreeCommand {
         // Fetch fresh state after mutation
         const freshStore = context.getState();
         const { newId } = res;
-        const newPerson = freshStore.people[newId];
+        let newPerson = freshStore.people[newId];
+
+        if (newPerson && this.initialUpdates && Object.keys(this.initialUpdates).length > 0) {
+            newPerson = validatePerson({
+                ...newPerson,
+                ...this.initialUpdates,
+            });
+            freshStore.setPeople({
+                ...freshStore.people,
+                [newId]: newPerson,
+            }, false);
+        }
 
         // 2. Sync and Side Effects
         if (!this.bypassSync) {

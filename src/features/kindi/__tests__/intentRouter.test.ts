@@ -19,6 +19,7 @@ describe('routeKindiIntent', () => {
     expect(routeKindiIntent('أضف حفيد حق محمود').kind).toBe('ACTION');
     expect(routeKindiIntent('اربط مريم بمحمود').kind).toBe('ACTION');
     expect(routeKindiIntent('حط مرا لساهر القرجي اسمها زينب').kind).toBe('ACTION');
+    expect(routeKindiIntent('ضيف ولده لمحمود اسمه علي').kind).toBe('ACTION');
   });
 
   it('routes editing language as UPDATE', () => {

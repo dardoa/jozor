@@ -1,5 +1,6 @@
 import React, { lazy, Suspense, useState } from 'react';
 import { VaultTabLoader } from './VaultTabLoader';
+import { VaultTreesPanel } from './VaultTreesPanel';
 import type { VaultRenderContext } from '../types';
 
 const CollaborationPanel = lazy(() =>
@@ -8,37 +9,32 @@ const CollaborationPanel = lazy(() =>
 const InsightsPanel = lazy(() =>
   import('./InsightsPanel').then((module) => ({ default: module.InsightsPanel }))
 );
-const VaultTreesPanel = lazy(() =>
-  import('./VaultTreesPanel').then((module) => ({ default: module.VaultTreesPanel }))
-);
 const VaultBackupsTab = lazy(() => import('./VaultBackupsTab'));
 const VaultSettingsTab = lazy(() => import('./VaultSettingsTab'));
 
 export const VaultTreesContent = ({ context, compact = false }: { context: VaultRenderContext; compact?: boolean }) => (
-  <Suspense fallback={<VaultTabLoader />}>
-    <VaultTreesPanel
-      treeName={context.treeName?.trim() || context.t.untitledTree}
-      treeId={context.currentTreeId}
-      roleLabel={context.roleLabel}
-      ownedTrees={context.ownedTrees}
-      sharedTrees={context.sharedTrees}
-      busyTreeId={context.busyTreeId}
-      isTreeLoading={context.isTreeLoading}
-      editingTreeId={context.editingTreeId}
-      editTreeName={context.editTreeName}
-      labels={context.treePanelLabels}
-      compact={compact}
-      onCreateTree={context.onCreateTree}
-      onImportTree={context.onImportTree}
-      onRefreshTrees={context.onRefreshTrees}
-      onOpenTree={context.onOpenTree}
-      onStartRename={context.onStartRename}
-      onConfirmRename={context.onConfirmRename}
-      onCancelRename={context.onCancelRename}
-      onEditTreeNameChange={context.onEditTreeNameChange}
-      onDeleteTree={context.onDeleteTree}
-    />
-  </Suspense>
+  <VaultTreesPanel
+    treeName={context.treeName?.trim() || context.t.untitledTree}
+    treeId={context.currentTreeId}
+    roleLabel={context.roleLabel}
+    ownedTrees={context.ownedTrees}
+    sharedTrees={context.sharedTrees}
+    busyTreeId={context.busyTreeId}
+    isTreeLoading={context.isTreeLoading}
+    editingTreeId={context.editingTreeId}
+    editTreeName={context.editTreeName}
+    labels={context.treePanelLabels}
+    compact={compact}
+    onCreateTree={context.onCreateTree}
+    onImportTree={context.onImportTree}
+    onRefreshTrees={context.onRefreshTrees}
+    onOpenTree={context.onOpenTree}
+    onStartRename={context.onStartRename}
+    onConfirmRename={context.onConfirmRename}
+    onCancelRename={context.onCancelRename}
+    onEditTreeNameChange={context.onEditTreeNameChange}
+    onDeleteTree={context.onDeleteTree}
+  />
 );
 
 export const VaultMembersContent = ({ context }: { context: VaultRenderContext }) => (

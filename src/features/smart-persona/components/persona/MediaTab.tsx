@@ -8,6 +8,15 @@ import { showToast } from '../../../../utils/showToast';
 import { useGallery } from '../../../../hooks/ui/useGallery';
 import { getGalleryImageUrl } from '../../../../utils/mediaUtils';
 
+type GalleryMediaItem = string | {
+  id?: string;
+  path?: string;
+  url?: string;
+  version?: number;
+  caption?: string;
+  createdAt?: string;
+};
+
 const ImageLightbox = lazy(() =>
   import('../../../../components/ui/ImageLightbox').then((module) => ({ default: module.ImageLightbox }))
 );
@@ -86,7 +95,9 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
     }
   };
 
-  const gallery = Array.isArray(person.gallery) ? person.gallery : [];
+  const gallery: GalleryMediaItem[] = Array.isArray(person.gallery)
+    ? person.gallery as unknown as GalleryMediaItem[]
+    : [];
   const voiceNotes = person.voiceNotes || [];
   const hasPhotos = gallery.length > 0;
   const hasVoiceNotes = voiceNotes.length > 0;
@@ -203,7 +214,7 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
                           } else {
                             const newGallery = [...gallery];
                             newGallery.splice(idx, 1);
-                            onUpdate(person.id, { gallery: newGallery });
+                            onUpdate(person.id, { gallery: newGallery as Person['gallery'] });
                           }
                         }}
                         className='p-1.5 bg-red-500/80 hover:bg-red-600 text-white rounded-full shadow-lg backdrop-blur-sm transition-transform hover:scale-110'
@@ -233,7 +244,7 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
                         } else {
                           newGallery[idx] = { url: item, caption: newCaption };
                         }
-                        onUpdate(person.id, { gallery: newGallery });
+                        onUpdate(person.id, { gallery: newGallery as Person['gallery'] });
                       }}
                       onClick={(e) => e.stopPropagation()}
                       className='w-full text-[10px] px-2 py-1 rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] text-[var(--text-main)] placeholder-[var(--text-dim)] focus:outline-none focus:border-[var(--primary-500)] text-center'

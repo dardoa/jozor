@@ -11,6 +11,8 @@ describe('updateCommandParser', () => {
       expect(detectUpdateField('تاريخ ميلاد أحمد')).toBe('birthDate');
       expect(detectUpdateField('مكان سكن فاطمة')).toBe('residence');
       expect(detectUpdateField('المهنة لمحمود')).toBe('profession');
+      expect(detectUpdateField('سامي ساكن في الرياض')).toBe('residence');
+      expect(detectUpdateField('سامي يشتغل طبيب')).toBe('profession');
     });
   });
 
@@ -23,6 +25,16 @@ describe('updateCommandParser', () => {
         value: 'الرياض',
       });
     });
+
+    it('keeps dialect inline update subjects clean', () => {
+      const parsed = parseUpdateCommand('عدل سامي ساكن في الرياض');
+
+      expect(parsed).toEqual({
+        field: 'residence',
+        subjectText: 'سامي',
+        value: undefined,
+      });
+    });
   });
 
   describe('extractUpdateFields', () => {
@@ -32,6 +44,16 @@ describe('updateCommandParser', () => {
         profession: 'طبيب',
         birthPlace: 'الرياض',
         birthDate: '1990',
+      });
+    });
+
+    it('extracts conservative dialect residence and profession updates', () => {
+      expect(extractUpdateFields('عدل سامي ساكن في الرياض')).toEqual({
+        residence: 'الرياض',
+      });
+
+      expect(extractUpdateFields('غير شغل سامي إلى طبيب')).toEqual({
+        profession: 'طبيب',
       });
     });
   });

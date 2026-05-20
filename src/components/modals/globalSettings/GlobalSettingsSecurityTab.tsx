@@ -1,4 +1,4 @@
-import { Loader2, ShieldAlert, Trash2 } from 'lucide-react';
+import { BrainCircuit, Loader2, ShieldAlert, Trash2 } from 'lucide-react';
 import { Button } from '../../ui/Button';
 import type { GlobalSettingsModalState } from '../useGlobalSettingsModalState';
 
@@ -25,6 +25,26 @@ export const GlobalSettingsSecurityTab = ({
   cancelDeleteHold,
 }: GlobalSettingsSecurityTabProps) => (
   <div className="space-y-6 animate-in slide-in-from-bottom-2 duration-300">
+    <div className="space-y-3 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-panel)] p-5 shadow-[var(--shadow-sm)]">
+      <div className="flex items-center gap-3">
+        <div className="rounded-lg border border-[var(--border-soft)] bg-[var(--surface-subtle)] p-2 text-[var(--color-info-500)]">
+          <BrainCircuit className="h-5 w-5" />
+        </div>
+        <div>
+          <h4 className="font-bold text-sm text-[var(--text-main)]">
+            {t.globalSettings.security.kindiLearningTitle || 'Kindi learning reports'}
+          </h4>
+          <p className="text-[10px] text-[var(--text-dim)]">
+            {t.globalSettings.security.kindiLearningSubtitle || 'Redacted diagnostics help improve understanding.'}
+          </p>
+        </div>
+      </div>
+      <p className="text-xs leading-relaxed text-[var(--text-dim)]">
+        {t.globalSettings.security.kindiLearningBody
+          || 'Kindi may store redacted learning events such as event type, failure reason, confidence, and parser version. Raw queries, names, person IDs, emails, and executable plans are not stored in learning reports.'}
+      </p>
+    </div>
+
     {!showDeleteConfirm ? (
       <div className="space-y-4 rounded-3xl border border-[var(--danger-500)]/14 bg-[var(--danger-500)]/6 p-6">
         <div className="flex items-center gap-3 text-[var(--danger-500)]">

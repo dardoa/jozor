@@ -215,12 +215,12 @@ export const KINDI_LEXICON = {
     UPDATE: UPDATE_ACTION_VERBS,
   },
   RELATIONS: {
-    PARENT_MALE: ['father', 'dad', 'male parent', 'أب', 'اب', 'والد'],
-    PARENT_FEMALE: ['mother', 'mom', 'mum', 'female parent', 'أم', 'ام', 'والدة', 'والده'],
+    PARENT_MALE: ['father', 'dad', 'male parent', 'أب', 'اب', 'والد', 'أبوه', 'ابوه'],
+    PARENT_FEMALE: ['mother', 'mom', 'mum', 'female parent', 'أم', 'ام', 'والدة', 'والده', 'أمه', 'امه', 'والدته'],
     SPOUSE_MALE: ['husband', 'spouse male', 'male spouse', 'man partner', 'زوج', 'زوجها', 'شريك', 'بعل'],
     SPOUSE_FEMALE: ['wife', 'spouse female', 'female spouse', 'woman partner', 'زوجة', 'زوجه', 'زوجته', 'شريكة', 'شريكه', 'حرم', 'امرأة', 'امراة', 'إمرأة', 'مرا', 'مرة', 'مره', 'مرته'],
-    CHILD_MALE: ['son', 'boy', 'male child', 'ابن', 'إبن', 'ولد', 'طفل', 'حفيد'],
-    CHILD_FEMALE: ['daughter', 'girl child', 'female child', 'بنت', 'ابنة', 'إبنة', 'انثى', 'أنثى', 'طفلة', 'حفيدة'],
+    CHILD_MALE: ['son', 'boy', 'male child', 'ابن', 'إبن', 'ولد', 'ولده', 'ولدي', 'طفل', 'حفيد'],
+    CHILD_FEMALE: ['daughter', 'girl child', 'female child', 'بنت', 'بنته', 'بنتها', 'ابنة', 'إبنة', 'انثى', 'أنثى', 'طفلة', 'حفيدة'],
   },
   SUPPORT_INDICATORS: {
     HOW: SUPPORT_HOW,

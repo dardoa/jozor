@@ -1,6 +1,17 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  getTreeCollaborators,
+  revokeCollaboratorAccess,
+  updateCollaboratorRole,
+} from '../../../../services/supabaseTreeCollaboratorService';
 import type { Collaborator } from '../../../../services/supabaseTreeTypes';
-import type { TreeInvitation } from '../../../../services/treeInvitationService';
+import { getSupabaseFull } from '../../../../services/supabaseClient';
+import {
+  createTreeInvitation,
+  listTreeInvitations,
+  revokeTreeInvitation,
+  type TreeInvitation,
+} from '../../../../services/treeInvitationService';
 import { useAppStore } from '../../../../store/useAppStore';
 import { logError } from '../../../../utils/errorLogger';
 import { showToast } from '../../../../utils/showToast';
@@ -46,13 +57,9 @@ export const useAccessControlState = ({
   const loadCollaborators = useCallback(async () => {
     try {
       setIsLoading(true);
-      const [collaboratorService, invitationService] = await Promise.all([
-        import('../../../../services/supabaseTreeCollaboratorService'),
-        import('../../../../services/treeInvitationService'),
-      ]);
       const [collabs, invites] = await Promise.all([
-        collaboratorService.getTreeCollaborators(treeId, ownerId, ownerEmail, supabaseToken),
-        invitationService.listTreeInvitations(treeId, ownerId, ownerEmail, supabaseToken),
+        getTreeCollaborators(treeId, ownerId, ownerEmail, supabaseToken),
+        listTreeInvitations(treeId, ownerId, ownerEmail, supabaseToken),
       ]);
       setCollaborators(collabs);
       setPendingInvitations(invites.filter((invitation) => invitation.status === 'pending'));
@@ -76,7 +83,6 @@ export const useAccessControlState = ({
     let closed = false;
 
     const subscribe = async () => {
-      const { getSupabaseFull } = await import('../../../../services/supabaseClient');
       if (closed) return;
 
       const client = getSupabaseFull(ownerId, ownerEmail, supabaseToken);
@@ -128,10 +134,7 @@ export const useAccessControlState = ({
 
     try {
       setIsInviting(true);
-      const [{ createTreeInvitation }, { activityService }] = await Promise.all([
-        import('../../../../services/treeInvitationService'),
-        import('../../../../features/activity-log'),
-      ]);
+      const { activityService } = await import('../../../../features/activity-log');
       const { inviteToken } = await createTreeInvitation(
         treeId,
         trimmedInviteEmail,
@@ -162,10 +165,7 @@ export const useAccessControlState = ({
 
   const handleRevokeInvitation = async (invitation: TreeInvitation) => {
     try {
-      const [{ revokeTreeInvitation }, { activityService }] = await Promise.all([
-        import('../../../../services/treeInvitationService'),
-        import('../../../../features/activity-log'),
-      ]);
+      const { activityService } = await import('../../../../features/activity-log');
       await revokeTreeInvitation(invitation.id, ownerId, ownerEmail, supabaseToken);
       showToast.success('messages.success.revoke');
       await activityService.logAction(treeId, 'SHARE_REVOKE', {
@@ -185,10 +185,7 @@ export const useAccessControlState = ({
     if (collaborator.role === newRole) return;
 
     try {
-      const [{ updateCollaboratorRole }, { activityService }] = await Promise.all([
-        import('../../../../services/supabaseTreeCollaboratorService'),
-        import('../../../../features/activity-log'),
-      ]);
+      const { activityService } = await import('../../../../features/activity-log');
       await updateCollaboratorRole(
         treeId,
         collaborator.email,
@@ -228,10 +225,7 @@ export const useAccessControlState = ({
     const collaborator = pendingRevokeCollaborator;
 
     try {
-      const [{ revokeCollaboratorAccess }, { activityService }] = await Promise.all([
-        import('../../../../services/supabaseTreeCollaboratorService'),
-        import('../../../../features/activity-log'),
-      ]);
+      const { activityService } = await import('../../../../features/activity-log');
       await revokeCollaboratorAccess(
         treeId,
         collaborator.email,

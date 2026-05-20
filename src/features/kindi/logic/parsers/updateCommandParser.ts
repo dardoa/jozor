@@ -29,8 +29,11 @@ export interface ParsedUpdateCommand {
 const includesAny = (value: string, terms: string[]) =>
   terms.some((term) => normalizeKindiCommandText(value).includes(normalizeKindiCommandText(term)));
 
+const RESIDENCE_DIALECT_TERMS = ['ساكن', 'ساكنة', 'ساكن في', 'ساكنة في'];
+const PROFESSION_DIALECT_TERMS = ['شغل', 'شغله', 'شغلها', 'يشتغل', 'تشتغل'];
+
 export const updateAttributeClausePattern =
-  /\s+(?:و\s*)?(?:صار|صارت|خلي|خلّي|اجعل|اجعلي|غير|غيّر|عدل|عدّل|حدث|حدّث|يسكن|تسكن|سكنه|سكنها|سكن|السكن|مكان\s+سكنه|مكان\s+سكنها|اقامته|إقامته|اقامتها|إقامتها|كنيته|كنيتها|كنية|لقبه|لقبها|لقب|المهنة|مهنته|مهنتها|وظيفته|وظيفتها|يشتغل|تشتغل|يعمل|تعمل|مكان\s+ميلاده|مكان\s+ميلادها|ولد\s+في|ولدت\s+في|مولود\s+في|مولودة\s+في|مواليد|عام|سنة|في\s+عام|تاريخ\s+ميلاده|تاريخ\s+ميلادها|ملاحظات|ملاحظة|السيرة|نبذة|residence|lives\s+in|live\s+in|nickname|profession|job|works\s+as|work\s+as|birth\s+place|born\s+in|born\s+on|born)\s+.+$/iu;
+  /\s+(?:و\s*)?(?:صار|صارت|خلي|خلّي|اجعل|اجعلي|غير|غيّر|عدل|عدّل|حدث|حدّث|يسكن|تسكن|ساكن|ساكنة|سكنه|سكنها|سكن|السكن|مكان\s+سكنه|مكان\s+سكنها|اقامته|إقامته|اقامتها|إقامتها|كنيته|كنيتها|كنية|لقبه|لقبها|لقب|المهنة|مهنته|مهنتها|وظيفته|وظيفتها|شغل|شغله|شغلها|يشتغل|تشتغل|يعمل|تعمل|مكان\s+ميلاده|مكان\s+ميلادها|ولد\s+في|ولدت\s+في|مولود\s+في|مولودة\s+في|مواليد|عام|سنة|في\s+عام|تاريخ\s+ميلاده|تاريخ\s+ميلادها|ملاحظات|ملاحظة|السيرة|نبذة|residence|lives\s+in|live\s+in|nickname|profession|job|works\s+as|work\s+as|birth\s+place|born\s+in|born\s+on|born)\s+.+$/iu;
 
 export const stripUpdateAttributeClauses = (value: string): string => value
   .replace(updateAttributeClausePattern, ' ')
@@ -64,6 +67,8 @@ export const UPDATE_VALUE_STOP_TERMS = [
   'صارت',
   'يسكن',
   'تسكن',
+  'ساكن',
+  'ساكنة',
   'سكنه',
   'سكنها',
   'كنيته',
@@ -76,6 +81,9 @@ export const UPDATE_VALUE_STOP_TERMS = [
   'مهنتها',
   'وظيفته',
   'وظيفتها',
+  'شغل',
+  'شغله',
+  'شغلها',
   'يشتغل',
   'تشتغل',
   'يعمل',
@@ -119,8 +127,8 @@ export const detectUpdateField = (query: string): KindiUpdateField | undefined =
   if (includesAny(normalized, ['مكان ميلاد', 'مكان الميلاد', 'birth place', 'place of birth'])) return 'birthPlace';
   if (includesAny(normalized, ['تاريخ وفاه', 'تاريخ الوفاه', 'تاريخ وفاة', 'تاريخ الوفاة', 'death date'])) return 'deathDate';
   if (includesAny(normalized, ['مكان وفاه', 'مكان الوفاه', 'مكان وفاة', 'مكان الوفاة', 'death place', 'place of death'])) return 'deathPlace';
-  if (includesAny(normalized, ['السكن', 'سكن', 'يسكن', 'تسكن', 'اقامه', 'إقامة', 'اقامته', 'إقامته', 'residence', 'lives in', 'live in'])) return 'residence';
-  if (includesAny(normalized, ['المهنه', 'المهنة', 'مهنة', 'وظيفه', 'وظيفة', 'profession', 'job', 'work'])) return 'profession';
+  if (includesAny(normalized, ['السكن', 'سكن', 'يسكن', 'تسكن', 'اقامه', 'إقامة', 'اقامته', 'إقامته', ...RESIDENCE_DIALECT_TERMS, 'residence', 'lives in', 'live in'])) return 'residence';
+  if (includesAny(normalized, ['المهنه', 'المهنة', 'مهنة', 'وظيفه', 'وظيفة', ...PROFESSION_DIALECT_TERMS, 'profession', 'job', 'work'])) return 'profession';
   if (includesAny(normalized, ['ملاحظات', 'ملاحظه', 'ملاحظة', 'السيره الذاتيه', 'السيرة الذاتية', 'السيره', 'السيرة', 'نبذه', 'نبذة', 'notes', 'bio', 'biography'])) return 'bio';
   if (includesAny(normalized, ['الاسم', 'اسم', 'name'])) return 'firstName';
 
@@ -145,8 +153,8 @@ export const stripUpdateFieldPhrase = (query: string, field?: KindiUpdateField):
     birthPlace: /^(?:مكان\s+ميلاد|مكان\s+الميلاد|birth\s+place|place\s+of\s+birth)\s*/iu,
     deathDate: /^(?:تاريخ\s+وفاه|تاريخ\s+الوفاه|تاريخ\s+وفاة|تاريخ\s+الوفاة|death\s+date)\s*/iu,
     deathPlace: /^(?:مكان\s+وفاه|مكان\s+الوفاه|مكان\s+وفاة|مكان\s+الوفاة|death\s+place|place\s+of\s+death)\s*/iu,
-    residence: /^(?:السكن|سكن|يسكن|تسكن|اقامه|إقامة|اقامته|إقامته|residence|lives\s+in|live\s+in)\s*/iu,
-    profession: /^(?:المهنه|المهنة|مهنة|وظيفه|وظيفة|profession|job|work)\s*/iu,
+    residence: /^(?:السكن|سكن|يسكن|تسكن|اقامه|إقامة|اقامته|إقامته|ساكن|ساكنة|residence|lives\s+in|live\s+in)\s*/iu,
+    profession: /^(?:المهنه|المهنة|مهنة|وظيفه|وظيفة|شغل|شغله|شغلها|يشتغل|تشتغل|profession|job|work)\s*/iu,
     bio: /^(?:ملاحظات|ملاحظه|ملاحظة|السيره\s+الذاتيه|السيرة\s+الذاتية|السيره|السيرة|نبذه|نبذة|notes|note|bio|biography)\s*/iu,
   };
 
@@ -249,7 +257,7 @@ export const extractUpdateFields = (query: string): Partial<Person> => {
 
   const residence = extractDelimitedUpdateValue(
     query,
-    'السكن|سكنه|سكنها|مكان\\s+سكنه|مكان\\s+سكنها|اقامته|إقامته|اقامتها|إقامتها|يسكن|تسكن|residence|lives\\s+in|live\\s+in',
+    'السكن|سكنه|سكنها|مكان\\s+سكنه|مكان\\s+سكنها|اقامته|إقامته|اقامتها|إقامتها|يسكن|تسكن|ساكن|ساكنة|residence|lives\\s+in|live\\s+in',
     UPDATE_VALUE_STOP_TERMS
   );
   if (residence !== undefined) updates.residence = residence;
@@ -264,7 +272,12 @@ export const extractUpdateFields = (query: string): Partial<Person> => {
   const deathPlace = fieldValue('death place|place of death|مكان الوفاة|وفاته');
   if (deathPlace) updates.deathPlace = deathPlace;
 
-  const profession = fieldValue('profession|job|work|المهنة|مهنة|عمله|وظيفته');
+  const profession = fieldValue('profession|job|work|المهنة|مهنة|عمله|وظيفته|شغل|شغله|شغلها|يشتغل|تشتغل')
+    || extractDelimitedUpdateValue(
+      query,
+      'شغل|شغله|شغلها|يشتغل|تشتغل',
+      UPDATE_VALUE_STOP_TERMS
+    );
   if (profession && updates.profession === undefined) {
     updates.profession = trimCompoundUpdateValue('profession', profession);
   }

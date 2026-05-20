@@ -2,10 +2,7 @@ import React, { useCallback, useMemo } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { useTranslation } from '../../../context/TranslationContext';
 import { useAppStore } from '../../../store/useAppStore';
-
-const DiagnosticsMaintenancePanels = React.lazy(() =>
-  import('./DiagnosticsMaintenancePanels').then((module) => ({ default: module.DiagnosticsMaintenancePanels }))
-);
+import { DiagnosticsMaintenancePanels } from './DiagnosticsMaintenancePanels';
 
 type SettingsTranslator = ReturnType<typeof useTranslation>['t'];
 
@@ -178,9 +175,7 @@ export const DiagnosticsPanels: React.FC<{ includeTelemetry?: boolean; includeMa
         ) : null}
 
         {includeMaintenance ? (
-          <React.Suspense fallback={null}>
-            <DiagnosticsMaintenancePanels />
-          </React.Suspense>
+          <DiagnosticsMaintenancePanels />
         ) : null}
       </div>
     </>

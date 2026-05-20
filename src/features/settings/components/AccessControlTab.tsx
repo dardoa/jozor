@@ -1,11 +1,9 @@
 import React, { lazy, Suspense } from 'react';
 import { useTranslation } from '../../../context/TranslationContext';
+import { ConfirmationModal } from '../../../components/ConfirmationModal';
 import { useAccessControlState } from './accessControl/useAccessControlState';
 import type { AccessControlTabProps } from './accessControl/accessControlTypes';
 
-const ConfirmationModal = lazy(() =>
-  import('../../../components/ConfirmationModal').then((module) => ({ default: module.ConfirmationModal }))
-);
 const AccessCollaboratorsSection = lazy(() =>
   import('./accessControl/AccessCollaboratorsSection').then((module) => ({ default: module.AccessCollaboratorsSection }))
 );
@@ -80,18 +78,16 @@ export const AccessControlTab: React.FC<AccessControlTabProps> = ({
       </Suspense>
 
       {state.isConfirmRevokeOpen ? (
-        <Suspense fallback={null}>
-          <ConfirmationModal
-            isOpen={state.isConfirmRevokeOpen}
-            onClose={state.closeRevokeConfirm}
-            onConfirm={() => void state.confirmRevoke()}
-            title={revokeAccessLabel}
-            message={confirmRevokeMessage}
-            confirmText={revokeAccessLabel}
-            type="danger"
-            overlayId="access-control-revoke-confirm"
-          />
-        </Suspense>
+        <ConfirmationModal
+          isOpen={state.isConfirmRevokeOpen}
+          onClose={state.closeRevokeConfirm}
+          onConfirm={() => void state.confirmRevoke()}
+          title={revokeAccessLabel}
+          message={confirmRevokeMessage}
+          confirmText={revokeAccessLabel}
+          type="danger"
+          overlayId="access-control-revoke-confirm"
+        />
       ) : null}
     </div>
   );

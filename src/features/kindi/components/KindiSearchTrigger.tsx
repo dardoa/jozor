@@ -64,6 +64,7 @@ export const KindiSearchTrigger: React.FC<SearchProps> = memo(({ people, onFocus
         isOpen={controller.isOpen}
         draft={controller.draft}
         messages={controller.messages}
+        peopleById={people}
         isThinking={controller.isThinking}
         onDraftChange={controller.setDraft}
         onSubmit={() => controller.submit()}

@@ -124,7 +124,7 @@ describe('useKindiSearchFlow', () => {
     expect(response.kind).toBe('low_confidence');
     const log = JSON.parse(window.sessionStorage.getItem('jozor:kindi:failure-log') || '[]');
     expect(log[0]).toMatchObject({
-      reason: 'low_confidence',
+      reason: 'AI_LOW_CONFIDENCE',
       query: 'unrelated',
     });
   });

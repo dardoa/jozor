@@ -5,6 +5,8 @@ import '@testing-library/jest-dom';
 import { describe, expect, it, vi } from 'vitest';
 import { MobileAccountSheet } from '../MobileAccountSheet';
 
+const useKindiReportsAdminAccessMock = vi.hoisted(() => vi.fn(() => false));
+
 vi.mock('../../../context/TranslationContext', () => ({
   useTranslation: () => ({
     t: {
@@ -16,6 +18,9 @@ vi.mock('../../../context/TranslationContext', () => ({
       switchToDarkMode: 'Switch to dark mode',
       switchToLightMode: 'Switch to light mode',
       avatarAlt: 'Avatar',
+      adminTools: 'Admin',
+      kindiLearningReports: 'Kindi learning reports',
+      kindiLearningReportsHint: 'Review redacted Kindi learning telemetry.',
       globalSettings: {
         title: 'Global Settings',
       },
@@ -29,8 +34,14 @@ vi.mock('../../../context/TranslationContext', () => ({
   }),
 }));
 
+vi.mock('../../../features/admin/useKindiReportsAdminAccess', () => ({
+  useKindiReportsAdminAccess: useKindiReportsAdminAccessMock,
+  openKindiLearningReports: vi.fn(),
+}));
+
 describe('MobileAccountSheet', () => {
   it('renders account actions in a mobile sheet and opens global settings', () => {
+    useKindiReportsAdminAccessMock.mockReturnValue(false);
     const onClose = vi.fn();
     const setLanguage = vi.fn();
     const setDarkMode = vi.fn();
@@ -62,11 +73,40 @@ describe('MobileAccountSheet', () => {
 
     expect(screen.getByRole('heading', { name: 'Account' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Global Settings/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Kindi learning reports/i })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /Global Settings/i }));
 
     expect(onClose).toHaveBeenCalledTimes(1);
     expect(onOpenGlobalSettings).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows Kindi learning reports for app admins', () => {
+    useKindiReportsAdminAccessMock.mockReturnValue(true);
+
+    render(
+      <MobileAccountSheet
+        isOpen
+        onClose={vi.fn()}
+        themeLanguage={{
+          language: 'en',
+          setLanguage: vi.fn(),
+          darkMode: false,
+          setDarkMode: vi.fn(),
+        }}
+        user={{
+          uid: 'admin-1',
+          email: 'owner@example.com',
+          displayName: 'Owner User',
+          photoURL: '',
+          supabaseToken: 'token-1',
+        }}
+        onLogin={vi.fn(async () => {})}
+        onLogout={vi.fn(async () => {})}
+      />
+    );
+
+    expect(screen.getByRole('button', { name: /Kindi learning reports/i })).toBeInTheDocument();
   });
 });
 

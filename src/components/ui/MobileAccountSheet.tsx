@@ -1,7 +1,8 @@
 import { memo } from 'react';
-import { CloudUpload, Languages, LogIn, LogOut, Moon, Settings, Sun, X } from 'lucide-react';
+import { BrainCircuit, CloudUpload, Languages, LogIn, LogOut, Moon, Settings, Sun, X } from 'lucide-react';
 import { useTranslation } from '../../context/TranslationContext';
 import type { ThemeLanguageProps, UserProfile } from '../../types';
+import { openKindiLearningReports, useKindiReportsAdminAccess } from '../../features/admin/useKindiReportsAdminAccess';
 
 interface MobileAccountSheetProps {
   isOpen: boolean;
@@ -72,6 +73,7 @@ export const MobileAccountSheet = memo(({
   const { t } = useTranslation();
   const text = t as unknown as Record<string, string>;
   const accountLabel = text.accountMenu || t.accountProfile;
+  const canOpenKindiReports = useKindiReportsAdminAccess(user);
 
   if (!isOpen) return null;
 
@@ -147,6 +149,18 @@ export const MobileAccountSheet = memo(({
                 label={t.userMenu.backupNow}
                 subLabel={text.backupNowHint || 'Create or sync a backup for the active tree.'}
                 onClick={closeThen(() => onBackupNow())}
+              />
+            </section>
+          ) : null}
+
+          {user && canOpenKindiReports ? (
+            <section className="space-y-3">
+              <h3 className="px-1 text-[11px] font-bold uppercase tracking-wider text-[var(--text-dim)] opacity-50">{text.adminTools || 'Admin'}</h3>
+              <SheetAction
+                icon={<BrainCircuit className="h-5 w-5" />}
+                label={text.kindiLearningReports || 'Kindi learning reports'}
+                subLabel={text.kindiLearningReportsHint || 'Review redacted Kindi learning telemetry.'}
+                onClick={closeThen(openKindiLearningReports)}
               />
             </section>
           ) : null}

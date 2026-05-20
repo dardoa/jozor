@@ -46,6 +46,9 @@ const HelpCenter = React.lazy(() =>
 const TheVaultDrawer = React.lazy(() =>
   import('../features/the-vault').then((m) => ({ default: m.TheVaultDrawer }))
 );
+const AdminKindiLearningReports = React.lazy(() =>
+  import('../features/admin/AdminKindiLearningReports').then((m) => ({ default: m.AdminKindiLearningReports }))
+);
 
 export const AppUIManager: React.FC = () => {
   const { t } = useTranslation();
@@ -281,6 +284,7 @@ export const AppUIManager: React.FC = () => {
         <Routes>
           <Route path='/help' element={<HelpCenter />} />
           <Route path='/support' element={<Navigate to='/help' replace />} />
+          <Route path='/admin/kindi-learning' element={<ProtectedRoute><AdminKindiLearningReports /></ProtectedRoute>} />
           <Route path='/shared/:shareToken' element={<InvitePage />} />
 
           <Route

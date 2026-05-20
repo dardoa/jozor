@@ -24,6 +24,7 @@ const appState = vi.hoisted(() => ({
 }));
 
 const logKindiSuccessMock = vi.hoisted(() => vi.fn());
+const logKindiLearningEventMock = vi.hoisted(() => vi.fn());
 
 vi.mock('../../../hooks/tree/useTreeActions', () => ({
   useTreeActions: () => treeActionMocks,
@@ -44,7 +45,22 @@ vi.mock('../../../services/searchService', () => ({
 }));
 
 vi.mock('../services/kindiLearningService', () => ({
+  KINDI_LEARNING_FAILURE_REASONS: {
+    UNKNOWN_DIALECT_WORD: 'UNKNOWN_DIALECT_WORD',
+    NAME_AMBIGUOUS: 'NAME_AMBIGUOUS',
+    FIELD_NOT_RECOGNIZED: 'FIELD_NOT_RECOGNIZED',
+    RELATION_NOT_SUPPORTED: 'RELATION_NOT_SUPPORTED',
+    LOCAL_SEARCH_FAILED: 'LOCAL_SEARCH_FAILED',
+    AI_LOW_CONFIDENCE: 'AI_LOW_CONFIDENCE',
+    USER_CANCELLED: 'USER_CANCELLED',
+    USER_REJECTED_DRAFT: 'USER_REJECTED_DRAFT',
+    SUPPORT_TOPIC_MISSING: 'SUPPORT_TOPIC_MISSING',
+    PARSER_PATTERN_MISSING: 'PARSER_PATTERN_MISSING',
+    EXECUTION_FAILED: 'EXECUTION_FAILED',
+    PERMISSION_DENIED: 'PERMISSION_DENIED',
+  },
   logKindiSuccess: logKindiSuccessMock,
+  logKindiLearningEvent: logKindiLearningEventMock,
 }));
 
 const person = (id: string, firstName: string): Person => ({
@@ -116,6 +132,7 @@ describe('useKindiController confidence handling', () => {
     vi.mocked(searchService.search).mockReset();
     Object.values(treeActionMocks).forEach((mock) => mock.mockReset());
     logKindiSuccessMock.mockReset();
+    logKindiLearningEventMock.mockReset();
     treeActionMocks.addChild.mockResolvedValue({ success: true });
     treeActionMocks.addParent.mockResolvedValue({ success: true });
     treeActionMocks.addSpouse.mockResolvedValue({ success: true });
@@ -190,7 +207,7 @@ describe('useKindiController confidence handling', () => {
 
     const log = JSON.parse(window.sessionStorage.getItem('jozor:kindi:failure-log') || '[]');
     expect(log[0]).toMatchObject({
-      reason: 'low_confidence',
+      reason: 'AI_LOW_CONFIDENCE',
       query: 'totally unrelated name',
     });
   });
@@ -206,9 +223,23 @@ describe('useKindiController confidence handling', () => {
     expect(searchService.search).not.toHaveBeenCalled();
     const log = JSON.parse(window.sessionStorage.getItem('jozor:kindi:failure-log') || '[]');
     expect(log[0]).toMatchObject({
-      reason: 'UNKNOWN',
+      reason: 'PARSER_PATTERN_MISSING',
       query: 'weather in Riyadh',
     });
+  });
+
+  it('answers app help questions from the local guide without invoking search', async () => {
+    const { result } = renderHook(() => useKindiController({
+      people: {},
+      onFocusPerson: vi.fn(),
+    }));
+
+    await submitAndFlush(result, 'كيف أعمل نسخة احتياطية للشجرة؟');
+
+    expect(searchService.search).not.toHaveBeenCalled();
+    const last = result.current.messages.at(-1);
+    expect(last?.text).toContain('Google Drive');
+    expect(last?.text).toContain('النسخ الاحتياطي');
   });
 
   it('blocks new input while a disambiguation card is pending', async () => {
@@ -301,8 +332,8 @@ describe('useKindiController confidence handling', () => {
       await result.current.confirm(confirmation!);
     });
 
-    expect(treeActionMocks.addChild).toHaveBeenCalledWith('male', undefined, false, parent.id);
-    expect(treeActionMocks.updatePerson).toHaveBeenCalledWith(addedChild.id, { firstName: 'علي' });
+    expect(treeActionMocks.addChild).toHaveBeenCalledWith('male', undefined, false, parent.id, { firstName: 'علي' });
+    expect(treeActionMocks.updatePerson).not.toHaveBeenCalled();
     expect(result.current.messages.find((message) => message.confirmation?.id === confirmation?.id)?.confirmation?.status)
       .toBe('confirmed');
   });
@@ -354,14 +385,98 @@ describe('useKindiController confidence handling', () => {
       });
     });
 
-    expect(treeActionMocks.addChild).toHaveBeenCalledWith('male', undefined, false, parent.id);
-    expect(treeActionMocks.updatePerson).toHaveBeenCalledWith(addedChild.id, {
+    expect(treeActionMocks.addChild).toHaveBeenCalledWith('male', undefined, false, parent.id, {
       firstName: 'Adam',
       lastName: 'Alqarji',
       profession: 'Teacher',
       birthPlace: 'Makkah',
       birthDate: '2010',
     });
+    expect(treeActionMocks.updatePerson).not.toHaveBeenCalled();
+  });
+
+  it('blocks executive commands for viewer access before preparing a confirmation', async () => {
+    const lina = person('p1', 'Lina');
+    appState.currentUserRole = 'viewer';
+
+    const { result } = renderHook(() => useKindiController({
+      people: { [lina.id]: lina },
+      onFocusPerson: vi.fn(),
+    }));
+
+    await submitAndFlush(result, 'delete Lina');
+
+    const last = result.current.messages.at(-1);
+    expect(last?.text).toBe(KINDI_STRINGS.permissions.readOnly);
+    expect(last?.confirmation).toBeUndefined();
+    expect(treeActionMocks.deletePerson).not.toHaveBeenCalled();
+    expect(treeActionMocks.updatePerson).not.toHaveBeenCalled();
+  });
+
+  it('prepares and executes an update command through the official tree action', async () => {
+    const lina = person('p1', 'Lina');
+    appState.people = {
+      [lina.id]: lina,
+    };
+    treeActionMocks.updatePerson.mockImplementationOnce(async (_personId, updates) => {
+      appState.people = {
+        [lina.id]: {
+          ...lina,
+          ...updates,
+        },
+      };
+      return { success: true };
+    });
+
+    const { result } = renderHook(() => useKindiController({
+      people: { [lina.id]: lina },
+      onFocusPerson: vi.fn(),
+    }));
+
+    await submitAndFlush(result, 'update birth date for Lina to 1990-01-01');
+
+    const confirmation = result.current.messages.at(-1)?.confirmation;
+    expect(confirmation?.kind).toBe('UPDATE');
+    expect(confirmation?.plan).toMatchObject({
+      type: 'UPDATE',
+      personId: lina.id,
+      updates: {
+        birthDate: '1990-01-01',
+      },
+    });
+
+    await act(async () => {
+      await result.current.confirm(confirmation!);
+    });
+
+    expect(treeActionMocks.updatePerson).toHaveBeenCalledWith(lina.id, {
+      birthDate: '1990-01-01',
+    });
+    expect(treeActionMocks.deletePerson).not.toHaveBeenCalled();
+    expect(result.current.messages.find((message) => message.confirmation?.id === confirmation?.id)?.confirmation?.status)
+      .toBe('confirmed');
+  });
+
+  it('keeps delete commands behind an explicit confirmation card', async () => {
+    const lina = person('p1', 'Lina');
+    appState.people = {
+      [lina.id]: lina,
+    };
+
+    const { result } = renderHook(() => useKindiController({
+      people: { [lina.id]: lina },
+      onFocusPerson: vi.fn(),
+    }));
+
+    await submitAndFlush(result, 'delete Lina');
+
+    const confirmation = result.current.messages.at(-1)?.confirmation;
+    expect(confirmation?.kind).toBe('DELETE');
+    expect(confirmation?.plan).toMatchObject({
+      type: 'DELETE',
+      personId: lina.id,
+    });
+    expect(treeActionMocks.deletePerson).not.toHaveBeenCalled();
   });
 
   it('does not log AI learning traces when a confirmation card is cancelled', () => {

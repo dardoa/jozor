@@ -3,8 +3,18 @@ import { useCallback } from 'react';
 import { searchService, type SearchResult } from '../../../services/searchService';
 import { KINDI_STRINGS } from '../logic/kindiLocales';
 import type { KindiPersonResult } from '../types';
+import {
+  KINDI_LEARNING_FAILURE_REASONS,
+  type KindiLearningFailureReason,
+} from '../logic/kindiLearningTaxonomy';
+import type { KindiLearningEventInput } from '../services/kindiLearningService';
 
-export type KindiFailureReason = 'UNKNOWN' | 'not_found' | 'low_confidence';
+export type KindiFailureReason = KindiLearningFailureReason;
+
+interface KindiFailureLogContext {
+  interactionId?: string;
+  redactedQuery?: string;
+}
 
 type KindiSearchFlowResult =
   | {
@@ -19,14 +29,15 @@ type KindiSearchFlowResult =
     };
 
 const KINDI_FAILURE_LOG_KEY = 'jozor:kindi:failure-log';
-const SEARCH_THINKING_DELAY_MS = 1000;
+const SEARCH_THINKING_DELAY_MS = 250;
 
 const sleep = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
 
 const logKindiFailure = (
   reason: KindiFailureReason,
   query: string,
-  metadata?: Record<string, unknown>
+  metadata?: Record<string, unknown>,
+  context?: KindiFailureLogContext
 ) => {
   const entry = {
     reason,
@@ -49,6 +60,21 @@ const logKindiFailure = (
   } catch {
     // Diagnostic-only logging must never interrupt the assistant flow.
   }
+
+  const event: KindiLearningEventInput = {
+    eventType: 'search_failure',
+    interactionId: context?.interactionId,
+    routeKind: metadata?.route === 'QUERY' ? 'QUERY' : undefined,
+    resultKind: reason,
+    failureReason: reason,
+    redactedQuery: context?.redactedQuery,
+    parserStage: metadata?.route === 'QUERY' ? 'local_search' : 'intent_router',
+    parserName: metadata?.route === 'QUERY' ? 'searchService' : 'intentRouter',
+    metadata,
+  };
+  void import('../services/kindiLearningService').then(({ logKindiLearningEvent }) => {
+    logKindiLearningEvent(event);
+  });
 };
 
 const splitKindiSearchConfidence = (results: SearchResult[]) => {
@@ -99,7 +125,10 @@ const buildNearbySearchResult = (results: SearchResult[]): KindiSearchFlowResult
 };
 
 export const useKindiSearchFlow = () => {
-  const runSearchFlow = useCallback(async (query: string): Promise<KindiSearchFlowResult> => {
+  const runSearchFlow = useCallback(async (
+    query: string,
+    context?: KindiFailureLogContext
+  ): Promise<KindiSearchFlowResult> => {
     const [searchResults] = await Promise.all([
       searchService.search(query, 200),
       sleep(SEARCH_THINKING_DELAY_MS),
@@ -107,7 +136,7 @@ export const useKindiSearchFlow = () => {
     const confidence = splitKindiSearchConfidence(searchResults);
 
     if (searchResults.length === 0) {
-      logKindiFailure('not_found', query, { route: 'QUERY' });
+      logKindiFailure(KINDI_LEARNING_FAILURE_REASONS.LOCAL_SEARCH_FAILED, query, { route: 'QUERY' }, context);
       return {
         kind: 'not_found',
         text: KINDI_STRINGS.search.notFound,
@@ -122,11 +151,11 @@ export const useKindiSearchFlow = () => {
       return buildNearbySearchResult(confidence.nearby);
     }
 
-    logKindiFailure('low_confidence', query, {
+    logKindiFailure(KINDI_LEARNING_FAILURE_REASONS.AI_LOW_CONFIDENCE, query, {
       bestScore: confidence.best?.score,
       bestFuseScore: confidence.best?.fuseScore,
       lowConfidenceCount: confidence.low.length,
-    });
+    }, context);
 
     return {
       kind: 'low_confidence',

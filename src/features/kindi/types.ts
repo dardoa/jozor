@@ -93,6 +93,7 @@ export interface KindiRoutedIntent {
 }
 
 export interface KindiDisambiguation {
+  interactionId?: string;
   promptName: string;
   routedIntent: KindiRoutedIntent;
   resultPeople: Person[];
@@ -102,6 +103,7 @@ export interface KindiDisambiguation {
 
 export interface KindiConfirmation {
   id: string;
+  interactionId?: string;
   title: string;
   description: string;
   confirmLabel: string;
