@@ -2,6 +2,10 @@ import '@testing-library/jest-dom';
 import { afterEach } from 'vitest';
 import { cleanup } from '@testing-library/react';
 
+// Setup dummy environment variables for tests if not provided
+process.env.VITE_SUPABASE_URL = process.env.VITE_SUPABASE_URL || 'https://dummy.supabase.co';
+process.env.VITE_SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY || 'dummy-anon-key-for-tests';
+
 // Runs a cleanup after each test case (e.g. clearing jsdom)
 afterEach(() => {
     cleanup();
