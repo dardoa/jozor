@@ -11,7 +11,7 @@ export default defineConfig(({ mode }) => {
   const shouldAnalyzeBundle = env.BUNDLE_ANALYZE === 'true' || process.env.BUNDLE_ANALYZE === 'true';
 
   // CRITICAL SECURITY CHECK: Force exit if secret is missing or insecure
-  const jwtSecret = env.SUPABASE_JWT_SECRET;
+  const jwtSecret = env.SUPABASE_JWT_SECRET || process.env.SUPABASE_JWT_SECRET;
 
   if (!jwtSecret || jwtSecret.length < 32) {
     process.stdout.write('\n\x1b[41m CRITICAL SECURITY ERROR \x1b[0m\n');
