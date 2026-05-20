@@ -16,6 +16,8 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      SUPABASE_JWT_SECRET: ${{ secrets.SUPABASE_JWT_SECRET || 'ci_dummy_supabase_jwt_secret_32_chars_long' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
