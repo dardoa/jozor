@@ -27,5 +27,20 @@ describe('addCommandParser', () => {
         },
       });
     });
+
+    it('parses conservative dialect relation terms without touching names', () => {
+      const parsed = parseKindiCommand('ضيف ولده لمحمود اسمه علي');
+
+      expect(parsed).toEqual({
+        relation: 'child',
+        gender: 'male',
+        newPersonName: {
+          firstName: 'علي',
+          lastName: undefined,
+        },
+        targetMention: 'محمود',
+        initialUpdates: undefined,
+      });
+    });
   });
 });

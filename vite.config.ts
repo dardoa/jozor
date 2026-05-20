@@ -51,6 +51,32 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         output: {
           manualChunks(id) {
+            const normalizedId = id.replace(/\\/g, '/');
+
+            if (normalizedId.includes('/src/features/kindi/')) {
+              return 'feature-kindi';
+            }
+
+            if (normalizedId.includes('/src/features/smart-persona/')) {
+              return 'feature-smart-persona';
+            }
+
+            if (normalizedId.includes('/src/features/settings/')) {
+              return 'feature-settings';
+            }
+
+            if (normalizedId.includes('/src/features/tree-control/')) {
+              return 'feature-tree-control';
+            }
+
+            if (normalizedId.includes('/src/features/the-vault/')) {
+              return 'feature-vault';
+            }
+
+            if (normalizedId.includes('/src/features/geography/')) {
+              return 'feature-geography';
+            }
+
             if (!id.includes('node_modules')) return undefined;
 
             if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {

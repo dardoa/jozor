@@ -15,7 +15,7 @@ vi.mock('../../../services/authTokenService', () => ({
   },
 }));
 
-import { insertKindiLearningLog, logKindiSuccess } from '../services/kindiLearningService';
+import { insertKindiLearningEvent, insertKindiLearningLog, logKindiSuccess } from '../services/kindiLearningService';
 import type { KindiLearningTrace } from '../types';
 
 const validTrace: KindiLearningTrace = {
@@ -61,5 +61,41 @@ describe('kindiLearningService', () => {
       confidence: validTrace.confidence,
       local_lexicon_version: validTrace.localLexiconVersion,
     });
+  });
+
+  it('inserts redacted learning events without raw query data', async () => {
+    await insertKindiLearningEvent({
+      eventType: 'ai_fallback_result',
+      interactionId: '7c785f48-88b8-4ab2-a3c2-04c9d31c138a',
+      routeKind: 'QUERY',
+      resultKind: 'planned',
+      failureReason: 'LOCAL_SEARCH_FAILED',
+      redactedQuery: 'add son for [NAME_1] named [NAME_2]',
+      confidence: 0.8,
+      intentGuess: 'ADD',
+      parserStage: 'ai_fallback',
+      parserName: 'kindiAIService',
+      metadata: {
+        candidateCount: 2,
+        personId: 'must-not-be-sent',
+        rawQuery: 'must-not-be-sent',
+      },
+    });
+
+    expect(insertMock).toHaveBeenCalledWith(expect.objectContaining({
+      event_type: 'ai_fallback_result',
+      interaction_id: '7c785f48-88b8-4ab2-a3c2-04c9d31c138a',
+      route_kind: 'QUERY',
+      result_kind: 'planned',
+      failure_reason: 'LOCAL_SEARCH_FAILED',
+      redacted_query: 'add son for [NAME_1] named [NAME_2]',
+      confidence: 0.8,
+      intent_guess: 'ADD',
+      parser_stage: 'ai_fallback',
+      parser_name: 'kindiAIService',
+      metadata: {
+        candidateCount: 2,
+      },
+    }));
   });
 });

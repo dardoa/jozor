@@ -6,10 +6,8 @@ import { FamilyActionsProps, Person, TreeSettings } from '../../../../types';
 import { calculateAgeAtEvent, calculateAgeDifference } from '../../../../domain/relationshipCalculations';
 import { sortPeopleByBirthDate } from '../../../../utils/familyLogic';
 import { Card } from '../../../../components/ui/Card';
+import { FamilyRelationshipsSection } from '../persona/FamilyRelationshipsSection';
 
-const FamilyRelationshipsSection = lazy(() =>
-  import('../persona/FamilyRelationshipsSection').then((module) => ({ default: module.FamilyRelationshipsSection }))
-);
 const PartnersTab = lazy(() =>
   import('../persona/PartnersTab').then((module) => ({ default: module.PartnersTab }))
 );
@@ -107,17 +105,15 @@ export const LinksTab = memo<LinksTabProps>(
             </div>
           )}
 
-          <Suspense fallback={null}>
-            <FamilyRelationshipsSection
-              person={person}
-              people={people}
-              isEditing={isEditing}
-              onUpdate={onUpdate}
-              onSelect={onSelect}
-              familyActions={familyActions}
-              hideSpouses={true}
-            />
-          </Suspense>
+          <FamilyRelationshipsSection
+            person={person}
+            people={people}
+            isEditing={isEditing}
+            onUpdate={onUpdate}
+            onSelect={onSelect}
+            familyActions={familyActions}
+            hideSpouses={true}
+          />
         </section>
 
 

@@ -1,9 +1,10 @@
-import React, { Suspense, lazy } from 'react';
+import React from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { RefreshCw, X, AlertCircle } from 'lucide-react';
 import { FloatingArrow } from '@floating-ui/react';
 import { SyncStatus } from '../types';
 import { useTranslation } from '../context/TranslationContext';
+import { ConfirmationModal } from './ConfirmationModal';
 import {
     getDriveStatusClass,
     getDriveStatusLabel,
@@ -12,10 +13,6 @@ import {
     getSyncStatusDotClass,
     getSyncStatusText,
 } from './syncStatusPresentation';
-
-const ConfirmationModal = lazy(() =>
-    import('./ConfirmationModal').then((module) => ({ default: module.ConfirmationModal }))
-);
 
 interface SyncStatusTooltipProps {
     syncStatus: SyncStatus;
@@ -176,21 +173,19 @@ export const SyncStatusTooltip: React.FC<SyncStatusTooltipProps> = ({
             </div>
 
             {isConfirmClearModalOpen && (
-                <Suspense fallback={null}>
-                    <ConfirmationModal
-                        isOpen={isConfirmClearModalOpen}
-                        onClose={() => setIsConfirmClearModalOpen(false)}
-                        onConfirm={() => {
-                            onClearSyncCache();
-                            onClose();
-                        }}
-                        title={t.settings?.clearSyncQueue || syncText.resetBackupDialogTitle || "Reset Backup Link"}
-                        message={syncText.resetBackupMessage || "This will reset the Google Drive file reference and create a new backup. Any current pending changes will be re-synced to the new file. Continue?"}
-                        confirmText={t.confirm || syncText.resetBackupConfirm || "Reset & Retry"}
-                        type="warning"
-                        overlayId="sync-reset-confirm"
-                    />
-                </Suspense>
+                <ConfirmationModal
+                    isOpen={isConfirmClearModalOpen}
+                    onClose={() => setIsConfirmClearModalOpen(false)}
+                    onConfirm={() => {
+                        onClearSyncCache();
+                        onClose();
+                    }}
+                    title={t.settings?.clearSyncQueue || syncText.resetBackupDialogTitle || "Reset Backup Link"}
+                    message={syncText.resetBackupMessage || "This will reset the Google Drive file reference and create a new backup. Any current pending changes will be re-synced to the new file. Continue?"}
+                    confirmText={t.confirm || syncText.resetBackupConfirm || "Reset & Retry"}
+                    type="warning"
+                    overlayId="sync-reset-confirm"
+                />
             )}
         </div>
     );

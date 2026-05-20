@@ -30,6 +30,8 @@ export const getGalleryImageUrl = (item: any): string | null => {
 
     if (typeof item === 'string') return item;
 
+    if (typeof item.url === 'string' && item.url.trim()) return item.url;
+
     // If it's the new GalleryItem object
     if (item.path) {
         const cleanPath = item.path.startsWith('avatars/') ? item.path.replace('avatars/', '') : item.path;

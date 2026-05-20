@@ -7,11 +7,31 @@ import type { MutationActionResult, Person } from '../../../types';
 import { getFullName } from '../../../utils/familyLogic';
 import { KINDI_STRINGS } from '../logic/kindiLocales';
 import type { KindiLearningTrace } from '../types';
+import { KINDI_LEARNING_FAILURE_REASONS } from '../logic/kindiLearningTaxonomy';
 
 const logSuccessfulKindiTrace = (trace?: KindiLearningTrace): void => {
   if (!trace) return;
   void import('../services/kindiLearningService').then(({ logKindiSuccess }) => {
     logKindiSuccess(trace);
+  });
+};
+
+const logConfirmedKindiEvent = (confirmation: KindiConfirmation): void => {
+  void import('../services/kindiLearningService').then(({ logKindiLearningEvent }) => {
+    logKindiLearningEvent({
+      eventType: 'confirmation_confirmed',
+      interactionId: confirmation.interactionId,
+      routeKind: confirmation.kind,
+      resultKind: confirmation.learningTrace ? 'ai_success' : 'local_success',
+      redactedQuery: confirmation.learningTrace?.redactedQuery,
+      confidence: confirmation.learningTrace?.confidence,
+      intentGuess: confirmation.kind,
+      parserStage: 'execution',
+      parserName: 'useKindiExecutionFlow',
+      metadata: {
+        planType: confirmation.plan?.type,
+      },
+    });
   });
 };
 
@@ -45,6 +65,19 @@ export const useKindiExecutionFlow = ({
     if (currentUserRole === 'viewer') {
       const error = KINDI_STRINGS.execution.readOnlyError;
       setStatus('failed', error);
+      void import('../services/kindiLearningService').then(({ logKindiLearningEvent }) => {
+        logKindiLearningEvent({
+          eventType: 'confirmation_failed',
+          interactionId: confirmation.interactionId,
+          routeKind: confirmation.kind,
+          failureReason: KINDI_LEARNING_FAILURE_REASONS.PERMISSION_DENIED,
+          redactedQuery: confirmation.learningTrace?.redactedQuery,
+          confidence: confirmation.learningTrace?.confidence,
+          intentGuess: confirmation.kind,
+          parserStage: 'execution',
+          parserName: 'useKindiExecutionFlow',
+        });
+      });
       addAssistantMessage({ text: KINDI_STRINGS.execution.readOnlyReply(error) });
       return;
     }
@@ -53,6 +86,19 @@ export const useKindiExecutionFlow = ({
     if (!plan) {
       const error = KINDI_STRINGS.execution.invalidPlanError;
       setStatus('failed', error);
+      void import('../services/kindiLearningService').then(({ logKindiLearningEvent }) => {
+        logKindiLearningEvent({
+          eventType: 'confirmation_failed',
+          interactionId: confirmation.interactionId,
+          routeKind: confirmation.kind,
+          failureReason: KINDI_LEARNING_FAILURE_REASONS.EXECUTION_FAILED,
+          redactedQuery: confirmation.learningTrace?.redactedQuery,
+          confidence: confirmation.learningTrace?.confidence,
+          intentGuess: confirmation.kind,
+          parserStage: 'execution',
+          parserName: 'useKindiExecutionFlow',
+        });
+      });
       addAssistantMessage({ text: KINDI_STRINGS.execution.invalidPlanReply(error) });
       return;
     }
@@ -72,13 +118,17 @@ export const useKindiExecutionFlow = ({
         return;
       }
 
+      const nameUpdates: Partial<Person> = { ...(plan.initialUpdates ?? {}) };
+      if (plan.name.firstName) nameUpdates.firstName = plan.name.firstName;
+      if (plan.name.lastName) nameUpdates.lastName = plan.name.lastName;
+
       const peopleBeforeAdd = useAppStore.getState().people;
       if (plan.relation === 'parent') {
-        result = await treeActions.addParent(plan.gender, undefined, false, plan.targetPersonId);
+        result = await treeActions.addParent(plan.gender, undefined, false, plan.targetPersonId, nameUpdates);
       } else if (plan.relation === 'spouse') {
-        result = await treeActions.addSpouse(plan.gender, plan.targetPersonId);
+        result = await treeActions.addSpouse(plan.gender, plan.targetPersonId, false, nameUpdates);
       } else {
-        result = await treeActions.addChild(plan.gender, undefined, false, plan.targetPersonId);
+        result = await treeActions.addChild(plan.gender, undefined, false, plan.targetPersonId, nameUpdates);
       }
 
       if (!result.success) {
@@ -91,24 +141,9 @@ export const useKindiExecutionFlow = ({
       const postAddState = useAppStore.getState();
       const addedId = Object.keys(postAddState.people).find((personId) => !peopleBeforeAdd[personId])
         || postAddState.focusId;
-      if (plan.name && addedId) {
-        const nameUpdates: Partial<Person> = { ...(plan.initialUpdates ?? {}) };
-        if (plan.name.firstName) nameUpdates.firstName = plan.name.firstName;
-        if (plan.name.lastName) nameUpdates.lastName = plan.name.lastName;
-
-        if (Object.keys(nameUpdates).length > 0) {
-          const nameResult = await treeActions.updatePerson(addedId, nameUpdates);
-          if (!nameResult.success) {
-            const error = nameResult.error || KINDI_STRINGS.execution.addNameUpdateFailed;
-            setStatus('failed', error);
-            addAssistantMessage({ text: error });
-            return;
-          }
-        }
-      }
-
       const addedPerson = useAppStore.getState().people[addedId];
       setStatus('confirmed');
+      logConfirmedKindiEvent(confirmation);
       logSuccessfulKindiTrace(confirmation.learningTrace);
       addAssistantMessage({
         text: KINDI_STRINGS.execution.addSuccess(
@@ -130,6 +165,7 @@ export const useKindiExecutionFlow = ({
 
       const updatedPerson = useAppStore.getState().people[plan.personId];
       setStatus('confirmed');
+      logConfirmedKindiEvent(confirmation);
       logSuccessfulKindiTrace(confirmation.learningTrace);
       addAssistantMessage({
         text: KINDI_STRINGS.execution.updateSuccess(
@@ -150,6 +186,7 @@ export const useKindiExecutionFlow = ({
     }
 
     setStatus('confirmed');
+    logConfirmedKindiEvent(confirmation);
     logSuccessfulKindiTrace(confirmation.learningTrace);
     addAssistantMessage({
       text: KINDI_STRINGS.execution.deleteSuccess(

@@ -1,9 +1,10 @@
 import { memo } from 'react';
-import { FolderArchive, Languages, LogIn, LogOut, Moon, Settings, Sun } from 'lucide-react';
+import { BrainCircuit, FolderArchive, Languages, LogIn, LogOut, Moon, Settings, Sun } from 'lucide-react';
 import { DropdownContent, DropdownMenuDivider, DropdownMenuHeader, DropdownMenuItem } from '../ui/DropdownMenu';
 import { useTranslation } from '../../context/TranslationContext';
 import type { ThemeLanguageProps, UserProfile } from '../../types';
 import { useAppStore } from '../../store/useAppStore';
+import { openKindiLearningReports, useKindiReportsAdminAccess } from '../../features/admin/useKindiReportsAdminAccess';
 
 interface AccountMenuProps {
   themeLanguage: ThemeLanguageProps;
@@ -17,9 +18,11 @@ interface AccountMenuProps {
 export const AccountMenu = memo<AccountMenuProps>(
   ({ themeLanguage, user, onLogin, onLogout }) => {
     const { t } = useTranslation();
+    const text = t as unknown as Record<string, string>;
     const accountLabel = t.accountMenu || t.accountProfile;
     const setVaultOpen = useAppStore((state) => state.setVaultOpen);
     const setVaultTab = useAppStore((state) => state.setVaultTab);
+    const canOpenKindiReports = useKindiReportsAdminAccess(user);
 
     const handleOpenVault = () => {
       // Guest → stats tab; Logged in → trees tab
@@ -74,6 +77,19 @@ export const AccountMenu = memo<AccountMenuProps>(
               : 'الإحصائيات والتصدير المحلي'
           }
         />
+
+        {user && canOpenKindiReports && (
+          <>
+            <DropdownMenuDivider />
+            <DropdownMenuHeader icon={<BrainCircuit className="w-3 h-3" />} label={text.adminTools || 'Admin'} />
+            <DropdownMenuItem
+              onClick={openKindiLearningReports}
+              icon={<BrainCircuit className="w-4 h-4" />}
+              label={text.kindiLearningReports || 'Kindi learning reports'}
+              subLabel={text.kindiLearningReportsHint || 'Review redacted Kindi learning telemetry.'}
+            />
+          </>
+        )}
 
         {/* Session */}
         <DropdownMenuDivider />

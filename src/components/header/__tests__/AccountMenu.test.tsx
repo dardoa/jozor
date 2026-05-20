@@ -5,6 +5,8 @@ import '@testing-library/jest-dom';
 import { describe, expect, it, vi } from 'vitest';
 import { AccountMenu } from '../AccountMenu';
 
+const useKindiReportsAdminAccessMock = vi.hoisted(() => vi.fn(() => false));
+
 vi.mock('../../../context/TranslationContext', () => ({
   useTranslation: () => ({
     t: {
@@ -20,6 +22,9 @@ vi.mock('../../../context/TranslationContext', () => ({
       switchToDarkMode: 'Switch to dark mode',
       signIn: 'Sign in',
       signOut: 'Sign out',
+      adminTools: 'Admin',
+      kindiLearningReports: 'Kindi learning reports',
+      kindiLearningReportsHint: 'Review redacted Kindi learning telemetry.',
       globalSettings: { title: 'Global Settings' },
       userMenu: {
         welcome: 'Welcome',
@@ -29,8 +34,14 @@ vi.mock('../../../context/TranslationContext', () => ({
   }),
 }));
 
+vi.mock('../../../features/admin/useKindiReportsAdminAccess', () => ({
+  useKindiReportsAdminAccess: useKindiReportsAdminAccessMock,
+  openKindiLearningReports: vi.fn(),
+}));
+
 describe('AccountMenu', () => {
   it('renders authenticated actions and toggles language', () => {
+    useKindiReportsAdminAccessMock.mockReturnValue(false);
     const setLanguage = vi.fn();
     const setDarkMode = vi.fn();
     const onLogout = vi.fn(async () => {});
@@ -62,6 +73,7 @@ describe('AccountMenu', () => {
     expect(screen.getByText('owner@example.com')).toBeInTheDocument();
     expect(screen.queryByRole('menuitem', { name: /Backup now/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('menuitem', { name: /Global Settings/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('menuitem', { name: /Kindi learning reports/i })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('menuitem', { name: /Switch to Arabic/i }));
     expect(setLanguage).toHaveBeenCalledWith('ar');
@@ -74,6 +86,7 @@ describe('AccountMenu', () => {
   });
 
   it('renders guest actions and sign in path', () => {
+    useKindiReportsAdminAccessMock.mockReturnValue(false);
     const onLogin = vi.fn(async () => {});
 
     render(
@@ -100,6 +113,34 @@ describe('AccountMenu', () => {
 
     fireEvent.click(screen.getByRole('menuitem', { name: 'Sign in' }));
     expect(onLogin).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows Kindi learning reports only for app admins', () => {
+    useKindiReportsAdminAccessMock.mockReturnValue(true);
+
+    render(
+      <AccountMenu
+        themeLanguage={{
+          language: 'en',
+          setLanguage: vi.fn(),
+          darkMode: false,
+          setDarkMode: vi.fn(),
+          theme: 'modern',
+          setTheme: vi.fn(),
+        } as never}
+        user={{
+          uid: 'admin-1',
+          email: 'owner@example.com',
+          displayName: 'Owner User',
+          photoURL: '',
+          supabaseToken: 'token-1',
+        }}
+        onLogin={vi.fn(async () => {})}
+        onLogout={vi.fn(async () => {})}
+      />
+    );
+
+    expect(screen.getByRole('menuitem', { name: /Kindi learning reports/i })).toBeInTheDocument();
   });
 });
 

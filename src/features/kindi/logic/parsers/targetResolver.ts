@@ -38,6 +38,87 @@ const getPersonNameVariants = (person: Person): string[] => {
   ].map(normalizeKindiText).filter(Boolean)));
 };
 
+interface IndexedKindiPerson {
+  person: Person;
+  order: number;
+  parts: ReturnType<typeof personStrictNameParts>;
+  variants: string[];
+}
+
+interface KindiTargetIndex {
+  indexedPeople: IndexedKindiPerson[];
+  exactVariantMatches: Map<string, Person[]>;
+  singleWordMatches: Map<string, Person[]>;
+  leadingWordMatches: Map<string, IndexedKindiPerson[]>;
+  orderById: Map<string, number>;
+}
+
+const targetIndexCache = new WeakMap<Person[], KindiTargetIndex>();
+
+const pushUnique = (map: Map<string, Person[]>, key: string, person: Person) => {
+  if (!key) return;
+  const existing = map.get(key);
+  if (existing) {
+    existing.push(person);
+    return;
+  }
+
+  map.set(key, [person]);
+};
+
+const pushIndexed = (map: Map<string, IndexedKindiPerson[]>, key: string, indexedPerson: IndexedKindiPerson) => {
+  if (!key) return;
+  const existing = map.get(key);
+  if (existing) {
+    existing.push(indexedPerson);
+    return;
+  }
+
+  map.set(key, [indexedPerson]);
+};
+
+const getKindiTargetIndex = (people: Person[]): KindiTargetIndex => {
+  const cached = targetIndexCache.get(people);
+  if (cached) return cached;
+
+  const exactVariantMatches = new Map<string, Person[]>();
+  const singleWordMatches = new Map<string, Person[]>();
+  const leadingWordMatches = new Map<string, IndexedKindiPerson[]>();
+  const orderById = new Map<string, number>();
+  const indexedPeople = people.map<IndexedKindiPerson>((person, order) => {
+    const parts = personStrictNameParts(person);
+    const variants = getPersonNameVariants(person);
+    const indexedPerson = {
+      person,
+      order,
+      parts,
+      variants,
+    };
+
+    orderById.set(person.id, order);
+    for (const variant of variants) {
+      pushUnique(exactVariantMatches, variant, person);
+    }
+    pushUnique(singleWordMatches, parts.first, person);
+    pushUnique(singleWordMatches, parts.nick, person);
+    pushUnique(singleWordMatches, parts.last, person);
+    pushIndexed(leadingWordMatches, parts.first, indexedPerson);
+    pushIndexed(leadingWordMatches, parts.nick, indexedPerson);
+
+    return indexedPerson;
+  });
+
+  const index = {
+    indexedPeople,
+    exactVariantMatches,
+    singleWordMatches,
+    leadingWordMatches,
+    orderById,
+  };
+  targetIndexCache.set(people, index);
+  return index;
+};
+
 export const levenshteinDistance = (a: string, b: string): number => {
   if (a === b) return 0;
   if (!a) return b.length;
@@ -86,9 +167,9 @@ export const findKindiTargetCandidates = (targetText: string | undefined, people
 
   const targetWords = normalizedTarget.split(/\s+/).filter(Boolean);
   if (targetWords.length === 0) return [];
-  const personOrder = new Map(people.map((person, index) => [person.id, index]));
+  const index = getKindiTargetIndex(people);
   const sortResults = () =>
-    results.sort((left, right) => (personOrder.get(left.id) ?? 0) - (personOrder.get(right.id) ?? 0));
+    results.sort((left, right) => (index.orderById.get(left.id) ?? 0) - (index.orderById.get(right.id) ?? 0));
 
   const results: Person[] = [];
   const addMatches = (matches: Person[]) => {
@@ -99,39 +180,30 @@ export const findKindiTargetCandidates = (targetText: string | undefined, people
     }
   };
 
-  addMatches(people.filter((person) =>
-    getPersonNameVariants(person).some((variant) => variant === normalizedTarget)
-  ));
+  addMatches(index.exactVariantMatches.get(normalizedTarget) ?? []);
 
   if (targetWords.length === 1) {
     const [firstWord] = targetWords;
-    addMatches(people.filter((person) => {
-      const parts = personStrictNameParts(person);
-      return parts.first === firstWord || parts.nick === firstWord || parts.last === firstWord;
-    }));
+    addMatches(index.singleWordMatches.get(firstWord) ?? []);
 
     if (results.length > 0) return sortResults();
 
-    addMatches(people.filter((person) => {
-      const parts = personStrictNameParts(person);
-      return [parts.first, parts.nick].filter(Boolean).some((variant) =>
+    addMatches(index.indexedPeople
+      .filter(({ parts }) =>
+        [parts.first, parts.nick].filter(Boolean).some((variant) =>
         isNormalizedNameMatch(firstWord, variant)
-      );
-    }));
+        )
+      )
+      .map(({ person }) => person));
 
     return sortResults();
   }
 
-  addMatches(people.filter((person) => {
-    const parts = personStrictNameParts(person);
-    if (targetWords.length >= 2 && parts.first !== targetWords[0] && parts.nick !== targetWords[0]) {
-      return false;
-    }
-
-    return getPersonNameVariants(person).some((variant) =>
+  addMatches((index.leadingWordMatches.get(targetWords[0]) ?? []).filter(({ variants }) =>
+    variants.some((variant) =>
       isNormalizedNameMatch(normalizedTarget, variant)
-    );
-  }));
+    )
+  ).map(({ person }) => person));
 
   return sortResults();
 };

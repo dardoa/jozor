@@ -3,6 +3,7 @@ import { Person, FamilyActionsProps, PersonUpdateHandler } from '../../../../typ
 import { Card } from '../../../../components/ui/Card';
 import { ChevronDown } from 'lucide-react';
 import { useTranslation } from '../../../../context/TranslationContext';
+import { FamilyRelationshipsSection } from './FamilyRelationshipsSection';
 
 const PersonIdentityEdit = lazy(() =>
   import('./PersonIdentityEdit').then((module) => ({ default: module.PersonIdentityEdit }))
@@ -13,10 +14,6 @@ const PersonStatusEdit = lazy(() =>
 const PersonBirthDeathEdit = lazy(() =>
   import('./PersonBirthDeathEdit').then((module) => ({ default: module.PersonBirthDeathEdit }))
 );
-const FamilyRelationshipsSection = lazy(() =>
-  import('./FamilyRelationshipsSection').then((module) => ({ default: module.FamilyRelationshipsSection }))
-);
-
 interface InfoTabEditProps {
   person: Person;
   people: Record<string, Person>;
@@ -59,16 +56,14 @@ export const InfoTabEdit = memo<InfoTabEditProps>(
 
           {showFamilyRelationships && (
             <div className='mt-2 animate-in fade-in slide-in-from-top-1 duration-200'>
-              <Suspense fallback={null}>
-                <FamilyRelationshipsSection
-                  person={person}
-                  people={people}
-                  isEditing={true}
-                  onUpdate={onUpdate}
-                  onSelect={onSelect}
-                  familyActions={familyActions}
-                />
-              </Suspense>
+              <FamilyRelationshipsSection
+                person={person}
+                people={people}
+                isEditing={true}
+                onUpdate={onUpdate}
+                onSelect={onSelect}
+                familyActions={familyActions}
+              />
             </div>
           )}
         </Card>
