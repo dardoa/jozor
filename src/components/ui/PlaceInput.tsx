@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { MapPin, Loader2, Globe } from 'lucide-react';
-import { usePlaceSuggestions } from '../../features/geography';
+import { usePlaceSuggestions } from '../../features/geography/hooks/usePlaceSuggestions';
 
 interface PlaceInputProps {
   label: string;

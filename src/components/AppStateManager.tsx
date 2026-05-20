@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { useSessionBootstrap } from '../hooks/auth/useSessionBootstrap';
 import { useConsistency } from '../hooks/sync/useConsistency';
-import { useGeocodingSync } from '../features/geography';
+import { useGeocodingSync } from '../features/geography/hooks/useGeocodingSync';
 import { useNotifications } from '../hooks/sync/useNotifications';
 import { useRealtimeNotifications } from '../hooks/sync/useRealtimeNotifications';
 import { useWebPush } from '../hooks/sync/useWebPush';
