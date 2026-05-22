@@ -82,6 +82,20 @@ production inventory query before writing the first helper migration. It reports
 target function definitions, security mode, ACLs, and policies that reference
 helper functions.
 
+Production check on 2026-05-22:
+
+- target functions found: 18
+- target functions still using `SECURITY DEFINER`: 18
+- helper-dependent RLS policies found: 75
+- helper-dependent tables found: 10
+- direct execute grantees for sampled target RPCs are `authenticated`,
+  `postgres`, and `service_role`; `anon` and inherited `PUBLIC` execution remain
+  removed from the previous cleanup.
+
+Conclusion: the helper pass is broad RLS surgery, not a small privilege revoke.
+Any migration here must be staged and covered by owner/collaborator regression
+tests first.
+
 ## Recommended Execution Order
 
 1. **Helper exposure reduction**
