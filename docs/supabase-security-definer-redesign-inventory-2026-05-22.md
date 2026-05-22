@@ -50,14 +50,48 @@ Still remaining:
 | `current_user_id_text()` | Auth helper | no direct `src` caller found | Exposes derived auth uid; low data sensitivity but broad RPC is unnecessary. | Candidate for revoke from authenticated after RLS verification. |
 | `current_user_email_text()` | Auth helper | no direct `src` caller found | Exposes derived email; low value but unnecessary direct RPC surface. | Candidate for revoke from authenticated after RLS verification. |
 
+## Helper Dependency Findings
+
+The helper-only functions are not safe to revoke blindly. They are not called
+directly from `src`, but they are embedded in RLS policies and privileged RPCs.
+
+Examples:
+
+- `current_user_id_text()` is used by owner policies on `trees`, `people`,
+  `relationships`, `tree_operations`, `tree_collaborators`, `tree_discussions`,
+  `activity_logs`, and media sync policies.
+- `is_tree_collaborator(uuid,text)` is used by collaborator read/write policies
+  and by privileged tree mutation/sync RPCs.
+- `can_edit_tree(uuid)` is used by tree-edit RPCs after the May 2026 hardening
+  migration.
+
+This means the first helper pass should be a compatibility experiment, not a
+production migration. The safe target is to reduce PostgREST-exposed RPC
+surface while preserving policy execution, which likely requires moving helpers
+into a private schema and updating every dependent policy/function reference in
+the same migration.
+
+There is also local schema drift to resolve before writing SQL: current
+migrations reference `public.current_user_id_text()` from an older
+`20260221_user_profiles_rls_auth_uid.sql` migration, but that migration is not
+present in the repository. Pull or inspect the production function definitions
+before attempting to recreate or move these helpers.
+
+Use `supabase/diagnostics/security_definer_inventory.sql` as the read-only
+production inventory query before writing the first helper migration. It reports
+target function definitions, security mode, ACLs, and policies that reference
+helper functions.
+
 ## Recommended Execution Order
 
 1. **Helper exposure reduction**
-   - Try revoking direct `authenticated` execute from helper-only functions:
-     `can_edit_tree`, `is_tree_owner`, `is_tree_collaborator`,
-     `current_user_id_text`, and `current_user_email_text`.
-   - This must be tested carefully because RLS policies and SECURITY DEFINER
-     functions may still need function execution privileges at runtime.
+   - Do not start by revoking direct `authenticated` execute from helper-only
+     functions in production.
+   - First pull/inspect production definitions for `current_user_id_text`,
+     `current_user_email_text`, `is_tree_owner`, and related helpers.
+   - Create a local/staging migration that moves helper implementations to a
+     private schema and rewrites dependent RLS policies/functions together.
+   - Verify owner/collaborator read/write flows before considering production.
 
 2. **Maintenance isolation**
    - Move pruning functions away from normal signed-in client access.
@@ -99,4 +133,3 @@ Still remaining:
 - Do not remove authenticated RPC access without a replacement app path.
 - Do not bundle this with Kindi learning-report changes.
 - Do not treat the Free-plan leaked-password warning as part of this redesign.
-
