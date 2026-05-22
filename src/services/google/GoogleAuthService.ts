@@ -36,7 +36,7 @@ export class GoogleAuthService implements IGoogleAuthService {
             authTokenService.setStoredSupabaseToken(supabase_token);
         }
         logInfo('GoogleAuthService persistToken', 'Token stored in localStorage.', {
-            tokenPrefix: access_token.substring(0, 10),
+            hasAccessToken: Boolean(access_token),
             expiry: new Date(expiry).toISOString()
         });
     }

@@ -79,7 +79,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const tokens = await tokenResponse.json();
 
     if (tokens.error) {
-      console.error('Google Token Exchange Error:', tokens);
+      console.error('Google Token Exchange Error:', {
+        error: tokens.error,
+        hasDescription: Boolean(tokens.error_description),
+        status: tokenResponse.status,
+      });
       throw new Error(tokens.error_description || 'Failed to exchange code');
     }
 
