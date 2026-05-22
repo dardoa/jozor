@@ -113,6 +113,14 @@ Post-sync RPC isolation check on 2026-05-22:
   16 to 15.
 - `sync_tree_batch` no longer appears in the warning list.
 
+Post-legacy tree-edit RPC isolation check on 2026-05-22:
+
+- `20260522200756_restrict_legacy_tree_edit_rpcs.sql` was applied remotely.
+- `authenticated_security_definer_function_executable` warnings dropped from
+  15 to 13.
+- `create_person_and_relationship` and `delete_person_and_relations` no longer
+  appear in the warning list.
+
 ## Recommended Execution Order
 
 1. **Helper exposure reduction**
@@ -137,6 +145,9 @@ Post-sync RPC isolation check on 2026-05-22:
    - Current code no longer calls `sync_tree_batch` as an RPC; sync writes the
      readable projection and then inserts sanitized rows into `tree_operations`
      directly.
+   - Current code also has no direct `src` caller for
+     `create_person_and_relationship` or `delete_person_and_relations`; person
+     and relationship edits are projected through table writes under RLS.
 
 4. **High-blast-radius sync redesign**
    - Redesign `replace_tree_content` with the strongest tests first.
