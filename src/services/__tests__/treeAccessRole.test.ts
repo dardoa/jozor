@@ -15,6 +15,7 @@ vi.mock('../../utils/errorLogger', () => ({
 }));
 
 import { claimCollaboratorMemberships, fetchTreeAccessRole } from '../supabaseTreeAccessService';
+import { logError } from '../../utils/errorLogger';
 
 type QueryResult<T> = { data: T; error: unknown };
 
@@ -103,6 +104,46 @@ describe('claimCollaboratorMemberships', () => {
 
     expect(claimed).toBe(2);
     expect(rpcMock).toHaveBeenCalledWith('claim_collaborator_memberships');
+  });
+
+  it('does not call the membership claim rpc without a complete identity', async () => {
+    const rpcMock = vi.fn();
+    getSupabaseWithAuthMock.mockReturnValue({ rpc: rpcMock });
+
+    await expect(claimCollaboratorMemberships('', 'user@example.com', 'token')).resolves.toBe(0);
+    await expect(claimCollaboratorMemberships('user-1', '', 'token')).resolves.toBe(0);
+
+    expect(getSupabaseWithAuthMock).not.toHaveBeenCalled();
+    expect(rpcMock).not.toHaveBeenCalled();
+  });
+
+  it('logs membership claim failures without storing the user email', async () => {
+    const rpcError = new Error('claim failed');
+    const rpcMock = vi.fn(async () => ({ data: null, error: rpcError }));
+    getSupabaseWithAuthMock.mockReturnValue({ rpc: rpcMock });
+
+    const claimed = await claimCollaboratorMemberships('user-1', 'User@Example.com', 'token');
+
+    expect(claimed).toBe(0);
+    expect(logError).toHaveBeenCalledWith(
+      'SupabaseTreeAccessService claimCollaboratorMemberships',
+      rpcError,
+      expect.objectContaining({
+        category: 'DATABASE',
+        severity: 'LOW',
+        showToast: false,
+        metadata: { uid: 'user-1' },
+      })
+    );
+    expect(logError).not.toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      expect.objectContaining({
+        metadata: expect.objectContaining({
+          userEmail: expect.any(String),
+        }),
+      })
+    );
   });
 });
 

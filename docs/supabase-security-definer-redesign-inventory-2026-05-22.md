@@ -140,6 +140,18 @@ Post-internal edit helper RPC isolation check on 2026-05-22:
 - Production RLS policies do not reference `can_edit_tree`; it is only used by
   legacy tree-edit functions that are no longer executable by browser roles.
 
+Post-membership claim hardening check on 2026-05-22:
+
+- `20260522203521_harden_claim_collaborator_memberships_guard.sql` was applied
+  remotely.
+- `claim_collaborator_memberships` remains callable by authenticated users
+  because the app still uses it to claim email-based collaboration rows after
+  sign-in.
+- The function now returns `0` without updating rows when the caller uid or
+  email claim is missing.
+- `authenticated_security_definer_function_executable` remains at 11, as
+  expected.
+
 ## Recommended Execution Order
 
 1. **Helper exposure reduction**
@@ -173,6 +185,9 @@ Post-internal edit helper RPC isolation check on 2026-05-22:
    - `can_edit_tree` has no direct `src` caller and no production RLS policy
      references. It remains available to privileged/server roles for legacy
      compatibility only.
+   - `claim_collaborator_memberships` is still a live app RPC. It has been
+     guarded for missing identity claims, but moving it behind a server API is a
+     separate redesign task.
 
 4. **High-blast-radius sync redesign**
    - Redesign `replace_tree_content` with the strongest tests first.
