@@ -130,6 +130,16 @@ Post-unused email helper RPC isolation check on 2026-05-22:
 - `is_tree_owner` was not restricted because production RLS policies still use
   it on `relationships` and `tree_collaborators`.
 
+Post-internal edit helper RPC isolation check on 2026-05-22:
+
+- `20260522202923_restrict_internal_can_edit_tree_helper.sql` was applied
+  remotely.
+- `authenticated_security_definer_function_executable` warnings dropped from
+  12 to 11.
+- `can_edit_tree` no longer appears in the warning list.
+- Production RLS policies do not reference `can_edit_tree`; it is only used by
+  legacy tree-edit functions that are no longer executable by browser roles.
+
 ## Recommended Execution Order
 
 1. **Helper exposure reduction**
@@ -160,6 +170,9 @@ Post-unused email helper RPC isolation check on 2026-05-22:
    - `current_user_email_text` has no direct `src` caller and no current RLS
      policy references. `is_tree_owner` does have current RLS policy references,
      so it remains callable until those policies are redesigned.
+   - `can_edit_tree` has no direct `src` caller and no production RLS policy
+     references. It remains available to privileged/server roles for legacy
+     compatibility only.
 
 4. **High-blast-radius sync redesign**
    - Redesign `replace_tree_content` with the strongest tests first.
