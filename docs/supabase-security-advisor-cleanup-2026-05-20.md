@@ -60,6 +60,24 @@ editing, sync, invitations, maintenance, or RLS helper logic.
 Enable leaked password protection from Supabase Auth settings. This is a
 project configuration change, not a SQL migration in this repository.
 
+Dashboard checklist:
+
+- Open Supabase Dashboard for the production project.
+- Go to Authentication settings.
+- Open Password Security.
+- Enable leaked password protection / prevent leaked passwords.
+- Re-run `supabase db advisors --linked --type security --level warn --fail-on none`
+  and confirm `auth_leaked_password_protection` is gone.
+
+Notes:
+
+- Supabase documents leaked password protection as an Auth setting that rejects
+  passwords known from HaveIBeenPwned data.
+- Existing users can still sign in with current passwords, but weak passwords
+  may be surfaced during password-based auth/update flows depending on the
+  current Auth configuration.
+- This setting is available on Supabase Pro Plan and above.
+
 ### SECURITY DEFINER Redesign
 
 The remaining warning group requires a separate design pass. Candidate options:
@@ -74,6 +92,17 @@ The remaining warning group requires a separate design pass. Candidate options:
 Do not simply revoke `authenticated` from these functions without replacing the
 calling path. The current app calls several of them directly, and RLS policies
 also depend on helper functions.
+
+Recommended phased plan:
+
+1. Inventory each function by caller, table access, and worst-case misuse.
+2. Classify functions into helper-only, user-facing mutation, invitation,
+   maintenance, and sync groups.
+3. Move privileged implementation functions to a private schema where practical.
+4. Keep public wrappers narrow and authenticated-only.
+5. Replace helper functions with `SECURITY INVOKER` only after proving RLS still
+   behaves correctly.
+6. Add regression tests before each group is changed.
 
 ## Verification Performed
 
