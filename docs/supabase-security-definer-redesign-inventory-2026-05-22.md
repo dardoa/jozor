@@ -141,6 +141,28 @@ tests first.
 - Maintenance pruning cannot be invoked by an unrelated authenticated user.
 - Collaboration claim does not grant access from spoofable user metadata.
 
+## Test Baseline Added
+
+Added a first unit-level contract baseline before SQL changes:
+
+- `src/services/__tests__/supabaseTreeMutationService.test.ts`
+  - verifies `createTreeWithRootAtomic` calls `create_tree_with_root` with the
+    expected owner, tree name, and root payload contract.
+- `src/api/__tests__/proxy.test.ts`
+  - verifies owner writes call `replace_tree_content` only after ownership
+    lookup.
+  - verifies editor collaborators can call the replace flow after collaborator
+    role lookup.
+  - verifies viewer collaborators are rejected before `replace_tree_content` is
+    called.
+- Existing tests already cover invitation RPC contracts, collaborator claim,
+  and maintenance pruning RPC call shapes.
+
+Verification on 2026-05-22:
+
+- `npm run test -- src/api/__tests__/proxy.test.ts src/services/__tests__/supabaseTreeMutationService.test.ts src/services/__tests__/treeInvitationService.test.ts src/services/__tests__/operationalMaintenanceService.test.ts src/services/__tests__/treeAccessRole.test.ts`
+- `npm run typecheck`
+
 ## Non-Goals
 
 - Do not enable automated behavior changes from advisor output.
