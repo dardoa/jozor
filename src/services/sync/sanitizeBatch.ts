@@ -2,7 +2,7 @@ import { PendingDeltaOp, DeltaOperation } from './SyncTypes';
 
 /**
  * Removes local-only fields from pending operations before sending them to the server.
- * This ensures that only valid schema fields are passed to the `sync_tree_batch` RPC.
+ * This ensures that only valid schema fields are written to `tree_operations`.
  */
 export function sanitizeOutgoingBatch(batch: PendingDeltaOp[]): Omit<PendingDeltaOp, 'localId' | 'retryCount' | 'removeReason'>[] {
     // Deep clean the batch to remove 'undefined' properties which can cause 400 Bad Request in PostgREST

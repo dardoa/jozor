@@ -96,6 +96,23 @@ Conclusion: the helper pass is broad RLS surgery, not a small privilege revoke.
 Any migration here must be staged and covered by owner/collaborator regression
 tests first.
 
+Post-maintenance isolation check on 2026-05-22:
+
+- `20260522161235_restrict_maintenance_rpc_execute.sql` was applied remotely.
+- `authenticated_security_definer_function_executable` warnings dropped from
+  18 to 16.
+- `prune_tree_operations` and `prune_activity_logs` no longer appear in the
+  warning list.
+- `auth_leaked_password_protection` remains deferred while the project is on
+  the Supabase Free plan.
+
+Post-sync RPC isolation check on 2026-05-22:
+
+- `20260522195905_restrict_sync_tree_batch_execute.sql` was applied remotely.
+- `authenticated_security_definer_function_executable` warnings dropped from
+  16 to 15.
+- `sync_tree_batch` no longer appears in the warning list.
+
 ## Recommended Execution Order
 
 1. **Helper exposure reduction**
@@ -117,6 +134,9 @@ tests first.
      production clients.
    - If not needed, remove public execution first, then drop only after a
      compatibility window.
+   - Current code no longer calls `sync_tree_batch` as an RPC; sync writes the
+     readable projection and then inserts sanitized rows into `tree_operations`
+     directly.
 
 4. **High-blast-radius sync redesign**
    - Redesign `replace_tree_content` with the strongest tests first.
