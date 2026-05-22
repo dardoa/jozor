@@ -2,15 +2,10 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { pruneActivityLogs, pruneTreeOperations } from '../operationalMaintenanceService';
 
-const { rpcMock, getSupabaseWithAuthMock } = vi.hoisted(() => {
-  const rpcMock = vi.fn();
-  const getSupabaseWithAuthMock = vi.fn(() => ({ rpc: rpcMock }));
-  return { rpcMock, getSupabaseWithAuthMock };
+const { fetchMock } = vi.hoisted(() => {
+  const fetchMock = vi.fn();
+  return { fetchMock };
 });
-
-vi.mock('../supabaseClient', () => ({
-  getSupabaseWithAuth: getSupabaseWithAuthMock as any,
-}));
 
 vi.mock('../../utils/errorLogger', () => ({
   getUserFacingErrorInfo: vi.fn((error: unknown, fallbackMessage?: string) => ({
@@ -24,13 +19,13 @@ vi.mock('../../utils/errorLogger', () => ({
 
 describe('operationalMaintenanceService', () => {
   beforeEach(() => {
-    rpcMock.mockReset();
-    getSupabaseWithAuthMock.mockClear();
+    fetchMock.mockReset();
+    vi.stubGlobal('fetch', fetchMock);
     localStorage.clear();
   });
 
   it('returns deleted count for tree operations pruning', async () => {
-    rpcMock.mockResolvedValue({ data: 12, error: null });
+    fetchMock.mockResolvedValue(new Response(JSON.stringify({ deletedCount: 12 }), { status: 200 }));
 
     const result = await pruneTreeOperations(
       'tree-1',
@@ -38,15 +33,23 @@ describe('operationalMaintenanceService', () => {
       500
     );
 
-    expect(rpcMock).toHaveBeenCalledWith('prune_tree_operations', {
-      p_tree_id: 'tree-1',
-      p_keep_latest: 500,
+    expect(fetchMock).toHaveBeenCalledWith('/api/maintenance', {
+      method: 'POST',
+      headers: {
+        Authorization: 'Bearer token',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        treeId: 'tree-1',
+        mode: 'operations',
+        keepLatest: 500,
+      }),
     });
     expect(result).toBe(12);
   });
 
   it('returns deleted count for activity log pruning', async () => {
-    rpcMock.mockResolvedValue({ data: 7, error: null });
+    fetchMock.mockResolvedValue(new Response(JSON.stringify({ deletedCount: 7 }), { status: 200 }));
 
     const result = await pruneActivityLogs(
       'tree-2',
@@ -54,15 +57,26 @@ describe('operationalMaintenanceService', () => {
       30
     );
 
-    expect(rpcMock).toHaveBeenCalledWith('prune_activity_logs', {
-      p_tree_id: 'tree-2',
-      p_keep_days: 30,
+    expect(fetchMock).toHaveBeenCalledWith('/api/maintenance', {
+      method: 'POST',
+      headers: {
+        Authorization: 'Bearer token',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        treeId: 'tree-2',
+        mode: 'activity',
+        keepDays: 30,
+      }),
     });
     expect(result).toBe(7);
   });
 
   it('throws a user-facing error when pruning fails', async () => {
-    rpcMock.mockResolvedValue({ data: null, error: new Error('db exploded') });
+    fetchMock.mockResolvedValue(new Response(
+      JSON.stringify({ error: { message: 'Database temporarily unavailable.' } }),
+      { status: 500 }
+    ));
 
     await expect(
       pruneTreeOperations('tree-3', {
@@ -74,18 +88,18 @@ describe('operationalMaintenanceService', () => {
 
   it('falls back to the stored Supabase token when the caller does not provide one', async () => {
     localStorage.setItem('jozor_supabase_token', 'stored-token');
-    rpcMock.mockResolvedValue({ data: 2, error: null });
+    fetchMock.mockResolvedValue(new Response(JSON.stringify({ deletedCount: 2 }), { status: 200 }));
 
     await pruneActivityLogs('tree-4', {
       uid: 'user-4',
       email: 'owner@example.com',
     });
 
-    expect(getSupabaseWithAuthMock).toHaveBeenCalledWith(
-      'user-4',
-      'owner@example.com',
-      'stored-token'
-    );
+    expect(fetchMock).toHaveBeenCalledWith('/api/maintenance', expect.objectContaining({
+      headers: expect.objectContaining({
+        Authorization: 'Bearer stored-token',
+      }),
+    }));
   });
 });
 

@@ -1,9 +1,5 @@
-import { getSupabaseWithAuth } from './supabaseClient';
 import { getUserFacingErrorInfo, logError, logInfo } from '../utils/errorLogger';
 import { authTokenService } from './authTokenService';
-
-const getClient = (uid: string, email: string, token?: string) =>
-  getSupabaseWithAuth(uid, email, token || authTokenService.getStoredSupabaseTokenOrUndefined());
 
 interface MaintenanceUser {
   uid: string;
@@ -11,21 +7,64 @@ interface MaintenanceUser {
   supabaseToken?: string;
 }
 
+type MaintenanceMode = 'operations' | 'activity';
+
+const getToken = (user: MaintenanceUser): string | undefined =>
+  user.supabaseToken || authTokenService.getStoredSupabaseTokenOrUndefined();
+
+const parseMaintenanceError = async (response: Response, fallbackMessage: string): Promise<Error> => {
+  try {
+    const payload = await response.json() as { error?: { message?: string } | string };
+    const message = typeof payload.error === 'string'
+      ? payload.error
+      : payload.error?.message;
+    return new Error(message || fallbackMessage);
+  } catch {
+    return new Error(fallbackMessage);
+  }
+};
+
+const runMaintenanceRequest = async (
+  treeId: string,
+  user: MaintenanceUser,
+  mode: MaintenanceMode,
+  params: Record<string, number>
+): Promise<number> => {
+  const token = getToken(user);
+  if (!token) {
+    throw new Error('Missing authenticated session for maintenance operation.');
+  }
+
+  const response = await fetch('/api/maintenance', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      treeId,
+      mode,
+      ...params,
+    }),
+  });
+
+  if (!response.ok) {
+    throw await parseMaintenanceError(response, 'Maintenance request failed.');
+  }
+
+  const payload = await response.json() as { deletedCount?: number | string };
+  return typeof payload.deletedCount === 'number'
+    ? payload.deletedCount
+    : Number(payload.deletedCount ?? 0);
+};
+
 export const pruneTreeOperations = async (
   treeId: string,
   user: MaintenanceUser,
   keepLatest = 2000
 ): Promise<number> => {
   try {
-    const client = getClient(user.uid, user.email, user.supabaseToken);
-    const { data, error } = await client.rpc('prune_tree_operations', {
-      p_tree_id: treeId,
-      p_keep_latest: keepLatest,
-    });
-
-    if (error) throw error;
-
-    const deletedCount = typeof data === 'number' ? data : Number(data ?? 0);
+    const deletedCount = await runMaintenanceRequest(treeId, user, 'operations', { keepLatest });
     logInfo('OperationalMaintenance pruneTreeOperations', 'Pruned old tree operations.', {
       treeId,
       keepLatest,
@@ -49,15 +88,7 @@ export const pruneActivityLogs = async (
   keepDays = 180
 ): Promise<number> => {
   try {
-    const client = getClient(user.uid, user.email, user.supabaseToken);
-    const { data, error } = await client.rpc('prune_activity_logs', {
-      p_tree_id: treeId,
-      p_keep_days: keepDays,
-    });
-
-    if (error) throw error;
-
-    const deletedCount = typeof data === 'number' ? data : Number(data ?? 0);
+    const deletedCount = await runMaintenanceRequest(treeId, user, 'activity', { keepDays });
     logInfo('OperationalMaintenance pruneActivityLogs', 'Pruned old activity logs.', {
       treeId,
       keepDays,

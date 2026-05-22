@@ -163,6 +163,31 @@ Verification on 2026-05-22:
 - `npm run test -- src/api/__tests__/proxy.test.ts src/services/__tests__/supabaseTreeMutationService.test.ts src/services/__tests__/treeInvitationService.test.ts src/services/__tests__/operationalMaintenanceService.test.ts src/services/__tests__/treeAccessRole.test.ts`
 - `npm run typecheck`
 
+## Maintenance RPC Isolation
+
+First narrow execution step:
+
+- `src/api/maintenance.ts` now performs maintenance server-side with the
+  Supabase service-role key after authenticating the request and verifying the
+  caller owns the tree.
+- `src/services/operationalMaintenanceService.ts` now calls `/api/maintenance`
+  instead of calling `prune_tree_operations` or `prune_activity_logs` directly
+  from the browser.
+- `supabase/migrations/20260522161235_restrict_maintenance_rpc_execute.sql`
+  revokes direct `authenticated`, `anon`, and inherited `PUBLIC` execution from
+  the two maintenance SECURITY DEFINER RPCs.
+
+Deployment order:
+
+1. Deploy the application code containing `/api/maintenance`.
+2. Apply the Supabase migration that revokes direct browser RPC access.
+3. Re-run Supabase advisors and the diagnostics/maintenance tests.
+
+Verification on 2026-05-22:
+
+- `npm run test -- src/api/__tests__/maintenance.test.ts src/services/__tests__/operationalMaintenanceService.test.ts src/components/__tests__/DiagnosticsDrawer.test.tsx`
+- `npm run typecheck`
+
 ## Non-Goals
 
 - Do not enable automated behavior changes from advisor output.
