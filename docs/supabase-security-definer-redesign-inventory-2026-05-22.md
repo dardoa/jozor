@@ -121,6 +121,15 @@ Post-legacy tree-edit RPC isolation check on 2026-05-22:
 - `create_person_and_relationship` and `delete_person_and_relations` no longer
   appear in the warning list.
 
+Post-unused email helper RPC isolation check on 2026-05-22:
+
+- `20260522201523_restrict_unused_email_helper_rpc.sql` was applied remotely.
+- `authenticated_security_definer_function_executable` warnings dropped from
+  13 to 12.
+- `current_user_email_text` no longer appears in the warning list.
+- `is_tree_owner` was not restricted because production RLS policies still use
+  it on `relationships` and `tree_collaborators`.
+
 ## Recommended Execution Order
 
 1. **Helper exposure reduction**
@@ -148,6 +157,9 @@ Post-legacy tree-edit RPC isolation check on 2026-05-22:
    - Current code also has no direct `src` caller for
      `create_person_and_relationship` or `delete_person_and_relations`; person
      and relationship edits are projected through table writes under RLS.
+   - `current_user_email_text` has no direct `src` caller and no current RLS
+     policy references. `is_tree_owner` does have current RLS policy references,
+     so it remains callable until those policies are redesigned.
 
 4. **High-blast-radius sync redesign**
    - Redesign `replace_tree_content` with the strongest tests first.
