@@ -82,6 +82,9 @@ Notes:
 
 The remaining warning group requires a separate design pass. Candidate options:
 
+- See `docs/supabase-security-definer-redesign-inventory-2026-05-22.md`
+  for the current function inventory, app callers, risk categories, and
+  proposed execution order.
 - Move privileged implementation functions into a private schema.
 - Keep only narrow public authenticated wrapper functions in `public`.
 - Convert safe helper functions to `SECURITY INVOKER` where RLS behavior permits.
