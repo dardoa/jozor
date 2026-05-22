@@ -5,11 +5,15 @@
 This document starts the separate redesign track for the remaining Supabase
 advisor warning:
 
-- `authenticated_security_definer_function_executable`: 18
+- `authenticated_security_definer_function_executable`: 11
 
 The previous cleanup intentionally kept authenticated access because the app
 still calls several RPCs directly. This pass is an inventory and sequencing
 document only. It is not a migration plan to revoke access immediately.
+
+Status as of 2026-05-23: the low-risk direct execution reductions are complete.
+The remaining warnings are live application paths or RLS helpers and should be
+handled only through redesign work with regression tests.
 
 ## Current Boundary
 
@@ -26,6 +30,20 @@ Still remaining:
 - authenticated users can execute these RPCs where granted.
 - some functions are app-facing operations; others are helper or maintenance
   primitives that should be narrowed before any migration.
+
+Remaining authenticated warnings:
+
+- `accept_tree_invitation(text)`
+- `accept_tree_invitation_by_id(uuid)`
+- `claim_collaborator_memberships()`
+- `create_tree_invitation(uuid,text,text,integer)`
+- `create_tree_with_root(text,text,jsonb)`
+- `current_user_id_text()`
+- `decline_tree_invitation(uuid)`
+- `is_tree_collaborator(uuid,text)`
+- `is_tree_owner(uuid)`
+- `replace_tree_content(uuid,jsonb,jsonb)`
+- `revoke_tree_invitation(uuid)`
 
 ## Function Inventory
 
@@ -95,6 +113,16 @@ Production check on 2026-05-22:
 Conclusion: the helper pass is broad RLS surgery, not a small privilege revoke.
 Any migration here must be staged and covered by owner/collaborator regression
 tests first.
+
+Current advisor boundary on 2026-05-23:
+
+- `authenticated_security_definer_function_executable` remains at 11.
+- No additional direct revoke is currently classified as low-risk.
+- `auth_leaked_password_protection` remains deferred while the project is on
+  the Supabase Free plan.
+- Google Drive backup authentication was restored by deploying a root Vercel
+  `/api/auth/exchange` function that returns JSON for 405/400 cases and keeps
+  token exchange server-side.
 
 Post-maintenance isolation check on 2026-05-22:
 

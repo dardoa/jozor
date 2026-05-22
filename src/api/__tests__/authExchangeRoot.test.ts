@@ -29,4 +29,14 @@ describe('root auth exchange API function', () => {
     expect(res.statusCode).toBe(405);
     expect(res.body).toEqual({ error: 'Method Not Allowed' });
   });
+
+  it('returns JSON 400 for POST requests without an auth code', async () => {
+    const req = { method: 'POST', body: {} };
+    const res = createResponse();
+
+    await rootHandler(req as never, res as never);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body).toEqual({ error: 'Missing auth code' });
+  });
 });
