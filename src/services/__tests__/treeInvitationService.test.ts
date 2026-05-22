@@ -105,6 +105,9 @@ describe('treeInvitationService', () => {
     const result = await acceptTreeInvitation('token-1', 'user-1', 'user@example.com', 'supabase-token');
 
     expect(result).toEqual({ treeId: 'tree-1', role: 'viewer', invitationId: 'inv-1' });
+    expect(rpcMock).toHaveBeenCalledWith('accept_tree_invitation', {
+      p_invite_token: 'token-1',
+    });
     expect(logInfoMock).toHaveBeenCalledWith(
       'TreeInvitationService acceptTreeInvitation',
       'Accepted tree invitation by token.',
@@ -128,6 +131,9 @@ describe('treeInvitationService', () => {
     const result = await acceptTreeInvitationById('inv-2', 'user-2', 'user@example.com', 'supabase-token');
 
     expect(result).toEqual({ treeId: 'tree-1', role: 'editor', invitationId: 'inv-2' });
+    expect(rpcMock).toHaveBeenCalledWith('accept_tree_invitation_by_id', {
+      p_invitation_id: 'inv-2',
+    });
     expect(logInfoMock).toHaveBeenCalledWith(
       'TreeInvitationService acceptTreeInvitationById',
       'Accepted tree invitation by id.',
@@ -256,6 +262,42 @@ describe('treeInvitationService', () => {
     );
   });
 
+  it('does not log raw invitation tokens when token acceptance fails', async () => {
+    const rpcError = new Error('token rejected');
+    const rpcMock = vi.fn(async () => ({
+      data: null,
+      error: rpcError,
+    }));
+
+    getSupabaseWithAuthMock.mockReturnValue({ rpc: rpcMock });
+
+    await expect(
+      acceptTreeInvitation('secret-invite-token', 'user-4', 'user@example.com', 'token')
+    ).rejects.toThrow('token rejected');
+
+    expect(logErrorMock).toHaveBeenCalledWith(
+      'TreeInvitationService acceptTreeInvitation',
+      rpcError,
+      expect.objectContaining({
+        category: 'DATABASE',
+        severity: 'LOW',
+        metadata: {
+          uid: 'user-4',
+          inviteTokenPresent: true,
+        },
+      })
+    );
+    expect(logErrorMock).not.toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      expect.objectContaining({
+        metadata: expect.objectContaining({
+          inviteToken: 'secret-invite-token',
+        }),
+      })
+    );
+  });
+
   it('logs delivered and ignored realtime invitation events for the current user', async () => {
     let onChange: ((payload: {
       eventType: 'INSERT' | 'UPDATE' | 'DELETE';
@@ -329,6 +371,14 @@ describe('treeInvitationService', () => {
         invitationId: 'inv-2',
         invitationStatus: 'pending',
         eventType: 'INSERT',
+        invitedEmailMatchesCurrentUser: false,
+      })
+    );
+    expect(logInfoMock).not.toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      expect.objectContaining({
+        invitedEmail: 'other@example.com',
       })
     );
   });

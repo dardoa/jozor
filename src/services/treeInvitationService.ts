@@ -189,7 +189,7 @@ export const acceptTreeInvitation = async (
     logError('TreeInvitationService acceptTreeInvitation', error, {
       category: 'DATABASE',
       severity: 'LOW',
-      metadata: { uid, inviteToken }
+      metadata: { uid, inviteTokenPresent: Boolean(inviteToken) }
     });
     throw error;
   }
@@ -307,7 +307,7 @@ export const subscribeToMyInvitations = (
             invitationStatus: row.status,
             eventType: payload.eventType,
             invitedUid: row.invited_uid,
-            invitedEmail: row.invited_email,
+            invitedEmailMatchesCurrentUser: row.invited_email?.toLowerCase() === normalizedEmail,
           });
         }
       )
