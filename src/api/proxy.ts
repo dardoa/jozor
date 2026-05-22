@@ -7,6 +7,10 @@ import { mapPersonToDbRow } from '../services/personRowMapper';
 type ProxyPerson = Person & { id: string };
 type ProxyRelationship = { tree_id: string; person_id: string; relative_id: string; type: 'parent' | 'spouse' };
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const user = await authenticateUser(req.headers.authorization);
@@ -98,9 +102,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     if (req.method === 'POST') {
-      const { treeId, content } = req.body;
+      const body = isRecord(req.body) ? req.body : {};
+      const treeId = typeof body.treeId === 'string' ? body.treeId : '';
+      const content = body.content;
       if (!treeId || !content) {
         return res.status(400).json({ error: 'treeId and content are required' });
+      }
+
+      if (!isRecord(content)) {
+        return res.status(400).json({ error: 'content must be a person map' });
       }
 
       // 1. Check WRITE access against the real collaborator source of truth.
@@ -138,7 +148,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       // 2. Perform the update
       // We map the content map back to arrays for bulk insertion
-      const people = Object.values((content || {}) as Record<string, ProxyPerson>);
+      const people = Object.values(content as Record<string, ProxyPerson>);
       const peoplePayload = people.map((p) => mapPersonToDbRow(p, treeId));
 
       const relationships: ProxyRelationship[] = [];

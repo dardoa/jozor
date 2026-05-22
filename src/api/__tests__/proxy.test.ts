@@ -65,6 +65,46 @@ describe('proxy API', () => {
     });
   });
 
+  it('rejects malformed write payloads before checking tree access', async () => {
+    const fromMock = vi.fn();
+    const rpcMock = vi.fn();
+    createSupabaseClientForUserMock.mockReturnValue({ from: fromMock, rpc: rpcMock });
+
+    const req = {
+      method: 'POST',
+      headers: { authorization: 'Bearer token' },
+      body: {
+        treeId: 'tree-1',
+        content: 'not-a-person-map',
+      },
+    };
+    const res = createResponse();
+
+    await handler(req as never, res as never);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body).toEqual({ error: 'content must be a person map' });
+    expect(fromMock).not.toHaveBeenCalled();
+    expect(rpcMock).not.toHaveBeenCalled();
+  });
+
+  it('rejects missing write bodies without calling replace_tree_content', async () => {
+    const rpcMock = vi.fn();
+    createSupabaseClientForUserMock.mockReturnValue({ rpc: rpcMock });
+
+    const req = {
+      method: 'POST',
+      headers: { authorization: 'Bearer token' },
+    };
+    const res = createResponse();
+
+    await handler(req as never, res as never);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body).toEqual({ error: 'treeId and content are required' });
+    expect(rpcMock).not.toHaveBeenCalled();
+  });
+
   it('replaces tree content for the tree owner only after checking ownership', async () => {
     const rpcMock = vi.fn(async () => ({ data: null, error: null }));
     const fromMock = vi.fn((table: string) => {
