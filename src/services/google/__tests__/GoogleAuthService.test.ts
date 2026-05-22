@@ -33,6 +33,7 @@ describe('GoogleAuthService', () => {
     localStorage.clear();
     vi.stubGlobal('fetch', vi.fn(async () => ({
       ok: true,
+      headers: new Headers({ 'content-type': 'application/json' }),
       json: async () => ({
         access_token: 'ya29.sensitive-google-token',
         supabase_token: 'supabase.jwt.token',
@@ -82,6 +83,37 @@ describe('GoogleAuthService', () => {
       expect.objectContaining({
         tokenPrefix: expect.any(String),
       })
+    );
+  });
+
+  it('handles non-json auth exchange failures without exposing raw server text', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => ({
+      ok: false,
+      headers: new Headers({ 'content-type': 'text/plain' }),
+      json: vi.fn(async () => {
+        throw new SyntaxError('Unexpected token A');
+      }),
+      text: vi.fn(async () => 'A server error occurred.'),
+    })));
+    const codeClient = {
+      callback: undefined as ((resp: { code: string; error?: string }) => void) | undefined,
+      requestCode: vi.fn(function requestCode(this: typeof codeClient) {
+        this.callback?.({ code: 'google-code' });
+      }),
+    };
+    const apiService = {
+      isInitialized: true,
+      initialize: vi.fn(),
+      getCodeClient: vi.fn(() => codeClient),
+    } as unknown as IGoogleApiService;
+
+    const service = new GoogleAuthService(apiService);
+
+    await expect(service.login()).rejects.toThrow('Token exchange failed');
+    expect(logInfoMock).not.toHaveBeenCalledWith(
+      'GoogleAuthService persistToken',
+      expect.anything(),
+      expect.anything()
     );
   });
 });

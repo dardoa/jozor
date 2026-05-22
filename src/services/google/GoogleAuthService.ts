@@ -13,6 +13,19 @@ type ExchangeResponse = {
 };
 type UserProfileWithSupabaseToken = UserProfile & { supabaseToken?: string };
 
+const readExchangeResponse = async (response: Response): Promise<Partial<ExchangeResponse>> => {
+    const contentType = response.headers.get('content-type') || '';
+    if (!contentType.toLowerCase().includes('application/json')) {
+        return {};
+    }
+
+    try {
+        return await response.json();
+    } catch {
+        return {};
+    }
+};
+
 export class GoogleAuthService implements IGoogleAuthService {
     private apiService: IGoogleApiService;
     private static readonly TOKEN_KEY = 'jozor_google_access_token';
@@ -105,12 +118,15 @@ export class GoogleAuthService implements IGoogleAuthService {
                             body: JSON.stringify({ code: resp.code }),
                         });
 
-                        const data: ExchangeResponse = await exchangeRes.json();
+                        const data = await readExchangeResponse(exchangeRes);
                         if (!exchangeRes.ok) {
                             throw new Error(data.error || 'Token exchange failed');
                         }
 
                         const { access_token, supabase_token, user } = data;
+                        if (!access_token || !user) {
+                            throw new Error('Token exchange response was incomplete');
+                        }
                         this.persistToken(access_token, supabase_token);
                         logInfo('GoogleAuthService login', 'Token persisted successfully.');
                         
