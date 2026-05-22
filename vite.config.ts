@@ -80,16 +80,26 @@ export default defineConfig(({ mode }) => {
             if (!id.includes('node_modules')) return undefined;
 
             if (
+              id.includes('/react/') ||
+              id.includes('\\react\\') ||
+              id.includes('/react-dom/') ||
+              id.includes('\\react-dom\\') ||
+              id.includes('/react-router') ||
+              id.includes('\\react-router') ||
+              id.includes('/react-leaflet/') ||
+              id.includes('\\react-leaflet\\') ||
+              id.includes('/@react-leaflet/') ||
+              id.includes('\\@react-leaflet\\') ||
+              id.includes('lucide-react')
+            ) {
+              return 'vendor-react';
+            }
+
+            if (
               id.includes('leaflet') ||
-              id.includes('react-leaflet') ||
-              id.includes('@react-leaflet') ||
               id.includes('supercluster')
             ) {
               return 'vendor-map';
-            }
-
-            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
-              return 'vendor-react';
             }
 
             if (id.includes('@supabase')) {
