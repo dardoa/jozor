@@ -1,6 +1,8 @@
 import { StateCreator } from 'zustand';
 import { TreeSettings } from '../../types';
 import { DEFAULT_TREE_SETTINGS } from '../../constants';
+import { normalizeChartType } from '../../domain/chartTypeAdapter';
+
 
 export interface SettingsSlice {
     /**
@@ -46,14 +48,18 @@ export const createSettingsSlice: StateCreator<SettingsSlice> = (set) => ({
     })(),
 
     // Actions
-    setTreeSettings: (settings) => set((state) => ({
-        // Always merge with defaults so Appearance Lab presets can update
-        // partial groups safely without reviving stale legacy fields.
-        treeSettings: {
-            ...DEFAULT_TREE_SETTINGS,
-            ...(typeof settings === 'function' ? settings(state.treeSettings) : settings),
-        },
-    })),
+    setTreeSettings: (settings) => set((state) => {
+        const resolved = typeof settings === 'function' ? settings(state.treeSettings) : settings;
+        if (resolved && resolved.chartType) {
+            resolved.chartType = normalizeChartType(resolved.chartType);
+        }
+        return {
+            treeSettings: {
+                ...DEFAULT_TREE_SETTINGS,
+                ...resolved,
+            },
+        };
+    }),
     setDarkMode: (dark) => set({ darkMode: dark }),
     setLanguage: (lang) => set(() => {
         if (typeof window !== 'undefined') {
@@ -61,7 +67,17 @@ export const createSettingsSlice: StateCreator<SettingsSlice> = (set) => ({
         }
         return { language: lang };
     }),
-    importSettings: (settings) => set((state) => ({ ...state, ...settings })),
+    importSettings: (settings) => set((state) => {
+        const nextSettings = { ...settings };
+        if (nextSettings.treeSettings) {
+            const chartType = nextSettings.treeSettings.chartType;
+            nextSettings.treeSettings = {
+                ...nextSettings.treeSettings,
+                chartType: normalizeChartType(chartType),
+            };
+        }
+        return { ...state, ...nextSettings };
+    }),
     setExportStatus: (status) => set({ exportStatus: status }),
     setActivityLogOpen: (open) => set({ isActivityLogOpen: open }),
     setIsLowGraphicsMode: (isLow) => set(() => {

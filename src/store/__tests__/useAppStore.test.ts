@@ -256,5 +256,45 @@ describe('loadFullState', () => {
     const storedFalse = JSON.parse(localStorage.getItem('jozor-ui-storage') || '{}');
     expect(storedFalse.state?.isLowGraphicsMode).toBe(false);
   });
+
+  it('normalizes legacy chartType ("descendant" or "force") to "focus" on loadFullState', () => {
+    act(() => {
+      loadFullState({
+        settings: {
+          chartType: 'descendant' as any,
+        },
+      });
+    });
+
+    expect(useAppStore.getState().treeSettings.chartType).toBe('focus');
+
+    act(() => {
+      loadFullState({
+        settings: {
+          chartType: 'force' as any,
+        },
+      });
+    });
+
+    expect(useAppStore.getState().treeSettings.chartType).toBe('focus');
+  });
+
+  it('normalizes legacy chartType to "focus" on importSettings and setTreeSettings', () => {
+    act(() => {
+      useAppStore.getState().importSettings({
+        treeSettings: {
+          chartType: 'descendant' as any,
+        } as any
+      });
+    });
+    expect(useAppStore.getState().treeSettings.chartType).toBe('focus');
+
+    act(() => {
+      useAppStore.getState().setTreeSettings({
+        chartType: 'force' as any,
+      } as any);
+    });
+    expect(useAppStore.getState().treeSettings.chartType).toBe('focus');
+  });
 });
 
