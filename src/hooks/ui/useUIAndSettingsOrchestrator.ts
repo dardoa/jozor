@@ -11,7 +11,7 @@ import { useTreeSettings } from '../tree/useTreeSettings';
 import { useWelcomeScreenLogic } from './useWelcomeScreenLogic';
 import { useAppStore, loadFullState } from '../../store/useAppStore';
 import { validatePerson } from '../../utils/familyLogic';
-import { INITIAL_ROOT_ID } from '../../constants';
+
 import { showToast } from '../../utils/showToast';
 
 interface UseUIAndSettingsOrchestratorParams {
@@ -82,7 +82,7 @@ export const useUIAndSettingsOrchestrator = (
 
         if (Object.keys(validated).length === 0) throw new Error('No valid data after validation');
 
-        const newFocusId = Object.keys(validated)[0] || INITIAL_ROOT_ID;
+        const newFocusId = Object.keys(validated)[0];
 
         // Use unified loader so all state (people, focusId, settings) go through the same path
         loadFullState({

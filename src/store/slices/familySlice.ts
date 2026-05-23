@@ -1,7 +1,22 @@
 import { StateCreator } from 'zustand';
 import { Person } from '../../types';
-import { INITIAL_ROOT_ID, SAMPLE_FAMILY } from '../../constants';
+import { DEFAULT_PERSON_TEMPLATE } from '../../constants';
 import { validatePerson, createPerson } from '../../utils/familyLogic';
+
+const getInitialFamilyState = () => {
+    const initialId = crypto.randomUUID();
+    const initialPerson: Person = {
+        id: initialId,
+        ...DEFAULT_PERSON_TEMPLATE,
+        firstName: 'Me',
+        lastName: '',
+        gender: 'male',
+    };
+    return {
+        people: { [initialId]: initialPerson },
+        focusId: initialId,
+    };
+};
 import {
     performAddChild,
     performAddParent,
@@ -51,13 +66,15 @@ export interface FamilySlice {
 const resolveValidFocusId = (people: Record<string, Person>, preferredFocusId: string): string =>
     preferredFocusId && people[preferredFocusId]
         ? preferredFocusId
-        : Object.keys(people)[0] || INITIAL_ROOT_ID;
+        : Object.keys(people)[0] || '';
 
-export const createFamilySlice: StateCreator<AppStore, [["zustand/devtools", never]], [], FamilySlice> = (set, get) => ({
-    // Initial State
-    people: SAMPLE_FAMILY,
-    locations: {},
-    focusId: INITIAL_ROOT_ID,
+export const createFamilySlice: StateCreator<AppStore, [["zustand/devtools", never]], [], FamilySlice> = (set, get) => {
+    const initial = getInitialFamilyState();
+    return {
+        // Initial State
+        people: initial.people,
+        locations: {},
+        focusId: initial.focusId,
     searchTarget: null,
     treeName: 'Family Lineage',
     peopleVersion: 0,
@@ -116,7 +133,7 @@ export const createFamilySlice: StateCreator<AppStore, [["zustand/devtools", nev
         if (newPeople === currentPeople) return;
 
         const nextFocusId =
-            focusId === id ? Object.keys(newPeople)[0] || INITIAL_ROOT_ID : focusId;
+            focusId === id ? Object.keys(newPeople)[0] || '' : focusId;
 
         const newDeletedPersonIds = new Set(get().deletedPersonIds);
         newDeletedPersonIds.add(id);
@@ -237,10 +254,11 @@ export const createFamilySlice: StateCreator<AppStore, [["zustand/devtools", nev
     },
 
     startNewTree: () => {
+        const initial = getInitialFamilyState();
         set((state) => ({
-            people: SAMPLE_FAMILY,
+            people: initial.people,
             peopleVersion: state.peopleVersion + 1,
-            focusId: INITIAL_ROOT_ID,
+            focusId: initial.focusId,
         }));
         get().clearHistory();
     },
@@ -295,4 +313,5 @@ export const createFamilySlice: StateCreator<AppStore, [["zustand/devtools", nev
             }
         };
     }),
-});
+};
+};

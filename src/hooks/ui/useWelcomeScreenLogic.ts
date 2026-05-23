@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Person } from '../../types';
-import { INITIAL_ROOT_ID } from '../../constants';
 
 interface UseWelcomeScreenLogicProps {
   people: Record<string, Person>;
@@ -24,10 +23,11 @@ export const useWelcomeScreenLogic = ({
 
   useEffect(() => {
     if (!showWelcome) return;
-    // Check if we have meaningful data (more than just the initial person)
+    // Check if we have meaningful data (more than just the initial person named 'Me')
+    const keys = Object.keys(people);
     const hasData =
-      Object.keys(people).length > 1 ||
-      (people[INITIAL_ROOT_ID] && people[INITIAL_ROOT_ID].firstName !== 'Me');
+      keys.length > 1 ||
+      (keys.length === 1 && people[keys[0]] && people[keys[0]].firstName !== 'Me');
     if (hasData) {
       const timer = setTimeout(() => setShowWelcome(false), 0);
       return () => clearTimeout(timer);

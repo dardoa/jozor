@@ -1,9 +1,7 @@
 /// <reference types="vite/client" />
 import { Person, Gender } from './types';
 
-export const INITIAL_ROOT_ID = '00000000-0000-0000-0000-000000000001';
-export const SPOUSE_ID = '00000000-0000-0000-0000-000000000002';
-export const CHILD_ID = '00000000-0000-0000-0000-000000000003';
+ 
  
 export const Z_INDEX = {
   BASE: 0,
@@ -82,22 +80,7 @@ export const DEFAULT_PERSON_TEMPLATE: Omit<Person, 'id'> = {
   partnerDetails: {},
 };
 
-export const INITIAL_PERSON: Person = {
-  id: INITIAL_ROOT_ID,
-  ...DEFAULT_PERSON_TEMPLATE,
-  firstName: 'Me',
-  lastName: '',
-  gender: 'male',
-};
 
-export const SAMPLE_FAMILY: Record<string, Person> = {
-  [INITIAL_ROOT_ID]: {
-    ...INITIAL_PERSON,
-    firstName: 'Me',
-    lastName: '',
-    gender: 'male',
-  },
-};
 
 export const GENDER_OPTIONS: { value: Gender; label: string }[] = [
   { value: 'male', label: 'Male' },
