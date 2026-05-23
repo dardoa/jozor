@@ -64,10 +64,10 @@ function getCronSecret() {
   return getEnv('CRON_SECRET');
 }
 
-function isAuthorizedCronRequest(req: VercelRequest) {
+function getCronAuthFailure(req: VercelRequest): { status: number; error: string } | null {
   const cronSecret = getCronSecret();
   if (!cronSecret) {
-    throw new Error('Missing CRON_SECRET environment variable.');
+    return { status: 503, error: 'CRON_SECRET is not configured' };
   }
 
   const authorization = req.headers.authorization;
@@ -75,7 +75,7 @@ function isAuthorizedCronRequest(req: VercelRequest) {
     ? authorization.slice('Bearer '.length).trim()
     : undefined;
 
-  return bearerToken === cronSecret;
+  return bearerToken === cronSecret ? null : { status: 401, error: 'Unauthorized' };
 }
 
 function parseBatchSize(value: string | string[] | undefined) {
@@ -392,8 +392,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    if (!isAuthorizedCronRequest(req)) {
-      return res.status(401).json({ error: 'Unauthorized' });
+    const authFailure = getCronAuthFailure(req);
+    if (authFailure) {
+      return res.status(authFailure.status).json({ error: authFailure.error });
     }
 
     const batchSize = parseBatchSize(req.query.limit);

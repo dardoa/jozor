@@ -56,3 +56,6 @@ lint*.json
 .codex-*/
 .playwright-cli/
 tmp-*/
+
+.vercel
+.env*.local
