@@ -18,6 +18,21 @@ requests to `src/api` through `scripts/dev/localApiProxyMiddleware.ts`.
 | `/api/push-notifier` | `api/push-notifier.ts` | `src/api/push-notifier.ts` | Node | Authenticated or cron-secret push delivery. |
 | `/api/push-reminder-cron` | `api/push-reminder-cron.ts` | `src/api/push-reminder-cron.ts` | Node | Cron-secret scheduled reminder processing. |
 
+## Required Vercel Environment
+
+| Variable | Required by | Notes |
+| --- | --- | --- |
+| `SUPABASE_URL` | `maintenance`, `ai-proxy`, push APIs | Server-side Supabase project URL. |
+| `SUPABASE_SERVICE_ROLE_KEY` | `maintenance`, `ai-proxy`, push APIs | Server-only service role key. Never expose as `VITE_*`. |
+| `SUPABASE_JWT_SECRET` | `auth/exchange`, auth utilities | Used to mint/verify internal Supabase JWTs. |
+| `GOOGLE_CLIENT_ID` | `auth/exchange` | Server-side OAuth client id; may match `VITE_GOOGLE_CLIENT_ID`. |
+| `GOOGLE_CLIENT_SECRET` | `auth/exchange` | Server-only OAuth client secret. |
+| `ENCRYPTION_SECRET` | `auth/exchange` | Required when refresh tokens are stored. |
+| `GOOGLE_AI_KEY` or `GEMINI_API_KEY` | `ai-proxy` | Server-only AI provider key for Kindi/AI features. |
+| `VAPID_PUBLIC_KEY` | `push-notifier` | Web Push public key for server payload signing. |
+| `VAPID_PRIVATE_KEY` | `push-notifier` | Server-only Web Push private key. |
+| `CRON_SECRET` | `push-reminder-cron`, `push-notifier` | Vercel Cron bearer token and internal push authorization. |
+
 ## Scheduled Jobs
 
 `vercel.json` schedules one daily job:
