@@ -31,6 +31,8 @@ Operational notes:
 - The schedule is daily to stay compatible with Vercel Hobby limits.
 - The endpoint requires `CRON_SECRET`; Vercel sends it as an `Authorization`
   bearer header when the environment variable is configured.
+- Each run processes up to 10 batches by default, with 50 subscribed users per
+  batch. The response includes `nextCursor` if a manual continuation is needed.
 - Delivery is idempotent at the reminder level through
   `push_reminder_deliveries` dedupe keys.
 

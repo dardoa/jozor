@@ -6,8 +6,10 @@ import { mapDbPersonRowToPerson, type DbPersonRow } from '../services/personRowM
 import { buildScheduledBirthdayNotifications } from '../services/scheduledNotifications';
 import type { Person } from '../types';
 
-const DEFAULT_BATCH_SIZE = 25;
+const DEFAULT_BATCH_SIZE = 50;
 const MAX_BATCH_SIZE = 50;
+const DEFAULT_MAX_BATCHES = 10;
+const MAX_BATCHES = 25;
 
 type ReminderDeliveryResult = {
   deliveredNotifications: number;
@@ -57,6 +59,16 @@ const parseBatchSize = (value: string | string[] | undefined) => {
   }
 
   return Math.min(Math.floor(parsed), MAX_BATCH_SIZE);
+};
+
+const parseMaxBatches = (value: string | string[] | undefined) => {
+  const rawValue = Array.isArray(value) ? value[0] : value;
+  const parsed = Number(rawValue);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return DEFAULT_MAX_BATCHES;
+  }
+
+  return Math.min(Math.floor(parsed), MAX_BATCHES);
 };
 
 const parseDateOverride = (value: string | string[] | undefined) => {
@@ -204,6 +216,16 @@ export const processReminderBatch = async (params: {
   return result;
 };
 
+const addReminderResults = (
+  target: ReminderDeliveryResult,
+  source: ReminderDeliveryResult
+) => {
+  target.deliveredNotifications += source.deliveredNotifications;
+  target.skippedNotifications += source.skippedNotifications;
+  target.sentSubscriptions += source.sentSubscriptions;
+  target.prunedSubscriptions += source.prunedSubscriptions;
+};
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Allow', ['GET']);
 
@@ -217,23 +239,53 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const batchSize = parseBatchSize(req.query.limit);
-    const cursor = Array.isArray(req.query.cursor) ? req.query.cursor[0] : req.query.cursor;
+    const maxBatches = parseMaxBatches(req.query.maxBatches);
+    let cursor = Array.isArray(req.query.cursor) ? req.query.cursor[0] : req.query.cursor;
     const now = parseDateOverride(req.query.date);
 
-    const batch = await listSubscribedUserIdsServer({
-      afterUserId: cursor,
-      limit: batchSize,
-    });
+    const processed: ReminderDeliveryResult = {
+      deliveredNotifications: 0,
+      skippedNotifications: 0,
+      sentSubscriptions: 0,
+      prunedSubscriptions: 0,
+    };
+    let processedUsers = 0;
+    let batchesProcessed = 0;
+    let nextCursor: string | null = null;
 
-    const processed = await processReminderBatch({
-      userIds: batch.userIds,
-      now,
-    });
+    while (batchesProcessed < maxBatches) {
+      const batch = await listSubscribedUserIdsServer({
+        afterUserId: cursor,
+        limit: batchSize,
+      });
+
+      if (batch.userIds.length === 0) {
+        nextCursor = null;
+        break;
+      }
+
+      addReminderResults(processed, await processReminderBatch({
+        userIds: batch.userIds,
+        now,
+      }));
+
+      processedUsers += batch.userIds.length;
+      batchesProcessed += 1;
+      nextCursor = batch.nextCursor ?? null;
+
+      if (!batch.nextCursor) {
+        break;
+      }
+
+      cursor = batch.nextCursor;
+    }
 
     return res.status(200).json({
-      processedUsers: batch.userIds.length,
+      processedUsers,
       batchSize,
-      nextCursor: batch.nextCursor ?? null,
+      batchesProcessed,
+      maxBatches,
+      nextCursor,
       evaluatedAt: now.toISOString(),
       ...processed,
     });

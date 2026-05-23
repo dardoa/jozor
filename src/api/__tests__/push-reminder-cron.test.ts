@@ -164,6 +164,9 @@ describe('push-reminder-cron API', () => {
     expect(res.body).toEqual(
       expect.objectContaining({
         processedUsers: 1,
+        batchesProcessed: 1,
+        maxBatches: 10,
+        nextCursor: null,
         deliveredNotifications: 1,
         skippedNotifications: 0,
         sentSubscriptions: 1,
@@ -194,6 +197,95 @@ describe('push-reminder-cron API', () => {
       expect.objectContaining({
         deliveredNotifications: 0,
         skippedNotifications: 1,
+      })
+    );
+  });
+
+  it('processes multiple subscribed-user batches in one cron run', async () => {
+    listSubscribedUserIdsServerMock
+      .mockResolvedValueOnce({
+        userIds: ['user-1'],
+        nextCursor: 'user-1',
+      })
+      .mockResolvedValueOnce({
+        userIds: ['user-2'],
+        nextCursor: null,
+      });
+    sendPushNotificationToUserMock.mockResolvedValue({
+      sent: 1,
+      pruned: 0,
+      totalSubscriptions: 1,
+    });
+    createClientMock.mockImplementation(() => createSupabaseMock());
+
+    const req = {
+      method: 'GET',
+      headers: { authorization: 'Bearer cron-secret' },
+      query: {
+        date: '2026-03-27T09:00:00.000Z',
+        limit: '1',
+        maxBatches: '2',
+      },
+    };
+    const res = createResponse();
+
+    await handler(req as never, res as never);
+
+    expect(listSubscribedUserIdsServerMock).toHaveBeenNthCalledWith(1, {
+      afterUserId: undefined,
+      limit: 1,
+    });
+    expect(listSubscribedUserIdsServerMock).toHaveBeenNthCalledWith(2, {
+      afterUserId: 'user-1',
+      limit: 1,
+    });
+    expect(sendPushNotificationToUserMock).toHaveBeenCalledTimes(2);
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toEqual(
+      expect.objectContaining({
+        processedUsers: 2,
+        batchesProcessed: 2,
+        maxBatches: 2,
+        nextCursor: null,
+        deliveredNotifications: 2,
+        sentSubscriptions: 2,
+      })
+    );
+  });
+
+  it('returns nextCursor when the configured batch cap is reached', async () => {
+    listSubscribedUserIdsServerMock.mockResolvedValue({
+      userIds: ['user-1'],
+      nextCursor: 'user-1',
+    });
+    sendPushNotificationToUserMock.mockResolvedValue({
+      sent: 1,
+      pruned: 0,
+      totalSubscriptions: 1,
+    });
+    createClientMock.mockImplementation(() => createSupabaseMock());
+
+    const req = {
+      method: 'GET',
+      headers: { authorization: 'Bearer cron-secret' },
+      query: {
+        date: '2026-03-27T09:00:00.000Z',
+        limit: '1',
+        maxBatches: '1',
+      },
+    };
+    const res = createResponse();
+
+    await handler(req as never, res as never);
+
+    expect(listSubscribedUserIdsServerMock).toHaveBeenCalledTimes(1);
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toEqual(
+      expect.objectContaining({
+        processedUsers: 1,
+        batchesProcessed: 1,
+        maxBatches: 1,
+        nextCursor: 'user-1',
       })
     );
   });
