@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { sendPushNotificationToUser } from './push-notifier';
 import { listSubscribedUserIdsServer } from '../services/pushSubscriptionService';
 import { mapDbPersonRowToPerson, type DbPersonRow } from '../services/personRowMapper';
@@ -11,6 +11,7 @@ const MAX_BATCH_SIZE = 50;
 const DEFAULT_MAX_BATCHES = 10;
 const MAX_BATCHES = 25;
 const DEFAULT_DELIVERY_RETENTION_DAYS = 90;
+let serverClient: SupabaseClient | null = null;
 
 type ReminderDeliveryResult = {
   deliveredNotifications: number;
@@ -27,13 +28,17 @@ const getServerClient = () => {
     throw new Error('Supabase server environment variables are not configured for reminder cron.');
   }
 
-  return createClient(supabaseUrl, serviceRoleKey, {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-      detectSessionInUrl: false,
-    },
-  });
+  if (!serverClient) {
+    serverClient = createClient(supabaseUrl, serviceRoleKey, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false,
+      },
+    });
+  }
+
+  return serverClient;
 };
 
 const getCronSecret = () => process.env.CRON_SECRET?.trim();

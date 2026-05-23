@@ -6,6 +6,7 @@ const sendPushNotificationToUserMock = vi.fn();
 const createClientMock = vi.fn();
 const deleteOldDeliveriesMock = vi.fn();
 const insertDeliveryClaimMock = vi.fn();
+let duplicateClaimMode = false;
 
 vi.mock('../../services/pushSubscriptionService', () => ({
   listSubscribedUserIdsServer: (...args: unknown[]) => listSubscribedUserIdsServerMock(...args),
@@ -42,9 +43,7 @@ const createResponse = () => {
   return response;
 };
 
-const createSupabaseMock = (options?: {
-  duplicateClaim?: boolean;
-}) => ({
+const createSupabaseMock = () => ({
   from(table: string) {
     if (table === 'trees') {
       return {
@@ -110,7 +109,7 @@ const createSupabaseMock = (options?: {
         insert(payload: unknown) {
           insertDeliveryClaimMock(payload);
           return Promise.resolve(
-            options?.duplicateClaim
+            duplicateClaimMode
               ? { error: { code: '23505' } }
               : { error: null }
           );
@@ -127,6 +126,7 @@ describe('push-reminder-cron API', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    duplicateClaimMode = false;
     process.env = {
       ...originalEnv,
       CRON_SECRET: 'cron-secret',
@@ -195,7 +195,8 @@ describe('push-reminder-cron API', () => {
       userIds: ['user-1'],
       nextCursor: null,
     });
-    createClientMock.mockImplementation(() => createSupabaseMock({ duplicateClaim: true }));
+    duplicateClaimMode = true;
+    createClientMock.mockImplementation(() => createSupabaseMock());
 
     const req = {
       method: 'GET',
