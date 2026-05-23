@@ -38,7 +38,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (req.method === 'GET') {
       const { fileId, treeId } = req.query as { fileId?: string; treeId?: string };
       if (fileId && !treeId) {
-        return res.status(400).json({ error: 'treeId is required' });
+        return res.status(410).json({
+          error: {
+            message: 'Legacy Google Drive proxy sharing has been disabled. Use a database-backed shared tree link.',
+            code: 'LEGACY_DRIVE_SHARING_DISABLED',
+          },
+        });
       }
 
       if (!treeId) {

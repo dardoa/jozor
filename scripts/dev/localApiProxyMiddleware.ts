@@ -2,7 +2,10 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { Plugin } from 'vite';
 
 type LocalProxyBody = Record<string, unknown>;
-type LocalRequest = IncomingMessage & { body?: LocalProxyBody };
+type LocalRequest = IncomingMessage & {
+  body?: LocalProxyBody;
+  query?: Record<string, string>;
+};
 type LocalResponse = ServerResponse & {
   status: (code: number) => LocalResponse;
   json: (payload: unknown) => LocalResponse;
@@ -177,45 +180,26 @@ const handleAuthExchange = async (
   }
 };
 
+const toQueryObject = (url: URL): Record<string, string> =>
+  Object.fromEntries(Array.from(url.searchParams.entries()));
+
 const handleDbProxy = async (
+  req: LocalRequest,
   url: URL,
   res: ServerResponse,
+  body: LocalProxyBody,
   env: LocalApiProxyEnv
 ) => {
-  const supabaseUrl = env.SUPABASE_URL || env.VITE_SUPABASE_URL;
-  const serviceRoleKey = env.SUPABASE_SERVICE_ROLE_KEY;
-  const legacyFileId = url.searchParams.get('fileId');
-  const searchId = url.searchParams.get('treeId') || url.searchParams.get('id');
-
-  if (legacyFileId && !searchId) {
-    sendJson(res, 410, {
-      error: {
-        message: 'Legacy Google Drive proxy sharing has been disabled. Use a database-backed shared tree link.',
-        code: 'LEGACY_DRIVE_SHARING_DISABLED',
-      },
-    });
-    return;
+  try {
+    syncProcessEnv(env);
+    const { default: proxyHandler } = await import('../../src/api/proxy');
+    const localResponse = createLocalResponse(res);
+    req.body = body;
+    req.query = toQueryObject(url);
+    await (proxyHandler as any)(req, localResponse);
+  } catch (error: unknown) {
+    sendJson(res, 500, { error: getErrorMessage(error) });
   }
-
-  if (!searchId) {
-    sendJson(res, 400, { error: 'treeId required' });
-    return;
-  }
-
-  const treeUrl = `${supabaseUrl}/rest/v1/trees?id=eq.${searchId}&select=*,people(*),relationships(*)`;
-  const treeRes = await fetch(treeUrl, {
-    headers: { apikey: serviceRoleKey!, Authorization: `Bearer ${serviceRoleKey}` },
-  });
-  const trees = await treeRes.json();
-
-  if (trees && Array.isArray(trees) && trees[0]) {
-    res.end(JSON.stringify(trees[0]));
-    return;
-  }
-
-  sendJson(res, 404, {
-    error: 'Tree not found. If this is a Google Drive file, ensure it has been imported to the database for collaborative sharing.',
-  });
 };
 
 export const createLocalApiProxyMiddleware = (env: LocalApiProxyEnv): Plugin => ({
@@ -250,7 +234,7 @@ export const createLocalApiProxyMiddleware = (env: LocalApiProxyEnv): Plugin => 
       }
 
       if (pathName === '/api/proxy') {
-        await handleDbProxy(url, res, env);
+        await handleDbProxy(req as LocalRequest, url, res, body, env);
         return;
       }
 

@@ -2,6 +2,21 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { describe, expect, it, vi } from 'vitest';
 import { createLocalApiProxyMiddleware } from './localApiProxyMiddleware';
 
+const authenticateUserMock = vi.fn();
+const createSupabaseClientForUserMock = vi.fn();
+
+vi.mock('../../src/utils/authUtils', () => ({
+  authenticateUser: (...args: unknown[]) => authenticateUserMock(...args),
+  createSupabaseClientForUser: (...args: unknown[]) => createSupabaseClientForUserMock(...args),
+}));
+
+vi.mock('../../src/utils/errorLogger', () => ({
+  logError: vi.fn((_context: string, error: unknown) => ({
+    message: error instanceof Error ? error.message : 'Unknown error',
+  })),
+  logInfo: vi.fn(),
+}));
+
 const createResponse = () => {
   const response = {
     statusCode: 200,
@@ -20,6 +35,14 @@ const createResponse = () => {
 
 describe('createLocalApiProxyMiddleware', () => {
   it('returns 410 for disabled legacy Drive fileId sharing links', async () => {
+    authenticateUserMock.mockResolvedValue({
+      type: 'internal',
+      token: 'supabase-token',
+      uid: 'user-1',
+      email: 'user@example.com',
+    });
+    createSupabaseClientForUserMock.mockReturnValue({});
+
     let handler:
       | ((req: IncomingMessage, res: ServerResponse, next: () => void) => Promise<void>)
       | undefined;
@@ -41,7 +64,7 @@ describe('createLocalApiProxyMiddleware', () => {
     const req = {
       method: 'GET',
       url: '/proxy?fileId=drive-file-1',
-      headers: { host: 'localhost:3000' },
+      headers: { host: 'localhost:3000', authorization: 'Bearer token' },
       [Symbol.asyncIterator]: async function* () {},
     } as IncomingMessage;
     const res = createResponse();

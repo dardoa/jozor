@@ -49,7 +49,7 @@ describe('proxy API', () => {
     createSupabaseClientForUserMock.mockReturnValue({});
   });
 
-  it('requires treeId for shared tree proxy reads', async () => {
+  it('rejects legacy Drive fileId proxy reads', async () => {
     const req = {
       method: 'GET',
       headers: { authorization: 'Bearer token' },
@@ -59,9 +59,12 @@ describe('proxy API', () => {
 
     await handler(req as never, res as never);
 
-    expect(res.statusCode).toBe(400);
+    expect(res.statusCode).toBe(410);
     expect(res.body).toEqual({
-      error: 'treeId is required',
+      error: {
+        message: 'Legacy Google Drive proxy sharing has been disabled. Use a database-backed shared tree link.',
+        code: 'LEGACY_DRIVE_SHARING_DISABLED',
+      },
     });
   });
 
