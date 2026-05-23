@@ -1,1 +1,4 @@
-export { default, sendPushNotificationToUser } from '../src/api/push-notifier';
+import handler, { sendPushNotificationToUser } from '../src/api/push-notifier';
+
+export { sendPushNotificationToUser };
+export default handler;

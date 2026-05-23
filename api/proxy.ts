@@ -1,1 +1,3 @@
-export { default } from '../src/api/proxy';
+import handler from '../src/api/proxy';
+
+export default handler;
