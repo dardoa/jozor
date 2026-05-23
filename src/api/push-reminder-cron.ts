@@ -10,6 +10,7 @@ const DEFAULT_BATCH_SIZE = 50;
 const MAX_BATCH_SIZE = 50;
 const DEFAULT_MAX_BATCHES = 10;
 const MAX_BATCHES = 25;
+const DEFAULT_DELIVERY_RETENTION_DAYS = 90;
 
 type ReminderDeliveryResult = {
   deliveredNotifications: number;
@@ -149,6 +150,22 @@ const claimReminderDelivery = async (userId: string, dedupeKey: string, type: st
   throw error;
 };
 
+const pruneReminderDeliveries = async (
+  now: Date,
+  retentionDays = DEFAULT_DELIVERY_RETENTION_DAYS
+) => {
+  const cutoff = new Date(now.getTime() - retentionDays * 86_400_000).toISOString();
+  const client = getServerClient();
+  const { error } = await client
+    .from('push_reminder_deliveries')
+    .delete()
+    .lt('created_at', cutoff);
+
+  if (error) {
+    throw error;
+  }
+};
+
 export const processReminderBatch = async (params: {
   userIds: string[];
   now: Date;
@@ -242,6 +259,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const maxBatches = parseMaxBatches(req.query.maxBatches);
     let cursor = Array.isArray(req.query.cursor) ? req.query.cursor[0] : req.query.cursor;
     const now = parseDateOverride(req.query.date);
+    await pruneReminderDeliveries(now);
 
     const processed: ReminderDeliveryResult = {
       deliveredNotifications: 0,

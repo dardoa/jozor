@@ -4,6 +4,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const listSubscribedUserIdsServerMock = vi.fn();
 const sendPushNotificationToUserMock = vi.fn();
 const createClientMock = vi.fn();
+const deleteOldDeliveriesMock = vi.fn();
+const insertDeliveryClaimMock = vi.fn();
 
 vi.mock('../../services/pushSubscriptionService', () => ({
   listSubscribedUserIdsServer: (...args: unknown[]) => listSubscribedUserIdsServerMock(...args),
@@ -97,7 +99,16 @@ const createSupabaseMock = (options?: {
 
     if (table === 'push_reminder_deliveries') {
       return {
-        insert() {
+        delete() {
+          return {
+            lt(column: string, cutoff: string) {
+              deleteOldDeliveriesMock(column, cutoff);
+              return Promise.resolve({ error: null });
+            },
+          };
+        },
+        insert(payload: unknown) {
+          insertDeliveryClaimMock(payload);
           return Promise.resolve(
             options?.duplicateClaim
               ? { error: { code: '23505' } }
@@ -151,6 +162,10 @@ describe('push-reminder-cron API', () => {
       afterUserId: undefined,
       limit: 10,
     });
+    expect(deleteOldDeliveriesMock).toHaveBeenCalledWith(
+      'created_at',
+      '2025-12-27T09:00:00.000Z'
+    );
     expect(sendPushNotificationToUserMock).toHaveBeenCalledWith(
       expect.objectContaining({
         userId: 'user-1',

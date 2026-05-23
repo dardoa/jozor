@@ -33,6 +33,8 @@ Operational notes:
   bearer header when the environment variable is configured.
 - Each run processes up to 10 batches by default, with 50 subscribed users per
   batch. The response includes `nextCursor` if a manual continuation is needed.
+- Each run prunes `push_reminder_deliveries` rows older than 90 days before
+  processing new reminders.
 - Delivery is idempotent at the reminder level through
   `push_reminder_deliveries` dedupe keys.
 
