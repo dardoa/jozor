@@ -18,6 +18,22 @@ requests to `src/api` through `scripts/dev/localApiProxyMiddleware.ts`.
 | `/api/push-notifier` | `api/push-notifier.ts` | `src/api/push-notifier.ts` | Node | Authenticated or cron-secret push delivery. |
 | `/api/push-reminder-cron` | `api/push-reminder-cron.ts` | `src/api/push-reminder-cron.ts` | Node | Cron-secret scheduled reminder processing. |
 
+## Scheduled Jobs
+
+`vercel.json` schedules one daily job:
+
+| Path | Schedule | Purpose |
+| --- | --- | --- |
+| `/api/push-reminder-cron` | `0 4 * * *` | Process a bounded batch of subscribed users for scheduled birthday reminders. |
+
+Operational notes:
+
+- The schedule is daily to stay compatible with Vercel Hobby limits.
+- The endpoint requires `CRON_SECRET`; Vercel sends it as an `Authorization`
+  bearer header when the environment variable is configured.
+- Delivery is idempotent at the reminder level through
+  `push_reminder_deliveries` dedupe keys.
+
 ## Intentionally Not Published
 
 | Source handler | Reason |
