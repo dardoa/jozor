@@ -1,4 +1,5 @@
 import React, { memo, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Check, CornerDownLeft, Mic, MicOff, Send, ShieldCheck, Sparkles, X } from 'lucide-react';
 
 import { KindiIcon } from '../../../components/icons/KindiIcon';
@@ -303,7 +304,7 @@ export const KindiOverlay: React.FC<KindiOverlayProps> = memo(({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [isOpen, isThinking, messages]);
 
-  if (!isOpen) return null;
+  if (!isOpen || typeof document === 'undefined') return null;
 
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget && !hasPendingDecision) {
@@ -311,7 +312,7 @@ export const KindiOverlay: React.FC<KindiOverlayProps> = memo(({
     }
   };
 
-  return (
+  return createPortal(
     <div
       data-testid="kindi-backdrop"
       onClick={handleBackdropClick}
@@ -374,9 +375,9 @@ export const KindiOverlay: React.FC<KindiOverlayProps> = memo(({
         role="dialog"
         aria-modal="true"
         aria-label="Kindi intelligent assistant"
-        className="animate-kindi-drawer flex h-[calc(100vh-2rem)] sm:h-[calc(100vh-3rem)] w-full max-w-md sm:max-w-[480px] flex-col overflow-hidden rounded-[2rem] border border-[var(--border-main)]/60 bg-[var(--surface-app)]/85 backdrop-blur-xl shadow-2xl m-4 sm:my-6 sm:me-6 sm:ms-0"
+        className="animate-kindi-drawer flex h-full sm:h-[calc(100vh-3rem)] w-full sm:max-w-[480px] flex-col overflow-hidden rounded-none sm:rounded-[2rem] border-none sm:border sm:border-[var(--border-main)]/60 bg-[var(--surface-app)] sm:bg-[var(--surface-app)]/85 sm:backdrop-blur-xl shadow-2xl m-0 sm:my-6 sm:me-6 sm:ms-0"
       >
-        <header className="flex items-center justify-between border-b border-[var(--border-soft)]/50 px-4 py-3.5 bg-[var(--surface-app)]/40">
+        <header className="flex items-center justify-between border-b border-[var(--border-soft)]/50 px-4 py-3.5 bg-[var(--surface-app)] sm:bg-[var(--surface-app)]/40">
           <div className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl bg-[var(--primary-600)] shadow-sm ring-1 ring-[var(--border-soft)]/50">
               <KindiIcon size={38} className="h-9 w-9 object-contain" />
@@ -499,7 +500,7 @@ export const KindiOverlay: React.FC<KindiOverlayProps> = memo(({
         </div>
 
         <form
-          className="border-t border-[var(--border-soft)]/50 bg-[var(--surface-panel)]/40 p-4 backdrop-blur-md"
+          className="border-t border-[var(--border-soft)]/50 bg-[var(--surface-panel)] sm:bg-[var(--surface-panel)]/40 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:pb-4 sm:backdrop-blur-md"
           onSubmit={(event) => {
             event.preventDefault();
             onSubmit();
@@ -564,6 +565,7 @@ export const KindiOverlay: React.FC<KindiOverlayProps> = memo(({
           </div>
         </form>
       </section>
-    </div>
+    </div>,
+    document.body
   );
 });
