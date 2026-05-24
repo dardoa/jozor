@@ -34,12 +34,7 @@ export const useAppModals = () => {
         setCleanTreeOptionsModal({ isOpen: true });
     }, []);
 
-    const [treeManagerModal, setTreeManagerModal] = useState<{ isOpen: boolean }>({
-        isOpen: false,
-    });
-
     const onOpenTreeManager = useCallback(() => {
-        setTreeManagerModal({ isOpen: false });
         setVaultTab('trees');
         setVaultOpen(true);
     }, [setVaultOpen, setVaultTab]);
@@ -49,13 +44,10 @@ export const useAppModals = () => {
         sharedTrees: SharedTreeSummary[];
     }>({ isOpen: false, sharedTrees: [] });
 
-    const [snapshotHistoryModal, setSnapshotHistoryModal] = useState<{ isOpen: boolean }>({
-        isOpen: false,
-    });
-
     const onOpenSnapshotHistory = useCallback(() => {
-        setSnapshotHistoryModal({ isOpen: true });
-    }, []);
+        setVaultTab('cloud');
+        setVaultOpen(true);
+    }, [setVaultOpen, setVaultTab]);
 
     const [globalSettingsModal, setGlobalSettingsModal] = useState<{ isOpen: boolean }>({
         isOpen: false,
@@ -82,11 +74,7 @@ export const useAppModals = () => {
         onOpenCleanTreeOptions,
         sharedTreePromptModal,
         setSharedTreePromptModal,
-        treeManagerModal,
-        setTreeManagerModal,
         onOpenTreeManager,
-        snapshotHistoryModal,
-        setSnapshotHistoryModal,
         onOpenSnapshotHistory,
         globalSettingsModal,
         setGlobalSettingsModal,

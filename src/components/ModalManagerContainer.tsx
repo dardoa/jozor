@@ -37,8 +37,6 @@ export const ModalManagerContainer: React.FC<ModalManagerContainerProps> = memo(
         setGoogleSyncChoiceModal={modals.setGoogleSyncChoiceModal}
         driveFileManagerModal={modals.driveFileManagerModal}
         setDriveFileManagerModal={modals.setDriveFileManagerModal}
-        treeManagerModal={modals.treeManagerModal}
-        setTreeManagerModal={modals.setTreeManagerModal}
         activeTreeId={appState.currentTreeId}
         onTreeSelected={appState.setCurrentTreeId}
         people={appState.people}
@@ -86,8 +84,6 @@ export const ModalManagerContainer: React.FC<ModalManagerContainerProps> = memo(
             // Leave user feedback to the caller (DriveFileManagerModal already shows toasts)
           }
         }}
-        snapshotHistoryModal={modals.snapshotHistoryModal}
-        setSnapshotHistoryModal={modals.setSnapshotHistoryModal}
         googleSync={googleSync}
         themeLanguage={themeLanguage}
         globalSettingsModal={modals.globalSettingsModal}

@@ -56,14 +56,6 @@ export interface WelcomeScreenLogicProps {
     onTriggerImportFile: () => void;
 }
 
-export interface TreeManagerModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    ownerId: string;
-    activeTreeId: string | null;
-    onTreeSelected: (treeId: string) => void;
-}
-
 export interface LinkModalState {
     isOpen: boolean;
     type: 'parent' | 'spouse' | 'child' | null;
@@ -84,8 +76,6 @@ export interface ModalStateAndActions {
     setGoogleSyncChoiceModal: (val: { isOpen: boolean; driveFileId: string | null }) => void;
     driveFileManagerModal: { isOpen: boolean };
     setDriveFileManagerModal: (val: { isOpen: boolean }) => void;
-    treeManagerModal: { isOpen: boolean };
-    setTreeManagerModal: (val: { isOpen: boolean }) => void;
     handleOpenLinkModal: (
         type: 'parent' | 'spouse' | 'child',
         gender: Gender,
@@ -96,8 +86,6 @@ export interface ModalStateAndActions {
     onOpenTreeManager: () => void;
     sharedTreePromptModal: { isOpen: boolean; sharedTrees: SharedTreeSummary[] };
     setSharedTreePromptModal: (val: { isOpen: boolean; sharedTrees: SharedTreeSummary[] }) => void;
-    snapshotHistoryModal: { isOpen: boolean };
-    setSnapshotHistoryModal: (val: { isOpen: boolean }) => void;
     onOpenSnapshotHistory: () => void;
     globalSettingsModal: { isOpen: boolean };
     setGlobalSettingsModal: (val: { isOpen: boolean }) => void;

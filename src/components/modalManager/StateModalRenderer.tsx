@@ -1,4 +1,3 @@
-import { EMPTY_STRING } from '../../constants';
 import type { ModalManagerProps } from './modalManagerTypes';
 import {
   CleanTreeOptionsModal,
@@ -7,8 +6,6 @@ import {
   GoogleSyncChoiceModal,
   LinkPersonModal,
   SharedTreePromptModal,
-  SnapshotHistoryModal,
-  TreeManagerModal,
 } from './lazyModals';
 
 export const StateModalRenderer = (modal: ModalManagerProps) => (
@@ -68,17 +65,6 @@ export const StateModalRenderer = (modal: ModalManagerProps) => (
       />
     ) : null}
 
-    {modal.treeManagerModal.isOpen ? (
-      <TreeManagerModal
-        isOpen={true}
-        onClose={() => modal.setTreeManagerModal({ isOpen: false })}
-        ownerId={modal.user?.uid || EMPTY_STRING}
-        userEmail={modal.user?.email || EMPTY_STRING}
-        activeTreeId={modal.activeTreeId}
-        onTreeSelected={modal.onTreeSelected}
-      />
-    ) : null}
-
     {modal.sharedTreePromptModal.isOpen ? (
       <SharedTreePromptModal
         isOpen={true}
@@ -88,15 +74,6 @@ export const StateModalRenderer = (modal: ModalManagerProps) => (
           modal.setSharedTreePromptModal({ isOpen: false, sharedTrees: [] });
           modal.onTreeSelected(tree.id);
         }}
-      />
-    ) : null}
-
-    {modal.snapshotHistoryModal.isOpen ? (
-      <SnapshotHistoryModal
-        isOpen={true}
-        onClose={() => modal.setSnapshotHistoryModal({ isOpen: false })}
-        googleSync={modal.googleSync}
-        themeLanguage={modal.themeLanguage}
       />
     ) : null}
 

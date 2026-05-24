@@ -30,15 +30,9 @@ export const GeographicJourneyModal = lazy(() =>
 export const UnifiedLoginModal = lazy(() =>
   import('../modals/UnifiedLoginModal').then((module) => ({ default: module.UnifiedLoginModal }))
 );
-export const SnapshotHistoryModal = lazy(() =>
-  import('../../features/the-vault').then((module) => ({ default: module.SnapshotHistoryModal }))
-);
 export const GlobalSettingsModal = lazy(() =>
   import('../modals/GlobalSettingsModal').then((module) => ({ default: module.GlobalSettingsModal }))
 );
 export const DriveFileManagerModal = lazy(() =>
   import('../../features/drive-file-manager').then((module) => ({ default: module.DriveFileManagerModal }))
-);
-export const TreeManagerModal = lazy(() =>
-  import('../../features/tree-manager').then((module) => ({ default: module.TreeManagerModal }))
 );

@@ -43,14 +43,10 @@ export interface ModalManagerProps {
   refreshDriveFiles: GoogleSyncStateAndActions['refreshDriveFiles'];
   onImportLocalFile: (data: unknown) => Promise<void>;
   onGoogleLogin: () => Promise<void>;
-  treeManagerModal: ModalStateAndActions['treeManagerModal'];
-  setTreeManagerModal: ModalStateAndActions['setTreeManagerModal'];
   activeTreeId: string | null;
   onTreeSelected: (treeId: string) => void;
   sharedTreePromptModal: { isOpen: boolean; sharedTrees: SharedTreeSummary[] };
   setSharedTreePromptModal: (val: { isOpen: boolean; sharedTrees: SharedTreeSummary[] }) => void;
-  snapshotHistoryModal: { isOpen: boolean };
-  setSnapshotHistoryModal: (val: { isOpen: boolean }) => void;
   googleSync: GoogleSyncStateAndActions;
   themeLanguage: ThemeLanguageProps;
   globalSettingsModal: { isOpen: boolean };
