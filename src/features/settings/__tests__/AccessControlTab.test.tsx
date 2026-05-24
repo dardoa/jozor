@@ -59,7 +59,7 @@ vi.mock('../../../services/supabaseTreeCollaboratorService', () => ({
   revokeCollaboratorAccess: vi.fn(),
 }));
 
-vi.mock('../../../services/treeInvitationService', () => ({
+vi.mock('../../../features/sharing', () => ({
   createTreeInvitation: vi.fn(),
   listTreeInvitations: vi.fn().mockResolvedValue([]),
   revokeTreeInvitation: vi.fn(),

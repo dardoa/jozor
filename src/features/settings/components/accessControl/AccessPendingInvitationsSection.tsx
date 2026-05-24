@@ -1,6 +1,6 @@
 import React from 'react';
 import { Mail, Trash2 } from 'lucide-react';
-import type { TreeInvitation } from '../../../../services/treeInvitationService';
+import type { TreeInvitation } from '../../../../features/sharing';
 import type { AccessSectionText, AccessText } from './accessControlTypes';
 import { accessDescriptionClassName, accessSectionClassName } from './accessControlUtils';
 

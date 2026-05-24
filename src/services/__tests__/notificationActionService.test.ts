@@ -15,7 +15,7 @@ const {
   logErrorMock: vi.fn(),
 }));
 
-vi.mock('../treeInvitationService', () => ({
+vi.mock('../../features/sharing', () => ({
   acceptTreeInvitationById: (...args: unknown[]) => acceptTreeInvitationByIdMock(...args),
   declineTreeInvitation: (...args: unknown[]) => declineTreeInvitationMock(...args),
 }));

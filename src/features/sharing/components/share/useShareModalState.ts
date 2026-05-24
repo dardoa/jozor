@@ -1,7 +1,7 @@
 import { FormEvent, useState } from 'react';
 import type { UserProfile } from '../../../../types';
 import { useTranslation } from '../../../../context/TranslationContext';
-import { createTreeInvitation } from '../../../../services/treeInvitationService';
+import { createTreeInvitation } from '../../services/treeInvitationService';
 import { getUserFacingErrorInfo, logError } from '../../../../utils/errorLogger';
 import { showToast } from '../../../../utils/showToast';
 

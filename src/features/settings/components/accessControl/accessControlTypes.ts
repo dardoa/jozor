@@ -1,5 +1,5 @@
 import type { Collaborator } from '../../../../services/supabaseTreeTypes';
-import type { TreeInvitation } from '../../../../services/treeInvitationService';
+import type { TreeInvitation } from '../../../../features/sharing';
 import type { TranslationSchema } from '../../../../utils/translationLoader';
 
 export interface AccessControlTabProps {

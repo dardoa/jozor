@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import type { AuthProps, Person } from '../../types';
 import { loadSharedFile } from '../../services/proxyService';
 import { getUserFacingErrorInfo, logError } from '../../utils/errorLogger';
-import { acceptTreeInvitation } from '../../services/treeInvitationService';
+import { acceptTreeInvitation } from '../../features/sharing';
 import { fetchTreeAccessRole } from '../../services/supabaseTreeAccessService';
 import { authTokenService } from '../../services/authTokenService';
 

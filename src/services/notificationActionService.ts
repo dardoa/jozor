@@ -1,4 +1,4 @@
-import { acceptTreeInvitationById, declineTreeInvitation } from './treeInvitationService';
+import { acceptTreeInvitationById, declineTreeInvitation } from '../features/sharing';
 import { showToast } from '../utils/showToast';
 import { logError } from '../utils/errorLogger';
 import { getNotificationTranslation } from '../utils/notificationTranslations';

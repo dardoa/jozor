@@ -5,7 +5,7 @@ import {
   listMyPendingInvitations,
   subscribeToMyInvitations,
   subscribeToOwnedInvitations,
-} from '../../services/treeInvitationService';
+} from '../../features/sharing';
 import { activityService } from '../../features/activity-log';
 import { RealtimeSubscriber } from '../../services/sync/RealtimeSubscriber';
 import type { DeltaOperation } from '../../services/sync/SyncTypes';

@@ -35,7 +35,7 @@ import {
   revokeTreeInvitation,
   subscribeToMyInvitations,
   subscribeToOwnedInvitations,
-} from '../treeInvitationService';
+} from '../../features/sharing/services/treeInvitationService';
 
 type QueryResult<T> = { data: T; error: unknown };
 

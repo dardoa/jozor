@@ -37,7 +37,7 @@ vi.mock('../../../services/proxyService', () => ({
   loadSharedFile: loadSharedFileMock,
 }));
 
-vi.mock('../../../services/treeInvitationService', () => ({
+vi.mock('../../../features/sharing', () => ({
   acceptTreeInvitation: acceptTreeInvitationMock,
 }));
 

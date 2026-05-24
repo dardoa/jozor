@@ -1,5 +1,5 @@
-import { getSupabaseFull, getSupabaseWithAuth } from './supabaseClient';
-import { logError, logInfo, logWarn } from '../utils/errorLogger';
+import { getSupabaseFull, getSupabaseWithAuth } from '../../../services/supabaseClient';
+import { logError, logInfo, logWarn } from '../../../utils/errorLogger';
 
 export interface TreeInvitation {
   id: string;

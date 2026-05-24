@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ShieldAlert, ShieldCheck, Loader2 } from 'lucide-react';
 import { useAppStore } from '../store/useAppStore';
-import { acceptTreeInvitation } from '../services/treeInvitationService';
+import { acceptTreeInvitation } from '../features/sharing';
 import { showToast } from '../utils/showToast';
 
 export const InvitePage: React.FC = () => {

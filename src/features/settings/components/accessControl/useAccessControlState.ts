@@ -11,7 +11,7 @@ import {
   listTreeInvitations,
   revokeTreeInvitation,
   type TreeInvitation,
-} from '../../../../services/treeInvitationService';
+} from '../../../../features/sharing';
 import { useAppStore } from '../../../../store/useAppStore';
 import { logError } from '../../../../utils/errorLogger';
 import { showToast } from '../../../../utils/showToast';

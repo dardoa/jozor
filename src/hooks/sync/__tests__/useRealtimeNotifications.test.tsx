@@ -57,7 +57,7 @@ vi.mock('../../../store/useAppStore', () => ({
   useAppStore: useAppStoreMock,
 }));
 
-vi.mock('../../../services/treeInvitationService', () => ({
+vi.mock('../../../features/sharing', () => ({
   listMyPendingInvitations: (...args: unknown[]) => listMyPendingInvitationsMock(...args),
   subscribeToMyInvitations: (...args: unknown[]) => subscribeToMyInvitationsMock(...args),
   subscribeToOwnedInvitations: (...args: unknown[]) => subscribeToOwnedInvitationsMock(...args),
