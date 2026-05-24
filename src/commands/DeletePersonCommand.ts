@@ -41,11 +41,13 @@ export class DeletePersonCommand implements TreeCommand {
             rollbackStore.deletedPersonIds?.delete(this.id);
             rollbackStore.setPeople(preDeletePeople, false);
             rollbackStore.setFocusId(preDeleteFocusId);
+            void context.storageService.removeDeletedPersonId(rollbackStore.currentTreeId, this.id);
         };
 
         // 2. Storage clean-up
         try {
             await context.storageService.deletePerson(this.id);
+            await context.storageService.recordDeletedPersonId(freshStore.currentTreeId, this.id);
         } catch (error) {
             rollback();
             return {

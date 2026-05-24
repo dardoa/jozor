@@ -17,10 +17,17 @@ export interface PendingOperationRec {
     created_at: string;
 }
 
+export interface PersonTombstoneRec {
+    tree_id: string;
+    person_id: string;
+    deleted_at: string;
+}
+
 export class JozorDatabase extends Dexie {
     people!: Table<Person, string>;
     settings!: Table<LocalSetting, string>;
     pending_operations!: Table<PendingOperationRec, number>;
+    person_tombstones!: Table<PersonTombstoneRec, [string, string]>;
 
     constructor() {
         super('JozorDB');
@@ -34,6 +41,13 @@ export class JozorDatabase extends Dexie {
             settings: 'key',
             // tree_id for filtering, id is auto-increment PK
             pending_operations: '++id, tree_id'
+        });
+
+        this.version(3).stores({
+            people: 'id',
+            settings: 'key',
+            pending_operations: '++id, tree_id',
+            person_tombstones: '[tree_id+person_id], tree_id, person_id, deleted_at',
         });
     }
 }

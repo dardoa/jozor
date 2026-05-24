@@ -13,6 +13,7 @@ export function applyIncomingOps(params: {
     people: Record<string, Person>;
     maxVersion: number;
     syncingNodeIdsToRemove: string[];
+    deletedPersonIdsToRecord: string[];
     treeMetadata: {
         focusId?: string;
         rootId?: string;
@@ -25,6 +26,7 @@ export function applyIncomingOps(params: {
     let people = { ...params.people };
     let maxVersion = params.lastSyncedVersion;
     const syncingNodeIdsToRemove: string[] = [];
+    const deletedPersonIdsToRecord: string[] = [];
     const treeMetadata: {
         focusId?: string;
         rootId?: string;
@@ -61,11 +63,14 @@ export function applyIncomingOps(params: {
         } else {
             const updated = applyOperationToMap(people, op);
             if (updated) people = updated;
+            if (op.type === 'DELETE_NODE' && targetId) {
+                deletedPersonIdsToRecord.push(targetId);
+            }
         }
         if (op.version_seq && op.version_seq > maxVersion) maxVersion = op.version_seq;
 
         if (targetId) syncingNodeIdsToRemove.push(targetId);
     });
 
-    return { people, maxVersion, syncingNodeIdsToRemove, treeMetadata };
+    return { people, maxVersion, syncingNodeIdsToRemove, deletedPersonIdsToRecord, treeMetadata };
 }

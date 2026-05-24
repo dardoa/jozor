@@ -5,6 +5,7 @@ import type { ConflictResolver } from './ConflictResolver';
 import { applyIncomingOps } from './applyIncomingOps';
 import { backgroundTreePersistence } from './BackgroundTreePersistence';
 import { clientInstanceId } from './syncInstance';
+import { storageService } from '../storageService';
 
 export class DeltaOperationApplier {
     private incomingProcessingQueue: Promise<void> = Promise.resolve();
@@ -40,6 +41,14 @@ export class DeltaOperationApplier {
                                 });
                             },
                         });
+
+                        if (result.deletedPersonIdsToRecord.length > 0) {
+                            const uniqueDeletedIds = Array.from(new Set(result.deletedPersonIdsToRecord));
+                            await storageService.recordDeletedPersonIds(state.currentTreeId, uniqueDeletedIds);
+                            const mergedDeletedIds = new Set(state.deletedPersonIds);
+                            uniqueDeletedIds.forEach((id) => mergedDeletedIds.add(id));
+                            state.setDeletedPersonIds(mergedDeletedIds);
+                        }
 
                         result.syncingNodeIdsToRemove.forEach((id) => state.removeSyncingNode(id));
 

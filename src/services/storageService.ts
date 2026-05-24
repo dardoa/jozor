@@ -1,4 +1,4 @@
-import type { SettingValue, PendingOperationRec } from '../utils/db';
+import type { SettingValue, PendingOperationRec, PersonTombstoneRec } from '../utils/db';
 import { Person } from '../types';
 import { logError, logInfo } from '../utils/errorLogger';
 
@@ -6,6 +6,10 @@ const getLocalDb = async () => {
     const { db } = await import('../utils/db');
     return db;
 };
+
+const LOCAL_TREE_SCOPE = '__local__';
+
+const normalizeTreeScope = (treeId?: string | null) => treeId || LOCAL_TREE_SCOPE;
 
 export const storageService = {
     // --- People Data ---
@@ -73,6 +77,45 @@ export const storageService = {
     async deletePerson(id: string) {
         const db = await getLocalDb();
         await db.people.delete(id);
+    },
+
+    async recordDeletedPersonId(treeId: string | null | undefined, personId: string) {
+        const db = await getLocalDb();
+        const tombstone: PersonTombstoneRec = {
+            tree_id: normalizeTreeScope(treeId),
+            person_id: personId,
+            deleted_at: new Date().toISOString(),
+        };
+        await db.person_tombstones.put(tombstone);
+    },
+
+    async recordDeletedPersonIds(treeId: string | null | undefined, personIds: string[]) {
+        if (personIds.length === 0) return;
+        const db = await getLocalDb();
+        const treeScope = normalizeTreeScope(treeId);
+        const deletedAt = new Date().toISOString();
+        await db.person_tombstones.bulkPut(
+            Array.from(new Set(personIds)).map((personId) => ({
+                tree_id: treeScope,
+                person_id: personId,
+                deleted_at: deletedAt,
+            }))
+        );
+    },
+
+    async removeDeletedPersonId(treeId: string | null | undefined, personId: string) {
+        const db = await getLocalDb();
+        await db.person_tombstones.delete([normalizeTreeScope(treeId), personId]);
+    },
+
+    async getDeletedPersonIds(treeId: string | null | undefined): Promise<string[]> {
+        const db = await getLocalDb();
+        const treeScope = normalizeTreeScope(treeId);
+        const rows = await db.person_tombstones
+            .where('tree_id')
+            .equals(treeScope)
+            .toArray();
+        return rows.map((row) => row.person_id);
     },
 
     // --- Settings & Metadata ---

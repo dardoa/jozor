@@ -47,6 +47,30 @@ describe('applyIncomingOps', () => {
             name: 'Sovereign Tree',
         });
         expect(result.maxVersion).toBe(8);
+        expect(result.deletedPersonIdsToRecord).toEqual([]);
+    });
+
+    it('returns deleted person ids from incoming delete operations for persistence', () => {
+        const applyOperationToMap = vi.fn(() => ({}));
+        const op: DeltaOperation = {
+            tree_id: 'tree-1',
+            user_id: 'user-2',
+            type: 'DELETE_NODE',
+            payload: { id: 'person-1' },
+            version_seq: 9,
+        };
+
+        const result = applyIncomingOps({
+            people: { 'person-1': root },
+            ops: [op],
+            deletedPersonIds: new Set(),
+            lastSyncedVersion: 8,
+            applyOperationToMap,
+        });
+
+        expect(result.people).toEqual({});
+        expect(result.deletedPersonIdsToRecord).toEqual(['person-1']);
+        expect(result.maxVersion).toBe(9);
     });
 });
 

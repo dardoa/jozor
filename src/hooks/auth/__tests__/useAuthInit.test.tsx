@@ -16,6 +16,7 @@ const {
   resolveTreeByPersonMock,
   showErrorMock,
   logErrorMock,
+  getDeletedPersonIdsMock,
 } = vi.hoisted(() => ({
   reconcileTreeMock: vi.fn().mockResolvedValue(undefined),
   recoverPendingOperationsMock: vi.fn().mockResolvedValue(undefined),
@@ -26,6 +27,7 @@ const {
   resolveTreeByPersonMock: vi.fn(),
   showErrorMock: vi.fn(),
   logErrorMock: vi.fn(),
+  getDeletedPersonIdsMock: vi.fn().mockResolvedValue([]),
 }));
 
 vi.mock('../../../services/deltaSyncService', () => ({
@@ -47,6 +49,12 @@ vi.mock('../../../services/supabaseTreeAccessService', () => ({
 
 vi.mock('../../../services/treeService', () => ({
   resolveTreeByPerson: resolveTreeByPersonMock,
+}));
+
+vi.mock('../../../services/storageService', () => ({
+  storageService: {
+    getDeletedPersonIds: getDeletedPersonIdsMock,
+  },
 }));
 
 vi.mock('../../../utils/errorLogger', () => ({

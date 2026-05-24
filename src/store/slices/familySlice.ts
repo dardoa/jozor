@@ -44,6 +44,8 @@ export interface FamilySlice {
     // Actions
     setTreeName: (name: string) => void;
     setPeople: (people: Record<string, Person>, addToHistory?: boolean) => void;
+    setDeletedPersonIds: (ids: Iterable<string>) => void;
+    addDeletedPersonId: (id: string) => void;
     setFocusId: (id: string) => void;
     setSearchTarget: (id: string | null) => void;
     updatePerson: (id: string, updates: Partial<Person>, bypassSync?: boolean, addToHistory?: boolean) => void;
@@ -68,6 +70,17 @@ const resolveValidFocusId = (people: Record<string, Person>, preferredFocusId: s
         ? preferredFocusId
         : Object.keys(people)[0] || '';
 
+const filterDeletedPeople = (
+    people: Record<string, Person>,
+    deletedIds: Set<string>
+): Record<string, Person> => {
+    if (deletedIds.size === 0) return people;
+
+    return Object.fromEntries(
+        Object.entries(people).filter(([id]) => !deletedIds.has(id))
+    );
+};
+
 export const createFamilySlice: StateCreator<AppStore, [["zustand/devtools", never]], [], FamilySlice> = (set, get) => {
     const initial = getInitialFamilyState();
     return {
@@ -86,13 +99,7 @@ export const createFamilySlice: StateCreator<AppStore, [["zustand/devtools", nev
     setPeople: (people, addToHistory = true) => {
         const current = get().people;
         const deletedIds = get().deletedPersonIds;
-        
-        let filteredPeople = people;
-        if (deletedIds.size > 0) {
-            filteredPeople = Object.fromEntries(
-                Object.entries(people).filter(([id]) => !deletedIds.has(id))
-            );
-        }
+        const filteredPeople = filterDeletedPeople(people, deletedIds);
 
         if (addToHistory) get().pushToHistory(current);
 
@@ -101,6 +108,24 @@ export const createFamilySlice: StateCreator<AppStore, [["zustand/devtools", nev
             peopleVersion: state.peopleVersion + 1,
             focusId: resolveValidFocusId(filteredPeople, state.focusId),
         }));
+    },
+
+    setDeletedPersonIds: (ids) => {
+        const deletedPersonIds = new Set(ids);
+        const filteredPeople = filterDeletedPeople(get().people, deletedPersonIds);
+
+        set((state) => ({
+            deletedPersonIds,
+            people: filteredPeople,
+            peopleVersion: filteredPeople === state.people ? state.peopleVersion : state.peopleVersion + 1,
+            focusId: resolveValidFocusId(filteredPeople, state.focusId),
+        }));
+    },
+
+    addDeletedPersonId: (id) => {
+        const deletedPersonIds = new Set(get().deletedPersonIds);
+        deletedPersonIds.add(id);
+        set({ deletedPersonIds });
     },
 
     setFocusId: (id) => set({ focusId: id }),
@@ -236,13 +261,7 @@ export const createFamilySlice: StateCreator<AppStore, [["zustand/devtools", nev
 
     loadCloudData: (cloudPeople) => {
         const deletedIds = get().deletedPersonIds;
-        
-        let filteredPeople = cloudPeople;
-        if (deletedIds.size > 0) {
-            filteredPeople = Object.fromEntries(
-                Object.entries(cloudPeople).filter(([id]) => !deletedIds.has(id))
-            );
-        }
+        const filteredPeople = filterDeletedPeople(cloudPeople, deletedIds);
 
         set((state) => ({
             people: filteredPeople,
@@ -259,19 +278,14 @@ export const createFamilySlice: StateCreator<AppStore, [["zustand/devtools", nev
             people: initial.people,
             peopleVersion: state.peopleVersion + 1,
             focusId: initial.focusId,
+            deletedPersonIds: new Set<string>(),
         }));
         get().clearHistory();
     },
 
     handleImport: (importedPeople) => {
         const deletedIds = get().deletedPersonIds;
-        
-        let filteredPeople = importedPeople;
-        if (deletedIds.size > 0) {
-            filteredPeople = Object.fromEntries(
-                Object.entries(importedPeople).filter(([id]) => !deletedIds.has(id))
-            );
-        }
+        const filteredPeople = filterDeletedPeople(importedPeople, deletedIds);
 
         set((state) => ({
             people: filteredPeople,

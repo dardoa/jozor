@@ -9,6 +9,8 @@ import type { Person } from '../../../types';
 const {
   saveFullTreeMock,
   deleteStoredPersonMock,
+  recordDeletedPersonIdMock,
+  removeDeletedPersonIdMock,
   debouncedPushMock,
   pushOperationMock,
   pushOperationsMock,
@@ -17,6 +19,8 @@ const {
 } = vi.hoisted(() => ({
   saveFullTreeMock: vi.fn().mockResolvedValue(undefined),
   deleteStoredPersonMock: vi.fn().mockResolvedValue(undefined),
+  recordDeletedPersonIdMock: vi.fn().mockResolvedValue(undefined),
+  removeDeletedPersonIdMock: vi.fn().mockResolvedValue(undefined),
   debouncedPushMock: vi.fn(),
   pushOperationMock: vi.fn().mockResolvedValue(undefined),
   pushOperationsMock: vi.fn().mockResolvedValue(undefined),
@@ -28,6 +32,8 @@ vi.mock('../../../services/storageService', () => ({
   storageService: {
     saveFullTree: saveFullTreeMock,
     deletePerson: deleteStoredPersonMock,
+    recordDeletedPersonId: recordDeletedPersonIdMock,
+    removeDeletedPersonId: removeDeletedPersonIdMock,
   },
 }));
 
@@ -143,6 +149,7 @@ describe('useTreeActions', () => {
     expect(deleteResult).toEqual({ success: true });
     expect(useAppStore.getState().people['person-1']).toBeUndefined();
     expect(deleteStoredPersonMock).toHaveBeenCalledWith('person-1');
+    expect(recordDeletedPersonIdMock).toHaveBeenCalledWith('tree-1', 'person-1');
     expect(updateSearchIndexMock).toHaveBeenCalledWith([]);
     expect(pushOperationMock).toHaveBeenCalledWith(
       'tree-1',
@@ -166,6 +173,7 @@ describe('useTreeActions', () => {
     });
     expect(useAppStore.getState().people['person-1']).toBeDefined();
     expect(useAppStore.getState().focusId).toBe('person-1');
+    expect(removeDeletedPersonIdMock).toHaveBeenCalledWith('tree-1', 'person-1');
     expect(saveFullTreeMock).not.toHaveBeenCalled();
   });
 
