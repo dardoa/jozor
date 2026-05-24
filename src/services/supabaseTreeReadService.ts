@@ -23,6 +23,37 @@ export const fetchTreesForUser = async (ownerId: string, userEmail: string, toke
   }));
 };
 
+export const fetchPeopleCountsForTrees = async (
+  treeIds: string[],
+  ownerId: string,
+  userEmail: string,
+  token?: string
+): Promise<Record<string, number>> => {
+  const uniqueTreeIds = Array.from(new Set(treeIds.filter(Boolean)));
+  if (uniqueTreeIds.length === 0) return {};
+
+  const client = getTreeClient(ownerId, userEmail, token);
+  const settled = await Promise.allSettled(
+    uniqueTreeIds.map(async (treeId) => {
+      const { count, error } = await client
+        .from('people')
+        .select('id', { count: 'exact', head: true })
+        .eq('tree_id', treeId);
+
+      if (error) throw error;
+      return [treeId, count ?? 0] as const;
+    })
+  );
+
+  return settled.reduce<Record<string, number>>((counts, result) => {
+    if (result.status === 'fulfilled') {
+      const [treeId, count] = result.value;
+      counts[treeId] = count;
+    }
+    return counts;
+  }, {});
+};
+
 export const fetchTree = async (
   treeId: string,
   ownerId: string,

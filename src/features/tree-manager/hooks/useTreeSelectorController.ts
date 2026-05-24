@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '../../../context/TranslationContext';
 import { fetchSharedTrees } from '../../../services/supabaseTreeAccessService';
 import { createTreeWithRootAtomic } from '../../../services/supabaseTreeMutationService';
-import { fetchTree, fetchTreesForUser } from '../../../services/supabaseTreeReadService';
+import { fetchPeopleCountsForTrees, fetchTree, fetchTreesForUser } from '../../../services/supabaseTreeReadService';
 import type { SharedTreeSummary, TreeSummary } from '../../../services/supabaseTreeTypes';
 import { loadFullState } from '../../../store/useAppStore';
 import { createPerson } from '../../../utils/familyLogic';
@@ -59,8 +59,16 @@ export const useTreeSelectorController = ({
           })
         ]);
         if (!cancelled) {
-          setTrees(owned);
-          setSharedTrees(shared);
+          const treeIds = [...owned, ...shared].map((tree) => tree.id);
+          const peopleCounts: Record<string, number> = await fetchPeopleCountsForTrees(
+            treeIds,
+            ownerId,
+            userEmail,
+            supabaseToken
+          ).catch(() => ({}));
+          if (cancelled) return;
+          setTrees(owned.map((tree) => ({ ...tree, peopleCount: peopleCounts[tree.id] })));
+          setSharedTrees(shared.map((tree) => ({ ...tree, peopleCount: peopleCounts[tree.id] })));
         }
       } catch (e) {
         logError('TreeSelector loadTrees', e, {

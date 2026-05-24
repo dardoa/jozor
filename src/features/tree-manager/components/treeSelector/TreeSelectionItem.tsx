@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight, Eye, Shield, TreePine } from 'lucide-react';
+import { ArrowRight, Eye, Shield, TreePine, Users } from 'lucide-react';
 import type { SharedTreeSummary, TreeSummary } from '../../../../services/supabaseTreeTypes';
 import { useTranslation } from '../../../../context/TranslationContext';
 
@@ -12,8 +12,15 @@ interface TreeSelectionItemProps {
   t: ReturnType<typeof useTranslation>['t'];
 }
 
-export const TreeSelectionItem: React.FC<TreeSelectionItemProps> = ({ tree, currentTreeId, onSelect, isShared, role, t: _t }) => {
+export const TreeSelectionItem: React.FC<TreeSelectionItemProps> = ({ tree, currentTreeId, onSelect, isShared, role, t }) => {
   const isActive = currentTreeId === tree.id;
+  const resolvedRole: 'owner' | 'editor' | 'viewer' = isShared ? (role || 'viewer') : 'owner';
+  const roleLabel = resolvedRole === 'owner'
+    ? ((t as any).owner || 'Owner')
+    : resolvedRole === 'editor'
+      ? ((t as any).editor || 'Editor')
+      : ((t as any).viewer || 'Viewer');
+  const memberLabel = (t as any).statistics?.members || 'Members';
 
   return (
     <div
@@ -41,24 +48,34 @@ export const TreeSelectionItem: React.FC<TreeSelectionItemProps> = ({ tree, curr
             `}>
               {tree.name}
             </h3>
-            {isShared && (
+            {resolvedRole && (
               <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-black uppercase tracking-wider
-                ${role === 'editor'
+                ${resolvedRole === 'owner'
+                  ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
+                  : resolvedRole === 'editor'
                   ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400 border border-blue-200 dark:border-blue-800'
                   : 'bg-stone-100 text-stone-500 dark:bg-stone-700 dark:text-stone-400 border border-stone-200 dark:border-stone-600'
                 }`}
               >
-                {role === 'editor' ? <Shield className='w-2.5 h-2.5' /> : <Eye className='w-2.5 h-2.5' />}
-                {role}
+                {resolvedRole === 'viewer' ? <Eye className='w-2.5 h-2.5' /> : <Shield className='w-2.5 h-2.5' />}
+                {roleLabel}
               </div>
             )}
             {isActive && (
               <span className='w-2 h-2 rounded-full bg-emerald-500 animate-pulse'></span>
             )}
           </div>
-          <p className='text-xs text-[var(--text-muted)] font-bold uppercase tracking-widest'>
-            Updated: {tree.updatedAt || tree.createdAt ? new Date(tree.updatedAt || tree.createdAt).toLocaleDateString() : 'Just now'}
-          </p>
+          <div className='flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[var(--text-muted)] font-bold uppercase tracking-widest'>
+            <span>
+              Updated: {tree.updatedAt || tree.createdAt ? new Date(tree.updatedAt || tree.createdAt).toLocaleDateString() : 'Just now'}
+            </span>
+            {typeof tree.peopleCount === 'number' && (
+              <span className='inline-flex items-center gap-1.5'>
+                <Users className='w-3.5 h-3.5' />
+                {tree.peopleCount} {memberLabel}
+              </span>
+            )}
+          </div>
         </div>
       </div>
 

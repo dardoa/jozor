@@ -7,6 +7,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { TreeSelector } from '../../features/tree-manager';
 
 const mockFetchTreesForUser = vi.fn();
+const mockFetchPeopleCountsForTrees = vi.fn();
 const mockFetchSharedTrees = vi.fn();
 const mockFetchTree = vi.fn();
 const mockLoadFullState = vi.fn();
@@ -15,6 +16,7 @@ const mockShowError = vi.fn();
 
 vi.mock('../../services/supabaseTreeReadService', () => ({
   fetchTreesForUser: (...args: unknown[]) => mockFetchTreesForUser(...args),
+  fetchPeopleCountsForTrees: (...args: unknown[]) => mockFetchPeopleCountsForTrees(...args),
   fetchTree: (...args: unknown[]) => mockFetchTree(...args),
 }));
 
@@ -44,6 +46,12 @@ vi.mock('../../context/TranslationContext', () => ({
       treeManager: {
         myTrees: 'My Trees',
         sharedWithMe: 'Shared With Me',
+      },
+      owner: 'Owner',
+      editor: 'Editor',
+      viewer: 'Viewer',
+      statistics: {
+        members: 'Members',
       },
       messages: {
         success: { load: 'Loaded successfully' },
@@ -86,6 +94,7 @@ describe('TreeSelector', () => {
       },
     ]);
     mockFetchSharedTrees.mockResolvedValue([]);
+    mockFetchPeopleCountsForTrees.mockResolvedValue({ 'tree-1': 7 });
     mockFetchTree.mockResolvedValue({
       people: {},
       settings: {},
@@ -112,6 +121,9 @@ describe('TreeSelector', () => {
     await waitFor(() => {
       expect(screen.getByText('Family Archive')).toBeInTheDocument();
     });
+
+    expect(screen.getByText('Owner')).toBeInTheDocument();
+    expect(screen.getByText('7 Members')).toBeInTheDocument();
 
     fireEvent.click(screen.getByText('Family Archive'));
 

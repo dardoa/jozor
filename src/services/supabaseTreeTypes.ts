@@ -4,6 +4,7 @@ export interface TreeSummary {
   isPublic: boolean;
   createdAt: string;
   updatedAt?: string;
+  peopleCount?: number;
 }
 
 export interface SharedTreeSummary extends TreeSummary {
