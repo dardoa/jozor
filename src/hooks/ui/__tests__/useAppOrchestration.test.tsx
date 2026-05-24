@@ -10,8 +10,10 @@ vi.mock('../../../services/storageService', () => ({
     storageService: {
         loadFullTree: vi.fn().mockResolvedValue({}), // Initially empty or sample
         saveFullTree: vi.fn().mockResolvedValue(undefined),
+        savePeople: vi.fn().mockResolvedValue(undefined),
         saveSetting: vi.fn(),
         getSetting: vi.fn().mockResolvedValue('modern'),
+        getDeletedPersonIds: vi.fn().mockResolvedValue([]),
     }
 }));
 

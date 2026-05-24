@@ -74,6 +74,12 @@ export const storageService = {
         await db.people.put(person);
     },
 
+    async savePeople(people: Person[]) {
+        if (people.length === 0) return;
+        const db = await getLocalDb();
+        await db.people.bulkPut(people);
+    },
+
     async deletePerson(id: string) {
         const db = await getLocalDb();
         await db.people.delete(id);

@@ -23,6 +23,8 @@ export class CommandExecutor {
         };
 
         try {
+            const previousPeople = useAppStore.getState().people;
+
             // Execute the command synchronously or asynchronously
             const result = await Promise.resolve(command.execute(context));
             
@@ -30,9 +32,13 @@ export class CommandExecutor {
             if (result.success) {
                 // Fetch the latest people state AFTER the command has mutated it
                 const updatedPeople = useAppStore.getState().people;
+                const changedPeople = Object.values(updatedPeople).filter((person) => (
+                    previousPeople[person.id] !== person
+                ));
                 
-                // Update local offline cache
-                localTreePersistenceService.scheduleFullTreeSave(updatedPeople);
+                // Update local offline cache incrementally. Full snapshots remain owned by
+                // import/load/reconcile flows rather than routine commands.
+                localTreePersistenceService.saveChangedPeople(changedPeople);
                 
                 // Update search index for immediate searchability
                 void searchService.updateSearchIndex(Object.values(updatedPeople));

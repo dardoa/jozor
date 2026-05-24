@@ -12,6 +12,13 @@ const throttledSaveFullTree = throttle((people: Record<string, Person>) => {
 }, SAVE_FULL_TREE_THROTTLE_MS);
 
 export const localTreePersistenceService = {
+    saveChangedPeople(people: Person[]) {
+        if (people.length === 0) return;
+        void storageService.savePeople(people).catch((error) => {
+            console.error('Incremental save failed', error);
+        });
+    },
+
     scheduleFullTreeSave(people: Record<string, Person>) {
         throttledSaveFullTree(people);
     },

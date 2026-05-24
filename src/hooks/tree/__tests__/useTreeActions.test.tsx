@@ -8,6 +8,7 @@ import type { Person } from '../../../types';
 
 const {
   saveFullTreeMock,
+  savePeopleMock,
   deleteStoredPersonMock,
   recordDeletedPersonIdMock,
   removeDeletedPersonIdMock,
@@ -18,6 +19,7 @@ const {
   updateSearchIndexMock,
 } = vi.hoisted(() => ({
   saveFullTreeMock: vi.fn().mockResolvedValue(undefined),
+  savePeopleMock: vi.fn().mockResolvedValue(undefined),
   deleteStoredPersonMock: vi.fn().mockResolvedValue(undefined),
   recordDeletedPersonIdMock: vi.fn().mockResolvedValue(undefined),
   removeDeletedPersonIdMock: vi.fn().mockResolvedValue(undefined),
@@ -31,6 +33,7 @@ const {
 vi.mock('../../../services/storageService', () => ({
   storageService: {
     saveFullTree: saveFullTreeMock,
+    savePeople: savePeopleMock,
     deletePerson: deleteStoredPersonMock,
     recordDeletedPersonId: recordDeletedPersonIdMock,
     removeDeletedPersonId: removeDeletedPersonIdMock,
@@ -109,7 +112,8 @@ describe('useTreeActions', () => {
     expect(updated.firstName).toBe('After');
     expect(updated.bio).toBe('Fresh bio');
 
-    expect(saveFullTreeMock).toHaveBeenCalledTimes(1);
+    expect(savePeopleMock).toHaveBeenCalledWith([updated]);
+    expect(saveFullTreeMock).not.toHaveBeenCalled();
     expect(debouncedPushMock).toHaveBeenCalledWith('tree-1', 'person-1', {
       firstName: 'After',
       bio: 'Fresh bio',
