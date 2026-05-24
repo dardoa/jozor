@@ -1,7 +1,7 @@
-import { bulkInsertRelationships, bulkUpsertPeople, createTree } from './supabaseTreeMutationService';
-import type { Person } from '../types';
 import { v4 as uuidv4 } from 'uuid';
-import { logError, logInfo } from '../utils/errorLogger';
+import type { Person } from '../../../types';
+import { logError, logInfo } from '../../../utils/errorLogger';
+import { bulkInsertRelationships, bulkUpsertPeople, createTree } from '../../../services/supabaseTreeMutationService';
 
 /**
  * Validates the imported JSON structure.

@@ -186,7 +186,7 @@ export const useVaultTreeManagement = ({
 
     const work = async () => {
       const text = await file.text();
-      const { importTreeFromJSONItem } = await import('../../../services/importTreeService');
+      const { importTreeFromJSONItem } = await import('../../tree-manager');
       const importedTreeId = await importTreeFromJSONItem(
         currentUser.uid,
         currentUser.email,
