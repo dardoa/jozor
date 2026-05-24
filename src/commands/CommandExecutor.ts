@@ -3,15 +3,9 @@ import { deltaSyncService } from '../services/deltaSyncService';
 import { activityService } from '../features/activity-log';
 import { storageService } from '../services/storageService';
 import { searchService } from '../services/searchService';
+import { localTreePersistenceService } from '../services/localTreePersistenceService';
 import { CommandContext, TreeCommand } from './types';
-import { MutationActionResult, Person } from '../types';
-import { throttle } from '../utils/throttle';
-
-// Throttled persister to avoid excessive IndexedDB writes when the tree changes frequently.
-const throttledSaveLocal = throttle((people: Record<string, Person>) => {
-    if (Object.keys(people).length === 0) return;
-    void storageService.saveFullTree(people).catch((e) => console.error('Auto-save failed', e));
-}, 3000);
+import { MutationActionResult } from '../types';
 
 /**
  * CommandExecutor manages the execution lifecycle of TreeCommands.
@@ -38,7 +32,7 @@ export class CommandExecutor {
                 const updatedPeople = useAppStore.getState().people;
                 
                 // Update local offline cache
-                throttledSaveLocal(updatedPeople);
+                localTreePersistenceService.scheduleFullTreeSave(updatedPeople);
                 
                 // Update search index for immediate searchability
                 void searchService.updateSearchIndex(Object.values(updatedPeople));

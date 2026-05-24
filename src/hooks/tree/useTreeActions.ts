@@ -1,8 +1,7 @@
 import { useAppStore } from '../../store/useAppStore';
-import { storageService } from '../../services/storageService';
 import { searchService } from '../../services/searchService';
+import { localTreePersistenceService } from '../../services/localTreePersistenceService';
 import { MutationActionResult, Person } from '../../types';
-import { throttle } from '../../utils/throttle';
 import { CommandExecutor } from '../../commands/CommandExecutor';
 import { UpdatePersonCommand } from '../../commands/UpdatePersonCommand';
 import { DeletePersonCommand } from '../../commands/DeletePersonCommand';
@@ -11,19 +10,13 @@ import { LinkPersonCommand } from '../../commands/LinkPersonCommand';
 import { AddFirstPersonCommand } from '../../commands/AddFirstPersonCommand';
 import { RemoveRelationshipCommand } from '../../commands/RemoveRelationshipCommand';
 
-// Throttled persister to avoid excessive IndexedDB writes when the tree changes frequently.
-const throttledSaveLocal = throttle((people: Record<string, Person>) => {
-    if (Object.keys(people).length === 0) return;
-    void storageService.saveFullTree(people).catch((e) => console.error('Auto-save failed', e));
-}, 3000);
-
 export const useTreeActions = () => {
     const store = useAppStore();
 
     const setPeople = (people: Record<string, Person>, addToHistory = true) => {
         store.setPeople(people, addToHistory);
         void searchService.updateSearchIndex(Object.values(people));
-        throttledSaveLocal(people);
+        localTreePersistenceService.scheduleFullTreeSave(people);
     };
 
     const updatePerson = async (
