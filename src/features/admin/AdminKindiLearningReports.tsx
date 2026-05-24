@@ -8,7 +8,7 @@ import {
   type KindiLearningEventType,
   type KindiLearningReports,
   type KindiLearningReportFilters,
-} from '../kindi/services/kindiLearningReportsService';
+} from '../kindi';
 
 const eventTypeValues = [
   'all',

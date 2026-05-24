@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import type { UserProfile } from '../../types';
-import { checkKindiReportsAdminAccess } from '../kindi/services/kindiLearningReportsService';
+import { checkKindiReportsAdminAccess } from '../kindi';
 
 export const useKindiReportsAdminAccess = (user: UserProfile | null): boolean => {
   const [isAdmin, setIsAdmin] = useState(false);

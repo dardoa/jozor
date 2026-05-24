@@ -2,7 +2,7 @@ import { useEffect, useCallback, useState } from 'react';
 import { useAppStore } from '../../../store/useAppStore';
 import { treeDiscussionService } from '../services/treeDiscussionService';
 import { getTreeCollaborators } from '../../../services/supabaseTreeCollaboratorService';
-import { activityService } from '../../activity-log/services/activityService';
+import { activityService } from '../../activity-log';
 import { logError } from '../../../utils/errorLogger';
 
 const EMPTY_ARRAY: any[] = [];
