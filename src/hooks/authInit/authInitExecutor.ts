@@ -4,6 +4,7 @@ import { fetchTree } from '../../services/supabaseTreeReadService';
 import { resolveTreeByPerson } from '../../services/treeService';
 import { treeMigrationService } from '../../services/treeMigrationService';
 import { logError } from '../../utils/errorLogger';
+import { showToast } from '../../utils/showToast';
 import type { Person, UserProfile } from '../../types';
 import type { SharedTreeSummary } from '../../services/supabaseTreeTypes';
 import type { AuthInitPlan } from './authInitDecision';
@@ -32,6 +33,19 @@ interface ExecuteAuthInitPlanParams {
 const dismissLoadingWithDelay = (setAuthLoading: (value: boolean) => void) => {
   dismissNativeSplash();
   setTimeout(() => setAuthLoading(false), 1500);
+};
+
+const buildLocalTreePromotionPromptKey = (uid: string) => `jozor:local-tree-promotion-prompted:${uid}`;
+
+const shouldShowLocalTreePromotionPrompt = (uid: string) => {
+  try {
+    const key = buildLocalTreePromotionPromptKey(uid);
+    if (sessionStorage.getItem(key) === '1') return false;
+    sessionStorage.setItem(key, '1');
+    return true;
+  } catch {
+    return true;
+  }
 };
 
 export const executeAuthInitPlan = ({
@@ -141,6 +155,34 @@ export const executeAuthInitPlan = ({
       }
       return;
 
+    case 'PROMPT_LOCAL_TREE_PROMOTION':
+      if (user) {
+        setShowWelcome(false);
+        if (shouldShowLocalTreePromotionPrompt(user.uid)) {
+          showToast.info('You have a local guest tree. Save it to your cloud account?', {
+            duration: 12000,
+            action: {
+              label: 'Save to cloud',
+              onClick: () => {
+                void treeMigrationService.migrateLocalTreeToCloud(
+                  user.uid,
+                  user.email || '',
+                  user.supabaseToken,
+                  'guest-local-tree',
+                  people,
+                  (newTreeId) => {
+                    localStorage.setItem('lastActiveTreeId', newTreeId);
+                    setCurrentTreeId(newTreeId);
+                  }
+                );
+              },
+            },
+          });
+        }
+        dismissLoadingWithDelay(setAuthLoading);
+      }
+      return;
+
     case 'FETCH_SHARED_TREES_PROMPT':
       if (user && user.email && setSharedTreePromptModal) {
         fetchSharedTrees(user.uid, user.email, user.supabaseToken)
@@ -163,4 +205,3 @@ export const executeAuthInitPlan = ({
       return;
   }
 };
-

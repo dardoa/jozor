@@ -71,6 +71,11 @@ describe('getAuthInitPlan', () => {
         expect(plan).toEqual({ type: 'RESTORE_LAST_ACTIVE', treeId: uuid });
     });
 
+    it('prompts for local tree promotion if a guest tree exists after login', () => {
+        const plan = getAuthInitPlan({ ...baseContext, peopleCount: 3 });
+        expect(plan).toEqual({ type: 'PROMPT_LOCAL_TREE_PROMOTION' });
+    });
+
     it('returns FETCH_SHARED_TREES_PROMPT if local is empty and no last tree', () => {
         const plan = getAuthInitPlan({ ...baseContext, peopleCount: 1 });
         expect(plan.type).toBe('FETCH_SHARED_TREES_PROMPT');

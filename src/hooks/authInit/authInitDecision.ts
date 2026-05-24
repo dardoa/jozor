@@ -21,6 +21,7 @@ export type AuthInitPlan =
     | { type: 'BOOTSTRAP_ROUTE_TREE'; treeId: string }
     | { type: 'RESOLVE_ROUTE_PERSON'; personId: string }
     | { type: 'RESTORE_LAST_ACTIVE'; treeId: string }
+    | { type: 'PROMPT_LOCAL_TREE_PROMOTION' }
     | { type: 'FETCH_SHARED_TREES_PROMPT' };
 
 /**
@@ -67,7 +68,12 @@ export function getAuthInitPlan(ctx: AuthInitContext): AuthInitPlan {
         return { type: 'RESTORE_LAST_ACTIVE', treeId: ctx.lastActiveTreeId };
     }
 
-    // 7. Fallback to shared trees prompt or just hide welcome
+    // 7. Logged-in user has a meaningful guest/local tree but no cloud tree selected.
+    if (ctx.peopleCount > 1) {
+        return { type: 'PROMPT_LOCAL_TREE_PROMOTION' };
+    }
+
+    // 8. Fallback to shared trees prompt or just hide welcome
     if (ctx.peopleCount <= 1 && ctx.hasSharedTreePromptModal) {
         return { type: 'FETCH_SHARED_TREES_PROMPT' };
     }
