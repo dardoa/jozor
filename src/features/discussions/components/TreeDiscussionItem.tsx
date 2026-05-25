@@ -13,6 +13,11 @@ interface TreeDiscussionItemProps {
   onReply?: (message: TreeDiscussionMessage) => void;
 }
 
+const getDeleteConfirmationMessage = (language: string) =>
+  language === 'ar'
+    ? 'هل أنت متأكد من حذف هذه الرسالة؟'
+    : 'Are you sure you want to delete this message?';
+
 export const TreeDiscussionItem: React.FC<TreeDiscussionItemProps> = ({ message, isOwn, onReply }) => {
   const { language } = useTranslation();
   const user = useAppStore(state => state.user);
@@ -34,7 +39,7 @@ export const TreeDiscussionItem: React.FC<TreeDiscussionItemProps> = ({ message,
 
   const handleDelete = async () => {
     if (!user || isDeleting) return;
-    if (!window.confirm(language === 'ar' ? '?? ??? ????? ?? ??? ??? ????????' : 'Are you sure you want to delete this message?')) return;
+    if (!window.confirm(getDeleteConfirmationMessage(language))) return;
 
     setIsDeleting(true);
     try {
