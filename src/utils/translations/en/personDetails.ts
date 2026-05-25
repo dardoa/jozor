@@ -153,5 +153,6 @@ export const personDetails = {
   vaultCanonicalShareLink: 'Canonical Share Link',
   vaultShareLinkCopied: 'Share link copied.',
   vaultCloudFiles: 'Google Drive Files',
+  vaultCloudFilesHint: 'Create, restore, overwrite, or delete Google Drive backups from this tab.',
   vaultCloudEmpty: 'No files found.',
 };

@@ -33,6 +33,3 @@ export const UnifiedLoginModal = lazy(() =>
 export const GlobalSettingsModal = lazy(() =>
   import('../modals/GlobalSettingsModal').then((module) => ({ default: module.GlobalSettingsModal }))
 );
-export const DriveFileManagerModal = lazy(() =>
-  import('../../features/drive-file-manager').then((module) => ({ default: module.DriveFileManagerModal }))
-);

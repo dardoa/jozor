@@ -153,5 +153,6 @@ export const personDetails = {
   vaultCanonicalShareLink: 'رابط المشاركة الأساسي',
   vaultShareLinkCopied: 'تم نسخ رابط المشاركة.',
   vaultCloudFiles: 'قائمة ملفات Google Drive',
+  vaultCloudFilesHint: 'أنشئ أو استعد أو استبدل أو احذف نسخ Google Drive الاحتياطية من هذا التبويب.',
   vaultCloudEmpty: 'لا توجد ملفات.',
 };

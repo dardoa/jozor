@@ -1,7 +1,6 @@
 import type { ModalManagerProps } from './modalManagerTypes';
 import {
   CleanTreeOptionsModal,
-  DriveFileManagerModal,
   GlobalSettingsModal,
   GoogleSyncChoiceModal,
   LinkPersonModal,
@@ -41,27 +40,9 @@ export const StateModalRenderer = (modal: ModalManagerProps) => (
         onSaveNewCloud={modal.onSaveNewCloudFile}
         onOpenDriveManager={() => {
           modal.setGoogleSyncChoiceModal({ isOpen: false, driveFileId: null });
-          modal.setDriveFileManagerModal({ isOpen: true });
+          modal.googleSync.onOpenDriveFileManager();
         }}
         driveFileId={modal.googleSyncChoiceModal.driveFileId}
-      />
-    ) : null}
-
-    {modal.driveFileManagerModal.isOpen ? (
-      <DriveFileManagerModal
-        isOpen={true}
-        onClose={() => modal.setDriveFileManagerModal({ isOpen: false })}
-        files={modal.driveFiles}
-        currentActiveFileId={modal.currentActiveDriveFileId}
-        onLoadFile={modal.handleLoadDriveFile}
-        onSaveAsNewFile={modal.handleSaveAsNewDriveFile}
-        onOverwriteExistingFile={modal.handleOverwriteExistingDriveFile}
-        onDeleteFile={modal.handleDeleteDriveFile}
-        refreshDriveFiles={modal.refreshDriveFiles}
-        isSaving={modal.isSavingDriveFile}
-        isDeleting={modal.isDeletingDriveFile}
-        isListing={modal.isListingDriveFiles}
-        onImportLocalFile={modal.onImportLocalFile}
       />
     ) : null}
 

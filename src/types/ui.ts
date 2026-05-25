@@ -211,22 +211,6 @@ export interface GoogleSyncChoiceModalProps {
     driveFileId: string | null;
 }
 
-export interface DriveFileManagerModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    files: DriveFile[];
-    currentActiveFileId: string | null;
-    onLoadFile: (fileId: string) => Promise<void>;
-    onSaveAsNewFile: (fileName: string) => Promise<void>;
-    onOverwriteExistingFile: (fileId: string) => Promise<void>;
-    onDeleteFile: (fileId: string) => Promise<void>;
-    refreshDriveFiles: () => Promise<void>;
-    isSaving: boolean;
-    isDeleting: boolean;
-    isListing: boolean;
-    onImportLocalFile: (data: unknown) => Promise<void>;
-}
-
 export interface PersonaFooterProps {
     person: Person;
     isEditing: boolean;

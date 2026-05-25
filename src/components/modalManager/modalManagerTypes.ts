@@ -18,8 +18,6 @@ export interface ModalManagerProps {
   setCleanTreeOptionsModal: ModalStateAndActions['setCleanTreeOptionsModal'];
   googleSyncChoiceModal: ModalStateAndActions['googleSyncChoiceModal'];
   setGoogleSyncChoiceModal: ModalStateAndActions['setGoogleSyncChoiceModal'];
-  driveFileManagerModal: ModalStateAndActions['driveFileManagerModal'];
-  setDriveFileManagerModal: ModalStateAndActions['setDriveFileManagerModal'];
   people: AppStateAndActions['people'];
   focusId: AppStateAndActions['focusId'];
   setFocusId: AppStateAndActions['setFocusId'];
@@ -31,17 +29,7 @@ export interface ModalManagerProps {
   onTriggerImportFile: WelcomeScreenLogicProps['onTriggerImportFile'];
   onLoadCloudData: GoogleSyncStateAndActions['onLoadCloudData'];
   onSaveNewCloudFile: GoogleSyncStateAndActions['onSaveNewCloudFile'];
-  driveFiles: GoogleSyncStateAndActions['driveFiles'];
   currentActiveDriveFileId: GoogleSyncStateAndActions['currentActiveDriveFileId'];
-  handleLoadDriveFile: GoogleSyncStateAndActions['handleLoadDriveFile'];
-  handleSaveAsNewDriveFile: GoogleSyncStateAndActions['handleSaveAsNewDriveFile'];
-  handleOverwriteExistingDriveFile: GoogleSyncStateAndActions['handleOverwriteExistingDriveFile'];
-  handleDeleteDriveFile: GoogleSyncStateAndActions['handleDeleteDriveFile'];
-  isSavingDriveFile: GoogleSyncStateAndActions['isSaving'];
-  isDeletingDriveFile: GoogleSyncStateAndActions['isDeleting'];
-  isListingDriveFiles: GoogleSyncStateAndActions['isListing'];
-  refreshDriveFiles: GoogleSyncStateAndActions['refreshDriveFiles'];
-  onImportLocalFile: (data: unknown) => Promise<void>;
   onGoogleLogin: () => Promise<void>;
   activeTreeId: string | null;
   onTreeSelected: (treeId: string) => void;

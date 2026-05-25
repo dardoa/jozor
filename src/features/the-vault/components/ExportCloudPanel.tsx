@@ -1,5 +1,6 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
+  AlertTriangle,
   Archive,
   Calendar,
   Cloud,
@@ -8,11 +9,14 @@ import {
   Image as ImageIcon,
   Printer,
   RefreshCw,
+  Save,
+  Trash2,
 } from 'lucide-react';
 
 import type { DriveFile, ExportType } from '../../../types';
 import type { TranslationSchema } from '../../../utils/translationLoader';
 import { logInfo } from '../../../utils/errorLogger';
+import { showToast } from '../../../utils/showToast';
 
 interface ExportCloudPanelProps {
   canManageCloud: boolean;
@@ -20,16 +24,21 @@ interface ExportCloudPanelProps {
   t: TranslationSchema;
   onCloseVault: () => void;
   onBackupNow: () => Promise<void> | void;
-  onManageDriveFiles: () => void;
   onOpenActivityLog: () => void;
   onRefreshDriveFiles: () => Promise<void> | void;
   onOpenDriveFile: (fileId: string) => Promise<void> | void;
+  onSaveAsNewFile: (fileName: string) => Promise<void> | void;
+  onOverwriteDriveFile: (fileId: string) => Promise<void> | void;
+  onDeleteDriveFile: (fileId: string) => Promise<void> | void;
   onRunExport: (type: ExportType) => Promise<void>;
   hasSessionError: boolean;
   isAuthorized: boolean;
   onGoogleLogin: () => void;
+  currentActiveDriveFileId: string | null;
   isBackingUp?: boolean;
   isRefreshing?: boolean;
+  isSaving?: boolean;
+  isDeleting?: boolean;
 }
 
 const EXPORT_ACTIONS: Array<{
@@ -61,17 +70,26 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
   t,
   onCloseVault,
   onBackupNow,
-  onManageDriveFiles,
   onOpenActivityLog,
   onRefreshDriveFiles,
   onOpenDriveFile,
+  onSaveAsNewFile,
+  onOverwriteDriveFile,
+  onDeleteDriveFile,
   onRunExport,
   hasSessionError,
   isAuthorized,
   onGoogleLogin,
+  currentActiveDriveFileId,
   isBackingUp = false,
   isRefreshing = false,
+  isSaving = false,
+  isDeleting = false,
 }) => {
+  const [newFileName, setNewFileName] = useState('');
+  const [confirmOverwriteId, setConfirmOverwriteId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
   const handleExport = useCallback(
     async (type: ExportType) => {
       if (type === 'print' || type === 'pdf') {
@@ -82,6 +100,32 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
     },
     [onCloseVault, onRunExport]
   );
+
+  const sortedFiles = useMemo(
+    () => [...files].sort((a, b) => String(b.modifiedTime || '').localeCompare(String(a.modifiedTime || ''))),
+    [files]
+  );
+
+  const handleSaveAsNew = useCallback(async () => {
+    const trimmed = newFileName.trim();
+    if (!trimmed) {
+      showToast.error('googleDriveFileNameRequired');
+      return;
+    }
+
+    await onSaveAsNewFile(trimmed);
+    setNewFileName('');
+  }, [newFileName, onSaveAsNewFile]);
+
+  const handleOverwrite = useCallback(async (fileId: string) => {
+    await onOverwriteDriveFile(fileId);
+    setConfirmOverwriteId(null);
+  }, [onOverwriteDriveFile]);
+
+  const handleDelete = useCallback(async (fileId: string) => {
+    await onDeleteDriveFile(fileId);
+    setConfirmDeleteId(null);
+  }, [onDeleteDriveFile]);
 
   return (
     <div className="space-y-6">
@@ -152,14 +196,6 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
             </button>
             <button
               type="button"
-              onClick={onManageDriveFiles}
-              disabled={!canManageCloud}
-              className="min-h-11 rounded-xl border border-[var(--border-soft)] bg-[var(--surface-subtle)] px-4 py-2 text-sm font-semibold text-[var(--text-secondary)] transition-all duration-200 ease-in-out hover:bg-[var(--surface-hover)] disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {t.vaultManageCloudFiles}
-            </button>
-            <button
-              type="button"
               onClick={onOpenActivityLog}
               className="min-h-11 rounded-xl border border-[var(--border-soft)] bg-[var(--surface-subtle)] px-4 py-2 text-sm font-semibold text-[var(--text-secondary)] transition-all duration-200 ease-in-out hover:bg-[var(--surface-hover)]"
             >
@@ -194,45 +230,130 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
       </section>
 
       <section className="rounded-[14px] border border-[var(--border-soft)] bg-[var(--surface-panel)] p-4 shadow-none">
-        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h4 className="text-[16px] font-bold tracking-tight text-[var(--text-main)]">{t.vaultCloudFiles}</h4>
-          <button
-            type="button"
-            onClick={() => void onRefreshDriveFiles()}
-            disabled={isRefreshing}
-            className="min-h-11 min-w-11 rounded-xl border border-[var(--border-soft)] bg-[var(--surface-subtle)] p-2 text-[var(--text-secondary)] transition-all duration-200 ease-in-out hover:bg-[var(--surface-hover)] disabled:cursor-not-allowed disabled:opacity-50"
-            aria-label={t.vaultRefreshCloudFiles}
-          >
-            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-          </button>
+        <div className="mb-4 flex flex-col gap-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h4 className="text-[16px] font-bold tracking-tight text-[var(--text-main)]">{t.vaultCloudFiles}</h4>
+              <p className="mt-1 text-xs text-[var(--text-muted)]">{t.vaultCloudFilesHint || 'Manage Google Drive backups from this tab.'}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => void onRefreshDriveFiles()}
+              disabled={isRefreshing}
+              className="min-h-11 min-w-11 rounded-xl border border-[var(--border-soft)] bg-[var(--surface-subtle)] p-2 text-[var(--text-secondary)] transition-all duration-200 ease-in-out hover:bg-[var(--surface-hover)] disabled:cursor-not-allowed disabled:opacity-50"
+              aria-label={t.vaultRefreshCloudFiles}
+            >
+              <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
+
+          <div className="grid gap-3 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-subtle)] p-3 sm:grid-cols-[minmax(0,1fr)_auto]">
+            <input
+              type="text"
+              value={newFileName}
+              onChange={(event) => setNewFileName(event.target.value)}
+              placeholder={t.googleDriveFileName}
+              disabled={!canManageCloud || isSaving}
+              className="min-h-11 rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3 text-sm text-[var(--text-main)] outline-none transition-all focus:border-[var(--primary-600)] disabled:cursor-not-allowed disabled:opacity-50"
+            />
+            <button
+              type="button"
+              onClick={() => void handleSaveAsNew()}
+              disabled={!canManageCloud || isSaving || !newFileName.trim()}
+              className="min-h-11 rounded-xl bg-[var(--primary-600)] px-4 py-2 text-sm font-semibold text-white transition-all duration-200 ease-in-out hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <span className="inline-flex items-center gap-2">
+                {isSaving ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                {t.saveAsNewFile}
+              </span>
+            </button>
+          </div>
         </div>
 
-        {files.length === 0 ? (
+        {sortedFiles.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-[var(--border-soft)] bg-[var(--surface-subtle)] p-5 text-[12px] text-[var(--text-muted)]">
             {t.vaultCloudEmpty}
           </div>
         ) : (
           <div className="space-y-6">
-            {files.map((file) => (
-              <div key={file.id} className="flex flex-col gap-3 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-subtle)] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+            {sortedFiles.map((file) => {
+              const isActive = file.id === currentActiveDriveFileId;
+
+              return (
+              <div key={file.id} className={`flex flex-col gap-3 rounded-2xl border px-4 py-3 sm:flex-row sm:items-center sm:justify-between ${isActive ? 'border-[var(--primary-600)]/40 bg-[var(--primary-600)]/5' : 'border-[var(--border-soft)] bg-[var(--surface-subtle)]'}`}>
                 <div className="min-w-0 flex items-center gap-3">
                   <div className="rounded-xl bg-[var(--surface-panel)] p-2 text-[var(--text-muted)]">
                     <HardDrive className="h-4 w-4" />
                   </div>
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-[var(--text-main)]">{file.name}</p>
+                    <div className="flex min-w-0 flex-wrap items-center gap-2">
+                      <p className="truncate text-sm font-semibold text-[var(--text-main)]">{file.name}</p>
+                      {isActive && (
+                        <span className="rounded-md bg-[var(--primary-600)] px-2 py-0.5 text-[10px] font-bold uppercase text-white">
+                          {t.active}
+                        </span>
+                      )}
+                    </div>
                     <p className="truncate text-[12px] text-[var(--text-muted)]">{file.modifiedTime}</p>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => void onOpenDriveFile(file.id)}
-                  className="min-h-11 rounded-xl bg-[var(--primary-600)] px-3 py-2 text-xs font-semibold text-white transition-all duration-200 ease-in-out hover:brightness-105"
-                >
-                  {t.vaultOpenCloudFile}
-                </button>
+                <div className="flex flex-wrap items-center gap-2">
+                  {confirmOverwriteId === file.id ? (
+                    <button
+                      type="button"
+                      onClick={() => void handleOverwrite(file.id)}
+                      disabled={isSaving}
+                      className="min-h-11 rounded-xl bg-orange-600 px-3 py-2 text-xs font-semibold text-white transition-all hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <span className="inline-flex items-center gap-1.5">
+                        <AlertTriangle className="h-4 w-4" />
+                        {t.confirmOverwrite}
+                      </span>
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setConfirmOverwriteId(file.id)}
+                      disabled={!canManageCloud || isSaving || isActive}
+                      className="min-h-11 rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3 py-2 text-xs font-semibold text-[var(--text-secondary)] transition-all hover:bg-[var(--surface-hover)] disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {t.overwrite}
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => void onOpenDriveFile(file.id)}
+                    disabled={isActive}
+                    className="min-h-11 rounded-xl bg-[var(--primary-600)] px-3 py-2 text-xs font-semibold text-white transition-all duration-200 ease-in-out hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {t.vaultOpenCloudFile}
+                  </button>
+                  {confirmDeleteId === file.id ? (
+                    <button
+                      type="button"
+                      onClick={() => void handleDelete(file.id)}
+                      disabled={isDeleting}
+                      className="min-h-11 rounded-xl bg-red-600 px-3 py-2 text-xs font-semibold text-white transition-all hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <span className="inline-flex items-center gap-1.5">
+                        <Trash2 className="h-4 w-4" />
+                        {t.confirmDelete}
+                      </span>
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setConfirmDeleteId(file.id)}
+                      disabled={!canManageCloud || isDeleting || isActive}
+                      className="min-h-11 rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3 py-2 text-xs font-semibold text-[var(--text-secondary)] transition-all hover:bg-[var(--surface-hover)] disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {t.delete}
+                    </button>
+                  )}
+                </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
 

@@ -80,16 +80,21 @@ export const VaultBackupsContent = ({ context }: { context: VaultRenderContext }
         t={context.t}
         onCloseVault={context.onCloseVault}
         onBackupNow={() => runWithLoading(() => context.auth.onSaveToGoogleDrive?.(), setIsBackingUp)}
-        onManageDriveFiles={() => context.auth.onOpenDriveFileManager()}
         onOpenActivityLog={context.onOpenActivityLog}
         onRefreshDriveFiles={() => runWithLoading(() => context.googleSync.refreshDriveFiles(), setIsRefreshing)}
         onOpenDriveFile={(fileId) => context.auth.handleLoadDriveFile(fileId)}
+        onSaveAsNewFile={(fileName) => context.auth.handleSaveAsNewDriveFile(fileName)}
+        onOverwriteDriveFile={(fileId) => context.auth.handleOverwriteExistingDriveFile(fileId)}
+        onDeleteDriveFile={(fileId) => context.auth.handleDeleteDriveFile(fileId)}
         onRunExport={(type) => context.exportActions.handleExport(type)}
         hasSessionError={context.auth.hasSessionError}
         isAuthorized={context.auth.isAuthorized}
         onGoogleLogin={() => context.auth.onLogin()}
+        currentActiveDriveFileId={context.auth.currentActiveDriveFileId}
         isBackingUp={isBackingUp}
         isRefreshing={isRefreshing}
+        isSaving={context.auth.isSavingDriveFile}
+        isDeleting={context.auth.isDeletingDriveFile}
       />
     </Suspense>
   );

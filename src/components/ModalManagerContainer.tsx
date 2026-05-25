@@ -7,10 +7,8 @@ import {
   WelcomeScreenLogicProps,
   FamilyActionsProps,
   ThemeLanguageProps,
-  FullState,
   AuthProps,
 } from '../types';
-import { loadFullState } from '../store/useAppStore';
 
 interface ModalManagerContainerProps {
   appState: AppStateAndActions;
@@ -35,8 +33,6 @@ export const ModalManagerContainer: React.FC<ModalManagerContainerProps> = memo(
         setCleanTreeOptionsModal={modals.setCleanTreeOptionsModal}
         googleSyncChoiceModal={modals.googleSyncChoiceModal}
         setGoogleSyncChoiceModal={modals.setGoogleSyncChoiceModal}
-        driveFileManagerModal={modals.driveFileManagerModal}
-        setDriveFileManagerModal={modals.setDriveFileManagerModal}
         activeTreeId={appState.currentTreeId}
         onTreeSelected={appState.setCurrentTreeId}
         people={appState.people}
@@ -50,40 +46,10 @@ export const ModalManagerContainer: React.FC<ModalManagerContainerProps> = memo(
         onTriggerImportFile={welcomeScreen.onTriggerImportFile}
         onLoadCloudData={googleSync.onLoadCloudData}
         onSaveNewCloudFile={googleSync.onSaveNewCloudFile}
-        driveFiles={googleSync.driveFiles}
         currentActiveDriveFileId={googleSync.currentActiveDriveFileId}
-        handleLoadDriveFile={googleSync.handleLoadDriveFile}
-        handleSaveAsNewDriveFile={googleSync.handleSaveAsNewDriveFile}
-        handleOverwriteExistingDriveFile={googleSync.handleOverwriteExistingDriveFile}
-        handleDeleteDriveFile={googleSync.handleDeleteDriveFile}
-        isSavingDriveFile={googleSync.isSaving}
-        isDeletingDriveFile={googleSync.isDeleting}
-        isListingDriveFiles={googleSync.isListing}
-        refreshDriveFiles={googleSync.refreshDriveFiles}
         onGoogleLogin={auth.onLogin}
         sharedTreePromptModal={modals.sharedTreePromptModal}
         setSharedTreePromptModal={modals.setSharedTreePromptModal}
-        onImportLocalFile={async (data: unknown) => {
-          try {
-            if (!data || typeof data !== 'object') {
-              throw new Error('Invalid import format');
-            }
-
-            const importedData = data as Record<string, unknown>;
-
-            // Case 1: FullState format { version, people, settings, ... }
-            if (importedData.people && typeof importedData.people === 'object') {
-              const fullState = importedData as unknown as FullState;
-              loadFullState(fullState);
-              return;
-            }
-
-            throw new Error('Imported files must use the current Jozor full-state format.');
-          } catch (e) {
-            console.error('Local import failed', e);
-            // Leave user feedback to the caller (DriveFileManagerModal already shows toasts)
-          }
-        }}
         googleSync={googleSync}
         themeLanguage={themeLanguage}
         globalSettingsModal={modals.globalSettingsModal}

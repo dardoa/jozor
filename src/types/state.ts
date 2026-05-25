@@ -74,8 +74,6 @@ export interface ModalStateAndActions {
     setCleanTreeOptionsModal: (val: { isOpen: boolean }) => void;
     googleSyncChoiceModal: { isOpen: boolean; driveFileId: string | null };
     setGoogleSyncChoiceModal: (val: { isOpen: boolean; driveFileId: string | null }) => void;
-    driveFileManagerModal: { isOpen: boolean };
-    setDriveFileManagerModal: (val: { isOpen: boolean }) => void;
     handleOpenLinkModal: (
         type: 'parent' | 'spouse' | 'child',
         gender: Gender,
