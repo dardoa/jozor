@@ -5,7 +5,7 @@ import { Card } from '../../../../components/ui/Card';
 import { useTranslation } from '../../../../context/TranslationContext';
 import { EmptyState } from '../../../../components/ui/EmptyState';
 import { showToast } from '../../../../utils/showToast';
-import { useGallery } from '../../../../hooks/ui/useGallery';
+import { useGallery } from '../../hooks/useGallery';
 import { getGalleryImageUrl } from '../../../../utils/mediaUtils';
 
 type GalleryMediaItem = string | {

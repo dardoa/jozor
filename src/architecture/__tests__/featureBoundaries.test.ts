@@ -8,6 +8,7 @@ const legacyServiceImports = [
   'services/activityService',
   'services/treeInvitationService',
   'services/importTreeService',
+  'services/supabaseGalleryService',
 ];
 
 async function listSourceFiles(dir: string): Promise<string[]> {

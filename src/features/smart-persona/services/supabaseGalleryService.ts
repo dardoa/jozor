@@ -1,5 +1,5 @@
-import { getSupabaseFull } from './supabaseClient';
-import { processImageFile } from '../utils/imageLogic';
+import { getSupabaseFull } from '../../../services/supabaseClient';
+import { processImageFile } from '../../../utils/imageLogic';
 
 export interface GalleryItem {
   id: string;
@@ -20,7 +20,7 @@ export const SupabaseGalleryService = {
     file,
     uid,
     email,
-    token
+    token,
   }: {
     treeId: string;
     personId: string;
@@ -33,10 +33,8 @@ export const SupabaseGalleryService = {
     const fileId = crypto.randomUUID();
     const filePath = `${treeId}/${personId}/gallery/${fileId}.webp`;
 
-    // 1. Process and compress the image
-    const compressedBlob = await processImageFile(file, 1200, 0.7); // Higher res for gallery
+    const compressedBlob = await processImageFile(file, 1200, 0.7);
 
-    // 2. Upload to Storage
     const { error: uploadError } = await client.storage
       .from('avatars')
       .upload(filePath, compressedBlob, {
@@ -46,7 +44,6 @@ export const SupabaseGalleryService = {
 
     if (uploadError) throw uploadError;
 
-    // 3. Return the gallery item object
     return {
       id: fileId,
       path: filePath,
@@ -78,5 +75,5 @@ export const SupabaseGalleryService = {
       console.error('[SupabaseGalleryService] Delete error:', error);
       throw error;
     }
-  }
+  },
 };
