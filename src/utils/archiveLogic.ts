@@ -222,7 +222,12 @@ export const importJozorArchiveData = async (file: File): Promise<JozorArchiveDa
   }
 
   if (!jsonFile) {
-    throw new Error('Invalid Jozor file: family_data.json not found');
+    const { restoreBlueprintArchive } = await import('../services/archiveRestoreService');
+    const restored = await restoreBlueprintArchive(file);
+    return {
+      people: restored.state.people,
+      settings: restored.state.settings as Record<string, unknown>,
+    };
   }
 
   const jsonContent = await jsonFile.async('string');

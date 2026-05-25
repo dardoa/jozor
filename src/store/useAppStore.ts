@@ -19,11 +19,40 @@ export interface LoadedState {
     version?: number;
     metadata?: unknown;
     people?: Record<string, Person>;
-    settings?: Partial<TreeSettings>;
+    settings?: Partial<TreeSettings> | {
+        treeSettings?: Partial<TreeSettings>;
+        darkMode?: boolean;
+        language?: 'en' | 'ar';
+    };
     focusId?: string;
     lastSyncedVersion?: number;
     treeName?: string;
 }
+
+const resolveLoadedSettings = (
+    settings: LoadedState['settings'],
+    currentTreeSettings: TreeSettings
+) => {
+    if (!settings || typeof settings !== 'object') return null;
+
+    const record = settings as Record<string, unknown>;
+    const wrappedTreeSettings = record.treeSettings && typeof record.treeSettings === 'object'
+        ? record.treeSettings as Partial<TreeSettings>
+        : null;
+    const rawTreeSettings = wrappedTreeSettings ?? settings as Partial<TreeSettings>;
+    const normalizedTreeSettings = rawTreeSettings.chartType
+        ? { ...rawTreeSettings, chartType: normalizeChartType(rawTreeSettings.chartType) }
+        : rawTreeSettings;
+
+    return {
+        appSettings: {
+            ...('darkMode' in record ? { darkMode: record.darkMode as boolean } : {}),
+            ...('language' in record ? { language: record.language as 'en' | 'ar' } : {}),
+            treeSettings: { ...currentTreeSettings, ...normalizedTreeSettings },
+        },
+        treeSettings: { ...currentTreeSettings, ...normalizedTreeSettings },
+    };
+};
 
 // Create the store with all slices combined
 export const useAppStore = create<AppStore>()(
@@ -56,13 +85,13 @@ export const loadFullState = (fullState: unknown) => {
             start.loadCloudData(state.people);
         }
         if (state.settings) {
-            const normalizedSettings = state.settings.chartType
-                ? { ...state.settings, chartType: normalizeChartType(state.settings.chartType) }
-                : state.settings;
-            start.importSettings({ treeSettings: { ...start.treeSettings, ...normalizedSettings } });
-            
-            // HYDRATE APPEARANCE LAB STORE DIRECTLY
-            hydrateAppearanceLabFromLegacy(normalizedSettings);
+            const resolvedSettings = resolveLoadedSettings(state.settings, start.treeSettings);
+            if (resolvedSettings) {
+                start.importSettings(resolvedSettings.appSettings);
+
+                // HYDRATE APPEARANCE LAB STORE DIRECTLY
+                hydrateAppearanceLabFromLegacy(resolvedSettings.treeSettings);
+            }
         }
         if (state.focusId && state.people && state.people[state.focusId]) {
             start.setFocusId(state.focusId);
@@ -104,6 +133,5 @@ export const selectSettingsValue = <K extends keyof TreeSettings>(key: K) => (st
 export const selectUIStatus = (state: AppStore) => state.driveSyncUiStatus;
 export const selectIsSelectionActive = (id: string) => (state: AppStore & { selectedPersonId?: string | null }) => state.selectedPersonId === id;
 export const selectCurrentTreeId = (state: AppStore) => state.currentTreeId;
-
 
 

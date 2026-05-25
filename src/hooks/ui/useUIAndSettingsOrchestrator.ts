@@ -56,18 +56,30 @@ export const useUIAndSettingsOrchestrator = (
     handleImport: useCallback(async (file: File) => {
       try {
         let imported: Record<string, Person> = {};
+        let importedSettings: Record<string, unknown> | undefined;
         const name = file.name.toLowerCase();
 
         if (name.endsWith('.jozor') || name.endsWith('.zip')) {
-          const { importFromJozorArchive } = await import('../../utils/archiveLogic');
-          imported = await importFromJozorArchive(file);
+          const { importJozorArchiveData } = await import('../../utils/archiveLogic');
+          const archiveData = await importJozorArchiveData(file);
+          imported = archiveData.people;
+          importedSettings = archiveData.settings;
         } else {
           const text = await file.text();
           if (name.endsWith('.ged')) {
             const { importFromGEDCOM } = await import('../../utils/gedcomLogic');
             imported = importFromGEDCOM(text);
           } else {
-            imported = JSON.parse(text);
+            const parsed = JSON.parse(text);
+            if (parsed && typeof parsed === 'object' && 'people' in parsed) {
+              imported = (parsed as { people: Record<string, Person> }).people;
+              const settings = (parsed as { settings?: unknown }).settings;
+              importedSettings = settings && typeof settings === 'object' && !Array.isArray(settings)
+                ? settings as Record<string, unknown>
+                : undefined;
+            } else {
+              imported = parsed;
+            }
           }
         }
 
@@ -86,6 +98,7 @@ export const useUIAndSettingsOrchestrator = (
         loadFullState({
           people: validated,
           focusId: newFocusId,
+          settings: importedSettings,
         });
 
         return true;

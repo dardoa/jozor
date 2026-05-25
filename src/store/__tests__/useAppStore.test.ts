@@ -279,6 +279,25 @@ describe('loadFullState', () => {
     expect(useAppStore.getState().treeSettings.chartType).toBe('focus');
   });
 
+  it('hydrates modern wrapped tree settings on loadFullState', () => {
+    act(() => {
+      loadFullState({
+        settings: {
+          treeSettings: {
+            chartType: 'radial' as any,
+          },
+          darkMode: true,
+          language: 'en',
+        },
+      });
+    });
+
+    expect(useAppStore.getState().treeSettings.chartType).toBe('radial');
+    expect(useAppStore.getState().darkMode).toBe(true);
+    expect(useAppStore.getState().language).toBe('en');
+    expect((useAppStore.getState().treeSettings as any).treeSettings).toBeUndefined();
+  });
+
   it('normalizes legacy chartType to "focus" on importSettings and setTreeSettings', () => {
     act(() => {
       useAppStore.getState().importSettings({

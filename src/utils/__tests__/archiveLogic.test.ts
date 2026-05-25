@@ -2,6 +2,7 @@ import JSZip from 'jszip';
 import { describe, expect, it, vi } from 'vitest';
 
 import { importFromJozorArchive, importJozorArchiveData } from '../archiveLogic';
+import { buildBlueprintArchive } from '../../services/archiveService';
 
 vi.mock('../../services/googleService', () => ({
   googleMediaService: {
@@ -55,6 +56,38 @@ describe('archiveLogic', () => {
       },
       settings: { treeSettings: { chartType: 'radial' } },
     });
+
+    const data = await importJozorArchiveData(file);
+
+    expect(data.people.person_1.firstName).toBe('Root');
+    expect(data.settings).toEqual({ treeSettings: { chartType: 'radial' } });
+  });
+
+  it('imports current blueprint Jozor archives with tree settings', async () => {
+    const { blob } = await buildBlueprintArchive({
+      version: 1,
+      people: {
+        person_1: {
+          id: 'person_1',
+          firstName: 'Root',
+          lastName: 'Person',
+          gender: 'male',
+          parents: [],
+          children: [],
+          spouses: [],
+        } as any,
+      },
+      settings: { treeSettings: { chartType: 'radial' } as any },
+      focusId: 'person_1',
+      metadata: {
+        lastModified: Date.parse('2026-05-25T00:00:00.000Z'),
+        appName: 'Jozor',
+      },
+    }, {
+      label: 'test-export',
+      createdAt: '2026-05-25T00:00:00.000Z',
+    });
+    const file = new File([blob], 'family.jozor', { type: 'application/octet-stream' });
 
     const data = await importJozorArchiveData(file);
 
