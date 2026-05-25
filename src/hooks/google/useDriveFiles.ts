@@ -58,14 +58,14 @@ export const useDriveFiles = ({
       setDriveFiles(files);
     } catch (e: unknown) {
       const err = e as Error;
-      logError('useGoogleSync refreshDriveFiles', err, {
-        category: 'NETWORK',
-        severity: 'MEDIUM',
-        metadata: { operationType: 'list_drive_files' }
-      });
       if (err.message === 'Missing authentication') {
         const hasPreviousToken = !!localStorage.getItem('jozor_google_access_token');
         if (hasPreviousToken) {
+          logError('useGoogleSync refreshDriveFiles', err, {
+            category: 'NETWORK',
+            severity: 'MEDIUM',
+            metadata: { operationType: 'list_drive_files' }
+          });
           setHasSessionError(true);
           showToast.error('Your session has expired. Please reconnect your account in the Cloud tab.', { id: SESSION_ERROR_TOAST_ID });
         } else {
@@ -73,6 +73,11 @@ export const useDriveFiles = ({
           setHasSessionError(false);
         }
       } else {
+        logError('useGoogleSync refreshDriveFiles', err, {
+          category: 'NETWORK',
+          severity: 'MEDIUM',
+          metadata: { operationType: 'list_drive_files' }
+        });
         showGoogleError(err, 'Failed to list files from Google Drive.');
       }
       setIsAuthorized(false);

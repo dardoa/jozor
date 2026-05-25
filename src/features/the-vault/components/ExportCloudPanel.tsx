@@ -127,6 +127,14 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
     setConfirmDeleteId(null);
   }, [onDeleteDriveFile]);
 
+  const handleGoogleLogin = useCallback(async () => {
+    try {
+      await onGoogleLogin();
+    } catch (error) {
+      showToast.error(error instanceof Error ? error.message : 'Failed to connect Google Drive.');
+    }
+  }, [onGoogleLogin]);
+
   return (
     <div className="space-y-6">
       <section className="rounded-[14px] border border-[var(--border-soft)] bg-[var(--surface-panel)] p-4 shadow-none">
@@ -147,7 +155,7 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
             </div>
             <button
               type="button"
-              onClick={onGoogleLogin}
+              onClick={() => void handleGoogleLogin()}
               className="w-full rounded-lg bg-[var(--danger-600)] px-4 py-2 text-sm font-bold text-white transition-all shadow-sm hover:brightness-95 active:scale-[0.98]"
             >
               Reconnect Google Account
@@ -172,7 +180,7 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
             </div>
             <button
               type="button"
-              onClick={onGoogleLogin}
+              onClick={() => void handleGoogleLogin()}
               className="w-full rounded-lg bg-[var(--color-info-500)] px-4 py-2 text-sm font-bold text-white transition-all shadow-sm hover:brightness-95 active:scale-[0.98]"
             >
               Connect Google Drive
