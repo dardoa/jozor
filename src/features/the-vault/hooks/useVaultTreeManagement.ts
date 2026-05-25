@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { loadFullState } from '../../../store/useAppStore';
+import { loadFullState, useAppStore } from '../../../store/useAppStore';
 import type { UserProfile } from '../../../types';
 import type { TranslationSchema } from '../../../utils/translationLoader';
 import { showToast } from '../../../utils/showToast';
@@ -127,6 +127,7 @@ export const useVaultTreeManagement = ({
       const { fetchTree } = await import('../../../services/supabaseTreeReadService');
       const full = await fetchTree(treeId, currentUser.uid, currentUser.email, currentUser.supabaseToken);
       localStorage.setItem('lastActiveTreeId', treeId);
+      useAppStore.getState().setDeletedPersonIds([]);
       loadFullState({
         version: 1,
         people: full.people,

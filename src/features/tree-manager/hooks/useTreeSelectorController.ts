@@ -6,7 +6,7 @@ import { fetchSharedTrees } from '../../../services/supabaseTreeAccessService';
 import { createTreeWithRootAtomic } from '../../../services/supabaseTreeMutationService';
 import { fetchPeopleCountsForTrees, fetchTree, fetchTreesForUser } from '../../../services/supabaseTreeReadService';
 import type { SharedTreeSummary, TreeSummary } from '../../../services/supabaseTreeTypes';
-import { loadFullState } from '../../../store/useAppStore';
+import { loadFullState, useAppStore } from '../../../store/useAppStore';
 import { createPerson } from '../../../utils/familyLogic';
 import { getUserFacingErrorInfo, logError } from '../../../utils/errorLogger';
 import { showToast } from '../../../utils/showToast';
@@ -94,6 +94,7 @@ export const useTreeSelectorController = ({
 
       localStorage.setItem('lastActiveTreeId', treeId);
 
+      useAppStore.getState().setDeletedPersonIds([]);
       loadFullState({
         version: 1,
         people: full.people,

@@ -11,6 +11,7 @@ const mockFetchPeopleCountsForTrees = vi.fn();
 const mockFetchSharedTrees = vi.fn();
 const mockFetchTree = vi.fn();
 const mockLoadFullState = vi.fn();
+const mockSetDeletedPersonIds = vi.fn();
 const mockShowSuccess = vi.fn();
 const mockShowError = vi.fn();
 
@@ -30,6 +31,11 @@ vi.mock('../../services/supabaseTreeMutationService', () => ({
 
 vi.mock('../../store/useAppStore', () => ({
   loadFullState: (...args: unknown[]) => mockLoadFullState(...args),
+  useAppStore: {
+    getState: () => ({
+      setDeletedPersonIds: mockSetDeletedPersonIds,
+    }),
+  },
 }));
 
 vi.mock('../../context/TranslationContext', () => ({
@@ -144,6 +150,7 @@ describe('TreeSelector', () => {
       );
     });
 
+    expect(mockSetDeletedPersonIds).toHaveBeenCalledWith([]);
     expect(onTreeSelected).toHaveBeenCalledWith('tree-1', 'owner');
     expect(mockShowSuccess).toHaveBeenCalledWith('messages.success.load');
   });
