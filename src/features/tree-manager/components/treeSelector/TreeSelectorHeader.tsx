@@ -19,6 +19,9 @@ export const TreeSelectorHeader: React.FC<TreeSelectorHeaderProps> = ({
   onCreateTree,
   onImportClick,
 }) => {
+  const importLabel = (t as any).vaultImportTree || t.load;
+  const importHint = (t as any).vaultImportTreeHint;
+
   return (
     <div className='flex flex-col sm:flex-row items-center sm:items-start justify-between gap-6 mb-12'>
       <div>
@@ -33,6 +36,11 @@ export const TreeSelectorHeader: React.FC<TreeSelectorHeaderProps> = ({
         <p className='text-[var(--text-muted)] font-medium px-1'>
           {t.manageTreesDesc}
         </p>
+        {importHint && (
+          <p className='mt-2 max-w-xl px-1 text-xs font-semibold text-[var(--text-muted)]'>
+            {importHint}
+          </p>
+        )}
       </div>
 
       <div className='flex gap-3 w-full sm:w-auto'>
@@ -61,7 +69,7 @@ export const TreeSelectorHeader: React.FC<TreeSelectorHeaderProps> = ({
           className='flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-[var(--theme-surface)] hover:bg-[var(--surface-hover)] text-[var(--text-main)] rounded-[var(--radius-lg)] font-bold text-sm transition-all active:scale-95 disabled:opacity-50'
         >
           {importing ? <Loader2 className='w-4 h-4 animate-spin' /> : <Download className='w-4 h-4' />}
-          {t.load}
+          {importLabel}
         </button>
       </div>
     </div>

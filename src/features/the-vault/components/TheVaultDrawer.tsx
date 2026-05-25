@@ -243,6 +243,7 @@ export const TheVaultDrawer: React.FC<TheVaultDrawerProps> = ({
     activeTree: t.vaultActiveTreeLabel,
     createTree: t.vaultCreateTree,
     importTree: t.vaultImportTree,
+    importTreeHint: t.vaultImportTreeHint,
     refreshTrees: t.vaultRefreshTrees,
     ownedCount: t.vaultTreeOwnedCount,
     sharedCount: t.vaultTreeSharedCount,

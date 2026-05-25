@@ -12,6 +12,7 @@ interface ActiveTreeCardProps {
     activeTree: string;
     createTree: string;
     importTree: string;
+    importTreeHint: string;
     refreshTrees: string;
   }>;
   onCreate: () => void;
@@ -22,7 +23,8 @@ interface ActiveTreeCardProps {
 const DEFAULT_LABELS = {
   activeTree: 'Active Tree',
   createTree: 'New',
-  importTree: 'Import',
+  importTree: 'Import as new tree',
+  importTreeHint: 'Imported files create a separate cloud tree and do not replace the active tree.',
   refreshTrees: 'Refresh',
 };
 
@@ -94,6 +96,11 @@ export const ActiveTreeCard: React.FC<ActiveTreeCardProps> = ({
             </span>
           </button>
         </div>
+        {resolvedLabels.importTreeHint && (
+          <p className="-mt-2 text-xs font-medium leading-relaxed text-[var(--text-muted)]">
+            {resolvedLabels.importTreeHint}
+          </p>
+        )}
       </div>
     </section>
   );

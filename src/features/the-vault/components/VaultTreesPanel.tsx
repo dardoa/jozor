@@ -8,6 +8,7 @@ export interface VaultTreesPanelLabels {
   activeTree: string;
   createTree: string;
   importTree: string;
+  importTreeHint: string;
   refreshTrees: string;
   ownedTitle: string;
   sharedTitle: string;
@@ -82,6 +83,7 @@ export const VaultTreesPanel: React.FC<VaultTreesPanelProps> = ({
         activeTree: labels.activeTree,
         createTree: labels.createTree,
         importTree: labels.importTree,
+        importTreeHint: labels.importTreeHint,
         refreshTrees: labels.refreshTrees,
       }}
       onCreate={onCreateTree}
