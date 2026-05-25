@@ -111,7 +111,6 @@ export const personDetails = {
   vaultExportPrivacyWarning: 'Current privacy settings will be applied to the exported file.',
   vaultCloudBackupTitle: 'Cloud & Backup',
   vaultBackupNow: 'Backup Now',
-  vaultManageCloudFiles: 'Manage Cloud Files',
   vaultActivityLog: 'Activity Log',
   vaultExportDataTitle: 'Export Data',
   vaultExportArchive: 'Jozor Archive',

@@ -111,7 +111,6 @@ export const personDetails = {
   vaultExportPrivacyWarning: 'سيتم تطبيق إعدادات الخصوصية الحالية على الملف المصدر.',
   vaultCloudBackupTitle: 'السحابة والنسخ الاحتياطي',
   vaultBackupNow: 'نسخ احتياطي الآن',
-  vaultManageCloudFiles: 'إدارة ملفات السحابة',
   vaultActivityLog: 'سجل النشاط',
   vaultExportDataTitle: 'تصدير البيانات',
   vaultExportArchive: 'أرشيف جذور',
