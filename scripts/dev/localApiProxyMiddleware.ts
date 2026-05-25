@@ -168,9 +168,11 @@ const handleAiProxy = async (
 const handleAuthExchange = async (
   req: LocalRequest,
   res: ServerResponse,
-  body: LocalProxyBody
+  body: LocalProxyBody,
+  env: LocalApiProxyEnv
 ) => {
   try {
+    syncProcessEnv(env);
     const { default: authExchangeHandler } = await import('../../src/api/auth/exchange');
     const localResponse = createLocalResponse(res);
     req.body = body;
@@ -239,7 +241,7 @@ export const createLocalApiProxyMiddleware = (env: LocalApiProxyEnv): Plugin => 
       }
 
       if (pathName === '/api/auth/exchange') {
-        await handleAuthExchange(req as LocalRequest, res, body);
+        await handleAuthExchange(req as LocalRequest, res, body, env);
         return;
       }
 
