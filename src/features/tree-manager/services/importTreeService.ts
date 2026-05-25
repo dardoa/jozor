@@ -2,6 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import type { Person } from '../../../types';
 import { logError, logInfo } from '../../../utils/errorLogger';
 import { importFromJozorArchive } from '../../../utils/archiveLogic';
+import { importFromGEDCOM } from '../../../utils/gedcomLogic';
 import { bulkInsertRelationships, bulkUpsertPeople, createTree } from '../../../services/supabaseTreeMutationService';
 
 /**
@@ -195,5 +196,10 @@ export const importTreeFromFileItem = async (
     }
 
     const text = await file.text();
+    if (fileName.endsWith('.ged')) {
+        const people = importFromGEDCOM(text);
+        return importTreeFromJSONItem(ownerId, userEmail, JSON.stringify({ people }), token);
+    }
+
     return importTreeFromJSONItem(ownerId, userEmail, text, token);
 };

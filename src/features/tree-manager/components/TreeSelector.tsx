@@ -123,7 +123,7 @@ export const TreeSelector: React.FC<TreeSelectorProps> = ({
 
         <input
           type='file'
-          accept='.json,.jozor'
+          accept='.json,.jozor,.zip,.ged'
           ref={fileInputRef}
           className='hidden'
           onChange={handleFileChange}

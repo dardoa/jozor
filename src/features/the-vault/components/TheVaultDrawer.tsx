@@ -326,7 +326,7 @@ export const TheVaultDrawer: React.FC<TheVaultDrawerProps> = ({
   return (
     <>
       <style>{TRANSITION_STYLE}</style>
-      <input ref={fileInputRef} type="file" accept=".json,.jozor" className="hidden" onChange={handleImportFile} />
+      <input ref={fileInputRef} type="file" accept=".json,.jozor,.zip,.ged" className="hidden" onChange={handleImportFile} />
       <OverlayPrimitive isOpen={isVaultOpen} onClose={() => setVaultOpen(false)} id="the-vault-drawer" withBackdrop={false}>
         <div
           className="fixed inset-0 z-[var(--z-index-drawer)] bg-[color:rgba(24,16,12,0.18)] backdrop-blur-[2px] transition-opacity"
