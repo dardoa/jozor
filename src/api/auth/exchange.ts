@@ -57,9 +57,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: 'Missing auth code' });
   }
 
-  // Check for required secrets
-  if (!SUPABASE_JWT_SECRET || !ENCRYPTION_SECRET) {
-    console.error('Missing critical environment variables: SUPABASE_JWT_SECRET or ENCRYPTION_SECRET');
+  // Check for secrets required to complete the local auth exchange.
+  // ENCRYPTION_SECRET is only required when persisting a refresh token; local
+  // development can still use the short-lived Google access token safely.
+  if (!SUPABASE_JWT_SECRET || !GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
+    console.error('Missing critical environment variables for auth exchange.', {
+      hasJwtSecret: Boolean(SUPABASE_JWT_SECRET),
+      hasGoogleClientId: Boolean(GOOGLE_CLIENT_ID),
+      hasGoogleClientSecret: Boolean(GOOGLE_CLIENT_SECRET),
+    });
     return res.status(500).json({ error: 'Server configuration error' });
   }
 
@@ -97,7 +103,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const uid = userInfo.sub;
 
     // 1. Store encrypted refresh token if Supabase is configured
-    if (refresh_token && supabase) {
+    if (refresh_token && supabase && ENCRYPTION_SECRET) {
       try {
         const encryptedToken = encryptToken(refresh_token, ENCRYPTION_SECRET);
         const { error: dbError } = await supabase.from('user_keys').upsert(
@@ -115,6 +121,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       } catch (dbErr) {
         console.warn('Failed to store refresh token:', dbErr);
       }
+    } else if (refresh_token && supabase && !ENCRYPTION_SECRET) {
+      console.warn('Skipping refresh token persistence because ENCRYPTION_SECRET is not configured for local development.');
     }
 
     // 2. Issue a secure JWT for the client to use with Supabase direct calls
