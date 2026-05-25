@@ -15,12 +15,12 @@ const {
   logWarnMock: vi.fn(),
 }));
 
-vi.mock('../supabaseClient', () => ({
+vi.mock('../../../../services/supabaseClient', () => ({
   getSupabaseWithAuth: getSupabaseWithAuthMock,
   getSupabaseFull: getSupabaseFullMock,
 }));
 
-vi.mock('../../utils/errorLogger', () => ({
+vi.mock('../../../../utils/errorLogger', () => ({
   logError: logErrorMock,
   logInfo: logInfoMock,
   logWarn: logWarnMock,
@@ -35,7 +35,7 @@ import {
   revokeTreeInvitation,
   subscribeToMyInvitations,
   subscribeToOwnedInvitations,
-} from '../../features/sharing/services/treeInvitationService';
+} from '../treeInvitationService';
 
 type QueryResult<T> = { data: T; error: unknown };
 
