@@ -15,8 +15,10 @@ const {
   fetchTreeAccessRoleMock,
   resolveTreeByPersonMock,
   showErrorMock,
+  showInfoMock,
   logErrorMock,
   getDeletedPersonIdsMock,
+  migrateLocalTreeToCloudMock,
 } = vi.hoisted(() => ({
   reconcileTreeMock: vi.fn().mockResolvedValue(undefined),
   recoverPendingOperationsMock: vi.fn().mockResolvedValue(undefined),
@@ -26,8 +28,10 @@ const {
   fetchTreeAccessRoleMock: vi.fn(),
   resolveTreeByPersonMock: vi.fn(),
   showErrorMock: vi.fn(),
+  showInfoMock: vi.fn(),
   logErrorMock: vi.fn(),
   getDeletedPersonIdsMock: vi.fn().mockResolvedValue([]),
+  migrateLocalTreeToCloudMock: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('../../../services/deltaSyncService', () => ({
@@ -57,6 +61,12 @@ vi.mock('../../../services/storageService', () => ({
   },
 }));
 
+vi.mock('../../../services/treeMigrationService', () => ({
+  treeMigrationService: {
+    migrateLocalTreeToCloud: migrateLocalTreeToCloudMock,
+  },
+}));
+
 vi.mock('../../../utils/errorLogger', () => ({
   logError: logErrorMock,
   logInfo: vi.fn(),
@@ -68,6 +78,7 @@ vi.mock('../../../utils/showToast', () => ({
     vi.fn(),
     {
       error: showErrorMock,
+      info: showInfoMock,
       success: vi.fn(),
       promise: vi.fn(),
     }
@@ -329,6 +340,36 @@ describe('useAuthInit', () => {
 
     expect(setShowWelcome).toHaveBeenCalledWith(false);
     expect(logErrorMock).toHaveBeenCalled();
+  });
+
+  it('prompts to promote a one-person local guest tree before restoring the last cloud tree', async () => {
+    localStorage.setItem('lastActiveTreeId', validTreeId);
+
+    const setShowWelcome = vi.fn();
+    const localPerson = buildPerson({
+      id: 'local-person-1',
+      firstName: 'Local',
+      lastName: 'Draft',
+    });
+
+    renderHook(() =>
+      useAuthInit({
+        people: { [localPerson.id]: localPerson },
+        setShowWelcome,
+      })
+    );
+
+    await waitFor(() => {
+      expect(showInfoMock).toHaveBeenCalledWith(
+        'You have a local guest tree. Save it to your cloud account?',
+        expect.objectContaining({
+          action: expect.objectContaining({ label: 'Save to cloud' }),
+        })
+      );
+    });
+
+    expect(fetchTreeMock).not.toHaveBeenCalledWith(validTreeId, 'user-1', 'user@example.com', 'token-1');
+    expect(setShowWelcome).toHaveBeenCalledWith(false);
   });
 
   it('flushes pending changes before logout and resets local session state', async () => {
