@@ -12,6 +12,8 @@ import { claimCollaboratorMemberships } from '../../services/supabaseTreeAccessS
 import { fetchUserProfile } from '../../services/supabaseProfileService';
 import { dismissNativeSplash } from '../../utils/nativeSplash';
 
+const SESSION_BOOTSTRAP_TIMEOUT_MS = 6000;
+
 /**
  * Applies the current Supabase session to the auth slice so refresh restores
  * the same auth lifecycle path as interactive sign-in/sign-out events.
@@ -111,6 +113,7 @@ export const useSessionBootstrap = () => {
   useEffect(() => {
     let active = true;
     let authEventHandled = false;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
     useAppStore.getState().setAuthLoading(true);
     useAppStore.getState().setSyncStatus({
@@ -124,11 +127,33 @@ export const useSessionBootstrap = () => {
     });
 
     const handleAuthSession = async (session: Session | null) => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+        timeoutId = null;
+      }
       performance.mark('diagnostic-1-auth-session-available');
       performance.mark('jozor-session-start');
       authEventHandled = true;
       await applySessionToStore(session);
     };
+
+    timeoutId = setTimeout(() => {
+      if (!active || authEventHandled) return;
+
+      console.warn('Supabase session bootstrap timed out. Releasing app into offline mode.');
+      const store = useAppStore.getState();
+      store.setSyncStatus({
+        ...store.syncStatus,
+        state: 'offline',
+        supabaseStatus: 'error',
+        errorMessage: 'Supabase session bootstrap timed out. Working locally until auth recovers.',
+        lastErrorCategory: 'AUTH',
+        lastErrorAt: new Date(),
+        lastErrorRetryable: true,
+      });
+      dismissNativeSplash();
+      store.setAuthLoading(false);
+    }, SESSION_BOOTSTRAP_TIMEOUT_MS);
 
     const {
       data: { subscription },
@@ -164,6 +189,7 @@ export const useSessionBootstrap = () => {
 
     return () => {
       active = false;
+      if (timeoutId) clearTimeout(timeoutId);
       subscription.unsubscribe();
     };
   }, []);

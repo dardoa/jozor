@@ -1,6 +1,6 @@
 
-import { renderHook, waitFor } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { act, renderHook, waitFor } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Session } from '@supabase/supabase-js';
 import { useSessionBootstrap } from '../useSessionBootstrap';
 import { useAppStore } from '../../../store/useAppStore';
@@ -52,6 +52,10 @@ vi.mock('../../../services/supabaseTreeAccessService', () => ({
 }));
 
 describe('useSessionBootstrap', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
@@ -176,6 +180,21 @@ describe('useSessionBootstrap', () => {
     expect(useAppStore.getState().notifications).toHaveLength(0);
     expect(setStoredSupabaseTokenMock).toHaveBeenCalledWith(null);
     expect(clearSupabaseInstancesMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('releases bootstrap into offline mode if Supabase session restore hangs', async () => {
+    vi.useFakeTimers();
+    getSessionMock.mockReturnValue(new Promise(() => {}));
+
+    renderHook(() => useSessionBootstrap());
+
+    act(() => {
+      vi.advanceTimersByTime(6000);
+    });
+
+    expect(useAppStore.getState().authLoading).toBe(false);
+    expect(useAppStore.getState().syncStatus.state).toBe('offline');
+    expect(useAppStore.getState().syncStatus.lastErrorCategory).toBe('AUTH');
   });
 });
 
