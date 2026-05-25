@@ -89,7 +89,7 @@ const buildHeaderProps = (): any => ({
     isListingDriveFiles: false,
     handleCreateSnapshot: vi.fn(async () => {}),
     handleRestoreSnapshot: vi.fn(async () => {}),
-    onOpenDriveFileManager: vi.fn(),
+    onOpenCloudBackups: vi.fn(),
     onOpenTreeManager: vi.fn(),
     onOpenLoginModal: vi.fn(async () => {}),
     syncStatus: {

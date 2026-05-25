@@ -21,7 +21,7 @@ interface UseAuthAndSyncOrchestratorParams {
   setShowWelcome: (value: boolean) => void;
   onOpenGoogleSyncChoice: (fileId: string) => void;
   onCloseGoogleSyncChoice: () => void;
-  onOpenDriveFileManager: () => void;
+  onOpenCloudBackups: () => void;
   onOpenTreeManager: () => void;
   // Setter from modal orchestrator to show the shared tree prompt
   setSharedTreePromptModal?: (value: { isOpen: boolean; sharedTrees: SharedTreeSummary[] }) => void;
@@ -55,7 +55,7 @@ export const useAuthAndSyncOrchestrator = (
     setShowWelcome,
     onOpenGoogleSyncChoice,
     onCloseGoogleSyncChoice,
-    onOpenDriveFileManager,
+    onOpenCloudBackups,
     onOpenTreeManager,
     setSharedTreePromptModal,
     onOpenLoginModal,
@@ -81,7 +81,7 @@ export const useAuthAndSyncOrchestrator = (
     onOpenGoogleSyncChoice,
     onCloseGoogleSyncChoice,
     setShowWelcome,
-    onOpenDriveFileManager
+    onOpenCloudBackups
   );
 
   // Keep stopSyncing ref up to date
@@ -177,7 +177,7 @@ export const useAuthAndSyncOrchestrator = (
     isAuthorized: googleSync.isAuthorized,
     handleCreateSnapshot: googleSync.handleCreateSnapshot,
     handleRestoreSnapshot: googleSync.handleRestoreSnapshot,
-    onOpenDriveFileManager,
+    onOpenCloudBackups,
     onOpenTreeManager,
     onOpenLoginModal,
     syncStatus,

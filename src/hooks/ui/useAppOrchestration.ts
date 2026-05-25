@@ -45,7 +45,7 @@ export const useAppOrchestration = (
     handleOpenLinkModal,
     onOpenSnapshotHistory,
     onOpenTreeManager,
-    onOpenDriveFileManager,
+    onOpenCloudBackups,
     onOpenGoogleSyncChoice,
     onCloseGoogleSyncChoice,
   } = useAppModalBindings();
@@ -86,7 +86,7 @@ export const useAppOrchestration = (
     setDetailsPanelOpen,
     onOpenGoogleSyncChoice,
     onCloseGoogleSyncChoice,
-    onOpenDriveFileManager,
+    onOpenCloudBackups,
     onOpenTreeManager,
     setSharedTreePromptModal: modals.setSharedTreePromptModal,
     onOpenLoginModal: async (returnTo?: string) => {
@@ -113,7 +113,7 @@ export const useAppOrchestration = (
     setShowWelcome,
     onOpenGoogleSyncChoice,
     onCloseGoogleSyncChoice,
-    onOpenDriveFileManager,
+    onOpenCloudBackups,
     onOpenTreeManager,
     setSharedTreePromptModal: modals.setSharedTreePromptModal,
     onOpenLoginModal: async (returnTo?: string) => {

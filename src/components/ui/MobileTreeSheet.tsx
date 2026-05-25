@@ -18,7 +18,7 @@ interface MobileTreeSheetProps {
   onOpenShare: () => void;
   onOpenDiagnostics: () => void;
   onOpenTreeManager: () => void;
-  onOpenDriveFileManager: () => void;
+  onOpenCloudBackups: () => void;
   onOpenSnapshotHistory: () => void;
   onOpenActivityLog: () => void;
   onOpenCleanTree: () => void;
@@ -74,7 +74,7 @@ export const MobileTreeSheet = memo(({
   onOpenShare,
   onOpenDiagnostics,
   onOpenTreeManager,
-  onOpenDriveFileManager,
+  onOpenCloudBackups,
   onOpenSnapshotHistory,
   onOpenActivityLog,
   onOpenCleanTree,
@@ -142,7 +142,7 @@ export const MobileTreeSheet = memo(({
               icon={<HardDrive className="h-5 w-5" />}
               label={t.manageDriveFiles}
               subLabel={settingsText.manageBackupsHint || 'Review backup files and connected storage.'}
-              onClick={closeThen(onOpenDriveFileManager)}
+              onClick={closeThen(onOpenCloudBackups)}
             />
           </section>
 

@@ -22,7 +22,7 @@ interface TreeMenuProps {
   onOpenShare: () => void;
   onOpenDiagnostics: () => void;
   onOpenTreeManager: () => void;
-  onOpenDriveFileManager: () => void;
+  onOpenCloudBackups: () => void;
   onOpenSnapshotHistory: () => void;
   onOpenActivityLog: () => void;
   onOpenCleanTree: () => void;
@@ -35,7 +35,7 @@ export const TreeMenu = memo<TreeMenuProps>(
     onOpenShare,
     onOpenDiagnostics,
     onOpenTreeManager,
-    onOpenDriveFileManager,
+    onOpenCloudBackups,
     onOpenSnapshotHistory,
     onOpenActivityLog,
     onOpenCleanTree,
@@ -76,7 +76,7 @@ export const TreeMenu = memo<TreeMenuProps>(
           subLabel={settingsText.treeManagerHint || 'Open, rename, or switch the active tree.'}
         />
         <DropdownMenuItem
-          onClick={onOpenDriveFileManager}
+          onClick={onOpenCloudBackups}
           icon={<HardDrive className="w-4 h-4" />}
           label={t.manageDriveFiles}
           subLabel={settingsText.manageBackupsHint || 'Review backup files and connected storage.'}

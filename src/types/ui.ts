@@ -67,7 +67,7 @@ export interface AuthProps {
     isAuthorized: boolean;
     handleCreateSnapshot: (label: string) => Promise<void>;
     handleRestoreSnapshot: (snapshot: DriveFile) => Promise<void>;
-    onOpenDriveFileManager: () => void;
+    onOpenCloudBackups: () => void;
     onOpenTreeManager: () => void;
     onOpenLoginModal: (returnTo?: string) => Promise<void>;
     syncStatus: SyncStatus;
@@ -97,7 +97,7 @@ export interface HeaderGlobalActionsProps {
     onOpenShare: () => void;
     onOpenCleanTree: () => void;
     onOpenTreeManager: () => void;
-    onOpenDriveFileManager: () => void;
+    onOpenCloudBackups: () => void;
     onOpenSnapshotHistory: () => void;
     onOpenActivityLog: () => void;
 }

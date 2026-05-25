@@ -173,7 +173,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
             onOpenShare: () => openVaultTab('members'),
             onOpenCleanTree: modals.onOpenCleanTreeOptions,
             onOpenTreeManager: auth.onOpenTreeManager,
-            onOpenDriveFileManager: auth.onOpenDriveFileManager,
+            onOpenCloudBackups: auth.onOpenCloudBackups,
             onOpenSnapshotHistory: modals.onOpenSnapshotHistory,
             onOpenActivityLog: () => setActivityLogOpen(true),
           }}

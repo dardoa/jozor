@@ -16,7 +16,7 @@ export const useGoogleSync = (
   onOpenGoogleSyncChoice: (fileId: string) => void,
   onCloseGoogleSyncChoice: () => void,
   setShowWelcome: (show: boolean) => void,
-  onOpenDriveFileManager: () => void
+  onOpenCloudBackups: () => void
 ) => {
   const currentActiveDriveFileId = useAppStore((state) => state.currentActiveDriveFileId);
   const setCurrentActiveDriveFileId = useAppStore((state) => state.setCurrentActiveDriveFileId);
@@ -139,7 +139,7 @@ export const useGoogleSync = (
     hasSessionError,
     isAuthorized,
     setShowWelcome,
-    onOpenDriveFileManager,
+    onOpenCloudBackups,
     handleCreateSnapshot,
     handleRestoreSnapshot,
     handleClearSyncCache,
@@ -167,7 +167,7 @@ export const useGoogleSync = (
     hasSessionError,
     isAuthorized,
     setShowWelcome,
-    onOpenDriveFileManager,
+    onOpenCloudBackups,
     handleCreateSnapshot,
     handleRestoreSnapshot,
     handleClearSyncCache,

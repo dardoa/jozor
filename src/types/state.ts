@@ -97,7 +97,7 @@ export interface GoogleSyncStateAndActions {
     onLogout: () => Promise<void>;
     onLoadCloudData: (fileId: string) => Promise<void>;
     onSaveNewCloudFile: () => Promise<void>;
-    onOpenDriveFileManager: () => void;
+    onOpenCloudBackups: () => void;
     driveFiles: import('./tree').DriveFile[];
     currentActiveDriveFileId: string | null;
     refreshDriveFiles: () => Promise<void>;

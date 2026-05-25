@@ -30,7 +30,7 @@ const buildProps = () => ({
   onOpenShare: vi.fn(),
   onOpenDiagnostics: vi.fn(),
   onOpenTreeManager: vi.fn(),
-  onOpenDriveFileManager: vi.fn(),
+  onOpenCloudBackups: vi.fn(),
   onOpenSnapshotHistory: vi.fn(),
   onOpenActivityLog: vi.fn(),
   onOpenCleanTree: vi.fn(),

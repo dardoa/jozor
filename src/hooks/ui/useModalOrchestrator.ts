@@ -19,7 +19,7 @@ export const useModalOrchestrator = () => {
     setGoogleSyncChoiceModal,
     onCloseGoogleSyncChoice,
     onOpenGoogleSyncChoice,
-    onOpenDriveFileManager,
+    onOpenCloudBackups,
     cleanTreeOptionsModal,
     setCleanTreeOptionsModal,
     onOpenCleanTreeOptions,
@@ -101,7 +101,7 @@ export const useModalOrchestrator = () => {
     onOpenSnapshotHistory,
     onOpenTreeManager,
     onOpenGlobalSettings,
-    onOpenDriveFileManager,
+    onOpenCloudBackups,
     onOpenGoogleSyncChoice,
     onCloseGoogleSyncChoice,
   };

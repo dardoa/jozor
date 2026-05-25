@@ -18,7 +18,7 @@ export const useAppModals = () => {
         setGoogleSyncChoiceModal({ isOpen: true, driveFileId: fileId });
     }, []);
 
-    const onOpenDriveFileManager = useCallback(() => {
+    const onOpenCloudBackups = useCallback(() => {
         setVaultTab('cloud');
         setVaultOpen(true);
     }, [setVaultOpen, setVaultTab]);
@@ -63,7 +63,7 @@ export const useAppModals = () => {
         setGoogleSyncChoiceModal,
         onCloseGoogleSyncChoice,
         onOpenGoogleSyncChoice,
-        onOpenDriveFileManager,
+        onOpenCloudBackups,
         cleanTreeOptionsModal,
         setCleanTreeOptionsModal,
         onOpenCleanTreeOptions,

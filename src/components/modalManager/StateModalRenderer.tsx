@@ -40,7 +40,7 @@ export const StateModalRenderer = (modal: ModalManagerProps) => (
         onSaveNewCloud={modal.onSaveNewCloudFile}
         onOpenDriveManager={() => {
           modal.setGoogleSyncChoiceModal({ isOpen: false, driveFileId: null });
-          modal.googleSync.onOpenDriveFileManager();
+          modal.googleSync.onOpenCloudBackups();
         }}
         driveFileId={modal.googleSyncChoiceModal.driveFileId}
       />
