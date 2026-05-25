@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import type { Person } from '../../../types';
 import { logError, logInfo } from '../../../utils/errorLogger';
-import { importFromJozorArchive } from '../../../utils/archiveLogic';
+import { importJozorArchiveData } from '../../../utils/archiveLogic';
 import { importFromGEDCOM } from '../../../utils/gedcomLogic';
 import { bulkInsertRelationships, bulkUpsertPeople, createTree } from '../../../services/supabaseTreeMutationService';
 
@@ -66,6 +66,9 @@ export const importTreeFromJSONItem = async (
     // Determine structure
     let peopleMap: Record<string, Person>;
     const record = data as Record<string, unknown>;
+    const importedSettings = record.settings && typeof record.settings === 'object' && !Array.isArray(record.settings)
+        ? record.settings as Record<string, unknown>
+        : undefined;
 
     if (record.people && typeof record.people === 'object') {
         peopleMap = record.people as Record<string, Person>;
@@ -89,7 +92,7 @@ export const importTreeFromJSONItem = async (
 
     // 1. Create the new tree
     const treeName = `Imported Tree ${new Date().toLocaleDateString()}`;
-    const treeId = await createTree(ownerId, userEmail, treeName, token);
+    const treeId = await createTree(ownerId, userEmail, treeName, token, importedSettings);
 
     // 2. Prepare people for bulk insert
     // ALWAYS generate new IDs when importing as a new tree to prevent ID collisions
@@ -191,8 +194,8 @@ export const importTreeFromFileItem = async (
     const fileName = file.name.toLowerCase();
 
     if (fileName.endsWith('.jozor') || fileName.endsWith('.zip')) {
-        const people = await importFromJozorArchive(file);
-        return importTreeFromJSONItem(ownerId, userEmail, JSON.stringify({ people }), token);
+        const archiveData = await importJozorArchiveData(file);
+        return importTreeFromJSONItem(ownerId, userEmail, JSON.stringify(archiveData), token);
     }
 
     const text = await file.text();

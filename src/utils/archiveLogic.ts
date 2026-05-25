@@ -204,7 +204,12 @@ export const exportToJozorArchive = async (
   return content;
 };
 
-export const importFromJozorArchive = async (file: File): Promise<Record<string, Person>> => {
+export interface JozorArchiveData {
+  people: Record<string, Person>;
+  settings?: Record<string, unknown>;
+}
+
+export const importJozorArchiveData = async (file: File): Promise<JozorArchiveData> => {
   const zip = await JSZip.loadAsync(file);
 
   let jsonFile = zip.file('family_data.json');
@@ -225,6 +230,9 @@ export const importFromJozorArchive = async (file: File): Promise<Record<string,
   const rawPeople = parsed && typeof parsed === 'object' && 'people' in parsed
     ? (parsed as { people?: unknown }).people
     : parsed;
+  const settings = parsed && typeof parsed === 'object' && 'settings' in parsed && typeof (parsed as { settings?: unknown }).settings === 'object'
+    ? (parsed as { settings?: Record<string, unknown> }).settings
+    : undefined;
 
   if (!rawPeople || typeof rawPeople !== 'object' || Array.isArray(rawPeople)) {
     throw new Error('Invalid Jozor file: people data not found');
@@ -267,5 +275,10 @@ export const importFromJozorArchive = async (file: File): Promise<Record<string,
     people[key] = p;
   }
 
-  return people;
+  return { people, settings };
+};
+
+export const importFromJozorArchive = async (file: File): Promise<Record<string, Person>> => {
+  const data = await importJozorArchiveData(file);
+  return data.people;
 };

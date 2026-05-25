@@ -5,7 +5,7 @@ const mockCreateTree = vi.hoisted(() => vi.fn());
 const mockBulkUpsertPeople = vi.hoisted(() => vi.fn());
 const mockBulkInsertRelationships = vi.hoisted(() => vi.fn());
 const mockImportFromGEDCOM = vi.hoisted(() => vi.fn());
-const mockImportFromJozorArchive = vi.hoisted(() => vi.fn());
+const mockImportJozorArchiveData = vi.hoisted(() => vi.fn());
 
 vi.mock('uuid', () => ({
   v4: () => mockUuid(),
@@ -18,7 +18,7 @@ vi.mock('../../../../services/supabaseTreeMutationService', () => ({
 }));
 
 vi.mock('../../../../utils/archiveLogic', () => ({
-  importFromJozorArchive: (...args: unknown[]) => mockImportFromJozorArchive(...args),
+  importJozorArchiveData: (...args: unknown[]) => mockImportJozorArchiveData(...args),
 }));
 
 vi.mock('../../../../utils/gedcomLogic', () => ({
@@ -78,7 +78,8 @@ describe('importTreeService', () => {
       'owner_1',
       'owner@example.com',
       expect.stringMatching(/^Imported Tree /),
-      'token_1'
+      'token_1',
+      undefined
     );
     expect(mockBulkUpsertPeople).toHaveBeenCalledWith(
       'tree_new',
@@ -93,13 +94,23 @@ describe('importTreeService', () => {
   });
 
   it('imports Jozor archive files as a new cloud tree with remapped people', async () => {
-    mockImportFromJozorArchive.mockResolvedValue(peopleMap);
+    mockImportJozorArchiveData.mockResolvedValue({
+      people: peopleMap,
+      settings: { treeSettings: { chartType: 'radial' } },
+    });
     const file = { name: 'family.jozor' } as unknown as File;
 
     const treeId = await importTreeFromFileItem('owner_1', 'owner@example.com', file, 'token_1');
 
     expect(treeId).toBe('tree_new');
-    expect(mockImportFromJozorArchive).toHaveBeenCalledWith(file);
+    expect(mockImportJozorArchiveData).toHaveBeenCalledWith(file);
+    expect(mockCreateTree).toHaveBeenCalledWith(
+      'owner_1',
+      'owner@example.com',
+      expect.stringMatching(/^Imported Tree /),
+      'token_1',
+      { treeSettings: { chartType: 'radial' } }
+    );
     expect(mockBulkUpsertPeople).toHaveBeenCalledWith(
       'tree_new',
       'owner_1',

@@ -29,11 +29,17 @@ export const createTreeWithRootAtomic = async (
   return data as string;
 };
 
-export const createTree = async (ownerId: string, userEmail: string, name: string, token?: string): Promise<string> => {
+export const createTree = async (
+  ownerId: string,
+  userEmail: string,
+  name: string,
+  token?: string,
+  settings?: Record<string, unknown>
+): Promise<string> => {
   const client = getTreeClient(ownerId, userEmail, token);
   const { data, error } = await client
     .from('trees')
-    .insert({ owner_id: ownerId, name })
+    .insert(settings ? { owner_id: ownerId, name, settings } : { owner_id: ownerId, name })
     .select('id')
     .single();
 

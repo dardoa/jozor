@@ -1,7 +1,7 @@
 import JSZip from 'jszip';
 import { describe, expect, it, vi } from 'vitest';
 
-import { importFromJozorArchive } from '../archiveLogic';
+import { importFromJozorArchive, importJozorArchiveData } from '../archiveLogic';
 
 vi.mock('../../services/googleService', () => ({
   googleMediaService: {
@@ -38,5 +38,27 @@ describe('archiveLogic', () => {
     expect(Object.keys(people)).toEqual(['person_1']);
     expect(people.person_1.firstName).toBe('Root');
     expect(people.person_1.lastName).toBe('Person');
+  });
+
+  it('exposes archive settings for cloud tree imports', async () => {
+    const file = await createArchiveFile({
+      people: {
+        person_1: {
+          id: 'person_1',
+          firstName: 'Root',
+          lastName: 'Person',
+          gender: 'male',
+          parents: [],
+          children: [],
+          spouses: [],
+        },
+      },
+      settings: { treeSettings: { chartType: 'radial' } },
+    });
+
+    const data = await importJozorArchiveData(file);
+
+    expect(data.people.person_1.firstName).toBe('Root');
+    expect(data.settings).toEqual({ treeSettings: { chartType: 'radial' } });
   });
 });
