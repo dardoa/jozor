@@ -16,6 +16,16 @@ import {
 const hasVisibleText = (value: unknown): boolean =>
     typeof value === 'string' && value.trim().length > 0;
 
+const isPlaceholderFirstName = (value: string): boolean => {
+    const normalized = value.trim().toLowerCase();
+    return !normalized || normalized === 'me' || normalized === 'new';
+};
+
+const isPlaceholderLastName = (value: string): boolean => {
+    const normalized = value.trim().toLowerCase();
+    return !normalized || normalized === 'person';
+};
+
 const hasMeaningfulLocalTree = (people: Record<string, Person>): boolean => {
     const localPeople = Object.values(people);
     if (localPeople.length > 1) return true;
@@ -23,10 +33,12 @@ const hasMeaningfulLocalTree = (people: Record<string, Person>): boolean => {
     const [onlyPerson] = localPeople;
     if (!onlyPerson) return false;
 
+    if (!isPlaceholderFirstName(onlyPerson.firstName) || !isPlaceholderLastName(onlyPerson.lastName)) {
+        return true;
+    }
+
     return [
-        onlyPerson.firstName,
         onlyPerson.middleName,
-        onlyPerson.lastName,
         onlyPerson.birthName,
         onlyPerson.nickName,
         onlyPerson.profession,

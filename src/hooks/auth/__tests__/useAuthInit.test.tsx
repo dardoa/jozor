@@ -372,6 +372,44 @@ describe('useAuthInit', () => {
     expect(setShowWelcome).toHaveBeenCalledWith(false);
   });
 
+  it('does not prompt to promote the untouched default local tree', async () => {
+    localStorage.setItem('lastActiveTreeId', validTreeId);
+
+    fetchTreeMock.mockResolvedValue({
+      people: {
+        'person-1': buildPerson({ firstName: 'Restored' }),
+      },
+      settings: {},
+      focusId: 'person-1',
+      lastVersion: 3,
+      name: 'Restored Tree',
+    });
+    fetchTreeAccessRoleMock.mockResolvedValue('owner');
+
+    const setShowWelcome = vi.fn();
+    const defaultLocalPerson = buildPerson({
+      id: 'local-person-1',
+      firstName: 'Me',
+      lastName: '',
+    });
+
+    renderHook(() =>
+      useAuthInit({
+        people: { [defaultLocalPerson.id]: defaultLocalPerson },
+        setShowWelcome,
+      })
+    );
+
+    await waitFor(() => {
+      expect(fetchTreeMock).toHaveBeenCalledWith(validTreeId, 'user-1', 'user@example.com', 'token-1');
+    });
+
+    expect(showInfoMock).not.toHaveBeenCalledWith(
+      'You have a local guest tree. Save it to your cloud account?',
+      expect.anything()
+    );
+  });
+
   it('flushes pending changes before logout and resets local session state', async () => {
     localStorage.setItem('lastActiveTreeId', 'tree-1');
 
