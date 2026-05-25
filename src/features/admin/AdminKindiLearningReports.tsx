@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { AlertTriangle, ArrowLeft, ArrowRight, BarChart3, BrainCircuit, RefreshCw, ShieldCheck } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, ArrowRight, BarChart3, BrainCircuit, RefreshCw, ShieldCheck, TimerReset } from 'lucide-react';
 
 import { useAppStore } from '../../store/useAppStore';
 import { useTranslation } from '../../context/TranslationContext';
@@ -331,6 +331,30 @@ export const AdminKindiLearningReports: React.FC = () => {
             row.confidence === null ? '-' : row.confidence.toFixed(2),
           ])}
         />
+
+        <section className="rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] p-4">
+          <div className="flex items-start gap-3">
+            <TimerReset className="mt-0.5 h-5 w-5 text-[var(--primary-600)]" />
+            <div>
+              <h2 className="text-sm font-black text-[var(--text-main)]">{text.retention.title}</h2>
+              <p className="mt-1 text-sm text-[var(--text-secondary)]">{text.retention.body}</p>
+              <div className="mt-3 grid gap-2 text-xs text-[var(--text-secondary)] sm:grid-cols-3">
+                <div className="rounded-md border border-[var(--border-soft)] bg-[var(--surface-app)] p-3">
+                  <div className="font-black uppercase tracking-wide text-[var(--text-muted)]">{text.retention.windowLabel}</div>
+                  <div className="mt-1 font-bold text-[var(--text-main)]">{text.retention.windowValue}</div>
+                </div>
+                <div className="rounded-md border border-[var(--border-soft)] bg-[var(--surface-app)] p-3">
+                  <div className="font-black uppercase tracking-wide text-[var(--text-muted)]">{text.retention.cleanupLabel}</div>
+                  <div className="mt-1 font-bold text-[var(--text-main)]">{text.retention.cleanupValue}</div>
+                </div>
+                <div className="rounded-md border border-[var(--border-soft)] bg-[var(--surface-app)] p-3">
+                  <div className="font-black uppercase tracking-wide text-[var(--text-muted)]">{text.retention.safetyLabel}</div>
+                  <div className="mt-1 font-bold text-[var(--text-main)]">{text.retention.safetyValue}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
 
         <div className="flex items-start gap-2 rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] p-4 text-sm text-[var(--text-secondary)]">
           <BarChart3 className="mt-0.5 h-4 w-4 text-[var(--primary-600)]" />
