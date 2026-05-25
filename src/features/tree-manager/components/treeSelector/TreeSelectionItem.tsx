@@ -15,12 +15,18 @@ interface TreeSelectionItemProps {
 export const TreeSelectionItem: React.FC<TreeSelectionItemProps> = ({ tree, currentTreeId, onSelect, isShared, role, t }) => {
   const isActive = currentTreeId === tree.id;
   const resolvedRole: 'owner' | 'editor' | 'viewer' = isShared ? (role || 'viewer') : 'owner';
+  const roles = (t as any).roles || {};
   const roleLabel = resolvedRole === 'owner'
-    ? ((t as any).owner || 'Owner')
+    ? (roles.owner || (t as any).owner || 'Owner')
     : resolvedRole === 'editor'
-      ? ((t as any).editor || 'Editor')
-      : ((t as any).viewer || 'Viewer');
-  const memberLabel = (t as any).statistics?.members || 'Members';
+      ? (roles.editor || (t as any).editor || 'Editor')
+      : (roles.viewer || (t as any).viewer || 'Viewer');
+  const updatedLabel = (t as any).vaultTreeUpdated || 'Updated';
+  const justNowLabel = (t as any).vaultTreeJustNow || 'Just now';
+  const memberLabel = (t as any).statistics?.members || (t as any).treeControlCenter?.overviewCards?.people || 'Members';
+  const updatedAtLabel = tree.updatedAt || tree.createdAt
+    ? new Date(tree.updatedAt || tree.createdAt).toLocaleDateString()
+    : justNowLabel;
 
   return (
     <div
@@ -67,7 +73,7 @@ export const TreeSelectionItem: React.FC<TreeSelectionItemProps> = ({ tree, curr
           </div>
           <div className='flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[var(--text-muted)] font-bold uppercase tracking-widest'>
             <span>
-              Updated: {tree.updatedAt || tree.createdAt ? new Date(tree.updatedAt || tree.createdAt).toLocaleDateString() : 'Just now'}
+              {updatedLabel} {updatedAtLabel}
             </span>
             {typeof tree.peopleCount === 'number' && (
               <span className='inline-flex items-center gap-1.5'>

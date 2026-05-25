@@ -50,6 +50,13 @@ vi.mock('../../context/TranslationContext', () => ({
       owner: 'Owner',
       editor: 'Editor',
       viewer: 'Viewer',
+      roles: {
+        owner: 'Tree owner',
+        editor: 'Editor',
+        viewer: 'Viewer',
+      },
+      vaultTreeUpdated: 'Updated',
+      vaultTreeJustNow: 'Just now',
       statistics: {
         members: 'Members',
       },
@@ -122,7 +129,8 @@ describe('TreeSelector', () => {
       expect(screen.getByText('Family Archive')).toBeInTheDocument();
     });
 
-    expect(screen.getByText('Owner')).toBeInTheDocument();
+    expect(screen.getByText('Tree owner')).toBeInTheDocument();
+    expect(screen.getByText('Updated 3/27/2026')).toBeInTheDocument();
     expect(screen.getByText('7 Members')).toBeInTheDocument();
 
     fireEvent.click(screen.getByText('Family Archive'));
