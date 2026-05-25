@@ -1,7 +1,7 @@
 import { bulkInsertRelationships, bulkUpsertPeople, createTree } from './supabaseTreeMutationService';
 import { showToast } from '../utils/showToast';
 import { logError } from '../utils/errorLogger';
-import { Person } from '../types';
+import type { Person, TreeSettings } from '../types';
 
 const buildRelationshipsFromPeople = (treeId: string, people: Person[]) => {
     const relationships: {
@@ -53,16 +53,20 @@ export const treeMigrationService = {
         token: string | undefined, 
         oldTreeId: string, 
         people: Record<string, Person>,
-        onSuccess: (newTreeId: string) => void
+        onSuccess: (newTreeId: string) => void,
+        options?: {
+            treeName?: string;
+            settings?: Partial<TreeSettings>;
+        }
     ): Promise<void> {
         console.warn(`[treeMigrationService] Migrating invalid Tree ID "${oldTreeId}" to cloud.`);
         
         const baseName = email.split('@')[0] || 'My';
-        const treeName = `${baseName}'s Family Tree`;
+        const treeName = options?.treeName?.trim() || `${baseName}'s Family Tree`;
 
         try {
             // 1. Create the tree in Supabase
-            const createdId = await createTree(uid, email, treeName, token);
+            const createdId = await createTree(uid, email, treeName, token, options?.settings);
             console.warn(`[treeMigrationService] Migrated tree created. Old: ${oldTreeId}, New: ${createdId}`);
             
             // 2. Force push all people and relationships to the new tree

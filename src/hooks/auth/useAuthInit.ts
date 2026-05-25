@@ -83,6 +83,8 @@ export const useAuthInit = ({
     const logout = useAppStore((state) => state.logout);
     const syncState = useAppStore((state) => state.syncStatus.state);
     const authLoading = useAppStore((state) => state.authLoading);
+    const treeName = useAppStore((state) => state.treeName);
+    const treeSettings = useAppStore((state) => state.treeSettings);
     
     const routePersonBranchInFlightRef = useRef<string | null>(null);
     const routePersonBranchCompletedRef = useRef<string | null>(null);
@@ -121,6 +123,8 @@ export const useAuthInit = ({
             plan,
             user,
             people,
+            treeName,
+            treeSettings,
             setCurrentTreeId,
             setFocusId,
             setAuthLoading,
@@ -149,6 +153,8 @@ export const useAuthInit = ({
         setFocusId,
         setAuthLoading,
         authLoading,
+        treeName,
+        treeSettings,
         people,
         setSharedTreePromptModal,
         setCurrentUserRole,

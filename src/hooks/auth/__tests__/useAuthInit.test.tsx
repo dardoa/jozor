@@ -372,6 +372,55 @@ describe('useAuthInit', () => {
     expect(setShowWelcome).toHaveBeenCalledWith(false);
   });
 
+  it('preserves local guest tree name and settings when promoting it to the cloud', async () => {
+    const setShowWelcome = vi.fn();
+    const localPerson = buildPerson({
+      id: 'local-person-1',
+      firstName: 'Local',
+      lastName: 'Draft',
+    });
+
+    useAppStore.setState((state) => ({
+      ...state,
+      treeName: 'Guest Draft Tree',
+      treeSettings: {
+        ...state.treeSettings,
+        layoutMode: 'horizontal',
+      },
+    }));
+
+    renderHook(() =>
+      useAuthInit({
+        people: { [localPerson.id]: localPerson },
+        setShowWelcome,
+      })
+    );
+
+    await waitFor(() => {
+      expect(showInfoMock).toHaveBeenCalled();
+    });
+
+    const toastOptions = showInfoMock.mock.calls[0]?.[1];
+    const action = toastOptions?.action;
+
+    act(() => {
+      action.onClick();
+    });
+
+    expect(migrateLocalTreeToCloudMock).toHaveBeenCalledWith(
+      'user-1',
+      'user@example.com',
+      'token-1',
+      'guest-local-tree',
+      { [localPerson.id]: localPerson },
+      expect.any(Function),
+      expect.objectContaining({
+        treeName: 'Guest Draft Tree',
+        settings: expect.objectContaining({ layoutMode: 'horizontal' }),
+      })
+    );
+  });
+
   it('does not prompt to promote the untouched default local tree', async () => {
     localStorage.setItem('lastActiveTreeId', validTreeId);
 

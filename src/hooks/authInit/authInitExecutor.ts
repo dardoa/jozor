@@ -5,7 +5,7 @@ import { resolveTreeByPerson } from '../../services/treeService';
 import { treeMigrationService } from '../../services/treeMigrationService';
 import { logError } from '../../utils/errorLogger';
 import { showToast } from '../../utils/showToast';
-import type { Person, UserProfile } from '../../types';
+import type { Person, TreeSettings, UserProfile } from '../../types';
 import type { SharedTreeSummary } from '../../services/supabaseTreeTypes';
 import type { AuthInitPlan } from './authInitDecision';
 import type { AuthInitTreeLoadHandlers } from './authInitTreeLoad';
@@ -20,6 +20,8 @@ interface ExecuteAuthInitPlanParams {
   plan: AuthInitPlan;
   user: UserProfile | null;
   people: Record<string, Person>;
+  treeName: string;
+  treeSettings: TreeSettings;
   setCurrentTreeId: (treeId: string | null) => void;
   setFocusId: (personId: string) => void;
   setAuthLoading: (value: boolean) => void;
@@ -52,6 +54,8 @@ export const executeAuthInitPlan = ({
   plan,
   user,
   people,
+  treeName,
+  treeSettings,
   setCurrentTreeId,
   setFocusId,
   setAuthLoading,
@@ -72,7 +76,8 @@ export const executeAuthInitPlan = ({
           user.supabaseToken,
           plan.invalidTreeId,
           people,
-          setCurrentTreeId
+          setCurrentTreeId,
+          { treeName, settings: treeSettings }
         ).finally(() => dismissLoadingWithDelay(setAuthLoading));
       }
       return;
@@ -173,7 +178,8 @@ export const executeAuthInitPlan = ({
                   (newTreeId) => {
                     localStorage.setItem('lastActiveTreeId', newTreeId);
                     setCurrentTreeId(newTreeId);
-                  }
+                  },
+                  { treeName, settings: treeSettings }
                 );
               },
             },
