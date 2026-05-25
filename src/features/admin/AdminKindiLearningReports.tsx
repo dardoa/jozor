@@ -125,7 +125,7 @@ export const AdminKindiLearningReports: React.FC = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-[var(--surface-app)] p-6 text-[var(--text-main)]">
+      <div className="h-screen overflow-y-auto bg-[var(--surface-app)] p-6 text-[var(--text-main)]">
         <div className="mx-auto max-w-3xl rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] p-6">
           <h1 className="text-xl font-black">{text.adminRequiredTitle}</h1>
           <p className="mt-2 text-sm text-[var(--text-secondary)]">{text.adminRequiredBody}</p>
@@ -136,7 +136,7 @@ export const AdminKindiLearningReports: React.FC = () => {
 
   if (!isLoading && reports && !reports.isAdmin) {
     return (
-      <div className="min-h-screen bg-[var(--surface-app)] p-6 text-[var(--text-main)]">
+      <div className="h-screen overflow-y-auto bg-[var(--surface-app)] p-6 text-[var(--text-main)]">
         <div className="mx-auto max-w-3xl rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] p-6">
           <div className="flex items-center gap-3">
             <ShieldCheck className="h-5 w-5 text-[var(--primary-600)]" />
@@ -153,7 +153,7 @@ export const AdminKindiLearningReports: React.FC = () => {
   const overview = reports?.overview;
 
   return (
-    <div className="min-h-screen bg-[var(--surface-app)] px-4 py-6 text-[var(--text-main)] sm:px-6">
+    <div className="h-screen overflow-y-auto bg-[var(--surface-app)] px-4 py-6 text-[var(--text-main)] sm:px-6">
       <main className="mx-auto flex max-w-7xl flex-col gap-5">
         <header className="flex flex-col gap-3 border-b border-[var(--border-soft)] pb-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
