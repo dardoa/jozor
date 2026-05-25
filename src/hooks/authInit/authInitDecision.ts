@@ -8,6 +8,7 @@ export interface AuthInitContext {
     routeTreeId: string | null | undefined;
     routePersonId: string | null | undefined;
     peopleCount: number;
+    hasMeaningfulLocalTree: boolean;
     hasPersonInTree: (personId: string) => boolean;
     lastActiveTreeId: string | null;
     hasSharedTreePromptModal: boolean;
@@ -63,14 +64,15 @@ export function getAuthInitPlan(ctx: AuthInitContext): AuthInitPlan {
         return { type: 'HIDE_WELCOME_ONLY' };
     }
 
-    // 6. Restore last active tree
-    if (ctx.lastActiveTreeId) {
-        return { type: 'RESTORE_LAST_ACTIVE', treeId: ctx.lastActiveTreeId };
+    // 6. Logged-in user has a meaningful guest/local tree but no cloud tree selected.
+    // This must run before restoring the last cloud tree so a guest draft is not hidden.
+    if (ctx.hasMeaningfulLocalTree) {
+        return { type: 'PROMPT_LOCAL_TREE_PROMOTION' };
     }
 
-    // 7. Logged-in user has a meaningful guest/local tree but no cloud tree selected.
-    if (ctx.peopleCount > 1) {
-        return { type: 'PROMPT_LOCAL_TREE_PROMOTION' };
+    // 7. Restore last active tree
+    if (ctx.lastActiveTreeId) {
+        return { type: 'RESTORE_LAST_ACTIVE', treeId: ctx.lastActiveTreeId };
     }
 
     // 8. Fallback to shared trees prompt or just hide welcome

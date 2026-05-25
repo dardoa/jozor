@@ -11,6 +11,7 @@ describe('getAuthInitPlan', () => {
         routeTreeId: null,
         routePersonId: null,
         peopleCount: 0,
+        hasMeaningfulLocalTree: false,
         hasPersonInTree: () => false,
         lastActiveTreeId: null,
         hasSharedTreePromptModal: true,
@@ -65,14 +66,25 @@ describe('getAuthInitPlan', () => {
         expect(plan).toEqual({ type: 'RESOLVE_ROUTE_PERSON', personId: 'person-1' });
     });
 
-    it('returns RESTORE_LAST_ACTIVE if lastActiveTreeId exists', () => {
+    it('returns RESTORE_LAST_ACTIVE if lastActiveTreeId exists and no local guest tree is pending', () => {
         const uuid = '123e4567-e89b-12d3-a456-426614174000';
         const plan = getAuthInitPlan({ ...baseContext, lastActiveTreeId: uuid });
         expect(plan).toEqual({ type: 'RESTORE_LAST_ACTIVE', treeId: uuid });
     });
 
     it('prompts for local tree promotion if a guest tree exists after login', () => {
-        const plan = getAuthInitPlan({ ...baseContext, peopleCount: 3 });
+        const plan = getAuthInitPlan({ ...baseContext, peopleCount: 3, hasMeaningfulLocalTree: true });
+        expect(plan).toEqual({ type: 'PROMPT_LOCAL_TREE_PROMOTION' });
+    });
+
+    it('prompts for local tree promotion before restoring the last cloud tree', () => {
+        const uuid = '123e4567-e89b-12d3-a456-426614174000';
+        const plan = getAuthInitPlan({
+            ...baseContext,
+            peopleCount: 1,
+            hasMeaningfulLocalTree: true,
+            lastActiveTreeId: uuid,
+        });
         expect(plan).toEqual({ type: 'PROMPT_LOCAL_TREE_PROMOTION' });
     });
 

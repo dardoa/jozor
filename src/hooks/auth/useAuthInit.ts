@@ -13,6 +13,32 @@ import {
     markTreeRestoreStart,
 } from '../authInit/authInitSideEffects';
 
+const hasVisibleText = (value: unknown): boolean =>
+    typeof value === 'string' && value.trim().length > 0;
+
+const hasMeaningfulLocalTree = (people: Record<string, Person>): boolean => {
+    const localPeople = Object.values(people);
+    if (localPeople.length > 1) return true;
+
+    const [onlyPerson] = localPeople;
+    if (!onlyPerson) return false;
+
+    return [
+        onlyPerson.firstName,
+        onlyPerson.middleName,
+        onlyPerson.lastName,
+        onlyPerson.birthName,
+        onlyPerson.nickName,
+        onlyPerson.profession,
+        onlyPerson.bio,
+        onlyPerson.birthDate,
+        onlyPerson.birthPlace,
+        onlyPerson.deathDate,
+        onlyPerson.deathPlace,
+        onlyPerson.photoUrl,
+    ].some(hasVisibleText);
+};
+
 export interface UseAuthInitParams {
     isSharedMode?: boolean;
     routeTreeId?: string | null;
@@ -69,6 +95,7 @@ export const useAuthInit = ({
             routeTreeId,
             routePersonId,
             peopleCount: Object.keys(people).length,
+            hasMeaningfulLocalTree: hasMeaningfulLocalTree(people),
             hasPersonInTree: (id) => Boolean(people[id]),
             lastActiveTreeId: getLastActiveTreeId(),
             hasSharedTreePromptModal: Boolean(setSharedTreePromptModal),
