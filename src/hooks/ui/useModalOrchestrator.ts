@@ -26,7 +26,6 @@ export const useModalOrchestrator = () => {
     onOpenTreeManager,
     sharedTreePromptModal,
     setSharedTreePromptModal,
-    onOpenSnapshotHistory,
     globalSettingsModal,
     setGlobalSettingsModal,
     onOpenGlobalSettings,
@@ -54,15 +53,12 @@ export const useModalOrchestrator = () => {
     (modalType: ModalType) => {
       if (modalType === 'globalSettings') {
         onOpenGlobalSettings();
-      } else if (modalType === 'snapshotHistory') {
-        onOpenSnapshotHistory();
       } else {
         rawHandleOpenModal(modalType);
       }
     },
     [
       onOpenGlobalSettings,
-      onOpenSnapshotHistory,
       rawHandleOpenModal,
     ]
   );
@@ -84,7 +80,6 @@ export const useModalOrchestrator = () => {
     onOpenTreeManager,
     sharedTreePromptModal,
     setSharedTreePromptModal,
-    onOpenSnapshotHistory,
     globalSettingsModal,
     setGlobalSettingsModal,
     onOpenGlobalSettings,
@@ -98,7 +93,6 @@ export const useModalOrchestrator = () => {
     modals,
     handleOpenModal,
     handleOpenLinkModal,
-    onOpenSnapshotHistory,
     onOpenTreeManager,
     onOpenGlobalSettings,
     onOpenCloudBackups,

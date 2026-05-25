@@ -309,7 +309,6 @@ export const general = {
     },
     actions: 'الإجراءات',
     presentMode: 'وضع العرض',
-    snapshotHistory: 'سجل النسخ الاحتياطية',
   },
   treeControlCenter: {
     title: 'مركز تحكم الشجرة',

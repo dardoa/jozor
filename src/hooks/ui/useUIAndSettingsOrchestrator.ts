@@ -21,7 +21,6 @@ interface UseUIAndSettingsOrchestratorParams {
   setFocusId: (id: string) => void;
   currentUserRole: 'owner' | 'editor' | 'viewer' | null;
   setIsPresentMode: (v: boolean) => void;
-  onOpenSnapshotHistory: () => void;
 }
 
 export const useUIAndSettingsOrchestrator = (
@@ -38,7 +37,6 @@ export const useUIAndSettingsOrchestrator = (
     setFocusId,
     currentUserRole,
     setIsPresentMode,
-    onOpenSnapshotHistory,
   } = params;
 
   const { t, language, setLanguage } = useTranslation();
@@ -120,7 +118,6 @@ export const useUIAndSettingsOrchestrator = (
     treeSettings,
     setTreeSettings,
     onPresent: () => setIsPresentMode(true),
-    onOpenSnapshotHistory,
     currentUserRole,
     isAdvancedBarOpen,
     setAdvancedBarOpen,

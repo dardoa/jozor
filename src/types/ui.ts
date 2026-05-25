@@ -80,7 +80,6 @@ export interface ViewSettingsProps {
     treeSettings: TreeSettings;
     setTreeSettings: (s: TreeSettings) => void;
     onPresent: () => void;
-    onOpenSnapshotHistory?: () => void;
     currentUserRole: 'owner' | 'editor' | 'viewer' | null;
     isAdvancedBarOpen: boolean;
     setAdvancedBarOpen: (v: boolean) => void;
@@ -98,7 +97,6 @@ export interface HeaderGlobalActionsProps {
     onOpenCleanTree: () => void;
     onOpenTreeManager: () => void;
     onOpenCloudBackups: () => void;
-    onOpenSnapshotHistory: () => void;
     onOpenActivityLog: () => void;
 }
 
@@ -182,7 +180,6 @@ export interface ViewSettingsMenuProps {
     onClose?: () => void;
     onPresent: () => void;
     onOpenLayoutSettings?: () => void;
-    onOpenSnapshotHistory?: () => void;
 }
 
 export interface SearchResultsProps {

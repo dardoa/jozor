@@ -155,7 +155,6 @@ describe('FamilyTree Component', () => {
                 settings={mockSettings}
                 isDetailsPanelOpen={false}
                 onPresent={() => { }}
-                onOpenSnapshotHistory={undefined}
                 ref={React.createRef<SVGSVGElement>()}
                 activeModal={null}
                 setDetailsPanelOpen={() => { }}
@@ -180,7 +179,6 @@ describe('FamilyTree Component', () => {
                 settings={mockSettings}
                 isDetailsPanelOpen={false}
                 onPresent={() => { }}
-                onOpenSnapshotHistory={undefined}
                 ref={React.createRef<SVGSVGElement>()}
                 activeModal={null}
                 setDetailsPanelOpen={() => { }}

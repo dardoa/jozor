@@ -14,7 +14,6 @@ interface FamilyTreeProps {
   isDetailsPanelOpen: boolean;
   hasBlockingOverlay?: boolean;
   onPresent: () => void;
-  onOpenSnapshotHistory?: () => void;
   onOpenPreferences?: () => void;
   activeModal: string | null;
   setDetailsPanelOpen: (open: boolean) => void;

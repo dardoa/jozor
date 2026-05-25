@@ -41,11 +41,6 @@ export const useAppModals = () => {
         sharedTrees: SharedTreeSummary[];
     }>({ isOpen: false, sharedTrees: [] });
 
-    const onOpenSnapshotHistory = useCallback(() => {
-        setVaultTab('cloud');
-        setVaultOpen(true);
-    }, [setVaultOpen, setVaultTab]);
-
     const [globalSettingsModal, setGlobalSettingsModal] = useState<{ isOpen: boolean }>({
         isOpen: false,
     });
@@ -70,7 +65,6 @@ export const useAppModals = () => {
         sharedTreePromptModal,
         setSharedTreePromptModal,
         onOpenTreeManager,
-        onOpenSnapshotHistory,
         globalSettingsModal,
         setGlobalSettingsModal,
         onOpenGlobalSettings,

@@ -174,7 +174,6 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
             onOpenCleanTree: modals.onOpenCleanTreeOptions,
             onOpenTreeManager: auth.onOpenTreeManager,
             onOpenCloudBackups: auth.onOpenCloudBackups,
-            onOpenSnapshotHistory: modals.onOpenSnapshotHistory,
             onOpenActivityLog: () => setActivityLogOpen(true),
           }}
         />
@@ -204,7 +203,6 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
             setDetailsPanelOpen={setDetailsPanelOpen}
             onOpenLinkModal={modals.handleOpenLinkModal}
             onPresent={viewSettings.onPresent}
-            onOpenSnapshotHistory={viewSettings.onOpenSnapshotHistory}
             isDetailsPanelOpen={detailsPanelOpen}
             onAddFirstPerson={coreFamilyActions.onAddFirstPerson}
             onNodeContextMenu={handleNodeContextMenu}

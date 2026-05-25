@@ -43,7 +43,6 @@ export const useAppOrchestration = (
     modals,
     handleOpenModal,
     handleOpenLinkModal,
-    onOpenSnapshotHistory,
     onOpenTreeManager,
     onOpenCloudBackups,
     onOpenGoogleSyncChoice,
@@ -65,7 +64,6 @@ export const useAppOrchestration = (
     setFocusId,
     currentUserRole,
     setIsPresentMode,
-    onOpenSnapshotHistory,
   });
 
   const canUndo = past.length > 0;

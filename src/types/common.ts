@@ -108,7 +108,6 @@ export type ModalType =
     | 'geographicJourney'
     | 'share'
     | 'login'
-    | 'snapshotHistory'
     | 'globalSettings'
     | 'migrationMap';
 

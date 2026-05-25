@@ -19,7 +19,6 @@ interface AppOverlaysProps {
   googleSync: GoogleSyncStateAndActions;
   viewSettings: {
     currentUserRole?: string | null;
-    onOpenSnapshotHistory?: () => void;
   };
   toolsActions: ToolsActionsProps;
   detailsPanelFamilyActions: FamilyActionsProps;

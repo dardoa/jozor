@@ -39,7 +39,6 @@ const TestComponent: React.FC<{
     setFocusId,
     currentUserRole: 'owner',
     setIsPresentMode: setPresentMode,
-    onOpenSnapshotHistory: () => {},
   });
   const searchProps = useAppSearchBindings({ people, setFocusId });
 

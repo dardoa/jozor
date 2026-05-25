@@ -110,7 +110,6 @@ const buildHeaderProps = (): any => ({
     treeSettings: {} as never,
     setTreeSettings: vi.fn(),
     onPresent: vi.fn(),
-    onOpenSnapshotHistory: vi.fn(),
     currentUserRole: 'editor',
     isAdvancedBarOpen: false,
     setAdvancedBarOpen: vi.fn(),
@@ -135,7 +134,6 @@ const buildHeaderProps = (): any => ({
     onOpenDiagnostics: vi.fn(),
     onOpenTreeManager: vi.fn(),
     onOpenLoginModal: vi.fn(),
-    onOpenSnapshotHistory: vi.fn(),
     onOpenShareModal: vi.fn(),
   } as never,
 });

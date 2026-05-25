@@ -309,7 +309,6 @@ export const general = {
     },
     actions: 'Actions',
     presentMode: 'Presentation Mode',
-    snapshotHistory: 'Snapshot History',
   },
   treeControlCenter: {
     title: 'Tree Control Center',

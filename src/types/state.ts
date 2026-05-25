@@ -84,7 +84,6 @@ export interface ModalStateAndActions {
     onOpenTreeManager: () => void;
     sharedTreePromptModal: { isOpen: boolean; sharedTrees: SharedTreeSummary[] };
     setSharedTreePromptModal: (val: { isOpen: boolean; sharedTrees: SharedTreeSummary[] }) => void;
-    onOpenSnapshotHistory: () => void;
     globalSettingsModal: { isOpen: boolean };
     setGlobalSettingsModal: (val: { isOpen: boolean }) => void;
     onOpenGlobalSettings: () => void;
