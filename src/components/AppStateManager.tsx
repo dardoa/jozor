@@ -13,9 +13,9 @@ const BootstrapSplash: React.FC = () => (
   <div className="flex h-screen items-center justify-center bg-[var(--theme-bg)]">
     <div className="flex flex-col items-center gap-3 text-center">
       <div className="rounded-2xl bg-[var(--card-bg)] px-6 py-4 shadow-[var(--shadow-sm)]">
-        <span className="text-2xl font-bold tracking-[0.18em] text-[var(--text-main)]">جذور</span>
+        <span className="text-2xl font-bold text-[var(--text-main)]">جذور</span>
       </div>
-      <span className="text-xs font-medium tracking-[0.2em] text-[var(--text-muted)]">SESSION BOOTSTRAP</span>
+      <span className="text-xs font-medium text-[var(--text-muted)]">جاري تجهيز شجرتك...</span>
     </div>
   </div>
 );
