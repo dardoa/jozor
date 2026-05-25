@@ -31,7 +31,7 @@ export const modals = {
   mostChildren: 'Most Children',
   genderRatio: 'Gender Ratio',
   maleNames: 'Top Male Names',
-  femaleNames: 'Top Male Names',
+  femaleNames: 'Top Female Names',
   topPlaces: 'Top Places',
   birthsPerDecade: 'Births Per Decade',
   checkIssues: 'Check Issues',
@@ -130,7 +130,7 @@ export const modals = {
   deleteAccountPermanentBody: 'Are you sure you want to leave? This action will permanently delete your account and all family trees you created. This data cannot be recovered once deleted.',
   deleteAccountAction: 'Delete Everything',
   deleteAccountCancel: 'Stay with Jozor',
-  tourRestartBody: 'Weâ€™ll take you on a quick tour to explore Jozor 1.1 features again. Ready?',
+  tourRestartBody: "We'll take you on a quick tour to explore Jozor 1.1 features again. Ready?",
   treeHealth: {
     title: 'Tree Health Check',
     score: 'Health Score',
