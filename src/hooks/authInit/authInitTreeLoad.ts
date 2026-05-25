@@ -51,6 +51,7 @@ export const createAuthInitTreeLoadHandlers = ({
   ) => {
     setCurrentTreeId(targetTreeId);
     setCurrentUserRole(role);
+    useAppStore.getState().setDeletedPersonIds([]);
     loadFullState({
       version: 1,
       people: full.people,
