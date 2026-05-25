@@ -25,6 +25,8 @@ vi.mock('../../../context/TranslationContext', () => ({
       adminTools: 'Admin',
       kindiLearningReports: 'Kindi learning reports',
       kindiLearningReportsHint: 'Review redacted Kindi learning telemetry.',
+      defaultTreeSettings: 'Default tree settings',
+      defaultTreeSettingsHint: 'Set visual defaults for newly created trees.',
       globalSettings: { title: 'Global Settings' },
       userMenu: {
         welcome: 'Welcome',
@@ -34,9 +36,10 @@ vi.mock('../../../context/TranslationContext', () => ({
   }),
 }));
 
-vi.mock('../../../features/admin/useKindiReportsAdminAccess', () => ({
+vi.mock('../../../features/admin', () => ({
   useKindiReportsAdminAccess: useKindiReportsAdminAccessMock,
   openKindiLearningReports: vi.fn(),
+  openAdminTreeDefaults: vi.fn(),
 }));
 
 describe('AccountMenu', () => {
@@ -74,6 +77,7 @@ describe('AccountMenu', () => {
     expect(screen.queryByRole('menuitem', { name: /Backup now/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('menuitem', { name: /Global Settings/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('menuitem', { name: /Kindi learning reports/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('menuitem', { name: /Default tree settings/i })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('menuitem', { name: /Switch to Arabic/i }));
     expect(setLanguage).toHaveBeenCalledWith('ar');
@@ -115,7 +119,7 @@ describe('AccountMenu', () => {
     expect(onLogin).toHaveBeenCalledTimes(1);
   });
 
-  it('shows Kindi learning reports only for app admins', () => {
+  it('shows admin tools only for app admins', () => {
     useKindiReportsAdminAccessMock.mockReturnValue(true);
 
     render(
@@ -141,6 +145,7 @@ describe('AccountMenu', () => {
     );
 
     expect(screen.getByRole('menuitem', { name: /Kindi learning reports/i })).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: /Default tree settings/i })).toBeInTheDocument();
   });
 });
 

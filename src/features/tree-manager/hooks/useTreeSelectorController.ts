@@ -11,6 +11,10 @@ import { createPerson } from '../../../utils/familyLogic';
 import { getUserFacingErrorInfo, logError } from '../../../utils/errorLogger';
 import { showToast } from '../../../utils/showToast';
 import { hydrateTreeTombstonesAndResumeSync } from '../../../hooks/authInit/treeActivationSync';
+import {
+  buildTreeSettingsWithAdminDefaults,
+  fetchAdminDefaultTreeSettings,
+} from '../../admin';
 
 interface UseTreeSelectorControllerArgs {
   ownerId: string;
@@ -127,7 +131,24 @@ export const useTreeSelectorController = ({
         firstName: (t as any).general?.me || 'Me',
         lastName: '',
       };
-      const newTreeId = await createTreeWithRootAtomic(ownerId, userEmail, t.newTreeName, rootPerson, supabaseToken);
+      const defaultSettings = await fetchAdminDefaultTreeSettings({
+        uid: ownerId,
+        email: userEmail,
+        displayName: userEmail,
+        photoURL: '',
+        supabaseToken,
+      }).catch(() => null);
+      const settings = defaultSettings
+        ? buildTreeSettingsWithAdminDefaults(defaultSettings)
+        : undefined;
+      const newTreeId = await createTreeWithRootAtomic(
+        ownerId,
+        userEmail,
+        t.newTreeName,
+        rootPerson,
+        supabaseToken,
+        settings as Record<string, unknown> | undefined
+      );
       await handleOpenTree(newTreeId);
     } catch (e) {
       logError('TreeSelector createTree', e, {

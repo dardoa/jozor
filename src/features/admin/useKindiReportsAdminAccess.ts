@@ -34,3 +34,8 @@ export const openKindiLearningReports = (): void => {
   window.history.pushState(null, '', '/admin/kindi-learning');
   window.dispatchEvent(new PopStateEvent('popstate'));
 };
+
+export const openAdminTreeDefaults = (): void => {
+  window.history.pushState(null, '', '/admin/tree-defaults');
+  window.dispatchEvent(new PopStateEvent('popstate'));
+};

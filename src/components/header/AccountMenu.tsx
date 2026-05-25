@@ -1,10 +1,10 @@
 import { memo } from 'react';
-import { BrainCircuit, FolderArchive, Languages, LogIn, LogOut, Moon, Settings, Sun } from 'lucide-react';
+import { BrainCircuit, FolderArchive, Languages, LogIn, LogOut, Moon, Settings, SlidersHorizontal, Sun } from 'lucide-react';
 import { DropdownContent, DropdownMenuDivider, DropdownMenuHeader, DropdownMenuItem } from '../ui/DropdownMenu';
 import { useTranslation } from '../../context/TranslationContext';
 import type { ThemeLanguageProps, UserProfile } from '../../types';
 import { useAppStore } from '../../store/useAppStore';
-import { openKindiLearningReports, useKindiReportsAdminAccess } from '../../features/admin/useKindiReportsAdminAccess';
+import { openAdminTreeDefaults, openKindiLearningReports, useKindiReportsAdminAccess } from '../../features/admin';
 
 interface AccountMenuProps {
   themeLanguage: ThemeLanguageProps;
@@ -87,6 +87,12 @@ export const AccountMenu = memo<AccountMenuProps>(
               icon={<BrainCircuit className="w-4 h-4" />}
               label={text.kindiLearningReports || 'Kindi learning reports'}
               subLabel={text.kindiLearningReportsHint || 'Review redacted Kindi learning telemetry.'}
+            />
+            <DropdownMenuItem
+              onClick={openAdminTreeDefaults}
+              icon={<SlidersHorizontal className="w-4 h-4" />}
+              label={text.defaultTreeSettings || 'Default tree settings'}
+              subLabel={text.defaultTreeSettingsHint || 'Set visual defaults for newly created trees.'}
             />
           </>
         )}

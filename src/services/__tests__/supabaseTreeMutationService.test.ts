@@ -61,6 +61,24 @@ describe('createTreeWithRootAtomic', () => {
     });
   });
 
+  it('passes optional default settings to the create_tree_with_root RPC', async () => {
+    const rpcMock = vi.fn(async () => ({ data: 'tree-1', error: null }));
+    getTreeClientMock.mockReturnValue({ rpc: rpcMock });
+
+    await createTreeWithRootAtomic(
+      'owner-1',
+      'owner@example.com',
+      'Family tree',
+      { id: 'person-1', firstName: 'Sara', lastName: 'Haddad', gender: 'female' } as Person,
+      'token-1',
+      { chartType: 'radial', showPhotos: false }
+    );
+
+    expect(rpcMock).toHaveBeenCalledWith('create_tree_with_root', expect.objectContaining({
+      p_settings: { chartType: 'radial', showPhotos: false },
+    }));
+  });
+
   it('throws when create_tree_with_root rejects the request', async () => {
     const rpcError = new Error('access denied');
     const rpcMock = vi.fn(async () => ({ data: null, error: rpcError }));
@@ -76,4 +94,3 @@ describe('createTreeWithRootAtomic', () => {
     ).rejects.toThrow('access denied');
   });
 });
-

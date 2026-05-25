@@ -1,8 +1,8 @@
 import { memo } from 'react';
-import { BrainCircuit, CloudUpload, Languages, LogIn, LogOut, Moon, Settings, Sun, X } from 'lucide-react';
+import { BrainCircuit, CloudUpload, Languages, LogIn, LogOut, Moon, Settings, SlidersHorizontal, Sun, X } from 'lucide-react';
 import { useTranslation } from '../../context/TranslationContext';
 import type { ThemeLanguageProps, UserProfile } from '../../types';
-import { openKindiLearningReports, useKindiReportsAdminAccess } from '../../features/admin/useKindiReportsAdminAccess';
+import { openAdminTreeDefaults, openKindiLearningReports, useKindiReportsAdminAccess } from '../../features/admin';
 
 interface MobileAccountSheetProps {
   isOpen: boolean;
@@ -161,6 +161,12 @@ export const MobileAccountSheet = memo(({
                 label={text.kindiLearningReports || 'Kindi learning reports'}
                 subLabel={text.kindiLearningReportsHint || 'Review redacted Kindi learning telemetry.'}
                 onClick={closeThen(openKindiLearningReports)}
+              />
+              <SheetAction
+                icon={<SlidersHorizontal className="h-5 w-5" />}
+                label={text.defaultTreeSettings || 'Default tree settings'}
+                subLabel={text.defaultTreeSettingsHint || 'Set visual defaults for newly created trees.'}
+                onClick={closeThen(openAdminTreeDefaults)}
               />
             </section>
           ) : null}

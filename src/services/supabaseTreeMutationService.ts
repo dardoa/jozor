@@ -9,7 +9,8 @@ export const createTreeWithRootAtomic = async (
   userEmail: string,
   name: string,
   rootPerson: Person,
-  token?: string
+  token?: string,
+  settings?: Record<string, unknown>
 ): Promise<string> => {
   const client = getTreeClient(ownerId, userEmail, token);
   const rootPersonData = {
@@ -18,12 +19,22 @@ export const createTreeWithRootAtomic = async (
     last_name: rootPerson.lastName,
     gender: rootPerson.gender,
   };
-
-  const { data, error } = await client.rpc('create_tree_with_root', {
+  const payload: {
+    p_owner_id: string;
+    p_tree_name: string;
+    p_root_person_data: typeof rootPersonData;
+    p_settings?: Record<string, unknown>;
+  } = {
     p_owner_id: ownerId,
     p_tree_name: name,
     p_root_person_data: rootPersonData,
-  });
+  };
+
+  if (settings) {
+    payload.p_settings = settings;
+  }
+
+  const { data, error } = await client.rpc('create_tree_with_root', payload);
 
   if (error) throw error;
   return data as string;

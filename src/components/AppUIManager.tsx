@@ -49,6 +49,9 @@ const TheVaultDrawer = React.lazy(() =>
 const AdminKindiLearningReports = React.lazy(() =>
   import('../features/admin/AdminKindiLearningReports').then((m) => ({ default: m.AdminKindiLearningReports }))
 );
+const AdminDefaultTreeSettings = React.lazy(() =>
+  import('../features/admin/AdminDefaultTreeSettings').then((m) => ({ default: m.AdminDefaultTreeSettings }))
+);
 
 export const AppUIManager: React.FC = () => {
   const { t } = useTranslation();
@@ -285,6 +288,7 @@ export const AppUIManager: React.FC = () => {
           <Route path='/help' element={<HelpCenter />} />
           <Route path='/support' element={<Navigate to='/help' replace />} />
           <Route path='/admin/kindi-learning' element={<ProtectedRoute><AdminKindiLearningReports /></ProtectedRoute>} />
+          <Route path='/admin/tree-defaults' element={<ProtectedRoute><AdminDefaultTreeSettings /></ProtectedRoute>} />
           <Route path='/shared/:shareToken' element={<InvitePage />} />
 
           <Route
