@@ -10,6 +10,7 @@ import { loadFullState, useAppStore } from '../../../store/useAppStore';
 import { createPerson } from '../../../utils/familyLogic';
 import { getUserFacingErrorInfo, logError } from '../../../utils/errorLogger';
 import { showToast } from '../../../utils/showToast';
+import { hydrateTreeTombstonesAndResumeSync } from '../../../hooks/authInit/treeActivationSync';
 
 interface UseTreeSelectorControllerArgs {
   ownerId: string;
@@ -103,6 +104,7 @@ export const useTreeSelectorController = ({
         treeName: full.name,
       });
       onTreeSelected(treeId, role);
+      hydrateTreeTombstonesAndResumeSync(treeId);
       navigate(`/tree/${treeId}`);
       showToast.success('messages.success.load');
     } catch (e) {

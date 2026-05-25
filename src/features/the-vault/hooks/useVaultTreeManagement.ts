@@ -5,6 +5,7 @@ import type { UserProfile } from '../../../types';
 import type { TranslationSchema } from '../../../utils/translationLoader';
 import { showToast } from '../../../utils/showToast';
 import type { SharedTreeSummary, TreeSummary } from '../../../services/supabaseTreeTypes';
+import { hydrateTreeTombstonesAndResumeSync } from '../../../hooks/authInit/treeActivationSync';
 
 const SESSION_ERROR_TOAST_ID = 'session-error';
 
@@ -137,6 +138,7 @@ export const useVaultTreeManagement = ({
       });
       setCurrentTreeId(treeId);
       setCurrentUserRole(treeRole);
+      hydrateTreeTombstonesAndResumeSync(treeId);
       onTreeOpened?.(treeId);
       navigate(`/tree/${treeId}`);
       setVaultOpen(false);

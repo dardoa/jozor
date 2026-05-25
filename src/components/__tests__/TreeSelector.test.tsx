@@ -12,6 +12,7 @@ const mockFetchSharedTrees = vi.fn();
 const mockFetchTree = vi.fn();
 const mockLoadFullState = vi.fn();
 const mockSetDeletedPersonIds = vi.fn();
+const mockHydrateTreeTombstonesAndResumeSync = vi.fn();
 const mockShowSuccess = vi.fn();
 const mockShowError = vi.fn();
 
@@ -79,6 +80,10 @@ vi.mock('../../context/TranslationContext', () => ({
       },
     },
   }),
+}));
+
+vi.mock('../../hooks/authInit/treeActivationSync', () => ({
+  hydrateTreeTombstonesAndResumeSync: (...args: unknown[]) => mockHydrateTreeTombstonesAndResumeSync(...args),
 }));
 
 vi.mock('../../utils/showToast', () => ({
@@ -151,6 +156,7 @@ describe('TreeSelector', () => {
     });
 
     expect(mockSetDeletedPersonIds).toHaveBeenCalledWith([]);
+    expect(mockHydrateTreeTombstonesAndResumeSync).toHaveBeenCalledWith('tree-1');
     expect(onTreeSelected).toHaveBeenCalledWith('tree-1', 'owner');
     expect(mockShowSuccess).toHaveBeenCalledWith('messages.success.load');
   });

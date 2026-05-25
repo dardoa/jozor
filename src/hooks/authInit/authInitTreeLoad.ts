@@ -1,8 +1,7 @@
 import { loadFullState, useAppStore } from '../../store/useAppStore';
-import { deltaSyncService } from '../../services/deltaSyncService';
-import { storageService } from '../../services/storageService';
 import { logError } from '../../utils/errorLogger';
 import type { Person } from '../../types';
+import { hydrateTreeTombstonesAndResumeSync } from './treeActivationSync';
 import {
   clearLastActiveTreeId,
   measureAuthToTreeLoaded,
@@ -63,20 +62,7 @@ export const createAuthInitTreeLoadHandlers = ({
     setLastActiveTreeId(targetTreeId);
     setShowWelcome(false);
 
-    void storageService.getDeletedPersonIds(targetTreeId)
-      .then((deletedPersonIds) => {
-        useAppStore.getState().setDeletedPersonIds(deletedPersonIds);
-      })
-      .catch((error) => {
-        logError('AUTH_INIT_TOMBSTONE_HYDRATION_FAILED', error, {
-          showToast: false,
-          metadata: { treeId: targetTreeId },
-        });
-      })
-      .finally(() => {
-        void deltaSyncService.reconcileTree(targetTreeId);
-        void deltaSyncService.recoverPendingOperations(targetTreeId);
-      });
+    hydrateTreeTombstonesAndResumeSync(targetTreeId);
     measureAuthToTreeLoaded();
   };
 
