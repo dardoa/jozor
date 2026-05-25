@@ -148,10 +148,9 @@ export const useTreeSelectorController = ({
 
     try {
       setImporting(true);
-      const text = await file.text();
-      const { importTreeFromJSONItem } = await import('../services/importTreeService');
+      const { importTreeFromFileItem } = await import('../services/importTreeService');
 
-      const newTreeId = await importTreeFromJSONItem(ownerId, userEmail, text, supabaseToken);
+      const newTreeId = await importTreeFromFileItem(ownerId, userEmail, file, supabaseToken);
       await handleOpenTree(newTreeId);
     } catch (e) {
       logError('TreeSelector importTree', e, {

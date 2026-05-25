@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import type { Person } from '../../../types';
 import { logError, logInfo } from '../../../utils/errorLogger';
+import { importFromJozorArchive } from '../../../utils/archiveLogic';
 import { bulkInsertRelationships, bulkUpsertPeople, createTree } from '../../../services/supabaseTreeMutationService';
 
 /**
@@ -178,4 +179,21 @@ export const importTreeFromJSONItem = async (
         operationType: 'import_tree_success'
     });
     return treeId;
+};
+
+export const importTreeFromFileItem = async (
+    ownerId: string,
+    userEmail: string,
+    file: File,
+    token?: string
+): Promise<string> => {
+    const fileName = file.name.toLowerCase();
+
+    if (fileName.endsWith('.jozor') || fileName.endsWith('.zip')) {
+        const people = await importFromJozorArchive(file);
+        return importTreeFromJSONItem(ownerId, userEmail, JSON.stringify({ people }), token);
+    }
+
+    const text = await file.text();
+    return importTreeFromJSONItem(ownerId, userEmail, text, token);
 };

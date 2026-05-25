@@ -185,12 +185,11 @@ export const useVaultTreeManagement = ({
     if (!file || !currentUser?.uid || !currentUser?.email) return;
 
     const work = async () => {
-      const text = await file.text();
-      const { importTreeFromJSONItem } = await import('../../tree-manager');
-      const importedTreeId = await importTreeFromJSONItem(
+      const { importTreeFromFileItem } = await import('../../tree-manager');
+      const importedTreeId = await importTreeFromFileItem(
         currentUser.uid,
         currentUser.email,
-        text,
+        file,
         currentUser.supabaseToken
       );
       await handleOpenTree(importedTreeId, 'owner');

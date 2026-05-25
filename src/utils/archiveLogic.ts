@@ -221,11 +221,19 @@ export const importFromJozorArchive = async (file: File): Promise<Record<string,
   }
 
   const jsonContent = await jsonFile.async('string');
-  const rawPeople = JSON.parse(jsonContent);
+  const parsed = JSON.parse(jsonContent);
+  const rawPeople = parsed && typeof parsed === 'object' && 'people' in parsed
+    ? (parsed as { people?: unknown }).people
+    : parsed;
+
+  if (!rawPeople || typeof rawPeople !== 'object' || Array.isArray(rawPeople)) {
+    throw new Error('Invalid Jozor file: people data not found');
+  }
+
   const people: Record<string, Person> = {};
 
-  for (const key of Object.keys(rawPeople)) {
-    const p = validatePerson(rawPeople[key]);
+  for (const key of Object.keys(rawPeople as Record<string, unknown>)) {
+    const p = validatePerson((rawPeople as Record<string, Partial<Person>>)[key]);
 
     // 1. Rehydrate Profile Photo
     if (p.photoUrl && p.photoUrl.startsWith('images/')) {
