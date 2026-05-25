@@ -538,7 +538,6 @@ export const general = {
     protectedBody: 'Only application admins can change defaults for newly created trees.',
     fields: {
       chartType: 'Chart type',
-      layoutMode: 'Layout orientation',
       showPhotos: 'Show photos by default',
       privacyMode: 'Enable privacy mode by default',
       nodeSpacingX: 'Horizontal spacing',

@@ -172,18 +172,6 @@ export const AdminDefaultTreeSettings: React.FC = () => {
               <option value="radial">{text.options.radial}</option>
             </select>
           </label>
-          <label className="grid gap-1 text-sm font-bold text-[var(--text-secondary)]">
-            {text.fields.layoutMode}
-            <select
-              value={settings.layoutMode}
-              onChange={(event) => updateSetting('layoutMode', event.target.value as AdminDefaultTreeSettingsModel['layoutMode'])}
-              className="rounded-md border border-[var(--border-soft)] bg-[var(--surface-app)] px-3 py-2 text-[var(--text-main)]"
-            >
-              <option value="vertical">{text.options.vertical}</option>
-              <option value="horizontal">{text.options.horizontal}</option>
-              <option value="radial">{text.options.radial}</option>
-            </select>
-          </label>
           <label className="flex items-center gap-3 rounded-md border border-[var(--border-soft)] bg-[var(--surface-app)] p-3 text-sm font-bold text-[var(--text-secondary)]">
             <input
               type="checkbox"

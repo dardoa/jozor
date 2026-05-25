@@ -43,7 +43,6 @@ describe('defaultTreeSettingsService', () => {
       unsafe: 'ignored',
     })).toEqual({
       chartType: 'focus',
-      layoutMode: 'horizontal',
       showPhotos: false,
       privacyMode: true,
       nodeSpacingX: 400,

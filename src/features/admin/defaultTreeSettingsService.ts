@@ -5,7 +5,6 @@ import { getSupabaseFull } from '../../services/supabaseClient';
 export type AdminDefaultTreeSettings = Pick<
   TreeSettings,
   | 'chartType'
-  | 'layoutMode'
   | 'showPhotos'
   | 'privacyMode'
   | 'nodeSpacingX'
@@ -17,7 +16,6 @@ export type AdminDefaultTreeSettings = Pick<
 
 export const ADMIN_DEFAULT_TREE_SETTING_KEYS: Array<keyof AdminDefaultTreeSettings> = [
   'chartType',
-  'layoutMode',
   'showPhotos',
   'privacyMode',
   'nodeSpacingX',
@@ -52,9 +50,6 @@ export const sanitizeDefaultTreeSettings = (
     chartType: record.chartType === 'radial' || record.chartType === 'focus'
       ? record.chartType
       : DEFAULT_TREE_SETTINGS.chartType,
-    layoutMode: record.layoutMode === 'horizontal' || record.layoutMode === 'vertical' || record.layoutMode === 'radial'
-      ? record.layoutMode
-      : DEFAULT_TREE_SETTINGS.layoutMode,
     showPhotos: pickBoolean(record.showPhotos, DEFAULT_TREE_SETTINGS.showPhotos),
     privacyMode: pickBoolean(record.privacyMode, Boolean(DEFAULT_TREE_SETTINGS.privacyMode)),
     nodeSpacingX: clampNumber(record.nodeSpacingX, DEFAULT_TREE_SETTINGS.nodeSpacingX, 40, 400),

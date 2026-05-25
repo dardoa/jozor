@@ -539,7 +539,6 @@ export const general = {
     protectedBody: 'يمكن لأدمن التطبيق فقط تعديل افتراضيات الشجرات الجديدة.',
     fields: {
       chartType: 'نوع المخطط',
-      layoutMode: 'اتجاه التخطيط',
       showPhotos: 'إظهار الصور افتراضيًا',
       privacyMode: 'تفعيل وضع الخصوصية افتراضيًا',
       nodeSpacingX: 'التباعد الأفقي',
