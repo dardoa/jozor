@@ -24,6 +24,9 @@ export interface FamilyTreeChartData {
 
 export interface FamilyTreeChartViewport {
   zoomScale: number;
+  zoomX: number;
+  zoomY: number;
+  viewportSize: { width: number; height: number };
 }
 
 export interface FamilyTreeChartHandlers {
@@ -149,6 +152,10 @@ const ChartFactory = React.memo<ChartFactoryProps>(({
         collapsePoints={collapsePoints}
         highlightedPath={highlightedPath}
         pipeline={pipeline}
+        zoomScale={viewport.zoomScale}
+        zoomX={viewport.zoomX}
+        zoomY={viewport.zoomY}
+        viewportSize={viewport.viewportSize}
         onSelect={onSelect}
         onNodeContextMenu={onNodeContextMenu}
         onToggleCollapse={toggleCollapse}

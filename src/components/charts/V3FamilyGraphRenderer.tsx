@@ -49,6 +49,9 @@ interface V3FamilyGraphRendererProps {
   focusPersonId?: string;
   highlightedPath?: Set<string>;
   zoomScale?: number;
+  zoomX?: number;
+  zoomY?: number;
+  viewportSize?: { width: number; height: number };
   onSelect?: (id: string) => void;
   onNodeContextMenu?: (e: React.MouseEvent, id: string) => void;
   onToggleCollapse?: (uniqueKey: string) => void;
@@ -70,6 +73,90 @@ function scalePathX(d: string | undefined | null, scaleX: ScaleX): string {
   } catch {
     return '';
   }
+}
+
+// ---------------------------------------------------------------------------
+// Viewport Culling Utilities
+// ---------------------------------------------------------------------------
+
+const CULL_MARGIN_FACTOR = 0.5; // 50% padding beyond screen edges to prevent pop-in
+
+interface ViewportBounds {
+  minX: number;
+  minY: number;
+  maxX: number;
+  maxY: number;
+}
+
+/**
+ * Computes the visible world-space rectangle, accounting for D3 zoom transform.
+ * The D3 transform is: screen = world * scale + translate
+ * So: world = (screen - translate) / scale
+ */
+function computeViewportBounds(
+  zoomX: number,
+  zoomY: number,
+  zoomScale: number,
+  viewportW: number,
+  viewportH: number,
+): ViewportBounds {
+  const marginX = (viewportW / zoomScale) * CULL_MARGIN_FACTOR;
+  const marginY = (viewportH / zoomScale) * CULL_MARGIN_FACTOR;
+
+  const worldMinX = -zoomX / zoomScale - marginX;
+  const worldMinY = -zoomY / zoomScale - marginY;
+  const worldMaxX = (viewportW - zoomX) / zoomScale + marginX;
+  const worldMaxY = (viewportH - zoomY) / zoomScale + marginY;
+
+  return { minX: worldMinX, minY: worldMinY, maxX: worldMaxX, maxY: worldMaxY };
+}
+
+/**
+ * Returns true if a node's bounding box overlaps the viewport bounds.
+ */
+function isNodeVisible(
+  nodeX: number,
+  nodeY: number,
+  nodeW: number,
+  nodeH: number,
+  vp: ViewportBounds,
+): boolean {
+  const halfW = nodeW / 2;
+  const halfH = nodeH / 2;
+  return (
+    nodeX + halfW >= vp.minX &&
+    nodeX - halfW <= vp.maxX &&
+    nodeY + halfH >= vp.minY &&
+    nodeY - halfH <= vp.maxY
+  );
+}
+
+/**
+ * Extracts a rough bounding box from SVG path data (M/L commands only).
+ * Returns null when path is invalid or empty.
+ */
+function getPathBounds(pathData: string): { minX: number; minY: number; maxX: number; maxY: number } | null {
+  const points = extractPathPoints(pathData);
+  if (points.length === 0) return null;
+
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  for (const p of points) {
+    if (p.x < minX) minX = p.x;
+    if (p.y < minY) minY = p.y;
+    if (p.x > maxX) maxX = p.x;
+    if (p.y > maxY) maxY = p.y;
+  }
+  return { minX, minY, maxX, maxY };
+}
+
+/**
+ * Returns true if an edge's path overlaps the viewport bounds.
+ */
+function isEdgeVisible(edge: EdgeEntity, vp: ViewportBounds): boolean {
+  if (!edge.pathData) return false;
+  const b = getPathBounds(edge.pathData);
+  if (!b) return false;
+  return b.maxX >= vp.minX && b.minX <= vp.maxX && b.maxY >= vp.minY && b.minY <= vp.maxY;
 }
 
 function normalizeSiblingBarPath(edge: EdgeEntity, scaledPath: string): string {
@@ -615,6 +702,9 @@ export const V3FamilyGraphRenderer: React.FC<V3FamilyGraphRendererProps> = ({
   focusPersonId,
   highlightedPath,
   zoomScale,
+  zoomX,
+  zoomY,
+  viewportSize,
   onSelect,
   onNodeContextMenu,
   onToggleCollapse,
@@ -626,6 +716,41 @@ export const V3FamilyGraphRenderer: React.FC<V3FamilyGraphRendererProps> = ({
   const { projectedNodes, familyNodes, edgeEntities, collapseControls, bounds } = pipeline;
   const scaleX = useMemo<ScaleX>(() => (x) => x, []);
 
+  // --- Viewport Culling ---
+  // Compute the visible world-space rectangle from D3 zoom state.
+  // When viewport info is not available (e.g. export context), skip culling.
+  const viewportBounds = useMemo<ViewportBounds | null>(() => {
+    const scale = zoomScale ?? 1;
+    const tx = zoomX ?? 0;
+    const ty = zoomY ?? 0;
+    const vw = viewportSize?.width ?? 0;
+    const vh = viewportSize?.height ?? 0;
+    // Skip culling when viewport dimensions are unknown or zoom is identity with no offset
+    if (vw <= 0 || vh <= 0) return null;
+    return computeViewportBounds(tx, ty, scale, vw, vh);
+  }, [zoomScale, zoomX, zoomY, viewportSize]);
+
+  const visibleNodes = useMemo(() => {
+    if (!viewportBounds) return projectedNodes;
+    return projectedNodes.filter((node) =>
+      isNodeVisible(node.x, node.y, nodeWidth, nodeHeight, viewportBounds)
+    );
+  }, [projectedNodes, viewportBounds, nodeWidth, nodeHeight]);
+
+  const visibleEdges = useMemo(() => {
+    if (!viewportBounds) return edgeEntities;
+    return edgeEntities.filter((edge) => isEdgeVisible(edge, viewportBounds));
+  }, [edgeEntities, viewportBounds]);
+
+  const visibleFamilyNodes = useMemo(() => {
+    if (!viewportBounds) return familyNodes;
+    return familyNodes.filter(
+      (fn) =>
+        fn.x >= viewportBounds.minX && fn.x <= viewportBounds.maxX &&
+        fn.y >= viewportBounds.minY && fn.y <= viewportBounds.maxY,
+    );
+  }, [familyNodes, viewportBounds]);
+
   const canvasMinX = scaleX(bounds.minX) - nodeWidth / 2 - padding;
   const canvasMinY = bounds.minY - nodeHeight / 2 - padding;
   const canvasMaxX = scaleX(bounds.maxX) + nodeWidth / 2 + padding;
@@ -633,7 +758,8 @@ export const V3FamilyGraphRenderer: React.FC<V3FamilyGraphRendererProps> = ({
   const canvasWidth = Math.max(320, canvasMaxX - canvasMinX);
   const canvasHeight = Math.max(240, canvasMaxY - canvasMinY);
 
-  const treeNodes = useStableTreeNodes(projectedNodes, people, focusPersonId, scaleX);
+  // Pass visibleNodes to useStableTreeNodes for identity-stable node objects
+  const treeNodes = useStableTreeNodes(visibleNodes, people, focusPersonId, scaleX);
 
   if (Number.isNaN(canvasWidth) || Number.isNaN(canvasHeight)) {
     return null;
@@ -651,13 +777,13 @@ export const V3FamilyGraphRenderer: React.FC<V3FamilyGraphRendererProps> = ({
         canvasHeight={canvasHeight}
       />
       <V3EdgesLayer
-        edgeEntities={edgeEntities}
+        edgeEntities={visibleEdges}
         scaleX={scaleX}
         lineStyle={normalizeV3LineStyle(settings.lineStyle)}
         lineThickness={settings.lineThickness}
         nodeHeight={nodeHeight}
       />
-      <V3FamilyDotsLayer familyNodes={familyNodes} scaleX={scaleX} />
+      <V3FamilyDotsLayer familyNodes={visibleFamilyNodes} scaleX={scaleX} />
       <V3CollapseControlsLayer
         collapseControls={collapseControls}
         onToggleCollapse={onToggleCollapse}

@@ -93,7 +93,7 @@ describe('FamilyTreeChartRenderer memoization', () => {
       fanArcs: [],
       collapsePoints: [],
     };
-    const viewport = { zoomScale: 1 };
+    const viewport = { zoomScale: 1, zoomX: 0, zoomY: 0, viewportSize: { width: 1280, height: 800 } };
     const handlers = {
       onSelect: () => undefined,
       onNodeContextMenu: () => undefined,

@@ -31,6 +31,9 @@ interface FamilyTreeCanvasProps {
   displayPipeline?: V3RendererPipeline | null;
   highlightedPath?: Set<string>;
   zoomScale: number;
+  zoomX: number;
+  zoomY: number;
+  viewportSize: { width: number; height: number };
   hasReceivedLayout: boolean;
   isFanChart: boolean;
   isForce: boolean;
@@ -63,6 +66,9 @@ export const FamilyTreeCanvas: React.FC<FamilyTreeCanvasProps> = ({
   displayPipeline,
   highlightedPath,
   zoomScale,
+  zoomX,
+  zoomY,
+  viewportSize,
   hasReceivedLayout,
   isFanChart,
   isForce,
@@ -101,7 +107,10 @@ export const FamilyTreeCanvas: React.FC<FamilyTreeCanvasProps> = ({
   ]);
   const chartViewport = useMemo<FamilyTreeChartViewport>(() => ({
     zoomScale,
-  }), [zoomScale]);
+    zoomX,
+    zoomY,
+    viewportSize,
+  }), [zoomScale, zoomX, zoomY, viewportSize]);
   const chartHandlers = useMemo<FamilyTreeChartHandlers>(() => ({
     onSelect,
     onNodeContextMenu,
