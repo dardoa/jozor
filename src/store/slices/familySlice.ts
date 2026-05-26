@@ -3,6 +3,8 @@ import { Person } from '../../types';
 import { DEFAULT_PERSON_TEMPLATE } from '../../constants';
 import { createPerson } from '../../utils/familyLogic';
 import { applyFamilyDomainAction, reduceFamilyDomain } from '../../domain/FamilyDomainReducer';
+import { storageService } from '../../services/storageService';
+import { logError } from '../../utils/errorLogger';
 
 const getInitialFamilyState = () => {
     const initialId = crypto.randomUUID();
@@ -157,6 +159,13 @@ export const createFamilySlice: StateCreator<AppStore, [["zustand/devtools", nev
 
         const newDeletedPersonIds = new Set(get().deletedPersonIds);
         newDeletedPersonIds.add(id);
+        void storageService.recordDeletedPersonId(get().currentTreeId, id).catch((error) => {
+            logError('familySlice deletePerson recordDeletedPersonId', error, {
+                category: 'DATABASE',
+                severity: 'MEDIUM',
+                metadata: { personId: id, treeId: get().currentTreeId, operationType: 'record_deleted_person_id' },
+            });
+        });
 
         if (addToHistory) get().pushToHistory(currentPeople);
 

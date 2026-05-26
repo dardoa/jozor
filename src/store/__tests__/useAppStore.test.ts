@@ -1,6 +1,6 @@
 
 import { act } from '@testing-library/react';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { loadFullState, useAppStore } from '../useAppStore';
 import {
   isPersistableNotification,
@@ -8,6 +8,14 @@ import {
 } from '../slices/uiSlice';
 import { DEFAULT_PERSON_TEMPLATE } from '../../constants';
 import type { Person } from '../../types';
+
+const recordDeletedPersonIdMock = vi.hoisted(() => vi.fn(async () => undefined));
+
+vi.mock('../../services/storageService', () => ({
+  storageService: {
+    recordDeletedPersonId: recordDeletedPersonIdMock,
+  },
+}));
 
 const buildPerson = (id: string, firstName: string): Person => ({
   ...DEFAULT_PERSON_TEMPLATE,
@@ -17,6 +25,7 @@ const buildPerson = (id: string, firstName: string): Person => ({
 
 describe('loadFullState', () => {
   beforeEach(() => {
+    vi.clearAllMocks();
     localStorage.clear();
     act(() => {
       useAppStore.getState().clearNotifications();
@@ -237,6 +246,29 @@ describe('loadFullState', () => {
     });
 
     expect(useAppStore.getState().focusId).toBe('person-1');
+  });
+
+  it('records local delete tombstones so stale remote operations cannot resurrect people after reload', () => {
+    act(() => {
+      useAppStore.setState((state) => ({
+        ...state,
+        currentTreeId: 'tree-1',
+        currentUserRole: 'owner',
+        people: {
+          'person-1': buildPerson('person-1', 'One'),
+          'person-2': buildPerson('person-2', 'Two'),
+        },
+        focusId: 'person-1',
+        deletedPersonIds: new Set<string>(),
+      }));
+    });
+
+    act(() => {
+      useAppStore.getState().deletePerson('person-2');
+    });
+
+    expect(useAppStore.getState().deletedPersonIds.has('person-2')).toBe(true);
+    expect(recordDeletedPersonIdMock).toHaveBeenCalledWith('tree-1', 'person-2');
   });
 
   it('persists isLowGraphicsMode to localStorage and updates state', () => {
