@@ -46,6 +46,20 @@ interface AIUsageReservation {
   next_reset: string;
 }
 
+type HeaderRecord = Record<string, string | string[] | undefined>;
+
+function getAuthorizationHeader(headers: Headers | HeaderRecord): string | undefined {
+  const maybeGetter = (headers as { get?: unknown }).get;
+  if (typeof maybeGetter === 'function') {
+    const getHeader = maybeGetter as Headers['get'];
+    return getHeader.call(headers, 'authorization') ?? getHeader.call(headers, 'Authorization') ?? undefined;
+  }
+
+  const headerRecord = headers as HeaderRecord;
+  const value = headerRecord.authorization ?? headerRecord.Authorization;
+  return Array.isArray(value) ? value[0] : value;
+}
+
 function getSupabaseAdminClient(): SupabaseClient {
   const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -340,14 +354,8 @@ export default async function handler(req: Request) {
     }, { status: 405, headers: corsHeaders });
   }
 
-  // Resilient header retrieval to support both Edge Runtime and Node.js local dev
-  let authHeader: string | undefined;
-  if (typeof (req.headers as any).get === 'function') {
-    authHeader = (req.headers as any).get('authorization') || undefined;
-  } else {
-    // Fallback for Node.js-style headers object
-    authHeader = (req.headers as any)['authorization'] || undefined;
-  }
+  // Resilient header retrieval to support both Edge Runtime and Node.js local dev.
+  const authHeader = getAuthorizationHeader(req.headers);
   
   const user = await authenticateUser(authHeader);
   if (!user) {
