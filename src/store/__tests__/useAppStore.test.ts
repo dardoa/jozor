@@ -2,6 +2,7 @@
 import { act } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { loadFullState, useAppStore } from '../useAppStore';
+import { projectPendingOperations } from '../../domain/pendingOperationsProjection';
 import {
   isPersistableNotification,
   sanitizePersistedNotifications,
@@ -347,5 +348,76 @@ describe('loadFullState', () => {
     });
     expect(useAppStore.getState().treeSettings.chartType).toBe('focus');
   });
-});
 
+  describe('Pending Operations Projection / Two-Layer State', () => {
+    beforeEach(() => {
+      act(() => {
+        useAppStore.getState().setDeletedPersonIds([]);
+        useAppStore.getState().setPendingOperations([]);
+        useAppStore.getState().setConfirmedPeople({
+          'person-1': buildPerson('person-1', 'Base'),
+        });
+        useAppStore.getState().setPeople({
+          'person-1': buildPerson('person-1', 'Base'),
+        }, false);
+      });
+    });
+
+    it('correctly adds and manages pending operations in the store', () => {
+      const op = {
+        tree_id: 'tree-1',
+        user_id: 'user-1',
+        type: 'UPDATE_PROP' as const,
+        payload: { id: 'person-1', updates: { firstName: 'Pending' } },
+        created_at: new Date().toISOString(),
+        localId: 42,
+      };
+
+      act(() => {
+        useAppStore.getState().addPendingOperation(op);
+      });
+
+      expect(useAppStore.getState().pendingOperations).toHaveLength(1);
+      expect(useAppStore.getState().pendingOperations[0].localId).toBe(42);
+
+      act(() => {
+        useAppStore.getState().removePendingOperations([42]);
+      });
+
+      expect(useAppStore.getState().pendingOperations).toHaveLength(0);
+    });
+
+    it('correctly replays pending operations over a newly updated confirmedPeople base', () => {
+      const op = {
+        tree_id: 'tree-1',
+        user_id: 'user-1',
+        type: 'UPDATE_PROP' as const,
+        payload: { id: 'person-1', updates: { firstName: 'LocalChange' } },
+        created_at: new Date().toISOString(),
+        localId: 100,
+      };
+
+      act(() => {
+        useAppStore.getState().addPendingOperation(op);
+      });
+
+      act(() => {
+        const nextConfirmed = {
+          'person-1': buildPerson('person-1', 'Base'),
+          'person-2': buildPerson('person-2', 'RemoteRemote'),
+        };
+        useAppStore.getState().setConfirmedPeople(nextConfirmed);
+        
+        const { people: projected } = projectPendingOperations(
+          nextConfirmed,
+          useAppStore.getState().pendingOperations
+        );
+        useAppStore.getState().setPeople(projected, false);
+      });
+
+      const people = useAppStore.getState().people;
+      expect(people['person-1'].firstName).toBe('LocalChange');
+      expect(people['person-2'].firstName).toBe('RemoteRemote');
+    });
+  });
+});

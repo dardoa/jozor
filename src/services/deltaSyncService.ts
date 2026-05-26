@@ -18,6 +18,7 @@ import { DeltaDebouncedUpdateQueue } from './sync/DeltaDebouncedUpdateQueue';
 import { DeltaOperationApplier } from './sync/DeltaOperationApplier';
 import { DeltaRemoteSyncClient } from './sync/DeltaRemoteSyncClient';
 import { clientInstanceId } from './sync/syncInstance';
+import { projectPendingOperations } from '../domain/pendingOperationsProjection';
 
 /**
  * DeltaSyncService (Modular Refactor)
@@ -170,7 +171,16 @@ class DeltaSyncService {
             return false;
         }
 
-        this.queue.enqueueOutgoing({ ...pendingOp, localId });
+        const opWithLocalId = { ...pendingOp, localId };
+        state.addPendingOperation(opWithLocalId);
+
+        const { people: projected } = projectPendingOperations(
+            state.confirmedPeople,
+            state.pendingOperations
+        );
+        state.setPeople(projected, false);
+
+        this.queue.enqueueOutgoing(opWithLocalId);
 
         return true;
     }
@@ -253,10 +263,17 @@ class DeltaSyncService {
         }
 
         queuedOps.forEach((op) => {
+            state.addPendingOperation(op);
             const targetId = this.getPayloadTargetId(op.payload);
             if (targetId) state.addSyncingNode(targetId);
             this.queue.enqueueOutgoing(op);
         });
+
+        const { people: projected } = projectPendingOperations(
+            state.confirmedPeople,
+            state.pendingOperations
+        );
+        state.setPeople(projected, false);
 
         return true;
     }
@@ -317,10 +334,18 @@ class DeltaSyncService {
     public async recoverPendingOperations(treeId: string) {
         try {
             const pending = await offlineCache.getPendingOperations(treeId);
+            const store = useAppStore.getState();
+            store.setPendingOperations(pending);
+
+            const { people: projected } = projectPendingOperations(
+                store.confirmedPeople,
+                pending
+            );
+            store.setPeople(projected, false);
+
             pending.forEach(op => this.queue.enqueueOutgoing(op));
             if (pending.length > 0) {
-                const { setSyncStatus, syncStatus } = useAppStore.getState();
-                setSyncStatus(buildSyncSaving(syncStatus, this.queue.getPendingOutgoingCount()));
+                store.setSyncStatus(buildSyncSaving(store.syncStatus, this.queue.getPendingOutgoingCount()));
             }
         } catch (error) {
             logError('Sync Recovery', error, { category: 'SYNC', severity: 'LOW' });
@@ -329,8 +354,10 @@ class DeltaSyncService {
 
     public async clearOutgoingQueue() {
         this.queue.clearOutgoing();
-        const { setSyncStatus, syncStatus } = useAppStore.getState();
-        setSyncStatus(buildSyncSuccess(syncStatus, 0));
+        const store = useAppStore.getState();
+        store.setPendingOperations([]);
+        store.setPeople(store.confirmedPeople, false);
+        store.setSyncStatus(buildSyncSuccess(store.syncStatus, 0));
         showToast.error('Sync queue cleared manually.');
     }
 

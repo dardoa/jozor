@@ -52,7 +52,16 @@ export class DeltaOperationApplier {
 
                         result.syncingNodeIdsToRemove.forEach((id) => state.removeSyncingNode(id));
 
-                        state.setPeople(result.people, false);
+                        // Project remote updates over local pending operations
+                        const { projectPendingOperations } = await import('../../domain/pendingOperationsProjection');
+                        const { people: projected } = projectPendingOperations(
+                            result.people,
+                            state.pendingOperations
+                        );
+
+                        state.setConfirmedPeople(result.people);
+                        state.setPeople(projected, false);
+
                         if (result.treeMetadata.focusId && result.people[result.treeMetadata.focusId]) {
                             state.setFocusId(result.treeMetadata.focusId);
                         }

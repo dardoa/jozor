@@ -8,6 +8,8 @@ import { offlineCache } from './OfflineCache';
 import { sanitizeOutgoingBatch } from './sanitizeBatch';
 import { buildSyncError, buildSyncSuccess } from './syncStatusHelpers';
 import type { Person } from '../../types';
+import { applyDeltaOperationToFamily } from '../../domain/FamilyDomainReducer';
+import { projectPendingOperations } from '../../domain/pendingOperationsProjection';
 
 type SupabaseTreeClient = ReturnType<typeof getSupabaseWithAuth>;
 
@@ -65,8 +67,28 @@ export class DeltaRemoteSyncClient {
 
             if (insertError) throw insertError;
 
-            useAppStore.getState().incrementOpCount(batch.length);
+            const store = useAppStore.getState();
+            let nextConfirmed = store.confirmedPeople;
+            batch.forEach((op) => {
+                const updated = applyDeltaOperationToFamily(nextConfirmed, op);
+                if (updated) {
+                    nextConfirmed = updated;
+                }
+            });
+
             const localIds = batch.map((op) => op.localId).filter((id): id is number => !!id);
+            const idsSet = new Set(localIds);
+            const nextPending = store.pendingOperations.filter(
+                (op) => op.localId === undefined || !idsSet.has(op.localId)
+            );
+
+            const { people: projected } = projectPendingOperations(nextConfirmed, nextPending);
+
+            store.setConfirmedPeople(nextConfirmed);
+            store.removePendingOperations(localIds);
+            store.setPeople(projected, false);
+
+            store.incrementOpCount(batch.length);
             await offlineCache.bulkDeletePendingOperations(localIds);
 
             const successTime = new Date();

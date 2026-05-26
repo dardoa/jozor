@@ -25,6 +25,7 @@ import { AppStore } from '../storeTypes';
 export interface FamilySlice {
     // State
     people: Record<string, Person>;
+    confirmedPeople: Record<string, Person>;
     locations: Record<string, import('../../types').LocationData>;
     focusId: string;
     searchTarget: { id: string; timestamp: number } | null;
@@ -39,6 +40,7 @@ export interface FamilySlice {
     // Actions
     setTreeName: (name: string) => void;
     setPeople: (people: Record<string, Person>, addToHistory?: boolean) => void;
+    setConfirmedPeople: (people: Record<string, Person>) => void;
     setDeletedPersonIds: (ids: Iterable<string>) => void;
     addDeletedPersonId: (id: string) => void;
     setFocusId: (id: string) => void;
@@ -81,6 +83,7 @@ export const createFamilySlice: StateCreator<AppStore, [["zustand/devtools", nev
     return {
         // Initial State
         people: initial.people,
+        confirmedPeople: initial.people,
         locations: {},
         focusId: initial.focusId,
     searchTarget: null,
@@ -99,11 +102,14 @@ export const createFamilySlice: StateCreator<AppStore, [["zustand/devtools", nev
         if (addToHistory) get().pushToHistory(current);
 
         set((state) => ({
+            confirmedPeople: filteredPeople,
             people: filteredPeople,
             peopleVersion: state.peopleVersion + 1,
             focusId: resolveValidFocusId(filteredPeople, state.focusId),
         }));
     },
+
+    setConfirmedPeople: (people) => set({ confirmedPeople: people }),
 
     setDeletedPersonIds: (ids) => {
         const deletedPersonIds = new Set(ids);
@@ -301,6 +307,7 @@ export const createFamilySlice: StateCreator<AppStore, [["zustand/devtools", nev
         const filteredPeople = filterDeletedPeople(cloudPeople, deletedIds);
 
         set((state) => ({
+            confirmedPeople: filteredPeople,
             people: filteredPeople,
             peopleVersion: state.peopleVersion + 1,
             focusId: resolveValidFocusId(filteredPeople, state.focusId),
@@ -312,6 +319,7 @@ export const createFamilySlice: StateCreator<AppStore, [["zustand/devtools", nev
     startNewTree: () => {
         const initial = getInitialFamilyState();
         set((state) => ({
+            confirmedPeople: initial.people,
             people: initial.people,
             peopleVersion: state.peopleVersion + 1,
             focusId: initial.focusId,
@@ -325,6 +333,7 @@ export const createFamilySlice: StateCreator<AppStore, [["zustand/devtools", nev
         const filteredPeople = filterDeletedPeople(importedPeople, deletedIds);
 
         set((state) => ({
+            confirmedPeople: filteredPeople,
             people: filteredPeople,
             peopleVersion: state.peopleVersion + 1,
             focusId: resolveValidFocusId(filteredPeople, state.focusId),
@@ -344,6 +353,7 @@ export const createFamilySlice: StateCreator<AppStore, [["zustand/devtools", nev
         get().pushToHistory(currentPeople);
 
         set((state) => ({
+            confirmedPeople: { [newPerson.id]: newPerson },
             people: { [newPerson.id]: newPerson },
             peopleVersion: state.peopleVersion + 1,
             focusId: newPerson.id,
