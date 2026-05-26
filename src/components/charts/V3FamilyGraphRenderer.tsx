@@ -48,6 +48,7 @@ interface V3FamilyGraphRendererProps {
   pipeline: V3RendererPipeline;
   focusPersonId?: string;
   highlightedPath?: Set<string>;
+  zoomScale?: number;
   onSelect?: (id: string) => void;
   onNodeContextMenu?: (e: React.MouseEvent, id: string) => void;
   onToggleCollapse?: (uniqueKey: string) => void;
@@ -549,6 +550,7 @@ interface V3PersonNodesLayerProps {
   onSelect: (id: string) => void;
   onNodeContextMenu: (event: React.MouseEvent, id: string) => void;
   settings: TreeSettings;
+  zoomScale: number;
   nodeWidth: number;
   nodeHeight: number;
 }
@@ -560,6 +562,7 @@ const V3PersonNodesLayer = memo<V3PersonNodesLayerProps>(({
   onSelect,
   onNodeContextMenu,
   settings,
+  zoomScale,
   nodeWidth,
   nodeHeight,
 }) => {
@@ -588,7 +591,7 @@ const V3PersonNodesLayer = memo<V3PersonNodesLayerProps>(({
           onSelect={onSelect}
           onNodeContextMenu={onNodeContextMenu}
           settings={settings}
-          zoomScale={1}
+          zoomScale={zoomScale}
           nodeWidth={nodeWidth}
           nodeHeight={nodeHeight}
           isPathHighlighted={isPathHighlighted}
@@ -611,6 +614,7 @@ export const V3FamilyGraphRenderer: React.FC<V3FamilyGraphRendererProps> = ({
   pipeline,
   focusPersonId,
   highlightedPath,
+  zoomScale,
   onSelect,
   onNodeContextMenu,
   onToggleCollapse,
@@ -666,6 +670,7 @@ export const V3FamilyGraphRenderer: React.FC<V3FamilyGraphRendererProps> = ({
         onSelect={onSelect ?? noopSelect}
         onNodeContextMenu={onNodeContextMenu ?? noopContextMenu}
         settings={settings}
+        zoomScale={zoomScale ?? 1}
         nodeWidth={nodeWidth}
         nodeHeight={nodeHeight}
       />

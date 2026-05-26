@@ -22,6 +22,7 @@ interface V3FamilyGraphChartProps {
   collapsePoints?: CollapsePoint[];
   highlightedPath?: Set<string>;
   pipeline?: V3RendererPipeline | null;
+  zoomScale?: number;
   onSelect?: (id: string) => void;
   onNodeContextMenu?: (e: React.MouseEvent, id: string) => void;
   onToggleCollapse?: (uniqueKey: string) => void;
@@ -34,6 +35,7 @@ export const V3FamilyGraphChart: React.FC<V3FamilyGraphChartProps> = ({
   collapsePoints = [],
   highlightedPath,
   pipeline: propPipeline,
+  zoomScale,
   onSelect,
   onNodeContextMenu,
   onToggleCollapse,
@@ -59,6 +61,7 @@ export const V3FamilyGraphChart: React.FC<V3FamilyGraphChartProps> = ({
       pipeline={activePipeline}
       focusPersonId={focusId}
       highlightedPath={highlightedPath}
+      zoomScale={zoomScale}
       onSelect={onSelect}
       onNodeContextMenu={onNodeContextMenu}
       onToggleCollapse={onToggleCollapse}
