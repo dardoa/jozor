@@ -23,9 +23,14 @@ vi.mock('../../store/useAppStore', () => ({
 }));
 
 describe('showToast', () => {
+  const getStateMock = vi.mocked(useAppStore.getState);
+  const mockLanguage = (language: 'en' | 'ar') => {
+    getStateMock.mockReturnValue({ language } as ReturnType<typeof useAppStore.getState>);
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
-    (useAppStore.getState as any).mockReturnValue({ language: 'en' });
+    mockLanguage('en');
   });
 
   it('calls sonner toast.success with translated text', () => {
@@ -34,7 +39,7 @@ describe('showToast', () => {
   });
 
   it('translates text to arabic when language is ar', () => {
-    (useAppStore.getState as any).mockReturnValue({ language: 'ar' });
+    mockLanguage('ar');
     showToast.success('messages.success.load');
     expect(toast.success).toHaveBeenCalledWith('تم تحميل الشجرة بنجاح', undefined);
   });
