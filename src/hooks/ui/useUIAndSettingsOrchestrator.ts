@@ -39,7 +39,7 @@ export const useUIAndSettingsOrchestrator = (
     setIsPresentMode,
   } = params;
 
-  const { t, language, setLanguage } = useTranslation();
+  const { language, setLanguage } = useTranslation();
   const { treeSettings, setTreeSettings } = useTreeSettings();
   const darkMode = useAppStore(state => state.darkMode);
   const setDarkMode = useAppStore(state => state.setDarkMode);
@@ -125,7 +125,7 @@ export const useUIAndSettingsOrchestrator = (
     onTriggerImportFile,
   };
 
-  const themeLanguage: ThemeLanguageProps = { darkMode, setDarkMode, language, setLanguage, t: t as any };
+  const themeLanguage: ThemeLanguageProps = { darkMode, setDarkMode, language, setLanguage };
 
   const viewSettings: ViewSettingsProps = {
     treeSettings,

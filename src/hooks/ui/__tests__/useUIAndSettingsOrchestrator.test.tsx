@@ -10,7 +10,7 @@ const mockSetLanguage = vi.hoisted(() => vi.fn());
 
 vi.mock('../../../context/TranslationContext', () => {
   return {
-    TranslationProvider: ({ children }: any) => <>{children}</>,
+    TranslationProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
     useTranslation: () => ({
       t: { messages: { empty: '' } },
       language: 'en',
@@ -77,6 +77,8 @@ describe('useUIAndSettingsOrchestrator', () => {
       deathDate: '',
       deathPlace: '',
       deathSource: '',
+      burialPlace: '',
+      residence: '',
       isDeceased: false,
       profession: '',
       company: '',
@@ -95,7 +97,7 @@ describe('useUIAndSettingsOrchestrator', () => {
       spouses: [],
       children: [],
       partnerDetails: {},
-    } as any,
+    },
     'person-2': {
       id: 'person-2',
       firstName: 'Second',
@@ -112,6 +114,8 @@ describe('useUIAndSettingsOrchestrator', () => {
       deathDate: '',
       deathPlace: '',
       deathSource: '',
+      burialPlace: '',
+      residence: '',
       isDeceased: false,
       profession: '',
       company: '',
@@ -130,7 +134,7 @@ describe('useUIAndSettingsOrchestrator', () => {
       spouses: [],
       children: [],
       partnerDetails: {},
-    } as any,
+    },
   };
 
   const renderWithProviders = () =>
