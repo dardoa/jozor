@@ -1,18 +1,16 @@
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { showToastMock, showSuccessMock } = vi.hoisted(() => ({
-  showToastMock: vi.fn(),
+const { showInfoMock, showSuccessMock } = vi.hoisted(() => ({
+  showInfoMock: vi.fn(),
   showSuccessMock: vi.fn(),
 }));
 
 vi.mock('../../utils/showToast', () => ({
-  showToast: Object.assign(
-    (...args: unknown[]) => showToastMock(...args),
-    {
-      success: (...args: unknown[]) => showSuccessMock(...args),
-    }
-  ),
+  showToast: {
+    info: (...args: unknown[]) => showInfoMock(...args),
+    success: (...args: unknown[]) => showSuccessMock(...args),
+  },
 }));
 
 import {
@@ -50,7 +48,7 @@ describe('notificationPolicyService', () => {
         source: 'heritage',
       })
     );
-    expect(showToastMock).not.toHaveBeenCalled();
+    expect(showInfoMock).not.toHaveBeenCalled();
     expect(showSuccessMock).not.toHaveBeenCalled();
   });
 
@@ -95,7 +93,7 @@ describe('notificationPolicyService', () => {
         body: expect.stringContaining('In 2 day(s)'),
       })
     );
-    expect(showToastMock).not.toHaveBeenCalled();
+    expect(showInfoMock).not.toHaveBeenCalled();
     expect(showSuccessMock).not.toHaveBeenCalled();
   });
 
@@ -115,7 +113,7 @@ describe('notificationPolicyService', () => {
         source: 'integrity',
       })
     );
-    expect(showToastMock).not.toHaveBeenCalled();
+    expect(showInfoMock).not.toHaveBeenCalled();
     expect(showSuccessMock).not.toHaveBeenCalled();
   });
 
@@ -165,7 +163,43 @@ describe('notificationPolicyService', () => {
       })
     );
     expect(showSuccessMock).not.toHaveBeenCalled();
-    expect(showToastMock).not.toHaveBeenCalled();
+    expect(showInfoMock).not.toHaveBeenCalled();
+  });
+
+  it('sends default toast specs through the info toast channel', () => {
+    const addNotification = vi.fn();
+
+    deliverNotificationWithPolicy(addNotification, {
+      notification: {
+        type: 'info',
+        source: 'system',
+        title: 'Heads up',
+        body: 'A default toast was sent.',
+      },
+      toast: {
+        message: 'Default toast',
+        duration: 3000,
+        icon: 'i',
+        maxWidth: '320px',
+        fontSize: '13px',
+        fontWeight: '700',
+      },
+    });
+
+    expect(addNotification).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Heads up',
+      })
+    );
+    expect(showInfoMock).toHaveBeenCalledWith('Default toast', {
+      duration: 3000,
+      icon: 'i',
+      style: {
+        maxWidth: '320px',
+        fontSize: '13px',
+        fontWeight: '700',
+      },
+    });
   });
 });
 
