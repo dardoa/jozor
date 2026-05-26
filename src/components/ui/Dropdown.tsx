@@ -4,6 +4,10 @@ import { DropdownCloseProvider } from './DropdownMenu';
 type TriggerElementProps = React.HTMLAttributes<HTMLElement> & {
   onClick?: (event: React.MouseEvent<HTMLElement>) => void;
   onKeyDown?: (event: React.KeyboardEvent<HTMLElement>) => void;
+  'data-dropdown-trigger'?: string;
+  'aria-haspopup'?: React.AriaAttributes['aria-haspopup'];
+  'aria-expanded'?: React.AriaAttributes['aria-expanded'];
+  'aria-controls'?: React.AriaAttributes['aria-controls'];
 };
 
 type TriggerElement = React.ReactElement<TriggerElementProps>;
@@ -121,21 +125,23 @@ export const Dropdown: React.FC<DropdownProps> = ({
     };
   }, [isOpen, handleClose]);
 
+  const triggerElement = React.isValidElement(trigger) ? (trigger as TriggerElement) : null;
+
   return (
     <div
       className={`relative ${className}`}
       ref={dropdownRef}
       onKeyDown={handleKeyDown}
     >
-      {React.isValidElement(trigger)
-        ? React.cloneElement(trigger as TriggerElement, {
-            ...((trigger as TriggerElement).props || {}),
+      {triggerElement
+        ? React.cloneElement(triggerElement, {
+            ...(triggerElement.props || {}),
             onClick: (e: React.MouseEvent) => {
-              (trigger as TriggerElement).props?.onClick?.(e as React.MouseEvent<HTMLElement>);
+              triggerElement.props?.onClick?.(e as React.MouseEvent<HTMLElement>);
               handleToggle();
             },
             onKeyDown: (e: React.KeyboardEvent) => {
-              (trigger as TriggerElement).props?.onKeyDown?.(e as React.KeyboardEvent<HTMLElement>);
+              triggerElement.props?.onKeyDown?.(e as React.KeyboardEvent<HTMLElement>);
               if (e.defaultPrevented) return;
 
               if (e.key === 'ArrowDown') {
@@ -151,7 +157,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
             'aria-haspopup': 'menu',
             'aria-expanded': isOpen,
             'aria-controls': isOpen ? contentId : undefined,
-          } as any)
+          })
         : (
           <button
             type="button"

@@ -1,4 +1,4 @@
-import { FolderArchive, Palette, Plus } from 'lucide-react';
+import { FolderArchive, Palette, Plus, type LucideIcon } from 'lucide-react';
 import { useTranslation } from '../../context/TranslationContext';
 
 interface MobileActionBarProps {
@@ -7,6 +7,16 @@ interface MobileActionBarProps {
   onAddPerson: () => void;
   canAddPerson?: boolean;
   activeTab?: 'vault' | 'appearance' | 'add' | null;
+}
+
+type MobileActionButtonId = 'vault' | 'appearance' | 'add';
+
+interface MobileActionButton {
+  id: MobileActionButtonId;
+  label: string;
+  icon: LucideIcon;
+  onClick: () => void;
+  disabled?: boolean;
 }
 
 export const MobileActionBar: React.FC<MobileActionBarProps> = ({
@@ -26,7 +36,7 @@ export const MobileActionBar: React.FC<MobileActionBarProps> = ({
     action();
   };
 
-  const buttons = [
+  const buttons: MobileActionButton[] = [
     {
       id: 'appearance',
       label: text.appearanceLab || text.appearance || 'Appearance',
@@ -46,7 +56,7 @@ export const MobileActionBar: React.FC<MobileActionBarProps> = ({
       icon: FolderArchive,
       onClick: onOpenVault,
     },
-  ] as const;
+  ];
 
   return (
     <nav
@@ -63,7 +73,7 @@ export const MobileActionBar: React.FC<MobileActionBarProps> = ({
             key={btn.id}
             type="button"
             onClick={() => runWithFeedback(btn.onClick)}
-            disabled={(btn as any).disabled}
+            disabled={btn.disabled}
             aria-label={btn.label}
             aria-current={isActive ? 'page' : undefined}
             title={btn.label}
