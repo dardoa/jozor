@@ -318,6 +318,10 @@ class DeltaSyncService {
         try {
             const pending = await offlineCache.getPendingOperations(treeId);
             pending.forEach(op => this.queue.enqueueOutgoing(op));
+            if (pending.length > 0) {
+                const { setSyncStatus, syncStatus } = useAppStore.getState();
+                setSyncStatus(buildSyncSaving(syncStatus, this.queue.getPendingOutgoingCount()));
+            }
         } catch (error) {
             logError('Sync Recovery', error, { category: 'SYNC', severity: 'LOW' });
         }
