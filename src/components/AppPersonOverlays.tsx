@@ -15,6 +15,7 @@ import type {
   ModalStateAndActions,
   ToolsActionsProps,
   TreeSettings,
+  ViewSettingsProps,
 } from '../types';
 
 const SmartPersonaDrawer = React.lazy(() =>
@@ -34,7 +35,7 @@ interface AppPersonOverlaysProps {
   effectiveTreeSettings: TreeSettings;
   canEditActiveTree: boolean;
   isTreeOwner: boolean;
-  currentUserRole?: string | null;
+  currentUserRole?: ViewSettingsProps['currentUserRole'];
 }
 
 export const AppPersonOverlays: React.FC<AppPersonOverlaysProps> = ({
@@ -181,7 +182,7 @@ export const AppPersonOverlays: React.FC<AppPersonOverlaysProps> = ({
             closeNodeContextMenu();
             triggerDelete(id);
           }}
-          currentUserRole={currentUserRole as any}
+          currentUserRole={currentUserRole ?? null}
         />
       )}
 

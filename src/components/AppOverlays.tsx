@@ -11,6 +11,7 @@ import type {
   ModalStateAndActions,
   ToolsActionsProps,
   TreeSettings,
+  ViewSettingsProps,
 } from '../types';
 
 interface AppOverlaysProps {
@@ -18,7 +19,7 @@ interface AppOverlaysProps {
   modals: ModalStateAndActions;
   googleSync: GoogleSyncStateAndActions;
   viewSettings: {
-    currentUserRole?: string | null;
+    currentUserRole?: ViewSettingsProps['currentUserRole'];
   };
   toolsActions: ToolsActionsProps;
   detailsPanelFamilyActions: FamilyActionsProps;

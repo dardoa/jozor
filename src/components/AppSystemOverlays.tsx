@@ -8,6 +8,7 @@ import type {
   AuthProps,
   GoogleSyncStateAndActions,
   ModalStateAndActions,
+  ViewSettingsProps,
 } from '../types';
 
 const ActivityLogDrawer = React.lazy(() => import('../features/activity-log').then(m => ({ default: m.ActivityLogDrawer })));
@@ -30,7 +31,7 @@ interface AppSystemOverlaysProps {
   auth: AuthProps;
   focusAndNavigate: (personId: string) => void;
   openVaultTab: (tab: 'trees' | 'members' | 'security' | 'cloud' | 'stats') => void;
-  currentUserRole?: string | null;
+  currentUserRole?: ViewSettingsProps['currentUserRole'];
 }
 
 export const AppSystemOverlays: React.FC<AppSystemOverlaysProps> = ({
