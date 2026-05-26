@@ -51,7 +51,7 @@ export const usePhotoUpload = (): UsePhotoUploadReturn => {
         file,
         uid: user.uid,
         email: user.email || '',
-        token: (user as any).supabaseToken,
+        token: user.supabaseToken,
         currentVersion: currentPerson?.photoVersion || 0,
         onProgress: (p) => setUploadProgress(p)
       });
@@ -88,7 +88,7 @@ export const usePhotoUpload = (): UsePhotoUploadReturn => {
         personId, 
         user.uid, 
         user.email || '', 
-        (user as any).supabaseToken
+        user.supabaseToken
       );
 
       // 2. Metadata delete from DB
