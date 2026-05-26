@@ -3,6 +3,7 @@ import { useAppStore } from '../../store/useAppStore';
 import { deltaSyncService } from '../../services/deltaSyncService';
 import { logInfo, logWarn } from '../../utils/errorLogger';
 import { showToast } from '../../utils/showToast';
+import type { DeltaOperation } from '../../services/sync/SyncTypes';
 
 type PermissionCollaboratorEvent = {
     eventType?: 'INSERT' | 'UPDATE' | 'DELETE';
@@ -28,9 +29,9 @@ export const useSupabaseSync = () => {
     // Use supabaseToken (Supabase JWT) as the subscription guard — supabaseAccessToken is the backup.
     const supabaseToken = user?.supabaseToken ?? null;
 
-    const handleRemoteOperation = useCallback((op: any) => {
+    const handleRemoteOperation = useCallback((op: DeltaOperation) => {
         logInfo('SYNC', 'SUPABASE_REMOTE_OPERATION_RECEIVED', { op });
-        deltaSyncService.applyOperation(op as any);
+        deltaSyncService.applyOperation(op);
     }, []);
 
     // Realtime Delta Sync Lifecycle

@@ -40,10 +40,10 @@ export const InvitePage: React.FC = () => {
                 setTimeout(() => {
                     navigate(`/tree/${result.treeId}`);
                 }, 2000);
-            } catch (error: any) {
+            } catch (error: unknown) {
                 console.error('Accept Invitation Error:', error);
                 setStatus('error');
-                setErrorMessage(error?.message || 'تعذر معالجة الدعوة. قد تكون منتهية الصلاحية أو غير صالحة لحسابك.');
+                setErrorMessage(error instanceof Error ? error.message : 'تعذر معالجة الدعوة. قد تكون منتهية الصلاحية أو غير صالحة لحسابك.');
             }
         };
 

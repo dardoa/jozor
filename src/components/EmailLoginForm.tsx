@@ -54,7 +54,7 @@ export const EmailLoginForm: React.FC<EmailLoginFormProps> = ({ onSuccess, onCan
                 }
                 return successMsg;
             },
-            error: (err: any) => err instanceof Error ? err.message : 'authErrors.generic',
+            error: (err: unknown) => err instanceof Error ? err.message : 'authErrors.generic',
         });
     };
 
