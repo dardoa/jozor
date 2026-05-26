@@ -12,7 +12,7 @@ class WorkerMock {
   terminate() {}
 }
 
-global.Worker = WorkerMock as any;
+global.Worker = WorkerMock as unknown as typeof Worker;
 
 const buildPerson = (overrides: Partial<Person> = {}): Person => ({
   id: 'root-person',
@@ -52,7 +52,7 @@ const settings: TreeSettings = {
   themeColor: '#10b981',
   boxColorLogic: 'gender',
   generationLimit: 6,
-} as TreeSettings;
+};
 
 const setPeopleInStore = (people: Record<string, Person>) => {
   act(() => {

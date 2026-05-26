@@ -56,7 +56,12 @@ function useStableHighlightedPath(
     const nextPath = calculateHighlightedPath(people, rootId);
     const previousPath = previousPathRef.current;
 
-    if (previousPath && areSetsEqual(previousPath as any, nextPath as any)) {
+    if (!nextPath) {
+      previousPathRef.current = undefined;
+      return undefined;
+    }
+
+    if (previousPath && areSetsEqual(previousPath, nextPath)) {
       return previousPath;
     }
 

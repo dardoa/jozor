@@ -39,6 +39,8 @@ export interface TreeSettings {
     isRtl?: boolean;
     privacyMode?: boolean;
     isLowGraphicsMode?: boolean;
+    enableForcePhysics?: boolean;
+    enableTimeOffset?: boolean;
 }
 
 export interface DriveFile {
