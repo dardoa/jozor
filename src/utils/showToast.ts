@@ -178,7 +178,7 @@ export const showToast = {
     params: {
       loading: TranslationKey | Omit<string, TranslationKey>;
       success: TranslationKey | Omit<string, TranslationKey> | ((data: T) => string);
-      error: TranslationKey | Omit<string, TranslationKey> | ((error: any) => string);
+      error: TranslationKey | Omit<string, TranslationKey> | ((error: unknown) => string);
       options?: ToastOptions;
     }
   ) => {

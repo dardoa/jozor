@@ -1,5 +1,5 @@
 import { Person, Gender } from '../types';
-import { createPerson } from './familyLogic';
+import { createPerson } from '../utils/familyLogic';
 
 // Helper to safely remove ID from array
 const removeId = (arr: string[], idToRemove: string) => arr.filter((id) => id !== idToRemove);

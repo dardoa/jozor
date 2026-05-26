@@ -1,7 +1,8 @@
 import { StateCreator } from 'zustand';
 import { Person } from '../../types';
 import { DEFAULT_PERSON_TEMPLATE } from '../../constants';
-import { validatePerson, createPerson } from '../../utils/familyLogic';
+import { createPerson } from '../../utils/familyLogic';
+import { applyFamilyDomainAction, reduceFamilyDomain } from '../../domain/FamilyDomainReducer';
 
 const getInitialFamilyState = () => {
     const initialId = crypto.randomUUID();
@@ -17,14 +18,6 @@ const getInitialFamilyState = () => {
         focusId: initialId,
     };
 };
-import {
-    performAddChild,
-    performAddParent,
-    performAddSpouse,
-    performDeletePerson,
-    performLinkPerson,
-    performRemoveRelationship,
-} from '../../utils/treeOperations';
 import { AppStore } from '../storeTypes';
 
 export interface FamilySlice {
@@ -140,12 +133,13 @@ export const createFamilySlice: StateCreator<AppStore, [["zustand/devtools", nev
     updatePerson: (id: string, updates: Partial<Person>, _bypassSync = false, addToHistory = true) => {
         if (get().currentUserRole === 'viewer') throw new Error('Unauthorized: Viewers cannot edit.');
         const currentPeople = get().people;
-        const validated = validatePerson({ ...currentPeople[id], ...updates });
+        const updatedPeople = reduceFamilyDomain(currentPeople, { type: 'updatePerson', id, updates });
+        if (!updatedPeople || updatedPeople === currentPeople) return;
         
         if (addToHistory) get().pushToHistory(currentPeople);
 
         set((state) => ({
-            people: { ...state.people, [id]: validated },
+            people: updatedPeople,
             peopleVersion: state.peopleVersion + 1,
         }));
     },
@@ -154,8 +148,9 @@ export const createFamilySlice: StateCreator<AppStore, [["zustand/devtools", nev
         if (get().currentUserRole === 'viewer') throw new Error('Unauthorized: Viewers cannot delete.');
         const currentPeople = get().people;
         const { focusId } = get();
-        const newPeople = performDeletePerson(currentPeople, id);
+        const newPeople = reduceFamilyDomain(currentPeople, { type: 'deletePerson', id });
         if (newPeople === currentPeople) return;
+        if (!newPeople) return;
 
         const nextFocusId =
             focusId === id ? Object.keys(newPeople)[0] || '' : focusId;
@@ -178,18 +173,25 @@ export const createFamilySlice: StateCreator<AppStore, [["zustand/devtools", nev
         const currentPeople = get().people;
         const { focusId } = get();
         const targetId = targetPersonId || focusId;
-        const res = performAddParent(currentPeople, targetId, gender, relatedPersonId);
+        const res = applyFamilyDomainAction(currentPeople, {
+            type: 'addParent',
+            targetId,
+            gender,
+            relatedPersonId,
+        });
         if (!res) return null;
+        const newId = res.newId;
+        if (!newId) return null;
 
         get().pushToHistory(currentPeople);
 
         set({
-            people: res.updatedPeople,
+            people: res.people,
             peopleVersion: get().peopleVersion + 1,
-            focusId: res.newId,
+            focusId: newId,
         });
 
-        return res;
+        return { updatedPeople: res.people, newId };
     },
 
     addSpouse: (gender, _bypassSync = false, relatedPersonId) => {
@@ -197,18 +199,24 @@ export const createFamilySlice: StateCreator<AppStore, [["zustand/devtools", nev
         const currentPeople = get().people;
         const { focusId } = get();
         const targetId = relatedPersonId || focusId;
-        const res = performAddSpouse(currentPeople, targetId, gender);
+        const res = applyFamilyDomainAction(currentPeople, {
+            type: 'addSpouse',
+            targetId,
+            gender,
+        });
         if (!res) return null;
+        const newId = res.newId;
+        if (!newId) return null;
 
         get().pushToHistory(currentPeople);
 
         set({
-            people: res.updatedPeople,
+            people: res.people,
             peopleVersion: get().peopleVersion + 1,
-            focusId: res.newId,
+            focusId: newId,
         });
 
-        return res;
+        return { updatedPeople: res.people, newId };
     },
 
     addChild: (gender, _bypassSync = false, relatedPersonId, targetPersonId) => {
@@ -216,24 +224,37 @@ export const createFamilySlice: StateCreator<AppStore, [["zustand/devtools", nev
         const currentPeople = get().people;
         const { focusId } = get();
         const targetId = targetPersonId || focusId;
-        const res = performAddChild(currentPeople, targetId, gender, relatedPersonId);
+        const res = applyFamilyDomainAction(currentPeople, {
+            type: 'addChild',
+            targetId,
+            gender,
+            relatedPersonId,
+        });
         if (!res) return null;
+        const newId = res.newId;
+        if (!newId) return null;
 
         get().pushToHistory(currentPeople);
 
         set({
-            people: res.updatedPeople,
+            people: res.people,
             peopleVersion: get().peopleVersion + 1,
-            focusId: res.newId,
+            focusId: newId,
         });
 
-        return res;
+        return { updatedPeople: res.people, newId };
     },
 
     removeRelationship: (targetId, relativeId, type, _bypassSync = false, addToHistory = true) => {
         if (get().currentUserRole === 'viewer') throw new Error('Unauthorized: Viewers cannot remove relationships.');
         const currentPeople = get().people;
-        const updatedPeople = performRemoveRelationship(currentPeople, targetId, relativeId, type);
+        const updatedPeople = reduceFamilyDomain(currentPeople, {
+            type: 'removeRelationship',
+            targetId,
+            relativeId,
+            relationshipType: type,
+        });
+        if (!updatedPeople) return;
 
         if (addToHistory) get().pushToHistory(currentPeople);
 
@@ -249,7 +270,14 @@ export const createFamilySlice: StateCreator<AppStore, [["zustand/devtools", nev
 
         const currentPeople = get().people;
         const { focusId } = get();
-        const updatedPeople = performLinkPerson(currentPeople, focusId, existingId, type, relatedPersonId);
+        const updatedPeople = reduceFamilyDomain(currentPeople, {
+            type: 'linkPerson',
+            focusId,
+            existingId,
+            relationshipType: type,
+            relatedPersonId,
+        });
+        if (!updatedPeople) return;
 
         if (addToHistory) get().pushToHistory(currentPeople);
 

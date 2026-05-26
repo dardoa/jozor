@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Person } from '../../types';
 import { DEFAULT_PERSON_TEMPLATE } from '../../constants';
-import { performAddChild, performAddParent } from '../treeOperations';
+import { performAddChild, performAddParent } from '../familyTreeOperations';
 
 const makePerson = (overrides: Partial<Person>): Person => ({
   id: overrides.id || crypto.randomUUID(),
@@ -10,7 +10,7 @@ const makePerson = (overrides: Partial<Person>): Person => ({
   ...overrides,
 });
 
-describe('treeOperations relationship rules', () => {
+describe('familyTreeOperations relationship rules', () => {
   it('auto-links the two parents as spouses when adding the second parent', () => {
     const child = makePerson({
       id: 'child-1',

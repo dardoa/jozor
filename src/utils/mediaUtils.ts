@@ -1,6 +1,12 @@
 import { Person } from '../types';
 import { supabaseUrl } from '../services/supabaseConfig';
 
+interface GalleryImageItem {
+    url?: string;
+    path?: string;
+    version?: number;
+}
+
 /**
  * Generates the correct photo URL for a person based on the path-based media fields.
  */
@@ -25,7 +31,7 @@ export const getPersonPhoto = (person: Partial<Person> | null | undefined): stri
  * Resolves a gallery image URL.
  * Supports direct string URLs and GalleryItem objects.
  */
-export const getGalleryImageUrl = (item: any): string | null => {
+export const getGalleryImageUrl = (item: string | GalleryImageItem | null | undefined): string | null => {
     if (!item) return null;
 
     if (typeof item === 'string') return item;
@@ -33,7 +39,7 @@ export const getGalleryImageUrl = (item: any): string | null => {
     if (typeof item.url === 'string' && item.url.trim()) return item.url;
 
     // If it's the new GalleryItem object
-    if (item.path) {
+    if (typeof item.path === 'string' && item.path.trim()) {
         const cleanPath = item.path.startsWith('avatars/') ? item.path.replace('avatars/', '') : item.path;
         const baseUrl = `${supabaseUrl}/storage/v1/object/public/avatars/${cleanPath}`;
         return item.version ? `${baseUrl}?v=${item.version}` : baseUrl;

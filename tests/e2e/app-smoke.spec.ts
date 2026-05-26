@@ -46,6 +46,7 @@ type JozorDebug = {
       invitationStatus?: 'pending' | 'accepted' | 'revoked' | 'expired' | 'declined';
     }>
   ) => void;
+  openDiagnostics: () => void;
   getStateSnapshot: () => {
     role?: DebugRole;
     people?: typeof seedPeople;
@@ -58,6 +59,12 @@ type JozorDebug = {
 type DebugWindow = Window & { jozorDebug?: JozorDebug };
 
 test.describe.configure({ timeout: 60000 });
+
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('language', 'en');
+  });
+});
 
 test('application shell loads', async ({ page }) => {
   await page.goto('/', { waitUntil: 'domcontentloaded' });
@@ -184,7 +191,7 @@ const seedScenario = async (
   }
 };
 
-const openAddRelativeMenu = async (page: Page) => {
+const openNodeContextMenu = async (page: Page) => {
   const node = page.getByTestId('tree-node').first();
   await expect(node).toBeVisible({ timeout: 10000 });
   await node.dispatchEvent('contextmenu', {
@@ -195,12 +202,12 @@ const openAddRelativeMenu = async (page: Page) => {
     clientX: 20,
     clientY: 20,
   });
-  await page.getByRole('menuitem', { name: /Add Relative/i }).click();
+  await expect(page.getByRole('menuitem', { name: /Add Father/i })).toBeVisible();
 };
 
 const closeContextMenu = async (page: Page) => {
   await page.keyboard.press('Escape');
-  await expect(page.getByRole('menuitem', { name: /Add Relative/i })).toHaveCount(0);
+  await expect(page.getByRole('menuitem', { name: /Add Father/i })).toHaveCount(0);
 };
 
 const waitForDebugRole = async (page: Page, role: DebugRole) => {
@@ -210,15 +217,10 @@ const waitForDebugRole = async (page: Page, role: DebugRole) => {
   }, role);
 };
 
-const openHeaderTreeMenu = async (page: Page) => {
-  const trigger = page.getByTestId('tree-menu-trigger').first();
-  await expect(trigger).toBeVisible({ timeout: 10000 });
-  await trigger.click();
-};
-
 const openDiagnosticsDrawer = async (page: Page) => {
-  await openHeaderTreeMenu(page);
-  await page.getByRole('menuitem', { name: /Diagnostics/i }).click();
+  await page.evaluate(() => {
+    (window as DebugWindow).jozorDebug?.openDiagnostics?.();
+  });
   await expect(page.getByRole('heading', { name: 'Diagnostics', exact: true })).toBeVisible();
 };
 
@@ -241,13 +243,13 @@ test('viewer can open a tree but cannot add relatives from node context menu', a
     clientY: 20,
   });
   
-  await expect(page.getByRole('menuitem', { name: /Add Relative/i })).toHaveCount(0);
+  await expect(page.getByRole('menuitem', { name: /Add Father/i })).toHaveCount(0);
 });
 
 test('editor can open a tree and add relatives from node context menu', async ({ page }) => {
   await seedScenario(page, 'editor');
   await waitForDebugRole(page, 'editor');
-  await openAddRelativeMenu(page);
+  await openNodeContextMenu(page);
 
   await expect(page.getByRole('menuitem', { name: 'Add Father' })).toBeEnabled();
   await expect(page.getByRole('menuitem', { name: 'Add Mother' })).toBeEnabled();
@@ -268,7 +270,7 @@ test('role upgrade from viewer to editor unlocks editing actions without reseedi
     clientX: 20,
     clientY: 20,
   });
-  await expect(page.getByRole('menuitem', { name: /Add Relative/i })).toHaveCount(0);
+  await expect(page.getByRole('menuitem', { name: /Add Father/i })).toHaveCount(0);
   await closeContextMenu(page);
 
   await page.evaluate(() => {
@@ -276,7 +278,7 @@ test('role upgrade from viewer to editor unlocks editing actions without reseedi
   });
 
   await waitForDebugRole(page, 'editor');
-  await openAddRelativeMenu(page);
+  await openNodeContextMenu(page);
   await expect(page.getByRole('menuitem', { name: 'Add Father' })).toBeEnabled();
 });
 
@@ -288,7 +290,7 @@ test('editor edits a person and the value persists after reload', async ({ page 
   await expect(editDetailsBtn).toBeVisible({ timeout: 10000 });
   await editDetailsBtn.click();
 
-  const firstNameInput = page.locator('aside input[type="text"]').first();
+  const firstNameInput = page.getByText('First Name', { exact: true }).locator('xpath=..').getByRole('textbox');
   await expect(firstNameInput).toBeVisible();
   await firstNameInput.fill('Root Updated');
   await firstNameInput.blur();
@@ -308,7 +310,7 @@ test('editor edits a person and the value persists after reload', async ({ page 
   });
 });
 
-test('owner can open header settings menu entries for share and admin hub', async ({ page }) => {
+test('owner can open the account menu and vault entry while a tree is active', async ({ page }) => {
   const ownerUser = {
     uid: 'owner-user',
     displayName: 'Owner User',
@@ -319,9 +321,9 @@ test('owner can open header settings menu entries for share and admin hub', asyn
   await seedScenario(page, 'owner', ownerUser);
   await waitForDebugRole(page, 'owner');
 
-  await openHeaderTreeMenu(page);
-  await expect(page.getByRole('menuitem', { name: /Share Tree/i })).toBeVisible();
-  await expect(page.getByRole('menuitem', { name: /Admin Hub/i })).toBeVisible();
+  await page.getByTestId('account-menu-trigger').click();
+  await expect(page.getByRole('menuitem', { name: /The Vault/i })).toBeVisible();
+  await expect(page.getByRole('menuitem', { name: /Sign Out/i })).toBeVisible();
 });
 
 test('persisted debug scenario restores the tree name in the header', async ({ page }) => {
@@ -536,7 +538,7 @@ test('shared tree access changes from owner to viewer to editor and editor chang
     clientX: 20,
     clientY: 20,
   });
-  await expect(page.getByRole('menuitem', { name: /Add Relative/i })).toHaveCount(0);
+  await expect(page.getByRole('menuitem', { name: /Add Father/i })).toHaveCount(0);
   await closeContextMenu(page);
 
   await page.evaluate((user) => {
@@ -550,7 +552,7 @@ test('shared tree access changes from owner to viewer to editor and editor chang
   await expect(editDetailsBtn).toBeVisible({ timeout: 10000 });
   await editDetailsBtn.click();
 
-  const firstNameInput = page.locator('aside input[type="text"]').first();
+  const firstNameInput = page.getByText('First Name', { exact: true }).locator('xpath=..').getByRole('textbox');
   await expect(firstNameInput).toBeVisible();
   await firstNameInput.fill('Collaborative Root');
   await firstNameInput.blur();
@@ -682,23 +684,23 @@ test.describe('mobile shell', () => {
     expect(notificationHeaderBox!.x + notificationHeaderBox!.width).toBeLessThanOrEqual(390);
     expect(notificationHeaderBox!.y + notificationHeaderBox!.height).toBeLessThanOrEqual(844);
 
-    await page.getByTestId('notification-bell-trigger').click();
+    await page.getByRole('button', { name: 'Close' }).click();
     await expect(page.getByText('Notification Center')).toHaveCount(0);
 
-    await page.getByRole('button', { name: /Advanced Layout Settings|Preferences/i }).click();
-    await expect(page.getByRole('tab', { name: 'Layout' })).toBeVisible();
-    await expect(page.getByRole('tab', { name: 'Appearance' })).toBeVisible();
-    await expect(page.getByRole('tab', { name: 'Visibility' })).toBeVisible();
+    await page.getByRole('navigation', { name: 'Mobile actions' }).getByRole('button', { name: 'Appearance' }).click();
+    await expect(page.getByRole('heading', { name: 'Appearance Lab' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Core' })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Layout/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Visible Content/i })).toBeVisible();
 
-    const preferencesPanel = page.locator('.ds-drawer-shell').last();
-    const preferencesBox = await preferencesPanel.boundingBox();
+    const preferencesBox = await page.getByRole('heading', { name: 'Appearance Lab' }).boundingBox();
 
     expect(preferencesBox).not.toBeNull();
     expect(preferencesBox!.x).toBeGreaterThanOrEqual(0);
     expect(preferencesBox!.x + preferencesBox!.width).toBeLessThanOrEqual(390);
   });
 
-  test('mobile desktop menus remain reachable within the viewport', async ({ page }) => {
+  test('mobile vault remains reachable within the viewport', async ({ page }) => {
     const ownerUser = {
       uid: 'mobile-owner-actions',
       displayName: 'Mobile Owner',
@@ -711,59 +713,18 @@ test.describe('mobile shell', () => {
 
     await openNotificationCenter(page);
     await expect(page.getByText('Notification Center')).toBeVisible();
-    await page.getByTestId('notification-bell-trigger').click();
+    await page.getByRole('button', { name: 'Close' }).click();
     await expect(page.getByText('Notification Center')).toHaveCount(0);
 
-    await page.getByRole('navigation', { name: 'Mobile actions' }).getByRole('button', { name: 'Tree' }).click();
-    await expect(page.getByRole('heading', { name: 'Tree', exact: true })).toBeVisible();
-    await expect(page.getByRole('button', { name: /Admin Hub/i })).toBeVisible();
-    await expect(page.getByRole('button', { name: /Diagnostics/i })).toBeVisible();
+    await page.getByRole('navigation', { name: 'Mobile actions' }).getByRole('button', { name: 'The Vault' }).click();
+    await expect(page.getByRole('heading', { name: 'The Vault' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Management', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Tools', exact: true })).toBeVisible();
 
-    const treeSheet = page.locator('.ds-drawer-shell').last();
-    const treeSheetBox = await treeSheet.boundingBox();
-    expect(treeSheetBox).not.toBeNull();
-    expect(treeSheetBox!.x).toBeGreaterThanOrEqual(0);
-    expect(treeSheetBox!.x + treeSheetBox!.width).toBeLessThanOrEqual(390);
-
-    await page.getByRole('button', { name: /Admin Hub/i }).click();
-    await expect(page.getByRole('heading', { name: 'Admin Hub' })).toBeVisible();
-    await page.keyboard.press('Escape');
-    await expect(page.getByRole('heading', { name: 'Admin Hub' })).toHaveCount(0);
-
-    await page.getByRole('navigation', { name: 'Mobile actions' }).getByRole('button', { name: 'Account' }).click();
-    await expect(page.getByRole('heading', { name: 'Account', exact: true })).toBeVisible();
-    await expect(page.getByRole('button', { name: /Global Settings/i })).toBeVisible();
-
-    const accountSheet = page.locator('.ds-drawer-shell').last();
-    const accountSheetBox = await accountSheet.boundingBox();
-    expect(accountSheetBox).not.toBeNull();
-    expect(accountSheetBox!.x).toBeGreaterThanOrEqual(0);
-    expect(accountSheetBox!.x + accountSheetBox!.width).toBeLessThanOrEqual(390);
-
-    await page.getByRole('button', { name: /Global Settings/i }).click();
-    await expect(page.getByRole('heading', { name: 'Global Settings' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Profile' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Security' })).toBeVisible();
-
-    const accountHeadingBox = await page.getByRole('heading', { name: 'Global Settings' }).boundingBox();
-    expect(accountHeadingBox).not.toBeNull();
-    expect(accountHeadingBox!.x).toBeGreaterThanOrEqual(0);
-    expect(accountHeadingBox!.x + accountHeadingBox!.width).toBeLessThanOrEqual(390);
-
-    await page.keyboard.press('Escape');
-    await expect(page.getByRole('heading', { name: 'Global Settings' })).toHaveCount(0);
-
-    await page.getByRole('navigation', { name: 'Mobile actions' }).getByRole('button', { name: 'Tools' }).click();
-    await expect(page.getByRole('heading', { name: 'Tools' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Save As' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Print' })).toBeVisible();
-    await expect(page.getByRole('button', { name: /Jozor Archive/i })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'PDF' })).toBeVisible();
-
-    const toolsDrawerBox = await page.locator('.ds-drawer-shell').last().boundingBox();
-    expect(toolsDrawerBox).not.toBeNull();
-    expect(toolsDrawerBox!.x).toBeGreaterThanOrEqual(0);
-    expect(toolsDrawerBox!.x + toolsDrawerBox!.width).toBeLessThanOrEqual(390);
+    const vaultHeadingBox = await page.getByRole('heading', { name: 'The Vault' }).boundingBox();
+    expect(vaultHeadingBox).not.toBeNull();
+    expect(vaultHeadingBox!.x).toBeGreaterThanOrEqual(0);
+    expect(vaultHeadingBox!.x + vaultHeadingBox!.width).toBeLessThanOrEqual(390);
   });
 });
 

@@ -35,7 +35,7 @@ const numberFields: Array<{
 
 export const AdminDefaultTreeSettings: React.FC = () => {
   const { t, language } = useTranslation();
-  const text = (t as any).adminTreeDefaults;
+  const text = t.adminTreeDefaults;
   const BackIcon = language === 'ar' ? ArrowRight : ArrowLeft;
   const user = useAppStore((state) => state.user);
   const [isAdmin, setIsAdmin] = useState(false);

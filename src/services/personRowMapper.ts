@@ -77,7 +77,7 @@ export const mapDbPersonRowToPerson = (row: DbPersonRow): Person => {
     photoUrl: row.photo_url ?? undefined,
     photoPath: row.photo_path ?? undefined,
     photoVersion: row.photo_version ?? undefined,
-    gallery: Array.isArray(customFields.gallery) ? (customFields.gallery as any[]) : [],
+    gallery: Array.isArray(customFields.gallery) ? (customFields.gallery as Person['gallery']) : [],
     voiceNotes: Array.isArray(customFields.voiceNotes) ? (customFields.voiceNotes as string[]) : [],
     sources: Array.isArray(customFields.sources) ? (customFields.sources as Person['sources']) : [],
     events: Array.isArray(customFields.events) ? (customFields.events as Person['events']) : [],

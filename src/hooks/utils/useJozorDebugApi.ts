@@ -51,6 +51,7 @@ type JozorDebugApi = {
   seedNotifications: (
     notifications: Array<Omit<AppNotification, 'id' | 'timestamp' | 'read' | 'createdAt' | 'updatedAt'>>
   ) => void;
+  openDiagnostics: () => void;
   getLayoutSnapshot: () => Promise<unknown>;
   clearPersistedScenario: () => void;
   resetScenario: () => void;
@@ -221,6 +222,9 @@ export const useJozorDebugApi = (setShowWelcome: (show: boolean) => void) => {
         notifications.forEach((notification) => {
           state.enqueueNotification(notification);
         });
+      },
+      openDiagnostics: () => {
+        useAppStore.getState().setDiagnosticsDrawerOpen(true);
       },
       getLayoutSnapshot: async () => {
         const layoutDebug = (window as Window & { __JOZOR_LAYOUT_DEBUG__?: unknown })

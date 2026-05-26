@@ -1,4 +1,4 @@
-import { showToast } from './showToast';
+import { showToast as toastApi } from './showToast';
 import { useAppStore } from '../store/useAppStore';
 
 export type ErrorCategory =
@@ -30,14 +30,20 @@ export interface UserFacingErrorInfo {
   retryable: boolean;
 }
 
+function getStringProperty(value: object, key: string): string | undefined {
+  const property = (value as Record<string, unknown>)[key];
+  return typeof property === 'string' ? property : undefined;
+}
+
 function getMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
   if (typeof error === 'string') return error;
   if (error && typeof error === 'object') {
-    const e = error as any;
     // Check for common error properties in Supabase/Fetch responses
-    if (e.message && typeof e.message === 'string') return e.message;
-    if (e.error_description && typeof e.error_description === 'string') return e.error_description;
+    const message = getStringProperty(error, 'message');
+    if (message) return message;
+    const errorDescription = getStringProperty(error, 'error_description');
+    if (errorDescription) return errorDescription;
     try {
       return JSON.stringify(error);
     } catch {
@@ -196,7 +202,7 @@ export function logError(
 
   if (showToast && toastMessage) {
     try {
-      (showToast as any).error(toastMessage);
+      toastApi.error(toastMessage);
     } catch {
       // Toast fallback.
     }

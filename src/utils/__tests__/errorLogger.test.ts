@@ -1,6 +1,7 @@
 
-import { describe, expect, it } from 'vitest';
-import { getUserFacingErrorInfo } from '../errorLogger';
+import { describe, expect, it, vi } from 'vitest';
+import { getUserFacingErrorInfo, logError } from '../errorLogger';
+import { showToast } from '../showToast';
 
 describe('getUserFacingErrorInfo', () => {
   it('maps permission errors to a non-retryable permission message', () => {
@@ -25,6 +26,17 @@ describe('getUserFacingErrorInfo', () => {
     expect(result.category).toBe('UNEXPECTED');
     expect(result.retryable).toBe(true);
     expect(result.message).toBe('Custom fallback message.');
+  });
+
+  it('shows a toast when requested by logError', () => {
+    const toastSpy = vi.spyOn(showToast, 'error').mockImplementation(() => undefined);
+
+    logError('test toast', new Error('Network timeout'), {
+      showToast: true,
+      toastMessage: 'Retry later',
+    });
+
+    expect(toastSpy).toHaveBeenCalledWith('Retry later');
   });
 });
 
