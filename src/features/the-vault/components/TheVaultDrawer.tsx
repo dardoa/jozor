@@ -230,37 +230,7 @@ export const TheVaultDrawer: React.FC<TheVaultDrawerProps> = ({
     }, 80);
   }, [setVaultOpen, toolsActions]);
 
-  if (!isVaultOpen) return null;
-
   const insightsLabel = t.vaultInsightsTools;
-  const managementLabel = t.vaultManagement;
-  const toolsLabel = t.vaultTools;
-  const treesLabel = t.vaultTrees;
-  const membersLabel = t.vaultMembers;
-  const treeListLabels = {
-    active: t.vaultTreeActive,
-    openTree: t.vaultTreeOpen,
-    renameTree: t.vaultTreeRename,
-    deleteTree: t.vaultTreeDelete,
-    updated: t.vaultTreeUpdated,
-    justNow: t.vaultTreeJustNow,
-    sharedAccessNote: t.vaultTreeSharedAccessNote,
-  };
-  const treePanelLabels = {
-    activeTree: t.vaultActiveTreeLabel,
-    createTree: t.vaultCreateTree,
-    importTree: t.vaultImportTree,
-    importTreeHint: t.vaultImportTreeHint,
-    refreshTrees: t.vaultRefreshTrees,
-    ownedCount: t.vaultTreeOwnedCount,
-    sharedCount: t.vaultTreeSharedCount,
-    ownedTitle: t.vaultTreeOwnedTitle,
-    sharedTitle: t.vaultTreeSharedTitle,
-    ownedEmpty: t.vaultTreeOwnedEmpty,
-    sharedEmpty: t.vaultTreeSharedEmpty,
-    list: treeListLabels,
-  };
-
   const isGuest = !currentUser;
 
   const navItems: readonly VaultDesktopNavItem[] = useMemo(() => {
@@ -296,6 +266,36 @@ export const TheVaultDrawer: React.FC<TheVaultDrawerProps> = ({
     t.vaultSecurity,
     t.vaultTrees,
   ]);
+
+  if (!isVaultOpen) return null;
+
+  const managementLabel = t.vaultManagement;
+  const toolsLabel = t.vaultTools;
+  const treesLabel = t.vaultTrees;
+  const membersLabel = t.vaultMembers;
+  const treeListLabels = {
+    active: t.vaultTreeActive,
+    openTree: t.vaultTreeOpen,
+    renameTree: t.vaultTreeRename,
+    deleteTree: t.vaultTreeDelete,
+    updated: t.vaultTreeUpdated,
+    justNow: t.vaultTreeJustNow,
+    sharedAccessNote: t.vaultTreeSharedAccessNote,
+  };
+  const treePanelLabels = {
+    activeTree: t.vaultActiveTreeLabel,
+    createTree: t.vaultCreateTree,
+    importTree: t.vaultImportTree,
+    importTreeHint: t.vaultImportTreeHint,
+    refreshTrees: t.vaultRefreshTrees,
+    ownedCount: t.vaultTreeOwnedCount,
+    sharedCount: t.vaultTreeSharedCount,
+    ownedTitle: t.vaultTreeOwnedTitle,
+    sharedTitle: t.vaultTreeSharedTitle,
+    ownedEmpty: t.vaultTreeOwnedEmpty,
+    sharedEmpty: t.vaultTreeSharedEmpty,
+    list: treeListLabels,
+  };
   const mobileHubItems = [
     { id: 'management', icon: Settings2, label: managementLabel },
     { id: 'insights', icon: BarChart3, label: t.vaultInsights },
