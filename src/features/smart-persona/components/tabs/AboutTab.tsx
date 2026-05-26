@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 import { BriefcaseBusiness, ChevronDown, Info, Mail } from 'lucide-react';
 
 import { FamilyActionsProps, Person, PersonUpdateHandler, TreeSettings } from '../../../../types';

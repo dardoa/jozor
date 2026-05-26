@@ -17,7 +17,6 @@ export const useTreeDangerZoneState = ({
   treeId,
   ownerId,
   ownerEmail,
-  text,
   onTreeDeleted,
 }: UseTreeDangerZoneStateArgs) => {
   const token = useAppStore.getState().user?.supabaseToken;

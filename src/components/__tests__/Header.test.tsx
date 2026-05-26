@@ -1,10 +1,8 @@
 
-import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { describe, expect, it, vi } from 'vitest';
 import { Header } from '../header/Header';
-import type { HeaderProps } from '../../types';
 
 const mockAppStoreState = {
   currentTreeId: 'tree-1' as string | null,

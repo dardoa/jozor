@@ -332,7 +332,6 @@ export function calculateFocusLayout(
     if ((node.type === 'ancestor' || node.type === 'focus') && (person.parents?.length ?? 0) > 0) {
       // Focus node upward key is distinct from downward key
       const uniqueKey = node.type === 'focus' ? `${node.id}_up` : node.id;
-      const hasUnseenParents = collapsedIds.has(uniqueKey) || !person.parents!.some(pid => nodesMap.has(pid));
       
       // We render the point if it has parents, regardless of un-seen, so the user can toggle
       collapsePoints.push({
@@ -350,7 +349,6 @@ export function calculateFocusLayout(
     // Downward collapse points (Descendants & Focus node)
     if ((node.type === 'descendant' || node.type === 'focus') && (person.children?.length ?? 0) > 0) {
       const uniqueKey = node.id;
-      const hasUnseenChildren = collapsedIds.has(uniqueKey) || !person.children!.some(cid => nodesMap.has(cid));
 
       collapsePoints.push({
         id: node.id,
@@ -413,7 +411,7 @@ export function calculateV3FocusLayout(
   };
 
   const links = edgeEntities
-    .map((edge, index) => {
+    .map((edge) => {
       const familyId = edge.metadata.familyId;
       const cluster = clusterLayout.clusters[familyId];
       const parentIds = cluster?.parentEntityIds ?? [];

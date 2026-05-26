@@ -6,7 +6,6 @@ import type { Person, AuthProps, ExportType } from '../../types';
 import { useAppStore } from '../../store/useAppStore';
 import { useGoogleSync } from '../sync/useGoogleSync';
 import { useSyncStatus } from '../sync/useSyncStatus';
-import { logError } from '../../utils/errorLogger';
 import { useAuthInit } from './useAuthInit';
 import { useSupabaseSync } from '../sync/useSupabaseSync';
 import type { SharedTreeSummary } from '../../services/supabaseTreeTypes';
@@ -69,7 +68,6 @@ export const useAuthAndSyncOrchestrator = (
   const navigate = useNavigate();
   const location = useLocation();
 
-  const isActivityLogOpen = useAppStore((state) => state.isActivityLogOpen);
   const setActivityLogOpen = useAppStore((state) => state.setActivityLogOpen);
 
   // Bridge for circular dependency with welcome screen (stopSyncing injected later)

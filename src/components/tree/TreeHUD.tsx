@@ -31,8 +31,6 @@ interface TreeHUDProps {
  * - Details panel awareness for dynamic positioning
  */
 export const TreeHUD: React.FC<TreeHUDProps> = ({
-    isFanChart,
-    isForce,
     isDetailsPanelOpen,
     hasBlockingOverlay = false,
     onOpenPreferences,

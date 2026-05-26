@@ -1,5 +1,4 @@
 
-import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { describe, expect, it, vi } from 'vitest';
@@ -34,7 +33,7 @@ vi.mock('../components/persona/PersonaFooter', () => ({
 }));
 
 vi.mock('../components/persona/PersonaTabs', () => ({
-  PersonaTabs: ({ activeTab, setActiveTab, tabs, onClose }: any) => (
+  PersonaTabs: ({ setActiveTab, tabs, onClose }: any) => (
     <div>
       <button onClick={onClose}>Close Persona</button>
       {tabs.map((t: any) => (

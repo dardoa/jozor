@@ -6,7 +6,7 @@ import { showToast } from '../../../../utils/showToast';
 
 export const CreateNewPersonSection: React.FC<CreateNewPersonSectionProps> = memo(
   ({ type, gender, familyActions, relatedPersonId, requiresRelatedPerson = false, onClose }) => {
-    const { t, language } = useTranslation();
+    const { t } = useTranslation();
 
 
 

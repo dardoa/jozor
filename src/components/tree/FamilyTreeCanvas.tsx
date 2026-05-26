@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import type { FanArc, Person, TreeNode, TreeSettings } from '../../types';
 import type { CollapsePoint } from '../../utils/layout/constants';
+import type { V3RendererPipeline } from '../../utils/layout/v3LayoutPipeline';
 import { TreeLoader } from './TreeLoader';
 import { TreeHUD } from './TreeHUD';
 import {
@@ -27,6 +28,7 @@ interface FamilyTreeCanvasProps {
   displayNodes: TreeNode[];
   displayFanArcs: FanArc[];
   displayCollapsePoints: CollapsePoint[];
+  displayPipeline?: V3RendererPipeline | null;
   highlightedPath?: Set<string>;
   zoomScale: number;
   hasReceivedLayout: boolean;
@@ -58,6 +60,7 @@ export const FamilyTreeCanvas: React.FC<FamilyTreeCanvasProps> = ({
   displayNodes,
   displayFanArcs,
   displayCollapsePoints,
+  displayPipeline,
   highlightedPath,
   zoomScale,
   hasReceivedLayout,
@@ -85,10 +88,12 @@ export const FamilyTreeCanvas: React.FC<FamilyTreeCanvasProps> = ({
     fanArcs: displayFanArcs,
     collapsePoints: displayCollapsePoints,
     highlightedPath,
+    pipeline: displayPipeline,
   }), [
     displayCollapsePoints,
     displayFanArcs,
     displayNodes,
+    displayPipeline,
     focusId,
     highlightedPath,
     people,

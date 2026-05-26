@@ -21,7 +21,6 @@ const NodeViewInner = ({
   showReferenceBadge,
   isFocused,
   isHighlighted,
-  isDimmed,
   isPathHighlighted,
   isPulsing,
   isPulsingTarget,

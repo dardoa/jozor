@@ -1,4 +1,4 @@
-import type { FullState, Person, UserProfile } from '../../types';
+import type { FullState, UserProfile } from '../../types';
 import { loadFullState, useAppStore } from '../../store/useAppStore';
 import { storageProvider } from '../../services/storageProvider';
 import { DriveSerializationService } from '../../services/google/DriveSerializationService';

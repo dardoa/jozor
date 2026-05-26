@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import { useCallback } from 'react';
 
 import type {
   Person,
@@ -34,7 +34,6 @@ export const useUIAndSettingsOrchestrator = (
   const {
     people,
     startNewTree,
-    setFocusId,
     currentUserRole,
     setIsPresentMode,
   } = params;

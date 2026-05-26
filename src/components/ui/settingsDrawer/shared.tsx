@@ -1,4 +1,3 @@
-import React from 'react';
 import { Focus, Orbit, type LucideIcon } from 'lucide-react';
 import { useTranslation } from '../../../context/TranslationContext';
 import { AppTheme, TreeSettings } from '../../../types';

@@ -12,7 +12,7 @@
 import React from 'react';
 import type { Person, TreeSettings } from '../../types';
 import type { CollapsePoint } from '../../utils/layout/constants';
-import { useV3RendererPipeline } from '../../hooks/tree/useV3RendererPipeline';
+import { useV3RendererPipeline, type V3RendererPipeline } from '../../hooks/tree/useV3RendererPipeline';
 import { V3FamilyGraphRenderer } from './V3FamilyGraphRenderer';
 
 interface V3FamilyGraphChartProps {
@@ -21,6 +21,7 @@ interface V3FamilyGraphChartProps {
   settings: TreeSettings;
   collapsePoints?: CollapsePoint[];
   highlightedPath?: Set<string>;
+  pipeline?: V3RendererPipeline | null;
   onSelect?: (id: string) => void;
   onNodeContextMenu?: (e: React.MouseEvent, id: string) => void;
   onToggleCollapse?: (uniqueKey: string) => void;
@@ -32,18 +33,22 @@ export const V3FamilyGraphChart: React.FC<V3FamilyGraphChartProps> = ({
   settings,
   collapsePoints = [],
   highlightedPath,
+  pipeline: propPipeline,
   onSelect,
   onNodeContextMenu,
   onToggleCollapse,
 }) => {
-  const pipeline = useV3RendererPipeline({
+  const fallbackPipeline = useV3RendererPipeline({
     people,
     focusId,
     collapsePoints,
     settings,
+    skip: Boolean(propPipeline),
   });
 
-  if (!pipeline) {
+  const activePipeline = propPipeline || fallbackPipeline;
+
+  if (!activePipeline) {
     return null;
   }
 
@@ -51,7 +56,7 @@ export const V3FamilyGraphChart: React.FC<V3FamilyGraphChartProps> = ({
     <V3FamilyGraphRenderer
       people={people}
       settings={settings}
-      pipeline={pipeline}
+      pipeline={activePipeline}
       focusPersonId={focusId}
       highlightedPath={highlightedPath}
       onSelect={onSelect}

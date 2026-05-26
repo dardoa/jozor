@@ -4,7 +4,6 @@ import type {
     Gender,
     Language,
     ModalRouteType,
-    ModalType,
     SyncStatus,
     UserProfile,
 } from './common';

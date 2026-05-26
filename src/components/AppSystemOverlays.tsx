@@ -36,7 +36,6 @@ interface AppSystemOverlaysProps {
 
 export const AppSystemOverlays: React.FC<AppSystemOverlaysProps> = ({
   appState,
-  modals,
   googleSync,
   auth,
   focusAndNavigate,

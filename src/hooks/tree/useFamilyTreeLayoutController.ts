@@ -1,6 +1,7 @@
-import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { FanArc, Person, TreeLink, TreeNode, TreeSettings } from '../../types';
 import type { CollapsePoint } from '../../utils/layout/constants';
+import type { V3RendererPipeline } from '../../utils/layout/v3LayoutPipeline';
 import { useAppStore } from '../../store/useAppStore';
 import { useDebouncedCallback } from '../ui/useDebounce';
 import { calculateHighlightedPath } from '../../domain/treeBranch';
@@ -15,6 +16,7 @@ interface LayoutData {
   links: TreeLink[];
   collapsePoints: CollapsePoint[];
   fanArcs: FanArc[];
+  v3Pipeline?: V3RendererPipeline | null;
 }
 
 interface LayoutRequestMetadata {
@@ -103,8 +105,7 @@ export const useFamilyTreeLayoutController = ({
   const [viewportSize, setViewportSize] = useState({ width: window.innerWidth, height: window.innerHeight });
   const collapsedIdsRef = useRef<Set<string>>(new Set());
 
-  const deferredSettings = useDeferredValue(settings);
-  const deferredFocusId = useDeferredValue(focusId);
+
 
   const workerRef = useRef<Worker | null>(null);
   const latestRequestIdRef = useRef<number>(0);
@@ -144,7 +145,7 @@ export const useFamilyTreeLayoutController = ({
     workerRef.current = new Worker(new URL('../../utils/layout.worker.ts', import.meta.url), { type: 'module' });
 
     workerRef.current.onmessage = (e: MessageEvent) => {
-      const { requestId, requestMetadata, nodes, links, collapsePoints, fanArcs, error } = e.data;
+      const { requestId, requestMetadata, nodes, links, collapsePoints, fanArcs, v3Pipeline, error } = e.data;
 
       if (error) {
         console.error('Layout Worker Error:', error);
@@ -165,7 +166,7 @@ export const useFamilyTreeLayoutController = ({
         return;
       }
 
-      const newData = { nodes, links, collapsePoints, fanArcs } as LayoutData;
+      const newData = { nodes, links, collapsePoints, fanArcs, v3Pipeline } as LayoutData;
       const isEmptyResult = (!nodes || nodes.length === 0) && (!fanArcs || fanArcs.length === 0);
       setLayoutData(newData);
       setLayoutPeopleVersion(requestMetadata.peopleVersion);
@@ -359,6 +360,7 @@ export const useFamilyTreeLayoutController = ({
     displayLinks: activeLayout.links,
     displayFanArcs: activeLayout.fanArcs,
     displayCollapsePoints: activeLayout.collapsePoints,
+    displayPipeline: activeLayout.v3Pipeline,
     isForce: false,
     isFanChart: chartModel === 'radial',
     toggleCollapse,

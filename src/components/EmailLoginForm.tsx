@@ -46,7 +46,7 @@ export const EmailLoginForm: React.FC<EmailLoginFormProps> = ({ onSuccess, onCan
 
         showToast.promise(authAction().finally(() => setAuthLoading(false)), {
             loading: loadingMsg,
-            success: (data) => {
+            success: () => {
                 if (mode === 'login' || mode === 'signup') {
                     onSuccess();
                 } else {

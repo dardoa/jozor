@@ -1,6 +1,6 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Person } from '../../../types';
+
 import { BackgroundTreePersistence } from '../BackgroundTreePersistence';
 import { offlineCache } from '../OfflineCache';
 

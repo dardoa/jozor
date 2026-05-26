@@ -3,7 +3,6 @@ import { useAppStore } from '../../../store/useAppStore';
 import { useTreeActions } from '../../../hooks/tree/useTreeActions';
 import { showToast } from '../../../utils/showToast';
 import { logError } from '../../../utils/errorLogger';
-import type { GalleryItem } from '../services/supabaseGalleryService';
 
 interface UseGalleryReturn {
   isUploading: boolean;

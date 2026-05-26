@@ -1,6 +1,7 @@
 import React from 'react';
 import type { FanArc, Person, TreeNode, TreeSettings } from '../../types';
 import type { CollapsePoint } from '../../utils/layout/constants';
+import type { V3RendererPipeline } from '../../utils/layout/v3LayoutPipeline';
 import { V3FamilyGraphChart } from '../charts/V3FamilyGraphChart';
 import { FanEmptyState, TreeEmptyState } from './FamilyTreeEmptyStates';
 
@@ -18,6 +19,7 @@ export interface FamilyTreeChartData {
   fanArcs: FanArc[];
   collapsePoints: CollapsePoint[];
   highlightedPath?: Set<string>;
+  pipeline?: V3RendererPipeline | null;
 }
 
 export interface FamilyTreeChartViewport {
@@ -101,6 +103,7 @@ const ChartFactory = React.memo<ChartFactoryProps>(({
     fanArcs,
     collapsePoints,
     highlightedPath,
+    pipeline,
   } = chartData;
   const {
     onSelect,
@@ -145,6 +148,7 @@ const ChartFactory = React.memo<ChartFactoryProps>(({
         settings={settings}
         collapsePoints={collapsePoints}
         highlightedPath={highlightedPath}
+        pipeline={pipeline}
         onSelect={onSelect}
         onNodeContextMenu={onNodeContextMenu}
         onToggleCollapse={toggleCollapse}

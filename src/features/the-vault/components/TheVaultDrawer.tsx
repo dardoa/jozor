@@ -105,7 +105,7 @@ export const TheVaultDrawer: React.FC<TheVaultDrawerProps> = ({
     t,
   });
 
-  const files = googleSync.driveFiles || [];
+
   const activeTreeMeta = useMemo(
     () => ownedTrees.find((tree) => tree.id === currentTreeId) ?? sharedTrees.find((tree) => tree.id === currentTreeId) ?? null,
     [currentTreeId, ownedTrees, sharedTrees]

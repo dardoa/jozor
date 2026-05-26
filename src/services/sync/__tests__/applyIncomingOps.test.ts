@@ -2,7 +2,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { applyIncomingOps } from '../applyIncomingOps';
 import type { DeltaOperation } from '../SyncTypes';
-import type { Person } from '../../../types';
+
 
 const root: any = {
     id: 'person-1',

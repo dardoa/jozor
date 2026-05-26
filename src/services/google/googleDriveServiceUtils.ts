@@ -1,4 +1,3 @@
-import { GoogleDrivePayload } from './interfaces';
 
 type DriveApiError = Error & { status?: number; result?: { error?: { code?: number } } };
 

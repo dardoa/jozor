@@ -6,7 +6,7 @@ import { showToast } from '../../../../utils/showToast';
 
 export const SelectExistingPersonSection: React.FC<SelectExistingPersonSectionProps> = memo(
   ({ people, type, gender, currentPersonId, familyActions, relatedPersonId, requiresRelatedPerson = false, autoFocusSearch = false, onClose }) => {
-    const { t, language } = useTranslation();
+    const { t } = useTranslation();
     const [searchTerm, setSearchTerm] = useState('');
     const searchInputRef = useRef<HTMLInputElement | null>(null);
 

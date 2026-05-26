@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { ChevronDown, Settings, MessageSquare } from 'lucide-react';
+import { ChevronDown, Settings } from 'lucide-react';
 import { Dropdown } from '../ui/Dropdown';
 import { useTranslation } from '../../context/TranslationContext';
 import { HeaderRightSectionProps } from '../../types';

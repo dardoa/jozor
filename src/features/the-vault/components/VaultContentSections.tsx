@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { VaultTabLoader } from './VaultTabLoader';
 import { VaultTreesPanel } from './VaultTreesPanel';
 import type { VaultRenderContext } from '../types';

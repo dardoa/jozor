@@ -1,10 +1,8 @@
-import type Fuse from 'fuse.js';
 import { Person } from '../types';
 import { normalizeArabic, stripArabicPrefixes } from '../utils/search/arabicUtils';
-import { parseSearchQuery, ParsedIntent } from './search/queryParser';
+import { parseSearchQuery } from './search/queryParser';
 import { getDisplayDate } from '../utils/familyLogic';
 
-let fuse: Fuse<Person> | null = null;
 let indexedPeople: Person[] = [];
 let fuseLoader: Promise<typeof import('fuse.js').default> | null = null;
 
@@ -330,20 +328,7 @@ export const searchService = {
 
         indexedPeople = mappedList;
 
-        const FuseConstructor = await loadFuse();
-        
-        // Defer Fuse index building to idle frame or next event loop cycle to guarantee UI fluidness
-        if (typeof requestIdleCallback !== 'undefined') {
-            await new Promise<void>(resolve => requestIdleCallback(() => {
-                fuse = new FuseConstructor(indexedPeople, FUSE_OPTIONS);
-                resolve();
-            }));
-        } else {
-            await new Promise<void>(resolve => setTimeout(() => {
-                fuse = new FuseConstructor(indexedPeople, FUSE_OPTIONS);
-                resolve();
-            }, 0));
-        }
+
     },
 
     async search(query: string, limit = 20): Promise<SearchResult[]> {

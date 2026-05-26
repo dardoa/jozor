@@ -94,7 +94,6 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   const setVaultTab = useAppStore((state) => state.setVaultTab);
   const isSyncing = useAppStore(selectIsSyncing);
   const isDemoMode = useAppStore((state) => state.isDemoMode);
-  const isActivityLogOpen = useAppStore((state) => state.isActivityLogOpen);
   const setActivityLogOpen = useAppStore((state) => state.setActivityLogOpen);
 
   const { t, language } = useTranslation();

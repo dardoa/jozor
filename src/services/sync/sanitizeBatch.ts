@@ -1,4 +1,4 @@
-import { PendingDeltaOp, DeltaOperation } from './SyncTypes';
+import { PendingDeltaOp } from './SyncTypes';
 
 /**
  * Removes local-only fields from pending operations before sending them to the server.

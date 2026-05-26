@@ -15,7 +15,6 @@ import {
 
 import type { DriveFile, ExportType } from '../../../types';
 import type { TranslationSchema } from '../../../utils/translationLoader';
-import { logInfo } from '../../../utils/errorLogger';
 import { showToast } from '../../../utils/showToast';
 
 interface ExportCloudPanelProps {

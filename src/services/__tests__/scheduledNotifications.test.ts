@@ -1,5 +1,5 @@
 
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { buildScheduledBirthdayNotifications, parseFullBirthDate } from '../scheduledNotifications';
 import type { Person } from '../../types';
 

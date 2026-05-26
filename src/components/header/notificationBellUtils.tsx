@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { Calendar, Info, MailCheck, MapPin } from 'lucide-react';
 import type { AppNotification } from '../../types';
 

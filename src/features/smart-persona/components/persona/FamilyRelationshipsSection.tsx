@@ -19,8 +19,8 @@ const FamilyGroup = memo(
     onSelect,
     placeholder,
     isEditing, // Removed 't' prop
-    iconBgClass = 'bg-[var(--surface-subtle)]', // Default background for icon
-    iconTextColorClass = 'text-[var(--text-secondary)]', // Default text color for icon
+    iconBgClass: _iconBgClass = 'bg-[var(--surface-subtle)]', // Default background for icon
+    iconTextColorClass: _iconTextColorClass = 'text-[var(--text-secondary)]', // Default text color for icon
   }: {
     title: string;
     icon: React.ReactNode;

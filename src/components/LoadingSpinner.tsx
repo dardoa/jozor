@@ -1,5 +1,4 @@
 import React from 'react';
-import { Loader2 } from 'lucide-react';
 
 export const LoadingSpinner: React.FC = () => (
   <div className='fixed inset-0 z-[100] flex items-center justify-center bg-[var(--theme-bg)] animate-in fade-in duration-500'>

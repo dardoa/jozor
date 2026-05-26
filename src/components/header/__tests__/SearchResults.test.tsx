@@ -2,7 +2,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { SearchResults } from '../SearchResults';
-import type { Person } from '../../../types';
 
 vi.mock('../../../context/TranslationContext', () => ({
   useTranslation: () => ({

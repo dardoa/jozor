@@ -1,4 +1,3 @@
-import React from 'react';
 import { useMap } from 'react-leaflet';
 import type { MigrationLink } from '../../../../domain/mapJourneyUtils';
 

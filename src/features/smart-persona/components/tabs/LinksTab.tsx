@@ -1,4 +1,4 @@
-import React, { lazy, memo, Suspense } from 'react';
+import { lazy, memo, Suspense } from 'react';
 import { useTranslation } from '../../../../context/TranslationContext';
 import { GitBranchPlus, Heart, HeartHandshake, Users } from 'lucide-react';
 
@@ -26,7 +26,7 @@ interface LinksTabProps {
 const relationshipDetailsHelp = 'Edit marriage dates, status, and locations.';
 
 export const LinksTab = memo<LinksTabProps>(
-  ({ person, people, isEditing, onUpdate, onSelect, familyActions, settings, isMobileLayout = false }) => {
+  ({ person, people, isEditing, onUpdate, onSelect, familyActions, isMobileLayout = false }) => {
     const { t } = useTranslation();
 
     const firstMarriageDate = person.spouses

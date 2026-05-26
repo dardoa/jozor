@@ -1,4 +1,4 @@
-import React, { lazy, memo, Suspense } from 'react';
+import { lazy, memo, Suspense } from 'react';
 
 import type { Person } from '../../../../types';
 import { useTranslation } from '../../../../context/TranslationContext';

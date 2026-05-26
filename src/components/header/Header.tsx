@@ -16,8 +16,6 @@ export const Header = memo<HeaderProps>(
     themeLanguage,
     auth,
     viewSettings,
-    toolsActions,
-    exportActions,
     searchProps,
     globalActions,
   }) => {

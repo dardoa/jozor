@@ -21,7 +21,6 @@ const getDeleteConfirmationMessage = (language: string) =>
 export const TreeDiscussionItem: React.FC<TreeDiscussionItemProps> = ({ message, isOwn, onReply }) => {
   const { language } = useTranslation();
   const user = useAppStore(state => state.user);
-  const currentTreeId = useAppStore(state => state.currentTreeId);
   const currentUserRole = useAppStore(state => state.currentUserRole);
   const removeMessage = useAppStore(state => state.removeDiscussionMessage);
   

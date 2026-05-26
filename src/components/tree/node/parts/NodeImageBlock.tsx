@@ -38,7 +38,6 @@ export const NodeImageBlock = memo<NodeImageBlockProps>(({
   monogramBg,
   person,
   shouldRenderPhoto,
-  photoAlt,
   photoSource,
   privacyMode,
   isDeceased,

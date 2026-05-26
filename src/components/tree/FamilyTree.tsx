@@ -55,6 +55,7 @@ export const FamilyTree = React.memo(React.forwardRef<SVGSVGElement, FamilyTreeP
     displayLinks,
     displayFanArcs,
     displayCollapsePoints,
+    displayPipeline,
     isForce,
     isFanChart,
     toggleCollapse,
@@ -167,6 +168,7 @@ export const FamilyTree = React.memo(React.forwardRef<SVGSVGElement, FamilyTreeP
       displayNodes={displayNodes}
       displayFanArcs={displayFanArcs}
       displayCollapsePoints={displayCollapsePoints}
+      displayPipeline={displayPipeline}
       highlightedPath={highlightedPath}
       zoomScale={zoomScale}
       hasReceivedLayout={hasReceivedLayout}

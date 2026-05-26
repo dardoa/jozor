@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import { memo } from 'react';
 import { Activity, X } from 'lucide-react';
 
 import { useTranslation } from '../../../context/TranslationContext';

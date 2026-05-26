@@ -1,11 +1,11 @@
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 import type { RefObject } from 'react';
 
 import { googleApiService, googleAuthService } from '../../services/googleService';
 import { storageProvider } from '../../services/storageProvider';
 import { useAppStore } from '../../store/useAppStore';
 import { showToast } from '../../utils/showToast';
-import { getUserFacingErrorInfo, logError, logWarn, logInfo } from '../../utils/errorLogger';
+import { getUserFacingErrorInfo, logError, logWarn } from '../../utils/errorLogger';
 
 const IS_DRIVE_BACKUP_ONLY = true;
 

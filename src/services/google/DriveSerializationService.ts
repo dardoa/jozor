@@ -35,7 +35,7 @@ export const DriveSerializationService = {
    * Validates the integrity of the people data before saving.
    * Returns true if valid, false otherwise.
    */
-  validateIntegrity(people: Record<string, Person>, silent: boolean = false): boolean {
+  validateIntegrity(people: Record<string, Person>, _silent: boolean = false): boolean {
     if (Object.keys(people).length === 0) {
       logWarn('DriveSerializationService', 'Integrity check failed: attempted to save empty people map.', {
         category: 'VALIDATION',

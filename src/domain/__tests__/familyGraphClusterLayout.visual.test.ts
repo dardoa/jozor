@@ -1,5 +1,5 @@
 
-import { existsSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import type { Person } from '../../types';
 import {

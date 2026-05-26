@@ -1,5 +1,4 @@
 import { memo, useCallback } from 'react';
-import { X } from 'lucide-react';
 
 import { useTranslation } from '../../../context/TranslationContext';
 import {

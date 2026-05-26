@@ -419,7 +419,7 @@ function alternatingPartnerOffset(index: number): number {
 }
 
 function computeChildBandOffsets(
-  ownerId: string,
+  _ownerId: string,
   families: string[],
   graph: FamilyGraph,
   semantics: LayoutSemanticsSnapshot,
@@ -584,7 +584,7 @@ function addCluster(
   familyId: string,
   ownerId: string,
   familyIndex: number,
-  familyCount: number,
+  _familyCount: number,
   ownerX: number,
   ownerGeneration: number,
   childBandOffsets: Map<string, number>,

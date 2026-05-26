@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { AuthProps, Person } from '../../../types';
-import { Loader2, AlertCircle, LogIn } from 'lucide-react';
+import { AlertCircle, LogIn } from 'lucide-react';
 import { EMPTY_STRING } from '../../../constants';
 import { useTranslation } from '../../../context/TranslationContext';
 import { useSharedTreeLoadFlow } from '../../../hooks/tree/useSharedTreeLoadFlow';
@@ -30,7 +30,7 @@ export const SharedTreeLoader: React.FC<SharedTreeLoaderProps> = ({
   isDbTree: isDbTreeProp,
 }) => {
   const { t } = useTranslation();
-  const { status, errorMsg, statusDetail } = useSharedTreeLoadFlow({
+  const { status, errorMsg } = useSharedTreeLoadFlow({
     ownerUid,
     fileId,
     auth,

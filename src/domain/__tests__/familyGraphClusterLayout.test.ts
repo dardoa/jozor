@@ -5,7 +5,6 @@ import { V3_HALF_CARD_W, V3_PARTNER_GAP } from '../../utils/layout/constants';
 import { buildFamilyGraph } from '../familyGraph';
 import {
   buildFamilyGraphClusterLayout,
-  generateClusterLayoutEdges,
 } from '../familyGraphClusterLayout';
 import { buildLayoutSemanticsSnapshot } from '../familyGraphSemantics';
 
@@ -48,17 +47,7 @@ const makePerson = (id: string, overrides: Partial<Person> = {}): Person => ({
   ...overrides,
 });
 
-function parsePoints(pathData: string): Array<{ x: number; y: number }> {
-  const points: Array<{ x: number; y: number }> = [];
-  const matcher = /[ML]\s*([-\d.]+)\s+([-\d.]+)/g;
-  let match: RegExpExecArray | null;
 
-  while ((match = matcher.exec(pathData)) !== null) {
-    points.push({ x: Number(match[1]), y: Number(match[2]) });
-  }
-
-  return points;
-}
 
 function buildMultiSpouseFixture(): Record<string, Person> {
   return {
