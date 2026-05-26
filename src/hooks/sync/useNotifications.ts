@@ -70,7 +70,7 @@ export function runHeritageCheck(
     }
     notified.add(dedupeKey);
 
-    deliverNotificationWithPolicy(addNotification as any, spec);
+    deliverNotificationWithPolicy(addNotification, spec);
     updateNotificationTelemetry({
       lastEventAt: new Date(),
       lastEventType: 'birthday',
@@ -140,7 +140,7 @@ export function runDataIntegrityCheck(
     missingCount,
   });
 
-  deliverNotificationWithPolicy(addNotification as any, spec);
+  deliverNotificationWithPolicy(addNotification, spec);
   updateNotificationTelemetry({
     lastEventAt: new Date(),
     lastEventType: 'integrity',

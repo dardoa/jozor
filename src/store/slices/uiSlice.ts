@@ -35,7 +35,7 @@ export interface UISlice {
     // Notifications
     notifications: AppNotification[];
     enqueueNotification: (n: Omit<AppNotification, 'id' | 'timestamp' | 'read' | 'createdAt' | 'updatedAt'>) => void;
-    addNotification: (n: Omit<AppNotification, 'id' | 'timestamp' | 'read'>) => void;
+    addNotification: (n: Omit<AppNotification, 'id' | 'timestamp' | 'read' | 'createdAt' | 'updatedAt'>) => void;
     updateNotification: (id: string, patch: Partial<AppNotification>) => void;
     removeNotification: (id: string) => void;
     markRead: (id: string) => void;

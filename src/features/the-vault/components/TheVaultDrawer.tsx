@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import {
   X, Cloud, ShieldCheck, Users, BarChart3, Lock, FolderTree, ArrowLeft, Settings2, Wrench,
+  type LucideIcon,
 } from 'lucide-react';
 
 import { useAppStore } from '../../../store/useAppStore';
@@ -34,6 +35,12 @@ const TRANSITION_STYLE = `
   }
   .vault-tab-content { animation: vault-tab-in 0.2s ease forwards; }
 `;
+
+interface VaultDesktopNavItem {
+  id: VaultTab;
+  icon: LucideIcon;
+  label: string;
+}
 
 export const TheVaultDrawer: React.FC<TheVaultDrawerProps> = ({
   googleSync,
@@ -256,18 +263,39 @@ export const TheVaultDrawer: React.FC<TheVaultDrawerProps> = ({
 
   const isGuest = !currentUser;
 
-  const navItems = isGuest
-    ? [
+  const navItems: readonly VaultDesktopNavItem[] = useMemo(() => {
+    if (isGuest) {
+      return [
         { id: 'stats', icon: BarChart3, label: insightsLabel },
         { id: 'cloud', icon: Cloud, label: `${t.vaultExport} & ${t.vaultCloud}` },
-      ] as const
-    : [
-        { id: 'trees', icon: FolderTree, label: t.vaultTrees },
-        { id: 'stats', icon: BarChart3, label: insightsLabel },
-        { id: 'cloud', icon: Cloud, label: `${t.vaultExport} & ${t.vaultCloud}` },
-        ...(canManageMembers ? [{ id: 'members', icon: Users, label: t.vaultMembers }] : []),
-        ...(canManageSecurity ? [{ id: 'security', icon: Lock, label: t.vaultSecurity }] : []),
-      ] as const;
+      ];
+    }
+
+    const items: VaultDesktopNavItem[] = [
+      { id: 'trees', icon: FolderTree, label: t.vaultTrees },
+      { id: 'stats', icon: BarChart3, label: insightsLabel },
+      { id: 'cloud', icon: Cloud, label: `${t.vaultExport} & ${t.vaultCloud}` },
+    ];
+
+    if (canManageMembers) {
+      items.push({ id: 'members', icon: Users, label: t.vaultMembers });
+    }
+    if (canManageSecurity) {
+      items.push({ id: 'security', icon: Lock, label: t.vaultSecurity });
+    }
+
+    return items;
+  }, [
+    canManageMembers,
+    canManageSecurity,
+    insightsLabel,
+    isGuest,
+    t.vaultCloud,
+    t.vaultExport,
+    t.vaultMembers,
+    t.vaultSecurity,
+    t.vaultTrees,
+  ]);
   const mobileHubItems = [
     { id: 'management', icon: Settings2, label: managementLabel },
     { id: 'insights', icon: BarChart3, label: t.vaultInsights },
@@ -358,7 +386,7 @@ export const TheVaultDrawer: React.FC<TheVaultDrawerProps> = ({
               />
             ) : (
               <VaultDesktopNavigation
-                items={navItems as any}
+                items={navItems}
                 activeTab={vaultTab}
                 onSelect={setVaultTab}
               />

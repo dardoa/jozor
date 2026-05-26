@@ -128,7 +128,7 @@ export const useTreeSelectorController = ({
       setCreating(true);
       const rootPerson = {
         ...createPerson('male'),
-        firstName: (t as any).general?.me || 'Me',
+        firstName: 'Me',
         lastName: '',
       };
       const defaultSettings = await fetchAdminDefaultTreeSettings({

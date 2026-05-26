@@ -153,10 +153,10 @@ export const useAuthAndSyncOrchestrator = (
 
   useSyncLifecycleEvents(lifecycleEvents);
 
-  const auth = {
+  const auth: AuthProps = {
     user,
     isDemoMode,
-    isSyncing: (googleSync as any).isSyncing,
+    isSyncing: googleSync.isSyncing,
     onLogin: handleAuthAction,
     onLogout: handleLogout,
     stopSyncing: googleSync.stopSyncing,
@@ -184,7 +184,7 @@ export const useAuthAndSyncOrchestrator = (
     onExport,
     onSaveToGoogleDrive: googleSync.onSaveToGoogleDrive,
     onOpenActivityLog: () => setActivityLogOpen(true),
-  } as any;
+  };
 
   return {
     auth,

@@ -41,9 +41,18 @@ interface ExportCloudPanelProps {
   isDeleting?: boolean;
 }
 
+type ExportLabelKey =
+  | 'vaultExportArchive'
+  | 'vaultExportJson'
+  | 'vaultExportGedcom'
+  | 'vaultExportCalendar'
+  | 'vaultExportPng'
+  | 'vaultExportPdf'
+  | 'vaultExportPrint';
+
 const EXPORT_ACTIONS: Array<{
   id: ExportType;
-  labelKey: keyof TranslationSchema;
+  labelKey: ExportLabelKey;
   icon: React.ComponentType<{ className?: string }>;
 }> = [
   { id: 'jozor', labelKey: 'vaultExportArchive', icon: Archive },
@@ -229,7 +238,7 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                   <Icon className="h-4 w-4" />
                 </div>
                 <div className="min-w-0">
-                  <div className="text-sm font-semibold text-[var(--text-main)]">{(t as any)[action.labelKey] || action.id}</div>
+                  <div className="text-sm font-semibold text-[var(--text-main)]">{t[action.labelKey] || action.id}</div>
                 </div>
               </button>
             );

@@ -124,7 +124,7 @@ export const useRealtimeNotifications = (
           if (!alreadyExists) {
             addedNotificationCount += 1;
             deliverNotificationWithPolicy(
-              addNotification as any,
+              addNotification,
               createPendingInvitationNotificationSpec({
                 isRtl: language === 'ar',
                 invitationId: invitation.id,
@@ -176,7 +176,7 @@ export const useRealtimeNotifications = (
 
         if (invitation.status === 'pending') {
           deliverNotificationWithPolicy(
-            addNotification as any,
+            addNotification,
             createPendingInvitationNotificationSpec({
               isRtl: language === 'ar',
               invitationId: invitation.id,
@@ -190,7 +190,7 @@ export const useRealtimeNotifications = (
           );
         } else if (invitation.status === 'accepted') {
           deliverNotificationWithPolicy(
-            addNotification as any,
+            addNotification,
             createAcceptedSelfNotificationSpec({
               isRtl: language === 'ar',
               invitationId: invitation.id,
@@ -244,7 +244,7 @@ export const useRealtimeNotifications = (
         });
 
         deliverNotificationWithPolicy(
-          addNotification as any,
+          addNotification,
           createOwnerInvitationOutcomeNotificationSpec({
             isRtl: language === 'ar',
             invitationId: invitation.id,
@@ -279,7 +279,7 @@ export const useRealtimeNotifications = (
             const role = (log.details.role as string | undefined) || 'viewer';
 
             deliverNotificationWithPolicy(
-              addNotification as any,
+              addNotification,
               createOwnerInvitationOutcomeNotificationSpec({
                 isRtl: language === 'ar',
                 invitationId: String(log.details.invitationId ?? 'unknown'),
@@ -309,7 +309,7 @@ export const useRealtimeNotifications = (
         const hourBucket = getChangeBucketHour(operation.created_at);
         const copy = getTreeChangeCopy(language === 'ar', operation.type);
 
-        deliverNotificationWithPolicy(addNotification as any, {
+        deliverNotificationWithPolicy(addNotification, {
           notification: {
             type: 'info',
             source: 'tree-realtime',

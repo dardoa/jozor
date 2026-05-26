@@ -164,13 +164,13 @@ export const useSessionBootstrap = () => {
 
     void supabaseAuthService
       .getSession()
-      .then(({ data }: any) => {
+      .then(({ data }) => {
         if (!active) return;
         if (!authEventHandled) {
           void handleAuthSession(data.session);
         }
       })
-      .catch((error: any) => {
+      .catch((error: unknown) => {
         if (!active) return;
         console.warn('Failed to restore Supabase session:', error);
         const store = useAppStore.getState();

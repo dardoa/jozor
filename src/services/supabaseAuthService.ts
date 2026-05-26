@@ -1,4 +1,4 @@
-import type { AuthChangeEvent, Session } from '@supabase/supabase-js';
+import type { AuthChangeEvent, AuthError, Session } from '@supabase/supabase-js';
 import { authTokenService } from './authTokenService';
 import { supabaseAuth } from './supabaseClient';
 
@@ -102,7 +102,7 @@ export const supabaseAuthService = {
     }
   },
 
-  getSession() {
+  getSession(): Promise<{ data: { session: Session | null }; error: AuthError | null }> {
     return supabaseAuth.auth.getSession();
   },
 

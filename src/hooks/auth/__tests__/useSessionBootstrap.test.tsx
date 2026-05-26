@@ -1,7 +1,7 @@
 
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Session } from '@supabase/supabase-js';
+import type { Session, User } from '@supabase/supabase-js';
 import { useSessionBootstrap } from '../useSessionBootstrap';
 import { useAppStore } from '../../../store/useAppStore';
 
@@ -96,16 +96,26 @@ describe('useSessionBootstrap', () => {
       ])
     );
 
-    const session = {
-      access_token: 'session-token',
-      user: {
-        id: 'user-1',
-        email: 'user@example.com',
-        user_metadata: {
-          full_name: 'User One',
-        },
+    const sessionUser: User = {
+      id: 'user-1',
+      aud: 'authenticated',
+      role: 'authenticated',
+      email: 'user@example.com',
+      app_metadata: {},
+      user_metadata: {
+        full_name: 'User One',
       },
-    } as any as Session;
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    const session: Session = {
+      access_token: 'session-token',
+      refresh_token: 'refresh-token',
+      expires_in: 3600,
+      token_type: 'bearer',
+      user: sessionUser,
+    };
 
     getSessionMock.mockResolvedValue({ data: { session } });
     mapSupabaseUserToUserProfileMock.mockReturnValue({

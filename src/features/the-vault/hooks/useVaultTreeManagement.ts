@@ -162,7 +162,7 @@ export const useVaultTreeManagement = ({
         import('../../../utils/familyLogic'),
         import('../../../services/supabaseTreeMutationService'),
       ]);
-      const rootPerson = { ...createPerson('male'), firstName: (t as any).general?.me || 'Me', lastName: '' };
+      const rootPerson = { ...createPerson('male'), firstName: 'Me', lastName: '' };
       const newTreeId = await createTreeWithRootAtomic(
         currentUser.uid,
         currentUser.email,
@@ -181,7 +181,7 @@ export const useVaultTreeManagement = ({
     }).unwrap().finally(() => {
       setBusyTreeId(null);
     });
-  }, [currentUser, handleOpenTree, (t as any).general, t.newTreeName]);
+  }, [currentUser, handleOpenTree, t.newTreeName]);
 
   const handleImportFile = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];

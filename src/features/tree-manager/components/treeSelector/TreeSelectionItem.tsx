@@ -15,15 +15,15 @@ interface TreeSelectionItemProps {
 export const TreeSelectionItem: React.FC<TreeSelectionItemProps> = ({ tree, currentTreeId, onSelect, isShared, role, t }) => {
   const isActive = currentTreeId === tree.id;
   const resolvedRole: 'owner' | 'editor' | 'viewer' = isShared ? (role || 'viewer') : 'owner';
-  const roles = (t as any).roles || {};
+  const roles = t.roles || {};
   const roleLabel = resolvedRole === 'owner'
-    ? (roles.owner || (t as any).owner || 'Owner')
+    ? (roles.owner || t.owner || 'Owner')
     : resolvedRole === 'editor'
-      ? (roles.editor || (t as any).editor || 'Editor')
-      : (roles.viewer || (t as any).viewer || 'Viewer');
-  const updatedLabel = (t as any).vaultTreeUpdated || 'Updated';
-  const justNowLabel = (t as any).vaultTreeJustNow || 'Just now';
-  const memberLabel = (t as any).statistics?.members || (t as any).treeControlCenter?.overviewCards?.people || 'Members';
+      ? (roles.editor || t.editor || 'Editor')
+      : (roles.viewer || t.viewer || 'Viewer');
+  const updatedLabel = t.vaultTreeUpdated || 'Updated';
+  const justNowLabel = t.vaultTreeJustNow || 'Just now';
+  const memberLabel = t.statistics?.members || t.treeControlCenter?.overviewCards?.people || 'Members';
   const updatedAtLabel = tree.updatedAt || tree.createdAt
     ? new Date(tree.updatedAt || tree.createdAt).toLocaleDateString()
     : justNowLabel;

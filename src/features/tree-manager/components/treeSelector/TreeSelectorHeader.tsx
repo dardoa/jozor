@@ -19,8 +19,8 @@ export const TreeSelectorHeader: React.FC<TreeSelectorHeaderProps> = ({
   onCreateTree,
   onImportClick,
 }) => {
-  const importLabel = (t as any).vaultImportTree || t.load;
-  const importHint = (t as any).vaultImportTreeHint;
+  const importLabel = t.vaultImportTree || t.load;
+  const importHint = t.vaultImportTreeHint;
 
   return (
     <div className='flex flex-col sm:flex-row items-center sm:items-start justify-between gap-6 mb-12'>

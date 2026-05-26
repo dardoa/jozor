@@ -1,10 +1,10 @@
 import React from 'react';
-import { Focus, Orbit } from 'lucide-react';
+import { Focus, Orbit, type LucideIcon } from 'lucide-react';
 import { useTranslation } from '../../../context/TranslationContext';
 import { AppTheme, TreeSettings } from '../../../types';
 
 export type SettingsTranslator = ReturnType<typeof useTranslation>['t'];
-export type IconComponent = React.ComponentType<{ className?: string }>;
+export type IconComponent = LucideIcon;
 export type PresetId = 'classic' | 'compact' | 'artistic';
 export type LayoutMode = TreeSettings['layoutMode'];
 export type LineStyle = NonNullable<TreeSettings['lineStyle']>;
@@ -152,7 +152,7 @@ export const Checkbox = ({ label, value, onChange, icon: Icon }: CheckboxProps) 
                         backgroundColor: value ? 'rgba(255,255,255,0.14)' : 'transparent',
                     }}
                 >
-                    <Icon {...{ className: "h-3.5 w-3.5", color: value ? '#FFFFFF' : 'var(--text-dim)' } as any} />
+                    <Icon className="h-3.5 w-3.5" color={value ? '#FFFFFF' : 'var(--text-dim)'} />
                 </div>
             )}
             <span className="text-xs font-semibold leading-none" style={{ color: value ? '#FFFFFF' : 'var(--text-dim)' }}>{label}</span>
@@ -170,7 +170,7 @@ export const SliderField = ({ label, value, onChange, min, max, step, unit, icon
     <div className="flex flex-col gap-2 px-3 py-2">
         <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-                {Icon && <Icon {...{ className: "h-3.5 w-3.5", color: "var(--color-accent-500)" } as any} />}
+                {Icon && <Icon className="h-3.5 w-3.5" color="var(--color-accent-500)" />}
                 <span className="text-sm font-medium" style={{ color: 'var(--text-dim)' }}>{label}</span>
             </div>
             <span className="text-xs font-bold" style={{ color: 'var(--color-accent-500)' }}>{valueLabel ?? `${value}${unit}`}</span>

@@ -47,6 +47,7 @@ export interface ThemeLanguageProps {
 export interface AuthProps {
     user: UserProfile | null;
     isDemoMode: boolean;
+    isSyncing: boolean;
     onLogin: (returnTo?: string) => Promise<void>;
     onLogout: () => Promise<void>;
     stopSyncing: () => void;
