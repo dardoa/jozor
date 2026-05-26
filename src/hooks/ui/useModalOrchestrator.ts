@@ -3,7 +3,7 @@ import * as React from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import { useModalAndDetailsPanelLogic } from './useModalAndDetailsPanelLogic';
 import { useAppModals } from './useAppModals';
-import type { ModalStateAndActions, ModalType } from '../../types';
+import type { ModalRouteType, ModalStateAndActions } from '../../types';
 
 /**
  * Central orchestrator for all modal- and person details panel-related UI state.
@@ -50,7 +50,7 @@ export const useModalOrchestrator = () => {
   });
 
   const handleOpenModal = React.useCallback(
-    (modalType: ModalType) => {
+    (modalType: ModalRouteType) => {
       if (modalType === 'globalSettings') {
         onOpenGlobalSettings();
       } else {

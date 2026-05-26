@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { Gender, GeographicJourneyMode, ModalType } from '../../types';
+import type { Gender, GeographicJourneyMode, ModalRouteType, ModalType } from '../../types';
 
 interface UseModalAndDetailsPanelLogicProps {
   canUndo: boolean;
@@ -33,9 +33,9 @@ export const useModalAndDetailsPanelLogic = ({ canUndo, canRedo }: UseModalAndDe
 
   const handleOpenModal = useCallback(
     (
-      modalType: ModalType
+      modalType: ModalRouteType
     ) => {
-      if ((modalType as string) === 'map') {
+      if (modalType === 'map') {
         setGeographicJourneyMode('events');
         setActiveModal('geographicJourney');
         return;

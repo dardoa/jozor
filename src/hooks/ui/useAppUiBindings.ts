@@ -2,13 +2,13 @@ import { useMemo } from 'react';
 import type {
   ExportActionsProps,
   ModalStateAndActions,
-  ModalType,
+  ModalRouteType,
   ToolsActionsProps,
 } from '../../types';
 
 interface UseAppUiBindingsOptions {
   modals: ModalStateAndActions;
-  handleOpenModal: (type: ModalType, data?: unknown) => void;
+  handleOpenModal: (type: ModalRouteType, data?: unknown) => void;
   handleExport: ExportActionsProps['handleExport'];
 }
 

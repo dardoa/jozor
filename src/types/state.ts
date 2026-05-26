@@ -1,6 +1,6 @@
 import type React from 'react';
 import type { SharedTreeSummary } from '../services/supabaseTreeService';
-import type { Gender, GeographicJourneyMode, Language, ModalType, UserProfile } from './common';
+import type { Gender, GeographicJourneyMode, Language, ModalRouteType, ModalType, UserProfile } from './common';
 import type { Person } from './person';
 import type { LocationData, LocationStatus, TreeSettings } from './tree';
 import type {
@@ -79,7 +79,7 @@ export interface ModalStateAndActions {
         gender: Gender,
         options?: { initialMode?: 'create' | 'existing' }
     ) => void;
-    handleOpenModal: (modalType: ModalType) => void;
+    handleOpenModal: (modalType: ModalRouteType) => void;
     onOpenCleanTreeOptions: () => void;
     onOpenTreeManager: () => void;
     sharedTreePromptModal: { isOpen: boolean; sharedTrees: SharedTreeSummary[] };

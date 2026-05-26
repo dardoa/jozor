@@ -24,8 +24,8 @@ const TestComponent: React.FC = () => {
       <button onClick={() => setDetailsPanelOpen(true)}>Open Details Panel</button>
       <button onClick={() => setDetailsPanelOpen(false)}>Close Details Panel</button>
       <button onClick={() => handleOpenModal('login')}>Open Login Modal</button>
-      <button onClick={() => handleOpenModal('map' as any)}>Open Event Journey</button>
-      <button onClick={() => handleOpenModal('migrationMap' as any)}>Open Migration Journey</button>
+      <button onClick={() => handleOpenModal('map')}>Open Event Journey</button>
+      <button onClick={() => handleOpenModal('migrationMap')}>Open Migration Journey</button>
     </div>
   );
 };

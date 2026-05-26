@@ -111,6 +111,8 @@ export type ModalType =
     | 'globalSettings'
     | 'migrationMap';
 
+export type ModalRouteType = ModalType | 'map';
+
 export type SmartPersonaTabId = 'about' | 'links' | 'media';
 
 export type ExportType = 'jozor' | 'json' | 'gedcom' | 'ics' | 'print' | 'png' | 'pdf' | 'svg' | 'jpeg';
