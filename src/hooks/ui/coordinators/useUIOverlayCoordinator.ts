@@ -1,0 +1,86 @@
+import { useState } from 'react';
+import type { Person, ExportActionsProps } from '../../../types';
+import { useAppModalBindings } from '../useAppModalBindings';
+import { useUIAndSettingsOrchestrator } from '../useUIAndSettingsOrchestrator';
+import { useAppUiBindings } from '../useAppUiBindings';
+import { useAppStore } from '../../../store/useAppStore';
+
+interface UseUIOverlayCoordinatorParams {
+  people: Record<string, Person>;
+  startNewTree: () => void;
+  focusId: string;
+  setFocusId: (id: string) => void;
+  currentUserRole: 'owner' | 'editor' | 'viewer' | null;
+  handleExport: ExportActionsProps['handleExport'];
+}
+
+export const useUIOverlayCoordinator = ({
+  people,
+  startNewTree,
+  focusId,
+  setFocusId,
+  currentUserRole,
+  handleExport,
+}: UseUIOverlayCoordinatorParams) => {
+  const [isPresentMode, setIsPresentMode] = useState(false);
+  const [detailsPanelOpen, setDetailsPanelOpen] = useState(true);
+
+  const isSettingsDrawerOpen = useAppStore((state) => state.isSettingsDrawerOpen);
+  const setSettingsDrawerOpen = useAppStore((state) => state.setSettingsDrawerOpen);
+  const isActivityLogOpen = useAppStore((state: any) => state.isActivityLogOpen);
+  const setActivityLogOpen = useAppStore((state: any) => state.setActivityLogOpen);
+
+  const {
+    modals,
+    handleOpenModal,
+    handleOpenLinkModal,
+    onOpenTreeManager,
+    onOpenCloudBackups,
+    onOpenGoogleSyncChoice,
+    onCloseGoogleSyncChoice,
+  } = useAppModalBindings();
+
+  const {
+    welcomeScreen,
+    themeLanguage,
+    viewSettings,
+    setShowWelcome,
+  } = useUIAndSettingsOrchestrator({
+    people,
+    startNewTree,
+    focusId,
+    setFocusId,
+    currentUserRole,
+    setIsPresentMode,
+  });
+
+  const { modalsReturn, toolsActions, exportActions } = useAppUiBindings({
+    modals,
+    handleOpenModal,
+    handleExport,
+  });
+
+  return {
+    welcomeScreen,
+    modals: modalsReturn,
+    themeLanguage,
+    viewSettings,
+    toolsActions,
+    exportActions,
+    setShowWelcome,
+    isPresentMode,
+    setIsPresentMode,
+    detailsPanelOpen,
+    setDetailsPanelOpen,
+    isSettingsDrawerOpen,
+    setSettingsDrawerOpen,
+    isActivityLogOpen,
+    setActivityLogOpen,
+    handleOpenModal,
+    handleOpenLinkModal,
+    onOpenTreeManager,
+    onOpenCloudBackups,
+    onOpenGoogleSyncChoice,
+    onCloseGoogleSyncChoice,
+  };
+};

@@ -1,23 +1,19 @@
 import type {
   AppOrchestrationReturn,
+  AuthProps,
 } from '../../types';
 import { useAppStore } from '../../store/useAppStore';
-import { useUIAndSettingsOrchestrator } from './useUIAndSettingsOrchestrator';
-import { useAuthAndSyncOrchestrator } from '../auth/useAuthAndSyncOrchestrator';
-import { useDetailsPanelAutoOpenOnFocus } from './useDetailsPanelAutoOpenOnFocus';
-import { useAppShortcutBindings } from './useAppShortcutBindings';
-import { useAppUiBindings } from './useAppUiBindings';
 import { useAppExportBindings } from './useAppExportBindings';
-import { useAppModalBindings } from './useAppModalBindings';
-import { useAppSearchBindings } from './useAppSearchBindings';
-import { useAppTreeBindings } from './useAppTreeBindings';
+import { useAuthCoordinator } from './coordinators/useAuthCoordinator';
+import { useSyncCoordinator } from './coordinators/useSyncCoordinator';
+import { useTreeCoordinator } from './coordinators/useTreeCoordinator';
+import { useUIOverlayCoordinator } from './coordinators/useUIOverlayCoordinator';
 
 export const useAppOrchestration = (
   isSharedMode: boolean = false,
   routeTreeId: string | null = null,
   routePersonId: string | null = null
 ): AppOrchestrationReturn => {
-
   const people = useAppStore((state) => state.people);
   const locations = useAppStore((state) => state.locations);
   const addLocation = useAppStore((state) => state.addLocation);
@@ -32,105 +28,41 @@ export const useAppOrchestration = (
   const currentTreeId = useAppStore((state) => state.currentTreeId);
   const setCurrentTreeId = useAppStore((state) => state.setCurrentTreeId);
   const currentUserRole = useAppStore((state) => state.currentUserRole);
-  const isSettingsDrawerOpen = useAppStore((state) => state.isSettingsDrawerOpen);
-  const setSettingsDrawerOpen = useAppStore((state) => state.setSettingsDrawerOpen);
-
-  const {
-    detailsPanelOpen,
-    setDetailsPanelOpen,
-    isPresentMode,
-    setIsPresentMode,
-    modals,
-    handleOpenModal,
-    handleOpenLinkModal,
-    onOpenTreeManager,
-    onOpenCloudBackups,
-    onOpenGoogleSyncChoice,
-    onCloseGoogleSyncChoice,
-  } = useAppModalBindings();
 
   const { svgRef, handleExport } = useAppExportBindings(people);
-  const searchProps = useAppSearchBindings({ people, setFocusId });
 
-  const {
-    welcomeScreen,
-    themeLanguage,
-    viewSettings,
-    setShowWelcome,
-  } = useUIAndSettingsOrchestrator({
+  // 1. Coordinates Modals, UI & Welcome Settings
+  const ui = useUIOverlayCoordinator({
     people,
     startNewTree,
     focusId,
     setFocusId,
     currentUserRole,
-    setIsPresentMode,
+    handleExport,
   });
 
-  const canUndo = past.length > 0;
-  const canRedo = future.length > 0;
-  useAppShortcutBindings({
-    canUndo,
-    canRedo,
-    undo,
-    redo,
-    isPresentMode,
-    setIsPresentMode,
-    enabled: !welcomeScreen.showWelcome,
+  // 2. Coordinates Google/Supabase Live Sync
+  const sync = useSyncCoordinator({
+    people,
+    onOpenGoogleSyncChoice: ui.onOpenGoogleSyncChoice,
+    onCloseGoogleSyncChoice: ui.onCloseGoogleSyncChoice,
+    setShowWelcome: ui.setShowWelcome,
+    onOpenCloudBackups: ui.onOpenCloudBackups,
   });
 
-  useDetailsPanelAutoOpenOnFocus({
-    focusId,
-    isPresentMode,
-    setDetailsPanelOpen,
-    onOpenGoogleSyncChoice,
-    onCloseGoogleSyncChoice,
-    onOpenCloudBackups,
-    onOpenTreeManager,
-    setSharedTreePromptModal: modals.setSharedTreePromptModal,
-    onOpenLoginModal: async (returnTo?: string) => {
-      if (returnTo) {
-        sessionStorage.setItem('jozor:return_to', returnTo);
-        sessionStorage.setItem('jozor:post-login-redirect', returnTo);
-      }
-      handleOpenModal('login');
-    },
-    onExport: handleExport,
-  } as any);
-
-  const isActivityLogOpen = useAppStore((state: any) => state.isActivityLogOpen);
-  const setActivityLogOpen = useAppStore((state: any) => state.setActivityLogOpen);
-
-  const {
-    auth,
-    googleSync,
-  } = useAuthAndSyncOrchestrator({
+  // 3. Coordinates Authentication, Session and Redirects
+  const authCoord = useAuthCoordinator({
     isSharedMode,
     routeTreeId,
     routePersonId,
     people,
-    setShowWelcome,
-    onOpenGoogleSyncChoice,
-    onCloseGoogleSyncChoice,
-    onOpenCloudBackups,
-    onOpenTreeManager,
-    setSharedTreePromptModal: modals.setSharedTreePromptModal,
-    onOpenLoginModal: async (returnTo?: string) => {
-      if (returnTo) {
-        sessionStorage.setItem('jozor:return_to', returnTo);
-        sessionStorage.setItem('jozor:post-login-redirect', returnTo);
-      }
-      handleOpenModal('login');
-    },
-    onExport: handleExport,
-  } as any);
+    setShowWelcome: ui.setShowWelcome,
+    setSharedTreePromptModal: ui.modals.setSharedTreePromptModal,
+    onGoogleSyncLogin: sync.googleSync.onLogin,
+  });
 
-  const {
-    appState,
-    historyControls,
-    onAddPerson,
-    detailsPanelFamilyActions,
-    coreFamilyActions,
-  } = useAppTreeBindings({
+  // 4. Coordinates Tree Modifications, History and ShortCuts
+  const tree = useTreeCoordinator({
     people,
     locations,
     addLocation,
@@ -139,42 +71,92 @@ export const useAppOrchestration = (
     setFocusId,
     currentTreeId,
     setCurrentTreeId,
-    canUndo,
-    canRedo,
+    past,
+    future,
     undo,
     redo,
-    handleOpenLinkModal,
-  });
-
-  const { modalsReturn, toolsActions, exportActions } = useAppUiBindings({
-    modals,
-    handleOpenModal,
+    isPresentMode: ui.isPresentMode,
+    setIsPresentMode: ui.setIsPresentMode,
+    showWelcome: ui.welcomeScreen.showWelcome,
+    handleOpenLinkModal: ui.handleOpenLinkModal,
+    setDetailsPanelOpen: ui.setDetailsPanelOpen,
+    onOpenGoogleSyncChoice: ui.onOpenGoogleSyncChoice,
+    onCloseGoogleSyncChoice: ui.onCloseGoogleSyncChoice,
+    onOpenCloudBackups: ui.onOpenCloudBackups,
+    onOpenTreeManager: ui.onOpenTreeManager,
+    setSharedTreePromptModal: ui.modals.setSharedTreePromptModal,
+    onOpenLoginModal: async (returnTo?: string) => {
+      if (returnTo) {
+        sessionStorage.setItem('jozor:return_to', returnTo);
+        sessionStorage.setItem('jozor:post-login-redirect', returnTo);
+      }
+      ui.handleOpenModal('login');
+    },
     handleExport,
   });
 
+  const auth: AuthProps = {
+    user: authCoord.user,
+    isDemoMode: authCoord.isDemoMode,
+    isSyncing: sync.googleSync.isSyncing,
+    onLogin: authCoord.onLogin,
+    onLogout: authCoord.onLogout,
+    stopSyncing: sync.googleSync.stopSyncing,
+    onLoadCloudData: sync.googleSync.onLoadCloudData,
+    onSaveNewCloudFile: sync.googleSync.onSaveNewCloudFile,
+    driveFiles: sync.googleSync.driveFiles,
+    currentActiveDriveFileId: sync.googleSync.currentActiveDriveFileId,
+    fileOwnerUid: sync.googleSync.fileOwnerUid,
+    refreshDriveFiles: sync.googleSync.refreshDriveFiles,
+    handleLoadDriveFile: sync.googleSync.handleLoadDriveFile,
+    handleSaveAsNewDriveFile: sync.googleSync.handleSaveAsNewDriveFile,
+    handleOverwriteExistingDriveFile: sync.googleSync.handleOverwriteExistingDriveFile,
+    handleDeleteDriveFile: sync.googleSync.handleDeleteDriveFile,
+    isSavingDriveFile: sync.googleSync.isSaving,
+    isDeletingDriveFile: sync.googleSync.isDeleting,
+    isListingDriveFiles: sync.googleSync.isListing,
+    hasSessionError: sync.googleSync.hasSessionError,
+    isAuthorized: sync.googleSync.isAuthorized,
+    handleCreateSnapshot: sync.googleSync.handleCreateSnapshot,
+    handleRestoreSnapshot: sync.googleSync.handleRestoreSnapshot,
+    onOpenCloudBackups: ui.onOpenCloudBackups,
+    onOpenTreeManager: ui.onOpenTreeManager,
+    onOpenLoginModal: async (returnTo?: string) => {
+      if (returnTo) {
+        sessionStorage.setItem('jozor:return_to', returnTo);
+        sessionStorage.setItem('jozor:post-login-redirect', returnTo);
+      }
+      ui.handleOpenModal('login');
+    },
+    syncStatus: sync.syncStatus,
+    onExport: handleExport,
+    onSaveToGoogleDrive: sync.googleSync.onSaveToGoogleDrive,
+    onOpenActivityLog: () => ui.setActivityLogOpen(true),
+  };
+
   return {
-    appState,
-    welcomeScreen,
-    modals: modalsReturn,
-    googleSync,
-    historyControls,
-    onAddPerson,
-    themeLanguage,
-    viewSettings,
-    toolsActions,
-    exportActions,
-    searchProps,
-    detailsPanelFamilyActions,
-    coreFamilyActions,
+    appState: tree.appState,
+    welcomeScreen: ui.welcomeScreen,
+    modals: ui.modals,
+    googleSync: sync.googleSync,
+    historyControls: tree.historyControls,
+    onAddPerson: tree.onAddPerson,
+    themeLanguage: ui.themeLanguage,
+    viewSettings: ui.viewSettings,
+    toolsActions: ui.toolsActions,
+    exportActions: ui.exportActions,
+    searchProps: tree.searchProps,
+    detailsPanelFamilyActions: tree.detailsPanelFamilyActions,
+    coreFamilyActions: tree.coreFamilyActions,
     svgRef,
-    isPresentMode,
-    setIsPresentMode,
-    detailsPanelOpen,
-    setDetailsPanelOpen,
-    isSettingsDrawerOpen,
-    setSettingsDrawerOpen,
-    isActivityLogOpen,
-    setActivityLogOpen,
+    isPresentMode: ui.isPresentMode,
+    setIsPresentMode: ui.setIsPresentMode,
+    detailsPanelOpen: ui.detailsPanelOpen,
+    setDetailsPanelOpen: ui.setDetailsPanelOpen,
+    isSettingsDrawerOpen: ui.isSettingsDrawerOpen,
+    setSettingsDrawerOpen: ui.setSettingsDrawerOpen,
+    isActivityLogOpen: ui.isActivityLogOpen,
+    setActivityLogOpen: ui.setActivityLogOpen,
     auth,
   };
 };
