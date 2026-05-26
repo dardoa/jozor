@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import type { AppStateAndActions, HistoryControlsProps } from '../../types';
+import type { AppStateAndActions, HistoryControlsProps, MutationActionResult } from '../../types';
 import type { Person } from '../../types';
 
 interface UseAppReturnBindingsOptions {
@@ -11,14 +11,14 @@ interface UseAppReturnBindingsOptions {
   setFocusId: (id: string) => void;
   currentTreeId: string | null;
   setCurrentTreeId: (id: string | null) => void;
-  updatePerson: (id: string, updates: Partial<Person>) => import('../../types').MutationActionResult | Promise<import('../../types').MutationActionResult>;
-  deletePerson: (id: string) => Promise<{ success: boolean; error?: string }>;
+  updatePerson: (id: string, updates: Partial<Person>) => MutationActionResult | Promise<MutationActionResult>;
+  deletePerson: (id: string) => Promise<MutationActionResult>;
   canUndo: boolean;
   canRedo: boolean;
   undo: () => void;
   redo: () => void;
-  addChild: (gender: 'male' | 'female', relatedPersonId?: string) => import('../../types').MutationActionResult | Promise<import('../../types').MutationActionResult>;
-  addFirstPerson: (gender: 'male' | 'female') => import('../../types').MutationActionResult | Promise<import('../../types').MutationActionResult>;
+  addChild: (gender: 'male' | 'female', relatedPersonId?: string) => MutationActionResult | Promise<MutationActionResult>;
+  addFirstPerson: (gender: 'male' | 'female') => MutationActionResult | Promise<MutationActionResult>;
 }
 
 export function useAppReturnBindings({
@@ -60,7 +60,7 @@ export function useAppReturnBindings({
     focusId,
     setFocusId,
     updatePerson,
-    deletePerson: deletePerson as any, // Cast because of slight type difference in deletePerson return
+    deletePerson,
     currentTreeId,
     setCurrentTreeId,
     activePerson,
