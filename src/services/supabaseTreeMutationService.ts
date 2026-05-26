@@ -1,4 +1,4 @@
-import type { Person } from '../types';
+import type { Person, TreeSettings } from '../types';
 import { logError } from '../utils/errorLogger';
 import { mapPersonToDbRow } from './personRowMapper';
 import { getTreeClient } from './supabaseTreeClient';
@@ -85,7 +85,7 @@ export const updateTreeSettings = async (
   treeId: string,
   ownerId: string,
   userEmail: string,
-  settings: Record<string, unknown>,
+  settings: TreeSettings,
   token?: string
 ): Promise<void> => {
   const client = getTreeClient(ownerId, userEmail, token);

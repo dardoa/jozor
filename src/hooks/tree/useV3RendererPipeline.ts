@@ -52,7 +52,7 @@ function resolveLayoutScale(settings?: Pick<TreeSettings, 'nodeSpacingX' | 'node
   };
 }
 
-function resolveMaxDepth(settings?: Pick<TreeSettings, 'generationLimit'>): number | undefined {
+function resolveMaxDepth(settings?: { generationLimit?: TreeSettings['generationLimit'] }): number | undefined {
   if (!Number.isFinite(settings?.generationLimit)) return undefined;
   return Math.max(0, Math.floor(Number(settings?.generationLimit)) - 1);
 }
@@ -291,6 +291,10 @@ interface UseV3RendererPipelineParams {
   // Callers no longer need to pass these values.
 }
 
+type PipelineSettings = Pick<TreeSettings, 'nodeSpacingX' | 'nodeSpacingY'> & {
+  generationLimit?: TreeSettings['generationLimit'];
+};
+
 /**
  * Runs the full V3 layout pipeline and returns renderer-ready data.
  * All computation is wrapped in a single useMemo keyed on structural signatures
@@ -325,7 +329,7 @@ export function useV3RendererPipeline({
       number,
       number | null,
     ];
-    const pipelineSettings = {
+    const pipelineSettings: PipelineSettings = {
       nodeSpacingX,
       nodeSpacingY,
       generationLimit: generationLimit ?? undefined,
@@ -341,7 +345,7 @@ export function useV3RendererPipeline({
       graph,
       focusId,
       people,
-      { maxDepth: resolveMaxDepth(pipelineSettings as any) },
+      { maxDepth: resolveMaxDepth(pipelineSettings) },
     );
     const collapsedOwnerIds = deriveCollapsedOwnerIds(collapsePoints, focusId);
     const semanticsSnapshot = applyCollapseSemantics(
