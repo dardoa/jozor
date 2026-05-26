@@ -1,8 +1,9 @@
-import { Person, DriveFile, UserProfile } from '../../types';
+import { Person, DriveFile, FullState, UserProfile } from '../../types';
 
 export type GoogleDrivePayload =
+    | FullState
     | { people: Record<string, Person> }
-    | Record<string, unknown>;
+    | Record<string, Person>;
 
 export type SnapshotPayload = Blob;
 

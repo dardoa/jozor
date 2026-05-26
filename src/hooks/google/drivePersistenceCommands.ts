@@ -2,9 +2,18 @@ import type { FullState, Person, UserProfile } from '../../types';
 import { loadFullState, useAppStore } from '../../store/useAppStore';
 import { storageProvider } from '../../services/storageProvider';
 import { DriveSerializationService } from '../../services/google/DriveSerializationService';
+import type { GoogleDrivePayload } from '../../services/google/interfaces';
 
-export const loadDrivePayloadIntoStore = (cloudData: FullState | Record<string, Person>) => {
-  if ('version' in cloudData || 'metadata' in cloudData) {
+const isFullStatePayload = (cloudData: GoogleDrivePayload): cloudData is FullState =>
+  'version' in cloudData || 'metadata' in cloudData;
+
+export const loadDrivePayloadIntoStore = (cloudData: GoogleDrivePayload) => {
+  if (isFullStatePayload(cloudData)) {
+    loadFullState(cloudData);
+    return;
+  }
+
+  if ('people' in cloudData) {
     loadFullState(cloudData);
     return;
   }
