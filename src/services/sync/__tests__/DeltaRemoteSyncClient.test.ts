@@ -11,7 +11,12 @@ const mocks = vi.hoisted(() => ({
     bulkDeletePendingOperations: vi.fn(),
     setSyncStatus: vi.fn(),
     incrementOpCount: vi.fn(),
+    setConfirmedPeople: vi.fn(),
+    removePendingOperations: vi.fn(),
+    setPeople: vi.fn(),
     people: {} as Record<string, Person>,
+    confirmedPeople: {} as Record<string, Person>,
+    pendingOperations: [] as PendingDeltaOp[],
 }));
 
 vi.mock('../../supabaseClient', () => ({
@@ -48,6 +53,11 @@ vi.mock('../../../store/useAppStore', () => ({
             },
             syncStatus: { state: 'saving', pendingCount: 1 },
             people: mocks.people,
+            confirmedPeople: mocks.confirmedPeople,
+            pendingOperations: mocks.pendingOperations,
+            setConfirmedPeople: mocks.setConfirmedPeople,
+            removePendingOperations: mocks.removePendingOperations,
+            setPeople: mocks.setPeople,
             setSyncStatus: mocks.setSyncStatus,
             incrementOpCount: mocks.incrementOpCount,
         })),
@@ -89,6 +99,8 @@ describe('DeltaRemoteSyncClient', () => {
         mocks.upsertRelationships.mockResolvedValue({ error: null });
         mocks.bulkDeletePendingOperations.mockResolvedValue(undefined);
         mocks.people = {};
+        mocks.confirmedPeople = {};
+        mocks.pendingOperations = [];
     });
 
     it('persists ADD_NODE to both the operation log and the readable tree projection', async () => {
