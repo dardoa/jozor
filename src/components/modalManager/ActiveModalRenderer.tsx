@@ -6,6 +6,7 @@ import {
   StatisticsDashboard,
   TimelineModal,
   UnifiedLoginModal,
+  PaywallModal,
 } from './lazyModals';
 
 interface ActiveModalRendererProps {
@@ -101,6 +102,15 @@ export const ActiveModalRenderer = ({ modal, locations }: ActiveModalRendererPro
         isOpen={true}
         onClose={closeModal}
         onGoogleLogin={modal.onGoogleLogin}
+      />
+    );
+  }
+
+  if (modal.activeModal === 'paywall') {
+    return (
+      <PaywallModal
+        isOpen={true}
+        onClose={closeModal}
       />
     );
   }

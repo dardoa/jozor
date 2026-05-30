@@ -105,9 +105,59 @@ export const useKindiController = ({ people, onFocusPerson }: UseKindiController
       return requestKindiClassification(redactedText);
     };
   }, []);
-  const { planWithAI } = useKindiAIPlanningFlow({
+  const { planWithAI: planWithAIRaw } = useKindiAIPlanningFlow({
     requestDraft: kindiAIRequestDraft,
   });
+
+  const subscriptionTier = useAppStore((state) => state.subscriptionTier);
+  const aiCloudQuotaRemaining = useAppStore((state) => state.aiCloudQuotaRemaining);
+  const setAiCloudQuotaRemaining = useAppStore((state) => state.setAiCloudQuotaRemaining);
+  const language = useAppStore((state) => state.language);
+
+  const planWithAI = useCallback(
+    async (args: Parameters<typeof planWithAIRaw>[0]): Promise<
+      Awaited<ReturnType<typeof planWithAIRaw>> | { kind: 'paywall_intercepted' }
+    > => {
+      if (subscriptionTier === 'free') {
+        const lang = language === 'en' ? 'en' : 'ar';
+        addAssistantMessage({
+          text: KINDI_STRINGS.billing.freePaywall[lang],
+        });
+        window.dispatchEvent(new CustomEvent('open-paywall'));
+        return { kind: 'paywall_intercepted' };
+      }
+
+      if (subscriptionTier === 'pro') {
+        if (aiCloudQuotaRemaining <= 0) {
+          const lang = language === 'en' ? 'en' : 'ar';
+          addAssistantMessage({
+            text: KINDI_STRINGS.billing.quotaExhausted[lang],
+          });
+          window.dispatchEvent(new CustomEvent('open-paywall'));
+          return { kind: 'paywall_intercepted' };
+        }
+      }
+
+      const result = await planWithAIRaw(args);
+
+      if (
+        subscriptionTier === 'pro' &&
+        (result.kind === 'planned' || result.kind === 'classified')
+      ) {
+        setAiCloudQuotaRemaining(Math.max(0, aiCloudQuotaRemaining - 1));
+      }
+
+      return result;
+    },
+    [
+      planWithAIRaw,
+      subscriptionTier,
+      aiCloudQuotaRemaining,
+      setAiCloudQuotaRemaining,
+      language,
+      addAssistantMessage,
+    ]
+  );
   const { confirm } = useKindiExecutionFlow({
     currentUserRole,
     addAssistantMessage,
@@ -192,6 +242,7 @@ export const useKindiController = ({ people, onFocusPerson }: UseKindiController
   }, [addAssistantMessageWithCue]);
 
   const respondToClassifiedAI = useCallback((aiPlanning: Awaited<ReturnType<typeof planWithAI>>): boolean => {
+    if (aiPlanning.kind === 'paywall_intercepted') return true;
     if (aiPlanning.kind !== 'classified') return false;
 
     if (aiPlanning.learningTrace) {
@@ -227,6 +278,7 @@ export const useKindiController = ({ people, onFocusPerson }: UseKindiController
     aiPlanning: Awaited<ReturnType<typeof planWithAI>>,
     interactionId?: string
   ): boolean => {
+    if (aiPlanning.kind === 'paywall_intercepted') return true;
     if (aiPlanning.kind !== 'planned') return false;
 
     const effectivePlanning = aiPlanning.planning;

@@ -125,6 +125,17 @@ export const useTreeSelectorController = ({
   };
 
   const handleCreateTree = async () => {
+    const tier = useAppStore.getState().subscriptionTier;
+    if (tier === 'free' && trees.length >= 1) {
+      showToast.error(
+        useAppStore.getState().language === 'ar'
+          ? 'الباقة المجانية تتيح لك شجرة عائلية واحدة فقط. يرجى الترقية لإنشاء المزيد.'
+          : 'The Free tier is limited to 1 family tree. Please upgrade to create more.'
+      );
+      window.dispatchEvent(new CustomEvent('open-paywall'));
+      return;
+    }
+
     try {
       setCreating(true);
       const rootPerson = {
@@ -170,6 +181,17 @@ export const useTreeSelectorController = ({
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
+
+    const tier = useAppStore.getState().subscriptionTier;
+    if (tier === 'free' && trees.length >= 1) {
+      showToast.error(
+        useAppStore.getState().language === 'ar'
+          ? 'الباقة المجانية تتيح لك شجرة عائلية واحدة فقط. يرجى الترقية لإضافة شجرة جديدة.'
+          : 'The Free tier is limited to 1 family tree. Please upgrade to import or create more.'
+      );
+      window.dispatchEvent(new CustomEvent('open-paywall'));
+      return;
+    }
 
     try {
       setImporting(true);

@@ -9,7 +9,7 @@ import {
 import { authTokenService } from '../../services/authTokenService';
 import { supabaseAuthService } from '../../services/supabaseAuthService';
 import { claimCollaboratorMemberships } from '../../services/supabaseTreeAccessService';
-import { fetchUserProfile } from '../../services/supabaseProfileService';
+import { fetchUserProfile, fetchAiMonthlyUsage } from '../../services/supabaseProfileService';
 import { dismissNativeSplash } from '../../utils/nativeSplash';
 
 const SESSION_BOOTSTRAP_TIMEOUT_MS = 6000;
@@ -78,20 +78,32 @@ const applySessionToStore = async (session: Session | null) => {
   // DO NOT set authLoading to false here. Let executeAuthInitPlan handle it after tree is loaded!
 
   // BACKGROUND PARALLEL REFINEMENT:
-  // Profile metadata and collaborator memberships are fetched concurrently.
+  // Profile metadata, AI monthly usage, and collaborator memberships are fetched concurrently.
   // Failure of these is non-critical for core app functionality (tree loading).
   try {
     const email = user.email || EMPTY_STRING;
 
-    const [profileResult, membershipsResult] = await Promise.allSettled([
+    const [profileResult, usageResult, membershipsResult] = await Promise.allSettled([
       fetchUserProfile(user.uid, email, user.supabaseToken),
+      fetchAiMonthlyUsage(user.uid, email, user.supabaseToken),
       email ? claimCollaboratorMemberships(user.uid, email, user.supabaseToken) : Promise.resolve(0)
     ]);
 
     // Apply metadata refinements if successful
     let refinedMetadata = { ...user.metadata };
+    let resolvedTier: 'free' | 'pro' | 'family' = 'free';
+
     if (profileResult.status === 'fulfilled' && profileResult.value) {
       refinedMetadata = { ...refinedMetadata, ...profileResult.value.metadata };
+      resolvedTier = profileResult.value.tier || 'free';
+      store.setSubscriptionTier(resolvedTier);
+    }
+
+    if (usageResult.status === 'fulfilled' && usageResult.value) {
+      const remaining = Math.max(0, usageResult.value.cloud_requests_limit - usageResult.value.cloud_requests_used);
+      store.setAiCloudQuotaRemaining(remaining);
+    } else {
+      store.setAiCloudQuotaRemaining(resolvedTier === 'family' ? 9999 : (resolvedTier === 'pro' ? 30 : 0));
     }
 
     if (profileResult.status === 'fulfilled' || membershipsResult.status === 'fulfilled') {

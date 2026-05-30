@@ -109,7 +109,8 @@ export type ModalType =
     | 'share'
     | 'login'
     | 'globalSettings'
-    | 'migrationMap';
+    | 'migrationMap'
+    | 'paywall';
 
 export type ModalRouteType = ModalType | 'map';
 

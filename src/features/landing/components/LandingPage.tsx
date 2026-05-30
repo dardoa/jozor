@@ -4,6 +4,7 @@ import { LandingHero } from './LandingHero';
 import { LandingFeatures } from './LandingFeatures';
 import { LandingFooter } from './LandingFooter';
 import { GuestModeModal } from './GuestModeModal';
+import { LandingPricing } from './LandingPricing';
 
 interface LandingPageProps {
   onStartNew: () => void;
@@ -51,6 +52,7 @@ export const LandingPage: React.FC<LandingPageProps> = memo(({ onStartNew, onImp
         <div className="-mt-12 md:-mt-20">
           <LandingFeatures />
         </div>
+        <LandingPricing onLogin={handleLogin} />
       </main>
 
       <div className="relative z-10">

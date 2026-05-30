@@ -13,7 +13,7 @@ export const fetchUserProfile = async (
   uid: string,
   email: string,
   token?: string
-): Promise<{ metadata: Record<string, unknown> } | null> => {
+): Promise<{ metadata: Record<string, unknown>; tier?: 'free' | 'pro' | 'family' } | null> => {
   performance.mark('diagnostic-3-profile-fetch-start');
   const client = getTreeClient(uid, email || '', token);
   const { data, error } = await client
@@ -26,6 +26,25 @@ export const fetchUserProfile = async (
 
   if (error) {
     logError('SupabaseProfileService fetchUserProfile', error, { category: 'NETWORK', severity: 'MEDIUM', showToast: false });
+    return null;
+  }
+  return data;
+};
+
+export const fetchAiMonthlyUsage = async (
+  uid: string,
+  email: string,
+  token?: string
+): Promise<{ cloud_requests_used: number; cloud_requests_limit: number } | null> => {
+  const client = getTreeClient(uid, email || '', token);
+  const { data, error } = await client
+    .from('ai_monthly_usage')
+    .select('*')
+    .eq('user_id', uid)
+    .maybeSingle();
+
+  if (error) {
+    logError('SupabaseProfileService fetchAiMonthlyUsage', error, { category: 'NETWORK', severity: 'MEDIUM', showToast: false });
     return null;
   }
   return data;

@@ -35,6 +35,7 @@ function isInvalidProviderKeyError(error: unknown): boolean {
     || message.toLowerCase().includes('api key not valid');
 }
 
+/*
 type AIUsagePeriod = 'daily' | 'monthly';
 
 interface AIUsageReservation {
@@ -45,6 +46,7 @@ interface AIUsageReservation {
   period: AIUsagePeriod;
   next_reset: string;
 }
+*/
 
 type HeaderRecord = Record<string, string | string[] | undefined>;
 
@@ -81,6 +83,7 @@ function getSupabaseAdminClient(): SupabaseClient {
   return supabaseAdminClient;
 }
 
+/*
 async function reserveAIUsage(userId: string): Promise<AIUsageReservation> {
   const supabaseAdmin = getSupabaseAdminClient();
   const { data, error } = await supabaseAdmin.rpc('reserve_ai_usage', {
@@ -102,6 +105,7 @@ async function reserveAIUsage(userId: string): Promise<AIUsageReservation> {
 function buildUsageLimitMessage(usage: AIUsageReservation): string {
   return `AI usage limit exceeded for this ${usage.period} period. Try again after ${usage.next_reset}.`;
 }
+*/
 
 function getBiographyPrompt(data: BiographyAIRequestData): string {
   const {
@@ -370,41 +374,173 @@ export default async function handler(req: Request) {
   try {
     const body = (await req.json()) as AIProxyRequest;
     const { prompt, image, preferredModels } = getOperationPrompt(body);
-    const usage = await reserveAIUsage(user.uid);
+    const supabaseAdmin = getSupabaseAdminClient();
+    
+    // 1. Fetch user's subscription tier
+    const { data: profile, error: profileError } = await supabaseAdmin
+      .from('user_profiles')
+      .select('tier')
+      .eq('id', user.uid)
+      .single();
 
-    if (!usage.allowed) {
+    if (profileError || !profile) {
       return Response.json({
         error: {
-          message: buildUsageLimitMessage(usage),
-          code: 'AI_USAGE_LIMIT_EXCEEDED',
-          details: {
-            usageCount: usage.usage_count,
-            limit: usage.limit,
-            lastReset: usage.last_reset,
-            nextReset: usage.next_reset,
-            period: usage.period,
-          },
+          message: 'Failed to retrieve user profile tier.',
+          code: 'PROFILE_RETRIEVAL_ERROR',
         },
-      }, { status: 429, headers: corsHeaders });
+      }, { status: 500, headers: corsHeaders });
+    }
+
+    const tier = profile.tier || 'free';
+
+    // 2. Reject Free tier users
+    if (tier === 'free') {
+      return Response.json({
+        error: {
+          message: 'AI Cloud features are only available on Pro and Family plans.',
+          code: 'TIER_LIMIT_EXCEEDED',
+        },
+      }, { status: 403, headers: corsHeaders });
+    }
+
+    let cloudRequestsUsed = 0;
+    let cloudRequestsLimit = 30;
+    let resetAtStr = '';
+
+    // 3. Check and increment quota for Pro tier users
+    if (tier === 'pro') {
+      const { data: usage, error: usageError } = await supabaseAdmin
+        .from('ai_monthly_usage')
+        .select('*')
+        .eq('user_id', user.uid)
+        .maybeSingle();
+
+      if (usageError) {
+        return Response.json({
+          error: {
+            message: 'Failed to retrieve AI usage records.',
+            code: 'USAGE_RETRIEVAL_ERROR',
+          },
+        }, { status: 500, headers: corsHeaders });
+      }
+
+      const now = new Date();
+      if (!usage) {
+        // Create first usage record
+        const resetAt = new Date();
+        resetAt.setMonth(resetAt.getMonth() + 1);
+        
+        const { data: newUsage, error: insertError } = await supabaseAdmin
+          .from('ai_monthly_usage')
+          .insert({
+            user_id: user.uid,
+            cloud_requests_used: 1,
+            cloud_requests_limit: 30,
+            reset_at: resetAt.toISOString(),
+          })
+          .select()
+          .single();
+
+        if (insertError || !newUsage) {
+          return Response.json({
+            error: {
+              message: 'Failed to initialize AI usage record.',
+              code: 'USAGE_INITIALIZATION_ERROR',
+            },
+          }, { status: 500, headers: corsHeaders });
+        }
+        cloudRequestsUsed = 1;
+        resetAtStr = resetAt.toISOString();
+      } else {
+        const resetAt = new Date(usage.reset_at);
+        if (now >= resetAt) {
+          // Reset usage for new billing cycle
+          const nextReset = new Date();
+          nextReset.setMonth(nextReset.getMonth() + 1);
+          
+          const { data: resetUsage, error: resetError } = await supabaseAdmin
+            .from('ai_monthly_usage')
+            .update({
+              cloud_requests_used: 1,
+              reset_at: nextReset.toISOString(),
+              updated_at: now.toISOString(),
+            })
+            .eq('user_id', user.uid)
+            .select()
+            .single();
+
+          if (resetError || !resetUsage) {
+            return Response.json({
+              error: {
+                message: 'Failed to reset AI usage record.',
+                code: 'USAGE_RESET_ERROR',
+              },
+            }, { status: 500, headers: corsHeaders });
+          }
+          cloudRequestsUsed = 1;
+          resetAtStr = nextReset.toISOString();
+        } else {
+          // Check if limit exceeded
+          if (usage.cloud_requests_used >= usage.cloud_requests_limit) {
+            return Response.json({
+              error: {
+                message: 'Monthly Pro AI cloud request limit exceeded. Upgrade to Family for unlimited cloud access.',
+                code: 'AI_USAGE_LIMIT_EXCEEDED',
+                details: {
+                  used: usage.cloud_requests_used,
+                  limit: usage.cloud_requests_limit,
+                  resetAt: usage.reset_at,
+                },
+              },
+            }, { status: 429, headers: corsHeaders });
+          }
+
+          // Increment usage
+          const { data: updatedUsage, error: updateError } = await supabaseAdmin
+            .from('ai_monthly_usage')
+            .update({
+              cloud_requests_used: usage.cloud_requests_used + 1,
+              updated_at: now.toISOString(),
+            })
+            .eq('user_id', user.uid)
+            .select()
+            .single();
+
+          if (updateError || !updatedUsage) {
+            return Response.json({
+              error: {
+                message: 'Failed to update AI usage record.',
+                code: 'USAGE_UPDATE_ERROR',
+              },
+            }, { status: 500, headers: corsHeaders });
+          }
+          cloudRequestsUsed = updatedUsage.cloud_requests_used;
+          cloudRequestsLimit = updatedUsage.cloud_requests_limit;
+          resetAtStr = updatedUsage.reset_at;
+        }
+      }
     }
 
     const response = await generateViaProvider(prompt, image, preferredModels);
+
     return Response.json({
-      ...response,
-      usage: {
-        usageCount: usage.usage_count,
-        limit: usage.limit,
-        lastReset: usage.last_reset,
-        nextReset: usage.next_reset,
-        period: usage.period,
-      },
+      result: response.result,
+      model: response.model,
+      ...(tier === 'pro' ? {
+        usage: {
+          used: cloudRequestsUsed,
+          limit: cloudRequestsLimit,
+          resetAt: resetAtStr,
+        }
+      } : {}),
     }, { status: 200, headers: corsHeaders });
-  } catch (error: unknown) {
+  } catch (error) {
     logServerError('API_AI_PROXY', error);
     return Response.json({
       error: {
-        message: error instanceof Error ? error.message : 'AI proxy request failed',
-        code: 'AI_PROXY_ERROR',
+        message: error instanceof Error ? error.message : 'Internal Server Error',
+        code: 'INTERNAL_SERVER_ERROR',
       },
     }, { status: 500, headers: corsHeaders });
   }
