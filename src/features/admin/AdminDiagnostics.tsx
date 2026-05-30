@@ -88,9 +88,7 @@ export const AdminDiagnostics: React.FC = () => {
           </div>
         </header>
 
-        <div className="rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] p-6 shadow-sm">
-          <DiagnosticsPanels includeTelemetry includeMaintenance />
-        </div>
+        <DiagnosticsPanels includeTelemetry includeMaintenance layout="grid" />
       </main>
     </div>
   );

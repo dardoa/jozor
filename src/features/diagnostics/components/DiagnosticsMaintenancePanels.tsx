@@ -7,7 +7,7 @@ import { pruneActivityLogs, pruneTreeOperations } from '../../../services/operat
 import { showToast } from '../../../utils/showToast';
 import { ConfirmationModal } from '../../../components/ConfirmationModal';
 
-export const DiagnosticsMaintenancePanels: React.FC = () => {
+export const DiagnosticsMaintenancePanels: React.FC<{ layout?: 'stack' | 'grid' }> = ({ layout = 'stack' }) => {
   const { t } = useTranslation();
   const currentTreeId = useAppStore((state) => state.currentTreeId);
   const currentUserRole = useAppStore((state) => state.currentUserRole);
@@ -55,35 +55,37 @@ export const DiagnosticsMaintenancePanels: React.FC = () => {
 
   return (
     <>
-      <section className="space-y-4">
-        <h4 className="px-3 text-xs font-semibold tracking-wide text-[var(--text-muted)]">{t.settings.maintenance}</h4>
-        <div className="space-y-3 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-panel-subtle)] p-4">
-          <p className="px-1 text-[11px] font-bold leading-relaxed text-[var(--text-secondary)]">{t.settings.maintenanceDesc}</p>
-          {canRunMaintenance ? (
-            <div className="grid grid-cols-1 gap-2">
-              <button onClick={() => void runMaintenance('operations', () => pruneTreeOperations(currentTreeId!, user!, 2000))} disabled={isRunningMaintenance} className="w-full rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] py-2.5 text-[11px] font-semibold tracking-wide text-[var(--text-main)] transition-all hover:border-[var(--primary-500)]/20 hover:bg-[var(--primary-600)]/10 disabled:cursor-not-allowed disabled:opacity-50">{t.settings.pruneOperations}</button>
-              <button onClick={() => void runMaintenance('activity', () => pruneActivityLogs(currentTreeId!, user!, 180))} disabled={isRunningMaintenance} className="w-full rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] py-2.5 text-[11px] font-semibold tracking-wide text-[var(--text-main)] transition-all hover:border-[var(--primary-500)]/20 hover:bg-[var(--primary-600)]/10 disabled:cursor-not-allowed disabled:opacity-50">{t.settings.pruneActivityLogs}</button>
-            </div>
-          ) : (
-            <div className="rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3 py-3 text-[11px] font-semibold text-[var(--text-secondary)]">
-              {t.settings.maintenanceOwnerOnly}
-            </div>
-          )}
-        </div>
-      </section>
+      <div className={layout === 'grid' ? "grid grid-cols-1 md:grid-cols-2 gap-6" : "space-y-6"}>
+        <section className="space-y-4">
+          <h4 className="px-3 text-xs font-semibold tracking-wide text-[var(--text-muted)]">{t.settings.maintenance}</h4>
+          <div className="space-y-3 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-panel-subtle)] p-4">
+            <p className="px-1 text-[11px] font-bold leading-relaxed text-[var(--text-secondary)]">{t.settings.maintenanceDesc}</p>
+            {canRunMaintenance ? (
+              <div className="grid grid-cols-1 gap-2">
+                <button onClick={() => void runMaintenance('operations', () => pruneTreeOperations(currentTreeId!, user!, 2000))} disabled={isRunningMaintenance} className="w-full rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] py-2.5 text-[11px] font-semibold tracking-wide text-[var(--text-main)] transition-all hover:border-[var(--primary-500)]/20 hover:bg-[var(--primary-600)]/10 disabled:cursor-not-allowed disabled:opacity-50">{t.settings.pruneOperations}</button>
+                <button onClick={() => void runMaintenance('activity', () => pruneActivityLogs(currentTreeId!, user!, 180))} disabled={isRunningMaintenance} className="w-full rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] py-2.5 text-[11px] font-semibold tracking-wide text-[var(--text-main)] transition-all hover:border-[var(--primary-500)]/20 hover:bg-[var(--primary-600)]/10 disabled:cursor-not-allowed disabled:opacity-50">{t.settings.pruneActivityLogs}</button>
+              </div>
+            ) : (
+              <div className="rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3 py-3 text-[11px] font-semibold text-[var(--text-secondary)]">
+                {t.settings.maintenanceOwnerOnly}
+              </div>
+            )}
+          </div>
+        </section>
 
-      <section className="space-y-4">
-        <h4 className="px-3 text-xs font-semibold tracking-wide text-[var(--text-muted)]">{t.settings.clearSyncQueue}</h4>
-        <div className="space-y-3 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-panel-subtle)] p-4">
-          <p className="px-1 text-[11px] font-bold leading-relaxed text-[var(--text-secondary)]">{t.settings.clearSyncQueueDesc}</p>
-          <button
-            onClick={() => setClearSyncConfirmOpen(true)}
-            className="w-full rounded-xl border border-[var(--danger-500)]/20 bg-[var(--danger-500)]/10 py-2.5 text-[11px] font-semibold tracking-wide text-[var(--danger-500)] transition-all hover:bg-[var(--danger-500)]/15"
-          >
-            {t.settings.clearSyncQueue}
-          </button>
-        </div>
-      </section>
+        <section className="space-y-4">
+          <h4 className="px-3 text-xs font-semibold tracking-wide text-[var(--text-muted)]">{t.settings.clearSyncQueue}</h4>
+          <div className="space-y-3 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-panel-subtle)] p-4">
+            <p className="px-1 text-[11px] font-bold leading-relaxed text-[var(--text-secondary)]">{t.settings.clearSyncQueueDesc}</p>
+            <button
+              onClick={() => setClearSyncConfirmOpen(true)}
+              className="w-full rounded-xl border border-[var(--danger-500)]/20 bg-[var(--danger-500)]/10 py-2.5 text-[11px] font-semibold tracking-wide text-[var(--danger-500)] transition-all hover:bg-[var(--danger-500)]/15"
+            >
+              {t.settings.clearSyncQueue}
+            </button>
+          </div>
+        </section>
+      </div>
 
       <ConfirmationModal
         isOpen={isClearSyncConfirmOpen}

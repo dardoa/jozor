@@ -61,9 +61,14 @@ const getNotificationDiagnosticsText = (t: SettingsTranslator): NotificationDiag
   noNotificationActivity: (t.settings as unknown as Record<string, string>).noNotificationActivity || 'None',
 });
 
-export const DiagnosticsPanels: React.FC<{ includeTelemetry?: boolean; includeMaintenance?: boolean }> = ({
+export const DiagnosticsPanels: React.FC<{
+  includeTelemetry?: boolean;
+  includeMaintenance?: boolean;
+  layout?: 'stack' | 'grid';
+}> = ({
   includeTelemetry = true,
   includeMaintenance = false,
+  layout = 'stack',
 }) => {
   const { t, dateLocale } = useTranslation();
   const syncStatus = useAppStore((state) => state.syncStatus);
@@ -207,7 +212,7 @@ export const DiagnosticsPanels: React.FC<{ includeTelemetry?: boolean; includeMa
 
   return (
     <>
-      <div className="space-y-6">
+      <div className={layout === 'grid' ? "grid grid-cols-1 lg:grid-cols-2 gap-6" : "space-y-6"}>
         {includeTelemetry ? (
         <section className="space-y-4">
           <h4 className="px-3 text-xs font-semibold tracking-wide text-[var(--text-muted)]">{t.settings.syncDiagnostics}</h4>
@@ -379,7 +384,9 @@ export const DiagnosticsPanels: React.FC<{ includeTelemetry?: boolean; includeMa
         ) : null}
 
         {includeMaintenance ? (
-          <DiagnosticsMaintenancePanels />
+          <div className={layout === 'grid' ? "lg:col-span-2" : ""}>
+            <DiagnosticsMaintenancePanels layout={layout} />
+          </div>
         ) : null}
       </div>
     </>
