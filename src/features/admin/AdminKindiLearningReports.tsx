@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { AlertTriangle, ArrowLeft, ArrowRight, BarChart3, BrainCircuit, RefreshCw, ShieldCheck, TimerReset } from 'lucide-react';
+import { Activity, AlertTriangle, ArrowLeft, ArrowRight, BarChart3, BrainCircuit, RefreshCw, ShieldCheck, TimerReset } from 'lucide-react';
 
 import { useAppStore } from '../../store/useAppStore';
 import { useTranslation } from '../../context/TranslationContext';
@@ -174,14 +174,24 @@ export const AdminKindiLearningReports: React.FC = () => {
               {text.description}
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => void loadReports()}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-[var(--primary-600)] px-3 py-2 text-sm font-black text-white shadow-sm transition hover:brightness-95"
-          >
-            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-            {text.refresh}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => useAppStore.getState().setDiagnosticsDrawerOpen(true)}
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3 py-2 text-sm font-black text-[var(--text-secondary)] shadow-sm transition hover:bg-[var(--surface-hover)] hover:text-[var(--text-main)]"
+            >
+              <Activity className="h-4 w-4 text-[var(--primary-600)]" />
+              {t.settings.diagnostics}
+            </button>
+            <button
+              type="button"
+              onClick={() => void loadReports()}
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-[var(--primary-600)] px-3 py-2 text-sm font-black text-white shadow-sm transition hover:brightness-95"
+            >
+              <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+              {text.refresh}
+            </button>
+          </div>
         </header>
 
         <section className="grid gap-3 rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] p-4 sm:grid-cols-4">

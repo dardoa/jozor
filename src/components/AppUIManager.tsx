@@ -52,6 +52,9 @@ const AdminKindiLearningReports = React.lazy(() =>
 const AdminDefaultTreeSettings = React.lazy(() =>
   import('../features/admin/AdminDefaultTreeSettings').then((m) => ({ default: m.AdminDefaultTreeSettings }))
 );
+const DiagnosticsDrawer = React.lazy(() =>
+  import('../features/diagnostics').then((m) => ({ default: m.DiagnosticsDrawer }))
+);
 
 export const AppUIManager: React.FC = () => {
   const { t } = useTranslation();
@@ -105,6 +108,7 @@ export const AppUIManager: React.FC = () => {
   const setVaultTab = useAppStore((state) => state.setVaultTab);
   const setActivityLogOpen = useAppStore((state) => state.setActivityLogOpen);
   const darkMode = useAppStore((state) => state.darkMode);
+  const isDiagnosticsDrawerOpen = useAppStore((state) => state.isDiagnosticsDrawerOpen);
   const setDarkMode = useAppStore((state) => state.setDarkMode);
   useJozorDebugApi(welcomeScreen.setShowWelcome);
 
@@ -322,6 +326,12 @@ export const AppUIManager: React.FC = () => {
             onOpenActivityLog={() => setActivityLogOpen(true)}
             onOpenCleanTree={modals.onOpenCleanTreeOptions}
           />
+        </React.Suspense>
+      ) : null}
+
+      {isDiagnosticsDrawerOpen ? (
+        <React.Suspense fallback={null}>
+          <DiagnosticsDrawer />
         </React.Suspense>
       ) : null}
 

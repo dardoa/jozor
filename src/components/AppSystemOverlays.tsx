@@ -12,9 +12,6 @@ import type {
 } from '../types';
 
 const ActivityLogDrawer = React.lazy(() => import('../features/activity-log').then(m => ({ default: m.ActivityLogDrawer })));
-const DiagnosticsDrawer = React.lazy(() =>
-  import('../features/diagnostics').then((module) => ({ default: module.DiagnosticsDrawer }))
-);
 const SettingsDrawer = React.lazy(() =>
   import('./ui/SettingsDrawer').then((module) => ({ default: module.SettingsDrawer }))
 );
@@ -45,7 +42,6 @@ export const AppSystemOverlays: React.FC<AppSystemOverlaysProps> = ({
   const { t, language } = useTranslation();
   const { people, focusId } = appState;
   const isSettingsDrawerOpen = useAppStore((state) => state.isSettingsDrawerOpen);
-  const isDiagnosticsDrawerOpen = useAppStore((state) => state.isDiagnosticsDrawerOpen);
   const isActivityLogOpen = useAppStore((state) => state.isActivityLogOpen);
   const setActivityLogOpen = useAppStore((state) => state.setActivityLogOpen);
   const setDiagnosticsDrawerOpen = useAppStore((state) => state.setDiagnosticsDrawerOpen);
@@ -76,11 +72,7 @@ export const AppSystemOverlays: React.FC<AppSystemOverlaysProps> = ({
         </React.Suspense>
       ) : null}
 
-      {isDiagnosticsDrawerOpen ? (
-        <React.Suspense fallback={null}>
-          <DiagnosticsDrawer />
-        </React.Suspense>
-      ) : null}
+
 
       {isTreeControlCenterOpen ? (
         <React.Suspense fallback={null}>

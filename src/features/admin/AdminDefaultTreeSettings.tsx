@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { ArrowLeft, ArrowRight, RefreshCw, Save, Settings2, ShieldCheck } from 'lucide-react';
+import { Activity, ArrowLeft, ArrowRight, RefreshCw, Save, Settings2, ShieldCheck } from 'lucide-react';
 
 import { useTranslation } from '../../context/TranslationContext';
 import { useAppStore } from '../../store/useAppStore';
@@ -134,6 +134,14 @@ export const AdminDefaultTreeSettings: React.FC = () => {
             <p className="mt-1 max-w-2xl text-sm text-[var(--text-secondary)]">{text.description}</p>
           </div>
           <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => useAppStore.getState().setDiagnosticsDrawerOpen(true)}
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3 py-2 text-sm font-black text-[var(--text-secondary)] shadow-sm transition hover:bg-[var(--surface-hover)] hover:text-[var(--text-main)]"
+            >
+              <Activity className="h-4 w-4 text-[var(--primary-600)]" />
+              {t.settings.diagnostics}
+            </button>
             <button
               type="button"
               onClick={() => void loadSettings()}
