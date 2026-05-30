@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { BrainCircuit, FolderArchive, Languages, LogIn, LogOut, Moon, Settings, SlidersHorizontal, Sun } from 'lucide-react';
+import { Activity, BrainCircuit, FolderArchive, Languages, LogIn, LogOut, Moon, Settings, SlidersHorizontal, Sun } from 'lucide-react';
 import { DropdownContent, DropdownMenuDivider, DropdownMenuHeader, DropdownMenuItem } from '../ui/DropdownMenu';
 import { useTranslation } from '../../context/TranslationContext';
 import type { ThemeLanguageProps, UserProfile } from '../../types';
@@ -62,6 +62,11 @@ export const AccountMenu = memo<AccountMenuProps>(
           onClick={() => themeLanguage.setDarkMode(!themeLanguage.darkMode)}
           icon={themeLanguage.darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           label={themeLanguage.darkMode ? t.switchToLightMode : t.switchToDarkMode}
+        />
+        <DropdownMenuItem
+          onClick={() => useAppStore.getState().setDiagnosticsDrawerOpen(true)}
+          icon={<Activity className="w-4 h-4" />}
+          label={t.settings.diagnostics}
         />
 
         {/* Vault — accessible to both guest and logged-in users */}

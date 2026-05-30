@@ -166,6 +166,23 @@ export const useFamilyTreeLayoutController = ({
         return;
       }
 
+      const startMark = `layout-start-${requestId}`;
+      if (performance.getEntriesByName(startMark).length > 0) {
+        const endMark = `layout-end-${requestId}`;
+        performance.mark(endMark);
+        const measureName = `layout-worker-time`;
+        performance.clearMeasures(measureName);
+        performance.measure(measureName, startMark, endMark);
+        
+        const measure = performance.getEntriesByName(measureName)[0];
+        if (measure && typeof window !== 'undefined') {
+          (window as any).__LAST_LAYOUT_DURATION__ = measure.duration;
+          (window as any).__LAST_LAYOUT_CACHED__ = false;
+        }
+        performance.clearMarks(startMark);
+        performance.clearMarks(endMark);
+      }
+
       const newData = { nodes, links, collapsePoints, fanArcs, v3Pipeline } as LayoutData;
       const isEmptyResult = (!nodes || nodes.length === 0) && (!fanArcs || fanArcs.length === 0);
       setLayoutData(newData);
@@ -213,6 +230,10 @@ export const useFamilyTreeLayoutController = ({
         setLayoutData(cached);
         setLayoutIdentityKey(requestIdentityKey);
         setIsLoading(false);
+        if (typeof window !== 'undefined') {
+          (window as any).__LAST_LAYOUT_DURATION__ = 0;
+          (window as any).__LAST_LAYOUT_CACHED__ = true;
+        }
         return;
       }
 
@@ -235,6 +256,7 @@ export const useFamilyTreeLayoutController = ({
         ? { ...settings, enableForcePhysics: false, generationLimit: Math.min(settings.generationLimit, 3) }
         : settings;
 
+      performance.mark(`layout-start-${requestId}`);
       workerRef.current?.postMessage({
         requestId,
         people,

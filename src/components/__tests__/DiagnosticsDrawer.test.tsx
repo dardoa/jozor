@@ -152,6 +152,7 @@ vi.mock('../ConfirmationModal', () => ({
 vi.mock('../../services/deltaSyncService', () => ({
   deltaSyncService: {
     clearOutgoingQueue: (...args: unknown[]) => clearOutgoingQueueMock(...args),
+    getLastCheckpointVersion: () => 42,
   },
 }));
 

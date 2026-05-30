@@ -312,6 +312,10 @@ class DeltaSyncService {
         };
     }
 
+    public getLastCheckpointVersion(): number {
+        return this.lastCheckpointVersion;
+    }
+
     private checkActiveTree(treeId: string) {
         if (this.activeTreeId !== treeId) {
             this.activeTreeId = treeId;
