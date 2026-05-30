@@ -53,7 +53,7 @@ export const areNodeContainerPropsEqual = (prev: NodeContainerProps, next: NodeC
   prev.isHighlighted === next.isHighlighted &&
   prev.onSelect === next.onSelect &&
   prev.onNodeContextMenu === next.onNodeContextMenu &&
-  (prev.zoomScale < 0.5) === (next.zoomScale < 0.5) &&
+  (prev.zoomScale < 0.3) === (next.zoomScale < 0.3) &&
   prev.nodeWidth === next.nodeWidth &&
   prev.nodeHeight === next.nodeHeight &&
   prev.isPulsing === next.isPulsing &&

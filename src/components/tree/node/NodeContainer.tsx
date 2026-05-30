@@ -25,7 +25,7 @@ export const NodeContainer = memo<NodeContainerProps>(({
   isPathHighlighted = false,
   showParentNavigation = true,
 }) => {
-  const isLOD = zoomScale < 0.5;
+  const isLOD = zoomScale < 0.3;
 
   const person = useAppStore((state) => state.people[node.data.id]) || (node.data as Person);
   const isNodeSyncing = useAppStore((state) => state.syncingNodes.has(person.id));
