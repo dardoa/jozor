@@ -28,6 +28,7 @@ export const landingPageEn = {
   encryptionBadge: 'High-security data encryption',
   mockupHeader: 'Family Tree',
   navFeatures: 'Features',
+  navPricing: 'Pricing',
   navAbout: 'About',
   navContact: 'Contact Us',
   startNow: 'Log In',

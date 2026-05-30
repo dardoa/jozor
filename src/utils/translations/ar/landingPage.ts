@@ -28,6 +28,7 @@ export const landingPageAr = {
   encryptionBadge: 'تشفير بيانات بمستوى عالي الأمان',
   mockupHeader: 'شجرة العائلة',
   navFeatures: 'المزايا',
+  navPricing: 'الاشتراكات',
   navAbout: 'عن جذور',
   navContact: 'تواصل معنا',
   startNow: 'تسجيل الدخول',

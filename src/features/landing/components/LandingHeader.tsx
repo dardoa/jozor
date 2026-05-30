@@ -26,6 +26,16 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({ onLogin }) => {
         {/* Navigation - Wide spacing */}
         <nav className="hidden md:flex items-center gap-12 text-[var(--text-secondary)] font-medium text-sm">
           <a href="#" className="hover:text-[var(--color-primary-600)] transition-colors">{t.landingPage.navFeatures}</a>
+          <a
+            href="#pricing"
+            onClick={(e) => {
+              e.preventDefault();
+              document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' });
+            }}
+            className="hover:text-[var(--color-primary-600)] transition-colors"
+          >
+            {t.landingPage.navPricing}
+          </a>
           <a href="#" className="hover:text-[var(--color-primary-600)] transition-colors">{t.landingPage.navAbout}</a>
           <a href="#" className="hover:text-[var(--color-primary-600)] transition-colors">{t.landingPage.navContact}</a>
         </nav>
