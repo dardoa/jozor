@@ -52,6 +52,9 @@ const AdminKindiLearningReports = React.lazy(() =>
 const AdminDefaultTreeSettings = React.lazy(() =>
   import('../features/admin/AdminDefaultTreeSettings').then((m) => ({ default: m.AdminDefaultTreeSettings }))
 );
+const AdminDiagnostics = React.lazy(() =>
+  import('../features/admin/AdminDiagnostics').then((m) => ({ default: m.AdminDiagnostics }))
+);
 const DiagnosticsDrawer = React.lazy(() =>
   import('../features/diagnostics').then((m) => ({ default: m.DiagnosticsDrawer }))
 );
@@ -293,6 +296,7 @@ export const AppUIManager: React.FC = () => {
           <Route path='/support' element={<Navigate to='/help' replace />} />
           <Route path='/admin/kindi-learning' element={<ProtectedRoute><AdminKindiLearningReports /></ProtectedRoute>} />
           <Route path='/admin/tree-defaults' element={<ProtectedRoute><AdminDefaultTreeSettings /></ProtectedRoute>} />
+          <Route path='/admin/diagnostics' element={<ProtectedRoute><AdminDiagnostics /></ProtectedRoute>} />
           <Route path='/shared/:shareToken' element={<InvitePage />} />
 
           <Route

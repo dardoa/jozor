@@ -4,7 +4,7 @@ import { DropdownContent, DropdownMenuDivider, DropdownMenuHeader, DropdownMenuI
 import { useTranslation } from '../../context/TranslationContext';
 import type { ThemeLanguageProps, UserProfile } from '../../types';
 import { useAppStore } from '../../store/useAppStore';
-import { openAdminTreeDefaults, openKindiLearningReports, useKindiReportsAdminAccess } from '../../features/admin';
+import { openAdminDiagnostics, openAdminTreeDefaults, openKindiLearningReports, useKindiReportsAdminAccess } from '../../features/admin';
 
 interface AccountMenuProps {
   themeLanguage: ThemeLanguageProps;
@@ -63,11 +63,6 @@ export const AccountMenu = memo<AccountMenuProps>(
           icon={themeLanguage.darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           label={themeLanguage.darkMode ? t.switchToLightMode : t.switchToDarkMode}
         />
-        <DropdownMenuItem
-          onClick={() => useAppStore.getState().setDiagnosticsDrawerOpen(true)}
-          icon={<Activity className="w-4 h-4" />}
-          label={t.settings.diagnostics}
-        />
 
         {/* Vault — accessible to both guest and logged-in users */}
         <DropdownMenuDivider />
@@ -98,6 +93,12 @@ export const AccountMenu = memo<AccountMenuProps>(
               icon={<SlidersHorizontal className="w-4 h-4" />}
               label={text.defaultTreeSettings || 'Default tree settings'}
               subLabel={text.defaultTreeSettingsHint || 'Set visual defaults for newly created trees.'}
+            />
+            <DropdownMenuItem
+              onClick={openAdminDiagnostics}
+              icon={<Activity className="w-4 h-4" />}
+              label={text.diagnosticsTitle || 'Diagnostics'}
+              subLabel={text.diagnosticsHint || 'Monitor performance, synchronization, and bootstrap telemetry.'}
             />
           </>
         )}

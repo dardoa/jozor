@@ -39,3 +39,8 @@ export const openAdminTreeDefaults = (): void => {
   window.history.pushState(null, '', '/admin/tree-defaults');
   window.dispatchEvent(new PopStateEvent('popstate'));
 };
+
+export const openAdminDiagnostics = (): void => {
+  window.history.pushState(null, '', '/admin/diagnostics');
+  window.dispatchEvent(new PopStateEvent('popstate'));
+};

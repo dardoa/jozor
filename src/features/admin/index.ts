@@ -9,5 +9,6 @@ export {
 export {
   openAdminTreeDefaults,
   openKindiLearningReports,
+  openAdminDiagnostics,
   useKindiReportsAdminAccess,
 } from './useKindiReportsAdminAccess';
