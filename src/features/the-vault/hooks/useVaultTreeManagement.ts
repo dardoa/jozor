@@ -134,6 +134,7 @@ export const useVaultTreeManagement = ({
         people: full.people,
         settings: full.settings || {},
         focusId: full.focusId,
+        lastSyncedVersion: full.lastVersion,
         treeName: full.name,
       });
       setCurrentTreeId(treeId);

@@ -34,6 +34,8 @@ class DeltaSyncService {
     private reconcileInFlight = false;
     private permissionListeners = new Set<(share: unknown) => void>();
     private permissionPausedTreeId: string | null = null;
+    private lastCheckpointVersion = 0;
+    private activeTreeId: string | null = null;
     private readonly flushBeforeUnload = () => {
         void this.flushPendingChanges();
     };
@@ -310,9 +312,85 @@ class DeltaSyncService {
         };
     }
 
+    private checkActiveTree(treeId: string) {
+        if (this.activeTreeId !== treeId) {
+            this.activeTreeId = treeId;
+            this.lastCheckpointVersion = useAppStore.getState().lastSyncedVersion || 0;
+        }
+    }
+
+    private async checkAndSaveCheckpoint() {
+        const { currentTreeId, lastSyncedVersion, confirmedPeople, user } = useAppStore.getState();
+        if (!currentTreeId || !user) return;
+
+        this.checkActiveTree(currentTreeId);
+
+        if (lastSyncedVersion - this.lastCheckpointVersion >= 50) {
+            const versionToSave = lastSyncedVersion;
+            this.lastCheckpointVersion = versionToSave;
+
+            try {
+                const { saveTreeCheckpoint } = await import('./supabaseTreeMutationService');
+                await saveTreeCheckpoint(
+                    currentTreeId,
+                    user.uid,
+                    user.email || '',
+                    versionToSave,
+                    confirmedPeople,
+                    user.supabaseToken || undefined
+                );
+                logWarn('DeltaSyncService checkAndSaveCheckpoint', 'Saved remote checkpoint.', {
+                    category: 'SYNC',
+                    metadata: { treeId: currentTreeId, version: versionToSave }
+                });
+            } catch (error) {
+                if (this.lastCheckpointVersion === versionToSave) {
+                    this.lastCheckpointVersion = versionToSave - 50;
+                }
+                logError('DeltaSyncService checkAndSaveCheckpoint', error, {
+                    category: 'SYNC',
+                    severity: 'MEDIUM',
+                    metadata: { treeId: currentTreeId }
+                });
+            }
+        }
+    }
+
+    private async reloadFullTreeFromServer(treeId: string): Promise<void> {
+        try {
+            const store = useAppStore.getState();
+            const user = store.user;
+            if (!user) return;
+
+            const { fetchTree } = await import('./supabaseTreeReadService');
+            const full = await fetchTree(treeId, user.uid, user.email || '', user.supabaseToken || undefined);
+
+            store.setConfirmedPeople(full.people);
+            store.setLastSyncedVersion(full.lastVersion);
+
+            const { projectPendingOperations } = await import('../domain/pendingOperationsProjection');
+            const { people: projected } = projectPendingOperations(full.people, store.pendingOperations);
+            store.setPeople(projected, false);
+
+            this.lastCheckpointVersion = full.lastVersion;
+            logWarn('DeltaSyncService reloadFullTreeFromServer', 'Successfully reloaded tree from server checkpoint.', {
+                category: 'SYNC',
+                metadata: { treeId, lastVersion: full.lastVersion }
+            });
+        } catch (error) {
+            logError('DeltaSyncService reloadFullTreeFromServer', error, {
+                category: 'SYNC',
+                severity: 'HIGH',
+                metadata: { treeId }
+            });
+        }
+    }
+
     public async reconcileTree(treeId: string) {
         if (this.reconcileInFlight) return;
         this.reconcileInFlight = true;
+
+        this.checkActiveTree(treeId);
 
         const { lastSyncedVersion, setSyncStatus: updateSyncStatus, syncStatus } = useAppStore.getState();
         updateSyncStatus(buildSyncSaving(syncStatus, this.queue.getPendingOutgoingCount()));
@@ -320,6 +398,15 @@ class DeltaSyncService {
         try {
             const ops = await this.fetchRemoteOperations(treeId, lastSyncedVersion || 0);
             if (ops.length > 0) {
+                if (lastSyncedVersion > 0 && ops[0].version_seq && Number(ops[0].version_seq) > lastSyncedVersion + 1) {
+                    logWarn('DeltaSyncService reconcileTree', 'Operations gap detected (old operations pruned). Triggering full tree reload.', {
+                        category: 'SYNC',
+                        metadata: { lastSyncedVersion, dbFirstVersion: ops[0].version_seq, treeId }
+                    });
+                    this.reconcileInFlight = false;
+                    await this.reloadFullTreeFromServer(treeId);
+                    return;
+                }
                 await this.processIncomingBatch(ops);
             }
 
@@ -399,11 +486,17 @@ class DeltaSyncService {
     }
 
     private async flushOutgoingBatch(batch: PendingDeltaOp[]) {
-        return this.remoteSyncClient.flushOutgoingBatch(batch, this.permissionPausedTreeId);
+        const result = await this.remoteSyncClient.flushOutgoingBatch(batch, this.permissionPausedTreeId);
+        if (result.success) {
+            await this.checkAndSaveCheckpoint();
+        }
+        return result;
     }
 
     private async processIncomingBatch(batch: DeltaOperation[]) {
-        return this.operationApplier.processIncomingBatch(batch);
+        const result = await this.operationApplier.processIncomingBatch(batch);
+        await this.checkAndSaveCheckpoint();
+        return result;
     }
 
     private async fetchRemoteOperations(treeId: string, sinceVersion: number): Promise<DeltaOperation[]> {

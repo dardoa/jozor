@@ -1,4 +1,4 @@
-import type { FullState } from '../types';
+import type { FullState, Person } from '../types';
 import { buildTreeFetchResult } from './supabaseTreeMapper';
 import { getTreeClient } from './supabaseTreeClient';
 import type { TreeSummary } from './supabaseTreeTypes';
@@ -61,6 +61,73 @@ export const fetchTree = async (
   token?: string
 ): Promise<Pick<FullState, 'people' | 'focusId' | 'settings'> & { ownerId: string; lastVersion: number; name: string }> => {
   const client = getTreeClient(ownerId, userEmail, token);
+
+  // 1. Try to fetch the latest checkpoint
+  const { data: checkpoint, error: checkpointError } = await client
+    .from('tree_checkpoints')
+    .select('*')
+    .eq('tree_id', treeId)
+    .order('version_seq', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (checkpointError) {
+    // If table doesn't exist or query fails, fall back silently but log it
+    console.warn('Failed to query tree_checkpoints, falling back to legacy load:', checkpointError.message);
+  }
+
+  if (checkpoint) {
+    // Checkpoint found! Load from checkpoint + trailing operations
+    const { data: tree, error: treeError } = await client
+      .from('trees')
+      .select('*')
+      .eq('id', treeId)
+      .single();
+
+    if (treeError) throw treeError;
+
+    const { data: operationRows, error: opsError } = await client
+      .from('tree_operations')
+      .select('*')
+      .eq('tree_id', treeId)
+      .gt('version_seq', checkpoint.version_seq)
+      .order('version_seq', { ascending: true });
+
+    if (opsError) throw opsError;
+
+    const basePeople = { ...(checkpoint.people as Record<string, Person>) };
+    const result = {
+      people: basePeople,
+      focusId: tree.focus_id || Object.keys(basePeople)[0] || undefined,
+      settings: tree.settings || {},
+      ownerId: tree.owner_id,
+      lastVersion: Number(checkpoint.version_seq),
+      name: tree.name || 'Untitled tree',
+    };
+
+    const operations = (operationRows ?? []) as DeltaOperation[];
+    const maxVersion = operations.reduce((max, op) => Math.max(max, Number(op.version_seq ?? 0)), result.lastVersion);
+    const { applyOperationToMap } = await import('../utils/syncUtils');
+    const replayed = operations.reduce((people, op) => {
+      if (op.type === 'SET_TREE_METADATA') {
+        const metadata = op.payload.treeMetadata ?? {};
+        if (metadata.focusId && people[metadata.focusId]) result.focusId = metadata.focusId;
+        if (metadata.settings) result.settings = metadata.settings;
+        if (metadata.name) result.name = metadata.name;
+        return people;
+      }
+
+      return applyOperationToMap(people, op) ?? people;
+    }, result.people);
+
+    return {
+      ...result,
+      people: replayed,
+      lastVersion: maxVersion,
+    };
+  }
+
+  // 2. Legacy Fallback (No checkpoint found)
   const { data: tree, error: treeError } = await client
     .from('trees')
     .select('*')
@@ -109,3 +176,4 @@ export const fetchTree = async (
     lastVersion: maxVersion,
   };
 };
+

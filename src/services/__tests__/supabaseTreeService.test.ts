@@ -1,4 +1,3 @@
-
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 
 const { getSupabaseWithAuthMock } = vi.hoisted(() => ({
@@ -101,6 +100,7 @@ describe('supabaseTreeService.fetchTree', () => {
     ];
 
     const fromMock = vi.fn((table: string) => {
+      if (table === 'tree_checkpoints') return createQueryBuilder({ data: null, error: null }); // no checkpoint
       if (table === 'trees') return createQueryBuilder({ data: treeRow, error: null });
       if (table === 'people') return createQueryBuilder({ data: peopleRows, error: null });
       if (table === 'relationships') return createQueryBuilder({ data: relationshipRows, error: null });
@@ -176,6 +176,7 @@ describe('supabaseTreeService.fetchTree', () => {
     ];
 
     const fromMock = vi.fn((table: string) => {
+      if (table === 'tree_checkpoints') return createQueryBuilder({ data: null, error: null }); // no checkpoint
       if (table === 'trees') return createQueryBuilder({ data: treeRow, error: null });
       if (table === 'people') return createQueryBuilder({ data: peopleRows, error: null });
       if (table === 'relationships') return createQueryBuilder({ data: [], error: null });
@@ -190,5 +191,68 @@ describe('supabaseTreeService.fetchTree', () => {
     expect(result.name).toBe('Untitled tree');
     expect(result.focusId).toBe('person-2');
   });
-});
 
+  it('loads from checkpoint and replays trailing operations', async () => {
+    const treeRow = {
+      id: 'tree-3',
+      owner_id: 'user-3',
+      name: 'Checkpoint Tree',
+      focus_id: 'person-3',
+      settings: {},
+    };
+
+    const checkpointRow = {
+      id: 'cp-1',
+      tree_id: 'tree-3',
+      version_seq: 10,
+      people: {
+        'person-3': {
+          id: 'person-3',
+          firstName: 'Checkpoint',
+          lastName: 'User',
+          gender: 'female',
+          parents: [],
+          children: [],
+          spouses: [],
+          bio: 'original bio',
+        },
+      },
+    };
+
+    const operationRows = [
+      {
+        tree_id: 'tree-3',
+        user_id: 'user-3',
+        type: 'UPDATE_PROP',
+        payload: { id: 'person-3', updates: { bio: 'updated bio' } },
+        version_seq: 12,
+      },
+    ];
+
+    const fromMock = vi.fn((table: string) => {
+      if (table === 'tree_checkpoints') return createQueryBuilder({ data: checkpointRow, error: null });
+      if (table === 'trees') return createQueryBuilder({ data: treeRow, error: null });
+      if (table === 'tree_operations') return createQueryBuilder({ data: operationRows, error: null });
+      throw new Error(`Should not access table ${table} when checkpoint is present`);
+    });
+
+    getSupabaseWithAuthMock.mockReturnValue({ from: fromMock });
+
+    const result = await fetchTree('tree-3', 'user-3', 'user3@example.com', 'token');
+
+    expect(result.ownerId).toBe('user-3');
+    expect(result.name).toBe('Checkpoint Tree');
+    expect(result.focusId).toBe('person-3');
+    expect(result.lastVersion).toBe(12);
+    expect(result.people['person-3']).toMatchObject({
+      firstName: 'Checkpoint',
+      lastName: 'User',
+      bio: 'updated bio',
+    });
+
+    expect(fromMock).toHaveBeenCalledWith('tree_checkpoints');
+    expect(fromMock).toHaveBeenCalledWith('tree_operations');
+    expect(fromMock).not.toHaveBeenCalledWith('people');
+    expect(fromMock).not.toHaveBeenCalledWith('relationships');
+  });
+});

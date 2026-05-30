@@ -105,6 +105,7 @@ export const useTreeSelectorController = ({
         people: full.people,
         settings: full.settings || {},
         focusId: full.focusId,
+        lastSyncedVersion: full.lastVersion,
         treeName: full.name,
       });
       onTreeSelected(treeId, role);

@@ -142,3 +142,36 @@ export const bulkInsertRelationships = async (
   const { error } = await client.from('relationships').insert(relationships);
   if (error) throw error;
 };
+
+export const saveTreeCheckpoint = async (
+  treeId: string,
+  ownerId: string,
+  userEmail: string,
+  versionSeq: number,
+  people: Record<string, Person>,
+  token?: string
+): Promise<void> => {
+  const client = getTreeClient(ownerId, userEmail, token);
+  const { error } = await client
+    .from('tree_checkpoints')
+    .upsert(
+      {
+        tree_id: treeId,
+        version_seq: versionSeq,
+        people,
+      },
+      {
+        onConflict: 'tree_id,version_seq',
+      }
+    );
+
+  if (error) {
+    logError('SupabaseTreeMutationService saveTreeCheckpoint', error, {
+      category: 'DATABASE',
+      severity: 'MEDIUM',
+      metadata: { treeId, versionSeq },
+    });
+    throw error;
+  }
+};
+
