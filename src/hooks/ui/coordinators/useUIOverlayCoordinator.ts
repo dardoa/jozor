@@ -23,7 +23,11 @@ export const useUIOverlayCoordinator = ({
   handleExport,
 }: UseUIOverlayCoordinatorParams) => {
   const [isPresentMode, setIsPresentMode] = useState(false);
-  const [detailsPanelOpen, setDetailsPanelOpen] = useState(true);
+  const [detailsPanelOpen, setDetailsPanelOpen] = useState(() => (
+    typeof window === 'undefined' ||
+    typeof window.matchMedia !== 'function' ||
+    !window.matchMedia('(max-width: 639px)').matches
+  ));
 
   const isSettingsDrawerOpen = useAppStore((state) => state.isSettingsDrawerOpen);
   const setSettingsDrawerOpen = useAppStore((state) => state.setSettingsDrawerOpen);

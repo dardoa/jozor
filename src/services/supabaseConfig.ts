@@ -1,7 +1,18 @@
 const viteEnv = (typeof import.meta !== 'undefined' ? import.meta.env : undefined) as ImportMetaEnv | undefined;
+const runtimeEnv = typeof process !== 'undefined' ? process.env : undefined;
 
-export const resolvedSupabaseUrl = viteEnv?.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL;
-export const resolvedSupabaseKey = viteEnv?.VITE_SUPABASE_ANON_KEY ?? process.env.SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_ANON_KEY;
+export const resolveSupabaseConfig = (
+  clientEnv?: Partial<ImportMetaEnv>,
+  serverEnv?: Partial<NodeJS.ProcessEnv>
+) => ({
+  url: clientEnv?.VITE_SUPABASE_URL ?? serverEnv?.SUPABASE_URL ?? serverEnv?.VITE_SUPABASE_URL,
+  key: clientEnv?.VITE_SUPABASE_ANON_KEY ?? serverEnv?.SUPABASE_ANON_KEY ?? serverEnv?.VITE_SUPABASE_ANON_KEY,
+});
+
+const resolvedConfig = resolveSupabaseConfig(viteEnv, runtimeEnv);
+
+export const resolvedSupabaseUrl = resolvedConfig.url;
+export const resolvedSupabaseKey = resolvedConfig.key;
 export const supabaseUrl = resolvedSupabaseUrl || 'http://127.0.0.1';
 export const supabaseKey = resolvedSupabaseKey || 'public-anon-key-placeholder';
 export const SUPABASE_SESSION_STORAGE_KEY = 'jozor-supabase-auth';
