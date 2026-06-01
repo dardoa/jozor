@@ -158,6 +158,17 @@ export const useVaultTreeManagement = ({
   const handleCreateTree = useCallback(async () => {
     if (!currentUser?.uid || !currentUser?.email) return;
 
+    const tier = useAppStore.getState().subscriptionTier;
+    if (tier === 'free' && ownedTrees.length >= 1) {
+      showToast.error(
+        useAppStore.getState().language === 'ar'
+          ? 'الباقة المجانية تتيح لك شجرة عائلية واحدة فقط. يرجى الترقية لإنشاء المزيد.'
+          : 'The Free tier is limited to 1 family tree. Please upgrade to create more.'
+      );
+      window.dispatchEvent(new CustomEvent('open-paywall'));
+      return;
+    }
+
     const work = async () => {
       const [{ createPerson }, { createTreeWithRootAtomic }] = await Promise.all([
         import('../../../utils/familyLogic'),
@@ -182,11 +193,22 @@ export const useVaultTreeManagement = ({
     }).unwrap().finally(() => {
       setBusyTreeId(null);
     });
-  }, [currentUser, handleOpenTree, t.newTreeName]);
+  }, [currentUser, handleOpenTree, t.newTreeName, ownedTrees.length]);
 
   const handleImportFile = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file || !currentUser?.uid || !currentUser?.email) return;
+
+    const tier = useAppStore.getState().subscriptionTier;
+    if (tier === 'free' && ownedTrees.length >= 1) {
+      showToast.error(
+        useAppStore.getState().language === 'ar'
+          ? 'الباقة المجانية تتيح لك شجرة عائلية واحدة فقط. يرجى الترقية لإضافة شجرة جديدة.'
+          : 'The Free tier is limited to 1 family tree. Please upgrade to import or create more.'
+      );
+      window.dispatchEvent(new CustomEvent('open-paywall'));
+      return;
+    }
 
     const work = async () => {
       const { importTreeFromFileItem } = await import('../../tree-manager');

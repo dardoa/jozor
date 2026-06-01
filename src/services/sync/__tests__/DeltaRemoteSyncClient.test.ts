@@ -1,13 +1,10 @@
-
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DeltaRemoteSyncClient } from '../DeltaRemoteSyncClient';
 import type { PendingDeltaOp } from '../SyncTypes';
 import type { Person } from '../../../types';
 
 const mocks = vi.hoisted(() => ({
-    insert: vi.fn(),
-    upsertPeople: vi.fn(),
-    upsertRelationships: vi.fn(),
+    rpc: vi.fn(),
     bulkDeletePendingOperations: vi.fn(),
     setSyncStatus: vi.fn(),
     incrementOpCount: vi.fn(),
@@ -21,25 +18,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock('../../supabaseClient', () => ({
     getSupabaseWithAuth: vi.fn(() => ({
-        from: (table: string) => {
-            if (table === 'tree_operations') {
-                return { insert: mocks.insert };
-            }
-            if (table === 'people') {
-                return { upsert: mocks.upsertPeople };
-            }
-            if (table === 'relationships') {
-                return { upsert: mocks.upsertRelationships };
-            }
-            if (table === 'trees') {
-                return {
-                    update: vi.fn(() => ({
-                        eq: vi.fn(async () => ({ error: null })),
-                    })),
-                };
-            }
-            throw new Error(`Unexpected table: ${table}`);
-        },
+        rpc: mocks.rpc,
     })),
 }));
 
@@ -94,116 +73,57 @@ const addNodeOp: PendingDeltaOp = {
 describe('DeltaRemoteSyncClient', () => {
     beforeEach(() => {
         vi.clearAllMocks();
-        mocks.insert.mockResolvedValue({ error: null });
-        mocks.upsertPeople.mockResolvedValue({ error: null });
-        mocks.upsertRelationships.mockResolvedValue({ error: null });
+        mocks.rpc.mockResolvedValue({ error: null });
         mocks.bulkDeletePendingOperations.mockResolvedValue(undefined);
         mocks.people = {};
         mocks.confirmedPeople = {};
         mocks.pendingOperations = [];
     });
 
-    it('persists ADD_NODE to both the operation log and the readable tree projection', async () => {
+    it('persists batch by calling sync_tree_batch RPC', async () => {
         const client = new DeltaRemoteSyncClient(() => 0, vi.fn());
 
         const result = await client.flushOutgoingBatch([addNodeOp], null);
 
         expect(result).toEqual({ success: true, shouldRetry: false });
-        expect(mocks.insert).toHaveBeenCalledTimes(1);
-        expect(mocks.upsertPeople).toHaveBeenCalledWith(
-            expect.objectContaining({
-                id: 'child-1',
-                tree_id: addNodeOp.tree_id,
-                first_name: 'Child',
-            }),
-            { onConflict: 'id' }
-        );
-        expect(mocks.upsertRelationships).toHaveBeenCalledWith(
-            {
-                tree_id: addNodeOp.tree_id,
-                person_id: 'parent-1',
-                relative_id: 'child-1',
-                type: 'child',
-            },
-            {
-                onConflict: 'tree_id,person_id,relative_id,type',
-                ignoreDuplicates: true,
-            }
-        );
+        const { localId, ...expectedOp } = addNodeOp;
+        expect(mocks.rpc).toHaveBeenCalledWith('sync_tree_batch', { p_ops: [expectedOp] });
         expect(mocks.bulkDeletePendingOperations).toHaveBeenCalledWith([7]);
+        expect(mocks.incrementOpCount).toHaveBeenCalledWith(1);
     });
 
-    it('projects local relationship participants before inserting an ADD_RELATION row', async () => {
+    it('sets syncBlockedByPlan = true when it catches a BILLING category error', async () => {
         const client = new DeltaRemoteSyncClient(() => 0, vi.fn());
-        const focusPerson = {
-            id: 'focus-1',
-            firstName: 'Focus',
-            lastName: 'One',
-            gender: 'male',
-            parents: [],
-            spouses: ['existing-1'],
-            children: [],
-        } as any;
-        const existingPerson = {
-            id: 'existing-1',
-            firstName: 'Existing',
-            lastName: 'One',
-            gender: 'female',
-            parents: [],
-            spouses: ['focus-1'],
-            children: [],
-        } as any;
-        mocks.people = {
-            [focusPerson.id]: focusPerson,
-            [existingPerson.id]: existingPerson,
-        };
-
-        const result = await client.flushOutgoingBatch([{
-            tree_id: addNodeOp.tree_id,
-            user_id: 'user-1',
-            type: 'ADD_RELATION',
-            payload: {
-                focusId: focusPerson.id,
-                existingId: existingPerson.id,
-                type: 'spouse',
+        mocks.rpc.mockResolvedValueOnce({
+            error: {
+                message: 'LIMIT_EXCEEDED_FREE',
             },
-            created_at: '2026-05-09T00:00:00.000Z',
-            localId: 8,
-        }], null);
+        });
 
-        expect(result).toEqual({ success: true, shouldRetry: false });
-        expect(mocks.upsertPeople).toHaveBeenCalledWith(
-            [
-                expect.objectContaining({ id: focusPerson.id, tree_id: addNodeOp.tree_id }),
-                expect.objectContaining({ id: existingPerson.id, tree_id: addNodeOp.tree_id }),
-            ],
-            { onConflict: 'id' }
+        const result = await client.flushOutgoingBatch([addNodeOp], null);
+
+        expect(result.success).toBe(false);
+        expect(result.shouldRetry).toBe(false);
+        expect(mocks.setSyncStatus).toHaveBeenCalledWith(
+            expect.objectContaining({
+                syncBlockedByPlan: true,
+                errorMessage: 'Plan limit reached. Please upgrade your subscription to continue.',
+            })
         );
-        expect(mocks.upsertRelationships).toHaveBeenCalledWith(
-            {
-                tree_id: addNodeOp.tree_id,
-                person_id: focusPerson.id,
-                relative_id: existingPerson.id,
-                type: 'spouse',
-            },
-            {
-                onConflict: 'tree_id,person_id,relative_id,type',
-                ignoreDuplicates: true,
-            }
-        );
-        expect(mocks.bulkDeletePendingOperations).toHaveBeenCalledWith([8]);
     });
 
-    it('does not acknowledge the batch when the readable projection fails', async () => {
+    it('does not acknowledge the batch when the RPC fails', async () => {
         const client = new DeltaRemoteSyncClient(() => 0, vi.fn());
-        mocks.upsertPeople.mockResolvedValueOnce({ error: new Error('people write failed') });
+        mocks.rpc.mockResolvedValueOnce({
+            error: {
+                message: 'Internal Database Error',
+            },
+        });
 
         const result = await client.flushOutgoingBatch([addNodeOp], null);
 
         expect(result.success).toBe(false);
         expect(result.shouldRetry).toBe(true);
-        expect(mocks.insert).not.toHaveBeenCalled();
         expect(mocks.bulkDeletePendingOperations).not.toHaveBeenCalled();
     });
 });
-

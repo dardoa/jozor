@@ -57,8 +57,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const googleClientId = getEnv('GOOGLE_CLIENT_ID') || getEnv('VITE_GOOGLE_CLIENT_ID');
   const googleClientSecret = getEnv('GOOGLE_CLIENT_SECRET');
 
-  if (!supabaseJwtSecret || !encryptionSecret || !googleClientId || !googleClientSecret) {
+  if (!supabaseUrl || !supabaseServiceRole || !supabaseJwtSecret || !encryptionSecret || !googleClientId || !googleClientSecret) {
     console.error('Auth exchange configuration missing.', {
+      hasSupabaseUrl: Boolean(supabaseUrl),
+      hasServiceRole: Boolean(supabaseServiceRole),
       hasJwtSecret: Boolean(supabaseJwtSecret),
       hasEncryptionSecret: Boolean(encryptionSecret),
       hasGoogleClientId: Boolean(googleClientId),
@@ -106,32 +108,48 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       throw new Error('Google userinfo response did not include a user id.');
     }
 
-    if (refreshToken && supabaseUrl && supabaseServiceRole) {
-      try {
-        const supabase = createClient(supabaseUrl, supabaseServiceRole, {
-          auth: {
-            persistSession: false,
-            autoRefreshToken: false,
-            detectSessionInUrl: false,
-          },
-        });
-        const { error: dbError } = await supabase.from('user_keys').upsert(
-          {
-            user_id: uid,
-            google_refresh_token: encryptToken(refreshToken, encryptionSecret),
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: 'user_id' }
-        );
+    const supabase = createClient(supabaseUrl, supabaseServiceRole, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false,
+      },
+    });
 
-        if (dbError) {
-          console.error('Supabase DB Error:', {
-            message: dbError.message,
-            code: dbError.code,
-          });
-        }
+    // 1. Complete profile onboarding before issuing an application session.
+    const { error: profileError } = await supabase.rpc('ensure_user_profile', {
+      p_user_id: uid,
+      p_display_name: userInfo.name || '',
+      p_photo_url: userInfo.picture || '',
+    });
+    if (profileError) {
+      console.error('Failed to ensure user profile:', {
+        message: profileError.message,
+        code: profileError.code,
+      });
+      throw new Error('Failed to initialize user profile.');
+    }
+
+    // 2. Store Google refresh token if provided
+    if (refreshToken) {
+      try {
+          const { error: dbError } = await supabase.from('user_keys').upsert(
+            {
+              user_id: uid,
+              google_refresh_token: encryptToken(refreshToken, encryptionSecret),
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: 'user_id' }
+          );
+
+          if (dbError) {
+            console.error('Supabase DB Error saving refresh token:', {
+              message: dbError.message,
+              code: dbError.code,
+            });
+          }
       } catch (dbError) {
-        console.warn('Failed to store refresh token.', {
+        console.warn('Failed to store refresh token:', {
           message: dbError instanceof Error ? dbError.message : 'Unknown error',
         });
       }

@@ -1,4 +1,5 @@
 import { useAppStore } from '../../store/useAppStore';
+import { toast } from 'sonner';
 import { searchService } from '../../services/searchService';
 import { localTreePersistenceService } from '../../services/localTreePersistenceService';
 import { MutationActionResult, Person } from '../../types';
@@ -38,6 +39,21 @@ export const useTreeActions = () => {
         return await CommandExecutor.execute(command);
     };
 
+    const checkPeopleLimit = (): boolean => {
+        const tier = store.subscriptionTier;
+        const totalPeople = Object.keys(store.people).length;
+        if (tier === 'free' && totalPeople >= 100) {
+            toast.error(
+                store.language === 'ar'
+                    ? 'لقد وصلت إلى الحد الأقصى للباقة المجانية (100 شخص). يرجى الترقية لإضافة المزيد.'
+                    : 'You have reached the limit of 100 people for the Free tier. Please upgrade to add more.'
+            );
+            window.dispatchEvent(new CustomEvent('open-paywall'));
+            return false;
+        }
+        return true;
+    };
+
     const addParent = async (
         gender: 'male' | 'female',
         relatedPersonId?: string,
@@ -45,6 +61,7 @@ export const useTreeActions = () => {
         targetPersonId?: string,
         initialUpdates?: Partial<Person>
     ): Promise<MutationActionResult> => {
+        if (!checkPeopleLimit()) return { success: false, error: 'Free tier limit reached.' };
         const command = new AddRelativeCommand('parent', gender, relatedPersonId, bypassSync, targetPersonId, initialUpdates);
         return await CommandExecutor.execute(command);
     };
@@ -53,6 +70,7 @@ export const useTreeActions = () => {
         gender: 'male' | 'female',
         bypassSync = false
     ): Promise<MutationActionResult> => {
+        if (!checkPeopleLimit()) return { success: false, error: 'Free tier limit reached.' };
         const command = new AddFirstPersonCommand(gender, bypassSync);
         return await CommandExecutor.execute(command);
     };
@@ -63,6 +81,7 @@ export const useTreeActions = () => {
         bypassSync = false,
         initialUpdates?: Partial<Person>
     ): Promise<MutationActionResult> => {
+        if (!checkPeopleLimit()) return { success: false, error: 'Free tier limit reached.' };
         const command = new AddRelativeCommand('spouse', gender, relatedPersonId, bypassSync, undefined, initialUpdates);
         return await CommandExecutor.execute(command);
     };
@@ -74,6 +93,7 @@ export const useTreeActions = () => {
         targetPersonId?: string,
         initialUpdates?: Partial<Person>
     ): Promise<MutationActionResult> => {
+        if (!checkPeopleLimit()) return { success: false, error: 'Free tier limit reached.' };
         const command = new AddRelativeCommand('child', gender, relatedPersonId, bypassSync, targetPersonId, initialUpdates);
         return await CommandExecutor.execute(command);
     };

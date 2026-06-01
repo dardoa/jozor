@@ -4,12 +4,17 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const {
   getSupabaseWithAuthMock,
   getSupabaseFullMock,
+  getAppStateMock,
   logErrorMock,
   logInfoMock,
   logWarnMock,
 } = vi.hoisted(() => ({
   getSupabaseWithAuthMock: vi.fn(),
   getSupabaseFullMock: vi.fn(),
+  getAppStateMock: vi.fn(() => ({
+    subscriptionTier: 'family',
+    language: 'en',
+  })),
   logErrorMock: vi.fn(),
   logInfoMock: vi.fn(),
   logWarnMock: vi.fn(),
@@ -24,6 +29,12 @@ vi.mock('../../../../utils/errorLogger', () => ({
   logError: logErrorMock,
   logInfo: logInfoMock,
   logWarn: logWarnMock,
+}));
+
+vi.mock('../../../../store/useAppStore', () => ({
+  useAppStore: {
+    getState: getAppStateMock,
+  },
 }));
 
 import {
@@ -56,6 +67,10 @@ const createQueryBuilder = <T>(result: QueryResult<T>) => {
 describe('treeInvitationService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    getAppStateMock.mockReturnValue({
+      subscriptionTier: 'family',
+      language: 'en',
+    });
   });
 
   it('creates invitations through create_tree_invitation rpc', async () => {

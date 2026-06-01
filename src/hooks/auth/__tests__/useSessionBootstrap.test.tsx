@@ -13,6 +13,7 @@ const {
   clearSupabaseInstancesMock,
   mapSupabaseUserToUserProfileMock,
   fetchUserProfileMock,
+  fetchAiMonthlyUsageMock,
   claimCollaboratorMembershipsMock,
 } = vi.hoisted(() => ({
   getSessionMock: vi.fn(),
@@ -22,6 +23,7 @@ const {
   clearSupabaseInstancesMock: vi.fn(),
   mapSupabaseUserToUserProfileMock: vi.fn(),
   fetchUserProfileMock: vi.fn(),
+  fetchAiMonthlyUsageMock: vi.fn(),
   claimCollaboratorMembershipsMock: vi.fn(),
 }));
 
@@ -45,6 +47,7 @@ vi.mock('../../../services/supabaseClient', () => ({
 
 vi.mock('../../../services/supabaseProfileService', () => ({
   fetchUserProfile: fetchUserProfileMock,
+  fetchAiMonthlyUsage: fetchAiMonthlyUsageMock,
 }));
 
 vi.mock('../../../services/supabaseTreeAccessService', () => ({
@@ -75,6 +78,10 @@ describe('useSessionBootstrap', () => {
           unsubscribe: unsubscribeMock,
         },
       },
+    });
+    fetchAiMonthlyUsageMock.mockResolvedValue({
+      cloud_requests_limit: 0,
+      cloud_requests_used: 0,
     });
   });
 

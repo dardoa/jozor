@@ -16,8 +16,6 @@ export {
 // Person mutations are handled via DeltaSyncService and Commands.
 
 export {
-  bulkInsertRelationships,
-  bulkUpsertPeople,
   createTree,
   createTreeWithRootAtomic,
   deleteWholeTree,

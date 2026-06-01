@@ -1,5 +1,6 @@
 import { getSupabaseFull, getSupabaseWithAuth } from '../../../services/supabaseClient';
 import { logError, logInfo, logWarn } from '../../../utils/errorLogger';
+import { useAppStore } from '../../../store/useAppStore';
 
 export interface TreeInvitation {
   id: string;
@@ -64,6 +65,34 @@ export const createTreeInvitation = async (
 
   try {
     const client = getClient(ownerUid, ownerEmail, token);
+    
+    // Check subscription collaborator limits before proceeding
+    const tier = useAppStore.getState().subscriptionTier;
+    if (tier === 'free') {
+      window.dispatchEvent(new CustomEvent('open-paywall'));
+      throw new Error(
+        useAppStore.getState().language === 'ar'
+          ? 'الباقة المجانية لا تتيح لك إضافة متعاونين. يرجى الترقية للمشاركة.'
+          : 'Free tier trees cannot have collaborators. Please upgrade to Pro or Family.'
+      );
+    } else if (tier === 'pro') {
+      const [collabsRes, invitesRes] = await Promise.all([
+        client.from('tree_collaborators').select('id').eq('tree_id', treeId),
+        client.from('tree_invitations').select('id').eq('tree_id', treeId).eq('status', 'pending').gt('expires_at', new Date().toISOString())
+      ]);
+      const activeCount = collabsRes.data?.length || 0;
+      const pendingCount = invitesRes.data?.length || 0;
+      
+      if ((activeCount + pendingCount) >= 1) {
+        window.dispatchEvent(new CustomEvent('open-paywall'));
+        throw new Error(
+          useAppStore.getState().language === 'ar'
+            ? 'باقة المحترفين (Pro) تتيح لك متعاوناً واحداً فقط. يرجى الترقية إلى باقة العائلة لإضافة المزيد.'
+            : 'Pro tier trees are limited to exactly 1 Co-Editor. Please upgrade to Family for unlimited collaborators.'
+        );
+      }
+    }
+
     const { data, error } = await client.rpc('create_tree_invitation', {
       p_tree_id: treeId,
       p_invited_email: normalizedEmail,

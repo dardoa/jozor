@@ -1,7 +1,16 @@
-
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SyncQueue } from '../SyncQueue';
 import type { DeltaOperation, PendingDeltaOp, SyncFlushResult } from '../SyncTypes';
+
+const storeState = {
+    syncStatus: { syncBlockedByPlan: false }
+};
+
+vi.mock('../../../store/useAppStore', () => ({
+    useAppStore: {
+        getState: () => storeState
+    }
+}));
 
 const op: PendingDeltaOp = {
     tree_id: 'tree-1',
@@ -23,11 +32,19 @@ const createQueue = (onFlushOutgoing: (batch: PendingDeltaOp[]) => Promise<SyncF
 describe('SyncQueue', () => {
     beforeEach(() => {
         vi.useFakeTimers();
+        storeState.syncStatus.syncBlockedByPlan = false;
     });
 
     afterEach(() => {
         vi.useRealTimers();
     });
+
+    async function runTimersAndMicrotasks() {
+        await vi.runOnlyPendingTimersAsync();
+        for (let i = 0; i < 10; i++) {
+            await Promise.resolve();
+        }
+    }
 
     it('requeues retryable failed batches', async () => {
         const flushMock = vi
@@ -37,11 +54,11 @@ describe('SyncQueue', () => {
         const queue = createQueue(flushMock);
 
         queue.enqueueOutgoing(op);
-        await vi.runOnlyPendingTimersAsync();
+        await runTimersAndMicrotasks();
 
         expect(queue.getPendingOutgoingCount()).toBe(1);
 
-        await vi.runOnlyPendingTimersAsync();
+        await runTimersAndMicrotasks();
 
         expect(flushMock).toHaveBeenCalledTimes(2);
         expect(queue.getPendingOutgoingCount()).toBe(0);
@@ -54,10 +71,37 @@ describe('SyncQueue', () => {
         const queue = createQueue(flushMock);
 
         queue.enqueueOutgoing(op);
-        await vi.runOnlyPendingTimersAsync();
+        await runTimersAndMicrotasks();
 
         expect(flushMock).toHaveBeenCalledTimes(1);
         expect(queue.getPendingOutgoingCount()).toBe(0);
+    });
+
+    it('does not flush outgoing queue and retains batch if syncBlockedByPlan is true', async () => {
+        storeState.syncStatus.syncBlockedByPlan = true;
+        const flushMock = vi.fn().mockResolvedValue({ success: true, shouldRetry: false });
+        const queue = createQueue(flushMock);
+
+        queue.enqueueOutgoing(op);
+        await runTimersAndMicrotasks();
+
+        expect(flushMock).not.toHaveBeenCalled();
+        expect(queue.getPendingOutgoingCount()).toBe(1);
+    });
+
+    it('prepends outgoing batch back onto queue if flush fails and syncBlockedByPlan becomes true during/after flush', async () => {
+        storeState.syncStatus.syncBlockedByPlan = false;
+        const flushMock = vi.fn().mockImplementation(async () => {
+            storeState.syncStatus.syncBlockedByPlan = true;
+            return { success: false, shouldRetry: false, error: 'LIMIT_EXCEEDED_FREE' };
+        });
+        const queue = createQueue(flushMock);
+
+        queue.enqueueOutgoing(op);
+        await runTimersAndMicrotasks();
+
+        expect(flushMock).toHaveBeenCalledTimes(1);
+        expect(queue.getPendingOutgoingCount()).toBe(1);
     });
 });
 

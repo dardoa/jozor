@@ -33,3 +33,6 @@ export const UnifiedLoginModal = lazy(() =>
 export const GlobalSettingsModal = lazy(() =>
   import('../modals/GlobalSettingsModal').then((module) => ({ default: module.GlobalSettingsModal }))
 );
+export const PaywallModal = lazy(() =>
+  import('./PaywallModal').then((module) => ({ default: module.PaywallModal }))
+);

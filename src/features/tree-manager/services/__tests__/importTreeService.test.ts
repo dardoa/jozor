@@ -2,8 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mockUuid = vi.hoisted(() => vi.fn());
 const mockCreateTree = vi.hoisted(() => vi.fn());
-const mockBulkUpsertPeople = vi.hoisted(() => vi.fn());
-const mockBulkInsertRelationships = vi.hoisted(() => vi.fn());
+const mockImportTreeContent = vi.hoisted(() => vi.fn());
 const mockImportFromGEDCOM = vi.hoisted(() => vi.fn());
 const mockImportJozorArchiveData = vi.hoisted(() => vi.fn());
 
@@ -13,8 +12,7 @@ vi.mock('uuid', () => ({
 
 vi.mock('../../../../services/supabaseTreeMutationService', () => ({
   createTree: (...args: unknown[]) => mockCreateTree(...args),
-  bulkUpsertPeople: (...args: unknown[]) => mockBulkUpsertPeople(...args),
-  bulkInsertRelationships: (...args: unknown[]) => mockBulkInsertRelationships(...args),
+  importTreeContent: (...args: unknown[]) => mockImportTreeContent(...args),
 }));
 
 vi.mock('../../../../utils/archiveLogic', () => ({
@@ -59,8 +57,7 @@ describe('importTreeService', () => {
     mockUuid.mockReset();
     mockUuid.mockReturnValueOnce('new_parent').mockReturnValueOnce('new_child');
     mockCreateTree.mockResolvedValue('tree_new');
-    mockBulkUpsertPeople.mockResolvedValue(undefined);
-    mockBulkInsertRelationships.mockResolvedValue(undefined);
+    mockImportTreeContent.mockResolvedValue(undefined);
   });
 
   it('imports GEDCOM files as a new cloud tree with remapped people', async () => {
@@ -81,12 +78,15 @@ describe('importTreeService', () => {
       'token_1',
       undefined
     );
-    expect(mockBulkUpsertPeople).toHaveBeenCalledWith(
+    expect(mockImportTreeContent).toHaveBeenCalledWith(
       'tree_new',
       'owner_1',
       expect.arrayContaining([
         expect.objectContaining({ id: 'new_parent', children: ['new_child'] }),
         expect.objectContaining({ id: 'new_child', parents: ['new_parent'] }),
+      ]),
+      expect.arrayContaining([
+        expect.objectContaining({ person_id: 'new_parent', relative_id: 'new_child', type: 'child' }),
       ]),
       'owner@example.com',
       'token_1'
@@ -111,12 +111,15 @@ describe('importTreeService', () => {
       'token_1',
       { treeSettings: { chartType: 'radial' } }
     );
-    expect(mockBulkUpsertPeople).toHaveBeenCalledWith(
+    expect(mockImportTreeContent).toHaveBeenCalledWith(
       'tree_new',
       'owner_1',
       expect.arrayContaining([
         expect.objectContaining({ id: 'new_parent' }),
         expect.objectContaining({ id: 'new_child' }),
+      ]),
+      expect.arrayContaining([
+        expect.objectContaining({ person_id: 'new_parent', relative_id: 'new_child', type: 'child' }),
       ]),
       'owner@example.com',
       'token_1'

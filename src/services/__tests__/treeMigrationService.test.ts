@@ -3,17 +3,15 @@ import { treeMigrationService } from '../treeMigrationService';
 import type { Person } from '../../types';
 import { DEFAULT_PERSON_TEMPLATE } from '../../constants';
 
-const { createTreeMock, bulkUpsertPeopleMock, bulkInsertRelationshipsMock, showSuccessMock } = vi.hoisted(() => ({
+const { createTreeMock, importTreeContentMock, showSuccessMock } = vi.hoisted(() => ({
   createTreeMock: vi.fn().mockResolvedValue('cloud-tree-1'),
-  bulkUpsertPeopleMock: vi.fn().mockResolvedValue(undefined),
-  bulkInsertRelationshipsMock: vi.fn().mockResolvedValue(undefined),
+  importTreeContentMock: vi.fn().mockResolvedValue(undefined),
   showSuccessMock: vi.fn(),
 }));
 
 vi.mock('../supabaseTreeMutationService', () => ({
   createTree: createTreeMock,
-  bulkUpsertPeople: bulkUpsertPeopleMock,
-  bulkInsertRelationships: bulkInsertRelationshipsMock,
+  importTreeContent: importTreeContentMock,
 }));
 
 vi.mock('../../utils/showToast', () => ({
@@ -41,8 +39,7 @@ describe('treeMigrationService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     createTreeMock.mockResolvedValue('cloud-tree-1');
-    bulkUpsertPeopleMock.mockResolvedValue(undefined);
-    bulkInsertRelationshipsMock.mockResolvedValue(undefined);
+    importTreeContentMock.mockResolvedValue(undefined);
   });
 
   it('preserves guest tree name and settings when migrating to cloud', async () => {
@@ -78,17 +75,17 @@ describe('treeMigrationService', () => {
       'token-1',
       { layoutMode: 'horizontal' }
     );
-    expect(bulkUpsertPeopleMock).toHaveBeenCalledWith('cloud-tree-1', 'user-1', Object.values(people), 'user@example.com', 'token-1');
-    expect(bulkInsertRelationshipsMock).toHaveBeenCalledWith(
+    expect(importTreeContentMock).toHaveBeenCalledWith(
+      'cloud-tree-1',
+      'user-1',
+      Object.values(people),
       [
         {
-          tree_id: 'cloud-tree-1',
           person_id: 'person-1',
           relative_id: 'person-2',
           type: 'child',
         },
       ],
-      'user-1',
       'user@example.com',
       'token-1'
     );

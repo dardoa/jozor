@@ -35,6 +35,7 @@ function isInvalidProviderKeyError(error: unknown): boolean {
     || message.toLowerCase().includes('api key not valid');
 }
 
+/*
 type AIUsagePeriod = 'daily' | 'monthly';
 
 interface AIUsageReservation {
@@ -45,6 +46,7 @@ interface AIUsageReservation {
   period: AIUsagePeriod;
   next_reset: string;
 }
+*/
 
 type HeaderRecord = Record<string, string | string[] | undefined>;
 
@@ -81,6 +83,29 @@ function getSupabaseAdminClient(): SupabaseClient {
   return supabaseAdminClient;
 }
 
+async function completeUsageReservation(
+  supabaseAdmin: SupabaseClient,
+  reservationId: string
+): Promise<void> {
+  let lastError: unknown;
+
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    const { error } = await supabaseAdmin.rpc('complete_ai_usage_reservation', {
+      p_reservation_id: reservationId,
+    });
+
+    if (!error) return;
+    lastError = error;
+
+    if (attempt < 3) {
+      await new Promise(resolve => setTimeout(resolve, attempt * 100));
+    }
+  }
+
+  logServerError('API_AI_PROXY_RESERVATION_COMPLETION', lastError);
+}
+
+/*
 async function reserveAIUsage(userId: string): Promise<AIUsageReservation> {
   const supabaseAdmin = getSupabaseAdminClient();
   const { data, error } = await supabaseAdmin.rpc('reserve_ai_usage', {
@@ -102,6 +127,7 @@ async function reserveAIUsage(userId: string): Promise<AIUsageReservation> {
 function buildUsageLimitMessage(usage: AIUsageReservation): string {
   return `AI usage limit exceeded for this ${usage.period} period. Try again after ${usage.next_reset}.`;
 }
+*/
 
 function getBiographyPrompt(data: BiographyAIRequestData): string {
   const {
@@ -361,50 +387,128 @@ export default async function handler(req: Request) {
   if (!user) {
     return Response.json({
       error: {
-        message: 'Invalid or expired authentication token',
+        message: 'Unauthorized: Invalid session.',
         code: 'UNAUTHORIZED',
       },
     }, { status: 401, headers: corsHeaders });
   }
 
+  let reservationId: string | null = null;
+  let supabaseAdmin: any = null;
+
   try {
     const body = (await req.json()) as AIProxyRequest;
     const { prompt, image, preferredModels } = getOperationPrompt(body);
-    const usage = await reserveAIUsage(user.uid);
+    supabaseAdmin = getSupabaseAdminClient();
+    
+    // 1. Fetch user's subscription tier
+    const { data: profile, error: profileError } = await supabaseAdmin
+      .from('user_profiles')
+      .select('tier')
+      .eq('id', user.uid)
+      .single();
 
-    if (!usage.allowed) {
+    if (profileError || !profile) {
       return Response.json({
         error: {
-          message: buildUsageLimitMessage(usage),
-          code: 'AI_USAGE_LIMIT_EXCEEDED',
-          details: {
-            usageCount: usage.usage_count,
-            limit: usage.limit,
-            lastReset: usage.last_reset,
-            nextReset: usage.next_reset,
-            period: usage.period,
-          },
+          message: 'Failed to retrieve user profile tier.',
+          code: 'PROFILE_RETRIEVAL_ERROR',
         },
-      }, { status: 429, headers: corsHeaders });
+      }, { status: 500, headers: corsHeaders });
     }
 
+    const tier = profile.tier || 'free';
+
+    // 2. Reject Free tier users
+    if (tier === 'free') {
+      return Response.json({
+        error: {
+          message: 'AI Cloud features are only available on Pro and Family plans.',
+          code: 'TIER_LIMIT_EXCEEDED',
+        },
+      }, { status: 403, headers: corsHeaders });
+    }
+
+    let cloudRequestsUsed = 0;
+    let cloudRequestsLimit = 30;
+    let resetAtStr = '';
+
+    // 3. Atomically check and reserve quota for Pro tier users
+    if (tier === 'pro') {
+      const { data: resId, error: reserveError } = await supabaseAdmin.rpc(
+        'reserve_ai_usage_atomic',
+        { p_user_id: user.uid }
+      );
+
+      if (reserveError) {
+        if (
+          reserveError.message.includes('quota exceeded') ||
+          reserveError.message.includes('Limit Exceeded') ||
+          reserveError.message.includes('limit exceeded')
+        ) {
+          return Response.json({
+            error: {
+              message: 'Monthly Pro AI cloud request limit exceeded. Upgrade to Family for unlimited cloud access.',
+              code: 'AI_USAGE_LIMIT_EXCEEDED',
+            },
+          }, { status: 429, headers: corsHeaders });
+        }
+
+        return Response.json({
+          error: {
+            message: `Failed to reserve AI quota: ${reserveError.message}`,
+            code: 'USAGE_RESERVATION_ERROR',
+          },
+        }, { status: 500, headers: corsHeaders });
+      }
+
+      reservationId = resId as string;
+    }
+
+    // 4. Generate AI response via Gemini provider
     const response = await generateViaProvider(prompt, image, preferredModels);
+
+    // 5. Complete reservation on success and fetch latest quota stats
+    if (reservationId) {
+      await completeUsageReservation(supabaseAdmin, reservationId);
+
+      const { data: usage } = await supabaseAdmin
+        .from('ai_monthly_usage')
+        .select('cloud_requests_used, cloud_requests_limit, reset_at')
+        .eq('user_id', user.uid)
+        .single();
+
+      if (usage) {
+        cloudRequestsUsed = usage.cloud_requests_used;
+        cloudRequestsLimit = usage.cloud_requests_limit;
+        resetAtStr = usage.reset_at;
+      }
+    }
+
     return Response.json({
-      ...response,
-      usage: {
-        usageCount: usage.usage_count,
-        limit: usage.limit,
-        lastReset: usage.last_reset,
-        nextReset: usage.next_reset,
-        period: usage.period,
-      },
+      result: response.result,
+      model: response.model,
+      ...(tier === 'pro' ? {
+        usage: {
+          used: cloudRequestsUsed,
+          limit: cloudRequestsLimit,
+          resetAt: resetAtStr,
+        }
+      } : {}),
     }, { status: 200, headers: corsHeaders });
-  } catch (error: unknown) {
+  } catch (error) {
+    if (reservationId && supabaseAdmin) {
+      // Refund reservation on failure/timeout
+      await supabaseAdmin.rpc('refund_ai_usage_reservation', { p_reservation_id: reservationId }).catch((e: any) => {
+        console.error('[AI_PROXY] Failed to refund reservation:', e);
+      });
+    }
+
     logServerError('API_AI_PROXY', error);
     return Response.json({
       error: {
-        message: error instanceof Error ? error.message : 'AI proxy request failed',
-        code: 'AI_PROXY_ERROR',
+        message: error instanceof Error ? error.message : 'Internal Server Error',
+        code: 'INTERNAL_SERVER_ERROR',
       },
     }, { status: 500, headers: corsHeaders });
   }

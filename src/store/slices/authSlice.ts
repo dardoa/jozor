@@ -23,6 +23,8 @@ export interface AuthSlice {
     driveSyncUiStatus: 'idle' | 'syncing' | 'success' | 'error';
     driveSyncUiMessage?: string;
     driveSyncUiError?: { code?: string; message: string };
+    subscriptionTier: 'free' | 'pro' | 'family';
+    aiCloudQuotaRemaining: number;
 
     // Actions
     setDriveSyncUiStatus: (status: 'idle' | 'syncing' | 'success' | 'error', message?: string, error?: { code?: string; message: string }) => void;
@@ -37,6 +39,8 @@ export interface AuthSlice {
     setCurrentActiveDriveFileId: (fileId: string | null) => void;
     setCurrentTreeId: (treeId: string | null) => void;
     setCurrentUserRole: (role: 'owner' | 'editor' | 'viewer' | null) => void;
+    setSubscriptionTier: (tier: 'free' | 'pro' | 'family') => void;
+    setAiCloudQuotaRemaining: (quota: number) => void;
     login: (returnTo?: string) => Promise<void>;
     logout: () => Promise<void>;
     updateTourStatus: (hasCompleted: boolean) => Promise<void>;
@@ -96,6 +100,8 @@ export const createAuthSlice: StateCreator<AppStore, [["zustand/devtools", never
     currentUserRole: null,
     isE2E: false,
     driveSyncUiStatus: 'idle',
+    subscriptionTier: 'free',
+    aiCloudQuotaRemaining: 0,
 
     // Actions
     setDriveSyncUiStatus: (status, message, error) => set({
@@ -132,6 +138,8 @@ export const createAuthSlice: StateCreator<AppStore, [["zustand/devtools", never
         })),
     setSupabaseAccessToken: (token) => set({ supabaseAccessToken: token }),
     setCurrentUserRole: (role) => set({ currentUserRole: role }),
+    setSubscriptionTier: (tier) => set({ subscriptionTier: tier }),
+    setAiCloudQuotaRemaining: (quota) => set({ aiCloudQuotaRemaining: quota }),
     updateTourStatus: async (hasCompleted: boolean) => {
         const { user } = get();
         if (!user) return;

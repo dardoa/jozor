@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { Activity, BrainCircuit, FolderArchive, Languages, LogIn, LogOut, Moon, Settings, SlidersHorizontal, Sun } from 'lucide-react';
+import { Activity, BrainCircuit, FolderArchive, Languages, LogIn, LogOut, Moon, Settings, SlidersHorizontal, Sun, Sparkles } from 'lucide-react';
 import { DropdownContent, DropdownMenuDivider, DropdownMenuHeader, DropdownMenuItem } from '../ui/DropdownMenu';
 import { useTranslation } from '../../context/TranslationContext';
 import type { ThemeLanguageProps, UserProfile } from '../../types';
@@ -23,6 +23,7 @@ export const AccountMenu = memo<AccountMenuProps>(
     const setVaultOpen = useAppStore((state) => state.setVaultOpen);
     const setVaultTab = useAppStore((state) => state.setVaultTab);
     const canOpenKindiReports = useKindiReportsAdminAccess(user);
+    const subscriptionTier = useAppStore((state) => state.subscriptionTier);
 
     const handleOpenVault = () => {
       // Guest → stats tab; Logged in → trees tab
@@ -41,7 +42,40 @@ export const AccountMenu = memo<AccountMenuProps>(
                 {t.userMenu.welcome} {user.displayName.split(' ')[0]}
               </p>
               <p className="text-[10px] text-[var(--text-muted)] truncate">{user.email}</p>
+              <div className="flex items-center gap-1.5 mt-1.5">
+                <span className={`text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded tracking-wider border ${
+                  subscriptionTier === 'family'
+                    ? 'bg-amber-500/10 text-amber-500 border-amber-500/20'
+                    : subscriptionTier === 'pro'
+                      ? 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20'
+                      : 'bg-zinc-500/10 text-zinc-500 border-zinc-500/20'
+                }`}>
+                  {subscriptionTier === 'family' ? (themeLanguage.language === 'ar' ? 'باقة العائلة' : 'Family Plan') :
+                   subscriptionTier === 'pro' ? (themeLanguage.language === 'ar' ? 'باقة المحترفين' : 'Pro Plan') :
+                   (themeLanguage.language === 'ar' ? 'الباقة المجانية' : 'Free Plan')}
+                </span>
+                {subscriptionTier !== 'family' && (
+                  <button
+                    onClick={() => window.dispatchEvent(new CustomEvent('open-paywall'))}
+                    className="text-[9px] font-extrabold text-[var(--primary-600)] hover:text-[var(--primary-700)] underline bg-transparent border-0 cursor-pointer p-0"
+                  >
+                    {themeLanguage.language === 'ar' ? 'ترقية' : 'Upgrade'}
+                  </button>
+                )}
+              </div>
             </div>
+            <DropdownMenuDivider />
+            <DropdownMenuHeader icon={<Sparkles className="w-3 h-3" />} label={themeLanguage.language === 'ar' ? 'الاشتراك والباقات' : 'Subscription'} />
+            <DropdownMenuItem
+              onClick={() => window.dispatchEvent(new CustomEvent('open-paywall'))}
+              icon={<Sparkles className="w-4 h-4 text-indigo-400" />}
+              label={themeLanguage.language === 'ar' ? 'إدارة الاشتراك والترقية' : 'Manage Subscription'}
+              subLabel={
+                subscriptionTier === 'family' ? (themeLanguage.language === 'ar' ? 'أنت على باقة العائلة المميزة' : 'You are on the Family plan') :
+                subscriptionTier === 'pro' ? (themeLanguage.language === 'ar' ? 'ترقية لباقة العائلة للحصول على ميزات أكثر' : 'Upgrade to Family for more features') :
+                (themeLanguage.language === 'ar' ? 'ترقية للحصول على ميزات الذكاء الاصطناعي والمشاركة' : 'Upgrade to unlock cloud AI and sharing')
+              }
+            />
             <DropdownMenuDivider />
           </>
         )}

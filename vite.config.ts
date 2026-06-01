@@ -139,6 +139,9 @@ export default defineConfig(({ mode }) => {
     test: {
       globals: true,
       environment: 'jsdom',
+      env: {
+        VITE_KINDI_AI_ENABLED: 'true',
+      },
       environmentMatchGlobs: [
         ['**/*.unit.test.ts', 'node']
       ],
@@ -152,6 +155,7 @@ export default defineConfig(({ mode }) => {
         '**/.git/**',
         'domain/legacy/visibleTree/__tests__/**',
         'tests/e2e/**',
+        'tests/integration/**',
         'legacy_archive/**',
       ],
     },

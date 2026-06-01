@@ -103,6 +103,7 @@ describe('useAuthInit', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
+    sessionStorage.clear();
 
     useAppStore.setState((state) => ({
       ...state,

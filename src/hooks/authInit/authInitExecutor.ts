@@ -16,6 +16,11 @@ interface RoutePersonBranchRefs {
   completedRef: MutableRefObject<string | null>;
 }
 
+interface TreeLoadBranchRefs {
+  inFlightRef: MutableRefObject<string | null>;
+  completedRef: MutableRefObject<string | null>;
+}
+
 interface ExecuteAuthInitPlanParams {
   plan: AuthInitPlan;
   user: UserProfile | null;
@@ -29,6 +34,7 @@ interface ExecuteAuthInitPlanParams {
   setSharedTreePromptModal?: (value: { isOpen: boolean; sharedTrees: SharedTreeSummary[] }) => void;
   treeLoadHandlers: AuthInitTreeLoadHandlers;
   routePersonBranchRefs: RoutePersonBranchRefs;
+  treeLoadBranchRefs: TreeLoadBranchRefs;
 }
 
 // Utility: dismiss native splash + wait at least 1500ms before releasing authLoading.
@@ -63,6 +69,7 @@ export const executeAuthInitPlan = ({
   setSharedTreePromptModal,
   treeLoadHandlers,
   routePersonBranchRefs,
+  treeLoadBranchRefs,
 }: ExecuteAuthInitPlanParams): void => {
   switch (plan.type) {
     case 'WAIT':
@@ -95,6 +102,15 @@ export const executeAuthInitPlan = ({
 
     case 'BOOTSTRAP_ROUTE_TREE':
       if (user) {
+        const requestKey = `route:${user.uid}:${plan.treeId}`;
+        if (
+          treeLoadBranchRefs.inFlightRef.current === requestKey ||
+          treeLoadBranchRefs.completedRef.current === requestKey
+        ) {
+          return;
+        }
+        treeLoadBranchRefs.inFlightRef.current = requestKey;
+
         Promise.all([
           fetchTree(plan.treeId, user.uid, user.email || '', user.supabaseToken),
           fetchTreeAccessRole(plan.treeId, user.uid, user.email || '', user.supabaseToken),
@@ -104,7 +120,13 @@ export const executeAuthInitPlan = ({
             treeLoadHandlers.handleTreeLoadSuccess(full, role, plan.treeId);
           })
           .catch((err) => treeLoadHandlers.handleTreeLoadError(err, 'SUPABASE_FETCH_ROUTE_TREE_ERROR'))
-          .finally(() => dismissLoadingWithDelay(setAuthLoading));
+          .finally(() => {
+            treeLoadBranchRefs.completedRef.current = requestKey;
+            if (treeLoadBranchRefs.inFlightRef.current === requestKey) {
+              treeLoadBranchRefs.inFlightRef.current = null;
+            }
+            dismissLoadingWithDelay(setAuthLoading);
+          });
       }
       return;
 
@@ -147,6 +169,15 @@ export const executeAuthInitPlan = ({
 
     case 'RESTORE_LAST_ACTIVE':
       if (user) {
+        const requestKey = `restore:${user.uid}:${plan.treeId}`;
+        if (
+          treeLoadBranchRefs.inFlightRef.current === requestKey ||
+          treeLoadBranchRefs.completedRef.current === requestKey
+        ) {
+          return;
+        }
+        treeLoadBranchRefs.inFlightRef.current = requestKey;
+
         Promise.all([
           fetchTree(plan.treeId, user.uid, user.email || '', user.supabaseToken),
           fetchTreeAccessRole(plan.treeId, user.uid, user.email || '', user.supabaseToken),
@@ -156,7 +187,13 @@ export const executeAuthInitPlan = ({
             treeLoadHandlers.handleTreeLoadSuccess(full, role, plan.treeId);
           })
           .catch((err) => treeLoadHandlers.handleTreeLoadError(err, 'SUPABASE_FETCH_TREE_ERROR'))
-          .finally(() => dismissLoadingWithDelay(setAuthLoading));
+          .finally(() => {
+            treeLoadBranchRefs.completedRef.current = requestKey;
+            if (treeLoadBranchRefs.inFlightRef.current === requestKey) {
+              treeLoadBranchRefs.inFlightRef.current = null;
+            }
+            dismissLoadingWithDelay(setAuthLoading);
+          });
       }
       return;
 

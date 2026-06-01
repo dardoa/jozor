@@ -64,6 +64,7 @@ export interface SyncStatus {
     lastErrorCategory?: string;
     lastErrorAt?: Date | null;
     lastErrorRetryable?: boolean;
+    syncBlockedByPlan?: boolean;
 }
 
 export interface InvitationTelemetry {
@@ -109,7 +110,8 @@ export type ModalType =
     | 'share'
     | 'login'
     | 'globalSettings'
-    | 'migrationMap';
+    | 'migrationMap'
+    | 'paywall';
 
 export type ModalRouteType = ModalType | 'map';
 

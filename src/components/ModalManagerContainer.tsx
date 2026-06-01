@@ -22,6 +22,14 @@ interface ModalManagerContainerProps {
 
 export const ModalManagerContainer: React.FC<ModalManagerContainerProps> = memo(
   ({ appState, modals, googleSync, welcomeScreen, familyActions, themeLanguage, auth }) => {
+    React.useEffect(() => {
+      const handleOpenPaywall = () => {
+        modals.setActiveModal('paywall');
+      };
+      window.addEventListener('open-paywall', handleOpenPaywall);
+      return () => window.removeEventListener('open-paywall', handleOpenPaywall);
+    }, [modals]);
+
     return (
       <ModalManager
         activeModal={modals.activeModal}

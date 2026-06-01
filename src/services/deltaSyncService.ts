@@ -323,42 +323,7 @@ class DeltaSyncService {
         }
     }
 
-    private async checkAndSaveCheckpoint() {
-        const { currentTreeId, lastSyncedVersion, confirmedPeople, user } = useAppStore.getState();
-        if (!currentTreeId || !user) return;
 
-        this.checkActiveTree(currentTreeId);
-
-        if (lastSyncedVersion - this.lastCheckpointVersion >= 50) {
-            const versionToSave = lastSyncedVersion;
-            this.lastCheckpointVersion = versionToSave;
-
-            try {
-                const { saveTreeCheckpoint } = await import('./supabaseTreeMutationService');
-                await saveTreeCheckpoint(
-                    currentTreeId,
-                    user.uid,
-                    user.email || '',
-                    versionToSave,
-                    confirmedPeople,
-                    user.supabaseToken || undefined
-                );
-                logWarn('DeltaSyncService checkAndSaveCheckpoint', 'Saved remote checkpoint.', {
-                    category: 'SYNC',
-                    metadata: { treeId: currentTreeId, version: versionToSave }
-                });
-            } catch (error) {
-                if (this.lastCheckpointVersion === versionToSave) {
-                    this.lastCheckpointVersion = versionToSave - 50;
-                }
-                logError('DeltaSyncService checkAndSaveCheckpoint', error, {
-                    category: 'SYNC',
-                    severity: 'MEDIUM',
-                    metadata: { treeId: currentTreeId }
-                });
-            }
-        }
-    }
 
     private async reloadFullTreeFromServer(treeId: string): Promise<void> {
         try {
@@ -490,17 +455,11 @@ class DeltaSyncService {
     }
 
     private async flushOutgoingBatch(batch: PendingDeltaOp[]) {
-        const result = await this.remoteSyncClient.flushOutgoingBatch(batch, this.permissionPausedTreeId);
-        if (result.success) {
-            await this.checkAndSaveCheckpoint();
-        }
-        return result;
+        return this.remoteSyncClient.flushOutgoingBatch(batch, this.permissionPausedTreeId);
     }
 
     private async processIncomingBatch(batch: DeltaOperation[]) {
-        const result = await this.operationApplier.processIncomingBatch(batch);
-        await this.checkAndSaveCheckpoint();
-        return result;
+        return this.operationApplier.processIncomingBatch(batch);
     }
 
     private async fetchRemoteOperations(treeId: string, sinceVersion: number): Promise<DeltaOperation[]> {

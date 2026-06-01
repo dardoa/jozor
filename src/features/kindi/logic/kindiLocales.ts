@@ -160,4 +160,15 @@ export const KINDI_STRINGS = {
     if (plan.relation === 'spouse') return plan.gender === 'female' ? 'زوجة' : 'زوج';
     return plan.gender === 'female' ? 'بنت' : 'ابن';
   },
+
+  billing: {
+    freePaywall: {
+      ar: 'يفهم مساعد كيندي المحلي الأوامر باللغة العربية الفصحى الصريحة. لمعالجة الأوامر بالعامية المعقدة، يرجى إعادة صياغة الطلب بالفصحى، أو الاشتراك في الباقة المدفوعة لتفعيل الفهم الذكي للعامية.',
+      en: 'Local Kindi AI only understands standard Arabic commands. To process complex dialect queries, please rephrase in standard Arabic, or subscribe to Pro/Family plan to unlock full dialect understanding.',
+    },
+    quotaExhausted: {
+      ar: 'لقد استهلكت جميع الـ 30 استعلاماً سحابياً المخصصة لباقة المحترفين (Pro) لهذا الشهر. يمكنك الاستمرار في استخدام الأوامر المحلية بالفصحى مجاناً، أو ترقية اشتراكك لباقة العائلة للحصول على استعلامات غير محدودة.',
+      en: 'You have used all 30 cloud queries for this month. You can still use standard Arabic local commands, rephrase your request, or upgrade to the Family plan for unlimited cloud queries.',
+    },
+  },
 } as const;

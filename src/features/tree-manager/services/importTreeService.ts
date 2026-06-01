@@ -3,7 +3,7 @@ import type { Person } from '../../../types';
 import { logError, logInfo } from '../../../utils/errorLogger';
 import { importJozorArchiveData } from '../../../utils/archiveLogic';
 import { importFromGEDCOM } from '../../../utils/gedcomLogic';
-import { bulkInsertRelationships, bulkUpsertPeople, createTree } from '../../../services/supabaseTreeMutationService';
+import { importTreeContent, createTree } from '../../../services/supabaseTreeMutationService';
 
 /**
  * Validates the imported JSON structure.
@@ -120,12 +120,8 @@ export const importTreeFromJSONItem = async (
         spouses: (p.spouses || []).map(id => idMap[id]).filter(Boolean),
     }));
 
-    // 3. Bulk Insert People
-    await bulkUpsertPeople(treeId, ownerId, finalPeople, userEmail, token);
-
-    // 4. Extract and Deduplicate Relationships
+    // 3. Extract and Deduplicate Relationships
     const relationships: {
-        tree_id: string;
         person_id: string;
         relative_id: string;
         type: 'parent' | 'child' | 'spouse';
@@ -146,7 +142,6 @@ export const importTreeFromJSONItem = async (
         if (processedPairs.has(key)) return;
 
         relationships.push({
-            tree_id: treeId,
             person_id: id1,
             relative_id: id2,
             type: originalType
@@ -170,12 +165,13 @@ export const importTreeFromJSONItem = async (
         });
     });
 
-    // 5. Bulk Insert Relationships
-    logInfo('importTreeFromJSONItem relationships', 'Inserting imported relationships.', {
-        operationType: 'import_tree_relationships',
-        metadata: { relationshipCount: relationships.length }
+    // 4. Import Tree Content in a single transaction
+    logInfo('importTreeFromJSONItem importContent', 'Inserting imported people and relationships.', {
+        operationType: 'import_tree_content',
+        metadata: { peopleCount: finalPeople.length, relationshipCount: relationships.length }
     });
-    await bulkInsertRelationships(relationships, ownerId, userEmail, token);
+
+    await importTreeContent(treeId, ownerId, finalPeople, relationships, userEmail, token);
 
     logInfo('importTreeFromJSONItem success', 'Import successful.', {
         treeId,
