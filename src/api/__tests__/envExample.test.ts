@@ -20,6 +20,14 @@ describe('environment example', () => {
       'VAPID_PUBLIC_KEY=',
       'VAPID_PRIVATE_KEY=',
       'CRON_SECRET=',
+      'APP_ORIGIN=',
+      'PADDLE_API_KEY=',
+      'PADDLE_WEBHOOK_SECRET=',
+      'PADDLE_PRO_PRICE_ID=',
+      'PADDLE_FAMILY_PRICE_ID=',
+      'PADDLE_ENVIRONMENT=',
+      'VITE_PADDLE_CLIENT_TOKEN=',
+      'VITE_PADDLE_ENVIRONMENT=',
     ].forEach(variable => {
       expect(envExample).toContain(variable);
     });

@@ -4,14 +4,9 @@ import path from 'node:path';
 
 const apiRoot = path.resolve(process.cwd(), 'api');
 const srcRoot = path.resolve(process.cwd(), 'src');
-const forbiddenSrcSegments = [
-  `${path.sep}store${path.sep}`,
-  `${path.sep}hooks${path.sep}`,
-  `${path.sep}components${path.sep}`,
-  `${path.sep}features${path.sep}`,
-  `${path.sep}context${path.sep}`,
-];
-
+const allowedSrcImports = new Set([
+  'api/ai-proxy.ts -> ../src/api/ai-proxy',
+]);
 async function listApiFiles(dir: string): Promise<string[]> {
   const entries = await readdir(dir, { withFileTypes: true });
   const files = await Promise.all(entries.map((entry) => {
@@ -46,7 +41,7 @@ function resolveLocalImport(filePath: string, importSource: string): string | nu
 }
 
 describe('Vercel server API boundaries', () => {
-  it('does not import browser-facing app layers from root API functions', async () => {
+  it('keeps root API functions server-only and self-contained', async () => {
     const violations: string[] = [];
     const apiFiles = await listApiFiles(apiRoot);
 
@@ -58,8 +53,10 @@ describe('Vercel server API boundaries', () => {
         const resolved = resolveLocalImport(filePath, importSource);
         if (!resolved || !resolved.startsWith(srcRoot)) continue;
 
-        if (forbiddenSrcSegments.some((segment) => resolved.includes(segment))) {
-          violations.push(`${path.relative(process.cwd(), filePath)} -> ${importSource}`);
+        const relativeFilePath = path.relative(process.cwd(), filePath).split(path.sep).join('/');
+        const violation = `${relativeFilePath} -> ${importSource}`;
+        if (!allowedSrcImports.has(violation)) {
+          violations.push(violation);
         }
       }
     }

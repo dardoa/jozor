@@ -54,15 +54,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   // 2. Verify paddle signature using Paddle Node SDK
-  let isSignatureValid = false;
   try {
     const paddle = new Paddle(process.env.PADDLE_API_KEY || 'dummy_key');
-    isSignatureValid = paddle.webhooks.signature.verify(rawBody, webhookSecret, signatureHeader);
+    await paddle.webhooks.unmarshal(rawBody, webhookSecret, signatureHeader);
   } catch (err) {
     console.error('[PADDLE_WEBHOOK] SDK verification error:', err);
-  }
-
-  if (!isSignatureValid) {
     console.warn('[PADDLE_WEBHOOK] Signature verification failed');
     return res.status(401).json({ error: 'Invalid signature' });
   }
@@ -70,7 +66,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   let event;
   try {
     event = JSON.parse(rawBody);
-  } catch (err) {
+  } catch {
     return res.status(400).json({ error: 'Invalid JSON body' });
   }
 

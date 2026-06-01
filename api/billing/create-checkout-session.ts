@@ -1,6 +1,80 @@
 ﻿import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
-import { authenticateUser } from '../../src/utils/authUtils';
+import crypto from 'node:crypto';
+
+type AuthenticatedUser = {
+  uid: string;
+  email: string;
+};
+
+function getEnv(name: string): string | undefined {
+  const value = process.env[name];
+  return typeof value === 'string' && value.trim() ? value : undefined;
+}
+
+function base64UrlDecode(value: string): Buffer {
+  const normalized = value.replace(/-/g, '+').replace(/_/g, '/');
+  return Buffer.from(normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '='), 'base64');
+}
+
+function verifyInternalToken(token: string): AuthenticatedUser | null {
+  const jwtSecret = getEnv('SUPABASE_JWT_SECRET');
+  if (!jwtSecret) return null;
+
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+
+    const [header, payload, signature] = parts;
+    const expectedSignature = crypto
+      .createHmac('sha256', jwtSecret)
+      .update(`${header}.${payload}`)
+      .digest('base64url');
+
+    const actualBuffer = Buffer.from(signature);
+    const expectedBuffer = Buffer.from(expectedSignature);
+    if (actualBuffer.length !== expectedBuffer.length || !crypto.timingSafeEqual(actualBuffer, expectedBuffer)) {
+      return null;
+    }
+
+    const parsed = JSON.parse(base64UrlDecode(payload).toString('utf8')) as {
+      sub?: string;
+      email?: string;
+      exp?: number;
+    };
+
+    if (!parsed.sub || !parsed.email) return null;
+    if (parsed.exp && parsed.exp < Math.floor(Date.now() / 1000)) return null;
+
+    return { uid: parsed.sub, email: parsed.email };
+  } catch {
+    return null;
+  }
+}
+
+async function authenticateUser(authHeader?: string): Promise<AuthenticatedUser | null> {
+  if (!authHeader?.startsWith('Bearer ')) return null;
+
+  const token = authHeader.slice('Bearer '.length);
+  const internalUser = verifyInternalToken(token);
+  if (internalUser) return internalUser;
+
+  const supabaseUrl = getEnv('SUPABASE_URL') || getEnv('VITE_SUPABASE_URL');
+  const supabaseAnonKey = getEnv('SUPABASE_ANON_KEY') || getEnv('VITE_SUPABASE_ANON_KEY');
+  if (!supabaseUrl || !supabaseAnonKey) return null;
+
+  const authClient = createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+    },
+  });
+  const { data, error } = await authClient.auth.getUser(token);
+  if (error || !data.user) return null;
+
+  return { uid: data.user.id, email: data.user.email ?? '' };
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS Headers
@@ -46,7 +120,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
       const raw = Buffer.concat(chunks).toString('utf8');
       body = JSON.parse(raw);
-    } catch (e) {
+    } catch {
       res.writeHead(400, { ...headers, 'Content-Type': 'application/json' });
       return res.end(JSON.stringify({ error: 'Invalid JSON body' }));
     }
@@ -59,8 +133,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   // 3. Initialize Supabase Admin Client
-  const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const supabaseUrl = getEnv('SUPABASE_URL') || getEnv('VITE_SUPABASE_URL');
+  const serviceRoleKey = getEnv('SUPABASE_SERVICE_ROLE_KEY');
 
   if (!supabaseUrl || !serviceRoleKey) {
     console.error('[CREATE_CHECKOUT] Supabase keys are not configured.');
