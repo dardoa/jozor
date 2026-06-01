@@ -18,6 +18,8 @@ jobs:
     timeout-minutes: 20
     env:
       SUPABASE_JWT_SECRET: ${{ secrets.SUPABASE_JWT_SECRET || 'ci_dummy_supabase_jwt_secret_32_chars_long' }}
+      VITE_SUPABASE_URL: http://127.0.0.1
+      VITE_SUPABASE_ANON_KEY: ci_dummy_supabase_anon_key
     steps:
       - name: Checkout
         uses: actions/checkout@v4
