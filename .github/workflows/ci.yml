@@ -32,10 +32,10 @@ jobs:
         run: npm ci
 
       - name: Typecheck
-        run: echo "Skipping typecheck during refactoring phase" # npm run typecheck
+        run: npm run typecheck
 
       - name: Lint
-        run: echo "Skipping lint during refactoring phase" # npm run lint
+        run: npm run lint
 
       - name: Unit tests
         run: npm run test

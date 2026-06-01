@@ -88,6 +88,8 @@ export const useAuthInit = ({
     
     const routePersonBranchInFlightRef = useRef<string | null>(null);
     const routePersonBranchCompletedRef = useRef<string | null>(null);
+    const treeLoadBranchInFlightRef = useRef<string | null>(null);
+    const treeLoadBranchCompletedRef = useRef<string | null>(null);
 
     useEffect(() => {
         const routePersonAlreadyResolved =
@@ -139,6 +141,10 @@ export const useAuthInit = ({
             routePersonBranchRefs: {
                 inFlightRef: routePersonBranchInFlightRef,
                 completedRef: routePersonBranchCompletedRef,
+            },
+            treeLoadBranchRefs: {
+                inFlightRef: treeLoadBranchInFlightRef,
+                completedRef: treeLoadBranchCompletedRef,
             },
         });
     }, [

@@ -39,6 +39,7 @@ vi.mock('../../../features/admin', () => ({
   useKindiReportsAdminAccess: useKindiReportsAdminAccessMock,
   openKindiLearningReports: vi.fn(),
   openAdminTreeDefaults: vi.fn(),
+  openAdminDiagnostics: vi.fn(),
 }));
 
 describe('AccountMenu', () => {
