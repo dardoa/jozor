@@ -23,6 +23,7 @@ lerna-debug.log*
 .env
 .env.*
 !.env.example
+!.env.integration.example
 .env*.local
 
 # Editor and System files

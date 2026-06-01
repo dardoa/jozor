@@ -1,6 +1,3 @@
--- Migration: Billing Enforcement Triggers
--- Description: Adds database triggers to enforce subscription limits (tree count, people count, and collaborator count) based on tier.
-
 BEGIN;
 
 -- 1. Trigger to enforce max 1 tree for Free tier
@@ -141,4 +138,4 @@ EXECUTE FUNCTION private.enforce_collaborator_limits();
 
 COMMIT;
 
-NOTIFY pgrst, 'reload schema';
+NOTIFY pgrst, 'reload schema';;

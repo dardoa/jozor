@@ -22,6 +22,10 @@ export function useSyncStatus() {
             lastErrorAt: null,
             lastErrorRetryable: undefined,
             supabaseStatus: 'idle',
+            syncBlockedByPlan: false,
+        });
+        import('../../services/deltaSyncService').then(({ deltaSyncService }) => {
+            deltaSyncService.flushPendingChanges();
         });
     }, [setSyncStatus]);
 

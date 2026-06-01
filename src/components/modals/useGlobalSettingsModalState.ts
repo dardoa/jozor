@@ -104,8 +104,6 @@ export const useGlobalSettingsModalState = (onClose: () => void) => {
 
     setIsDeleting(true);
     try {
-      const { SupabaseStorageService } = await import('../../services/supabaseStorageService');
-      await SupabaseStorageService.deleteUserStorage(user.uid, user.email, user.supabaseToken);
       await deleteUserAccount(user.uid, user.email, user.supabaseToken);
       await logout();
       onClose();

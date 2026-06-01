@@ -152,6 +152,7 @@ export default defineConfig(({ mode }) => {
         '**/.git/**',
         'domain/legacy/visibleTree/__tests__/**',
         'tests/e2e/**',
+        'tests/integration/**',
         'legacy_archive/**',
       ],
     },

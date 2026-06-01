@@ -1,6 +1,5 @@
 import type { Person, TreeSettings } from '../types';
 import { logError } from '../utils/errorLogger';
-import { mapPersonToDbRow } from './personRowMapper';
 import { getTreeClient } from './supabaseTreeClient';
 import { activityService } from '../features/activity-log';
 
@@ -117,61 +116,53 @@ export const deleteWholeTree = async (treeId: string, ownerId: string, userEmail
   if (error) throw error;
 };
 
-export const bulkUpsertPeople = async (
+export const importTreeContent = async (
   treeId: string,
   ownerId: string,
   people: Person[],
+  relationships: { person_id: string; relative_id: string; type: 'parent' | 'child' | 'spouse' }[],
   email?: string,
   token?: string
 ): Promise<void> => {
-  if (people.length === 0) return;
   const client = getTreeClient(ownerId, email || '', token);
-  const payload = people.map((person) => mapPersonToDbRow(person, treeId));
-  const { error } = await client.from('people').upsert(payload, { onConflict: 'id' });
-  if (error) throw error;
-};
 
-export const bulkInsertRelationships = async (
-  relationships: { tree_id: string; person_id: string; relative_id: string; type: 'parent' | 'child' | 'spouse' }[],
-  ownerId: string,
-  email?: string,
-  token?: string
-): Promise<void> => {
-  if (relationships.length === 0) return;
-  const client = getTreeClient(ownerId, email || '', token);
-  const { error } = await client.from('relationships').insert(relationships);
-  if (error) throw error;
-};
+  // Format people mapping to JSON serializable objects matching database expected schema
+  const peoplePayload = people.map((person) => ({
+    id: person.id,
+    firstName: person.firstName,
+    lastName: person.lastName,
+    middleName: person.middleName,
+    birthName: person.birthName,
+    nickName: person.nickName,
+    suffix: person.suffix,
+    gender: person.gender,
+    birthDate: person.birthDate,
+    birthPlace: person.birthPlace,
+    deathDate: person.deathDate,
+    deathPlace: person.deathPlace,
+    bio: person.bio,
+    profession: person.profession,
+    company: person.company,
+    interests: person.interests,
+    photoUrl: person.photoUrl,
+    photoPath: person.photoPath,
+    photoVersion: person.photoVersion,
+    email: person.email,
+    website: person.website,
+    blog: person.blog,
+    address: person.address,
+    customFields: (person as any).customFields,
+    metadata: (person as any).metadata,
+  }));
 
-export const saveTreeCheckpoint = async (
-  treeId: string,
-  ownerId: string,
-  userEmail: string,
-  versionSeq: number,
-  people: Record<string, Person>,
-  token?: string
-): Promise<void> => {
-  const client = getTreeClient(ownerId, userEmail, token);
-  const { error } = await client
-    .from('tree_checkpoints')
-    .upsert(
-      {
-        tree_id: treeId,
-        version_seq: versionSeq,
-        people,
-      },
-      {
-        onConflict: 'tree_id,version_seq',
-      }
-    );
+  const { error } = await client.rpc('import_tree_content', {
+    p_tree_id: treeId,
+    p_people: peoplePayload,
+    p_relationships: relationships,
+  });
 
   if (error) {
-    logError('SupabaseTreeMutationService saveTreeCheckpoint', error, {
-      category: 'DATABASE',
-      severity: 'MEDIUM',
-      metadata: { treeId, versionSeq },
-    });
+    logError('SupabaseTreeMutationService importTreeContent', error);
     throw error;
   }
 };
-

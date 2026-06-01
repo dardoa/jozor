@@ -8,6 +8,7 @@ export type ErrorCategory =
   | 'VALIDATION'
   | 'DATABASE'
   | 'PERMISSION'
+  | 'BILLING'
   | 'RENDER'
   | 'UNEXPECTED';
 export type ErrorSeverity = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
@@ -63,6 +64,7 @@ function inferCategory(error: unknown, fallback: ErrorCategory): ErrorCategory {
 
   const message = getMessage(error).toLowerCase();
 
+  if (message.includes('limit_exceeded_free') || message.includes('billing') || message.includes('quota exceeded') || message.includes('limit reached')) return 'BILLING';
   if (message.includes('jwt') || message.includes('token') || message.includes('auth')) return 'AUTH';
   if (message.includes('permission') || message.includes('forbidden') || message.includes('access denied') || message.includes('rls')) return 'PERMISSION';
   if (message.includes('network') || message.includes('fetch') || message.includes('timeout') || message.includes('offline')) return 'NETWORK';
@@ -90,6 +92,12 @@ export function getUserFacingErrorInfo(
       return {
         category,
         message: 'You do not have permission to make this change.',
+        retryable: false,
+      };
+    case 'BILLING':
+      return {
+        category,
+        message: 'Plan limit reached. Please upgrade your subscription to continue.',
         retryable: false,
       };
     case 'NETWORK':

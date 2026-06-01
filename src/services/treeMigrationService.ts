@@ -1,11 +1,10 @@
-import { bulkInsertRelationships, bulkUpsertPeople, createTree } from './supabaseTreeMutationService';
+import { importTreeContent, createTree } from './supabaseTreeMutationService';
 import { showToast } from '../utils/showToast';
 import { logError } from '../utils/errorLogger';
 import type { Person, TreeSettings } from '../types';
 
-const buildRelationshipsFromPeople = (treeId: string, people: Person[]) => {
+const buildRelationshipsFromPeople = (people: Person[]) => {
     const relationships: {
-        tree_id: string;
         person_id: string;
         relative_id: string;
         type: 'parent' | 'child' | 'spouse';
@@ -25,7 +24,6 @@ const buildRelationshipsFromPeople = (treeId: string, people: Person[]) => {
         if (processedPairs.has(key)) return;
 
         relationships.push({
-            tree_id: treeId,
             person_id: personId,
             relative_id: relativeId,
             type,
@@ -73,8 +71,8 @@ export const treeMigrationService = {
             const peopleList = Object.values(people);
             if (peopleList.length > 0) {
                 try {
-                    await bulkUpsertPeople(createdId, uid, peopleList, email, token);
-                    await bulkInsertRelationships(buildRelationshipsFromPeople(createdId, peopleList), uid, email, token);
+                    const relations = buildRelationshipsFromPeople(peopleList);
+                    await importTreeContent(createdId, uid, peopleList, relations, email, token);
                     console.warn('[treeMigrationService] Migration data sync complete.');
                     showToast.success('Your local tree has been migrated to the cloud.', { duration: 5000 });
                 } catch (err) {

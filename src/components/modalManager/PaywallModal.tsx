@@ -37,7 +37,8 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ isOpen, onClose }) =
     script.async = true;
     script.onload = () => {
       if (window.Paddle) {
-        window.Paddle.Environment.set('sandbox');
+        const env = import.meta.env.VITE_PADDLE_ENVIRONMENT || 'sandbox';
+        window.Paddle.Environment.set(env);
         const token = import.meta.env.VITE_PADDLE_CLIENT_TOKEN || 'test_token';
         window.Paddle.Initialize({ token });
         setPaddleLoaded(true);
@@ -64,16 +65,28 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ isOpen, onClose }) =
       return;
     }
 
-    const priceId = tier === 'pro'
-      ? (import.meta.env.VITE_PADDLE_PRO_PRICE_ID || 'pri_sandbox_pro_123')
-      : (import.meta.env.VITE_PADDLE_FAMILY_PRICE_ID || 'pri_sandbox_family_123');
-
     setCheckoutLoading(tier);
 
     try {
+      const token = user.supabaseToken || useAppStore.getState().supabaseAccessToken;
+      const response = await fetch('/api/billing/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token || ''}`,
+        },
+        body: JSON.stringify({ tier }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP error ${response.status}`);
+      }
+
+      const { transactionId } = await response.json();
+
       window.Paddle.Checkout.open({
-        items: [{ priceId, quantity: 1 }],
-        customData: { userId: user.uid },
+        transactionId,
         settings: {
           displayMode: 'overlay',
           theme: 'dark',
@@ -89,9 +102,9 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ isOpen, onClose }) =
           }
         }
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Paddle Checkout failed:', error);
-      toast.error(isRtl ? 'عذراً، فشل فتح بوابة الدفع.' : 'Failed to open checkout.');
+      toast.error(isRtl ? `عذراً، فشل فتح بوابة الدفع: ${error.message}` : `Failed to open checkout: ${error.message}`);
       setCheckoutLoading(null);
     }
   };

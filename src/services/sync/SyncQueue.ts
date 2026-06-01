@@ -1,4 +1,5 @@
 import { DeltaOperation, PendingDeltaOp, SyncFlushResult } from './SyncTypes';
+import { useAppStore } from '../../store/useAppStore';
 
 export class SyncQueue {
     private outgoingQueue: PendingDeltaOp[] = [];
@@ -30,6 +31,11 @@ export class SyncQueue {
 
     private async flushOutgoing() {
         if (this.outgoingQueue.length === 0 || this.isFlushing) return;
+
+        if (useAppStore.getState().syncStatus.syncBlockedByPlan) {
+            return;
+        }
+
         this.isFlushing = true;
 
         const batch = [...this.outgoingQueue];
@@ -38,15 +44,21 @@ export class SyncQueue {
 
         try {
             const result = await this.options.onFlushOutgoing(batch);
-            if (!result.success && result.shouldRetry) {
-                this.outgoingQueue = [...batch, ...this.outgoingQueue];
+            if (!result.success) {
+                const isBlocked = !!useAppStore.getState().syncStatus.syncBlockedByPlan;
+
+                if (result.shouldRetry || isBlocked) {
+                    this.outgoingQueue = [...batch, ...this.outgoingQueue];
+                }
             }
         } catch {
             // Unexpected failure: keep the batch retryable so ops are not silently lost.
             this.outgoingQueue = [...batch, ...this.outgoingQueue];
         } finally {
             this.isFlushing = false;
-            if (this.outgoingQueue.length > 0) {
+            const isBlocked = !!useAppStore.getState().syncStatus.syncBlockedByPlan;
+
+            if (this.outgoingQueue.length > 0 && !isBlocked) {
                 this.outgoingTimeout = setTimeout(() => this.flushOutgoing(), this.options.outgoingBatchDelay);
             }
         }

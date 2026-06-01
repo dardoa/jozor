@@ -64,6 +64,7 @@ export interface SyncStatus {
     lastErrorCategory?: string;
     lastErrorAt?: Date | null;
     lastErrorRetryable?: boolean;
+    syncBlockedByPlan?: boolean;
 }
 
 export interface InvitationTelemetry {

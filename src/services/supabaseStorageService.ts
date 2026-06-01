@@ -82,16 +82,14 @@ export const SupabaseStorageService = {
                 .from('avatars')
                 .getPublicUrl(filePath);
 
-            // 5. Update DB media fields.
-            const { error: dbError } = await client
-                .from('people')
-                .update({ 
-                    photo_url: publicUrl,
-                    photo_path: filePath,
-                    photo_version: nextVersion 
-                } as any)
-                .eq('id', personId)
-                .eq('tree_id', treeId);
+            // 5. Update DB media fields using secure RPC.
+            const { error: dbError } = await client.rpc('update_person_photo', {
+                p_person_id: personId,
+                p_tree_id: treeId,
+                p_photo_url: publicUrl,
+                p_photo_path: filePath,
+                p_photo_version: nextVersion
+            });
 
             if (dbError) {
                 console.error('Database update error:', dbError);
@@ -151,15 +149,16 @@ export const SupabaseStorageService = {
                 .from(bucketName)
                 .getPublicUrl(filePath);
 
-            // Update user profile in DB
-            await client
-                .from('user_profiles')
-                .update({ 
-                    photo_url: data.publicUrl,
-                    photo_path: filePath,
-                    photo_version: nextVersion
-                } as any)
-                .eq('id', userId);
+            // Update user profile in DB using secure RPC
+            const { error: dbError } = await client.rpc('update_user_avatar', {
+                p_photo_url: data.publicUrl,
+                p_photo_path: filePath,
+                p_photo_version: nextVersion
+            });
+
+            if (dbError) {
+                throw new Error(`Profile update failed: ${dbError.message}`);
+            }
 
             return {
                 publicUrl: `${data.publicUrl}?v=${nextVersion}`,

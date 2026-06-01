@@ -58,16 +58,9 @@ export const updateUserProfile = async (
 ): Promise<void> => {
   const client = getTreeClient(uid, email, token);
 
-  const { error } = await client
-    .from('user_profiles')
-    .update({
-      ...(updates.displayName && { display_name: updates.displayName }),
-      ...(updates.photoURL && { photo_url: updates.photoURL }),
-      ...(updates.photoPath && { photo_path: updates.photoPath }),
-      ...(updates.photoVersion !== undefined && { photo_version: updates.photoVersion }),
-      ...(updates.metadata && { metadata: updates.metadata }),
-    })
-    .eq('id', uid);
+  const { error } = await client.rpc('update_my_profile', {
+    p_updates: updates,
+  });
 
   if (error) {
     logError('SupabaseProfileService updateUserProfile', error, {
@@ -80,35 +73,25 @@ export const updateUserProfile = async (
   }
 };
 
-export const deleteUserAccount = async (uid: string, email?: string, token?: string): Promise<void> => {
-  const client = getTreeClient(uid, email || '', token);
+export const deleteUserAccount = async (uid: string, _email?: string, token?: string): Promise<void> => {
+  const response = await fetch('/api/auth/delete-account', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token && { Authorization: `Bearer ${token}` }),
+    },
+  });
 
-  const { error: treeError } = await client
-    .from('trees')
-    .delete()
-    .eq('owner_id', uid);
-
-  if (treeError) {
-    logError('SupabaseProfileService deleteUserAccount', treeError, {
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    const message = errorData.error || 'Failed to delete account';
+    const errorObj = new Error(message);
+    logError('SupabaseProfileService deleteUserAccount', errorObj, {
       category: 'DATABASE',
       severity: 'HIGH',
-      metadata: { uid, operation: 'delete_trees' },
+      metadata: { uid, responseStatus: response.status },
     });
-    throw treeError;
-  }
-
-  const { error: profileError } = await client
-    .from('user_profiles')
-    .delete()
-    .eq('id', uid);
-
-  if (profileError) {
-    logError('SupabaseProfileService deleteUserAccount', profileError, {
-      category: 'DATABASE',
-      severity: 'HIGH',
-      metadata: { uid, operation: 'delete_profile' },
-    });
-    throw profileError;
+    throw errorObj;
   }
 };
 
@@ -119,9 +102,9 @@ export const updateUserTourStatus = async (
   token?: string
 ): Promise<void> => {
   const client = getTreeClient(uid, email || '', token);
-  const { error } = await client
-    .from('user_profiles')
-    .upsert({ id: uid, metadata: { has_completed_tour: hasCompleted } }, { onConflict: 'id' });
+  const { error } = await client.rpc('update_user_tour_status', {
+    p_has_completed: hasCompleted,
+  });
   if (error) {
     logWarn('SupabaseProfileService updateUserTourStatus', 'Failed to persist tour status.', {
       category: 'DATABASE',
