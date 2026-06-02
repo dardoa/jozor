@@ -30,6 +30,7 @@
   "dependencies": {
     "@floating-ui/react": "^0.27.17",
     "@google/generative-ai": "^0.24.1",
+    "@paddle/paddle-js": "^1.6.4",
     "@paddle/paddle-node-sdk": "^3.8.0",
     "@supabase/supabase-js": "^2.87.1",
     "browser-image-compression": "^2.0.2",

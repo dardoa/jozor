@@ -19,6 +19,11 @@ interface LocalApiProxyEnv {
   GOOGLE_AI_KEY?: string;
   GEMINI_API_KEY?: string;
   VITE_KINDI_AI_ENABLED?: string;
+  PADDLE_API_KEY?: string;
+  PADDLE_WEBHOOK_SECRET?: string;
+  PADDLE_PRO_PRICE_ID?: string;
+  PADDLE_FAMILY_PRICE_ID?: string;
+  VITE_PADDLE_CLIENT_TOKEN?: string;
   APP_ORIGIN?: string;
   VITE_APP_ORIGIN?: string;
   NODE_ENV?: string;
@@ -74,6 +79,13 @@ const isLocalProxyEnabled = (
   }
 
   return true;
+};
+
+const isTrustedPaddleWebhookTunnel = (req: IncomingMessage): boolean => {
+  const requestHost = req.headers.host?.split(':')[0]?.toLowerCase();
+  return requestHost === 'localhost'
+    || requestHost === '127.0.0.1'
+    || Boolean(requestHost?.endsWith('.trycloudflare.com'));
 };
 
 const createLocalResponse = (res: ServerResponse): LocalResponse => {
@@ -133,6 +145,10 @@ const handleCheckEnv = (res: ServerResponse, env: LocalApiProxyEnv) => {
     hasProviderKey: Boolean(env.GOOGLE_AI_KEY || env.GEMINI_API_KEY),
     hasSupabaseServiceRole: Boolean(env.SUPABASE_SERVICE_ROLE_KEY),
     kindiAIClientFlag: env.VITE_KINDI_AI_ENABLED === 'true',
+    hasPaddleApiKey: Boolean(env.PADDLE_API_KEY),
+    hasPaddleWebhookSecret: Boolean(env.PADDLE_WEBHOOK_SECRET),
+    hasPaddlePriceIds: Boolean(env.PADDLE_PRO_PRICE_ID && env.PADDLE_FAMILY_PRICE_ID),
+    hasPaddleClientToken: Boolean(env.VITE_PADDLE_CLIENT_TOKEN),
     appOrigin: env.APP_ORIGIN || env.VITE_APP_ORIGIN || null,
     env: env.NODE_ENV || process.env.NODE_ENV || 'development',
   });
@@ -182,6 +198,36 @@ const handleAuthExchange = async (
   }
 };
 
+const handleCheckoutSession = async (
+  req: LocalRequest,
+  res: ServerResponse,
+  body: LocalProxyBody,
+  env: LocalApiProxyEnv
+) => {
+  try {
+    syncProcessEnv(env);
+    const { default: checkoutHandler } = await import('../../api/billing/create-checkout-session');
+    req.body = body;
+    await (checkoutHandler as any)(req, res);
+  } catch (error: unknown) {
+    sendJson(res, 500, { error: getErrorMessage(error) });
+  }
+};
+
+const handlePaddleWebhook = async (
+  req: LocalRequest,
+  res: ServerResponse,
+  env: LocalApiProxyEnv
+) => {
+  try {
+    syncProcessEnv(env);
+    const { default: paddleWebhookHandler } = await import('../../api/billing/paddle-webhook');
+    await (paddleWebhookHandler as any)(req, createLocalResponse(res));
+  } catch (error: unknown) {
+    sendJson(res, 500, { error: getErrorMessage(error) });
+  }
+};
+
 const toQueryObject = (url: URL): Record<string, string> =>
   Object.fromEntries(Array.from(url.searchParams.entries()));
 
@@ -218,12 +264,23 @@ export const createLocalApiProxyMiddleware = (env: LocalApiProxyEnv): Plugin => 
         return;
       }
 
-      if (!isLocalProxyEnabled(req, res, env)) {
+      if (pathName === '/api/billing/paddle-webhook' && !isTrustedPaddleWebhookTunnel(req)) {
+        sendJson(res, 403, { error: 'Paddle webhook tunnel host is not allowed.' });
+        return;
+      }
+
+      if (pathName !== '/api/billing/paddle-webhook' && !isLocalProxyEnabled(req, res, env)) {
+        return;
+      }
+
+      res.setHeader('Content-Type', 'application/json');
+
+      if (pathName === '/api/billing/paddle-webhook') {
+        await handlePaddleWebhook(req as LocalRequest, res, env);
         return;
       }
 
       const body = await parseJsonBody(req);
-      res.setHeader('Content-Type', 'application/json');
 
       if (pathName === '/api/ai-proxy') {
         await handleAiProxy(req as LocalRequest, res, body, originalUrl, env);
@@ -242,6 +299,11 @@ export const createLocalApiProxyMiddleware = (env: LocalApiProxyEnv): Plugin => 
 
       if (pathName === '/api/auth/exchange') {
         await handleAuthExchange(req as LocalRequest, res, body, env);
+        return;
+      }
+
+      if (pathName === '/api/billing/create-checkout-session') {
+        await handleCheckoutSession(req as LocalRequest, res, body, env);
         return;
       }
 

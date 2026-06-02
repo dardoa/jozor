@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { CheckoutEventNames, initializePaddle, type Paddle } from '@paddle/paddle-js';
 import { X, Check, Shield, Zap, Users, Sparkles } from 'lucide-react';
 import { useTranslation } from '../../context/TranslationContext';
 import { useAppStore } from '../../store/useAppStore';
@@ -10,47 +11,55 @@ interface PaywallModalProps {
   onClose: () => void;
 }
 
-declare global {
-  interface Window {
-    Paddle?: any;
-  }
-}
-
 export const PaywallModal: React.FC<PaywallModalProps> = ({ isOpen, onClose }) => {
   const { language } = useTranslation();
   const user = useAppStore(state => state.user);
   const currentTier = useAppStore(state => state.subscriptionTier);
-  const [paddleLoaded, setPaddleLoaded] = useState(false);
+  const [paddle, setPaddle] = useState<Paddle>();
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
 
   const isRtl = language === 'ar';
+  const isRtlRef = useRef(isRtl);
+  const onCloseRef = useRef(onClose);
 
-  // Load Paddle.js dynamically
   useEffect(() => {
-    if (window.Paddle) {
-      setPaddleLoaded(true);
+    isRtlRef.current = isRtl;
+    onCloseRef.current = onClose;
+  }, [isRtl, onClose]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const environment = import.meta.env.VITE_PADDLE_ENVIRONMENT === 'production' ? 'production' : 'sandbox';
+    const token = import.meta.env.VITE_PADDLE_CLIENT_TOKEN;
+
+    if (!token) {
+      console.error('VITE_PADDLE_CLIENT_TOKEN is not configured');
       return;
     }
 
-    const script = document.createElement('script');
-    script.src = 'https://cdn.paddle.com/paddle/v2/paddle.js';
-    script.async = true;
-    script.onload = () => {
-      if (window.Paddle) {
-        const env = import.meta.env.VITE_PADDLE_ENVIRONMENT || 'sandbox';
-        window.Paddle.Environment.set(env);
-        const token = import.meta.env.VITE_PADDLE_CLIENT_TOKEN || 'test_token';
-        window.Paddle.Initialize({ token });
-        setPaddleLoaded(true);
-      }
-    };
-    script.onerror = () => {
-      console.error('Failed to load Paddle SDK');
-    };
-    document.body.appendChild(script);
+    initializePaddle({
+      environment,
+      token,
+      eventCallback: event => {
+        if (event.name === CheckoutEventNames.CHECKOUT_COMPLETED) {
+          toast.success(isRtlRef.current ? 'تم الاشتراك بنجاح! جاري ترقية حسابك...' : 'Subscription successful! Upgrading your account...');
+          onCloseRef.current();
+        } else if (event.name === CheckoutEventNames.CHECKOUT_CLOSED) {
+          setCheckoutLoading(null);
+        }
+      },
+    })
+      .then(instance => {
+        if (!cancelled && instance) {
+          setPaddle(instance);
+        }
+      })
+      .catch(error => {
+        console.error('Failed to initialize Paddle SDK:', error);
+      });
 
     return () => {
-      // Keep script loaded globally for subsequent uses
+      cancelled = true;
     };
   }, []);
 
@@ -60,7 +69,7 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ isOpen, onClose }) =
       return;
     }
 
-    if (!paddleLoaded || !window.Paddle) {
+    if (!paddle) {
       toast.error(isRtl ? 'حدث خطأ في تحميل بوابة الدفع. يرجى المحاولة لاحقاً.' : 'Payment gateway failed to load. Please try again.');
       return;
     }
@@ -85,7 +94,7 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ isOpen, onClose }) =
 
       const { transactionId } = await response.json();
 
-      window.Paddle.Checkout.open({
+      paddle.Checkout.open({
         transactionId,
         settings: {
           displayMode: 'overlay',
@@ -93,14 +102,6 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ isOpen, onClose }) =
           locale: isRtl ? 'ar' : 'en',
           successUrl: window.location.origin,
         },
-        eventCallback: (event: any) => {
-          if (event.name === 'checkout.completed') {
-            toast.success(isRtl ? 'تم الاشتراك بنجاح! جاري ترقية حسابك...' : 'Subscription successful! Upgrading your account...');
-            onClose();
-          } else if (event.name === 'checkout.closed') {
-            setCheckoutLoading(null);
-          }
-        }
       });
     } catch (error: any) {
       console.error('Paddle Checkout failed:', error);

@@ -56,7 +56,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // 2. Verify paddle signature using Paddle Node SDK
   try {
     const paddle = new Paddle(process.env.PADDLE_API_KEY || 'dummy_key');
-    await paddle.webhooks.unmarshal(rawBody, webhookSecret, signatureHeader);
+    const isSignatureValid = await paddle.webhooks.isSignatureValid(rawBody, webhookSecret, signatureHeader);
+    if (!isSignatureValid) {
+      throw new Error('[Paddle] Webhook signature verification failed');
+    }
   } catch (err) {
     console.error('[PADDLE_WEBHOOK] SDK verification error:', err);
     console.warn('[PADDLE_WEBHOOK] Signature verification failed');
