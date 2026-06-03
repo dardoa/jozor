@@ -46,6 +46,16 @@ const isActiveOverride = (entry: AdminSubscriptionUser) => {
   return new Date(override.expires_at).getTime() > Date.now();
 };
 
+const overrideStatus = (entry: AdminSubscriptionUser): { label: string; tone: 'success' | 'warning' | 'danger' } | null => {
+  const override = entry.override;
+  if (!override) return null;
+  if (!override.is_active || override.revoked_at) return { label: 'Revoked', tone: 'danger' };
+  if (override.expires_at && new Date(override.expires_at).getTime() <= Date.now()) {
+    return { label: 'Expired', tone: 'warning' };
+  }
+  return { label: 'Active', tone: 'success' };
+};
+
 type TierFilter = 'all' | AdminBillingTier;
 type SourceFilter = 'all' | AdminSubscriptionOverrideSource;
 type StatusFilter = 'all' | 'active_override' | 'expired_override' | 'paddle_active' | 'free_only';
@@ -396,9 +406,14 @@ export const AdminSubscriptions: React.FC = () => {
                     <td className="px-4 py-3 align-top">
                       {entry.override ? (
                         <div className="space-y-2">
-                          <Badge tone={entry.override.source === 'sandbox_test' ? 'warning' : 'success'}>
-                            {tierLabel(entry.override.tier)} / {sourceLabel(entry.override.source)}
-                          </Badge>
+                          <div className="flex flex-wrap gap-2">
+                            <Badge tone={entry.override.source === 'sandbox_test' ? 'warning' : 'success'}>
+                              {tierLabel(entry.override.tier)} / {sourceLabel(entry.override.source)}
+                            </Badge>
+                            {overrideStatus(entry) && (
+                              <Badge tone={overrideStatus(entry)!.tone}>{overrideStatus(entry)!.label}</Badge>
+                            )}
+                          </div>
                           <div className="text-xs text-[var(--text-muted)]">
                             Expires: {formatDate(entry.override.expires_at)}
                           </div>
