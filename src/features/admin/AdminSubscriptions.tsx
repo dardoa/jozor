@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Gift, RefreshCw, Search, ShieldAlert, ShieldCheck, XCircle } from 'lucide-react';
+import { Gift, RefreshCw, RotateCcw, Search, ShieldAlert, ShieldCheck, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { useAppStore } from '../../store/useAppStore';
@@ -9,6 +9,7 @@ import {
   ADMIN_SUBSCRIPTION_OVERRIDE_SOURCES,
   fetchAdminSubscriptions,
   grantAdminSubscriptionOverride,
+  resetSandboxTestSubscriptionOverride,
   revokeAdminSubscriptionOverride,
   type AdminSubscriptionAuditAction,
   type AdminSubscriptionAuditEvent,
@@ -113,6 +114,7 @@ export const AdminSubscriptions: React.FC = () => {
     () => safeUsers.find((entry) => entry.id === selectedUserId) ?? null,
     [selectedUserId, safeUsers]
   );
+  const canResetSandboxTest = selectedUser?.override?.source === 'sandbox_test' && isActiveOverride(selectedUser);
 
   const isRtl = language === 'ar';
 
@@ -172,6 +174,23 @@ export const AdminSubscriptions: React.FC = () => {
       await loadSubscriptions();
     } catch (revokeError) {
       const message = revokeError instanceof Error ? revokeError.message : 'Failed to revoke override.';
+      setError(message);
+      toast.error(message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleSandboxReset = async () => {
+    if (!user || !selectedUserId) return;
+    setIsSaving(true);
+    setError(null);
+    try {
+      const resetCount = await resetSandboxTestSubscriptionOverride(user, selectedUserId);
+      toast.success(resetCount > 0 ? 'Sandbox test override reset.' : 'No active sandbox_test override found.');
+      await loadSubscriptions();
+    } catch (resetError) {
+      const message = resetError instanceof Error ? resetError.message : 'Failed to reset sandbox_test override.';
       setError(message);
       toast.error(message);
     } finally {
@@ -470,6 +489,17 @@ export const AdminSubscriptions: React.FC = () => {
             >
               <XCircle className="h-4 w-4" />
               Revoke active override
+            </button>
+
+            <button
+              type="button"
+              onClick={() => void handleSandboxReset()}
+              disabled={!canResetSandboxTest || isSaving}
+              title="Only resets an active sandbox_test override for the selected user."
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm font-black text-amber-800 transition hover:bg-amber-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <RotateCcw className="h-4 w-4" />
+              sandbox_test reset
             </button>
           </div>
         </aside>

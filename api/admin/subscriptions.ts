@@ -402,6 +402,45 @@ async function revokeOverride(req: VercelRequest, res: VercelResponse, supabaseA
   return json(res, 200, { revokedCount: data?.length ?? 0 });
 }
 
+async function resetSandboxTestOverride(req: VercelRequest, res: VercelResponse, supabaseAdmin: SupabaseClient, adminUser: AuthenticatedUser) {
+  const { userId } = req.body ?? {};
+
+  if (typeof userId !== 'string' || !userId.trim()) {
+    return json(res, 400, { error: { code: 'BAD_REQUEST', message: 'userId is required.' } });
+  }
+
+  const now = new Date().toISOString();
+  const { data, error } = await supabaseAdmin
+    .from('subscription_overrides')
+    .update({
+      is_active: false,
+      revoked_at: now,
+      revoked_by: adminUser.uid,
+      updated_at: now,
+    })
+    .eq('user_id', userId)
+    .eq('source', 'sandbox_test')
+    .eq('is_active', true)
+    .is('revoked_at', null)
+    .select('id, tier, source, reason, expires_at');
+
+  if (error) throw error;
+  for (const resetOverride of data ?? []) {
+    await insertAuditEvent(supabaseAdmin, {
+      targetUserId: userId,
+      actorUserId: adminUser.uid,
+      action: 'revoke',
+      overrideId: resetOverride.id,
+      tier: isBillingTier(resetOverride.tier) ? resetOverride.tier : null,
+      source: 'sandbox_test',
+      reason: typeof resetOverride.reason === 'string' ? resetOverride.reason : null,
+      expiresAt: typeof resetOverride.expires_at === 'string' ? resetOverride.expires_at : null,
+      metadata: { reset: 'sandbox_test' },
+    });
+  }
+  return json(res, 200, { resetCount: data?.length ?? 0 });
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === 'OPTIONS') {
     res.setHeader('Allow', ['GET', 'POST', 'OPTIONS']);
@@ -436,6 +475,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (action === 'revoke') {
       return await revokeOverride(req, res, supabaseAdmin, user);
+    }
+
+    if (action === 'reset_sandbox_test') {
+      return await resetSandboxTestOverride(req, res, supabaseAdmin, user);
     }
 
     return json(res, 400, { error: { code: 'BAD_REQUEST', message: 'Unsupported admin action.' } });

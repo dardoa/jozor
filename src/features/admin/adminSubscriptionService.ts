@@ -151,3 +151,21 @@ export const revokeAdminSubscriptionOverride = async (
   );
   return payload.revokedCount;
 };
+
+export const resetSandboxTestSubscriptionOverride = async (
+  user: UserProfile,
+  userId: string
+): Promise<number> => {
+  const payload = await requestAdminSubscriptions<{ resetCount: number }>(
+    user,
+    '/api/admin/subscriptions',
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        action: 'reset_sandbox_test',
+        userId,
+      }),
+    }
+  );
+  return payload.resetCount;
+};
