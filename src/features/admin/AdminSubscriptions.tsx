@@ -49,6 +49,7 @@ const isActiveOverride = (entry: AdminSubscriptionUser) => {
 type TierFilter = 'all' | AdminBillingTier;
 type SourceFilter = 'all' | AdminSubscriptionOverrideSource;
 type StatusFilter = 'all' | 'active_override' | 'expired_override' | 'paddle_active' | 'free_only';
+type AuditActionFilter = 'all' | AdminSubscriptionAuditAction;
 
 const Badge = ({
   children,
@@ -82,6 +83,7 @@ export const AdminSubscriptions: React.FC = () => {
   const [tierFilter, setTierFilter] = useState<TierFilter>('all');
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>('all');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [auditActionFilter, setAuditActionFilter] = useState<AuditActionFilter>('all');
   const [tier, setTier] = useState<Exclude<AdminBillingTier, 'free'>>('pro');
   const [source, setSource] = useState<AdminSubscriptionOverrideSource>('sandbox_test');
   const [expiresAt, setExpiresAt] = useState('');
@@ -109,6 +111,10 @@ export const AdminSubscriptions: React.FC = () => {
     () => new Map(safeUsers.map((entry) => [entry.id, entry.email || entry.displayName || entry.id])),
     [safeUsers]
   );
+  const filteredAuditEvents = useMemo(
+    () => safeAuditEvents.filter((event) => auditActionFilter === 'all' || event.action === auditActionFilter),
+    [auditActionFilter, safeAuditEvents]
+  );
 
   const selectedUser = useMemo(
     () => safeUsers.find((entry) => entry.id === selectedUserId) ?? null,
@@ -117,6 +123,13 @@ export const AdminSubscriptions: React.FC = () => {
   const canResetSandboxTest = selectedUser?.override?.source === 'sandbox_test' && isActiveOverride(selectedUser);
 
   const isRtl = language === 'ar';
+
+  const handleClearFilters = () => {
+    setTierFilter('all');
+    setSourceFilter('all');
+    setStatusFilter('all');
+    setAuditActionFilter('all');
+  };
 
   const loadSubscriptions = useCallback(async () => {
     if (!user) return;
@@ -264,7 +277,7 @@ export const AdminSubscriptions: React.FC = () => {
         </div>
       </section>
 
-      <section className="grid gap-3 rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] p-4 md:grid-cols-3">
+      <section className="grid gap-3 rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] p-4 md:grid-cols-[1fr_1fr_1fr_auto]">
         <label className="grid gap-1 text-sm font-bold text-[var(--text-secondary)]">
           Effective tier
           <select
@@ -307,6 +320,14 @@ export const AdminSubscriptions: React.FC = () => {
             <option value="free_only">Free only</option>
           </select>
         </label>
+
+        <button
+          type="button"
+          onClick={handleClearFilters}
+          className="self-end rounded-md border border-[var(--border-soft)] bg-[var(--surface-app)] px-4 py-2 text-sm font-black text-[var(--text-secondary)] transition hover:bg-[var(--surface-hover)] hover:text-[var(--text-main)]"
+        >
+          Clear filters
+        </button>
       </section>
 
       <section className="grid gap-3 rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] p-4 lg:grid-cols-[1fr_auto]">
@@ -513,7 +534,22 @@ export const AdminSubscriptions: React.FC = () => {
               Last 50 admin override events for the current search result.
             </p>
           </div>
-          <Badge>{safeAuditEvents.length} events</Badge>
+          <div className="flex items-center gap-3">
+            <label className="flex items-center gap-2 text-xs font-black text-[var(--text-secondary)]">
+              Action
+              <select
+                value={auditActionFilter}
+                onChange={(event) => setAuditActionFilter(event.target.value as AuditActionFilter)}
+                className="rounded-md border border-[var(--border-soft)] bg-[var(--surface-app)] px-2 py-1 text-xs text-[var(--text-main)]"
+              >
+                <option value="all">All</option>
+                <option value="grant">Granted</option>
+                <option value="revoke">Revoked</option>
+                <option value="replace">Replaced</option>
+              </select>
+            </label>
+            <Badge>{filteredAuditEvents.length} / {safeAuditEvents.length} events</Badge>
+          </div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[860px] text-sm">
@@ -527,7 +563,7 @@ export const AdminSubscriptions: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {safeAuditEvents.length > 0 ? safeAuditEvents.map((event) => (
+              {filteredAuditEvents.length > 0 ? filteredAuditEvents.map((event) => (
                 <tr key={event.id} className="border-b border-[var(--border-soft)]/60 last:border-0">
                   <td className="px-4 py-3 align-top">
                     <Badge tone={event.action === 'revoke' ? 'danger' : event.action === 'replace' ? 'warning' : 'success'}>
@@ -554,7 +590,7 @@ export const AdminSubscriptions: React.FC = () => {
               )) : (
                 <tr>
                   <td className="px-4 py-6 text-sm text-[var(--text-muted)]" colSpan={5}>
-                    {isLoading ? 'Loading...' : 'No audit events yet.'}
+                    {isLoading ? 'Loading...' : 'No matching audit events.'}
                   </td>
                 </tr>
               )}
