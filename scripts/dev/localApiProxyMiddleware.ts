@@ -228,6 +228,24 @@ const handlePaddleWebhook = async (
   }
 };
 
+const handleAdminSubscriptions = async (
+  req: LocalRequest,
+  url: URL,
+  res: ServerResponse,
+  body: LocalProxyBody,
+  env: LocalApiProxyEnv
+) => {
+  try {
+    syncProcessEnv(env);
+    const { default: adminSubscriptionsHandler } = await import('../../api/admin/subscriptions');
+    req.body = body;
+    req.query = toQueryObject(url);
+    await (adminSubscriptionsHandler as any)(req, createLocalResponse(res));
+  } catch (error: unknown) {
+    sendJson(res, 500, { error: getErrorMessage(error) });
+  }
+};
+
 const toQueryObject = (url: URL): Record<string, string> =>
   Object.fromEntries(Array.from(url.searchParams.entries()));
 
@@ -304,6 +322,11 @@ export const createLocalApiProxyMiddleware = (env: LocalApiProxyEnv): Plugin => 
 
       if (pathName === '/api/billing/create-checkout-session') {
         await handleCheckoutSession(req as LocalRequest, res, body, env);
+        return;
+      }
+
+      if (pathName === '/api/admin/subscriptions') {
+        await handleAdminSubscriptions(req as LocalRequest, url, res, body, env);
         return;
       }
 
