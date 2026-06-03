@@ -16,6 +16,13 @@ async function getRawBody(req: VercelRequest): Promise<string> {
   return Buffer.concat(chunks).toString('utf8');
 }
 
+function getEnv(name: string): string | undefined {
+  const value = process.env[name];
+  if (typeof value !== 'string') return undefined;
+  const trimmed = value.trim();
+  return trimmed ? trimmed : undefined;
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', ['POST']);
@@ -27,7 +34,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: 'Missing paddle-signature header' });
   }
 
-  const webhookSecret = process.env.PADDLE_WEBHOOK_SECRET;
+  const webhookSecret = getEnv('PADDLE_WEBHOOK_SECRET');
   if (!webhookSecret) {
     console.error('[PADDLE_WEBHOOK] PADDLE_WEBHOOK_SECRET is not configured.');
     return res.status(500).json({ error: 'Server configuration error' });
@@ -55,7 +62,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // 2. Verify paddle signature using Paddle Node SDK
   try {
-    const paddle = new Paddle(process.env.PADDLE_API_KEY || 'dummy_key');
+    const paddle = new Paddle(getEnv('PADDLE_API_KEY') || 'dummy_key');
     const isSignatureValid = await paddle.webhooks.isSignatureValid(rawBody, webhookSecret, signatureHeader);
     if (!isSignatureValid) {
       throw new Error('[Paddle] Webhook signature verification failed');
@@ -92,8 +99,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // 2. Strict Price Mapping (No includes check)
   let tier: 'free' | 'pro' | 'family' = 'free';
-  const proPriceId = process.env.PADDLE_PRO_PRICE_ID;
-  const familyPriceId = process.env.PADDLE_FAMILY_PRICE_ID;
+  const proPriceId = getEnv('PADDLE_PRO_PRICE_ID');
+  const familyPriceId = getEnv('PADDLE_FAMILY_PRICE_ID');
 
   if (status === 'active' || status === 'trialing') {
     const priceId = data.items?.[0]?.price?.id;
@@ -107,8 +114,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
   }
 
-  const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const supabaseUrl = getEnv('SUPABASE_URL') || getEnv('VITE_SUPABASE_URL');
+  const serviceRoleKey = getEnv('SUPABASE_SERVICE_ROLE_KEY');
 
   if (!supabaseUrl || !serviceRoleKey) {
     console.error('[PADDLE_WEBHOOK] Supabase keys are not configured.');

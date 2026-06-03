@@ -9,7 +9,9 @@ type AuthenticatedUser = {
 
 function getEnv(name: string): string | undefined {
   const value = process.env[name];
-  return typeof value === 'string' && value.trim() ? value : undefined;
+  if (typeof value !== 'string') return undefined;
+  const trimmed = value.trim();
+  return trimmed ? trimmed : undefined;
 }
 
 function base64UrlDecode(value: string): Buffer {
@@ -79,7 +81,7 @@ async function authenticateUser(authHeader?: string): Promise<AuthenticatedUser 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS Headers
   const origin = req.headers.origin;
-  const allowedOrigin = process.env.VITE_APP_ORIGIN || process.env.APP_ORIGIN || 'http://localhost:5173';
+  const allowedOrigin = getEnv('VITE_APP_ORIGIN') || getEnv('APP_ORIGIN') || 'http://localhost:5173';
 
   const headers = {
     'Access-Control-Allow-Origin': origin === allowedOrigin ? origin : allowedOrigin,
@@ -167,8 +169,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // 5. Select proper price ID strictly based on tier
-    const proPriceId = process.env.PADDLE_PRO_PRICE_ID;
-    const familyPriceId = process.env.PADDLE_FAMILY_PRICE_ID;
+    const proPriceId = getEnv('PADDLE_PRO_PRICE_ID');
+    const familyPriceId = getEnv('PADDLE_FAMILY_PRICE_ID');
     const priceId = tier === 'pro' ? proPriceId : familyPriceId;
 
     if (!priceId) {
@@ -177,14 +179,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.end(JSON.stringify({ error: 'Paddle price ID is not configured.' }));
     }
 
-    const paddleApiKey = process.env.PADDLE_API_KEY;
+    const paddleApiKey = getEnv('PADDLE_API_KEY');
     if (!paddleApiKey) {
       console.error('[CREATE_CHECKOUT] PADDLE_API_KEY is not configured.');
       res.writeHead(500, { ...headers, 'Content-Type': 'application/json' });
       return res.end(JSON.stringify({ error: 'Paddle API key is not configured.' }));
     }
 
-    const paddleEnv = process.env.PADDLE_ENVIRONMENT || process.env.VITE_PADDLE_ENVIRONMENT || 'sandbox';
+    const paddleEnv = getEnv('PADDLE_ENVIRONMENT') || getEnv('VITE_PADDLE_ENVIRONMENT') || 'sandbox';
     const paddleHost = paddleEnv === 'production' ? 'api.paddle.com' : 'sandbox-api.paddle.com';
     const paddleUrl = `https://${paddleHost}/transactions`;
 
