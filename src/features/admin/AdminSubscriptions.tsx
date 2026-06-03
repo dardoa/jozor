@@ -486,6 +486,12 @@ export const AdminSubscriptions: React.FC = () => {
               </select>
             </label>
 
+            {source === 'sandbox_test' && (
+              <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs font-bold text-amber-800">
+                Sandbox test grants are temporary admin overrides for verification only. They do not create or modify a Paddle subscription.
+              </div>
+            )}
+
             <label className="grid gap-1 text-sm font-bold text-[var(--text-secondary)]">
               Expires at
               <input
