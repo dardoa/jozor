@@ -18,6 +18,22 @@ export interface AdminSubscriptionOverride {
   updated_at: string;
 }
 
+export type AdminSubscriptionAuditAction = 'grant' | 'revoke' | 'replace';
+
+export interface AdminSubscriptionAuditEvent {
+  id: string;
+  target_user_id: string;
+  actor_user_id: string | null;
+  action: AdminSubscriptionAuditAction;
+  override_id: string | null;
+  tier: AdminBillingTier | null;
+  source: AdminSubscriptionOverrideSource | null;
+  reason: string | null;
+  expires_at: string | null;
+  metadata: Record<string, unknown>;
+  created_at: string;
+}
+
 export interface AdminPaddleSubscription {
   user_id: string;
   id: string;
@@ -72,11 +88,14 @@ const requestAdminSubscriptions = async <T>(
 export const fetchAdminSubscriptions = async (
   user: UserProfile,
   query = ''
-): Promise<AdminSubscriptionUser[]> => {
+): Promise<{ users: AdminSubscriptionUser[]; auditEvents: AdminSubscriptionAuditEvent[] }> => {
   const params = new URLSearchParams();
   if (query.trim()) params.set('q', query.trim());
   const suffix = params.toString() ? `?${params.toString()}` : '';
-  const payload = await requestAdminSubscriptions<{ users: AdminSubscriptionUser[] }>(
+  const payload = await requestAdminSubscriptions<{
+    users: AdminSubscriptionUser[];
+    auditEvents?: AdminSubscriptionAuditEvent[];
+  }>(
     user,
     `/api/admin/subscriptions${suffix}`
   );
@@ -84,7 +103,10 @@ export const fetchAdminSubscriptions = async (
     throw new Error('Admin subscriptions response is missing users.');
   }
 
-  return payload.users;
+  return {
+    users: payload.users,
+    auditEvents: Array.isArray(payload.auditEvents) ? payload.auditEvents : [],
+  };
 };
 
 export const grantAdminSubscriptionOverride = async (

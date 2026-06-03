@@ -10,6 +10,8 @@ import {
   fetchAdminSubscriptions,
   grantAdminSubscriptionOverride,
   revokeAdminSubscriptionOverride,
+  type AdminSubscriptionAuditAction,
+  type AdminSubscriptionAuditEvent,
   type AdminBillingTier,
   type AdminSubscriptionOverrideSource,
   type AdminSubscriptionUser,
@@ -29,6 +31,23 @@ const sourceLabel = (source: AdminSubscriptionOverrideSource) => {
   if (source === 'internal_test') return 'Internal test';
   return 'Manual comp';
 };
+
+const actionLabel = (action: AdminSubscriptionAuditAction) => {
+  if (action === 'grant') return 'Granted';
+  if (action === 'revoke') return 'Revoked';
+  return 'Replaced';
+};
+
+const isActiveOverride = (entry: AdminSubscriptionUser) => {
+  const override = entry.override;
+  if (!override || !override.is_active || override.revoked_at) return false;
+  if (!override.expires_at) return true;
+  return new Date(override.expires_at).getTime() > Date.now();
+};
+
+type TierFilter = 'all' | AdminBillingTier;
+type SourceFilter = 'all' | AdminSubscriptionOverrideSource;
+type StatusFilter = 'all' | 'active_override' | 'expired_override' | 'paddle_active' | 'free_only';
 
 const Badge = ({
   children,
@@ -57,7 +76,11 @@ export const AdminSubscriptions: React.FC = () => {
   const isAdmin = useKindiReportsAdminAccess(user);
   const [query, setQuery] = useState('');
   const [users, setUsers] = useState<AdminSubscriptionUser[]>([]);
+  const [auditEvents, setAuditEvents] = useState<AdminSubscriptionAuditEvent[]>([]);
   const [selectedUserId, setSelectedUserId] = useState('');
+  const [tierFilter, setTierFilter] = useState<TierFilter>('all');
+  const [sourceFilter, setSourceFilter] = useState<SourceFilter>('all');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [tier, setTier] = useState<Exclude<AdminBillingTier, 'free'>>('pro');
   const [source, setSource] = useState<AdminSubscriptionOverrideSource>('sandbox_test');
   const [expiresAt, setExpiresAt] = useState('');
@@ -66,6 +89,25 @@ export const AdminSubscriptions: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const safeUsers = Array.isArray(users) ? users : [];
+  const safeAuditEvents = Array.isArray(auditEvents) ? auditEvents : [];
+
+  const filteredUsers = useMemo(() => safeUsers.filter((entry) => {
+    if (tierFilter !== 'all' && entry.effectiveTier !== tierFilter) return false;
+    if (sourceFilter !== 'all' && entry.override?.source !== sourceFilter) return false;
+    if (statusFilter === 'active_override' && !isActiveOverride(entry)) return false;
+    if (statusFilter === 'expired_override') {
+      const override = entry.override;
+      if (!override?.expires_at || new Date(override.expires_at).getTime() > Date.now()) return false;
+    }
+    if (statusFilter === 'paddle_active' && entry.paddleTier === 'free') return false;
+    if (statusFilter === 'free_only' && (entry.effectiveTier !== 'free' || entry.override)) return false;
+    return true;
+  }), [safeUsers, sourceFilter, statusFilter, tierFilter]);
+
+  const userLabelsById = useMemo(
+    () => new Map(safeUsers.map((entry) => [entry.id, entry.email || entry.displayName || entry.id])),
+    [safeUsers]
+  );
 
   const selectedUser = useMemo(
     () => safeUsers.find((entry) => entry.id === selectedUserId) ?? null,
@@ -79,9 +121,10 @@ export const AdminSubscriptions: React.FC = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const rows = await fetchAdminSubscriptions(user, query);
-      const nextUsers = Array.isArray(rows) ? rows : [];
+      const report = await fetchAdminSubscriptions(user, query);
+      const nextUsers = Array.isArray(report.users) ? report.users : [];
       setUsers(nextUsers);
+      setAuditEvents(Array.isArray(report.auditEvents) ? report.auditEvents : []);
       if (nextUsers.length > 0 && !nextUsers.some((row) => row.id === selectedUserId)) {
         setSelectedUserId(nextUsers[0].id);
       }
@@ -202,6 +245,51 @@ export const AdminSubscriptions: React.FC = () => {
         </div>
       </section>
 
+      <section className="grid gap-3 rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] p-4 md:grid-cols-3">
+        <label className="grid gap-1 text-sm font-bold text-[var(--text-secondary)]">
+          Effective tier
+          <select
+            value={tierFilter}
+            onChange={(event) => setTierFilter(event.target.value as TierFilter)}
+            className="rounded-md border border-[var(--border-soft)] bg-[var(--surface-app)] px-3 py-2 text-[var(--text-main)]"
+          >
+            <option value="all">All tiers</option>
+            <option value="free">Free</option>
+            <option value="pro">Pro</option>
+            <option value="family">Family</option>
+          </select>
+        </label>
+
+        <label className="grid gap-1 text-sm font-bold text-[var(--text-secondary)]">
+          Override source
+          <select
+            value={sourceFilter}
+            onChange={(event) => setSourceFilter(event.target.value as SourceFilter)}
+            className="rounded-md border border-[var(--border-soft)] bg-[var(--surface-app)] px-3 py-2 text-[var(--text-main)]"
+          >
+            <option value="all">All sources</option>
+            {ADMIN_SUBSCRIPTION_OVERRIDE_SOURCES.map((value) => (
+              <option key={value} value={value}>{sourceLabel(value)}</option>
+            ))}
+          </select>
+        </label>
+
+        <label className="grid gap-1 text-sm font-bold text-[var(--text-secondary)]">
+          Status
+          <select
+            value={statusFilter}
+            onChange={(event) => setStatusFilter(event.target.value as StatusFilter)}
+            className="rounded-md border border-[var(--border-soft)] bg-[var(--surface-app)] px-3 py-2 text-[var(--text-main)]"
+          >
+            <option value="all">All statuses</option>
+            <option value="active_override">Active override</option>
+            <option value="expired_override">Expired override</option>
+            <option value="paddle_active">Paddle paid tier</option>
+            <option value="free_only">Free only</option>
+          </select>
+        </label>
+      </section>
+
       <section className="grid gap-3 rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] p-4 lg:grid-cols-[1fr_auto]">
         <label className="grid gap-1 text-sm font-bold text-[var(--text-secondary)]">
           {isRtl ? 'بحث بالبريد أو User ID' : 'Search by email or user ID'}
@@ -244,7 +332,7 @@ export const AdminSubscriptions: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {safeUsers.length > 0 ? safeUsers.map((entry) => (
+                {filteredUsers.length > 0 ? filteredUsers.map((entry) => (
                   <tr
                     key={entry.id}
                     className={`cursor-pointer border-b border-[var(--border-soft)]/60 last:border-0 ${
@@ -289,7 +377,7 @@ export const AdminSubscriptions: React.FC = () => {
                 )) : (
                   <tr>
                     <td className="px-4 py-6 text-sm text-[var(--text-muted)]" colSpan={5}>
-                      {isLoading ? 'Loading...' : 'No users found.'}
+                      {isLoading ? 'Loading...' : 'No matching users found.'}
                     </td>
                   </tr>
                 )}
@@ -385,6 +473,64 @@ export const AdminSubscriptions: React.FC = () => {
             </button>
           </div>
         </aside>
+      </section>
+
+      <section className="overflow-hidden rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)]">
+        <div className="flex items-center justify-between border-b border-[var(--border-soft)] px-4 py-3">
+          <div>
+            <h2 className="text-sm font-black text-[var(--text-main)]">Subscription override audit</h2>
+            <p className="mt-1 text-xs text-[var(--text-secondary)]">
+              Last 50 admin override events for the current search result.
+            </p>
+          </div>
+          <Badge>{safeAuditEvents.length} events</Badge>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[860px] text-sm">
+            <thead>
+              <tr className="border-b border-[var(--border-soft)] text-left text-xs uppercase tracking-wide text-[var(--text-muted)]">
+                <th className="px-4 py-3 font-black">Action</th>
+                <th className="px-4 py-3 font-black">User</th>
+                <th className="px-4 py-3 font-black">Tier / Source</th>
+                <th className="px-4 py-3 font-black">Reason</th>
+                <th className="px-4 py-3 font-black">Created</th>
+              </tr>
+            </thead>
+            <tbody>
+              {safeAuditEvents.length > 0 ? safeAuditEvents.map((event) => (
+                <tr key={event.id} className="border-b border-[var(--border-soft)]/60 last:border-0">
+                  <td className="px-4 py-3 align-top">
+                    <Badge tone={event.action === 'revoke' ? 'danger' : event.action === 'replace' ? 'warning' : 'success'}>
+                      {actionLabel(event.action)}
+                    </Badge>
+                  </td>
+                  <td className="px-4 py-3 align-top">
+                    <div className="font-black text-[var(--text-main)]">{userLabelsById.get(event.target_user_id) ?? event.target_user_id}</div>
+                    <div className="mt-1 max-w-[260px] truncate font-mono text-xs text-[var(--text-muted)]">{event.target_user_id}</div>
+                  </td>
+                  <td className="px-4 py-3 align-top text-[var(--text-secondary)]">
+                    {event.tier ? tierLabel(event.tier) : '-'} / {event.source ? sourceLabel(event.source) : '-'}
+                    {event.expires_at && (
+                      <div className="mt-1 text-xs text-[var(--text-muted)]">Expires: {formatDate(event.expires_at)}</div>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 align-top text-[var(--text-secondary)]">
+                    <div className="max-w-[320px] truncate">{event.reason || '-'}</div>
+                  </td>
+                  <td className="px-4 py-3 align-top text-xs text-[var(--text-muted)]">
+                    {formatDate(event.created_at)}
+                  </td>
+                </tr>
+              )) : (
+                <tr>
+                  <td className="px-4 py-6 text-sm text-[var(--text-muted)]" colSpan={5}>
+                    {isLoading ? 'Loading...' : 'No audit events yet.'}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </section>
     </div>
   );
