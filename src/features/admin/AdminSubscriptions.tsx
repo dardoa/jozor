@@ -65,10 +65,11 @@ export const AdminSubscriptions: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const safeUsers = Array.isArray(users) ? users : [];
 
   const selectedUser = useMemo(
-    () => users.find((entry) => entry.id === selectedUserId) ?? null,
-    [selectedUserId, users]
+    () => safeUsers.find((entry) => entry.id === selectedUserId) ?? null,
+    [selectedUserId, safeUsers]
   );
 
   const isRtl = language === 'ar';
@@ -79,9 +80,10 @@ export const AdminSubscriptions: React.FC = () => {
     setError(null);
     try {
       const rows = await fetchAdminSubscriptions(user, query);
-      setUsers(rows);
-      if (rows.length > 0 && !rows.some((row) => row.id === selectedUserId)) {
-        setSelectedUserId(rows[0].id);
+      const nextUsers = Array.isArray(rows) ? rows : [];
+      setUsers(nextUsers);
+      if (nextUsers.length > 0 && !nextUsers.some((row) => row.id === selectedUserId)) {
+        setSelectedUserId(nextUsers[0].id);
       }
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : 'Failed to load subscriptions.');
@@ -242,7 +244,7 @@ export const AdminSubscriptions: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {users.length > 0 ? users.map((entry) => (
+                {safeUsers.length > 0 ? safeUsers.map((entry) => (
                   <tr
                     key={entry.id}
                     className={`cursor-pointer border-b border-[var(--border-soft)]/60 last:border-0 ${

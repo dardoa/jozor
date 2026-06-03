@@ -80,6 +80,10 @@ export const fetchAdminSubscriptions = async (
     user,
     `/api/admin/subscriptions${suffix}`
   );
+  if (!Array.isArray(payload.users)) {
+    throw new Error('Admin subscriptions response is missing users.');
+  }
+
   return payload.users;
 };
 
