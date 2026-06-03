@@ -370,9 +370,10 @@ export const resolveRelationTerm = (query: string): Pick<KindiAddPlan, 'relation
   return { relation: 'child', gender: 'male' };
 };
 
-export const stripKnownCommandTerms = (value: string): string => {
-  let output = ` ${value} `;
-  const allTerms = [
+const escapeRegExp = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const COMMAND_STRIP_PATTERN = new RegExp(
+  `(^|\\s)(?:${[
     ...ADD_VERBS,
     ...UPDATE_VERBS,
     ...DELETE_VERBS,
@@ -382,12 +383,15 @@ export const stripKnownCommandTerms = (value: string): string => {
     ...TARGET_PREPOSITIONS,
     ...NAME_MARKERS,
     ...RELATION_TERMS.flatMap((term) => term.terms),
-  ].sort((a, b) => b.length - a.length);
+  ]
+    .sort((a, b) => b.length - a.length)
+    .map(escapeRegExp)
+    .join('|')})(?=\\s|$)`,
+  'giu'
+);
 
-  for (const rawTerm of allTerms) {
-    const term = rawTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    output = output.replace(new RegExp(`(^|\\s)${term}(?=\\s|$)`, 'giu'), ' ');
-  }
-
+export const stripKnownCommandTerms = (value: string): string => {
+  let output = ` ${value} `;
+  output = output.replace(COMMAND_STRIP_PATTERN, ' ');
   return output.replace(/\s+/g, ' ').trim();
 };

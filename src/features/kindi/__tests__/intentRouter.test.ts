@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { routeKindiIntent } from '../logic/intentRouter';
-import { getConversationFlowIntent, hasCommandTerm, KINDI_LEXICON } from '../logic/kindiCommandLexicon';
+import { getConversationFlowIntent, hasCommandTerm, KINDI_LEXICON, stripKnownCommandTerms } from '../logic/kindiCommandLexicon';
 
 describe('routeKindiIntent', () => {
   it('routes plain relationship search as QUERY', () => {
@@ -56,6 +56,12 @@ describe('routeKindiIntent', () => {
   it('does not match short Arabic relation words inside person names', () => {
     expect(hasCommandTerm('أضف زوجة لأسامة', KINDI_LEXICON.RELATIONS.PARENT_FEMALE)).toBe(false);
     expect(hasCommandTerm('أضف أم لأسامة', KINDI_LEXICON.RELATIONS.PARENT_FEMALE)).toBe(true);
+  });
+
+  it('strips known command terms without removing words inside names', () => {
+    expect(stripKnownCommandTerms('add son to Mahmoud named Ali')).toBe('Mahmoud Ali');
+    expect(stripKnownCommandTerms('delete Anderson')).toBe('Anderson');
+    expect(stripKnownCommandTerms('update profession for Nora')).toBe('profession Nora');
   });
 
   it('detects broad conversation flow choices without routing them as commands', () => {

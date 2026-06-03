@@ -1,5 +1,5 @@
 import React, { type MouseEvent } from 'react';
-import DOMPurify from 'dompurify';
+import DOMPurify, { type Config as DOMPurifyConfig } from 'dompurify';
 import { Info, Loader2, Sparkles } from 'lucide-react';
 
 import type { Person } from '../../../../types';
@@ -24,6 +24,12 @@ interface BioBiographySectionProps {
 }
 
 const BIO_TONES = ['standard', 'formal', 'storyteller', 'humorous', 'journalistic'] as const;
+const BIO_SANITIZE_OPTIONS = {
+  ALLOWED_TAGS: ['p', 'br', 'strong', 'b', 'em', 'i', 'ul', 'ol', 'li', 'blockquote'],
+  ALLOWED_ATTR: [],
+} satisfies DOMPurifyConfig;
+
+const sanitizeBioHtml = (bio: string): string => String(DOMPurify.sanitize(bio, BIO_SANITIZE_OPTIONS));
 
 export const BioBiographySection: React.FC<BioBiographySectionProps> = ({
   person,
@@ -94,7 +100,7 @@ export const BioBiographySection: React.FC<BioBiographySectionProps> = ({
       ) : (
         <div className="text-sm text-[var(--text-main)] leading-relaxed">
           {person.bio ? (
-            <div className="space-y-4 article-content" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(person.bio) }} />
+            <div className="space-y-4 article-content" dangerouslySetInnerHTML={{ __html: sanitizeBioHtml(person.bio) }} />
           ) : (
             <EmptyState
               icon={<Info className="w-8 h-8" />}
