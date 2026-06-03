@@ -92,44 +92,6 @@ export const getFullName = (p?: Person): string => {
  * @returns A formatted string like "(b. 1990)" or "(1990 - 2020)".
  */
 export const getYears = (p: Person, _format: 'iso' | 'eu' | 'us' | 'long' = 'iso'): string => {
-  // If format is ISO, we just show year (old behavior) or full date?
-  // Actually, usually nodes just show years (1990 - 2020).
-  // If the user wants full dates on nodes, that's a different setting?
-  // The user requirement says "Change date format -> verify all dates update".
-  // Node cards usually show years only for space.
-  // BUT if I change format, maybe they want full dates?
-  // Let's assume on nodes we keep Years Only for standard view, but maybe "long" format implies full date?
-  // Actually, standard genealogy nodes usually just show years.
-  // Let's just use `formatDate` but extracting year if the format is not ISO?
-  // Wait, `getDisplayDate` extracts YEAR.
-  // If I want to support full dates on nodes, I should use `formatDate`.
-  // But space is tight.
-  // Let's stick to Years Only for getYears, BUT if format is provided, maybe we interpret it?
-  // Actually, maybe `getYears` should just use `formatDate` if `showDates` is on?
-  // Existing `getYears` implementation:
-  // const b = getDisplayDate(p.birthDate); // returns YEAR
-
-  // If I change this to full date, it might break layout.
-  // Let's keep `getYears` returning YEARS, but maybe improve parsing?
-  // Or maybe "Date Format" applies to "Birth Date: ..." details, not the node years?
-  // "Change date format -> verify all dates update throughout app".
-  // If I change it to DD/MM/YYYY, seeing 1990 is fine.
-  // So `getYears` might remain YEAR ONLY.
-  // Except if `p.birthDate` is `1990-01-01`, `getDisplayDate` returns `1990`.
-  // This seems correct for nodes.
-
-  // However, Details panel InfoTab shows full dates.
-
-  // So I will NOT change `getYears` to return full dates, because that would clutter the node.
-  // I will leave `getYears` as is (returning years).
-  // I will ONLY update places that show FULL dates.
-
-  // Wait, if I do that, `getYears` doesn't need `format`.
-
-  // BUT the user said "verify ALL dates update".
-  // If the node shows "b. 1990", that's year, not date.
-  // I think it's acceptable to keep nodes as years.
-
   const b = getDisplayDate(p.birthDate);
   if (!b && !p.deathDate) return '';
 

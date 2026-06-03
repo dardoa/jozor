@@ -36,9 +36,7 @@ export const DiscussionListener: React.FC = () => {
         setOnlineUsers(currentTreeId, onlineUsers);
       },
       (status, err) => {
-        if (status === 'SUBSCRIBED') {
-          console.log(`[Discussion] Subscribed to tree: ${currentTreeId}`);
-        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
           logError('DiscussionListener subscription error', err || new Error(status), {
             metadata: { treeId: currentTreeId, status }
           });

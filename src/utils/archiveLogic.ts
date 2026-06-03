@@ -33,37 +33,53 @@ const blobToBase64 = (blob: Blob): Promise<string> => {
   });
 };
 
+const decodeArchivePath = (value: string): string => {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+};
+
+const getSafeArchiveMediaPath = (mediaPath: string, expectedFolder: string): string | null => {
+  const decodedPath = decodeArchivePath(mediaPath);
+  const hasSuspiciousPathSyntax =
+    decodedPath.length === 0 ||
+    decodedPath.length > 255 ||
+    decodedPath.startsWith('/') ||
+    decodedPath.startsWith('\\') ||
+    /^[a-z]:/i.test(decodedPath) ||
+    decodedPath.includes('\\') ||
+    /[\u0000-\u001f]/.test(decodedPath);
+
+  if (hasSuspiciousPathSyntax) return null;
+
+  const segments = decodedPath.split('/');
+  if (segments[0] !== expectedFolder || segments.length < 2) return null;
+  if (segments.some((segment) => segment === '' || segment === '.' || segment === '..')) return null;
+
+  return decodedPath;
+};
+
 // New helper for secure file lookup within the zip
 const findAndValidateMediaFile = async (
   zip: JSZip,
   mediaPath: string,
   expectedFolder: string
 ): Promise<string> => {
-  // --- SECURITY VALIDATION ---
-  // 1. Check for absolute paths or path traversal attempts
-  //    - Starts with '/' (absolute path)
-  //    - Contains '..' (path traversal)
-  //    - Path length limit (DoS mitigation)
-  if (mediaPath.startsWith('/') || mediaPath.includes('../') || mediaPath.length > 255) {
+  const safeMediaPath = getSafeArchiveMediaPath(mediaPath, expectedFolder);
+  if (!safeMediaPath) {
     console.warn(
       `Security alert: Invalid or suspicious media path detected: '${mediaPath}'. Skipping.`
     );
-    return mediaPath; // Return original path, effectively skipping processing
-  }
-  // 2. Ensure it starts with the expected folder prefix
-  if (!mediaPath.startsWith(`${expectedFolder}/`)) {
-    console.warn(
-      `Security alert: Media path '${mediaPath}' does not start with expected folder '${expectedFolder}'. Skipping.`
-    );
     return mediaPath;
   }
-  // --- END SECURITY VALIDATION ---
 
-  let mediaFile = zip.file(mediaPath);
+  let mediaFile = zip.file(safeMediaPath);
   if (!mediaFile) {
     // If direct path fails, try finding by filename alone within the expected folder.
     // This regex search is already somewhat safe as it anchors to the folder.
-    const fileName = mediaPath.split('/').pop();
+    const fileName = safeMediaPath.split('/').pop();
     if (fileName) {
       // Escape special characters in fileName for regex
       const escapedFileName = fileName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -74,7 +90,7 @@ const findAndValidateMediaFile = async (
 
   if (mediaFile) {
     const base64 = await mediaFile.async('base64');
-    const ext = mediaPath.split('.').pop();
+    const ext = safeMediaPath.split('.').pop();
     const mime =
       ext === 'png'
         ? 'image/png'

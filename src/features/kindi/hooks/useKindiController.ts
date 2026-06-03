@@ -39,6 +39,7 @@ const sleep = (ms: number) => new Promise((resolve) => window.setTimeout(resolve
 
 const pickRandom = (items: readonly string[]) => items[Math.floor(Math.random() * items.length)];
 const IS_KINDI_AI_ENABLED = import.meta.env.VITE_KINDI_AI_ENABLED === 'true';
+let fallbackInteractionIdCounter = 0;
 const logKindiAIDebug = (message: string, metadata?: Record<string, unknown>) => {
   if (import.meta.env.DEV) {
     console.info(`[Kindi AI] ${message}`, metadata ?? {});
@@ -51,12 +52,23 @@ const getSafeRedactedQuery = (query: string): string | undefined => {
 };
 
 const createKindiInteractionId = (): string => {
-  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
-    return crypto.randomUUID();
+  const browserCrypto = globalThis.crypto;
+  if (browserCrypto?.randomUUID) {
+    return browserCrypto.randomUUID();
   }
 
-  const hex = Array.from({ length: 32 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
-  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-4${hex.slice(13, 16)}-${(8 + Math.floor(Math.random() * 4)).toString(16)}${hex.slice(17, 20)}-${hex.slice(20)}`;
+  const bytes = new Uint8Array(16);
+  if (browserCrypto?.getRandomValues) {
+    browserCrypto.getRandomValues(bytes);
+  } else {
+    fallbackInteractionIdCounter += 1;
+    return `kindi:${Date.now()}:${fallbackInteractionIdCounter}`;
+  }
+
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 };
 
 const logKindiLearningEvent = (

@@ -94,4 +94,32 @@ describe('archiveLogic', () => {
     expect(data.people.person_1.firstName).toBe('Root');
     expect(data.settings).toEqual({ treeSettings: { chartType: 'radial' } });
   });
+
+  it('does not rehydrate encoded traversal media paths', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const zip = new JSZip();
+    zip.file('family_data.json', JSON.stringify({
+      people: {
+        person_1: {
+          id: 'person_1',
+          firstName: 'Root',
+          lastName: 'Person',
+          gender: 'male',
+          parents: [],
+          children: [],
+          spouses: [],
+          photoUrl: 'images/%2e%2e/secret.png',
+        },
+      },
+    }));
+    zip.file('images/%2e%2e/secret.png', 'not-an-image');
+    const blob = await zip.generateAsync({ type: 'blob' });
+    const file = new File([blob], 'family.jozor', { type: 'application/zip' });
+
+    const data = await importJozorArchiveData(file);
+
+    expect(data.people.person_1.photoUrl).toBe('images/%2e%2e/secret.png');
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('Invalid or suspicious media path'));
+    warnSpy.mockRestore();
+  });
 });

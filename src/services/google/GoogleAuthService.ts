@@ -12,6 +12,9 @@ type ExchangeResponse = {
     error?: string;
 };
 type UserProfileWithSupabaseToken = UserProfile & { supabaseToken?: string };
+type MutableCodeClient = google.accounts.oauth2.CodeClient & {
+    callback?: (response: google.accounts.oauth2.CodeResponse) => void;
+};
 
 const readExchangeResponse = async (response: Response): Promise<Partial<ExchangeResponse>> => {
     const contentType = response.headers.get('content-type') || '';
@@ -97,14 +100,13 @@ export class GoogleAuthService implements IGoogleAuthService {
                 await this.apiService.initialize();
             }
 
-            const codeClient = this.apiService.getCodeClient();
+            const codeClient = this.apiService.getCodeClient() as MutableCodeClient | undefined;
             if (!codeClient) {
                 throw new Error('Google API (Code Client) not initialized.');
             }
 
             return new Promise<UserProfile>((resolve, reject) => {
                 const gapiClient = (window as GoogleWindow).gapi;
-                // @ts-expect-error - callback property exists on client
                 codeClient.callback = async (resp: google.accounts.oauth2.CodeResponse) => {
                     if (resp.error) {
                         this.loginPromise = null;

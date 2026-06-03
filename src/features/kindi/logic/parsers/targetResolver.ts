@@ -151,7 +151,8 @@ export const isNormalizedNameMatch = (query: string, candidate: string): boolean
 
   const queryWords = query.split(/\s+/).filter(Boolean);
   const candidateWords = candidate.split(/\s+/).filter(Boolean);
-  if (queryWords.length >= 2 && queryWords.every((word) => candidateWords.includes(word))) {
+  const candidateWordSet = new Set(candidateWords);
+  if (queryWords.length >= 2 && queryWords.every((word) => candidateWordSet.has(word))) {
     return true;
   }
 

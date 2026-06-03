@@ -179,7 +179,3 @@ export function buildFamilyGraph(peopleInput: Record<string, RawPerson> | RawPer
 export function stringifyFamilyGraph(graph: FamilyGraph): string {
   return JSON.stringify(graph, null, 2);
 }
-
-export function debugPrintFamilyGraph(graph: FamilyGraph, label = '[FamilyGraph]'): void {
-  console.log(`${label}\n${stringifyFamilyGraph(graph)}`);
-}
