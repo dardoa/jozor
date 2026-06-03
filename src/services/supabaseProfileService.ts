@@ -1,6 +1,8 @@
 import { logError, logWarn } from '../utils/errorLogger';
 import { getTreeClient } from './supabaseTreeClient';
 
+type BillingTier = 'free' | 'pro' | 'family';
+
 export interface UserProfileUpdates {
   displayName?: string;
   photoURL?: string;
@@ -28,7 +30,49 @@ export const fetchUserProfile = async (
     logError('SupabaseProfileService fetchUserProfile', error, { category: 'NETWORK', severity: 'MEDIUM', showToast: false });
     return null;
   }
-  return data;
+
+  const { data: overrideData, error: overrideError } = await client
+    .from('subscription_overrides')
+    .select('tier, expires_at, is_active, revoked_at')
+    .eq('user_id', uid)
+    .eq('is_active', true)
+    .is('revoked_at', null)
+    .maybeSingle();
+
+  if (overrideError) {
+    logWarn('SupabaseProfileService fetchUserProfile', 'Failed to fetch subscription override.', {
+      category: 'NETWORK',
+      metadata: { message: overrideError.message },
+    });
+    return data;
+  }
+
+  const isBillingTier = (value: unknown): value is BillingTier =>
+    value === 'free' || value === 'pro' || value === 'family';
+
+  const baseTier: BillingTier = isBillingTier(data?.tier) ? data.tier : 'free';
+  const overrideTier = overrideData?.tier;
+  const overrideIsActive = Boolean(
+    overrideData?.is_active &&
+    !overrideData.revoked_at &&
+    (!overrideData.expires_at || new Date(overrideData.expires_at).getTime() > Date.now())
+  );
+
+  if (!overrideIsActive || !isBillingTier(overrideTier) || overrideTier === 'free') {
+    return data;
+  }
+
+  const rank = { free: 0, pro: 1, family: 2 } as const;
+  const effectiveTier = rank[overrideTier] > rank[baseTier] ? overrideTier : baseTier;
+
+  return {
+    ...data,
+    tier: effectiveTier,
+    metadata: {
+      ...(data?.metadata ?? {}),
+      subscription_override_active: true,
+    },
+  };
 };
 
 export const fetchAiMonthlyUsage = async (

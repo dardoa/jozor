@@ -1,5 +1,5 @@
 import React from 'react';
-import { Activity, ArrowLeft, ArrowRight, BrainCircuit, LayoutDashboard, SlidersHorizontal } from 'lucide-react';
+import { Activity, ArrowLeft, ArrowRight, BrainCircuit, CreditCard, LayoutDashboard, SlidersHorizontal } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 
 import { useTranslation } from '../../context/TranslationContext';
@@ -7,8 +7,9 @@ import { useAppStore } from '../../store/useAppStore';
 import { AdminDiagnostics } from './AdminDiagnostics';
 import { AdminDefaultTreeSettings } from './AdminDefaultTreeSettings';
 import { AdminKindiLearningReports } from './AdminKindiLearningReports';
+import { AdminSubscriptions } from './AdminSubscriptions';
 
-type AdminTab = 'kindi' | 'tree-defaults' | 'diagnostics';
+type AdminTab = 'kindi' | 'subscriptions' | 'tree-defaults' | 'diagnostics';
 
 const tabs: Array<{
   id: AdminTab;
@@ -21,6 +22,12 @@ const tabs: Array<{
     icon: BrainCircuit,
     label: 'Kindi Reports',
     description: 'Redacted learning reports and intent telemetry.',
+  },
+  {
+    id: 'subscriptions',
+    icon: CreditCard,
+    label: 'Subscriptions',
+    description: 'Read Paddle status and grant safe admin overrides.',
   },
   {
     id: 'tree-defaults',
@@ -37,7 +44,7 @@ const tabs: Array<{
 ];
 
 const isAdminTab = (value: string | null): value is AdminTab =>
-  value === 'kindi' || value === 'tree-defaults' || value === 'diagnostics';
+  value === 'kindi' || value === 'subscriptions' || value === 'tree-defaults' || value === 'diagnostics';
 
 const returnToApp = () => {
   window.history.pushState(null, '', '/');
@@ -97,7 +104,7 @@ export const AdminDashboard: React.FC = () => {
           <p className="mt-1 max-w-2xl text-sm text-[var(--text-secondary)]">{description}</p>
         </header>
 
-        <nav className="grid gap-2 rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] p-2 md:grid-cols-3" aria-label="Admin sections">
+        <nav className="grid gap-2 rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] p-2 md:grid-cols-4" aria-label="Admin sections">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = tab.id === activeTab;
@@ -125,6 +132,7 @@ export const AdminDashboard: React.FC = () => {
 
         <section className="min-h-[50vh] rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] p-4 shadow-sm">
           {activeTab === 'kindi' && <AdminKindiLearningReports embedded />}
+          {activeTab === 'subscriptions' && <AdminSubscriptions />}
           {activeTab === 'tree-defaults' && <AdminDefaultTreeSettings embedded />}
           {activeTab === 'diagnostics' && <AdminDiagnostics embedded />}
         </section>
