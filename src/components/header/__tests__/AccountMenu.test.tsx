@@ -22,10 +22,8 @@ vi.mock('../../../context/TranslationContext', () => ({
       signIn: 'Sign in',
       signOut: 'Sign out',
       adminTools: 'Admin',
-      kindiLearningReports: 'Kindi learning reports',
-      kindiLearningReportsHint: 'Review redacted Kindi learning telemetry.',
-      defaultTreeSettings: 'Default tree settings',
-      defaultTreeSettingsHint: 'Set visual defaults for newly created trees.',
+      adminDashboard: 'Admin Dashboard',
+      adminDashboardHint: 'Manage reports, defaults, diagnostics, and future admin tools.',
       globalSettings: { title: 'Global Settings' },
       userMenu: {
         welcome: 'Welcome',
@@ -37,9 +35,7 @@ vi.mock('../../../context/TranslationContext', () => ({
 
 vi.mock('../../../features/admin', () => ({
   useKindiReportsAdminAccess: useKindiReportsAdminAccessMock,
-  openKindiLearningReports: vi.fn(),
-  openAdminTreeDefaults: vi.fn(),
-  openAdminDiagnostics: vi.fn(),
+  openAdminDashboard: vi.fn(),
 }));
 
 describe('AccountMenu', () => {
@@ -76,8 +72,7 @@ describe('AccountMenu', () => {
     expect(screen.getByText('owner@example.com')).toBeInTheDocument();
     expect(screen.queryByRole('menuitem', { name: /Backup now/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('menuitem', { name: /Global Settings/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('menuitem', { name: /Kindi learning reports/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('menuitem', { name: /Default tree settings/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('menuitem', { name: /Admin Dashboard/i })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('menuitem', { name: /Switch to Arabic/i }));
     expect(setLanguage).toHaveBeenCalledWith('ar');
@@ -144,8 +139,8 @@ describe('AccountMenu', () => {
       />
     );
 
-    expect(screen.getByRole('menuitem', { name: /Kindi learning reports/i })).toBeInTheDocument();
-    expect(screen.getByRole('menuitem', { name: /Default tree settings/i })).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: /Admin Dashboard/i })).toBeInTheDocument();
+    expect(screen.queryByRole('menuitem', { name: /Kindi learning reports/i })).not.toBeInTheDocument();
   });
 });
 

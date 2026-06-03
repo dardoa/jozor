@@ -1,10 +1,10 @@
 import { memo } from 'react';
-import { Activity, BrainCircuit, FolderArchive, Languages, LogIn, LogOut, Moon, Settings, SlidersHorizontal, Sun, Sparkles } from 'lucide-react';
+import { BrainCircuit, FolderArchive, Languages, LayoutDashboard, LogIn, LogOut, Moon, Settings, Sun, Sparkles } from 'lucide-react';
 import { DropdownContent, DropdownMenuDivider, DropdownMenuHeader, DropdownMenuItem } from '../ui/DropdownMenu';
 import { useTranslation } from '../../context/TranslationContext';
 import type { ThemeLanguageProps, UserProfile } from '../../types';
 import { useAppStore } from '../../store/useAppStore';
-import { openAdminDiagnostics, openAdminTreeDefaults, openKindiLearningReports, useKindiReportsAdminAccess } from '../../features/admin';
+import { openAdminDashboard, useKindiReportsAdminAccess } from '../../features/admin';
 
 interface AccountMenuProps {
   themeLanguage: ThemeLanguageProps;
@@ -117,22 +117,10 @@ export const AccountMenu = memo<AccountMenuProps>(
             <DropdownMenuDivider />
             <DropdownMenuHeader icon={<BrainCircuit className="w-3 h-3" />} label={text.adminTools || 'Admin'} />
             <DropdownMenuItem
-              onClick={openKindiLearningReports}
-              icon={<BrainCircuit className="w-4 h-4" />}
-              label={text.kindiLearningReports || 'Kindi learning reports'}
-              subLabel={text.kindiLearningReportsHint || 'Review redacted Kindi learning telemetry.'}
-            />
-            <DropdownMenuItem
-              onClick={openAdminTreeDefaults}
-              icon={<SlidersHorizontal className="w-4 h-4" />}
-              label={text.defaultTreeSettings || 'Default tree settings'}
-              subLabel={text.defaultTreeSettingsHint || 'Set visual defaults for newly created trees.'}
-            />
-            <DropdownMenuItem
-              onClick={openAdminDiagnostics}
-              icon={<Activity className="w-4 h-4" />}
-              label={text.diagnosticsTitle || 'Diagnostics'}
-              subLabel={text.diagnosticsHint || 'Monitor performance, synchronization, and bootstrap telemetry.'}
+              onClick={() => openAdminDashboard()}
+              icon={<LayoutDashboard className="w-4 h-4" />}
+              label={text.adminDashboard || 'Admin Dashboard'}
+              subLabel={text.adminDashboardHint || 'Manage reports, defaults, diagnostics, and future admin tools.'}
             />
           </>
         )}

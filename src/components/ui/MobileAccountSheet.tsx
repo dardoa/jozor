@@ -1,8 +1,8 @@
 import { memo } from 'react';
-import { BrainCircuit, CloudUpload, Languages, LogIn, LogOut, Moon, Settings, SlidersHorizontal, Sun, X } from 'lucide-react';
+import { CloudUpload, Languages, LayoutDashboard, LogIn, LogOut, Moon, Settings, Sun, X } from 'lucide-react';
 import { useTranslation } from '../../context/TranslationContext';
 import type { ThemeLanguageProps, UserProfile } from '../../types';
-import { openAdminTreeDefaults, openKindiLearningReports, useKindiReportsAdminAccess } from '../../features/admin';
+import { openAdminDashboard, useKindiReportsAdminAccess } from '../../features/admin';
 
 interface MobileAccountSheetProps {
   isOpen: boolean;
@@ -157,16 +157,10 @@ export const MobileAccountSheet = memo(({
             <section className="space-y-3">
               <h3 className="px-1 text-[11px] font-bold uppercase tracking-wider text-[var(--text-dim)] opacity-50">{text.adminTools || 'Admin'}</h3>
               <SheetAction
-                icon={<BrainCircuit className="h-5 w-5" />}
-                label={text.kindiLearningReports || 'Kindi learning reports'}
-                subLabel={text.kindiLearningReportsHint || 'Review redacted Kindi learning telemetry.'}
-                onClick={closeThen(openKindiLearningReports)}
-              />
-              <SheetAction
-                icon={<SlidersHorizontal className="h-5 w-5" />}
-                label={text.defaultTreeSettings || 'Default tree settings'}
-                subLabel={text.defaultTreeSettingsHint || 'Set visual defaults for newly created trees.'}
-                onClick={closeThen(openAdminTreeDefaults)}
+                icon={<LayoutDashboard className="h-5 w-5" />}
+                label={text.adminDashboard || 'Admin Dashboard'}
+                subLabel={text.adminDashboardHint || 'Manage reports, defaults, diagnostics, and future admin tools.'}
+                onClick={closeThen(() => openAdminDashboard())}
               />
             </section>
           ) : null}

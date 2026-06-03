@@ -18,10 +18,8 @@ vi.mock('../../../context/TranslationContext', () => ({
       switchToLightMode: 'Switch to light mode',
       avatarAlt: 'Avatar',
       adminTools: 'Admin',
-      kindiLearningReports: 'Kindi learning reports',
-      kindiLearningReportsHint: 'Review redacted Kindi learning telemetry.',
-      defaultTreeSettings: 'Default tree settings',
-      defaultTreeSettingsHint: 'Set visual defaults for newly created trees.',
+      adminDashboard: 'Admin Dashboard',
+      adminDashboardHint: 'Manage reports, defaults, diagnostics, and future admin tools.',
       globalSettings: {
         title: 'Global Settings',
       },
@@ -37,8 +35,7 @@ vi.mock('../../../context/TranslationContext', () => ({
 
 vi.mock('../../../features/admin', () => ({
   useKindiReportsAdminAccess: useKindiReportsAdminAccessMock,
-  openKindiLearningReports: vi.fn(),
-  openAdminTreeDefaults: vi.fn(),
+  openAdminDashboard: vi.fn(),
 }));
 
 describe('MobileAccountSheet', () => {
@@ -75,8 +72,7 @@ describe('MobileAccountSheet', () => {
 
     expect(screen.getByRole('heading', { name: 'Account' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Global Settings/i })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /Kindi learning reports/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /Default tree settings/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Admin Dashboard/i })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /Global Settings/i }));
 
@@ -109,8 +105,8 @@ describe('MobileAccountSheet', () => {
       />
     );
 
-    expect(screen.getByRole('button', { name: /Kindi learning reports/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Default tree settings/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Admin Dashboard/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Kindi learning reports/i })).not.toBeInTheDocument();
   });
 });
 

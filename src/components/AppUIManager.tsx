@@ -46,14 +46,8 @@ const HelpCenter = React.lazy(() =>
 const TheVaultDrawer = React.lazy(() =>
   import('../features/the-vault').then((m) => ({ default: m.TheVaultDrawer }))
 );
-const AdminKindiLearningReports = React.lazy(() =>
-  import('../features/admin/AdminKindiLearningReports').then((m) => ({ default: m.AdminKindiLearningReports }))
-);
-const AdminDefaultTreeSettings = React.lazy(() =>
-  import('../features/admin/AdminDefaultTreeSettings').then((m) => ({ default: m.AdminDefaultTreeSettings }))
-);
-const AdminDiagnostics = React.lazy(() =>
-  import('../features/admin/AdminDiagnostics').then((m) => ({ default: m.AdminDiagnostics }))
+const AdminDashboard = React.lazy(() =>
+  import('../features/admin/AdminDashboard').then((m) => ({ default: m.AdminDashboard }))
 );
 const DiagnosticsDrawer = React.lazy(() =>
   import('../features/diagnostics').then((m) => ({ default: m.DiagnosticsDrawer }))
@@ -294,9 +288,10 @@ export const AppUIManager: React.FC = () => {
         <Routes>
           <Route path='/help' element={<HelpCenter />} />
           <Route path='/support' element={<Navigate to='/help' replace />} />
-          <Route path='/admin/kindi-learning' element={<ProtectedRoute><AdminKindiLearningReports /></ProtectedRoute>} />
-          <Route path='/admin/tree-defaults' element={<ProtectedRoute><AdminDefaultTreeSettings /></ProtectedRoute>} />
-          <Route path='/admin/diagnostics' element={<ProtectedRoute><AdminDiagnostics /></ProtectedRoute>} />
+          <Route path='/admin' element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+          <Route path='/admin/kindi-learning' element={<Navigate to='/admin?tab=kindi' replace />} />
+          <Route path='/admin/tree-defaults' element={<Navigate to='/admin?tab=tree-defaults' replace />} />
+          <Route path='/admin/diagnostics' element={<Navigate to='/admin?tab=diagnostics' replace />} />
           <Route path='/shared/:shareToken' element={<InvitePage />} />
 
           <Route

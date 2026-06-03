@@ -30,17 +30,20 @@ export const useKindiReportsAdminAccess = (user: UserProfile | null): boolean =>
   return isAdmin;
 };
 
-export const openKindiLearningReports = (): void => {
-  window.history.pushState(null, '', '/admin/kindi-learning');
+export const openAdminDashboard = (tab?: 'kindi' | 'tree-defaults' | 'diagnostics'): void => {
+  const suffix = tab ? `?tab=${tab}` : '';
+  window.history.pushState(null, '', `/admin${suffix}`);
   window.dispatchEvent(new PopStateEvent('popstate'));
+};
+
+export const openKindiLearningReports = (): void => {
+  openAdminDashboard('kindi');
 };
 
 export const openAdminTreeDefaults = (): void => {
-  window.history.pushState(null, '', '/admin/tree-defaults');
-  window.dispatchEvent(new PopStateEvent('popstate'));
+  openAdminDashboard('tree-defaults');
 };
 
 export const openAdminDiagnostics = (): void => {
-  window.history.pushState(null, '', '/admin/diagnostics');
-  window.dispatchEvent(new PopStateEvent('popstate'));
+  openAdminDashboard('diagnostics');
 };

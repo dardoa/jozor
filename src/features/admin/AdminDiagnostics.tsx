@@ -16,7 +16,11 @@ const returnToApp = () => {
   window.dispatchEvent(new PopStateEvent('popstate'));
 };
 
-export const AdminDiagnostics: React.FC = () => {
+interface AdminDiagnosticsProps {
+  embedded?: boolean;
+}
+
+export const AdminDiagnostics: React.FC<AdminDiagnosticsProps> = ({ embedded = false }) => {
   const { t, language } = useTranslation();
   const text = t.adminDiagnostics;
   const BackIcon = language === 'ar' ? ArrowRight : ArrowLeft;
@@ -67,18 +71,20 @@ export const AdminDiagnostics: React.FC = () => {
   }
 
   return (
-    <div className="h-screen overflow-y-auto bg-[var(--surface-app)] px-4 py-6 text-[var(--text-main)] sm:px-6">
+    <div className={`${embedded ? 'bg-transparent text-[var(--text-main)]' : 'h-screen overflow-y-auto bg-[var(--surface-app)] px-4 py-6 text-[var(--text-main)] sm:px-6'}`}>
       <main className="mx-auto flex max-w-5xl flex-col gap-5">
         <header className="flex flex-col gap-3 border-b border-[var(--border-soft)] pb-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <button
-              type="button"
-              onClick={returnToApp}
-              className="mb-3 inline-flex items-center gap-2 rounded-md border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3 py-2 text-xs font-black text-[var(--text-secondary)] transition hover:bg-[var(--surface-hover)] hover:text-[var(--text-main)]"
-            >
-              <BackIcon className="h-4 w-4" />
-              {text.backToApp}
-            </button>
+            {!embedded && (
+              <button
+                type="button"
+                onClick={returnToApp}
+                className="mb-3 inline-flex items-center gap-2 rounded-md border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3 py-2 text-xs font-black text-[var(--text-secondary)] transition hover:bg-[var(--surface-hover)] hover:text-[var(--text-main)]"
+              >
+                <BackIcon className="h-4 w-4" />
+                {text.backToApp}
+              </button>
+            )}
             <div className="flex items-center gap-2 text-sm font-bold text-[var(--primary-600)]">
               <Activity className="h-4 w-4" />
               {text.breadcrumb}
