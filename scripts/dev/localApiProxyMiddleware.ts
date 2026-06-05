@@ -246,6 +246,22 @@ const handleAdminSubscriptions = async (
   }
 };
 
+const handleAdminBillingDiagnostics = async (
+  req: LocalRequest,
+  url: URL,
+  res: ServerResponse,
+  env: LocalApiProxyEnv
+) => {
+  try {
+    syncProcessEnv(env);
+    const { default: adminBillingDiagnosticsHandler } = await import('../../api/admin/billing-diagnostics');
+    req.query = toQueryObject(url);
+    await (adminBillingDiagnosticsHandler as any)(req, createLocalResponse(res));
+  } catch (error: unknown) {
+    sendJson(res, 500, { error: getErrorMessage(error) });
+  }
+};
+
 const toQueryObject = (url: URL): Record<string, string> =>
   Object.fromEntries(Array.from(url.searchParams.entries()));
 
@@ -327,6 +343,11 @@ export const createLocalApiProxyMiddleware = (env: LocalApiProxyEnv): Plugin => 
 
       if (pathName === '/api/admin/subscriptions') {
         await handleAdminSubscriptions(req as LocalRequest, url, res, body, env);
+        return;
+      }
+
+      if (pathName === '/api/admin/billing-diagnostics') {
+        await handleAdminBillingDiagnostics(req as LocalRequest, url, res, env);
         return;
       }
 

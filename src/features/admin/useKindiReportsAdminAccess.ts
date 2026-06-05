@@ -30,7 +30,7 @@ export const useKindiReportsAdminAccess = (user: UserProfile | null): boolean =>
   return isAdmin;
 };
 
-export const openAdminDashboard = (tab?: 'kindi' | 'subscriptions' | 'tree-defaults' | 'diagnostics'): void => {
+export const openAdminDashboard = (tab?: 'kindi' | 'subscriptions' | 'billing' | 'tree-defaults' | 'diagnostics'): void => {
   const suffix = tab ? `?tab=${tab}` : '';
   window.history.pushState(null, '', `/admin${suffix}`);
   window.dispatchEvent(new PopStateEvent('popstate'));
