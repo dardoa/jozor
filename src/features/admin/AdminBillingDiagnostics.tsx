@@ -69,7 +69,7 @@ export const AdminBillingDiagnostics: React.FC = () => {
   );
 
   const loadEvents = useCallback(async () => {
-    if (!user) return;
+    if (!user || !isAdmin) return;
     setIsLoading(true);
     setError(null);
     try {
@@ -84,7 +84,7 @@ export const AdminBillingDiagnostics: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [query, statusFilter, user]);
+  }, [isAdmin, query, statusFilter, user]);
 
   useEffect(() => {
     void loadEvents();
