@@ -292,6 +292,7 @@ export const AppUIManager: React.FC = () => {
           <Route path='/admin/kindi-learning' element={<Navigate to='/admin?tab=kindi' replace />} />
           <Route path='/admin/tree-defaults' element={<Navigate to='/admin?tab=tree-defaults' replace />} />
           <Route path='/admin/diagnostics' element={<Navigate to='/admin?tab=diagnostics' replace />} />
+          <Route path='/admin/billing-diagnostics' element={<Navigate to='/admin?tab=billing' replace />} />
           <Route path='/shared/:shareToken' element={<InvitePage />} />
 
           <Route
