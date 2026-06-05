@@ -44,6 +44,10 @@ export const openAdminTreeDefaults = (): void => {
   openAdminDashboard('tree-defaults');
 };
 
+export const openAdminBillingDiagnostics = (): void => {
+  openAdminDashboard('billing');
+};
+
 export const openAdminDiagnostics = (): void => {
   openAdminDashboard('diagnostics');
 };

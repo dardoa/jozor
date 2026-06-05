@@ -8,6 +8,7 @@ export {
 } from './defaultTreeSettingsService';
 export {
   openAdminTreeDefaults,
+  openAdminBillingDiagnostics,
   openKindiLearningReports,
   openAdminDiagnostics,
   openAdminDashboard,
