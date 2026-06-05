@@ -1,10 +1,10 @@
 import { memo } from 'react';
-import { BrainCircuit, FolderArchive, Languages, LayoutDashboard, LogIn, LogOut, Moon, Settings, Sun, Sparkles } from 'lucide-react';
+import { BrainCircuit, CreditCard, FolderArchive, Languages, LayoutDashboard, LogIn, LogOut, Moon, Settings, Sun, Sparkles } from 'lucide-react';
 import { DropdownContent, DropdownMenuDivider, DropdownMenuHeader, DropdownMenuItem } from '../ui/DropdownMenu';
 import { useTranslation } from '../../context/TranslationContext';
 import type { ThemeLanguageProps, UserProfile } from '../../types';
 import { useAppStore } from '../../store/useAppStore';
-import { openAdminDashboard, useKindiReportsAdminAccess } from '../../features/admin';
+import { openAdminBillingDiagnostics, openAdminDashboard, useKindiReportsAdminAccess } from '../../features/admin';
 
 interface AccountMenuProps {
   themeLanguage: ThemeLanguageProps;
@@ -121,6 +121,12 @@ export const AccountMenu = memo<AccountMenuProps>(
               icon={<LayoutDashboard className="w-4 h-4" />}
               label={text.adminDashboard || 'Admin Dashboard'}
               subLabel={text.adminDashboardHint || 'Manage reports, defaults, diagnostics, and future admin tools.'}
+            />
+            <DropdownMenuItem
+              onClick={() => openAdminBillingDiagnostics()}
+              icon={<CreditCard className="w-4 h-4" />}
+              label={text.adminBillingDiagnostics || 'Billing diagnostics'}
+              subLabel={text.adminBillingDiagnosticsHint || 'Inspect Paddle webhook processing and subscription update events.'}
             />
           </>
         )}

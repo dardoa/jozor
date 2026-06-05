@@ -1,8 +1,8 @@
 import { memo } from 'react';
-import { CloudUpload, Languages, LayoutDashboard, LogIn, LogOut, Moon, Settings, Sun, X } from 'lucide-react';
+import { CloudUpload, CreditCard, Languages, LayoutDashboard, LogIn, LogOut, Moon, Settings, Sun, X } from 'lucide-react';
 import { useTranslation } from '../../context/TranslationContext';
 import type { ThemeLanguageProps, UserProfile } from '../../types';
-import { openAdminDashboard, useKindiReportsAdminAccess } from '../../features/admin';
+import { openAdminBillingDiagnostics, openAdminDashboard, useKindiReportsAdminAccess } from '../../features/admin';
 
 interface MobileAccountSheetProps {
   isOpen: boolean;
@@ -161,6 +161,12 @@ export const MobileAccountSheet = memo(({
                 label={text.adminDashboard || 'Admin Dashboard'}
                 subLabel={text.adminDashboardHint || 'Manage reports, defaults, diagnostics, and future admin tools.'}
                 onClick={closeThen(() => openAdminDashboard())}
+              />
+              <SheetAction
+                icon={<CreditCard className="h-5 w-5" />}
+                label={text.adminBillingDiagnostics || 'Billing diagnostics'}
+                subLabel={text.adminBillingDiagnosticsHint || 'Inspect Paddle webhook processing and subscription update events.'}
+                onClick={closeThen(() => openAdminBillingDiagnostics())}
               />
             </section>
           ) : null}
