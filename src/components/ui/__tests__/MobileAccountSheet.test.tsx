@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { MobileAccountSheet } from '../MobileAccountSheet';
 
 const useKindiReportsAdminAccessMock = vi.hoisted(() => vi.fn(() => false));
+const openAdminBillingDiagnosticsMock = vi.hoisted(() => vi.fn());
 
 vi.mock('../../../context/TranslationContext', () => ({
   useTranslation: () => ({
@@ -20,6 +21,8 @@ vi.mock('../../../context/TranslationContext', () => ({
       adminTools: 'Admin',
       adminDashboard: 'Admin Dashboard',
       adminDashboardHint: 'Manage reports, defaults, diagnostics, and future admin tools.',
+      adminBillingDiagnostics: 'Billing diagnostics',
+      adminBillingDiagnosticsHint: 'Inspect Paddle webhook processing and subscription update events.',
       globalSettings: {
         title: 'Global Settings',
       },
@@ -36,6 +39,7 @@ vi.mock('../../../context/TranslationContext', () => ({
 vi.mock('../../../features/admin', () => ({
   useKindiReportsAdminAccess: useKindiReportsAdminAccessMock,
   openAdminDashboard: vi.fn(),
+  openAdminBillingDiagnostics: openAdminBillingDiagnosticsMock,
 }));
 
 describe('MobileAccountSheet', () => {
@@ -82,11 +86,13 @@ describe('MobileAccountSheet', () => {
 
   it('shows admin tools for app admins', () => {
     useKindiReportsAdminAccessMock.mockReturnValue(true);
+    openAdminBillingDiagnosticsMock.mockClear();
+    const onClose = vi.fn();
 
     render(
       <MobileAccountSheet
         isOpen
-        onClose={vi.fn()}
+        onClose={onClose}
         themeLanguage={{
           language: 'en',
           setLanguage: vi.fn(),
@@ -106,6 +112,9 @@ describe('MobileAccountSheet', () => {
     );
 
     expect(screen.getByRole('button', { name: /Admin Dashboard/i })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Billing diagnostics/i }));
+    expect(openAdminBillingDiagnosticsMock).toHaveBeenCalledTimes(1);
+    expect(onClose).toHaveBeenCalledTimes(1);
     expect(screen.queryByRole('button', { name: /Kindi learning reports/i })).not.toBeInTheDocument();
   });
 });

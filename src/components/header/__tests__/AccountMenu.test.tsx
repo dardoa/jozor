@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { AccountMenu } from '../AccountMenu';
 
 const useKindiReportsAdminAccessMock = vi.hoisted(() => vi.fn(() => false));
+const openAdminBillingDiagnosticsMock = vi.hoisted(() => vi.fn());
 
 vi.mock('../../../context/TranslationContext', () => ({
   useTranslation: () => ({
@@ -24,6 +25,8 @@ vi.mock('../../../context/TranslationContext', () => ({
       adminTools: 'Admin',
       adminDashboard: 'Admin Dashboard',
       adminDashboardHint: 'Manage reports, defaults, diagnostics, and future admin tools.',
+      adminBillingDiagnostics: 'Billing diagnostics',
+      adminBillingDiagnosticsHint: 'Inspect Paddle webhook processing and subscription update events.',
       globalSettings: { title: 'Global Settings' },
       userMenu: {
         welcome: 'Welcome',
@@ -36,6 +39,7 @@ vi.mock('../../../context/TranslationContext', () => ({
 vi.mock('../../../features/admin', () => ({
   useKindiReportsAdminAccess: useKindiReportsAdminAccessMock,
   openAdminDashboard: vi.fn(),
+  openAdminBillingDiagnostics: openAdminBillingDiagnosticsMock,
 }));
 
 describe('AccountMenu', () => {
@@ -116,6 +120,7 @@ describe('AccountMenu', () => {
 
   it('shows admin tools only for app admins', () => {
     useKindiReportsAdminAccessMock.mockReturnValue(true);
+    openAdminBillingDiagnosticsMock.mockClear();
 
     render(
       <AccountMenu
@@ -140,6 +145,8 @@ describe('AccountMenu', () => {
     );
 
     expect(screen.getByRole('menuitem', { name: /Admin Dashboard/i })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('menuitem', { name: /Billing diagnostics/i }));
+    expect(openAdminBillingDiagnosticsMock).toHaveBeenCalledTimes(1);
     expect(screen.queryByRole('menuitem', { name: /Kindi learning reports/i })).not.toBeInTheDocument();
   });
 });
