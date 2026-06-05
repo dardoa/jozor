@@ -228,6 +228,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   } catch (err: any) {
     console.error('[CREATE_CHECKOUT] Failed to create checkout transaction:', err);
     res.writeHead(500, { ...headers, 'Content-Type': 'application/json' });
-    return res.end(JSON.stringify({ error: err.message || 'Failed to initiate checkout session' }));
+    return res.end(JSON.stringify({ error: 'Failed to initiate checkout session' }));
   }
 }
