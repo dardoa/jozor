@@ -461,6 +461,8 @@ export const general = {
   adminTools: 'الإدارة',
   kindiLearningReports: 'تقارير تعلم كيندي',
   kindiLearningReportsHint: 'مراجعة تقارير كيندي المنقحة لتحسين الفهم.',
+  adminBillingDiagnostics: 'تشخيصات الفوترة',
+  adminBillingDiagnosticsHint: 'فحص معالجة Webhook من Paddle وأحداث تحديث الاشتراكات.',
   defaultTreeSettings: 'إعدادات الشجرة الافتراضية',
   defaultTreeSettingsHint: 'تحديد الإعدادات البصرية للشجرات الجديدة.',
   diagnosticsTitle: 'التشخيص',

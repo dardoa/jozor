@@ -460,6 +460,8 @@ export const general = {
   adminTools: 'Admin',
   kindiLearningReports: 'Kindi learning reports',
   kindiLearningReportsHint: 'Review redacted Kindi learning telemetry.',
+  adminBillingDiagnostics: 'Billing diagnostics',
+  adminBillingDiagnosticsHint: 'Inspect Paddle webhook processing and subscription update events.',
   defaultTreeSettings: 'Default tree settings',
   defaultTreeSettingsHint: 'Set visual defaults for newly created trees.',
   diagnosticsTitle: 'Diagnostics',
