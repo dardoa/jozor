@@ -195,7 +195,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const { error: dbDeleteError } = await userClient.rpc('delete_my_profile_data');
     if (dbDeleteError) {
       console.error('Error executing delete_my_profile_data RPC:', dbDeleteError);
-      return res.status(500).json({ error: `DB deletion failed: ${dbDeleteError.message}` });
+      return res.status(500).json({ error: 'Failed to delete account data' });
     }
 
     // 5. Delete the Auth User (ignore if user not found in auth.users, e.g. custom Google users)
@@ -208,7 +208,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           console.log(`Auth user ${user.uid} not found in auth.users, treating as success.`);
         } else {
           console.error('Error deleting auth user:', authDeleteError);
-          return res.status(500).json({ error: `Auth deletion failed: ${authDeleteError.message}` });
+          return res.status(500).json({ error: 'Failed to delete account authentication record' });
         }
       }
     } else {
@@ -218,6 +218,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).json({ success: true, message: 'Account and associated data deleted successfully.' });
   } catch (err) {
     console.error('Delete Account Handler Error:', err);
-    return res.status(500).json({ error: err instanceof Error ? err.message : 'Unknown error' });
+    return res.status(500).json({ error: 'Failed to delete account' });
   }
 }
