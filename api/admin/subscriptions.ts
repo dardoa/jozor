@@ -485,6 +485,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Admin subscription request failed.';
     console.error('[ADMIN_SUBSCRIPTIONS] Request failed.', { message });
-    return json(res, 500, { error: { code: 'INTERNAL_SERVER_ERROR', message } });
+    return json(res, 500, {
+      error: {
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Admin subscription request failed.',
+      },
+    });
   }
 }
