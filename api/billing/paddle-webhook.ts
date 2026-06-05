@@ -332,6 +332,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       occurredAt: event.occurred_at,
       metadata: { message: err instanceof Error ? err.message.slice(0, 300) : 'Unknown error' },
     });
-    return res.status(500).json({ error: err.message || 'Database transaction failed' });
+    return res.status(500).json({ error: 'Database transaction failed' });
   }
 }
