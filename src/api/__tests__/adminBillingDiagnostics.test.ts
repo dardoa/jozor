@@ -49,6 +49,7 @@ const createAuthClient = (user: { id: string; email?: string } | null) => ({
 const createAdminClient = (input: {
   isAdmin: boolean;
   diagnostics?: unknown[];
+  adminError?: unknown;
   onDiagnosticsBuilder?: (builder: Record<string, unknown>) => void;
 }) => {
   const adminUsersQuery = {
@@ -56,7 +57,7 @@ const createAdminClient = (input: {
     eq: vi.fn(() => adminUsersQuery),
     maybeSingle: vi.fn(async () => ({
       data: input.isAdmin ? { user_id: 'admin-1' } : null,
-      error: null,
+      error: input.adminError ?? null,
     })),
   };
 
@@ -161,7 +162,7 @@ describe('admin billing diagnostics API', () => {
       headers: { authorization: 'Bearer token-1' },
       query: {
         status: 'processed',
-        q: 'evt_123,%()',
+        q: 'evt_123,%(),price_id.ilike.%pri_999%',
         limit: '500',
       },
     };
@@ -174,7 +175,29 @@ describe('admin billing diagnostics API', () => {
     expect(diagnosticsBuilder?.limit).toHaveBeenCalledWith(100);
     expect(diagnosticsBuilder?.eq).toHaveBeenCalledWith('processing_status', 'processed');
     expect(diagnosticsBuilder?.or).toHaveBeenCalledWith(
-      'event_id.ilike.%evt_123%,target_user_id.ilike.%evt_123%,subscription_id.ilike.%evt_123%,customer_id.ilike.%evt_123%,price_id.ilike.%evt_123%'
+      'event_id.ilike.%evt_123 price_id.ilike. pri_999%,target_user_id.ilike.%evt_123 price_id.ilike. pri_999%,subscription_id.ilike.%evt_123 price_id.ilike. pri_999%,customer_id.ilike.%evt_123 price_id.ilike. pri_999%,price_id.ilike.%evt_123 price_id.ilike. pri_999%'
     );
+  });
+
+  it('does not expose internal server error details to the client', async () => {
+    createClientMock
+      .mockReturnValueOnce(createAuthClient({ id: 'admin-1', email: 'owner@example.com' }))
+      .mockReturnValueOnce(createAdminClient({
+        isAdmin: true,
+        adminError: { message: 'private database policy detail' },
+      }));
+
+    const req = { method: 'GET', headers: { authorization: 'Bearer token-1' }, query: {} };
+    const res = createResponse();
+
+    await handler(req as never, res as never);
+
+    expect(res.statusCode).toBe(500);
+    expect(res.body).toEqual({
+      error: {
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Admin billing diagnostics request failed.',
+      },
+    });
   });
 });

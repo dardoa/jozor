@@ -92,6 +92,17 @@ function isProcessingStatus(value: unknown): value is ProcessingStatus {
   return value === 'processed' || value === 'ignored' || value === 'failed' || value === 'received';
 }
 
+function sanitizeSearchQuery(value: unknown): string {
+  if (typeof value !== 'string') return '';
+
+  return value
+    .normalize('NFKC')
+    .replace(/[^\w@.:\-/\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 100);
+}
+
 function json(res: VercelResponse, status: number, payload: unknown) {
   return res.status(status).json(payload);
 }
@@ -120,9 +131,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const status = typeof req.query.status === 'string' ? req.query.status : 'all';
-    const query = typeof req.query.q === 'string'
-      ? req.query.q.replace(/[,%()]/g, ' ').trim().slice(0, 100)
-      : '';
+    const query = sanitizeSearchQuery(req.query.q);
     const limitValue = typeof req.query.limit === 'string' ? Number.parseInt(req.query.limit, 10) : 50;
     const limit = Number.isFinite(limitValue) ? Math.min(Math.max(limitValue, 1), 100) : 50;
 
@@ -149,6 +158,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Admin billing diagnostics request failed.';
     console.error('[ADMIN_BILLING_DIAGNOSTICS] Request failed.', { message });
-    return json(res, 500, { error: { code: 'INTERNAL_SERVER_ERROR', message } });
+    return json(res, 500, {
+      error: {
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Admin billing diagnostics request failed.',
+      },
+    });
   }
 }
