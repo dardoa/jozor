@@ -387,6 +387,21 @@ Base Confirmed State
 - تم دفع الحزمة في commit/PR واضح ومحصور.
 ## Implementation Log
 
+### 2026-06-06 - Layout Core Performance Baseline
+
+- Added `npm run test:layout:perf` for a repeatable V3 layout pipeline baseline.
+- The baseline measures pure layout computation through `computeV3PipelineData`, not browser FPS or SVG DOM cost.
+- Current local sample from `src/domain/__tests__/familyGraphPerformance.test.ts`:
+  - 100 synthetic people: about 25ms
+  - 500 synthetic people: about 34ms
+  - 1000 synthetic people: about 80ms
+- Interpretation:
+  - The pure layout core is currently fast enough for the tested synthetic range.
+  - The next performance risk is more likely browser rendering cost, SVG/DOM node count, `foreignObject`, viewport culling, and interaction paint work.
+- Guardrail:
+  - Keep this test as an early warning before changing layout/routing.
+  - Do not treat it as proof of 60 FPS; browser-level verification still needs Playwright/runtime measurements.
+
 ### 2026-05-26 - Phase 0/1 Baseline and Domain Reducer Entry Point
 
 - Added `docs/smoke-test-checklist.md` and refreshed the Playwright smoke suite against the current UI.
