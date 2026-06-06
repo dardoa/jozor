@@ -387,6 +387,19 @@ Base Confirmed State
 - تم دفع الحزمة في commit/PR واضح ومحصور.
 ## Implementation Log
 
+### 2026-06-06 - Rendering Guardrails for Large Trees
+
+- Added a V3 renderer test that verifies viewport culling keeps offscreen person nodes and edges out of the rendered layer when viewport data is available.
+- Added a node-level LOD test that verifies far zoom uses lightweight pure SVG rendering and close zoom uses the full `foreignObject` card.
+- Current state:
+  - `V3FamilyGraphRenderer` already has viewport culling for nodes, family dots, and edges.
+  - `NodeContainer` already switches to LOD rendering when `zoomScale < 0.3`.
+- Interpretation:
+  - The immediate high-value rendering work is not to reimplement culling/LOD from scratch.
+  - The next rendering risk is browser-runtime measurement on large real trees: frame time, DOM count, memory, and pan/zoom smoothness.
+- Guardrail:
+  - Keep the culling and LOD tests passing before changing `V3FamilyGraphRenderer`, `NodeContainer`, or `NodeView`.
+
 ### 2026-06-06 - Layout Core Performance Baseline
 
 - Added `npm run test:layout:perf` for a repeatable V3 layout pipeline baseline.
