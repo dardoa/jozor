@@ -324,18 +324,22 @@ async function grantOverride(req: VercelRequest, res: VercelResponse, supabaseAd
 
   if (revokeError) throw revokeError;
 
-  for (const replacedOverride of replacedOverrides ?? []) {
-    await insertAuditEvent(supabaseAdmin, {
-      targetUserId: userId,
-      actorUserId: adminUser.uid,
-      action: 'replace',
-      overrideId: replacedOverride.id,
-      tier: isBillingTier(replacedOverride.tier) ? replacedOverride.tier : null,
-      source: isOverrideSource(replacedOverride.source) ? replacedOverride.source : null,
-      reason: typeof replacedOverride.reason === 'string' ? replacedOverride.reason : null,
-      expiresAt: typeof replacedOverride.expires_at === 'string' ? replacedOverride.expires_at : null,
-      metadata: { replacedByTier: tier, replacedBySource: source },
-    });
+  if (replacedOverrides && replacedOverrides.length > 0) {
+    await Promise.all(
+      replacedOverrides.map((replacedOverride) =>
+        insertAuditEvent(supabaseAdmin, {
+          targetUserId: userId,
+          actorUserId: adminUser.uid,
+          action: 'replace',
+          overrideId: replacedOverride.id,
+          tier: isBillingTier(replacedOverride.tier) ? replacedOverride.tier : null,
+          source: isOverrideSource(replacedOverride.source) ? replacedOverride.source : null,
+          reason: typeof replacedOverride.reason === 'string' ? replacedOverride.reason : null,
+          expiresAt: typeof replacedOverride.expires_at === 'string' ? replacedOverride.expires_at : null,
+          metadata: { replacedByTier: tier, replacedBySource: source },
+        })
+      )
+    );
   }
 
   const { data, error } = await supabaseAdmin
@@ -387,17 +391,21 @@ async function revokeOverride(req: VercelRequest, res: VercelResponse, supabaseA
     .select('id, tier, source, reason, expires_at');
 
   if (error) throw error;
-  for (const revokedOverride of data ?? []) {
-    await insertAuditEvent(supabaseAdmin, {
-      targetUserId: userId,
-      actorUserId: adminUser.uid,
-      action: 'revoke',
-      overrideId: revokedOverride.id,
-      tier: isBillingTier(revokedOverride.tier) ? revokedOverride.tier : null,
-      source: isOverrideSource(revokedOverride.source) ? revokedOverride.source : null,
-      reason: typeof revokedOverride.reason === 'string' ? revokedOverride.reason : null,
-      expiresAt: typeof revokedOverride.expires_at === 'string' ? revokedOverride.expires_at : null,
-    });
+  if (data && data.length > 0) {
+    await Promise.all(
+      data.map((revokedOverride) =>
+        insertAuditEvent(supabaseAdmin, {
+          targetUserId: userId,
+          actorUserId: adminUser.uid,
+          action: 'revoke',
+          overrideId: revokedOverride.id,
+          tier: isBillingTier(revokedOverride.tier) ? revokedOverride.tier : null,
+          source: isOverrideSource(revokedOverride.source) ? revokedOverride.source : null,
+          reason: typeof revokedOverride.reason === 'string' ? revokedOverride.reason : null,
+          expiresAt: typeof revokedOverride.expires_at === 'string' ? revokedOverride.expires_at : null,
+        })
+      )
+    );
   }
   return json(res, 200, { revokedCount: data?.length ?? 0 });
 }
@@ -425,18 +433,22 @@ async function resetSandboxTestOverride(req: VercelRequest, res: VercelResponse,
     .select('id, tier, source, reason, expires_at');
 
   if (error) throw error;
-  for (const resetOverride of data ?? []) {
-    await insertAuditEvent(supabaseAdmin, {
-      targetUserId: userId,
-      actorUserId: adminUser.uid,
-      action: 'revoke',
-      overrideId: resetOverride.id,
-      tier: isBillingTier(resetOverride.tier) ? resetOverride.tier : null,
-      source: 'sandbox_test',
-      reason: typeof resetOverride.reason === 'string' ? resetOverride.reason : null,
-      expiresAt: typeof resetOverride.expires_at === 'string' ? resetOverride.expires_at : null,
-      metadata: { reset: 'sandbox_test' },
-    });
+  if (data && data.length > 0) {
+    await Promise.all(
+      data.map((resetOverride) =>
+        insertAuditEvent(supabaseAdmin, {
+          targetUserId: userId,
+          actorUserId: adminUser.uid,
+          action: 'revoke',
+          overrideId: resetOverride.id,
+          tier: isBillingTier(resetOverride.tier) ? resetOverride.tier : null,
+          source: 'sandbox_test',
+          reason: typeof resetOverride.reason === 'string' ? resetOverride.reason : null,
+          expiresAt: typeof resetOverride.expires_at === 'string' ? resetOverride.expires_at : null,
+          metadata: { reset: 'sandbox_test' },
+        })
+      )
+    );
   }
   return json(res, 200, { resetCount: data?.length ?? 0 });
 }

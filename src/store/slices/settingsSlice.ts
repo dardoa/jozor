@@ -72,8 +72,9 @@ export const createSettingsSlice: StateCreator<SettingsSlice> = (set) => ({
         if (nextSettings.treeSettings) {
             const chartType = nextSettings.treeSettings.chartType;
             nextSettings.treeSettings = {
+                ...state.treeSettings,
                 ...nextSettings.treeSettings,
-                chartType: normalizeChartType(chartType),
+                chartType: normalizeChartType(chartType ?? nextSettings.treeSettings.chartType ?? state.treeSettings.chartType),
             };
         }
         return { ...state, ...nextSettings };

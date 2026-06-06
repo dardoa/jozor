@@ -140,13 +140,18 @@ export const sendPushNotificationToUser = async (body: SendPushPayload) => {
     body: body.body.trim(),
   });
 
+  const results = await Promise.allSettled(
+    subscriptions.map((subscription) => sendPushToSubscription(subscription, payload))
+  );
+
   let sent = 0;
   let pruned = 0;
 
-  for (const subscription of subscriptions) {
-    const result = await sendPushToSubscription(subscription, payload);
-    if (result === 'sent') sent += 1;
-    if (result === 'pruned') pruned += 1;
+  for (const result of results) {
+    if (result.status === 'fulfilled') {
+      if (result.value === 'sent') sent += 1;
+      if (result.value === 'pruned') pruned += 1;
+    }
   }
 
   return {

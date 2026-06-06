@@ -102,9 +102,11 @@ async function deleteFolderRecursively(supabaseAdmin: any, bucket: string, folde
       }
     }
 
-    // Recurse into subdirs first
-    for (const subdir of subdirs) {
-      await deleteFolderRecursively(supabaseAdmin, bucket, subdir);
+    // Recurse into subdirs first in parallel
+    if (subdirs.length > 0) {
+      await Promise.all(
+        subdirs.map((subdir) => deleteFolderRecursively(supabaseAdmin, bucket, subdir))
+      );
     }
 
     if (filesToDelete.length > 0) {
@@ -169,12 +171,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const userFolder = `users/${user.uid}`;
     await deleteFolderRecursively(supabaseAdmin, 'avatars', userFolder);
 
-    // 3. Delete all tree-specific folders for trees owned by user
+    // 3. Delete all tree-specific folders for trees owned by user in parallel
     if (trees && trees.length > 0) {
-      for (const tree of trees) {
-        const treeFolder = tree.id;
-        await deleteFolderRecursively(supabaseAdmin, 'avatars', treeFolder);
-      }
+      await Promise.all(
+        trees.map((tree) => deleteFolderRecursively(supabaseAdmin, 'avatars', tree.id))
+      );
     }
 
     // 4. Initialize user client to perform delete_my_profile_data RPC as the authenticated user
