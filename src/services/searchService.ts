@@ -3,7 +3,26 @@ import { normalizeArabic, stripArabicPrefixes } from '../utils/search/arabicUtil
 import { parseSearchQuery } from './search/queryParser';
 import { getDisplayDate } from '../utils/familyLogic';
 
-let indexedPeople: Person[] = [];
+type LegacySearchPersonFields = {
+    fatherId?: string;
+    motherId?: string;
+    fatherName?: string;
+    familyName?: string;
+    currentLocation?: string;
+};
+
+type SearchablePerson = Person & LegacySearchPersonFields;
+
+type IndexedPerson = SearchablePerson & {
+    normalizedFullName: string;
+    normalizedFirstName: string;
+    normalizedLastName: string;
+    normalizedMiddleName: string;
+    normalizedNickName: string;
+    normalizedBirthPlace: string;
+};
+
+let indexedPeople: IndexedPerson[] = [];
 let fuseLoader: Promise<typeof import('fuse.js').default> | null = null;
 
 export type SearchMatchType = 'exact' | 'fuzzy';
@@ -63,8 +82,22 @@ const SEARCH_STOP_WORDS = new Set([
 const normalizeSearchText = (text: string | undefined): string =>
     stripArabicPrefixes(normalizeArabic(text || '')).replace(/\s+/g, ' ').trim();
 
+const asSearchablePerson = (person: Person): SearchablePerson => person as SearchablePerson;
+
+const getParentIdsForSearch = (person: Person): string[] => {
+    const searchable = asSearchablePerson(person);
+    return [
+        ...(person.parents ?? []),
+        searchable.fatherId,
+        searchable.motherId,
+    ].filter((id): id is string => Boolean(id));
+};
+
+const getPersonCurrentLocation = (person: Person): string =>
+    asSearchablePerson(person).currentLocation ?? '';
+
 const getPersonFullName = (person: Person): string => {
-    const extended = person as Person & { fatherName?: string; familyName?: string };
+    const extended = asSearchablePerson(person);
     return [
         person.firstName,
         person.middleName || extended.fatherName,
@@ -75,8 +108,9 @@ const getPersonFullName = (person: Person): string => {
 const getPersonNameVariants = (person: Person): string[] => {
     const full = normalizeSearchText(getPersonFullName(person));
     const first = normalizeSearchText(person.firstName);
-    const middle = normalizeSearchText(person.middleName || (person as Person & { fatherName?: string }).fatherName || '');
-    const last = normalizeSearchText(person.lastName || (person as Person & { familyName?: string }).familyName || '');
+    const extended = asSearchablePerson(person);
+    const middle = normalizeSearchText(person.middleName || extended.fatherName || '');
+    const last = normalizeSearchText(person.lastName || extended.familyName || '');
     const nick = normalizeSearchText(person.nickName || '');
 
     return Array.from(new Set([
@@ -160,7 +194,7 @@ const getFuzzyConfidence = (fuseScore: number): SearchConfidence => {
     return 'low';
 };
 
-const runExactNameSearch = (query: string, people: Person[], limit: number): SearchResult[] => {
+const runExactNameSearch = (query: string, people: readonly Person[], limit: number): SearchResult[] => {
     const normalizedQuery = normalizeSearchText(query);
     const tokens = tokenizeSearchQuery(query);
     if (!normalizedQuery || tokens.length === 0) return [];
@@ -219,7 +253,7 @@ const runExactNameSearch = (query: string, people: Person[], limit: number): Sea
     return uniqueResults(results, limit);
 };
 
-const runFuzzySearch = async (query: string, people: Person[], limit: number): Promise<SearchResult[]> => {
+const runFuzzySearch = async (query: string, people: readonly IndexedPerson[], limit: number): Promise<SearchResult[]> => {
     const normalizedQuery = normalizeSearchText(query);
     if (!normalizedQuery) return [];
 
@@ -252,7 +286,7 @@ const calculateAge = (birthDate: string): number | null => {
     return new Date().getFullYear() - year;
 };
 
-const findTargetPeople = async (name: string, people: Person[]): Promise<Person[]> => {
+const findTargetPeople = async (name: string, people: readonly IndexedPerson[]): Promise<IndexedPerson[]> => {
     const normalizedQuery = normalizeSearchText(name);
     const words = normalizedQuery.split(/\s+/).filter(Boolean);
     
@@ -279,7 +313,7 @@ const findTargetPeople = async (name: string, people: Person[]): Promise<Person[
     });
 };
 
-const mappedPeopleCache = new Map<string, { ref: Person; mapped: any }>();
+const mappedPeopleCache = new Map<string, { ref: Person; mapped: IndexedPerson }>();
 
 export const searchService = {
     async updateSearchIndex(people: Person[]) {
@@ -294,7 +328,7 @@ export const searchService = {
         }
 
         const CHUNK_SIZE = 1000;
-        const mappedList: any[] = [];
+        const mappedList: IndexedPerson[] = [];
         let missesCount = 0;
 
         for (let i = 0; i < people.length; i++) {
@@ -303,7 +337,7 @@ export const searchService = {
             if (cached && cached.ref === p) {
                 mappedList.push(cached.mapped);
             } else {
-                const mapped = {
+                const mapped: IndexedPerson = {
                     ...p,
                     normalizedFullName: normalizeSearchText(getPersonFullName(p)),
                     normalizedFirstName: normalizeArabic(p.firstName),
@@ -311,7 +345,7 @@ export const searchService = {
                     normalizedMiddleName: normalizeArabic(p.middleName || ''),
                     normalizedNickName: normalizeArabic(p.nickName || ''),
                     normalizedBirthPlace: normalizeArabic(p.birthPlace || '')
-                } as any;
+                };
                 mappedPeopleCache.set(p.id, { ref: p, mapped });
                 mappedList.push(mapped);
                 missesCount++;
@@ -359,18 +393,14 @@ export const searchService = {
                             case 'rel_sons':
                                 candidates = candidates.filter(p => 
                                     (intent.id === 'rel_sons' ? p.gender === 'male' : true) &&
-                                    (p.parents?.some(pid => targetIds.has(pid)) || 
-                                     targetIds.has((p as any).fatherId) || 
-                                     targetIds.has((p as any).motherId)) &&
+                                    getParentIdsForSearch(p).some(parentId => targetIds.has(parentId)) &&
                                     !targetIds.has(p.id)
                                 );
                                 break;
                             case 'rel_daughters':
                                 candidates = candidates.filter(p => 
                                     p.gender === 'female' &&
-                                    (p.parents?.some(pid => targetIds.has(pid)) || 
-                                     targetIds.has((p as any).fatherId) || 
-                                     targetIds.has((p as any).motherId)) &&
+                                    getParentIdsForSearch(p).some(parentId => targetIds.has(parentId)) &&
                                     !targetIds.has(p.id)
                                 );
                                 break;
@@ -381,9 +411,7 @@ export const searchService = {
                                 candidates = candidates.filter(p => 
                                     (intent.id === 'rel_granddaughters' ? p.gender === 'female' : 
                                      intent.id === 'rel_grandsons' ? p.gender === 'male' : true) &&
-                                    (p.parents?.some(pid => allChildIds.has(pid)) ||
-                                     allChildIds.has((p as any).fatherId) ||
-                                     allChildIds.has((p as any).motherId)) &&
+                                    getParentIdsForSearch(p).some(parentId => allChildIds.has(parentId)) &&
                                     !targetIds.has(p.id)
                                 );
                                 break;
@@ -394,9 +422,7 @@ export const searchService = {
                                 const allParentIds = new Set(targets.flatMap(t => t.parents || []));
                                 candidates = candidates.filter(p => 
                                     !targetIds.has(p.id) && 
-                                    (p.parents?.some(pid => allParentIds.has(pid)) || 
-                                     allParentIds.has((p as any).fatherId) ||
-                                     allParentIds.has((p as any).motherId))
+                                    getParentIdsForSearch(p).some(parentId => allParentIds.has(parentId))
                                 );
                                 break;
                             case 'rel_uncles_paternal':
@@ -404,7 +430,7 @@ export const searchService = {
                                 // 1. Find the fathers of the targets
                                 const targetFatherIds = new Set<string>();
                                 targets.forEach(t => {
-                                    if ((t as any).fatherId) targetFatherIds.add((t as any).fatherId);
+                                    if (t.fatherId) targetFatherIds.add(t.fatherId);
                                     // Also check parents array for male parents
                                     t.parents?.forEach(pid => {
                                         const p = indexedPeople.find(ip => ip.id === pid);
@@ -415,17 +441,13 @@ export const searchService = {
                                 // 2. Find the grandparents (parents of these fathers)
                                 const grandParentIds = new Set<string>();
                                 indexedPeople.filter(p => targetFatherIds.has(p.id)).forEach(f => {
-                                    f.parents?.forEach(pid => grandParentIds.add(pid));
-                                    if ((f as any).fatherId) grandParentIds.add((f as any).fatherId);
-                                    if ((f as any).motherId) grandParentIds.add((f as any).motherId);
+                                    getParentIdsForSearch(f).forEach(parentId => grandParentIds.add(parentId));
                                 });
 
                                 // 3. Find the siblings of these fathers (Uncles/Aunts)
                                 candidates = indexedPeople.filter(p => 
                                     (intent.id === 'rel_uncles_paternal' ? p.gender === 'male' : p.gender === 'female') && 
-                                    (p.parents?.some(pid => grandParentIds.has(pid)) || 
-                                     grandParentIds.has((p as any).fatherId) || 
-                                     grandParentIds.has((p as any).motherId)) &&
+                                    getParentIdsForSearch(p).some(parentId => grandParentIds.has(parentId)) &&
                                     !targetFatherIds.has(p.id)
                                 );
                                 break;
@@ -434,7 +456,7 @@ export const searchService = {
                                 // 1. Find the mothers of the targets
                                 const targetMotherIds = new Set<string>();
                                 targets.forEach(t => {
-                                    if ((t as any).motherId) targetMotherIds.add((t as any).motherId);
+                                    if (t.motherId) targetMotherIds.add(t.motherId);
                                     t.parents?.forEach(pid => {
                                         const p = indexedPeople.find(ip => ip.id === pid);
                                         if (p?.gender === 'female') targetMotherIds.add(pid);
@@ -444,17 +466,13 @@ export const searchService = {
                                 // 2. Find the grandparents (parents of these mothers)
                                 const grandParentIdsM = new Set<string>();
                                 indexedPeople.filter(p => targetMotherIds.has(p.id)).forEach(m => {
-                                    m.parents?.forEach(pid => grandParentIdsM.add(pid));
-                                    if ((m as any).fatherId) grandParentIdsM.add((m as any).fatherId);
-                                    if ((m as any).motherId) grandParentIdsM.add((m as any).motherId);
+                                    getParentIdsForSearch(m).forEach(parentId => grandParentIdsM.add(parentId));
                                 });
 
                                 // 3. Find the siblings of these mothers (Maternal Uncles/Aunts)
                                 candidates = indexedPeople.filter(p => 
                                     (intent.id === 'rel_uncles_maternal' ? p.gender === 'male' : p.gender === 'female') && 
-                                    (p.parents?.some(pid => grandParentIdsM.has(pid)) || 
-                                     grandParentIdsM.has((p as any).fatherId) || 
-                                     grandParentIdsM.has((p as any).motherId)) &&
+                                    getParentIdsForSearch(p).some(parentId => grandParentIdsM.has(parentId)) &&
                                     !targetMotherIds.has(p.id)
                                 );
                                 break;
@@ -463,7 +481,7 @@ export const searchService = {
                                 // 1. Find the target's father's siblings
                                 const tFatherIdsP = new Set<string>();
                                 targets.forEach(t => {
-                                    if ((t as any).fatherId) tFatherIdsP.add((t as any).fatherId);
+                                    if (t.fatherId) tFatherIdsP.add(t.fatherId);
                                     t.parents?.forEach(pid => {
                                         const p = indexedPeople.find(ip => ip.id === pid);
                                         if (p?.gender === 'male') tFatherIdsP.add(pid);
@@ -471,24 +489,18 @@ export const searchService = {
                                 });
                                 const gParentIdsP = new Set<string>();
                                 indexedPeople.filter(p => tFatherIdsP.has(p.id)).forEach(f => {
-                                    f.parents?.forEach(pid => gParentIdsP.add(pid));
-                                    if ((f as any).fatherId) gParentIdsP.add((f as any).fatherId);
-                                    if ((f as any).motherId) gParentIdsP.add((f as any).motherId);
+                                    getParentIdsForSearch(f).forEach(parentId => gParentIdsP.add(parentId));
                                 });
                                 // Filter by gender based on whether we want kids of Uncle or Aunt
                                 const specificParentIdsP = indexedPeople.filter(p => 
                                     (intent.id === 'rel_cousins_paternal_uncle' ? p.gender === 'male' : p.gender === 'female') && 
-                                    (p.parents?.some(pid => gParentIdsP.has(pid)) || 
-                                     gParentIdsP.has((p as any).fatherId) || 
-                                     gParentIdsP.has((p as any).motherId)) &&
+                                    getParentIdsForSearch(p).some(parentId => gParentIdsP.has(parentId)) &&
                                     !tFatherIdsP.has(p.id)
                                 ).map(u => u.id);
 
                                 // 2. Find children
                                 candidates = indexedPeople.filter(p => 
-                                    (p.parents?.some(pid => specificParentIdsP.includes(pid)) || 
-                                     specificParentIdsP.includes((p as any).fatherId) || 
-                                     specificParentIdsP.includes((p as any).motherId)) &&
+                                    getParentIdsForSearch(p).some(parentId => specificParentIdsP.includes(parentId)) &&
                                     !targetIds.has(p.id)
                                 );
                                 break;
@@ -497,7 +509,7 @@ export const searchService = {
                                 // 1. Find the target's mother's siblings
                                 const tMotherIdsM = new Set<string>();
                                 targets.forEach(t => {
-                                    if ((t as any).motherId) tMotherIdsM.add((t as any).motherId);
+                                    if (t.motherId) tMotherIdsM.add(t.motherId);
                                     t.parents?.forEach(pid => {
                                         const p = indexedPeople.find(ip => ip.id === pid);
                                         if (p?.gender === 'female') tMotherIdsM.add(pid);
@@ -505,24 +517,18 @@ export const searchService = {
                                 });
                                 const gParentIdsMM = new Set<string>();
                                 indexedPeople.filter(p => tMotherIdsM.has(p.id)).forEach(m => {
-                                    m.parents?.forEach(pid => gParentIdsMM.add(pid));
-                                    if ((m as any).fatherId) gParentIdsMM.add((m as any).fatherId);
-                                    if ((m as any).motherId) gParentIdsMM.add((m as any).motherId);
+                                    getParentIdsForSearch(m).forEach(parentId => gParentIdsMM.add(parentId));
                                 });
                                 // Filter by gender: Uncle (خال) or Aunt (خالة)
                                 const specificParentIdsM = indexedPeople.filter(p => 
                                     (intent.id === 'rel_cousins_maternal_uncle' ? p.gender === 'male' : p.gender === 'female') && 
-                                    (p.parents?.some(pid => gParentIdsMM.has(pid)) || 
-                                     gParentIdsMM.has((p as any).fatherId) || 
-                                     gParentIdsMM.has((p as any).motherId)) &&
+                                    getParentIdsForSearch(p).some(parentId => gParentIdsMM.has(parentId)) &&
                                     !tMotherIdsM.has(p.id)
                                 ).map(u => u.id);
 
                                 // 2. Find children
                                 candidates = indexedPeople.filter(p => 
-                                    (p.parents?.some(pid => specificParentIdsM.includes(pid)) || 
-                                     specificParentIdsM.includes((p as any).fatherId) || 
-                                     specificParentIdsM.includes((p as any).motherId)) &&
+                                    getParentIdsForSearch(p).some(parentId => specificParentIdsM.includes(parentId)) &&
                                     !targetIds.has(p.id)
                                 );
                                 break;
@@ -531,17 +537,13 @@ export const searchService = {
                                 // 1. Find all parents of the targets
                                 const parentsOfTargetsIds = new Set<string>();
                                 targets.forEach(t => {
-                                    t.parents?.forEach(pid => parentsOfTargetsIds.add(pid));
-                                    if ((t as any).fatherId) parentsOfTargetsIds.add((t as any).fatherId);
-                                    if ((t as any).motherId) parentsOfTargetsIds.add((t as any).motherId);
+                                    getParentIdsForSearch(t).forEach(parentId => parentsOfTargetsIds.add(parentId));
                                 });
 
                                 // 2. Find the grandparents (parents of those parents)
                                 const grandparentsIds = new Set<string>();
                                 indexedPeople.filter(p => parentsOfTargetsIds.has(p.id)).forEach(parent => {
-                                    parent.parents?.forEach(pid => grandparentsIds.add(pid));
-                                    if ((parent as any).fatherId) grandparentsIds.add((parent as any).fatherId);
-                                    if ((parent as any).motherId) grandparentsIds.add((parent as any).motherId);
+                                    getParentIdsForSearch(parent).forEach(parentId => grandparentsIds.add(parentId));
                                 });
 
                                 // 3. Set candidates
@@ -557,7 +559,7 @@ export const searchService = {
                     const city = normalizeSearchText(intent.locationCity);
                     candidates = candidates.filter(p => 
                         normalizeSearchText(p.birthPlace || '').includes(city) || 
-                        normalizeSearchText((p as any).currentLocation || '').includes(city)
+                        normalizeSearchText(getPersonCurrentLocation(p)).includes(city)
                     );
                 } else if (intent.logicType === 'CATEGORICAL') {
                     inferenceSucceeded = true;
