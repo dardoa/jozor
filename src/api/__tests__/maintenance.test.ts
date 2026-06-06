@@ -200,4 +200,54 @@ describe('maintenance API', () => {
     expect(res.statusCode).toBe(200);
     expect(res.body).toEqual({ deletedCount: 3 });
   });
+
+  it('hides internal maintenance failure details', async () => {
+    const fromMock = vi.fn((table: string) => {
+      if (table === 'trees') {
+        return {
+          select: vi.fn(() => ({
+            eq: vi.fn(() => ({
+              maybeSingle: vi.fn(async () => ({ data: { owner_id: 'owner-1' }, error: null })),
+            })),
+          })),
+        };
+      }
+      if (table === 'tree_operations') {
+        return {
+          select: vi.fn(() => ({
+            eq: vi.fn(() => ({
+              order: vi.fn(() => ({
+                range: vi.fn(async () => ({ data: null, error: new Error('private database detail') })),
+              })),
+            })),
+          })),
+        };
+      }
+      throw new Error(`Unexpected table ${table}`);
+    });
+    createClientMock.mockReturnValue({ from: fromMock });
+
+    const req = {
+      method: 'POST',
+      headers: { authorization: 'Bearer token' },
+      body: { treeId: 'tree-1', mode: 'operations', keepLatest: 2000 },
+    };
+    const res = createResponse();
+
+    await handler(req as never, res as never);
+
+    expect(res.statusCode).toBe(500);
+    expect(res.body).toEqual({
+      error: {
+        message: 'Maintenance request failed.',
+        code: 'INTERNAL_SERVER_ERROR',
+      },
+    });
+    expect(JSON.stringify(res.body)).not.toContain('private database detail');
+    expect(logErrorMock).toHaveBeenCalledWith(
+      'API_MAINTENANCE',
+      expect.objectContaining({ message: 'private database detail' }),
+      expect.objectContaining({ showToast: false })
+    );
+  });
 });

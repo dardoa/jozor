@@ -339,7 +339,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.error('[API_PROXY] Request failed.', { message });
     return res.status(500).json({
       error: {
-        message,
+        message: 'Internal server error',
         code: 'INTERNAL_SERVER_ERROR',
       },
     });

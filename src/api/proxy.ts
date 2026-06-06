@@ -206,10 +206,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   } catch (error: unknown) {
     const err = error as Error;
-    const logged = logError('API_PROXY', err, { showToast: false });
+    logError('API_PROXY', err, { showToast: false });
     return res.status(500).json({
       error: {
-        message: logged.message,
+        message: 'Internal server error',
         code: 'INTERNAL_SERVER_ERROR',
       },
     });

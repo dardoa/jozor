@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const authenticateUserMock = vi.fn();
 const createSupabaseClientForUserMock = vi.fn();
+const logErrorMock = vi.fn();
 
 vi.mock('../../utils/authUtils', () => ({
   authenticateUser: (...args: unknown[]) => authenticateUserMock(...args),
@@ -10,7 +11,7 @@ vi.mock('../../utils/authUtils', () => ({
 }));
 
 vi.mock('../../utils/errorLogger', () => ({
-  logError: vi.fn(),
+  logError: (...args: unknown[]) => logErrorMock(...args),
   logInfo: vi.fn(),
 }));
 
@@ -265,6 +266,33 @@ describe('proxy API', () => {
     expect(res.statusCode).toBe(403);
     expect(res.body).toEqual({ error: 'Insufficient permissions to update this tree' });
     expect(rpcMock).not.toHaveBeenCalled();
+  });
+
+  it('hides internal failure details from unexpected proxy errors', async () => {
+    authenticateUserMock.mockRejectedValue(new Error('private auth backend detail'));
+
+    const req = {
+      method: 'GET',
+      headers: { authorization: 'Bearer token' },
+      query: {},
+    };
+    const res = createResponse();
+
+    await handler(req as never, res as never);
+
+    expect(res.statusCode).toBe(500);
+    expect(res.body).toEqual({
+      error: {
+        message: 'Internal server error',
+        code: 'INTERNAL_SERVER_ERROR',
+      },
+    });
+    expect(JSON.stringify(res.body)).not.toContain('private auth backend detail');
+    expect(logErrorMock).toHaveBeenCalledWith(
+      'API_PROXY',
+      expect.objectContaining({ message: 'private auth backend detail' }),
+      { showToast: false }
+    );
   });
 });
 

@@ -212,10 +212,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     return res.status(500).json({
       error: {
-        message,
+        message: 'Maintenance request failed.',
         code: 'INTERNAL_SERVER_ERROR',
       },
     });
   }
 }
-

@@ -305,5 +305,23 @@ describe('push-reminder-cron API', () => {
       })
     );
   });
+
+  it('hides internal failure details from the cron response', async () => {
+    listSubscribedUserIdsServerMock.mockRejectedValue(new Error('private database detail'));
+    createClientMock.mockImplementation(() => createSupabaseMock());
+
+    const req = {
+      method: 'GET',
+      headers: { authorization: 'Bearer cron-secret' },
+      query: { date: '2026-03-27T09:00:00.000Z' },
+    };
+    const res = createResponse();
+
+    await handler(req as never, res as never);
+
+    expect(res.statusCode).toBe(500);
+    expect(res.body).toEqual({ error: 'Reminder cron failed.' });
+    expect(JSON.stringify(res.body)).not.toContain('private database detail');
+  });
 });
 

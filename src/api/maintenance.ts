@@ -167,7 +167,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     return res.status(200).json({ deletedCount });
   } catch (error) {
-    const logged = logError('API_MAINTENANCE', error, {
+    logError('API_MAINTENANCE', error, {
       category: 'DATABASE',
       severity: 'MEDIUM',
       showToast: false,
@@ -175,7 +175,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     return res.status(500).json({
       error: {
-        message: logged.message,
+        message: 'Maintenance request failed.',
         code: 'INTERNAL_SERVER_ERROR',
       },
     });

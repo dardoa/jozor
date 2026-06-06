@@ -26,10 +26,10 @@ export default async function handler(_req: VercelRequest, res: VercelResponse) 
       env: process.env.NODE_ENV,
     });
   } catch (error) {
-    const logged = logError('API_CHECK_ENV', error, { showToast: false });
+    logError('API_CHECK_ENV', error, { showToast: false });
     return res.status(500).json({
       error: {
-        message: logged.message,
+        message: 'Environment check failed',
       },
     });
   }

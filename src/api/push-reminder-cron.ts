@@ -314,6 +314,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Reminder cron failed.';
-    return res.status(500).json({ error: message });
+    console.error('[API_PUSH_REMINDER_CRON] Failed.', { message });
+    return res.status(500).json({ error: 'Reminder cron failed.' });
   }
 }

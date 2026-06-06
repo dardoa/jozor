@@ -43,9 +43,11 @@ export default async function handler(_req: VercelRequest, res: VercelResponse) 
         : 'All critical variables are present'
     });
   } catch (error) {
+    console.error('[API_DEBUG_ENV] Debug endpoint failed.', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
     return res.status(500).json({
-      error: 'Debug endpoint failed',
-      message: error instanceof Error ? error.message : 'Unknown error'
+      error: 'Debug endpoint failed'
     });
   }
 }
