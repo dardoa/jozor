@@ -1,5 +1,6 @@
 
 import { render } from '@testing-library/react';
+import type { ComponentProps } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { V3FamilyGraphRenderer } from '../V3FamilyGraphRenderer';
 import type { Person, TreeSettings } from '../../../types';
@@ -94,6 +95,7 @@ const renderGraph = (
   people = { [person.id]: person },
   pipelineOverride: V3RendererPipeline = pipeline,
   settingsOverride: TreeSettings = settings,
+  rendererProps: Partial<ComponentProps<typeof V3FamilyGraphRenderer>> = {},
 ) => (
   <svg>
     <V3FamilyGraphRenderer
@@ -103,6 +105,7 @@ const renderGraph = (
       focusPersonId={person.id}
       onSelect={() => undefined}
       onNodeContextMenu={() => undefined}
+      {...rendererProps}
     />
   </svg>
 );
@@ -264,6 +267,71 @@ describe('V3FamilyGraphRenderer node stability', () => {
     const rightDrop = container.querySelector('[data-edge-id="child-drop-right"]');
     expect(leftDrop?.getAttribute('d')).toMatch(/^M 60 0 L 60 119 C 60 140.32 0 140.32 0 160$/);
     expect(rightDrop?.getAttribute('d')).toMatch(/^M 60 0 L 60 119 C 60 140.32 120 140.32 120 160$/);
+  });
+
+  it('culls offscreen V3 nodes and edges when viewport data is available', () => {
+    const people = Object.fromEntries(
+      Array.from({ length: 12 }, (_, index) => {
+        const person = buildPerson({
+          id: `person-${index}`,
+          firstName: `Person ${index}`,
+        });
+        return [person.id, person];
+      }),
+    );
+    const cullingPipeline: V3RendererPipeline = {
+      projectedNodes: Object.values(people).map((person, index) => ({
+        uniqueEntityId: `person:${person.id}`,
+        personId: person.id,
+        x: index * 1000,
+        y: 0,
+        isCanonical: true,
+        isReference: false,
+      })),
+      familyNodes: [],
+      edgeEntities: [
+        {
+          id: 'visible-edge',
+          type: 'partner-link',
+          pathData: 'M 0 0 L 100 0',
+          metadata: {
+            familyId: 'family:visible',
+            sourcePersonId: 'person-0',
+            targetPersonId: 'person-0',
+          },
+        },
+        {
+          id: 'offscreen-edge',
+          type: 'partner-link',
+          pathData: 'M 2000 0 L 2100 0',
+          metadata: {
+            familyId: 'family:offscreen',
+            sourcePersonId: 'person-2',
+            targetPersonId: 'person-2',
+          },
+        },
+      ],
+      collapseControls: [],
+      bounds: { minX: 0, minY: 0, maxX: 11000, maxY: 0 },
+    };
+
+    const { container } = render(renderGraph(
+      people['person-0'],
+      people,
+      cullingPipeline,
+      settings,
+      {
+        zoomScale: 1,
+        zoomX: 0,
+        zoomY: 0,
+        viewportSize: { width: 300, height: 300 },
+      },
+    ));
+
+    expect(nodeComponentMock).toHaveBeenCalledTimes(1);
+    expect((nodeComponentMock as any).mock.calls[0][0].node.data.id).toBe('person-0');
+    expect(container.querySelector('[data-edge-id="visible-edge"]')).toBeInTheDocument();
+    expect(container.querySelector('[data-edge-id="offscreen-edge"]')).not.toBeInTheDocument();
   });
 });
 
