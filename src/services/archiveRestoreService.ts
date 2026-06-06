@@ -151,32 +151,48 @@ const restorePeopleMedia = async ({
   const restoredPeople: Record<string, Person> = {};
   const personIds = Object.keys(people).sort();
 
-  for (const personId of personIds) {
-    const restored = validatePerson(people[personId]);
+  // Keep warnings order deterministic by giving each person a separate warnings array
+  const personWarningsList = personIds.map(() => [] as string[]);
 
-    restored.photoUrl = await restoreAvatar({
-      zip,
-      personId,
-      manifest,
-      warnings,
-      createObjectUrl,
-      trackObjectUrl,
-    });
+  const restoredPeopleTemp = await Promise.all(
+    personIds.map(async (personId, idx) => {
+      const restored = validatePerson(people[personId]);
 
-    restored.gallery = await restoreGallery({
-      zip,
-      personId,
-      manifest,
-      warnings,
-      createObjectUrl,
-      trackObjectUrl,
-    });
+      const [photoUrl, gallery] = await Promise.all([
+        restoreAvatar({
+          zip,
+          personId,
+          manifest,
+          warnings: personWarningsList[idx],
+          createObjectUrl,
+          trackObjectUrl,
+        }),
+        restoreGallery({
+          zip,
+          personId,
+          manifest,
+          warnings: personWarningsList[idx],
+          createObjectUrl,
+          trackObjectUrl,
+        }),
+      ]);
 
-    // Blueprint archives intentionally do not preserve voice notes yet, so we
-    // keep the restored runtime state explicit about that current limitation.
-    restored.voiceNotes = [];
+      restored.photoUrl = photoUrl;
+      restored.gallery = gallery;
+      restored.voiceNotes = [];
 
+      return { personId, restored };
+    })
+  );
+
+  // Populate restoredPeople in the deterministic sorted order of personIds
+  for (const { personId, restored } of restoredPeopleTemp) {
     restoredPeople[personId] = restored;
+  }
+
+  // Add warnings to the main warnings array in deterministic sorted order
+  for (const w of personWarningsList) {
+    warnings.push(...w);
   }
 
   return restoredPeople;
@@ -222,23 +238,28 @@ const restoreGallery = async ({
   trackObjectUrl,
 }: Omit<RestorePeopleMediaParams, 'people'> & { personId: string }): Promise<string[]> => {
   const galleryPaths = manifest.media.gallery[personId] ?? [];
-  const restoredGallery: string[] = [];
 
-  for (const galleryPath of galleryPaths) {
-    const restored = await restoreMediaUrl({
-      zip,
-      filePath: galleryPath,
-      warnings,
-      createObjectUrl,
-      trackObjectUrl,
-    });
+  // Track warnings for each path to keep warnings deterministic
+  const pathWarnings = galleryPaths.map(() => [] as string[]);
 
-    if (restored) {
-      restoredGallery.push(restored);
-    }
+  const results = await Promise.all(
+    galleryPaths.map((galleryPath, index) =>
+      restoreMediaUrl({
+        zip,
+        filePath: galleryPath,
+        warnings: pathWarnings[index],
+        createObjectUrl,
+        trackObjectUrl,
+      })
+    )
+  );
+
+  // Push all warnings in the exact order of galleryPaths
+  for (const w of pathWarnings) {
+    warnings.push(...w);
   }
 
-  return restoredGallery;
+  return results.filter((url): url is string => typeof url === 'string');
 };
 
 const restoreMediaUrl = async ({

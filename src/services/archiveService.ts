@@ -47,47 +47,59 @@ export const buildBlueprintArchive = async (
 
   // We rewrite media references into manifest entries so tree.json stays purely
   // data-oriented and never embeds transport-specific image payloads.
-  for (const personId of sortedPersonIds) {
-    const person = snapshot.people[personId];
-    const normalizedPerson = clonePersonWithoutPortableMedia(person);
+  const tempResults = await Promise.all(
+    sortedPersonIds.map(async (personId) => {
+      const person = snapshot.people[personId];
+      const normalizedPerson = clonePersonWithoutPortableMedia(person);
 
-    if (person.photoUrl) {
-      const avatarPath = await addMediaFile({
-        zip,
-        source: person.photoUrl,
-        targetBasePath: `media/avatars/${sanitizeFileSegment(personId)}`,
-        date: archiveDate,
-        mediaFetcher,
-      });
+      const avatarPromise = person.photoUrl
+        ? addMediaFile({
+            zip,
+            source: person.photoUrl,
+            targetBasePath: `media/avatars/${sanitizeFileSegment(personId)}`,
+            date: archiveDate,
+            mediaFetcher,
+          })
+        : Promise.resolve(null);
 
-      if (avatarPath) {
-        avatars[personId] = avatarPath;
-      }
-    }
+      const galleryPromises = (Array.isArray(person.gallery) ? person.gallery : []).map(
+        (galleryItem, index) =>
+          addMediaFile({
+            zip,
+            source: galleryItem,
+            targetBasePath: `media/gallery/${sanitizeFileSegment(personId)}-${index + 1}`,
+            date: archiveDate,
+            mediaFetcher,
+          })
+      );
 
-    if (Array.isArray(person.gallery) && person.gallery.length > 0) {
-      const galleryPaths: string[] = [];
+      const [avatarPath, galleryPathsRaw] = await Promise.all([
+        avatarPromise,
+        Promise.all(galleryPromises),
+      ]);
 
-      for (const [index, galleryItem] of person.gallery.entries()) {
-        const galleryPath = await addMediaFile({
-          zip,
-          source: galleryItem,
-          targetBasePath: `media/gallery/${sanitizeFileSegment(personId)}-${index + 1}`,
-          date: archiveDate,
-          mediaFetcher,
-        });
+      const galleryPaths = galleryPathsRaw.filter((path): path is string => typeof path === 'string');
 
-        if (galleryPath) {
-          galleryPaths.push(galleryPath);
-        }
-      }
+      return {
+        personId,
+        normalizedPerson,
+        avatarPath,
+        galleryPaths,
+      };
+    })
+  );
 
-      if (galleryPaths.length > 0) {
-        gallery[personId] = galleryPaths;
-      }
-    }
-
+  // Populate maps in deterministic order of sortedPersonIds
+  for (const { personId, normalizedPerson, avatarPath, galleryPaths } of tempResults) {
     normalizedPeople[personId] = normalizedPerson;
+
+    if (avatarPath) {
+      avatars[personId] = avatarPath;
+    }
+
+    if (galleryPaths.length > 0) {
+      gallery[personId] = galleryPaths;
+    }
   }
 
   const normalizedTree: ArchiveTreeState = {
