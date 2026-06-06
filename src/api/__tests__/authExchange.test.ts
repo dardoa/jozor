@@ -57,6 +57,7 @@ describe('auth exchange API', () => {
     await handler(req as never, res as never);
 
     expect(res.statusCode).toBe(500);
+    expect(res.body).toEqual({ error: 'Failed to exchange Google authorization code' });
     expect(consoleErrorSpy).toHaveBeenCalledWith(
       'Google Token Exchange Error:',
       {
@@ -68,6 +69,7 @@ describe('auth exchange API', () => {
     const loggedText = JSON.stringify(consoleErrorSpy.mock.calls);
     expect(loggedText).not.toContain('raw-access-token');
     expect(loggedText).not.toContain('raw-refresh-token');
+    expect(JSON.stringify(res.body)).not.toContain('Bad code');
 
     consoleErrorSpy.mockRestore();
   });

@@ -180,7 +180,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       message: error instanceof Error ? error.message : 'Unknown error',
     });
     return res.status(500).json({
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: 'Failed to exchange Google authorization code',
     });
   }
 }

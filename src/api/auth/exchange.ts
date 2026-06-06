@@ -149,7 +149,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   } catch (e: unknown) {
     console.error('Auth Handler Error:', e);
-    const errorMessage = e instanceof Error ? e.message : 'Unknown error';
-    return res.status(500).json({ error: errorMessage });
+    return res.status(500).json({ error: 'Failed to exchange Google authorization code' });
   }
 }
