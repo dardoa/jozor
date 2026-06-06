@@ -45,8 +45,10 @@ export class DeltaDebouncedUpdateQueue {
         const queued = Array.from(this.updateQueue.entries());
         this.updateQueue.clear();
 
-        for (const [id, data] of queued) {
-            await this.pushOperation(data.treeId, 'UPDATE_PROP', { id, updates: data.updates });
-        }
+        await Promise.all(
+            queued.map(([id, data]) =>
+                this.pushOperation(data.treeId, 'UPDATE_PROP', { id, updates: data.updates })
+            )
+        );
     }
 }
