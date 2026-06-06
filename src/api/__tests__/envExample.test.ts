@@ -13,6 +13,7 @@ describe('environment example', () => {
       'SUPABASE_URL=',
       'SUPABASE_SERVICE_ROLE_KEY=',
       'SUPABASE_JWT_SECRET=',
+      'VITE_GOOGLE_API_KEY=',
       'GOOGLE_CLIENT_ID=',
       'GOOGLE_CLIENT_SECRET=',
       'GOOGLE_AI_KEY=',

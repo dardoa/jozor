@@ -68,7 +68,22 @@ If either audit fails:
 - stop release validation
 - fix schema drift before app testing
 
-## 4. App Smoke Validation
+## 4. Google Cloud Readiness
+
+The browser variable `VITE_GOOGLE_API_KEY` is used only for Google Picker developer-key initialization.
+It is intentionally public, so it must be restricted before any non-sandbox release.
+
+Minimum acceptance:
+
+- use a dedicated Google API key for Jozor Picker, not a shared project-wide key
+- restrict the key by HTTP referrer to the exact deployed origins, such as `https://jozor.vercel.app/*`
+- restrict the key by API scope to only the APIs needed by Picker/Drive flows
+- keep OAuth client origins and redirect/callback origins aligned with the deployed environment
+- rotate the key if it was ever tested without referrer restrictions
+
+If these restrictions are not confirmed, do not promote the build beyond sandbox/staging.
+
+## 5. App Smoke Validation
 
 Run this manually on the target environment:
 
@@ -85,7 +100,7 @@ Run this manually on the target environment:
 11. Promote the viewer to `editor`.
 12. Confirm the editor can edit and changes persist after reload.
 
-## 5. Collaboration Validation
+## 6. Collaboration Validation
 
 Minimum acceptance:
 
@@ -99,7 +114,7 @@ Current automated coverage:
 - [`app-smoke.spec.ts`](/D:/AppDEV/Jozor1.1/tests/e2e/app-smoke.spec.ts) covers role-sensitive behavior and persistence
 - [`collaboration-live.spec.ts`](/D:/AppDEV/Jozor1.1/tests/e2e/collaboration-live.spec.ts) is available for real multi-user validation when test credentials are configured
 
-## 6. Observability Check
+## 7. Observability Check
 
 Before release, confirm these flows produce useful diagnostics in the console or logs:
 
@@ -115,7 +130,7 @@ Expected result:
 - user-facing messages are clearer than raw backend errors
 - logs include enough metadata to identify `treeId`, user, and operation type
 
-## 7. Staging Sign-off
+## 8. Staging Sign-off
 
 A staging environment is ready when:
 
@@ -125,7 +140,7 @@ A staging environment is ready when:
 - collaboration validation passes
 - no unexplained sync or auth regressions remain
 
-## 8. Deferred But Tracked
+## 9. Deferred But Tracked
 
 Not required for every release, but recommended:
 
