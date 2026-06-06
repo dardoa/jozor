@@ -23,18 +23,31 @@ export const fetchTreesForUser = async (ownerId: string, userEmail: string, toke
   }));
 };
 
-export const fetchPeopleCountsForTrees = async (
-  treeIds: string[],
-  ownerId: string,
-  userEmail: string,
-  token?: string
-): Promise<Record<string, number>> => {
-  const uniqueTreeIds = Array.from(new Set(treeIds.filter(Boolean)));
-  if (uniqueTreeIds.length === 0) return {};
+type EmbeddedPeopleCountRow = {
+  id?: unknown;
+  people?: unknown;
+};
 
-  const client = getTreeClient(ownerId, userEmail, token);
+const readEmbeddedPeopleCount = (people: unknown): number => {
+  if (Array.isArray(people)) {
+    const first = people[0] as { count?: unknown } | undefined;
+    return typeof first?.count === 'number' ? first.count : 0;
+  }
+
+  if (people && typeof people === 'object' && 'count' in people) {
+    const count = (people as { count?: unknown }).count;
+    return typeof count === 'number' ? count : 0;
+  }
+
+  return 0;
+};
+
+const fetchPeopleCountsIndividually = async (
+  client: ReturnType<typeof getTreeClient>,
+  treeIds: string[]
+): Promise<Record<string, number>> => {
   const settled = await Promise.allSettled(
-    uniqueTreeIds.map(async (treeId) => {
+    treeIds.map(async (treeId) => {
       const { count, error } = await client
         .from('people')
         .select('id', { count: 'exact', head: true })
@@ -49,6 +62,34 @@ export const fetchPeopleCountsForTrees = async (
     if (result.status === 'fulfilled') {
       const [treeId, count] = result.value;
       counts[treeId] = count;
+    }
+    return counts;
+  }, {});
+};
+
+export const fetchPeopleCountsForTrees = async (
+  treeIds: string[],
+  ownerId: string,
+  userEmail: string,
+  token?: string
+): Promise<Record<string, number>> => {
+  const uniqueTreeIds = Array.from(new Set(treeIds.filter(Boolean)));
+  if (uniqueTreeIds.length === 0) return {};
+
+  const client = getTreeClient(ownerId, userEmail, token);
+  const { data, error } = await client
+    .from('trees')
+    .select('id, people(count)')
+    .in('id', uniqueTreeIds);
+
+  if (error) {
+    return fetchPeopleCountsIndividually(client, uniqueTreeIds);
+  }
+
+  return (data ?? []).reduce<Record<string, number>>((counts, row) => {
+    const treeRow = row as EmbeddedPeopleCountRow;
+    if (typeof treeRow.id === 'string') {
+      counts[treeRow.id] = readEmbeddedPeopleCount(treeRow.people);
     }
     return counts;
   }, {});
@@ -176,4 +217,3 @@ export const fetchTree = async (
     lastVersion: maxVersion,
   };
 };
-
