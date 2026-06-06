@@ -21,20 +21,23 @@ export const storageService = {
         try {
             const db = await getLocalDb();
             const peopleArray = Object.values(people);
-            if (peopleArray.length === 0) {
-                await db.people.clear();
-                return;
-            }
-            await db.people.bulkPut(peopleArray);
+            await db.transaction('rw', db.people, async () => {
+                if (peopleArray.length === 0) {
+                    await db.people.clear();
+                    return;
+                }
 
-            // Safety: Cleanup orphans so deletions persist across reloads.
-            const dbCount = await db.people.count();
-            if (dbCount > peopleArray.length) {
-                const dbIds = await db.people.toCollection().primaryKeys();
-                const memIds = new Set(Object.keys(people));
-                const toDelete = dbIds.filter(id => !memIds.has(id));
-                if (toDelete.length > 0) await db.people.bulkDelete(toDelete);
-            }
+                await db.people.bulkPut(peopleArray);
+
+                // Safety: Cleanup orphans so deletions persist across reloads.
+                const dbCount = await db.people.count();
+                if (dbCount > peopleArray.length) {
+                    const dbIds = await db.people.toCollection().primaryKeys();
+                    const memIds = new Set(Object.keys(people));
+                    const toDelete = dbIds.filter(id => typeof id === 'string' && !memIds.has(id));
+                    if (toDelete.length > 0) await db.people.bulkDelete(toDelete);
+                }
+            });
         } catch (e) {
             logError('storageService saveFullTree', e, {
                 category: 'DATABASE',
