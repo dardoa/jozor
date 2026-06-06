@@ -337,7 +337,6 @@ class DeltaSyncService {
             store.setConfirmedPeople(full.people);
             store.setLastSyncedVersion(full.lastVersion);
 
-            const { projectPendingOperations } = await import('../domain/pendingOperationsProjection');
             const { people: projected } = projectPendingOperations(full.people, store.pendingOperations);
             store.setPeople(projected, false);
 

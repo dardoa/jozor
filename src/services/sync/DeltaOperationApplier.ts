@@ -6,6 +6,7 @@ import { applyIncomingOps } from './applyIncomingOps';
 import { backgroundTreePersistence } from './BackgroundTreePersistence';
 import { clientInstanceId } from './syncInstance';
 import { storageService } from '../storageService';
+import { projectPendingOperations } from '../../domain/pendingOperationsProjection';
 
 export class DeltaOperationApplier {
     private incomingProcessingQueue: Promise<void> = Promise.resolve();
@@ -53,7 +54,6 @@ export class DeltaOperationApplier {
                         result.syncingNodeIdsToRemove.forEach((id) => state.removeSyncingNode(id));
 
                         // Project remote updates over local pending operations
-                        const { projectPendingOperations } = await import('../../domain/pendingOperationsProjection');
                         const { people: projected } = projectPendingOperations(
                             result.people,
                             state.pendingOperations
