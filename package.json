@@ -23,6 +23,7 @@
     "test:e2e:collab:live": "playwright test tests/e2e/collaboration-live.spec.ts --project=chromium --reporter=line",
     "test:layout:perf": "vitest run src/domain/__tests__/familyGraphPerformance.test.ts",
     "test:render:guard": "vitest run src/components/charts/__tests__/V3FamilyGraphRenderer.test.tsx src/components/tree/node/__tests__/NodeContainer.test.tsx",
+    "test:render:runtime": "playwright test tests/e2e/render-runtime.spec.ts --project=chromium --reporter=line",
     "test:shared-tree:unit": "vitest run services/__tests__/proxyService.test.ts components/__tests__/SharedTreeLoader.test.tsx services/__tests__/supabaseTreeService.test.ts components/__tests__/Header.test.tsx components/__tests__/TreeSelector.test.tsx store/__tests__/useAppStore.test.ts",
     "test:shared-tree:smoke": "playwright test tests/e2e/app-smoke.spec.ts --project=chromium --reporter=line --grep \"persisted debug scenario restores the tree name in the header|sync diagnostics surface pending work and retryable errors|shared tree access changes from owner to viewer to editor and editor changes persist after reload\"",
     "test:telemetry": "npm run test:telemetry:unit && npm run test:telemetry:smoke",
