@@ -143,5 +143,23 @@ describe('push-notifier API', () => {
     expect(listSubscriptionsForUserServerMock).toHaveBeenCalledWith('user-2');
     expect(res.statusCode).toBe(200);
   });
+
+  it('does not expose push provider error details to the client', async () => {
+    authenticateUserMock.mockResolvedValue({ uid: 'user-1', email: 'user@example.com' });
+    listSubscriptionsForUserServerMock.mockRejectedValue(new Error('private provider credential detail'));
+
+    const req = {
+      method: 'POST',
+      headers: { authorization: 'Bearer token' },
+      body: { title: 'Hello', body: 'World' },
+    };
+    const res = createResponse();
+
+    await handler(req as never, res as never);
+
+    expect(res.statusCode).toBe(500);
+    expect(res.body).toEqual({ error: 'Push delivery failed.' });
+    expect(JSON.stringify(res.body)).not.toContain('private provider credential detail');
+  });
 });
 

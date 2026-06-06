@@ -336,6 +336,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Push delivery failed.';
     console.error('[API_PUSH_NOTIFIER] Delivery failed.', { message });
-    return res.status(500).json({ error: message });
+    return res.status(500).json({ error: 'Push delivery failed.' });
   }
 }
