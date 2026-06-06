@@ -22,6 +22,24 @@ const ALLOWED_ORIGIN = resolveAllowedOrigin();
 const MAX_PROMPT_LENGTH = 30_000;
 let supabaseAdminClient: SupabaseClient | null = null;
 
+type BillingTier = 'free' | 'pro' | 'family';
+
+export interface AIProxyRateLimitResult {
+  allowed: boolean;
+  requestCount: number;
+  requestLimit: number;
+  windowSeconds: number;
+  retryAfterSeconds: number;
+  resetAt: string;
+}
+
+export class AIProxyRateLimitExceededError extends Error {
+  constructor(readonly result: AIProxyRateLimitResult) {
+    super('AI proxy rate limit exceeded.');
+    this.name = 'AIProxyRateLimitExceededError';
+  }
+}
+
 function logServerError(context: string, error: unknown) {
   const message = error instanceof Error ? error.message : String(error);
   const stack = error instanceof Error ? error.stack : undefined;
@@ -60,6 +78,54 @@ function getAuthorizationHeader(headers: Headers | HeaderRecord): string | undef
   const headerRecord = headers as HeaderRecord;
   const value = headerRecord.authorization ?? headerRecord.Authorization;
   return Array.isArray(value) ? value[0] : value;
+}
+
+function normalizeBillingTier(value: unknown): BillingTier {
+  const normalized = typeof value === 'string' ? value.toLowerCase() : '';
+  return normalized === 'pro' || normalized === 'family' ? normalized : 'free';
+}
+
+export function normalizeAIProxyRateLimitResult(data: unknown): AIProxyRateLimitResult {
+  const row = Array.isArray(data) ? data[0] : data;
+  const candidate = row as Record<string, unknown> | null | undefined;
+
+  if (!candidate || typeof candidate !== 'object') {
+    throw new Error('AI rate limit validation returned no data.');
+  }
+
+  const allowed = Boolean(candidate.allowed);
+  const requestCount = Number(candidate.request_count ?? candidate.requestCount ?? 0);
+  const requestLimit = Number(candidate.request_limit ?? candidate.requestLimit ?? 0);
+  const windowSeconds = Number(candidate.window_seconds ?? candidate.windowSeconds ?? 60);
+  const retryAfterSeconds = Number(candidate.retry_after_seconds ?? candidate.retryAfterSeconds ?? windowSeconds);
+  const resetAt = String(candidate.reset_at ?? candidate.resetAt ?? '');
+
+  if (
+    !Number.isFinite(requestCount) ||
+    !Number.isFinite(requestLimit) ||
+    !Number.isFinite(windowSeconds) ||
+    !Number.isFinite(retryAfterSeconds)
+  ) {
+    throw new Error('AI rate limit validation returned malformed data.');
+  }
+
+  return {
+    allowed,
+    requestCount,
+    requestLimit,
+    windowSeconds,
+    retryAfterSeconds: Math.max(0, Math.ceil(retryAfterSeconds)),
+    resetAt,
+  };
+}
+
+export function buildAIProxyRateLimitHeaders(result: AIProxyRateLimitResult): Record<string, string> {
+  return {
+    'Retry-After': String(Math.max(1, result.retryAfterSeconds)),
+    'X-RateLimit-Limit': String(result.requestLimit),
+    'X-RateLimit-Remaining': String(Math.max(0, result.requestLimit - result.requestCount)),
+    'X-RateLimit-Reset': result.resetAt,
+  };
 }
 
 function getSupabaseAdminClient(): SupabaseClient {
@@ -103,6 +169,28 @@ async function completeUsageReservation(
   }
 
   logServerError('API_AI_PROXY_RESERVATION_COMPLETION', lastError);
+}
+
+async function enforceAIProxyRateLimit(
+  supabaseAdmin: SupabaseClient,
+  userId: string,
+  tier: BillingTier
+): Promise<AIProxyRateLimitResult> {
+  const { data, error } = await supabaseAdmin.rpc('check_ai_proxy_rate_limit', {
+    p_user_id: userId,
+    p_tier: tier,
+  });
+
+  if (error) {
+    throw new Error(`Failed to validate AI rate limit: ${error.message}`);
+  }
+
+  const result = normalizeAIProxyRateLimitResult(data);
+  if (!result.allowed) {
+    throw new AIProxyRateLimitExceededError(result);
+  }
+
+  return result;
 }
 
 /*
@@ -417,7 +505,7 @@ export default async function handler(req: Request) {
       }, { status: 500, headers: corsHeaders });
     }
 
-    const tier = profile.tier || 'free';
+    const tier = normalizeBillingTier(profile.tier);
 
     // 2. Reject Free tier users
     if (tier === 'free') {
@@ -429,11 +517,16 @@ export default async function handler(req: Request) {
       }, { status: 403, headers: corsHeaders });
     }
 
+    // 3. Enforce a short-window rate limit for all cloud AI tiers.
+    // Pro still has the monthly quota below; Family gets a generous burst cap
+    // so one user cannot exhaust provider capacity in a short spike.
+    await enforceAIProxyRateLimit(supabaseAdmin, user.uid, tier);
+
     let cloudRequestsUsed = 0;
     let cloudRequestsLimit = 30;
     let resetAtStr = '';
 
-    // 3. Atomically check and reserve quota for Pro tier users
+    // 4. Atomically check and reserve quota for Pro tier users
     if (tier === 'pro') {
       const { data: resId, error: reserveError } = await supabaseAdmin.rpc(
         'reserve_ai_usage_atomic',
@@ -465,10 +558,10 @@ export default async function handler(req: Request) {
       reservationId = resId as string;
     }
 
-    // 4. Generate AI response via Gemini provider
+    // 5. Generate AI response via Gemini provider
     const response = await generateViaProvider(prompt, image, preferredModels);
 
-    // 5. Complete reservation on success and fetch latest quota stats
+    // 6. Complete reservation on success and fetch latest quota stats
     if (reservationId) {
       await completeUsageReservation(supabaseAdmin, reservationId);
 
@@ -501,6 +594,23 @@ export default async function handler(req: Request) {
       // Refund reservation on failure/timeout
       await supabaseAdmin.rpc('refund_ai_usage_reservation', { p_reservation_id: reservationId }).catch((e: any) => {
         console.error('[AI_PROXY] Failed to refund reservation:', e);
+      });
+    }
+
+    if (error instanceof AIProxyRateLimitExceededError) {
+      return Response.json({
+        error: {
+          message: 'Too many AI requests. Please wait briefly before trying again.',
+          code: 'AI_RATE_LIMIT_EXCEEDED',
+          retryAfterSeconds: error.result.retryAfterSeconds,
+          resetAt: error.result.resetAt,
+        },
+      }, {
+        status: 429,
+        headers: {
+          ...corsHeaders,
+          ...buildAIProxyRateLimitHeaders(error.result),
+        },
       });
     }
 
