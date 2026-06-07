@@ -32,9 +32,14 @@ interface PersonHeaderViewProps {
   settings: TreeSettings;
 }
 
+type PersonHeaderTranslations = {
+  viewOnMap?: string;
+};
+
 export const PersonHeaderView = memo<PersonHeaderViewProps>(
   ({ person, canEdit, onSelect, onOpenModal, familyActions, settings }) => {
     const { t } = useTranslation();
+    const headerText = t as typeof t & PersonHeaderTranslations;
     const fullName =
       [person.title, person.firstName, person.middleName, person.lastName, person.suffix]
         .filter(Boolean)
@@ -223,7 +228,7 @@ export const PersonHeaderView = memo<PersonHeaderViewProps>(
               onClick={() => onOpenModal('map')}
               className={`${baseButtonClasses} w-full bg-[var(--surface-subtle)] text-[var(--text-main)]`}
             >
-              <MapPin className='w-3.5 h-3.5' /> {(t as any).viewOnMap}
+              <MapPin className='w-3.5 h-3.5' /> {headerText.viewOnMap || 'View on Map'}
             </button>
             <button
               onClick={() => onOpenModal('timeline')}

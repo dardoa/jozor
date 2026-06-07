@@ -552,3 +552,15 @@
 - `radial` is not yet a true explicit route in `treeLayout.ts`.
 - `radial` currently resolves through the non-pedigree compatibility route.
 - This is transitional compatibility behavior, not final architectural identity.
+
+## Translation And UI Small Cast Cleanup
+
+- Scope:
+  - Removed low-risk translation casts from account menus, mobile account/actions, tree discussion HUD, timeline labels, geography labels, and smart persona map action.
+  - Replaced broad `Record<string, string>` and `any` translation access with narrow local optional translation extensions.
+  - Tightened the Paywall checkout catch boundary from `any` to `unknown`.
+- Verification:
+  - `npx tsc --noEmit --pretty false`
+  - `npm run build`
+- Deferred:
+  - Renderer, gallery item, modal-routing, diagnostics window, and map library integration casts remain outside this small UI/translation package.

@@ -60,6 +60,23 @@ const SheetAction = ({
   </button>
 );
 
+type MobileAccountTranslations = {
+  accountMenu?: string;
+  accountPreferences?: string;
+  languagePreferenceHint?: string;
+  appearancePreferenceHint?: string;
+  appSettings?: string;
+  globalSettingsHint?: string;
+  storageAndBackup?: string;
+  backupNowHint?: string;
+  adminTools?: string;
+  adminDashboard?: string;
+  adminDashboardHint?: string;
+  adminBillingDiagnostics?: string;
+  adminBillingDiagnosticsHint?: string;
+  sessionLabel?: string;
+};
+
 export const MobileAccountSheet = memo(({
   isOpen,
   onClose,
@@ -71,7 +88,7 @@ export const MobileAccountSheet = memo(({
   onOpenGlobalSettings,
 }: MobileAccountSheetProps) => {
   const { t } = useTranslation();
-  const text = t as unknown as Record<string, string>;
+  const text = t as typeof t & MobileAccountTranslations;
   const accountLabel = text.accountMenu || t.accountProfile;
   const canOpenKindiReports = useKindiReportsAdminAccess(user);
 

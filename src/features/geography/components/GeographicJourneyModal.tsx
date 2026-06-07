@@ -36,6 +36,11 @@ type GeographicJourneyModalProps = {
   onSelectPerson?: (id: string) => void;
 };
 
+type GeographicJourneyTranslations = {
+  migrationMap?: string;
+  viewOnMap?: string;
+};
+
 const modeButtonClass = (active: boolean) =>
   `inline-flex items-center gap-2 rounded-2xl px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] transition-all ${
     active
@@ -53,6 +58,7 @@ export const GeographicJourneyModal: React.FC<GeographicJourneyModalProps> = ({
   onSelectPerson,
 }) => {
   const { t } = useTranslation();
+  const geographyText = t as typeof t & GeographicJourneyTranslations;
   const treeName = useAppStore(state => state.treeName);
   const isRtl = language === 'ar';
   const mapRef = useRef<L.Map | null>(null);
@@ -156,7 +162,7 @@ export const GeographicJourneyModal: React.FC<GeographicJourneyModalProps> = ({
               <div className={`mt-4 flex flex-wrap gap-2 ${isRtl ? 'justify-end' : ''}`}>
                 <button type="button" onClick={() => setMode('events')} className={modeButtonClass(mode === 'events')}>
                   <MapPin className="h-4 w-4" />
-                  {(t as any).viewOnMap}
+                  {geographyText.viewOnMap || 'View on Map'}
                 </button>
                 <button
                   type="button"
@@ -164,7 +170,7 @@ export const GeographicJourneyModal: React.FC<GeographicJourneyModalProps> = ({
                   className={modeButtonClass(mode === 'migration')}
                 >
                   <Route className="h-4 w-4" />
-                  {(t as unknown as Record<string, string>).migrationMap || 'Migration Map'}
+                  {geographyText.migrationMap || 'Migration Map'}
                 </button>
               </div>
             </div>
@@ -253,7 +259,7 @@ export const GeographicJourneyModal: React.FC<GeographicJourneyModalProps> = ({
                 <Users className="h-3 w-3" />
                 {mode === 'events'
                   ? t.statistics.uniqueLocations
-                  : (t as unknown as Record<string, string>).migrationMap || 'Migration Map'}
+                  : geographyText.migrationMap || 'Migration Map'}
               </h4>
               <div className="space-y-4">
                 {mode === 'events'

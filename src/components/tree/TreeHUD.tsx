@@ -19,6 +19,12 @@ interface TreeHUDProps {
     zoomScale: number;
 }
 
+type TreeHudTranslations = {
+    discussionDrawer?: {
+        title?: string;
+    };
+};
+
 /**
  * TreeHUD - Heads-Up Display Component
  * 
@@ -41,6 +47,7 @@ export const TreeHUD: React.FC<TreeHUDProps> = ({
     zoomScale,
 }) => {
     const { t } = useTranslation();
+    const discussionText = (t as typeof t & TreeHudTranslations).discussionDrawer;
     const isDiscussionOpen = useAppStore((state) => state.isDiscussionOpen);
     const setDiscussionOpen = useAppStore((state) => state.setDiscussionOpen);
     const currentTreeId = useAppStore((state) => state.currentTreeId);
@@ -68,7 +75,7 @@ export const TreeHUD: React.FC<TreeHUDProps> = ({
                                     ? 'bg-[var(--color-primary-600)] text-white border-[var(--color-primary-500)]' 
                                     : 'bg-[var(--surface-panel)] text-[var(--text-default)] border-[var(--border-soft)] hover:border-[var(--color-primary-500)] hover:text-[var(--color-primary-600)]'
                             }`}
-                            title={(t as any).discussionDrawer?.title || 'Tree Discussion'}
+                            title={discussionText?.title || 'Tree Discussion'}
                         >
                             <MessageSquare className="w-5 h-5" />
                             {unreadCount > 0 && (

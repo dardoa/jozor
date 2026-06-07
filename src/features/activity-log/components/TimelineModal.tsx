@@ -33,8 +33,14 @@ type EventTypeMeta = {
   icon: typeof Baby;
 };
 
+type TimelineTranslations = {
+  birth?: string;
+  births?: string;
+};
+
 export const TimelineModal = ({ isOpen, onClose, people, onSelectPerson }: TimelineModalProps) => {
   const { t } = useTranslation();
+  const timelineText = t as typeof t & TimelineTranslations;
   const [sortAsc, setSortAsc] = useState(true);
   const [activeFilters, setActiveFilters] = useState<Set<TimelineEvent['type']>>(
     new Set(['birth', 'death', 'marriage', 'custom'])
@@ -62,7 +68,7 @@ export const TimelineModal = ({ isOpen, onClose, people, onSelectPerson }: Timel
   const eventTypeMeta = useMemo<Record<TimelineEvent['type'], EventTypeMeta>>(
     () => ({
       birth: {
-        label: (t as any).births || (t as any).birth,
+        label: timelineText.births || timelineText.birth || t.born,
         chipClass: 'bg-emerald-50 text-emerald-700',
         iconWrapClass: 'bg-emerald-50 text-emerald-700',
         icon: Baby,

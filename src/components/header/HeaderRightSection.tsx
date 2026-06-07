@@ -65,7 +65,7 @@ export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(({ the
                   id="user-menu-trigger"
                   type='button'
                   data-testid="account-menu-trigger"
-                  aria-label={(t as unknown as Record<string, string>).accountMenu || t.accountProfile}
+                  aria-label={t.accountMenu || t.accountProfile}
                   className='flex items-center gap-1 rounded-full border border-[var(--border-main)] bg-[var(--theme-bg)] p-1 transition-all hover:bg-[var(--theme-hover)] active:scale-95 sm:pe-1.5'
                 >
                   <div className='h-8 w-8 overflow-hidden rounded-full bg-gradient-to-br from-[var(--primary-600)] to-[var(--primary-400)] text-xs font-bold text-white shadow-sm sm:h-7 sm:w-7 sm:text-[11px] flex items-center justify-center'>
@@ -82,7 +82,7 @@ export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(({ the
         ) : (
           // Guest mode: only show the settings/account dropdown, no redundant Google login button
           <Dropdown
-            trigger={<HeaderMenuTrigger icon={<Settings className="w-5 h-5" />} label={(t as unknown as Record<string, string>).accountMenu || t.accountProfile} testId="account-menu-trigger" />}
+            trigger={<HeaderMenuTrigger icon={<Settings className="w-5 h-5" />} label={t.accountMenu || t.accountProfile} testId="account-menu-trigger" />}
             align='end'
           >
             <AccountMenu themeLanguage={themeLanguage} user={null} onLogin={auth.onOpenLoginModal} onLogout={auth.onLogout} />

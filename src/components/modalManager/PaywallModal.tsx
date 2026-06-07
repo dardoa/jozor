@@ -217,9 +217,10 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ isOpen, onClose }) =
           successUrl: window.location.origin,
         },
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
       console.error('Paddle Checkout failed:', error);
-      toast.error(`${text.checkoutError}: ${error.message}`);
+      toast.error(`${text.checkoutError}: ${message}`);
       setCheckoutLoading(null);
     }
   };

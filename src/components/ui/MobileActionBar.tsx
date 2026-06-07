@@ -19,6 +19,15 @@ interface MobileActionButton {
   disabled?: boolean;
 }
 
+type MobileActionTranslations = {
+  appearance?: string;
+  addShort?: string;
+  vaultTitle?: string;
+  settings?: {
+    appearanceLab?: string;
+  };
+};
+
 export const MobileActionBar: React.FC<MobileActionBarProps> = ({
   onOpenVault,
   onOpenAppearance,
@@ -27,7 +36,7 @@ export const MobileActionBar: React.FC<MobileActionBarProps> = ({
   activeTab = null,
 }) => {
   const { t } = useTranslation();
-  const text = t as unknown as Record<string, string>;
+  const text = t as typeof t & MobileActionTranslations;
 
   const runWithFeedback = (action: () => void) => {
     if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
@@ -39,7 +48,7 @@ export const MobileActionBar: React.FC<MobileActionBarProps> = ({
   const buttons: MobileActionButton[] = [
     {
       id: 'appearance',
-      label: text.appearanceLab || text.appearance || 'Appearance',
+      label: text.settings?.appearanceLab || text.appearance || 'Appearance',
       icon: Palette,
       onClick: onOpenAppearance,
     },

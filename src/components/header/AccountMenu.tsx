@@ -15,10 +15,18 @@ interface AccountMenuProps {
   onOpenGlobalSettings?: () => void;
 }
 
+type AccountMenuTranslations = {
+  adminTools?: string;
+  adminDashboard?: string;
+  adminDashboardHint?: string;
+  adminBillingDiagnostics?: string;
+  adminBillingDiagnosticsHint?: string;
+};
+
 export const AccountMenu = memo<AccountMenuProps>(
   ({ themeLanguage, user, onLogin, onLogout }) => {
     const { t } = useTranslation();
-    const text = t as unknown as Record<string, string>;
+    const text = t as typeof t & AccountMenuTranslations;
     const accountLabel = t.accountMenu || t.accountProfile;
     const setVaultOpen = useAppStore((state) => state.setVaultOpen);
     const setVaultTab = useAppStore((state) => state.setVaultTab);
