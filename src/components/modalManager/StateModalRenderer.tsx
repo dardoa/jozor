@@ -9,10 +9,10 @@ import {
 
 export const StateModalRenderer = (modal: ModalManagerProps) => (
   <>
-    {modal.linkModal.isOpen ? (
+    {modal.activeModal === 'link' ? (
       <LinkPersonModal
         isOpen={true}
-        onClose={() => modal.setLinkModal({ ...modal.linkModal, isOpen: false })}
+        onClose={() => modal.setActiveModal('none')}
         people={modal.people}
         type={modal.linkModal.type}
         gender={modal.linkModal.gender}
@@ -22,35 +22,35 @@ export const StateModalRenderer = (modal: ModalManagerProps) => (
       />
     ) : null}
 
-    {modal.cleanTreeOptionsModal.isOpen ? (
+    {modal.activeModal === 'cleanTreeOptions' ? (
       <CleanTreeOptionsModal
         isOpen={true}
-        onClose={() => modal.setCleanTreeOptionsModal({ isOpen: false })}
+        onClose={() => modal.setActiveModal('none')}
         onStartNewTree={modal.onStartNewTree}
         onTriggerImportFile={modal.onTriggerImportFile}
         language={modal.language}
       />
     ) : null}
 
-    {modal.googleSyncChoiceModal.isOpen ? (
+    {modal.activeModal === 'googleSyncChoice' ? (
       <GoogleSyncChoiceModal
         isOpen={true}
-        onClose={() => modal.setGoogleSyncChoiceModal({ isOpen: false, driveFileId: null })}
-        onLoadCloud={() => modal.onLoadCloudData(modal.googleSyncChoiceModal.driveFileId!)}
+        onClose={() => modal.setActiveModal('none')}
+        onLoadCloud={() => modal.onLoadCloudData(modal.googleSyncChoiceDriveFileId!)}
         onSaveNewCloud={modal.onSaveNewCloudFile}
         onOpenDriveManager={() => {
-          modal.setGoogleSyncChoiceModal({ isOpen: false, driveFileId: null });
+          modal.setActiveModal('none');
           modal.googleSync.onOpenCloudBackups();
         }}
-        driveFileId={modal.googleSyncChoiceModal.driveFileId}
+        driveFileId={modal.googleSyncChoiceDriveFileId}
       />
     ) : null}
 
-    {modal.sharedTreePromptModal.isOpen ? (
+    {modal.activeModal === 'sharedTreePrompt' ? (
       <SharedTreePromptModal
         isOpen={true}
         onClose={() => modal.setSharedTreePromptModal({ isOpen: false, sharedTrees: [] })}
-        sharedTrees={modal.sharedTreePromptModal.sharedTrees}
+        sharedTrees={modal.sharedTreesPayload}
         onSelect={async (tree) => {
           modal.setSharedTreePromptModal({ isOpen: false, sharedTrees: [] });
           modal.onTreeSelected(tree.id);
@@ -58,10 +58,10 @@ export const StateModalRenderer = (modal: ModalManagerProps) => (
       />
     ) : null}
 
-    {modal.globalSettingsModal.isOpen ? (
+    {modal.activeModal === 'globalSettings' ? (
       <GlobalSettingsModal
         isOpen={true}
-        onClose={() => modal.setGlobalSettingsModal({ isOpen: false })}
+        onClose={() => modal.setActiveModal('none')}
       />
     ) : null}
   </>

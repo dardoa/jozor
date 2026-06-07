@@ -14,10 +14,8 @@ export interface ModalManagerProps {
   geographicJourneyMode: ModalStateAndActions['geographicJourneyMode'];
   linkModal: ModalStateAndActions['linkModal'];
   setLinkModal: ModalStateAndActions['setLinkModal'];
-  cleanTreeOptionsModal: ModalStateAndActions['cleanTreeOptionsModal'];
-  setCleanTreeOptionsModal: ModalStateAndActions['setCleanTreeOptionsModal'];
-  googleSyncChoiceModal: ModalStateAndActions['googleSyncChoiceModal'];
-  setGoogleSyncChoiceModal: ModalStateAndActions['setGoogleSyncChoiceModal'];
+  googleSyncChoiceDriveFileId: ModalStateAndActions['googleSyncChoiceDriveFileId'];
+  setGoogleSyncChoiceDriveFileId: ModalStateAndActions['setGoogleSyncChoiceDriveFileId'];
   people: AppStateAndActions['people'];
   focusId: AppStateAndActions['focusId'];
   setFocusId: AppStateAndActions['setFocusId'];
@@ -33,10 +31,9 @@ export interface ModalManagerProps {
   onGoogleLogin: () => Promise<void>;
   activeTreeId: string | null;
   onTreeSelected: (treeId: string) => void;
-  sharedTreePromptModal: { isOpen: boolean; sharedTrees: SharedTreeSummary[] };
+  sharedTreesPayload: ModalStateAndActions['sharedTreesPayload'];
+  setSharedTreesPayload: ModalStateAndActions['setSharedTreesPayload'];
   setSharedTreePromptModal: (val: { isOpen: boolean; sharedTrees: SharedTreeSummary[] }) => void;
   googleSync: GoogleSyncStateAndActions;
   themeLanguage: ThemeLanguageProps;
-  globalSettingsModal: { isOpen: boolean };
-  setGlobalSettingsModal: (val: { isOpen: boolean }) => void;
 }

@@ -57,7 +57,6 @@ export interface WelcomeScreenLogicProps {
 }
 
 export interface LinkModalState {
-    isOpen: boolean;
     type: 'parent' | 'spouse' | 'child' | null;
     gender: Gender | null;
     initialMode?: 'create' | 'existing';
@@ -70,10 +69,11 @@ export interface ModalStateAndActions {
     setGeographicJourneyMode: (mode: GeographicJourneyMode) => void;
     linkModal: LinkModalState;
     setLinkModal: (val: LinkModalState) => void;
-    cleanTreeOptionsModal: { isOpen: boolean };
-    setCleanTreeOptionsModal: (val: { isOpen: boolean }) => void;
-    googleSyncChoiceModal: { isOpen: boolean; driveFileId: string | null };
-    setGoogleSyncChoiceModal: (val: { isOpen: boolean; driveFileId: string | null }) => void;
+    googleSyncChoiceDriveFileId: string | null;
+    setGoogleSyncChoiceDriveFileId: (id: string | null) => void;
+    sharedTreesPayload: SharedTreeSummary[];
+    setSharedTreesPayload: (trees: SharedTreeSummary[]) => void;
+    setSharedTreePromptModal: (val: { isOpen: boolean; sharedTrees: SharedTreeSummary[] }) => void;
     handleOpenLinkModal: (
         type: 'parent' | 'spouse' | 'child',
         gender: Gender,
@@ -82,10 +82,6 @@ export interface ModalStateAndActions {
     handleOpenModal: (modalType: ModalRouteType) => void;
     onOpenCleanTreeOptions: () => void;
     onOpenTreeManager: () => void;
-    sharedTreePromptModal: { isOpen: boolean; sharedTrees: SharedTreeSummary[] };
-    setSharedTreePromptModal: (val: { isOpen: boolean; sharedTrees: SharedTreeSummary[] }) => void;
-    globalSettingsModal: { isOpen: boolean };
-    setGlobalSettingsModal: (val: { isOpen: boolean }) => void;
     onOpenGlobalSettings: () => void;
 }
 

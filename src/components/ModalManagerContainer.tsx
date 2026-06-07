@@ -37,10 +37,8 @@ export const ModalManagerContainer: React.FC<ModalManagerContainerProps> = memo(
         geographicJourneyMode={modals.geographicJourneyMode}
         linkModal={modals.linkModal}
         setLinkModal={modals.setLinkModal}
-        cleanTreeOptionsModal={modals.cleanTreeOptionsModal}
-        setCleanTreeOptionsModal={modals.setCleanTreeOptionsModal}
-        googleSyncChoiceModal={modals.googleSyncChoiceModal}
-        setGoogleSyncChoiceModal={modals.setGoogleSyncChoiceModal}
+        googleSyncChoiceDriveFileId={modals.googleSyncChoiceDriveFileId}
+        setGoogleSyncChoiceDriveFileId={modals.setGoogleSyncChoiceDriveFileId}
         activeTreeId={appState.currentTreeId}
         onTreeSelected={appState.setCurrentTreeId}
         people={appState.people}
@@ -56,12 +54,11 @@ export const ModalManagerContainer: React.FC<ModalManagerContainerProps> = memo(
         onSaveNewCloudFile={googleSync.onSaveNewCloudFile}
         currentActiveDriveFileId={googleSync.currentActiveDriveFileId}
         onGoogleLogin={auth.onLogin}
-        sharedTreePromptModal={modals.sharedTreePromptModal}
+        sharedTreesPayload={modals.sharedTreesPayload}
+        setSharedTreesPayload={modals.setSharedTreesPayload}
         setSharedTreePromptModal={modals.setSharedTreePromptModal}
         googleSync={googleSync}
         themeLanguage={themeLanguage}
-        globalSettingsModal={modals.globalSettingsModal}
-        setGlobalSettingsModal={modals.setGlobalSettingsModal}
       />
     );
   }

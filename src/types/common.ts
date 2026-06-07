@@ -112,7 +112,11 @@ export type ModalType =
     | 'globalSettings'
     | 'migrationMap'
     | 'paywall'
-    | 'chat';
+    | 'chat'
+    | 'link'
+    | 'cleanTreeOptions'
+    | 'googleSyncChoice'
+    | 'sharedTreePrompt';
 
 export type ModalRouteType = ModalType | 'map';
 

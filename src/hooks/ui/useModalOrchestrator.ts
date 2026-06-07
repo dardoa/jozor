@@ -1,9 +1,6 @@
-import * as React from 'react';
-
 import { useAppStore } from '../../store/useAppStore';
 import { useModalAndDetailsPanelLogic } from './useModalAndDetailsPanelLogic';
-import { useAppModals } from './useAppModals';
-import type { ModalRouteType, ModalStateAndActions } from '../../types';
+import type { ModalStateAndActions } from '../../types';
 
 /**
  * Central orchestrator for all modal- and person details panel-related UI state.
@@ -13,23 +10,6 @@ export const useModalOrchestrator = () => {
   // History/future drive some modal keyboard affordances (undo/redo availability)
   const past = useAppStore((state) => state.past);
   const future = useAppStore((state) => state.future);
-
-  const {
-    googleSyncChoiceModal,
-    setGoogleSyncChoiceModal,
-    onCloseGoogleSyncChoice,
-    onOpenGoogleSyncChoice,
-    onOpenCloudBackups,
-    cleanTreeOptionsModal,
-    setCleanTreeOptionsModal,
-    onOpenCleanTreeOptions,
-    onOpenTreeManager,
-    sharedTreePromptModal,
-    setSharedTreePromptModal,
-    globalSettingsModal,
-    setGlobalSettingsModal,
-    onOpenGlobalSettings,
-  } = useAppModals();
 
   const {
     detailsPanelOpen,
@@ -42,26 +22,23 @@ export const useModalOrchestrator = () => {
     setIsPresentMode,
     linkModal,
     setLinkModal,
+    googleSyncChoiceDriveFileId,
+    setGoogleSyncChoiceDriveFileId,
+    sharedTreesPayload,
+    setSharedTreesPayload,
     handleOpenLinkModal,
-    handleOpenModal: rawHandleOpenModal,
+    handleOpenModal,
+    onOpenGoogleSyncChoice,
+    onCloseGoogleSyncChoice,
+    onOpenCleanTreeOptions,
+    onOpenGlobalSettings,
+    onOpenCloudBackups,
+    onOpenTreeManager,
+    setSharedTreePromptModal,
   } = useModalAndDetailsPanelLogic({
     canUndo: past.length > 0,
     canRedo: future.length > 0,
   });
-
-  const handleOpenModal = React.useCallback(
-    (modalType: ModalRouteType) => {
-      if (modalType === 'globalSettings') {
-        onOpenGlobalSettings();
-      } else {
-        rawHandleOpenModal(modalType);
-      }
-    },
-    [
-      onOpenGlobalSettings,
-      rawHandleOpenModal,
-    ]
-  );
 
   const modals: ModalStateAndActions = {
     activeModal,
@@ -70,19 +47,16 @@ export const useModalOrchestrator = () => {
     setGeographicJourneyMode,
     linkModal,
     setLinkModal,
-    cleanTreeOptionsModal,
-    setCleanTreeOptionsModal,
-    googleSyncChoiceModal,
-    setGoogleSyncChoiceModal,
+    googleSyncChoiceDriveFileId,
+    setGoogleSyncChoiceDriveFileId,
+    sharedTreesPayload,
+    setSharedTreesPayload,
     handleOpenLinkModal,
     handleOpenModal,
     onOpenCleanTreeOptions,
     onOpenTreeManager,
-    sharedTreePromptModal,
-    setSharedTreePromptModal,
-    globalSettingsModal,
-    setGlobalSettingsModal,
     onOpenGlobalSettings,
+    setSharedTreePromptModal,
   };
 
   return {
@@ -98,5 +72,6 @@ export const useModalOrchestrator = () => {
     onOpenCloudBackups,
     onOpenGoogleSyncChoice,
     onCloseGoogleSyncChoice,
+    setSharedTreePromptModal,
   };
 };
