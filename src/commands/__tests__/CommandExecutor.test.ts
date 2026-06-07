@@ -4,12 +4,13 @@ import { useAppStore } from '../../store/useAppStore';
 import { localTreePersistenceService } from '../../services/localTreePersistenceService';
 import { searchService } from '../../services/searchService';
 import { TreeCommand } from '../types';
+import type { Person } from '../../types';
 
 // Mock dependencies
 vi.mock('../../store/useAppStore', () => {
   const mockState = {
     people: {
-      'person-1': { id: 'person-1', firstName: 'Original' } as any,
+      'person-1': { id: 'person-1', firstName: 'Original' } as unknown as Person,
     },
   };
   const mockGetState = vi.fn(() => mockState);
@@ -43,7 +44,7 @@ describe('CommandExecutor', () => {
     // Reset store state
     const state = useAppStore.getState();
     state.people = {
-      'person-1': { id: 'person-1', firstName: 'Original' } as any,
+      'person-1': { id: 'person-1', firstName: 'Original' } as unknown as Person,
     };
   });
 
@@ -53,8 +54,8 @@ describe('CommandExecutor', () => {
         // Mutate store state as commands normally do
         const state = useAppStore.getState();
         state.people = {
-          'person-1': { id: 'person-1', firstName: 'Mutated' } as any, // Changed reference
-          'person-2': { id: 'person-2', firstName: 'New Person' } as any, // New
+          'person-1': { id: 'person-1', firstName: 'Mutated' } as unknown as Person, // Changed reference
+          'person-2': { id: 'person-2', firstName: 'New Person' } as unknown as Person, // New
         };
         return { success: true };
       }),

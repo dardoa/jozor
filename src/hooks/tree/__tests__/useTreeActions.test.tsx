@@ -5,6 +5,7 @@ import { useTreeActions } from '../useTreeActions';
 import { useAppStore } from '../../../store/useAppStore';
 import { DEFAULT_PERSON_TEMPLATE } from '../../../constants';
 import type { Person } from '../../../types';
+import type { AppStore } from '../../../store/storeTypes';
 
 const {
   saveFullTreeMock,
@@ -73,7 +74,7 @@ const buildPerson = (overrides: Partial<Person> = {}): Person => ({
   profession: 'Writer',
   bio: 'Old bio',
   ...overrides,
-} as any);
+} as unknown as Person);
 
 describe('useTreeActions', () => {
   beforeEach(() => {
@@ -94,7 +95,7 @@ describe('useTreeActions', () => {
       },
       history: [],
       future: [],
-    } as any);
+    } as unknown as Partial<AppStore>);
   });
 
   it('updates the person locally and persists the merged record to sync layers', async () => {
@@ -185,7 +186,7 @@ describe('useTreeActions', () => {
     useAppStore.setState({
       people: {},
       focusId: '',
-    } as any);
+    } as unknown as Partial<AppStore>);
 
     const { result } = renderHook(() => useTreeActions());
 

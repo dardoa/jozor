@@ -133,7 +133,7 @@ export const createFamilySlice: StateCreator<AppStore, [["zustand/devtools", nev
 
     setSearchTarget: (id) => {
         if (id) {
-            (get() as any).triggerPulse?.(id);
+            get().triggerPulse?.(id);
         }
         set({ searchTarget: id ? { id, timestamp: Date.now() } : null });
     },

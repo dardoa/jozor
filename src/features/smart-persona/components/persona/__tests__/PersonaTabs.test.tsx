@@ -18,14 +18,14 @@ describe('PersonaTabs', () => {
   it('renders tab semantics correctly', () => {
     render(
       <PersonaTabs
-        activeTab={"info" as any}
+        activeTab="about"
         setActiveTab={vi.fn()}
         onClose={vi.fn()}
         tabs={[
-          { id: 'info', label: 'Info', show: true },
-          { id: 'bio', label: 'Bio', show: true },
+          { id: 'about', label: 'Info', show: true },
+          { id: 'links', label: 'Bio', show: true },
           { id: 'media', label: 'Media', show: false },
-        ] as any}
+        ]}
       />
     );
 
@@ -39,22 +39,22 @@ describe('PersonaTabs', () => {
 
     render(
       <PersonaTabs
-        activeTab={"info" as any}
+        activeTab="about"
         setActiveTab={setActiveTab}
         onClose={vi.fn()}
         tabs={[
-          { id: 'info', label: 'Info', show: true },
-          { id: 'partners', label: 'Partners', show: true },
-          { id: 'bio', label: 'Bio', show: true },
-        ] as any}
+          { id: 'about', label: 'Info', show: true },
+          { id: 'links', label: 'Partners', show: true },
+          { id: 'media', label: 'Bio', show: true },
+        ]}
       />
     );
 
     fireEvent.keyDown(screen.getByRole('tab', { name: 'Info' }), { key: 'ArrowRight' });
-    expect(setActiveTab).toHaveBeenCalledWith('partners');
+    expect(setActiveTab).toHaveBeenCalledWith('links');
 
     fireEvent.keyDown(screen.getByRole('tab', { name: 'Info' }), { key: 'ArrowLeft' });
-    expect(setActiveTab).toHaveBeenCalledWith('bio');
+    expect(setActiveTab).toHaveBeenCalledWith('media');
   });
 });
 

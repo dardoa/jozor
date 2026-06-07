@@ -1,7 +1,7 @@
 
 import { render } from '@testing-library/react';
 import type { ComponentProps } from 'react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 import { V3FamilyGraphRenderer } from '../V3FamilyGraphRenderer';
 import type { Person, TreeSettings } from '../../../types';
 import type { V3RendererPipeline } from '../../../hooks/tree/useV3RendererPipeline';
@@ -119,11 +119,11 @@ describe('V3FamilyGraphRenderer node stability', () => {
     const person = buildPerson();
     const { rerender } = render(renderGraph(person));
 
-    const initialNode = (nodeComponentMock as any).mock.calls[0][0].node;
+    const initialNode = (nodeComponentMock as Mock).mock.calls[0][0].node;
 
     rerender(renderGraph(person, { [person.id]: person }));
 
-    const refreshedNode = (nodeComponentMock as any).mock.calls.at(-1)?.[0].node;
+    const refreshedNode = (nodeComponentMock as Mock).mock.calls.at(-1)?.[0].node;
     expect(refreshedNode).toBe(initialNode);
   });
 
@@ -131,12 +131,12 @@ describe('V3FamilyGraphRenderer node stability', () => {
     const person = buildPerson();
     const { rerender } = render(renderGraph(person));
 
-    const initialNode = (nodeComponentMock as any).mock.calls[0][0].node;
+    const initialNode = (nodeComponentMock as Mock).mock.calls[0][0].node;
     const renamedPerson = { ...person, firstName: 'Noura' };
 
     rerender(renderGraph(renamedPerson));
 
-    const refreshedNode = (nodeComponentMock as any).mock.calls.at(-1)?.[0].node;
+    const refreshedNode = (nodeComponentMock as Mock).mock.calls.at(-1)?.[0].node;
     expect(refreshedNode).not.toBe(initialNode);
     expect(refreshedNode.data).toBe(renamedPerson);
   });
@@ -329,7 +329,7 @@ describe('V3FamilyGraphRenderer node stability', () => {
     ));
 
     expect(nodeComponentMock).toHaveBeenCalledTimes(1);
-    expect((nodeComponentMock as any).mock.calls[0][0].node.data.id).toBe('person-0');
+    expect((nodeComponentMock as Mock).mock.calls[0][0].node.data.id).toBe('person-0');
     expect(container.querySelector('[data-edge-id="visible-edge"]')).toBeInTheDocument();
     expect(container.querySelector('[data-edge-id="offscreen-edge"]')).not.toBeInTheDocument();
   });

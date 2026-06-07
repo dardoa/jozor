@@ -55,7 +55,7 @@ describe('SharedTreeLoader', () => {
   const onLoadComplete = vi.fn();
   const onCancel = vi.fn();
 
-  const auth: any = {
+  const auth: AuthProps = {
     user: {
       uid: 'user-1',
       email: 'invitee@example.com',
@@ -64,6 +64,9 @@ describe('SharedTreeLoader', () => {
       supabaseToken: 'token-1',
     },
     isDemoMode: false,
+    isSyncing: false,
+    hasSessionError: false,
+    isAuthorized: true,
 
     onLogin: vi.fn(async () => {}),
     onLogout: vi.fn(async () => {}),
@@ -87,12 +90,12 @@ describe('SharedTreeLoader', () => {
     onOpenTreeManager: vi.fn(),
     onOpenLoginModal: vi.fn(async () => {}),
     syncStatus: {
-      state: 'synced' as any,
+      state: 'synced',
       lastSyncTime: null,
       lastSyncSupabase: null,
       lastSyncDrive: null,
-      supabaseStatus: 'synced' as any,
-      driveStatus: 'synced' as any,
+      supabaseStatus: 'idle',
+      driveStatus: 'idle',
       pendingCount: 0,
     },
   };

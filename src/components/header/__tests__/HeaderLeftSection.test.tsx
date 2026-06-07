@@ -3,6 +3,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { describe, expect, it, vi } from 'vitest';
 import { HeaderLeftSection } from '../HeaderLeftSection';
+import type { Language } from '../../../types';
 
 vi.mock('../../../context/TranslationContext', () => ({
   useTranslation: () => ({
@@ -19,7 +20,7 @@ vi.mock('../../../context/TranslationContext', () => ({
 describe('HeaderLeftSection', () => {
   const baseProps = {
     themeLanguage: {
-      language: 'en',
+      language: 'en' as Language,
       setLanguage: vi.fn(),
       darkMode: false,
       setDarkMode: vi.fn(),
@@ -34,13 +35,13 @@ describe('HeaderLeftSection', () => {
   };
 
   it('disables the details trigger when no active person is available', () => {
-    render(<HeaderLeftSection {...baseProps as any} detailsPanelOpen={false} hasActivePerson={false} />);
+    render(<HeaderLeftSection {...baseProps} detailsPanelOpen={false} hasActivePerson={false} />);
 
     expect(screen.getByRole('button', { name: 'Select a person to view details' })).toBeDisabled();
   });
 
   it('uses a details-specific label and toggles when an active person exists', () => {
-    render(<HeaderLeftSection {...baseProps as any} detailsPanelOpen={false} hasActivePerson />);
+    render(<HeaderLeftSection {...baseProps} detailsPanelOpen={false} hasActivePerson />);
 
     const trigger = screen.getByRole('button', { name: 'Open details' });
     fireEvent.click(trigger);

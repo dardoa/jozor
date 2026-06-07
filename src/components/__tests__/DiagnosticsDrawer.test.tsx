@@ -165,9 +165,9 @@ vi.mock('../../utils/showToast', () => ({
   showToast: Object.assign(
     vi.fn(),
     {
-      error: (...args: any[]) => showErrorMock(...args),
-      loading: showLoadingMock as any,
-      success: (...args: any[]) => updateToastMock(...args),
+      error: (...args: unknown[]) => showErrorMock(...args),
+      loading: showLoadingMock as unknown as (message: string) => string,
+      success: (...args: unknown[]) => updateToastMock(...args),
       promise: vi.fn(),
     }
   )

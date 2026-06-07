@@ -1,5 +1,6 @@
 import JSZip from 'jszip';
 import { describe, expect, it, vi } from 'vitest';
+import type { Person, TreeSettings } from '../../types';
 
 import { importFromJozorArchive, importJozorArchiveData } from '../archiveLogic';
 import { buildBlueprintArchive } from '../../services/archiveService';
@@ -75,9 +76,9 @@ describe('archiveLogic', () => {
           parents: [],
           children: [],
           spouses: [],
-        } as any,
+        } as unknown as Person,
       },
-      settings: { treeSettings: { chartType: 'radial' } as any },
+      settings: { treeSettings: { chartType: 'radial' } as unknown as TreeSettings },
       focusId: 'person_1',
       metadata: {
         lastModified: Date.parse('2026-05-25T00:00:00.000Z'),

@@ -49,8 +49,8 @@ export interface V3RendererPipeline {
   bounds: { minX: number; minY: number; maxX: number; maxY: number };
 }
 
-type PipelineSettings = Pick<TreeSettings, 'nodeSpacingX' | 'nodeSpacingY'> & {
-  generationLimit?: TreeSettings['generationLimit'];
+export type PipelineSettings = Pick<TreeSettings, 'nodeSpacingX' | 'nodeSpacingY'> & {
+  generationLimit?: TreeSettings['generationLimit'] | null;
 };
 
 const clamp = (value: number, min: number, max: number): number =>
@@ -70,7 +70,7 @@ export function resolveLayoutScale(settings?: Pick<TreeSettings, 'nodeSpacingX' 
   };
 }
 
-export function resolveMaxDepth(settings?: { generationLimit?: TreeSettings['generationLimit'] }): number | undefined {
+export function resolveMaxDepth(settings?: { generationLimit?: number | null }): number | undefined {
   if (!Number.isFinite(settings?.generationLimit)) return undefined;
   return Math.max(0, Math.floor(Number(settings?.generationLimit)) - 1);
 }
@@ -256,7 +256,7 @@ export function computeV3PipelineData({
   people: Record<string, Person>;
   focusId: string;
   collapsePoints: CollapsePoint[];
-  settings: TreeSettings;
+  settings: PipelineSettings;
 }): V3RendererPipeline | null {
   if (!focusId || !people[focusId]) return null;
 

@@ -4,6 +4,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { describe, expect, it, vi } from 'vitest';
 import { TreeControlCenter } from '../components/TreeControlCenter';
+import type { Person } from '../../../types';
 
 vi.mock('../../../context/TranslationContext', () => ({
   useTranslation: () => ({
@@ -126,7 +127,7 @@ describe('TreeControlCenter', () => {
         language="en"
         roleLabel="Tree owner"
         peopleCount={24}
-        people={[{ id: 'person-1', firstName: 'Amina', lastName: 'Saleh' } as any]}
+        people={[{ id: 'person-1', firstName: 'Amina', lastName: 'Saleh' }] as unknown as Person[]}
         currentRootName="Amina Saleh"
         currentRootId="person-1"
         hasPendingSync={false}

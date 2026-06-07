@@ -63,11 +63,10 @@ export function useV3RendererPipeline({
       focusId,
       collapsePoints,
       settings: {
-        ...settings,
         nodeSpacingX,
         nodeSpacingY,
-        generationLimit: generationLimit ?? undefined,
-      } as any,
+        generationLimit,
+      },
     });
   }, [collapseSignature, focusId, peopleLayoutSignature, settingsSignature]);
 }

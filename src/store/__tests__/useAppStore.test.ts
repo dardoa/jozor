@@ -8,7 +8,7 @@ import {
   sanitizePersistedNotifications,
 } from '../slices/uiSlice';
 import { DEFAULT_PERSON_TEMPLATE } from '../../constants';
-import type { Person } from '../../types';
+import type { Person, ChartType, TreeSettings } from '../../types';
 
 const recordDeletedPersonIdMock = vi.hoisted(() => vi.fn(async () => undefined));
 
@@ -294,7 +294,7 @@ describe('loadFullState', () => {
     act(() => {
       loadFullState({
         settings: {
-          chartType: 'descendant' as any,
+          chartType: 'descendant' as unknown as ChartType,
         },
       });
     });
@@ -304,7 +304,7 @@ describe('loadFullState', () => {
     act(() => {
       loadFullState({
         settings: {
-          chartType: 'force' as any,
+          chartType: 'force' as unknown as ChartType,
         },
       });
     });
@@ -317,7 +317,7 @@ describe('loadFullState', () => {
       loadFullState({
         settings: {
           treeSettings: {
-            chartType: 'radial' as any,
+            chartType: 'radial' as unknown as ChartType,
           },
           darkMode: true,
           language: 'en',
@@ -328,23 +328,23 @@ describe('loadFullState', () => {
     expect(useAppStore.getState().treeSettings.chartType).toBe('radial');
     expect(useAppStore.getState().darkMode).toBe(true);
     expect(useAppStore.getState().language).toBe('en');
-    expect((useAppStore.getState().treeSettings as any).treeSettings).toBeUndefined();
+    expect((useAppStore.getState().treeSettings as unknown as Record<string, unknown>).treeSettings).toBeUndefined();
   });
 
   it('normalizes legacy chartType to "focus" on importSettings and setTreeSettings', () => {
     act(() => {
       useAppStore.getState().importSettings({
         treeSettings: {
-          chartType: 'descendant' as any,
-        } as any
+          chartType: 'descendant' as unknown as ChartType,
+        } as unknown as TreeSettings
       });
     });
     expect(useAppStore.getState().treeSettings.chartType).toBe('focus');
 
     act(() => {
       useAppStore.getState().setTreeSettings({
-        chartType: 'force' as any,
-      } as any);
+        chartType: 'force' as unknown as ChartType,
+      } as unknown as TreeSettings);
     });
     expect(useAppStore.getState().treeSettings.chartType).toBe('focus');
   });

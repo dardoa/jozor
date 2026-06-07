@@ -32,11 +32,17 @@ vi.mock('../components/persona/PersonaFooter', () => ({
   PersonaFooter: () => <div>PersonaFooterMock</div>,
 }));
 
+import type { FamilyActionsProps, Person, SmartPersonaTabId, TreeSettings } from '../../../types';
+
 vi.mock('../components/persona/PersonaTabs', () => ({
-  PersonaTabs: ({ setActiveTab, tabs, onClose }: any) => (
+  PersonaTabs: ({ setActiveTab, tabs, onClose }: {
+    setActiveTab: (tab: SmartPersonaTabId) => void;
+    tabs: { id: SmartPersonaTabId; label: string; show: boolean }[];
+    onClose: () => void;
+  }) => (
     <div>
       <button onClick={onClose}>Close Persona</button>
-      {tabs.map((t: any) => (
+      {tabs.map((t) => (
         <button key={t.id} onClick={() => setActiveTab(t.id)}>
           {t.label}
         </button>
@@ -80,16 +86,16 @@ describe('SmartPersonaDrawer', () => {
 
     render(
       <SmartPersonaDrawer
-        person={mockPerson as any}
-        people={{ 'p-1': mockPerson as any }}
+        person={mockPerson as unknown as Person}
+        people={{ 'p-1': mockPerson as unknown as Person }}
         onUpdate={vi.fn()}
         onDelete={vi.fn()}
         onSelect={vi.fn()}
         isOpen
         onClose={handleClose}
         onOpenModal={vi.fn()}
-        familyActions={{} as any}
-        settings={{} as any}
+        familyActions={{} as unknown as FamilyActionsProps}
+        settings={{} as unknown as TreeSettings}
         user={null}
       />
     );

@@ -50,13 +50,6 @@ export const useTreeCoordinator = ({
   showWelcome,
   handleOpenLinkModal,
   setDetailsPanelOpen,
-  onOpenGoogleSyncChoice,
-  onCloseGoogleSyncChoice,
-  onOpenCloudBackups,
-  onOpenTreeManager,
-  setSharedTreePromptModal,
-  onOpenLoginModal,
-  handleExport,
 }: UseTreeCoordinatorParams) => {
   const canUndo = past.length > 0;
   const canRedo = future.length > 0;
@@ -100,14 +93,7 @@ export const useTreeCoordinator = ({
     focusId,
     isPresentMode,
     setDetailsPanelOpen,
-    onOpenGoogleSyncChoice,
-    onCloseGoogleSyncChoice,
-    onOpenCloudBackups,
-    onOpenTreeManager,
-    setSharedTreePromptModal,
-    onOpenLoginModal,
-    onExport: handleExport,
-  } as any);
+  });
 
   return {
     appState,

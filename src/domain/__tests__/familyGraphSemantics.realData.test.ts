@@ -1,6 +1,8 @@
 
 import { describe, it, expect } from 'vitest';
 import { buildLayoutSemanticsSnapshot } from '../familyGraphSemantics';
+import type { FamilyGraph } from '../familyGraph';
+import type { Person } from '../../types';
 
 
 describe('Family Tree Semantics - Real Data Test', () => {
@@ -46,8 +48,8 @@ describe('Family Tree Semantics - Real Data Test', () => {
   };
 
   // Mock Family Graph from data
-  const familyGraph: any = {
-    people: testData.people as any,
+  const familyGraph = {
+    people: testData.people as unknown as Record<string, Person>,
     families: {
       "fam-mahmoud-nouriya": {
         id: "fam-mahmoud-nouriya",
@@ -60,7 +62,7 @@ describe('Family Tree Semantics - Real Data Test', () => {
         childIds: ["9f700bfb-4503-48a3-995f-cff8fafa3205"]
       }
     }
-  };
+  } as unknown as FamilyGraph;
 
   it('should ensure the Female Root (Nouriya) owns her family when focused', () => {
     const rootId = "0b8d9754-ea63-415c-80b8-1f0b8fd5f7d5"; // نورية
