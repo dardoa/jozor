@@ -1,5 +1,5 @@
 import { getSupabaseFull } from './supabaseClient';
-import imageCompression from 'browser-image-compression';
+import imageCompression, { type Options as ImageCompressionOptions } from 'browser-image-compression';
 
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_FILE_SIZE_MB = 1;
@@ -45,11 +45,11 @@ export const SupabaseStorageService = {
 
         try {
             // 1. Compress Image (Standardizing on WebP for the new system)
-            const options = {
+            const options: ImageCompressionOptions = {
                 maxSizeMB: MAX_FILE_SIZE_MB,
                 maxWidthOrHeight: 1024,
                 useWebWorker: true,
-                fileType: 'image/webp' as any,
+                fileType: 'image/webp',
             };
 
             const compressedBlob = await imageCompression(file, options);
@@ -124,11 +124,11 @@ export const SupabaseStorageService = {
         const nextVersion = currentVersion + 1;
 
         try {
-            const options = {
+            const options: ImageCompressionOptions = {
                 maxSizeMB: 0.5,
                 maxWidthOrHeight: 512,
                 useWebWorker: true,
-                fileType: 'image/webp' as any,
+                fileType: 'image/webp',
             };
             const compressedBlob = await imageCompression(file, options);
 

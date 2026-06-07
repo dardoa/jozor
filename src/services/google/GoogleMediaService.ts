@@ -30,9 +30,10 @@ export class GoogleMediaService implements IGoogleMediaService {
                 return reject('No auth token found');
             }
 
-            const pickerCallback = async (data: any) => {
+            const pickerCallback = async (data: google.picker.ResponseObject) => {
                 if (data[win.google.picker.Response.ACTION] === win.google.picker.Action.PICKED) {
-                    const doc = data[win.google.picker.Response.DOCUMENTS][0];
+                    const documents = data[win.google.picker.Response.DOCUMENTS] ?? [];
+                    const doc = documents[0];
                     const fileId = doc[win.google.picker.Document.ID];
 
                     try {

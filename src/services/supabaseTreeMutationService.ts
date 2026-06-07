@@ -3,6 +3,11 @@ import { logError } from '../utils/errorLogger';
 import { getTreeClient } from './supabaseTreeClient';
 import { activityService } from '../features/activity-log';
 
+type ImportablePerson = Person & {
+  customFields?: Record<string, unknown>;
+  metadata?: Record<string, unknown>;
+};
+
 export const createTreeWithRootAtomic = async (
   ownerId: string,
   userEmail: string,
@@ -127,33 +132,37 @@ export const importTreeContent = async (
   const client = getTreeClient(ownerId, email || '', token);
 
   // Format people mapping to JSON serializable objects matching database expected schema
-  const peoplePayload = people.map((person) => ({
-    id: person.id,
-    firstName: person.firstName,
-    lastName: person.lastName,
-    middleName: person.middleName,
-    birthName: person.birthName,
-    nickName: person.nickName,
-    suffix: person.suffix,
-    gender: person.gender,
-    birthDate: person.birthDate,
-    birthPlace: person.birthPlace,
-    deathDate: person.deathDate,
-    deathPlace: person.deathPlace,
-    bio: person.bio,
-    profession: person.profession,
-    company: person.company,
-    interests: person.interests,
-    photoUrl: person.photoUrl,
-    photoPath: person.photoPath,
-    photoVersion: person.photoVersion,
-    email: person.email,
-    website: person.website,
-    blog: person.blog,
-    address: person.address,
-    customFields: (person as any).customFields,
-    metadata: (person as any).metadata,
-  }));
+  const peoplePayload = people.map((person) => {
+    const importablePerson = person as ImportablePerson;
+
+    return {
+      id: person.id,
+      firstName: person.firstName,
+      lastName: person.lastName,
+      middleName: person.middleName,
+      birthName: person.birthName,
+      nickName: person.nickName,
+      suffix: person.suffix,
+      gender: person.gender,
+      birthDate: person.birthDate,
+      birthPlace: person.birthPlace,
+      deathDate: person.deathDate,
+      deathPlace: person.deathPlace,
+      bio: person.bio,
+      profession: person.profession,
+      company: person.company,
+      interests: person.interests,
+      photoUrl: person.photoUrl,
+      photoPath: person.photoPath,
+      photoVersion: person.photoVersion,
+      email: person.email,
+      website: person.website,
+      blog: person.blog,
+      address: person.address,
+      customFields: importablePerson.customFields,
+      metadata: importablePerson.metadata,
+    };
+  });
 
   const { error } = await client.rpc('import_tree_content', {
     p_tree_id: treeId,

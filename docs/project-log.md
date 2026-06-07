@@ -1,5 +1,21 @@
 # Project Log
 
+## 2026-06-07 - TypeScript Hygiene: Low-Risk Service Cast Cleanup
+
+- Summary:
+  - Replaced low-risk `any` casts in service-layer code with narrower local types.
+  - Kept behavior unchanged while improving compiler coverage around image compression, Supabase auth, import payloads, and Google Picker media selection.
+- Files changed:
+  - `src/services/supabaseStorageService.ts`
+  - `src/services/supabaseTreeMutationService.ts`
+  - `src/services/google/GoogleMediaService.ts`
+  - `src/services/supabaseClient.ts`
+- Verification:
+  - `npx tsc --noEmit --pretty false`: pass
+  - `npx vitest run src/services/__tests__/supabaseTreeMutationService.test.ts src/services/__tests__/supabaseTreeService.test.ts src/services/google/__tests__/GoogleAuthService.test.ts`: pass
+- Notes:
+  - This is a Phase 1 hygiene step only; no sync, rendering, or storage behavior was intentionally changed.
+
 ## M-007b-4 - Remove Legacy JSON Snapshot System (Archive-Only)
 
 - Task ID: `M-007b-4`
