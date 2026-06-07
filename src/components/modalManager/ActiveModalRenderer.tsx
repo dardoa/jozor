@@ -1,4 +1,5 @@
 import type { ModalManagerProps } from './modalManagerTypes';
+import type { LocationData } from '../../types';
 import {
   GeographicJourneyModal,
   RelationshipModal,
@@ -23,7 +24,7 @@ interface ActiveModalRendererProps {
     | 'currentActiveDriveFileId'
     | 'activeTreeId'
   >;
-  locations: Record<string, unknown>;
+  locations: Record<string, LocationData>;
 }
 
 export const ActiveModalRenderer = ({ modal, locations }: ActiveModalRendererProps) => {
@@ -72,7 +73,7 @@ export const ActiveModalRenderer = ({ modal, locations }: ActiveModalRendererPro
         isOpen={true}
         onClose={closeModal}
         people={modal.people}
-        locations={locations as any}
+        locations={locations}
         language={modal.language}
         initialMode={modal.geographicJourneyMode}
         onSelectPerson={(id) => {

@@ -5,7 +5,7 @@ import 'd3-transition';
 
 interface UseLayoutModeTransitionOptions {
   layoutMode: string;
-  gRef: React.RefObject<SVGGElement>;
+  gRef: React.RefObject<SVGGElement | null>;
 }
 
 export function useLayoutModeTransition({ layoutMode, gRef }: UseLayoutModeTransitionOptions) {

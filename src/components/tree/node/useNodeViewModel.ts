@@ -93,7 +93,7 @@ export const useNodeViewModel = ({
   );
   const showReferenceBadge = Boolean(node.isReference && !isLOD);
 
-  return useMemo(() => ({
+  return useMemo<NodeViewProps>(() => ({
     id: person.id,
     index,
     nodeWidth,
@@ -118,7 +118,7 @@ export const useNodeViewModel = ({
     shouldRenderPhoto,
     photoSource,
     photoAlt,
-    privacyMode: Boolean((settings as any).privacyMode),
+    privacyMode: Boolean(settings.privacyMode),
     isDeceased: person.isDeceased,
     privacyPlaceholder: {
       Icon: privacyPlaceholder.Icon,
@@ -128,10 +128,10 @@ export const useNodeViewModel = ({
     secondaryNameLine,
     nicknameAsPrimary,
     metaLines,
-    showGender: settings.showGender,
+    showGender: Boolean(settings.showGender),
     onFocusPerson,
     showParentNavigation,
-  }) as any, [
+  }), [
     borderColor,
     hasErrors,
     imageBlockHeightPx,

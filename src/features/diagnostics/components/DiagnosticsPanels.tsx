@@ -113,11 +113,11 @@ export const DiagnosticsPanels: React.FC<{
     return () => clearInterval(interval);
   }, []);
 
-  const layoutDuration = (typeof window !== 'undefined' && (window as any).__LAST_LAYOUT_DURATION__ !== undefined)
-    ? (window as any).__LAST_LAYOUT_DURATION__
+  const layoutDuration = (typeof window !== 'undefined' && window.__LAST_LAYOUT_DURATION__ !== undefined)
+    ? window.__LAST_LAYOUT_DURATION__
     : null;
-  const layoutCached = (typeof window !== 'undefined' && (window as any).__LAST_LAYOUT_CACHED__ !== undefined)
-    ? (window as any).__LAST_LAYOUT_CACHED__
+  const layoutCached = (typeof window !== 'undefined' && window.__LAST_LAYOUT_CACHED__ !== undefined)
+    ? window.__LAST_LAYOUT_CACHED__
     : false;
 
   const lastCheckpointVersion = useMemo(() => {

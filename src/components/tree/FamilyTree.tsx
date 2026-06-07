@@ -68,7 +68,7 @@ export const FamilyTree = React.memo(React.forwardRef<SVGSVGElement, FamilyTreeP
 
   useLayoutModeTransition({
     layoutMode: settings.layoutMode,
-    gRef: gRef as any,
+    gRef,
   });
 
   const { handleZoomIn, handleZoomOut, handleResetZoom, handleFitToScreen, zoomScale, zoomX, zoomY } = useTreeInteraction({
@@ -122,15 +122,9 @@ export const FamilyTree = React.memo(React.forwardRef<SVGSVGElement, FamilyTreeP
       isLoading,
       chartModel,
       activeLayoutSummary: {
-        nodeCount: activeLayout && typeof activeLayout === 'object' && 'nodes' in (activeLayout as any)
-          ? (activeLayout as { nodes?: unknown[] }).nodes?.length ?? 0
-          : 0,
-        linkCount: activeLayout && typeof activeLayout === 'object' && 'links' in (activeLayout as any)
-          ? (activeLayout as { links?: unknown[] }).links?.length ?? 0
-          : 0,
-        fanArcCount: activeLayout && typeof activeLayout === 'object' && 'fanArcs' in (activeLayout as any)
-          ? (activeLayout as { fanArcs?: unknown[] }).fanArcs?.length ?? 0
-          : 0,
+        nodeCount: activeLayout?.nodes?.length ?? 0,
+        linkCount: activeLayout?.links?.length ?? 0,
+        fanArcCount: activeLayout?.fanArcs?.length ?? 0,
       },
       controllerDebug: debugLayoutState,
     };

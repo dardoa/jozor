@@ -10,3 +10,8 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
+
+interface Window {
+  __LAST_LAYOUT_DURATION__?: number;
+  __LAST_LAYOUT_CACHED__?: boolean;
+}

@@ -176,8 +176,8 @@ export const useFamilyTreeLayoutController = ({
         
         const measure = performance.getEntriesByName(measureName)[0];
         if (measure && typeof window !== 'undefined') {
-          (window as any).__LAST_LAYOUT_DURATION__ = measure.duration;
-          (window as any).__LAST_LAYOUT_CACHED__ = false;
+          window.__LAST_LAYOUT_DURATION__ = measure.duration;
+          window.__LAST_LAYOUT_CACHED__ = false;
         }
         performance.clearMarks(startMark);
         performance.clearMarks(endMark);
@@ -231,8 +231,8 @@ export const useFamilyTreeLayoutController = ({
         setLayoutIdentityKey(requestIdentityKey);
         setIsLoading(false);
         if (typeof window !== 'undefined') {
-          (window as any).__LAST_LAYOUT_DURATION__ = 0;
-          (window as any).__LAST_LAYOUT_CACHED__ = true;
+          window.__LAST_LAYOUT_DURATION__ = 0;
+          window.__LAST_LAYOUT_CACHED__ = true;
         }
         return;
       }
