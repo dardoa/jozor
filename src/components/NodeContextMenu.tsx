@@ -28,6 +28,12 @@ interface NodeContextMenuProps {
     currentUserRole: 'owner' | 'editor' | 'viewer' | null;
 }
 
+type OptionalNodeContextMenuTranslations = {
+    viewDetails?: string;
+    linkExistingPerson?: string;
+    addChild?: string;
+};
+
 const MenuHeader = ({ label, showBack = false, onBack, t, person }: { label: string, showBack?: boolean, onBack?: () => void, t: ReturnType<typeof useTranslation>['t'], person: Person }) => (
     <div className="px-4 py-3 border-b border-[var(--border-soft)] mb-1 flex items-center gap-3 bg-[var(--surface-subtle)]/85">
         {showBack && onBack && (
@@ -70,11 +76,12 @@ export const NodeContextMenu: React.FC<NodeContextMenuProps> = ({
     // null = guest/local mode → same rights as owner locally
     const canEdit = currentUserRole === 'owner' || currentUserRole === 'editor' || currentUserRole === null;
     const isRtl = language === 'ar';
-    const detailsLabel = canEdit ? t.editDetails : (((t as any).viewDetails as string | undefined) ?? 'View Details');
-    const linkExistingLabel = ((t as any).linkExistingPerson as string | undefined) ?? 'Link Existing Person';
+    const optionalText = t as typeof t & OptionalNodeContextMenuTranslations;
+    const detailsLabel = canEdit ? t.editDetails : (optionalText.viewDetails ?? 'View Details');
+    const linkExistingLabel = optionalText.linkExistingPerson ?? 'Link Existing Person';
     const deleteLabel = t.deletePerson ?? 'Delete Person';
-    const sonLabel = (t as any).addSon ?? ((t as any).addChild as string | undefined) ?? 'Add Son';
-    const daughterLabel = (t as any).addDaughter ?? ((t as any).addChild as string | undefined) ?? 'Add Daughter';
+    const sonLabel = t.addSon ?? optionalText.addChild ?? 'Add Son';
+    const daughterLabel = t.addDaughter ?? optionalText.addChild ?? 'Add Daughter';
     const estimatedMenuWidth = 260;
     const estimatedMenuHeight = view === 'linkExisting' ? 320 : 360;
     const clampedTop = Math.max(12, Math.min(y, window.innerHeight - estimatedMenuHeight));

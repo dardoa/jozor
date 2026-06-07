@@ -1,5 +1,16 @@
 # Project Log
 
+## 2026-06-07 - TypeScript Hygiene: Node Context Menu Translations
+
+- Summary:
+  - Replaced broad translation `any` casts in `NodeContextMenu` with a narrow local optional-translation type.
+  - Preserved existing fallback labels for optional keys that are not part of the current translation schema.
+- Verification:
+  - `npx tsc --noEmit --pretty false`: pass
+  - `npx vitest run src/components/__tests__/NodeContextMenu.test.tsx`: pass
+- Notes:
+  - This changed typing only; menu permissions and action behavior were not intentionally changed.
+
 ## 2026-06-07 - TypeScript Hygiene: AI Proxy Boundary
 
 - Summary:
