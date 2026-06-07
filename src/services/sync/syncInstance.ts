@@ -1,1 +1,1 @@
-export const clientInstanceId = `client_${Math.random().toString(36).slice(2)}_${Date.now()}`;
+export const clientInstanceId = `client_${crypto.randomUUID()}_${Date.now()}`;

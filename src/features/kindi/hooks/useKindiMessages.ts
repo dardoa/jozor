@@ -5,7 +5,7 @@ import type { KindiConfirmation, KindiMessage } from '../types';
 
 export type KindiConversationCue = 'greeting' | 'flow-search' | 'flow-add' | undefined;
 
-export const createKindiMessageId = () => `kindi:${Date.now()}:${Math.random().toString(36).slice(2)}`;
+export const createKindiMessageId = () => `kindi:${Date.now()}:${crypto.randomUUID()}`;
 
 const INITIAL_MESSAGES: KindiMessage[] = [
   {

@@ -68,7 +68,7 @@ class SupabaseClientRegistry {
           persistSession: false,
           autoRefreshToken: false,
           detectSessionInUrl: false,
-          storageKey: `sb-full-${Math.random().toString(36).substring(2, 12)}`,
+          storageKey: `sb-full-${crypto.randomUUID()}`,
         },
         global: {
           headers: createSupabaseAuthHeaders(context.token),
