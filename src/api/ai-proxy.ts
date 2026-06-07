@@ -482,7 +482,7 @@ export default async function handler(req: Request) {
   }
 
   let reservationId: string | null = null;
-  let supabaseAdmin: any = null;
+  let supabaseAdmin: SupabaseClient | null = null;
 
   try {
     const body = (await req.json()) as AIProxyRequest;
@@ -592,9 +592,11 @@ export default async function handler(req: Request) {
   } catch (error) {
     if (reservationId && supabaseAdmin) {
       // Refund reservation on failure/timeout
-      await supabaseAdmin.rpc('refund_ai_usage_reservation', { p_reservation_id: reservationId }).catch((e: any) => {
+      try {
+        await supabaseAdmin.rpc('refund_ai_usage_reservation', { p_reservation_id: reservationId });
+      } catch (e: unknown) {
         console.error('[AI_PROXY] Failed to refund reservation:', e);
-      });
+      }
     }
 
     if (error instanceof AIProxyRateLimitExceededError) {

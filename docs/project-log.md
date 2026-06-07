@@ -1,5 +1,16 @@
 # Project Log
 
+## 2026-06-07 - TypeScript Hygiene: AI Proxy Boundary
+
+- Summary:
+  - Removed the remaining broad `any` usage from `src/api/ai-proxy.ts`.
+  - Typed the Supabase admin client inside the request handler and replaced an RPC `.catch(...)` chain with explicit `try/catch` error handling.
+- Verification:
+  - `npx vitest run src/api/__tests__/aiProxyRateLimit.test.ts src/api/__tests__/aiProxyRoot.test.ts`: pass
+  - `npx tsc --noEmit --pretty false`: pass
+- Notes:
+  - No billing, quota, rate-limit, or provider behavior was intentionally changed.
+
 ## 2026-06-07 - TypeScript Hygiene: Low-Risk Service Cast Cleanup
 
 - Summary:
