@@ -42,12 +42,17 @@ interface BioEventsSectionProps {
   onRemove: (id: string) => void;
 }
 
+type BioEventsTranslations = TranslationSchema & {
+  birth?: string;
+};
+
 const getLifeEventMeta = (type: string | undefined, t: TranslationSchema) => {
+  const text = t as BioEventsTranslations;
   const normalized = (type || '').trim().toLowerCase();
 
   if (normalized.includes('birth') || normalized.includes('ولاد')) {
     return {
-      label: (t as any).birth,
+      label: text.birth || t.born,
       chipClass: 'bg-[#edf3f8] text-[#526b82] shadow-sm',
       icon: Baby,
     };

@@ -9,7 +9,7 @@ export interface NotificationBellStoreActions {
   markAllRead: () => void;
   updateNotification: (id: string, patch: Partial<AppNotification>) => void;
   removeNotification: (id: string) => void;
-  setFocusId: (id: string | null) => void;
+  setFocusId: (id: string) => void;
   setSearchTarget: (id: string | null) => void;
 }
 

@@ -10,7 +10,7 @@ import {
 } from '../shared';
 import { activeStyle, inactiveStyle } from './sectionStyles';
 
-export const CoreEngineSection = React.memo(({ settingsText, t }: { settingsText: SettingsTextOptions & Record<string, string>; t: SettingsTranslator }) => {
+export const CoreEngineSection = React.memo(({ settingsText, t }: { settingsText: SettingsTextOptions; t: SettingsTranslator }) => {
   // READ: from appearanceSlice
   const { treeMode } = useAppStore(
     useShallow((state) => ({ treeMode: state.appearance.coreEngine.treeMode }))

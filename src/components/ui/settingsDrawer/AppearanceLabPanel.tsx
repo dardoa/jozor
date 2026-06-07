@@ -43,7 +43,7 @@ export const AppearanceLabPanel = ({
     unnamedPersonLabel,
     onSectionOpen,
 }: AppearanceLabPanelProps) => {
-    const settingsText = t.settings as unknown as SettingsTextOptions & Record<string, string>;
+    const settingsText: SettingsTextOptions = t.settings;
     const [openSection, setOpenSection] = React.useState<SectionId | null>('theme');
     const [advancedTab, setAdvancedTab] = React.useState<AdvancedTabId>('details');
 

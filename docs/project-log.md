@@ -564,3 +564,15 @@
   - `npm run build`
 - Deferred:
   - Renderer, gallery item, modal-routing, diagnostics window, and map library integration casts remain outside this small UI/translation package.
+
+## Appearance Lab And Persona Translation Cast Cleanup
+
+- Scope:
+  - Removed the remaining small translation casts from Settings Drawer, Appearance Lab shell, Smart Persona bio events, and Smart Persona media upload labels.
+  - Replaced Appearance Lab section props that required `Record<string, string>` with the stricter `SettingsTextOptions` contract.
+  - Added explicit legacy optional labels for `names`, `photos`, and `dates` instead of allowing an open string dictionary.
+- Verification:
+  - `npx tsc --noEmit --pretty false`
+  - `npm run build`
+- Deferred:
+  - Smart Persona gallery item shape casts remain a separate data-model cleanup task.

@@ -1,6 +1,7 @@
 import JSZip from 'jszip';
 
 import type { BackupManifest, FullState, Person } from '../types';
+import { getGalleryImageUrl } from '../utils/mediaUtils';
 
 export interface ArchiveBuildOptions {
   label: string;
@@ -66,7 +67,7 @@ export const buildBlueprintArchive = async (
         (galleryItem, index) =>
           addMediaFile({
             zip,
-            source: galleryItem,
+            source: getGalleryImageUrl(galleryItem) || '',
             targetBasePath: `media/gallery/${sanitizeFileSegment(personId)}-${index + 1}`,
             date: archiveDate,
             mediaFetcher,

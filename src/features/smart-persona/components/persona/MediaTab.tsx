@@ -17,6 +17,10 @@ type GalleryMediaItem = string | {
   createdAt?: string;
 };
 
+type MediaTabTranslations = {
+  addPhoto?: string;
+};
+
 const ImageLightbox = lazy(() =>
   import('../../../../components/ui/ImageLightbox').then((module) => ({ default: module.ImageLightbox }))
 );
@@ -33,6 +37,7 @@ interface MediaTabProps {
 
 export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user }) => {
   const { t } = useTranslation();
+  const mediaText = t as typeof t & MediaTabTranslations;
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isDriveLoading, setIsDriveLoading] = useState(false);
@@ -164,7 +169,7 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
                 ) : (
                    <Plus className='w-3.5 h-3.5' />
                 )}
-                {(t as any).addPhoto || 'Add Photo'}
+                {mediaText.addPhoto || 'Add Photo'}
               </button>
             </div>
           )}
@@ -175,7 +180,7 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
           accept='image/*'
           className='hidden'
           onChange={handleImageUpload}
-          aria-label={(t as any).addPhoto || 'Add Photo'}
+          aria-label={mediaText.addPhoto || 'Add Photo'}
         />
 
         {!hasPhotos && !isEditing ? (

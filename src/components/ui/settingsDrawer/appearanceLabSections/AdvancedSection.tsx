@@ -28,7 +28,7 @@ export const AdvancedSection = React.memo(({
   onToggle: (id: SectionId) => void;
   advancedTab: AdvancedTabId;
   setAdvancedTab: React.Dispatch<React.SetStateAction<AdvancedTabId>>;
-  settingsText: SettingsTextOptions & Record<string, string>;
+  settingsText: SettingsTextOptions;
   t: SettingsTranslator;
   sortedPeople: AppearanceLabPerson[];
   unnamedPersonLabel: string;

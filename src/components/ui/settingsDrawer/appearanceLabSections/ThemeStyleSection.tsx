@@ -14,7 +14,7 @@ export const ThemeStyleSection = React.memo(({
 }: {
   open: boolean;
   onToggle: (id: SectionId) => void;
-  settingsText: SettingsTextOptions & Record<string, string>;
+  settingsText: SettingsTextOptions;
   palettePreviewById: Record<string, string[]>;
 }) => {
   // READ: from appearanceSlice

@@ -6,7 +6,7 @@ import { SectionHeader, SliderField, type SettingsTextOptions, type SettingsTran
 import { SectionShell, valueTone } from './sectionStyles';
 import type { SectionId } from './types';
 
-export const LayoutSection = React.memo(({ open, onToggle, settingsText, t }: { open: boolean; onToggle: (id: SectionId) => void; settingsText: SettingsTextOptions & Record<string, string>; t: SettingsTranslator }) => {
+export const LayoutSection = React.memo(({ open, onToggle, settingsText, t }: { open: boolean; onToggle: (id: SectionId) => void; settingsText: SettingsTextOptions; t: SettingsTranslator }) => {
   // READ: from appearanceSlice
   const { zoom, horizontalSpread, verticalSpread } = useAppStore(
     useShallow((state) => ({ zoom: state.appearance.layout.zoom, horizontalSpread: state.appearance.layout.horizontalSpread, verticalSpread: state.appearance.layout.verticalSpread }))

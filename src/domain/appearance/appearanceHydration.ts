@@ -1,4 +1,4 @@
-import { AppearanceState, PRESETS } from './appearanceEngine';
+import { AppearanceState, PRESETS, DeepPartial, ThemeStyle } from './appearanceEngine';
 import { TreeSettings } from '../../types';
 import { normalizeChartType } from '../chartTypeAdapter';
 import { useAppStore } from '../../store/useAppStore';
@@ -31,12 +31,12 @@ export const hydrateAppearanceLabFromLegacy = (
         ? (() => {
             // Apply the preset patch first to get the preset's palette/font/density/radius
             const presetPatch = PRESETS[mappedLegacyPreset as keyof typeof PRESETS];
-            const patched = patchStateFromPreset<AppearanceState>(currentStoreState, presetPatch as any);
+            const patched = patchStateFromPreset<AppearanceState>(currentStoreState, presetPatch as DeepPartial<AppearanceState>);
             const { paletteId, fontMode, density, radiusMode } = patched;
             // Recalculate full tokens so cssVariables/colors/fonts match the preset
             const resolvedTokens = resolveThemeState(paletteId, fontMode, density, radiusMode);
             return {
-                theme: { themeStyle: mappedLegacyPreset },
+                theme: { themeStyle: mappedLegacyPreset as ThemeStyle },
                 appearance: {
                     ...baseVisualState.appearance,
                     ...presetPatch?.appearance,
@@ -73,9 +73,9 @@ export const hydrateAppearanceLabFromLegacy = (
             treeMode: activeTreeMode,
             orientation: activeTreeMode === 'focus' ? (activeLayoutMode === 'horizontal' ? 'horizontal' : 'vertical') : currentStoreState.coreEngine.orientation,
         },
-        theme: resolvedVisualState.theme as any,
-        meta: { activePreset: (mappedLegacyPreset ?? currentStoreState.meta.activePreset) as any },
-        appearance: resolvedVisualState.appearance as any,
+        theme: resolvedVisualState.theme,
+        meta: { activePreset: mappedLegacyPreset ?? currentStoreState.meta.activePreset },
+        appearance: resolvedVisualState.appearance,
         layout: { zoom: treeSettings.nodeWidth ?? currentStoreState.layout.zoom, horizontalSpread: treeSettings.nodeSpacingX ?? currentStoreState.layout.horizontalSpread, verticalSpread: treeSettings.nodeSpacingY ?? currentStoreState.layout.verticalSpread },
         contentVisibility: {
             photos: Boolean(treeSettings.showPhotos ?? currentStoreState.contentVisibility.photos),
@@ -105,7 +105,7 @@ export const hydrateAppearanceLabFromLegacy = (
             },
         },
         advanced: {
-            nodeDetails: { textSize: treeSettings.textSize ?? currentStoreState.advanced.nodeDetails.textSize, generationLimit: treeSettings.generationLimit ?? currentStoreState.advanced.nodeDetails.generationLimit, compactNodes: Boolean(treeSettings.isCompact ?? currentStoreState.advanced.nodeDetails.compactNodes), lineStyle: normalizeAppearanceLineStyle(treeSettings.lineStyle ?? currentStoreState.advanced.nodeDetails.lineStyle), lineThickness: treeSettings.lineThickness ?? currentStoreState.advanced.nodeDetails.lineThickness, boxColorLogic: (treeSettings.boxColorLogic ?? currentStoreState.advanced.nodeDetails.boxColorLogic) as any },
+            nodeDetails: { textSize: treeSettings.textSize ?? currentStoreState.advanced.nodeDetails.textSize, generationLimit: treeSettings.generationLimit ?? currentStoreState.advanced.nodeDetails.generationLimit, compactNodes: Boolean(treeSettings.isCompact ?? currentStoreState.advanced.nodeDetails.compactNodes), lineStyle: normalizeAppearanceLineStyle(treeSettings.lineStyle ?? currentStoreState.advanced.nodeDetails.lineStyle), lineThickness: treeSettings.lineThickness ?? currentStoreState.advanced.nodeDetails.lineThickness, boxColorLogic: treeSettings.boxColorLogic ?? currentStoreState.advanced.nodeDetails.boxColorLogic },
             layoutEngine: { highlightBranch: Boolean(treeSettings.highlightBranch ?? currentStoreState.advanced.layoutEngine.highlightBranch), highlightedBranchRootId: treeSettings.highlightedBranchRootId ?? currentStoreState.advanced.layoutEngine.highlightedBranchRootId },
         },
     };

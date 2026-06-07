@@ -6,7 +6,7 @@ import { Checkbox, type SettingsTextOptions, type SettingsTranslator } from '../
 import { SectionShell } from './sectionStyles';
 import type { SectionId } from './types';
 
-export const ContentSection = React.memo(({ open, onToggle, settingsText, t }: { open: boolean; onToggle: (id: SectionId) => void; settingsText: SettingsTextOptions & Record<string, string>; t: SettingsTranslator }) => {
+export const ContentSection = React.memo(({ open, onToggle, settingsText, t }: { open: boolean; onToggle: (id: SectionId) => void; settingsText: SettingsTextOptions; t: SettingsTranslator }) => {
   // READ: from appearanceSlice
   const contentVisibility = useAppStore(useShallow((state) => state.appearance.contentVisibility));
   // WRITE: directly to appearanceSlice

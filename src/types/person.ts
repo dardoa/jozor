@@ -8,6 +8,14 @@ export interface RelationshipInfo {
     endPlace?: string;
 }
 
+export interface GalleryItem {
+    id: string;
+    path: string;
+    version: number;
+    caption?: string;
+    createdAt: string;
+}
+
 export interface Person {
     id: string;
     title: string;
@@ -38,7 +46,7 @@ export interface Person {
     photoUrl?: string;
     photoPath?: string;
     photoVersion?: number;
-    gallery: string[];
+    gallery: (string | GalleryItem)[];
     voiceNotes: string[];
     sources: { id: string; title: string; url?: string; date?: string; type?: string }[];
     events: {

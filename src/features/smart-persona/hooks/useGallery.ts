@@ -32,14 +32,14 @@ export const useGallery = (): UseGalleryReturn => {
         file,
         uid: user.uid,
         email: user.email,
-        token: (useAppStore.getState() as any).supabaseToken || undefined,
+        token: useAppStore.getState().user?.supabaseToken || undefined,
       });
 
       const person = useAppStore.getState().people[personId];
       const currentGallery = Array.isArray(person?.gallery) ? person.gallery : [];
 
       treeActions.updatePerson(personId, {
-        gallery: [...currentGallery, newItem] as any,
+        gallery: [...currentGallery, newItem],
       });
 
       showToast.success('Photo added to gallery');
@@ -58,7 +58,7 @@ export const useGallery = (): UseGalleryReturn => {
       const person = useAppStore.getState().people[personId];
       if (!person || !Array.isArray(person.gallery)) return;
 
-      const itemToRemove = person.gallery.find((item: any) =>
+      const itemToRemove = person.gallery.find((item) =>
         typeof item === 'object' && item.id === itemId
       );
 
@@ -67,16 +67,16 @@ export const useGallery = (): UseGalleryReturn => {
       setIsUploading(true);
       const { SupabaseGalleryService } = await import('../services/supabaseGalleryService');
 
-      if ((itemToRemove as any).path) {
+      if (typeof itemToRemove === 'object' && itemToRemove.path) {
         await SupabaseGalleryService.deleteGalleryItem({
-          path: (itemToRemove as any).path,
+          path: itemToRemove.path,
           uid: user.uid,
           email: user.email,
-          token: (useAppStore.getState() as any).supabaseToken || undefined,
+          token: useAppStore.getState().user?.supabaseToken || undefined,
         });
       }
 
-      const newGallery = person.gallery.filter((item: any) =>
+      const newGallery = person.gallery.filter((item) =>
         !(typeof item === 'object' && item.id === itemId)
       );
 

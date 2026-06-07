@@ -32,7 +32,10 @@ export type VisibilitySettingKey =
     | 'showDeceased'
     | 'privacyMode';
 
-export type SettingsTextOptions = {
+export type SettingsTextOptions = SettingsTranslator['settings'] & {
+    names?: string;
+    photos?: string;
+    dates?: string;
     dateFormats?: Partial<Record<DateFormat, string>>;
     lineStyleOptions?: Partial<Record<LineStyle, string>>;
     nodeColorLogicOptions?: Partial<Record<BoxColorLogic, string>>;

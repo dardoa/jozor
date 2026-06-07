@@ -7,7 +7,7 @@ import { activeStyle, inactiveStyle, SectionShell } from './sectionStyles';
 import { THEME_DENSITY_OPTIONS, THEME_FONT_OPTIONS, THEME_RADIUS_OPTIONS } from './themeOptions';
 import type { SectionId } from './types';
 
-export const AppearanceSection = React.memo(({ open, onToggle, settingsText, t }: { open: boolean; onToggle: (id: SectionId) => void; settingsText: SettingsTextOptions & Record<string, string>; t: SettingsTranslator }) => {
+export const AppearanceSection = React.memo(({ open, onToggle, settingsText, t }: { open: boolean; onToggle: (id: SectionId) => void; settingsText: SettingsTextOptions; t: SettingsTranslator }) => {
   // READ: from appearanceSlice
   const { fontMode, radiusMode, density } = useAppStore(
     useShallow((state) => ({ 

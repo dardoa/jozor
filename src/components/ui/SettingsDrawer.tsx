@@ -91,7 +91,7 @@ export const SettingsDrawer = memo(() => {
                                 <Settings className="h-5 w-5" />
                             </div>
                             <h2 className="text-[18px] font-medium" style={{ color: 'var(--text-main)' }}>
-                                {(t.settings as unknown as Record<string, string>).appearanceLab || t.settings.title}
+                                {t.settings.appearanceLab || t.settings.title}
                             </h2>
                         </div>
                         <button

@@ -1,8 +1,9 @@
 import JSZip from 'jszip';
-import { Person } from '../types';
+import { Person, GalleryItem } from '../types';
 import { validatePerson } from './familyLogic';
 import { googleMediaService } from '../services/googleService';
 import { OFFLINE_VIEWER_HTML } from './archiveTemplates';
+import { getGalleryImageUrl } from './mediaUtils';
 
 // Helper to extract base64 data
 const getBase64Data = (dataUrl: string) => {
@@ -147,7 +148,9 @@ export const exportToJozorArchive = async (
     // 2. Process Gallery
     if (p.gallery && Array.isArray(p.gallery)) {
       const newGallery: string[] = [];
-      for (const imgStr of p.gallery) {
+      for (const item of p.gallery) {
+        const imgStr = getGalleryImageUrl(item);
+        if (!imgStr) continue;
         if (imgStr.startsWith('data:')) {
           const mime = getMimeType(imgStr);
           const ext = getExtension(mime);
@@ -272,11 +275,12 @@ export const importJozorArchiveData = async (file: File): Promise<JozorArchiveDa
     // 2. Rehydrate Gallery
     if (p.gallery && Array.isArray(p.gallery)) {
       p.gallery = await Promise.all(
-        p.gallery.map(async (imgPath: string) => {
-          if (imgPath.startsWith('images/')) {
+        p.gallery.map(async (item: string | GalleryItem) => {
+          const imgPath = typeof item === 'string' ? item : item.path;
+          if (imgPath && imgPath.startsWith('images/')) {
             return await findAndValidateMediaFile(zip, imgPath, 'images');
           }
-          return imgPath;
+          return imgPath || '';
         })
       );
     }
