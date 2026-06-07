@@ -4,12 +4,13 @@ import { treeDiscussionService } from '../services/treeDiscussionService';
 import { getTreeCollaborators } from '../../../services/supabaseTreeCollaboratorService';
 import { activityService } from '../../activity-log';
 import { logError } from '../../../utils/errorLogger';
+import type { TreeDiscussionMessage } from '../../../types/tree';
 
-const EMPTY_ARRAY: any[] = [];
+const EMPTY_MESSAGES: TreeDiscussionMessage[] = [];
 
 export const useTreeDiscussion = (treeId?: string) => {
   const user = useAppStore(state => state.user);
-  const messages = useAppStore(state => state.discussionMessages[treeId || ''] || EMPTY_ARRAY);
+  const messages = useAppStore(state => state.discussionMessages[treeId || ''] || EMPTY_MESSAGES);
   const addMessage = useAppStore(state => state.addDiscussionMessage);
   const setMessages = useAppStore(state => state.setDiscussionMessages);
   const prependMessages = useAppStore(state => state.prependDiscussionMessages);

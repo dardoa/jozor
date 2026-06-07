@@ -14,6 +14,7 @@ import { TreeDiscussionItem } from './TreeDiscussionItem';
 import { useAppStore } from '../../../store/useAppStore';
 import { TreeDiscussionMessage } from '../../../types/tree';
 import { DISCUSSION_MESSAGE_MAX_LENGTH } from '../services/treeDiscussionService';
+import type { DiscussionCollaborator, DiscussionPresenceUser } from '../types';
 
 interface TreeDiscussionDrawerProps {
     isOpen: boolean;
@@ -21,14 +22,29 @@ interface TreeDiscussionDrawerProps {
     treeId: string;
 }
 
-const EMPTY_ARRAY: any[] = [];
+const EMPTY_ONLINE_USERS: DiscussionPresenceUser[] = [];
+const EMPTY_COLLABORATORS: DiscussionCollaborator[] = [];
+
+type DiscussionDrawerTranslations = {
+    discussionDrawer?: {
+        title?: string;
+        subtitle?: string;
+        online?: string;
+        searchPlaceholder?: string;
+        emptyState?: string;
+        emptyStateDesc?: string;
+        loadMore?: string;
+        placeholder?: string;
+    };
+};
 
 const TreeDiscussionDrawer: React.FC<TreeDiscussionDrawerProps> = ({ isOpen, onClose, treeId }) => {
     const { t, language } = useTranslation();
+    const discussionText = (t as typeof t & DiscussionDrawerTranslations).discussionDrawer;
     const user = useAppStore(state => state.user);
     const markAsRead = useAppStore(state => state.markAsRead);
-    const onlineUsers = useAppStore(state => state.onlineUsers[treeId] || EMPTY_ARRAY);
-    const collaborators = useAppStore(state => state.collaborators[treeId] || EMPTY_ARRAY);
+    const onlineUsers = useAppStore(state => state.onlineUsers[treeId] || EMPTY_ONLINE_USERS);
+    const collaborators = useAppStore(state => state.collaborators[treeId] || EMPTY_COLLABORATORS);
     const { messages, loading, loadingMore, hasMore, sendMessage, loadMore } = useTreeDiscussion(treeId);
     const [content, setContent] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
@@ -42,7 +58,7 @@ const TreeDiscussionDrawer: React.FC<TreeDiscussionDrawerProps> = ({ isOpen, onC
         // Get unique online users emails
         const onlineEmails = new Set(
             onlineUsers
-                .map((u: any) => typeof u.email === 'string' ? u.email.toLowerCase() : '')
+                .map((u) => u.email.toLowerCase())
                 .filter(Boolean)
         );
         
@@ -52,17 +68,17 @@ const TreeDiscussionDrawer: React.FC<TreeDiscussionDrawerProps> = ({ isOpen, onC
         if (user?.email) allMemberEmails.add(user.email.toLowerCase());
 
         // 2. Add collaborators from the tree
-        collaborators.forEach((c: any) => {
+        collaborators.forEach((c) => {
             if (c.email) allMemberEmails.add(c.email.toLowerCase());
         });
         
         // 3. Add everyone who has ever sent a message in this discussion
-        messages.forEach((m: any) => {
+        messages.forEach((m) => {
             if (m.userEmail) allMemberEmails.add(m.userEmail.toLowerCase());
         });
 
         // 4. Add anyone currently online
-        onlineUsers.forEach((u: any) => {
+        onlineUsers.forEach((u) => {
             if (u.email) allMemberEmails.add(u.email.toLowerCase());
         });
 
@@ -164,17 +180,17 @@ const TreeDiscussionDrawer: React.FC<TreeDiscussionDrawerProps> = ({ isOpen, onC
                             </div>
                             <div>
                                 <h2 className="text-lg font-bold text-[var(--text-main)] leading-tight">
-                                    {(t as any).discussionDrawer?.title || 'Tree Discussion'}
+                                    {discussionText?.title || 'Tree Discussion'}
                                 </h2>
                                 <div className="flex items-center gap-2 mt-1">
                                     <p className="text-xs text-[var(--text-muted)] font-medium uppercase tracking-wider">
-                                        {(t as any).discussionDrawer?.subtitle || 'Coordinate with collaborators'}
+                                        {discussionText?.subtitle || 'Coordinate with collaborators'}
                                     </p>
                                     {onlineUsers.length > 0 && (
                                         <div className="flex items-center gap-1.5 px-2 py-0.5 bg-green-500/10 rounded-full border border-green-500/20">
                                             <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
                                             <span className="text-[10px] text-green-600 font-bold">
-                                                {onlineUsers.length} {(t as any).discussionDrawer?.online || 'Online'}
+                                                {onlineUsers.length} {discussionText?.online || 'Online'}
                                             </span>
                                         </div>
                                     )}
@@ -218,7 +234,7 @@ const TreeDiscussionDrawer: React.FC<TreeDiscussionDrawerProps> = ({ isOpen, onC
                             type="search"
                             value={searchQuery}
                             onChange={(event) => setSearchQuery(event.target.value)}
-                            placeholder={(t as any).discussionDrawer?.searchPlaceholder || (language === 'ar' ? 'ابحث في الرسائل...' : 'Search messages...')}
+                            placeholder={discussionText?.searchPlaceholder || (language === 'ar' ? 'ابحث في الرسائل...' : 'Search messages...')}
                             className="w-full rounded-xl border border-[var(--border-soft)] bg-[var(--surface-subtle)] py-2 ps-9 pe-3 text-sm text-[var(--text-main)] outline-none transition focus:ring-2 focus:ring-[var(--color-primary-500)]/20"
                         />
                         {normalizedSearchQuery && (
@@ -243,10 +259,10 @@ const TreeDiscussionDrawer: React.FC<TreeDiscussionDrawerProps> = ({ isOpen, onC
                                 <MessageCircle className="w-8 h-8 text-[var(--text-muted)]" />
                             </div>
                             <p className="text-[var(--text-secondary)] font-bold">
-                                {(t as any).discussionDrawer?.emptyState || 'No messages yet'}
+                                {discussionText?.emptyState || 'No messages yet'}
                             </p>
                             <p className="text-xs text-[var(--text-muted)] mt-1">
-                                {(t as any).discussionDrawer?.emptyStateDesc || 'Start a discussion to coordinate with other collaborators'}
+                                {discussionText?.emptyStateDesc || 'Start a discussion to coordinate with other collaborators'}
                             </p>
                         </div>
                     ) : normalizedSearchQuery && visibleMessages.length === 0 ? (
@@ -275,7 +291,7 @@ const TreeDiscussionDrawer: React.FC<TreeDiscussionDrawerProps> = ({ isOpen, onC
                                     ) : (
                                         <MessageCircle className="w-3 h-3" />
                                     )}
-                                    <span>{(t as any).discussionDrawer?.loadMore || 'Load older messages'}</span>
+                                    <span>{discussionText?.loadMore || 'Load older messages'}</span>
                                 </button>
                             )}
 
@@ -324,7 +340,7 @@ const TreeDiscussionDrawer: React.FC<TreeDiscussionDrawerProps> = ({ isOpen, onC
                                         handleSend();
                                     }
                                 }}
-                                placeholder={(t as any).discussionDrawer?.placeholder || 'Type a message...'}
+                                placeholder={discussionText?.placeholder || 'Type a message...'}
                                 maxLength={DISCUSSION_MESSAGE_MAX_LENGTH}
                                 className="w-full bg-[var(--surface-subtle)] border border-[var(--border-soft)] rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-500)]/20 transition-all resize-none custom-scrollbar max-h-32"
                                 rows={1}

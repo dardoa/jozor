@@ -1,5 +1,24 @@
 # Project Log
 
+## 2026-06-07 - TypeScript Hygiene: Discussions Feature Boundary
+
+- Summary:
+  - Added explicit discussion feature types for Supabase discussion rows, realtime presence users, and collaborators.
+  - Replaced remaining `any` usage inside `src/features/discussions` across the store, service, hook, and drawer.
+  - Kept existing discussion UI labels and fallback behavior unchanged.
+- Files changed:
+  - `src/features/discussions/types.ts`
+  - `src/features/discussions/store/discussionSlice.ts`
+  - `src/features/discussions/services/treeDiscussionService.ts`
+  - `src/features/discussions/hooks/useTreeDiscussion.ts`
+  - `src/features/discussions/components/TreeDiscussionDrawer.tsx`
+- Verification:
+  - `npx tsc --noEmit --pretty false`: pass
+  - `npx vitest run src/features/discussions/services/__tests__/treeDiscussionService.test.ts src/features/discussions/store/__tests__/discussionSlice.test.ts src/features/discussions/components/__tests__/TreeDiscussionItem.test.tsx`: pass
+  - `npm run build`: pass
+- Notes:
+  - This is a type-safety cleanup only; realtime subscription, unread counts, message ordering, and send/delete behavior were not intentionally changed.
+
 ## 2026-06-07 - TypeScript Hygiene: Node Context Menu Translations
 
 - Summary:

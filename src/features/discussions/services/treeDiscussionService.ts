@@ -1,8 +1,34 @@
 import { getSupabaseFull, getSupabaseWithAuth } from '../../../services/supabaseClient';
 import { logError, logInfo } from '../../../utils/errorLogger';
 import type { TreeDiscussionMessage } from '../../../types/tree';
+import type { DiscussionPresencePayload, DiscussionPresenceUser, TreeDiscussionRow } from '../types';
 
 export const DISCUSSION_MESSAGE_MAX_LENGTH = 2000;
+
+const mapDiscussionRowToMessage = (row: TreeDiscussionRow): TreeDiscussionMessage => ({
+  id: row.id,
+  treeId: row.tree_id,
+  userId: row.user_id,
+  userEmail: row.user_email,
+  content: row.content,
+  replyToEventId: row.reply_to_event_id ?? undefined,
+  replyToMessageId: row.reply_to_message_id ?? undefined,
+  replyToUserName: row.reply_to_user_name ?? undefined,
+  replyToContent: row.reply_to_content ?? undefined,
+  createdAt: row.created_at,
+});
+
+const normalizePresencePayload = (payload: DiscussionPresencePayload): DiscussionPresenceUser | null => {
+  if (typeof payload.uid !== 'string' || typeof payload.email !== 'string') {
+    return null;
+  }
+
+  return {
+    uid: payload.uid,
+    email: payload.email,
+    onlineAt: typeof payload.online_at === 'string' ? payload.online_at : '',
+  };
+};
 
 export const treeDiscussionService = {
   /**
@@ -33,18 +59,9 @@ export const treeDiscussionService = {
 
       if (error) throw error;
 
-      return (data || []).map((row: any) => ({
-        id: row.id,
-        treeId: row.tree_id,
-        userId: row.user_id,
-        userEmail: row.user_email,
-        content: row.content,
-        replyToEventId: row.reply_to_event_id,
-        replyToMessageId: row.reply_to_message_id,
-        replyToUserName: row.reply_to_user_name,
-        replyToContent: row.reply_to_content,
-        createdAt: row.created_at,
-      })).reverse(); // Return in chronological order
+      return ((data || []) as TreeDiscussionRow[])
+        .map(mapDiscussionRowToMessage)
+        .reverse(); // Return in chronological order
     } catch (error) {
       logError('TreeDiscussionService fetchMessages', error, {
         category: 'DATABASE',
@@ -96,18 +113,7 @@ export const treeDiscussionService = {
 
       logInfo('TreeDiscussionService sendMessage', 'Message sent.', { treeId, userId });
 
-      return {
-        id: data.id,
-        treeId: data.tree_id,
-        userId: data.user_id,
-        userEmail: data.user_email,
-        content: data.content,
-        replyToEventId: data.reply_to_event_id,
-        replyToMessageId: data.reply_to_message_id,
-        replyToUserName: data.reply_to_user_name,
-        replyToContent: data.reply_to_content,
-        createdAt: data.created_at,
-      };
+      return mapDiscussionRowToMessage(data as TreeDiscussionRow);
     } catch (error) {
       logError('TreeDiscussionService sendMessage', error, {
         category: 'DATABASE',
@@ -156,7 +162,7 @@ export const treeDiscussionService = {
     token: string | undefined,
     onMessage: (message: TreeDiscussionMessage) => void,
     onDelete?: (messageId: string) => void,
-    onPresenceSync?: (users: any[]) => void,
+    onPresenceSync?: (users: DiscussionPresenceUser[]) => void,
     onStatus?: (status: string, error?: Error) => void
   ) {
     const client = getSupabaseFull(uid, email, token);
@@ -178,31 +184,19 @@ export const treeDiscussionService = {
         },
         (payload) => {
           if (payload.eventType === 'INSERT') {
-            const row = payload.new as any;
-            onMessage({
-              id: row.id,
-              treeId: row.tree_id,
-              userId: row.user_id,
-              userEmail: row.user_email,
-              content: row.content,
-              replyToEventId: row.reply_to_event_id,
-              replyToMessageId: row.reply_to_message_id,
-              replyToUserName: row.reply_to_user_name,
-              replyToContent: row.reply_to_content,
-              createdAt: row.created_at,
-            });
+            onMessage(mapDiscussionRowToMessage(payload.new as TreeDiscussionRow));
           } else if (payload.eventType === 'DELETE') {
-            if (onDelete) onDelete(payload.old.id);
+            const deletedRow = payload.old as Partial<TreeDiscussionRow>;
+            if (onDelete && typeof deletedRow.id === 'string') onDelete(deletedRow.id);
           }
         }
       )
       .on('presence', { event: 'sync' }, () => {
         const newState = channel.presenceState();
-        const onlineUsers = Object.values(newState).flat().map((p: any) => ({
-          uid: p.uid,
-          email: p.email,
-          onlineAt: p.online_at
-        }));
+        const onlineUsers = Object.values(newState)
+          .flat()
+          .map((presence) => normalizePresencePayload(presence as DiscussionPresencePayload))
+          .filter((presence): presence is DiscussionPresenceUser => Boolean(presence));
         if (onPresenceSync) onPresenceSync(onlineUsers);
       })
       .subscribe((status, err) => {

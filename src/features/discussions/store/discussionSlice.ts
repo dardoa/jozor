@@ -1,12 +1,13 @@
 import { StateCreator } from 'zustand';
 import type { TreeDiscussionMessage } from '../../../types/tree';
+import type { DiscussionCollaborator, DiscussionPresenceUser } from '../types';
 
 export interface DiscussionSlice {
   discussionMessages: Record<string, TreeDiscussionMessage[]>; // treeId -> messages
   lastReadTimestamps: Record<string, string>; // treeId -> ISO string
   unreadCounts: Record<string, number>; // treeId -> count
-  onlineUsers: Record<string, any[]>; // treeId -> users
-  collaborators: Record<string, any[]>; // treeId -> list of all members
+  onlineUsers: Record<string, DiscussionPresenceUser[]>; // treeId -> users
+  collaborators: Record<string, DiscussionCollaborator[]>; // treeId -> list of all members
   hasMore: Record<string, boolean>; // treeId -> whether there are more older messages
   isDiscussionOpen: boolean;
   addDiscussionMessage: (treeId: string, message: TreeDiscussionMessage, currentUserId?: string) => void;
@@ -16,8 +17,8 @@ export interface DiscussionSlice {
   setDiscussionOpen: (isOpen: boolean) => void;
   markAsRead: (treeId: string) => void;
   removeDiscussionMessage: (treeId: string, messageId: string) => void;
-  setOnlineUsers: (treeId: string, users: any[]) => void;
-  setCollaborators: (treeId: string, collaborators: any[]) => void;
+  setOnlineUsers: (treeId: string, users: DiscussionPresenceUser[]) => void;
+  setCollaborators: (treeId: string, collaborators: DiscussionCollaborator[]) => void;
 }
 
 const UNREAD_STORAGE_KEY = 'jozor_unread_counts';
@@ -81,7 +82,7 @@ export const createDiscussionSlice: StateCreator<DiscussionSlice> = (set) => ({
     const existing = state.discussionMessages[treeId] || [];
     // Merge and deduplicate just in case
     const merged = [...newOlderMessages, ...existing];
-    const uniqueMap = new Map();
+    const uniqueMap = new Map<string, TreeDiscussionMessage>();
     merged.forEach(m => uniqueMap.set(m.id, m));
     
     const finalMessages = Array.from(uniqueMap.values()).sort((a, b) => 
