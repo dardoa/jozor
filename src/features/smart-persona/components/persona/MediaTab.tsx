@@ -194,9 +194,12 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
               const src = getGalleryImageUrl(item);
               if (!src) return null;
               const imgAlt = personFullName ? `${personFullName} — ${t.galleryTab} ${idx + 1}` : `Gallery image ${idx + 1}`;
+              const isObj = typeof item === 'object';
+              const itemId = isObj ? item.id : String(idx);
+              const caption = isObj ? item.caption : undefined;
 
               return (
-                <div key={(item as any).id || idx} className='flex flex-col gap-1.5 animate-in fade-in duration-200'>
+                <div key={itemId} className='flex flex-col gap-1.5 animate-in fade-in duration-200'>
                 <div
                   /* thumbnail wrapper */
                   className='relative group rounded-xl overflow-hidden border border-[var(--border-soft)] aspect-square bg-[var(--surface-subtle)] shadow-[var(--shadow-sm)] cursor-zoom-in'
@@ -214,8 +217,8 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (typeof item === 'object' && (item as any).id) {
-                            removePhoto(person.id, (item as any).id);
+                          if (isObj && item.id) {
+                            removePhoto(person.id, item.id);
                           } else {
                             const newGallery = [...gallery];
                             newGallery.splice(idx, 1);
@@ -229,9 +232,9 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
                       </button>
                     )}
                   </div>
-                  {!isEditing && (item as any).caption && (
+                  {!isEditing && caption && (
                     <div className='absolute bottom-0 inset-x-0 bg-black/60 text-white text-[10px] p-1 truncate backdrop-blur-sm'>
-                      {(item as any).caption}
+                      {caption}
                     </div>
                   )}
                   </div>
@@ -240,14 +243,20 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
                     <input
                       type='text'
                       placeholder='أضف وصفاً للصورة...'
-                      value={(item as any).caption || ''}
+                      value={caption || ''}
                       onChange={(e) => {
                         const newCaption = e.target.value;
                         const newGallery = [...gallery];
-                        if (typeof item === 'object') {
+                        if (isObj) {
                           newGallery[idx] = { ...item, caption: newCaption };
                         } else {
-                          newGallery[idx] = { url: item, caption: newCaption };
+                          newGallery[idx] = {
+                            id: `gallery-legacy-${idx}`,
+                            path: item,
+                            version: 1,
+                            caption: newCaption,
+                            createdAt: new Date().toISOString(),
+                          };
                         }
                         onUpdate(person.id, { gallery: newGallery as Person['gallery'] });
                       }}

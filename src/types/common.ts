@@ -111,7 +111,8 @@ export type ModalType =
     | 'login'
     | 'globalSettings'
     | 'migrationMap'
-    | 'paywall';
+    | 'paywall'
+    | 'chat';
 
 export type ModalRouteType = ModalType | 'map';
 

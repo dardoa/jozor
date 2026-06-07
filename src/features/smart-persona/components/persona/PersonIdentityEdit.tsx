@@ -47,7 +47,7 @@ export const PersonIdentityEdit = memo<PersonIdentityEditProps>(({ person, onUpd
       const updates: Partial<Person> = {};
       (Object.keys(extracted) as Array<keyof Person>).forEach((key) => {
         if (extracted[key] !== undefined && extracted[key] !== null && extracted[key] !== '') {
-          updates[key] = extracted[key] as any;
+          (updates as Record<string, unknown>)[key] = extracted[key];
         }
       });
       onUpdate(person.id, updates);

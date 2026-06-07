@@ -3,7 +3,7 @@ import { memo, useCallback } from 'react';
 import { useTranslation } from '../../../context/TranslationContext';
 import {
   type FamilyActionsProps,
-  type ModalType,
+  type ModalRouteType,
   type Person,
   type PersonUpdateHandler,
   type TreeSettings,
@@ -23,7 +23,7 @@ interface SmartPersonaDrawerProps {
   onSelect: (id: string) => void;
   isOpen: boolean;
   onClose: () => void;
-  onOpenModal: (type: ModalType, data?: unknown) => void;
+  onOpenModal: (type: ModalRouteType, data?: unknown) => void;
   familyActions: FamilyActionsProps;
   settings: TreeSettings;
   user: UserProfile | null;
@@ -81,7 +81,7 @@ export const SmartPersonaDrawer = memo<SmartPersonaDrawerProps>(
     });
 
     const handleAboutModalOpen = useCallback((modalType: AboutModalType) => {
-      onOpenModal(modalType as any);
+      onOpenModal(modalType);
     }, [onOpenModal]);
 
     return (
