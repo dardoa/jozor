@@ -324,56 +324,83 @@ export async function processReminderBatch(params: {
   userIds: string[];
   now: Date;
 }): Promise<ReminderDeliveryResult> {
-  const result: ReminderDeliveryResult = {
+  const userResults = await Promise.all(
+    params.userIds.map((userId) => processReminderUser({ userId, now: params.now }))
+  );
+
+  return userResults.reduce<ReminderDeliveryResult>((accumulator, userResult) => {
+    addReminderResults(accumulator, userResult);
+    return accumulator;
+  }, createEmptyReminderResult());
+}
+
+function createEmptyReminderResult(): ReminderDeliveryResult {
+  return {
     deliveredNotifications: 0,
     skippedNotifications: 0,
     sentSubscriptions: 0,
     prunedSubscriptions: 0,
   };
+}
 
-  for (const userId of params.userIds) {
-    const treeIds = await listVisibleTreeIdsForUser(userId);
-    if (treeIds.length === 0) continue;
+async function processReminderUser(params: {
+  userId: string;
+  now: Date;
+}): Promise<ReminderDeliveryResult> {
+  const treeIds = await listVisibleTreeIdsForUser(params.userId);
+  if (treeIds.length === 0) return createEmptyReminderResult();
 
-    const people = await fetchPeopleForTreeIds(treeIds);
-    const reminders = buildScheduledBirthdayNotifications({
-      people,
-      now: params.now,
-    });
+  const people = await fetchPeopleForTreeIds(treeIds);
+  const reminders = buildScheduledBirthdayNotifications({
+    people,
+    now: params.now,
+  });
 
-    for (const reminder of reminders) {
-      const dedupeKey = reminder.notification.dedupeKey;
-      if (!dedupeKey) {
-        result.skippedNotifications += 1;
-        continue;
-      }
+  const reminderResults = await Promise.all(
+    reminders.map((reminder) => processReminderForUser(params.userId, reminder))
+  );
 
-      const claimed = await claimReminderDelivery(userId, dedupeKey, reminder.notification.type);
-      if (!claimed) {
-        result.skippedNotifications += 1;
-        continue;
-      }
+  return reminderResults.reduce<ReminderDeliveryResult>((accumulator, reminderResult) => {
+    addReminderResults(accumulator, reminderResult);
+    return accumulator;
+  }, createEmptyReminderResult());
+}
 
-      const delivery = await sendPushNotificationToUser({
-        userId,
-        title: reminder.notification.title,
-        body: reminder.notification.body,
-        url: reminder.notification.personId ? `/person/${reminder.notification.personId}` : '/',
-        tag: dedupeKey,
-        data: {
-          source: 'scheduled-reminder-cron',
-          dedupeKey,
-          personId: reminder.notification.personId,
-          notificationType: reminder.notification.type,
-        },
-      });
+async function processReminderForUser(
+  userId: string,
+  reminder: ReturnType<typeof buildScheduledBirthdayNotifications>[number]
+): Promise<ReminderDeliveryResult> {
+  const result = createEmptyReminderResult();
+  const dedupeKey = reminder.notification.dedupeKey;
 
-      result.deliveredNotifications += 1;
-      result.sentSubscriptions += delivery.sent;
-      result.prunedSubscriptions += delivery.pruned;
-    }
+  if (!dedupeKey) {
+    result.skippedNotifications += 1;
+    return result;
   }
 
+  const claimed = await claimReminderDelivery(userId, dedupeKey, reminder.notification.type);
+  if (!claimed) {
+    result.skippedNotifications += 1;
+    return result;
+  }
+
+  const delivery = await sendPushNotificationToUser({
+    userId,
+    title: reminder.notification.title,
+    body: reminder.notification.body,
+    url: reminder.notification.personId ? `/person/${reminder.notification.personId}` : '/',
+    tag: dedupeKey,
+    data: {
+      source: 'scheduled-reminder-cron',
+      dedupeKey,
+      personId: reminder.notification.personId,
+      notificationType: reminder.notification.type,
+    },
+  });
+
+  result.deliveredNotifications += 1;
+  result.sentSubscriptions += delivery.sent;
+  result.prunedSubscriptions += delivery.pruned;
   return result;
 }
 

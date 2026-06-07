@@ -175,66 +175,91 @@ export const processReminderBatch = async (params: {
   userIds: string[];
   now: Date;
 }): Promise<ReminderDeliveryResult> => {
-  const result: ReminderDeliveryResult = {
-    deliveredNotifications: 0,
-    skippedNotifications: 0,
-    sentSubscriptions: 0,
-    prunedSubscriptions: 0,
-  };
+  const userResults = await Promise.all(
+    params.userIds.map((userId) => processReminderUser({ userId, now: params.now }))
+  );
 
-  for (const userId of params.userIds) {
-    const treeIds = await listVisibleTreeIdsForUser(userId);
-    if (treeIds.length === 0) {
-      continue;
-    }
+  return userResults.reduce<ReminderDeliveryResult>((accumulator, userResult) => {
+    addReminderResults(accumulator, userResult);
+    return accumulator;
+  }, createEmptyReminderResult());
+};
 
-    const people = await fetchPeopleForTreeIds(treeIds);
-    const reminders = buildScheduledBirthdayNotifications({
-      people,
-      isRtl: false,
-      now: params.now,
-    });
+const createEmptyReminderResult = (): ReminderDeliveryResult => ({
+  deliveredNotifications: 0,
+  skippedNotifications: 0,
+  sentSubscriptions: 0,
+  prunedSubscriptions: 0,
+});
 
-    for (const reminder of reminders) {
-      const dedupeKey = reminder.spec.notification.dedupeKey;
-      if (!dedupeKey) {
-        result.skippedNotifications += 1;
-        continue;
-      }
-
-      const claimed = await claimReminderDelivery(
-        userId,
-        dedupeKey,
-        reminder.spec.notification.type
-      );
-
-      if (!claimed) {
-        result.skippedNotifications += 1;
-        continue;
-      }
-
-      const delivery = await sendPushNotificationToUser({
-        userId,
-        title: reminder.spec.notification.title,
-        body: reminder.spec.notification.body,
-        url: reminder.spec.notification.personId
-          ? `/person/${reminder.spec.notification.personId}`
-          : '/',
-        tag: reminder.spec.notification.dedupeKey,
-        data: {
-          source: 'scheduled-reminder-cron',
-          dedupeKey: reminder.spec.notification.dedupeKey,
-          personId: reminder.spec.notification.personId,
-          notificationType: reminder.spec.notification.type,
-        },
-      });
-
-      result.deliveredNotifications += 1;
-      result.sentSubscriptions += delivery.sent;
-      result.prunedSubscriptions += delivery.pruned;
-    }
+const processReminderUser = async (params: {
+  userId: string;
+  now: Date;
+}): Promise<ReminderDeliveryResult> => {
+  const treeIds = await listVisibleTreeIdsForUser(params.userId);
+  if (treeIds.length === 0) {
+    return createEmptyReminderResult();
   }
 
+  const people = await fetchPeopleForTreeIds(treeIds);
+  const reminders = buildScheduledBirthdayNotifications({
+    people,
+    isRtl: false,
+    now: params.now,
+  });
+
+  const reminderResults = await Promise.all(
+    reminders.map((reminder) => processReminderForUser(params.userId, reminder))
+  );
+
+  return reminderResults.reduce<ReminderDeliveryResult>((accumulator, reminderResult) => {
+    addReminderResults(accumulator, reminderResult);
+    return accumulator;
+  }, createEmptyReminderResult());
+};
+
+const processReminderForUser = async (
+  userId: string,
+  reminder: ReturnType<typeof buildScheduledBirthdayNotifications>[number]
+): Promise<ReminderDeliveryResult> => {
+  const result = createEmptyReminderResult();
+  const dedupeKey = reminder.spec.notification.dedupeKey;
+
+  if (!dedupeKey) {
+    result.skippedNotifications += 1;
+    return result;
+  }
+
+  const claimed = await claimReminderDelivery(
+    userId,
+    dedupeKey,
+    reminder.spec.notification.type
+  );
+
+  if (!claimed) {
+    result.skippedNotifications += 1;
+    return result;
+  }
+
+  const delivery = await sendPushNotificationToUser({
+    userId,
+    title: reminder.spec.notification.title,
+    body: reminder.spec.notification.body,
+    url: reminder.spec.notification.personId
+      ? `/person/${reminder.spec.notification.personId}`
+      : '/',
+    tag: dedupeKey,
+    data: {
+      source: 'scheduled-reminder-cron',
+      dedupeKey,
+      personId: reminder.spec.notification.personId,
+      notificationType: reminder.spec.notification.type,
+    },
+  });
+
+  result.deliveredNotifications += 1;
+  result.sentSubscriptions += delivery.sent;
+  result.prunedSubscriptions += delivery.pruned;
   return result;
 };
 
