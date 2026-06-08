@@ -104,7 +104,7 @@ describe('FamilyTreeChartRenderer memoization', () => {
       emptyState: {},
       fanEmpty: {},
       premiumInteractiveCanvas: '',
-    };
+    } as any;
 
     const { rerender } = render(
       <svg>

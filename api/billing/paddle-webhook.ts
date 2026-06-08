@@ -315,8 +315,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       occurredAt: event.occurred_at,
     });
     return res.status(200).json({ status: 'success', tier });
-  } catch (err: any) {
-    console.error('[PADDLE_WEBHOOK] Database update transaction failed:', err);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    console.error('[PADDLE_WEBHOOK] Database update transaction failed:', message);
     await recordBillingWebhookDiagnostic({
       supabaseAdmin,
       eventId: event.event_id,
@@ -330,7 +331,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       tier,
       httpStatus: 500,
       occurredAt: event.occurred_at,
-      metadata: { message: err instanceof Error ? err.message.slice(0, 300) : 'Unknown error' },
+      metadata: { message: message.slice(0, 300) },
     });
     return res.status(500).json({ error: 'Database transaction failed' });
   }

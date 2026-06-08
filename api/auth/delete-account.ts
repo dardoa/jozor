@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import crypto from 'node:crypto';
 
 function getEnv(name: string): string | undefined {
@@ -76,7 +76,7 @@ async function authenticateUser(authHeader?: string): Promise<AuthenticatedUser 
   return { uid: data.user.id, email: data.user.email ?? '' };
 }
 
-async function deleteFolderRecursively(supabaseAdmin: any, bucket: string, folderPath: string) {
+async function deleteFolderRecursively(supabaseAdmin: SupabaseClient, bucket: string, folderPath: string) {
   let hasMore = true;
   while (hasMore) {
     const { data: items, error } = await supabaseAdmin.storage

@@ -11,7 +11,7 @@ import {
 import { generateGeometryKey } from '../../domain/treeLayout';
 
 
-interface LayoutData {
+export interface LayoutData {
   nodes: TreeNode[];
   links: TreeLink[];
   collapsePoints: CollapsePoint[];
@@ -19,11 +19,13 @@ interface LayoutData {
   v3Pipeline?: V3RendererPipeline | null;
 }
 
-interface LayoutRequestMetadata {
+export interface LayoutRequestMetadata {
   geometryKey: string;
   requestIdentityKey: string;
   peopleVersion: number;
 }
+
+export type ActiveLayoutData = LayoutData & Partial<LayoutRequestMetadata>;
 
 interface UseFamilyTreeLayoutControllerParams {
   people: Record<string, Person>;

@@ -1,5 +1,5 @@
 import type { Person } from '../types';
-import type { FamilyGraph } from './familyGraph';
+import type { FamilyGraph, FamilyUnitSemantics } from './familyGraph';
 
 export interface FamilyRenderDecision {
   familyId: string;
@@ -31,13 +31,21 @@ export interface LayoutSemanticsOptions {
 }
 
 interface CompatibleFamilyGraph extends FamilyGraph {
-  people?: Record<string, any>;
+  people?: Record<string, Person>;
+}
+
+interface CompatibleFamilyUnit {
+  familyId?: string;
+  id?: string;
+  parentIds?: string[];
+  childIds?: string[];
+  semantics?: FamilyUnitSemantics;
 }
 
 function normalizeFamilyGraph(input: CompatibleFamilyGraph): FamilyGraph {
   const persons = input.persons ?? input.people ?? {};
   const normalizedFamilies = Object.fromEntries(
-    Object.entries(input.families ?? {}).map(([familyId, family]: [string, any]) => [
+    Object.entries(input.families ?? {}).map(([familyId, family]: [string, CompatibleFamilyUnit]) => [
       familyId,
       {
         familyId: family.familyId ?? family.id ?? familyId,

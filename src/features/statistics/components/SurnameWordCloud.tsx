@@ -56,9 +56,12 @@ export const SurnameWordCloud = memo(({ data }: SurnameWordCloudProps) => {
             .on('end', function () {
                 select(this)
                     .on('mouseover', function () { select(this).style('opacity', 1).style('fill', 'var(--text-main)'); })
-                    .on('mouseout', function (_event, d: any) {
-                        const originalIndex = data.findIndex(item => item.text === d.text);
-                        select(this).style('opacity', 0.8).style('fill', originalIndex % 2 === 0 ? 'var(--color-accent-500)' : 'var(--color-info-500)');
+                    .on('mouseout', function (_event, d: unknown) {
+                        const word = d as { text: string; value: number } | null | undefined;
+                        if (word && typeof word.text === 'string') {
+                            const originalIndex = data.findIndex(item => item.text === word.text);
+                            select(this).style('opacity', 0.8).style('fill', originalIndex % 2 === 0 ? 'var(--color-accent-500)' : 'var(--color-info-500)');
+                        }
                     });
             });
 

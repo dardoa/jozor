@@ -158,19 +158,31 @@ function getFullName(person: PersonRecord) {
     .trim();
 }
 
-function mapDbPersonRowToPerson(row: any): PersonRecord {
-  const customFields = row.custom_fields || {};
-  const metadata = row.metadata || {};
+interface DbPersonRow {
+  id: string;
+  first_name?: string | null;
+  middle_name?: string | null;
+  last_name?: string | null;
+  birth_date?: string | null;
+  death_date?: string | null;
+  custom_fields?: Record<string, unknown> | null;
+  metadata?: Record<string, unknown> | null;
+  [key: string]: unknown;
+}
+
+function mapDbPersonRowToPerson(row: DbPersonRow): PersonRecord {
+  const customFields = (row.custom_fields && typeof row.custom_fields === 'object') ? row.custom_fields : {};
+  const metadata = (row.metadata && typeof row.metadata === 'object') ? row.metadata : {};
 
   return {
     ...(metadata as Partial<PersonRecord>),
     id: row.id,
-    firstName: row.first_name ?? '',
-    middleName: row.middle_name ?? '',
-    lastName: row.last_name ?? '',
-    birthDate: row.birth_date ?? '',
-    deathDate: row.death_date ?? '',
-    isDeceased: Boolean(row.death_date || customFields.isDeceased),
+    firstName: typeof row.first_name === 'string' ? row.first_name : '',
+    middleName: typeof row.middle_name === 'string' ? row.middle_name : '',
+    lastName: typeof row.last_name === 'string' ? row.last_name : '',
+    birthDate: typeof row.birth_date === 'string' ? row.birth_date : '',
+    deathDate: typeof row.death_date === 'string' ? row.death_date : '',
+    isDeceased: Boolean(row.death_date || ('isDeceased' in customFields && customFields.isDeceased)),
   };
 }
 
@@ -290,7 +302,7 @@ async function fetchPeopleForTreeIds(treeIds: string[]) {
 
   if (error) throw error;
 
-  return ((data ?? []) as any[]).reduce<Record<string, PersonRecord>>((accumulator, row) => {
+  return ((data ?? []) as DbPersonRow[]).reduce<Record<string, PersonRecord>>((accumulator, row) => {
     accumulator[row.id] = mapDbPersonRowToPerson(row);
     return accumulator;
   }, {});

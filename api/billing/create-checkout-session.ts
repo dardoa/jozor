@@ -1,4 +1,4 @@
-﻿import type { VercelRequest, VercelResponse } from '@vercel/node';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 import crypto from 'node:crypto';
 
@@ -109,10 +109,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.end(JSON.stringify({ error: 'Unauthorized: Invalid session.' }));
   }
 
+  interface CheckoutRequestBody {
+    tier?: string;
+  }
+
   // 2. Parse body
-  let body: any = {};
+  let body: CheckoutRequestBody = {};
   if (req.body) {
-    body = req.body;
+    body = req.body as CheckoutRequestBody;
   } else {
     // If Vercel bodyParser is not used, get raw body and parse
     try {
@@ -121,7 +125,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         chunks.push(chunk);
       }
       const raw = Buffer.concat(chunks).toString('utf8');
-      body = JSON.parse(raw);
+      body = JSON.parse(raw) as CheckoutRequestBody;
     } catch {
       res.writeHead(400, { ...headers, 'Content-Type': 'application/json' });
       return res.end(JSON.stringify({ error: 'Invalid JSON body' }));
@@ -225,8 +229,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // 7. Return securely generated transactionId to client
     res.writeHead(200, { ...headers, 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({ transactionId }));
-  } catch (err: any) {
-    console.error('[CREATE_CHECKOUT] Failed to create checkout transaction:', err);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    console.error('[CREATE_CHECKOUT] Failed to create checkout transaction:', message);
     res.writeHead(500, { ...headers, 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({ error: 'Failed to initiate checkout session' }));
   }

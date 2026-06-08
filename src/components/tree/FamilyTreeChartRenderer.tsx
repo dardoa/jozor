@@ -2,6 +2,7 @@ import React from 'react';
 import type { FanArc, Person, TreeNode, TreeSettings } from '../../types';
 import type { CollapsePoint } from '../../utils/layout/constants';
 import type { V3RendererPipeline } from '../../utils/layout/v3LayoutPipeline';
+import type { TranslationSchema } from '../../utils/translationLoader';
 import { V3FamilyGraphChart } from '../charts/V3FamilyGraphChart';
 import { FanEmptyState, TreeEmptyState } from './FamilyTreeEmptyStates';
 
@@ -43,7 +44,7 @@ interface FamilyTreeChartRendererProps {
   handlers: FamilyTreeChartHandlers;
   isLoading: boolean;
   hasReceivedLayout: boolean;
-  t: any;
+  t: TranslationSchema;
 }
 
 interface ChartFactoryProps {
@@ -53,7 +54,7 @@ interface ChartFactoryProps {
   handlers: FamilyTreeChartHandlers;
   isLoading: boolean;
   hasReceivedLayout: boolean;
-  t: any;
+  t: TranslationSchema;
 }
 
 const hasRenderableChartContent = (

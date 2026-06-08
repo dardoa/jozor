@@ -2,6 +2,8 @@ import React, { useMemo } from 'react';
 import type { FanArc, Person, TreeNode, TreeSettings } from '../../types';
 import type { CollapsePoint } from '../../utils/layout/constants';
 import type { V3RendererPipeline } from '../../utils/layout/v3LayoutPipeline';
+import type { ActiveLayoutData } from '../../hooks/tree/useFamilyTreeLayoutController';
+import type { TranslationSchema } from '../../utils/translationLoader';
 import { TreeLoader } from './TreeLoader';
 import { TreeHUD } from './TreeHUD';
 import {
@@ -24,7 +26,7 @@ interface FamilyTreeCanvasProps {
   svgRef: React.RefObject<SVGSVGElement | null>;
   gRef: React.RefObject<SVGGElement | null>;
   isLoading: boolean;
-  activeLayout: any;
+  activeLayout: ActiveLayoutData;
   displayNodes: TreeNode[];
   displayFanArcs: FanArc[];
   displayCollapsePoints: CollapsePoint[];
@@ -46,7 +48,7 @@ interface FamilyTreeCanvasProps {
   onResetZoom: () => void;
   onFitToScreen: () => void;
   onOpenPreferences?: () => void;
-  t: any;
+  t: TranslationSchema;
 }
 
 export const FamilyTreeCanvas: React.FC<FamilyTreeCanvasProps> = ({

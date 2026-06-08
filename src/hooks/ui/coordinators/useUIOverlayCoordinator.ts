@@ -31,8 +31,8 @@ export const useUIOverlayCoordinator = ({
 
   const isSettingsDrawerOpen = useAppStore((state) => state.isSettingsDrawerOpen);
   const setSettingsDrawerOpen = useAppStore((state) => state.setSettingsDrawerOpen);
-  const isActivityLogOpen = useAppStore((state: any) => state.isActivityLogOpen);
-  const setActivityLogOpen = useAppStore((state: any) => state.setActivityLogOpen);
+  const isActivityLogOpen = useAppStore((state) => state.isActivityLogOpen);
+  const setActivityLogOpen = useAppStore((state) => state.setActivityLogOpen);
 
   const {
     modals,

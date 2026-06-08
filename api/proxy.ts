@@ -9,7 +9,47 @@ type AuthenticatedUser = {
   type: 'internal';
 };
 
-type ProxyPerson = Record<string, any> & { id: string };
+type ProxyPerson = Record<string, unknown> & {
+  id: string;
+  parents?: string[];
+  spouses?: string[];
+  children?: string[];
+  firstName?: string;
+  lastName?: string;
+  middleName?: string;
+  birthName?: string;
+  nickName?: string;
+  suffix?: string;
+  gender?: 'male' | 'female';
+  birthDate?: string;
+  deathDate?: string;
+  birthPlace?: string;
+  deathPlace?: string;
+  bio?: string;
+  profession?: string;
+  company?: string;
+  interests?: string;
+  photoUrl?: string;
+  photoPath?: string;
+  photoVersion?: number;
+  email?: string;
+  website?: string;
+  blog?: string;
+  address?: string;
+  title?: string;
+  birthSource?: string;
+  deathSource?: string;
+  burialPlace?: string;
+  residence?: string;
+  marriageDate?: string;
+  marriagePlace?: string;
+  gallery?: unknown[];
+  voiceNotes?: unknown[];
+  sources?: unknown[];
+  events?: unknown[];
+  partnerDetails?: Record<string, unknown>;
+  isPrivate?: boolean;
+};
 type ProxyRelationship = {
   tree_id: string;
   person_id: string;
