@@ -96,7 +96,6 @@ export const useFamilyTreeLayoutController = ({
     fanArcs: [],
   });
   const [layoutPeopleVersion, setLayoutPeopleVersion] = useState(peopleVersion);
-  const [lastValidLayoutPeopleVersion, setLastValidLayoutPeopleVersion] = useState(peopleVersion);
   const [layoutIdentityKey, setLayoutIdentityKey] = useState<string | null>(null);
   const [latestRequestMetadataDebug, setLatestRequestMetadataDebug] = useState<LayoutRequestMetadata | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -190,7 +189,6 @@ export const useFamilyTreeLayoutController = ({
       setLayoutIdentityKey(requestMetadata.requestIdentityKey);
       if (!isEmptyResult) {
         setLastValidLayout({ ...newData, ...requestMetadata });
-        setLastValidLayoutPeopleVersion(requestMetadata.peopleVersion);
       }
       setHasReceivedLayout(true);
       setIsLoading(false);
@@ -338,9 +336,7 @@ export const useFamilyTreeLayoutController = ({
   const shouldReuseLastValidLayout =
     isLoading &&
     !!lastValidLayout &&
-    lastValidLayout.requestIdentityKey === requestIdentityKey &&
-    lastValidLayoutPeopleVersion === peopleVersion &&
-    lastValidLayout.geometryKey === geometryKey;
+    lastValidLayout.requestIdentityKey === requestIdentityKey;
   const activeLayout =
     shouldReuseLastValidLayout
       ? lastValidLayout

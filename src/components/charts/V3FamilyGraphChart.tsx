@@ -1,18 +1,18 @@
 /**
  * V3FamilyGraphChart
  *
- * Thin wrapper that plumbs the useV3RendererPipeline hook into
- * V3FamilyGraphRenderer.  This is the only family-graph drawing path.
+ * Thin wrapper that renders the worker-produced V3 pipeline through
+ * V3FamilyGraphRenderer. This is the only family-graph drawing path.
  *
  * Responsibilities:
- *  - Calls useV3RendererPipeline (the single useMemo pipeline).
- *  - Passes results to V3FamilyGraphRenderer (the pure SVG layer).
- *  - Returns null on invalid / empty state.
+ *  - Receives the layout pipeline from the layout worker/controller.
+ *  - Passes the pipeline to V3FamilyGraphRenderer (the pure SVG layer).
+ *  - Returns null while the worker pipeline is not available.
  */
 import React from 'react';
 import type { Person, TreeSettings } from '../../types';
 import type { CollapsePoint } from '../../utils/layout/constants';
-import { useV3RendererPipeline, type V3RendererPipeline } from '../../hooks/tree/useV3RendererPipeline';
+import type { V3RendererPipeline } from '../../utils/layout/v3LayoutPipeline';
 import { V3FamilyGraphRenderer } from './V3FamilyGraphRenderer';
 
 interface V3FamilyGraphChartProps {
@@ -35,7 +35,6 @@ export const V3FamilyGraphChart: React.FC<V3FamilyGraphChartProps> = ({
   people,
   focusId,
   settings,
-  collapsePoints = [],
   highlightedPath,
   pipeline: propPipeline,
   zoomScale,
@@ -46,15 +45,7 @@ export const V3FamilyGraphChart: React.FC<V3FamilyGraphChartProps> = ({
   onNodeContextMenu,
   onToggleCollapse,
 }) => {
-  const fallbackPipeline = useV3RendererPipeline({
-    people,
-    focusId,
-    collapsePoints,
-    settings,
-    skip: Boolean(propPipeline),
-  });
-
-  const activePipeline = propPipeline || fallbackPipeline;
+  const activePipeline = propPipeline;
 
   if (!activePipeline) {
     return null;

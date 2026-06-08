@@ -4,7 +4,7 @@ import type { ComponentProps } from 'react';
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 import { V3FamilyGraphRenderer } from '../V3FamilyGraphRenderer';
 import type { Person, TreeSettings } from '../../../types';
-import type { V3RendererPipeline } from '../../../hooks/tree/useV3RendererPipeline';
+import type { V3RendererPipeline } from '../../../utils/layout/v3LayoutPipeline';
 
 const nodeComponentMock = vi.hoisted(() => vi.fn(() => null));
 

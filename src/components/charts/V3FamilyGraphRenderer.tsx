@@ -3,7 +3,7 @@ import type { Person, TreeNode, TreeSettings } from '../../types';
 import type {
   V3CollapseControl,
   V3RendererPipeline,
-} from '../../hooks/tree/useV3RendererPipeline';
+} from '../../utils/layout/v3LayoutPipeline';
 import type { EdgeEntity, EdgeEntityType } from '../../domain/familyGraphClusterLayout';
 import {
   NODE_HEIGHT_COMPACT,

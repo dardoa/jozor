@@ -20,8 +20,19 @@ vi.mock('../../context/TranslationContext', () => ({
 class WorkerMock {
     onmessage: ((ev: MessageEvent) => unknown) | null = null;
     constructor() { }
-    postMessage(msg: { requestId?: number; people?: Record<string, Person>; focusId?: string }) {
+    postMessage(msg: {
+        requestId?: number;
+        people?: Record<string, Person>;
+        focusId?: string;
+        requestMetadata?: { geometryKey: string; requestIdentityKey: string; peopleVersion: number };
+    }) {
         const requestId = msg?.requestId ?? 1;
+        // Echo requestMetadata back so the layout controller accepts the response
+        const requestMetadata = msg?.requestMetadata ?? {
+            geometryKey: 'mock-key',
+            requestIdentityKey: 'focus',
+            peopleVersion: 0,
+        };
         const people = msg?.people ?? {};
         const focusId = msg?.focusId;
         const focus = focusId && people[focusId] ? focusId : Object.keys(people)[0];
@@ -43,7 +54,29 @@ class WorkerMock {
 
         setTimeout(() => {
             this.onmessage?.({
-                data: { requestId, nodes, links, collapsePoints: [], fanArcs: [] }
+                data: {
+                    requestId,
+                    requestMetadata,
+                    nodes,
+                    links,
+                    collapsePoints: [],
+                    fanArcs: [],
+                    // Minimal pipeline so V3FamilyGraphChart does not return null
+                    v3Pipeline: {
+                        projectedNodes: nodes.map((n: { id: string; x: number; y: number }) => ({
+                            uniqueEntityId: n.id,
+                            personId: n.id,
+                            x: n.x,
+                            y: n.y,
+                            isCanonical: true,
+                            isReference: false,
+                        })),
+                        familyNodes: [],
+                        edgeEntities: [],
+                        collapseControls: [],
+                        bounds: { minX: -200, minY: -200, maxX: 200, maxY: 200 },
+                    },
+                }
             } as MessageEvent);
         }, 0);
     }
