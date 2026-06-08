@@ -6,6 +6,7 @@ import { zoom, zoomIdentity, type D3ZoomEvent, type ZoomBehavior } from 'd3-zoom
 import { extent } from 'd3-array';
 import { useAppStore } from '../../store/useAppStore';
 import { TreeNode } from '../../types';
+import { useThrottledCallback } from '../ui/useDebounce';
 
 interface UseTreeInteractionProps {
     svgRef: React.RefObject<SVGSVGElement | null>;
@@ -54,6 +55,7 @@ export const useTreeInteraction = ({
     const [zoomScale, setZoomScale] = useState(1);
     const [zoomX, setZoomX] = useState(0);
     const [zoomY, setZoomY] = useState(0);
+    const zoomScaleRef = useRef(1);
 
     // Sync guard: prevents auto-centering from interrupting user interaction or background saves
     const isSyncing = useAppStore(state => 
@@ -70,6 +72,15 @@ export const useTreeInteraction = ({
     const lastAutoFitKeyRef = useRef<string | null>(null);
     const lastFocusId = useRef<string | null>(null);
 
+    const syncZoomState = useCallback((scale: number, x: number, y: number) => {
+        zoomScaleRef.current = scale;
+        setZoomScale(scale);
+        setZoomX(x);
+        setZoomY(y);
+    }, []);
+
+    const updateStateThrottled = useThrottledCallback(syncZoomState, 100);
+
     // Initialize zoom behavior
     useEffect(() => {
         if (!svgRef.current || !gRef.current || !wrapperRef.current) return;
@@ -82,11 +93,10 @@ export const useTreeInteraction = ({
             })
             .on('zoom', (event: D3ZoomEvent<SVGSVGElement, unknown>) => {
                 if (gRef.current) select(gRef.current).attr('transform', event.transform.toString());
-                setZoomScale(event.transform.k);
-                setZoomX(event.transform.x);
-                setZoomY(event.transform.y);
+                updateStateThrottled(event.transform.k, event.transform.x, event.transform.y);
             })
             .on('end', (event) => {
+                updateStateThrottled.flush(event.transform.k, event.transform.x, event.transform.y);
                 if (event.sourceEvent) {
                     setTimeout(() => {
                         isUserInteracting.current = false;
@@ -104,7 +114,7 @@ export const useTreeInteraction = ({
                 const dx = e.touches[0].clientX - e.touches[1].clientX;
                 const dy = e.touches[0].clientY - e.touches[1].clientY;
                 touchStartDistanceRef.current = Math.hypot(dx, dy);
-                touchStartScaleRef.current = zoomScale;
+                touchStartScaleRef.current = zoomScaleRef.current;
                 e.preventDefault();
             }
         };
@@ -147,8 +157,9 @@ export const useTreeInteraction = ({
             svgElement.removeEventListener('touchmove', handleTouchMove);
             svgElement.removeEventListener('touchend', handleTouchEnd);
             svgElement.removeEventListener('touchcancel', handleTouchEnd);
+            updateStateThrottled.cancel();
         };
-    }, [svgRef, gRef, wrapperRef, zoomScale]);
+    }, [svgRef, gRef, wrapperRef, updateStateThrottled]);
 
     // Update translateExtent separately when nodes or dimensions change
     useEffect(() => {
