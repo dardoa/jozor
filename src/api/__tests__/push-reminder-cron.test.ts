@@ -49,6 +49,12 @@ const createSupabaseMock = () => ({
       return {
         select() {
           return {
+            in(_column: string, values: string[]) {
+              return Promise.resolve({
+                data: values.map(uid => ({ id: 'tree-1', owner_id: uid })),
+                error: null,
+              });
+            },
             eq() {
               return Promise.resolve({ data: [{ id: 'tree-1' }], error: null });
             },
@@ -61,6 +67,9 @@ const createSupabaseMock = () => ({
       return {
         select() {
           return {
+            in(_column: string, _values: string[]) {
+              return Promise.resolve({ data: [], error: null });
+            },
             eq() {
               return Promise.resolve({ data: [], error: null });
             },
@@ -106,13 +115,43 @@ const createSupabaseMock = () => ({
             },
           };
         },
+        upsert(payload: unknown, _options?: any) {
+          insertDeliveryClaimMock(payload);
+          return {
+            select(_cols?: string) {
+              const payloadArray = Array.isArray(payload) ? payload : [payload];
+              return Promise.resolve(
+                duplicateClaimMode
+                  ? { data: [], error: null }
+                  : {
+                      data: payloadArray.map((p: any) => ({
+                        user_id: p.user_id,
+                        dedupe_key: p.dedupe_key,
+                      })),
+                      error: null,
+                    }
+              );
+            },
+          };
+        },
         insert(payload: unknown) {
           insertDeliveryClaimMock(payload);
-          return Promise.resolve(
-            duplicateClaimMode
-              ? { error: { code: '23505' } }
-              : { error: null }
-          );
+          return {
+            select(_cols?: string) {
+              const payloadArray = Array.isArray(payload) ? payload : [payload];
+              return Promise.resolve(
+                duplicateClaimMode
+                  ? { data: [], error: null }
+                  : {
+                      data: payloadArray.map((p: any) => ({
+                        user_id: p.user_id,
+                        dedupe_key: p.dedupe_key,
+                      })),
+                      error: null,
+                    }
+              );
+            },
+          };
         },
       };
     }
@@ -173,6 +212,9 @@ describe('push-reminder-cron API', () => {
           source: 'scheduled-reminder-cron',
           notificationType: 'birthday',
         }),
+      }),
+      expect.objectContaining({
+        signal: expect.any(AbortSignal),
       })
     );
     expect(res.statusCode).toBe(200);

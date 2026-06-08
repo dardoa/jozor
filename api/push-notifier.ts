@@ -238,18 +238,32 @@ async function removeSubscriptionByEndpointServer(endpoint: string): Promise<voi
 
 async function sendPushToSubscription(
   subscription: PushSubscriptionRecord,
-  payload: string
+  payload: string,
+  options?: { signal?: AbortSignal }
 ): Promise<'sent' | 'pruned'> {
-  try {
+  if (options?.signal?.aborted) {
+    throw new Error('Aborted');
+  }
+
+  const abortPromise = new Promise<never>((_, reject) => {
+    if (options?.signal?.aborted) return reject(new Error('Aborted'));
+    options?.signal?.addEventListener('abort', () => reject(new Error('Aborted')), { once: true });
+  });
+
+  const sendPromise = (async () => {
     await webpush.sendNotification(
       {
         endpoint: subscription.endpoint,
         keys: subscription.keys,
       },
-      payload
+      payload,
+      { timeout: 5000 }
     );
+    return 'sent' as const;
+  })();
 
-    return 'sent';
+  try {
+    return await Promise.race([sendPromise, abortPromise]);
   } catch (error) {
     if (isExpiredSubscriptionError(error)) {
       await removeSubscriptionByEndpointServer(subscription.endpoint);
@@ -260,7 +274,7 @@ async function sendPushToSubscription(
   }
 }
 
-export async function sendPushNotificationToUser(body: SendPushPayload) {
+export async function sendPushNotificationToUser(body: SendPushPayload, options?: { signal?: AbortSignal }) {
   configureWebPush();
 
   const subscriptions = await listSubscriptionsForUserServer(body.userId);
@@ -279,7 +293,7 @@ export async function sendPushNotificationToUser(body: SendPushPayload) {
   });
 
   const results = await Promise.allSettled(
-    subscriptions.map((subscription) => sendPushToSubscription(subscription, payload))
+    subscriptions.map((subscription) => sendPushToSubscription(subscription, payload, options))
   );
 
   let sent = 0;

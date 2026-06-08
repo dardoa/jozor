@@ -94,24 +94,37 @@ const hasInternalAdminAccess = (req: VercelRequest) => {
 
 const sendPushToSubscription = async (
   subscription: PushSubscriptionRecord,
-  payload: string
+  payload: string,
+  options?: { signal?: AbortSignal }
 ): Promise<'sent' | 'pruned'> => {
-  try {
+  if (options?.signal?.aborted) {
+    throw new Error('Aborted');
+  }
+
+  const abortPromise = new Promise<never>((_, reject) => {
+    if (options?.signal?.aborted) return reject(new Error('Aborted'));
+    options?.signal?.addEventListener('abort', () => reject(new Error('Aborted')), { once: true });
+  });
+
+  const sendPromise = (async () => {
     await webpush.sendNotification(
       {
         endpoint: subscription.endpoint,
         keys: subscription.keys,
       },
-      payload
+      payload,
+      { timeout: 5000 }
     );
+    return 'sent' as const;
+  })();
 
-    return 'sent';
+  try {
+    return await Promise.race([sendPromise, abortPromise]);
   } catch (error) {
     if (isExpiredSubscriptionError(error)) {
       await removeSubscriptionByEndpointServer(subscription.endpoint);
       return 'pruned';
     }
-
     throw error;
   }
 };
@@ -122,7 +135,7 @@ const sendPushToSubscription = async (
  * This helper is shared by the authenticated API route and the scheduled cron
  * orchestrator so the actual push-delivery behavior stays identical in both paths.
  */
-export const sendPushNotificationToUser = async (body: SendPushPayload) => {
+export const sendPushNotificationToUser = async (body: SendPushPayload, options?: { signal?: AbortSignal }) => {
   configureWebPush();
 
   const subscriptions = await listSubscriptionsForUserServer(body.userId);
@@ -141,7 +154,7 @@ export const sendPushNotificationToUser = async (body: SendPushPayload) => {
   });
 
   const results = await Promise.allSettled(
-    subscriptions.map((subscription) => sendPushToSubscription(subscription, payload))
+    subscriptions.map((subscription) => sendPushToSubscription(subscription, payload, options))
   );
 
   let sent = 0;

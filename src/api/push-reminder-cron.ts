@@ -1,10 +1,10 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import { sendPushNotificationToUser } from './push-notifier';
 import { listSubscribedUserIdsServer } from '../services/pushSubscriptionService';
-import { mapDbPersonRowToPerson, type DbPersonRow } from '../services/personRowMapper';
-import { buildScheduledBirthdayNotifications } from '../services/scheduledNotifications';
-import type { Person } from '../types';
+import {
+  processReminderBatch as sharedProcessReminderBatch,
+  type ReminderDeliveryResult,
+} from '../services/reminders/reminderProcessor';
 
 const DEFAULT_BATCH_SIZE = 50;
 const MAX_BATCH_SIZE = 50;
@@ -12,13 +12,6 @@ const DEFAULT_MAX_BATCHES = 10;
 const MAX_BATCHES = 25;
 const DEFAULT_DELIVERY_RETENTION_DAYS = 90;
 let serverClient: SupabaseClient | null = null;
-
-type ReminderDeliveryResult = {
-  deliveredNotifications: number;
-  skippedNotifications: number;
-  sentSubscriptions: number;
-  prunedSubscriptions: number;
-};
 
 const getServerClient = () => {
   const supabaseUrl = process.env.SUPABASE_URL;
@@ -85,76 +78,6 @@ const parseDateOverride = (value: string | string[] | undefined) => {
   return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
 };
 
-const listVisibleTreeIdsForUser = async (userId: string) => {
-  const client = getServerClient();
-  const [ownedTreesResult, collaboratorRowsResult] = await Promise.all([
-    client.from('trees').select('id').eq('owner_id', userId),
-    client.from('tree_collaborators').select('tree_id').eq('collaborator_uid', userId),
-  ]);
-
-  if (ownedTreesResult.error) {
-    throw ownedTreesResult.error;
-  }
-
-  if (collaboratorRowsResult.error) {
-    throw collaboratorRowsResult.error;
-  }
-
-  return Array.from(
-    new Set([
-      ...(ownedTreesResult.data ?? []).map(row => row.id as string),
-      ...(collaboratorRowsResult.data ?? []).map(row => row.tree_id as string),
-    ].filter(Boolean))
-  );
-};
-
-const fetchPeopleForTreeIds = async (treeIds: string[]) => {
-  if (treeIds.length === 0) {
-    return {} as Record<string, Person>;
-  }
-
-  const client = getServerClient();
-  const { data, error } = await client
-    .from('people')
-    .select('*')
-    .in('tree_id', treeIds);
-
-  if (error) {
-    throw error;
-  }
-
-  return ((data ?? []) as DbPersonRow[]).reduce<Record<string, Person>>((accumulator, row) => {
-    accumulator[row.id] = mapDbPersonRowToPerson(row);
-    return accumulator;
-  }, {});
-};
-
-/**
- * The daily cron may retry or re-run, so each reminder must be claimed in the
- * database before any push send is attempted. The unique key prevents duplicate
- * external reminders for the same user and day.
- */
-const claimReminderDelivery = async (userId: string, dedupeKey: string, type: string) => {
-  const client = getServerClient();
-  const { error } = await client
-    .from('push_reminder_deliveries')
-    .insert({
-      user_id: userId,
-      dedupe_key: dedupeKey,
-      notification_type: type,
-    });
-
-  if (!error) {
-    return true;
-  }
-
-  if (typeof error === 'object' && error && 'code' in error && error.code === '23505') {
-    return false;
-  }
-
-  throw error;
-};
-
 const pruneReminderDeliveries = async (
   now: Date,
   retentionDays = DEFAULT_DELIVERY_RETENTION_DAYS
@@ -175,92 +98,11 @@ export const processReminderBatch = async (params: {
   userIds: string[];
   now: Date;
 }): Promise<ReminderDeliveryResult> => {
-  const userResults = await Promise.all(
-    params.userIds.map((userId) => processReminderUser({ userId, now: params.now }))
-  );
-
-  return userResults.reduce<ReminderDeliveryResult>((accumulator, userResult) => {
-    addReminderResults(accumulator, userResult);
-    return accumulator;
-  }, createEmptyReminderResult());
-};
-
-const createEmptyReminderResult = (): ReminderDeliveryResult => ({
-  deliveredNotifications: 0,
-  skippedNotifications: 0,
-  sentSubscriptions: 0,
-  prunedSubscriptions: 0,
-});
-
-const processReminderUser = async (params: {
-  userId: string;
-  now: Date;
-}): Promise<ReminderDeliveryResult> => {
-  const treeIds = await listVisibleTreeIdsForUser(params.userId);
-  if (treeIds.length === 0) {
-    return createEmptyReminderResult();
-  }
-
-  const people = await fetchPeopleForTreeIds(treeIds);
-  const reminders = buildScheduledBirthdayNotifications({
-    people,
-    isRtl: false,
+  return sharedProcessReminderBatch({
+    userIds: params.userIds,
     now: params.now,
+    client: getServerClient(),
   });
-
-  const reminderResults = await Promise.all(
-    reminders.map((reminder) => processReminderForUser(params.userId, reminder))
-  );
-
-  return reminderResults.reduce<ReminderDeliveryResult>((accumulator, reminderResult) => {
-    addReminderResults(accumulator, reminderResult);
-    return accumulator;
-  }, createEmptyReminderResult());
-};
-
-const processReminderForUser = async (
-  userId: string,
-  reminder: ReturnType<typeof buildScheduledBirthdayNotifications>[number]
-): Promise<ReminderDeliveryResult> => {
-  const result = createEmptyReminderResult();
-  const dedupeKey = reminder.spec.notification.dedupeKey;
-
-  if (!dedupeKey) {
-    result.skippedNotifications += 1;
-    return result;
-  }
-
-  const claimed = await claimReminderDelivery(
-    userId,
-    dedupeKey,
-    reminder.spec.notification.type
-  );
-
-  if (!claimed) {
-    result.skippedNotifications += 1;
-    return result;
-  }
-
-  const delivery = await sendPushNotificationToUser({
-    userId,
-    title: reminder.spec.notification.title,
-    body: reminder.spec.notification.body,
-    url: reminder.spec.notification.personId
-      ? `/person/${reminder.spec.notification.personId}`
-      : '/',
-    tag: dedupeKey,
-    data: {
-      source: 'scheduled-reminder-cron',
-      dedupeKey,
-      personId: reminder.spec.notification.personId,
-      notificationType: reminder.spec.notification.type,
-    },
-  });
-
-  result.deliveredNotifications += 1;
-  result.sentSubscriptions += delivery.sent;
-  result.prunedSubscriptions += delivery.pruned;
-  return result;
 };
 
 const addReminderResults = (
