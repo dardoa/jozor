@@ -69,6 +69,11 @@ export interface Person {
 
     partnerDetails?: Record<string, RelationshipInfo>;
     isPrivate?: boolean;
+    metadata?: {
+        lastUpdated?: Record<string, string>;
+        lastUpdatedOps?: Record<string, { client_id: string; client_version: number }>;
+        [key: string]: unknown;
+    };
 }
 
 export interface FamilyData {

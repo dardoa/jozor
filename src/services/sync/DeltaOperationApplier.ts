@@ -34,6 +34,7 @@ export class DeltaOperationApplier {
                             lastSyncedVersion: state.lastSyncedVersion,
                             applyOperationToMap,
                             excludeClientId: clientInstanceId,
+                            currentTreeSettings: state.treeSettings,
                             onSkipBlacklisted: ({ op, targetId }) => {
                                 logInfo('DeltaSyncService ghostNodeGuard', 'Skipping operation for blacklisted person.', {
                                     type: op.type,
@@ -62,11 +63,14 @@ export class DeltaOperationApplier {
                         state.setConfirmedPeople(result.people);
                         state.setPeople(projected, false);
 
-                        if (result.treeMetadata.focusId && result.people[result.treeMetadata.focusId]) {
+                        if (result.treeMetadata.focusId !== undefined && result.people[result.treeMetadata.focusId]) {
                             state.setFocusId(result.treeMetadata.focusId);
                         }
-                        if (result.treeMetadata.name) {
+                        if (result.treeMetadata.name !== undefined) {
                             state.setTreeName(result.treeMetadata.name);
+                        }
+                        if (result.treeMetadata.settings) {
+                            state.setTreeSettings(result.treeMetadata.settings);
                         }
                         state.setLastSyncedVersion(result.maxVersion);
 

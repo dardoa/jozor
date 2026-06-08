@@ -13,6 +13,10 @@ export const createPerson = (gender: Gender = 'male'): Person => ({
   gender,
   firstName: 'New',
   lastName: 'Person',
+  metadata: {
+    lastUpdated: {},
+    lastUpdatedOps: {}
+  }
 });
 
 /**
@@ -42,6 +46,15 @@ export const validatePerson = (p: Partial<Person>): Person => {
     sources,
     events: Array.isArray(p.events) ? p.events : [],
     partnerDetails: p.partnerDetails || {},
+    metadata: {
+      ...p.metadata,
+      lastUpdated: {
+        ...((p.metadata?.lastUpdated as Record<string, string>) || {})
+      },
+      lastUpdatedOps: {
+        ...((p.metadata?.lastUpdatedOps as Record<string, { client_id: string; client_version: number }>) || {})
+      }
+    },
     // Ensure vital strings exist
     firstName: p.firstName ?? '',
     lastName: p.lastName ?? '',

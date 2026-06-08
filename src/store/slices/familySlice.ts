@@ -4,6 +4,7 @@ import { DEFAULT_PERSON_TEMPLATE } from '../../constants';
 import { createPerson } from '../../utils/familyLogic';
 import { applyFamilyDomainAction, reduceFamilyDomain } from '../../domain/FamilyDomainReducer';
 import { storageService } from '../../services/storageService';
+import { clientInstanceId } from '../../services/sync/syncInstance';
 import { logError } from '../../utils/errorLogger';
 
 const getInitialFamilyState = () => {
@@ -141,7 +142,15 @@ export const createFamilySlice: StateCreator<AppStore, [["zustand/devtools", nev
     updatePerson: (id: string, updates: Partial<Person>, _bypassSync = false, addToHistory = true) => {
         if (get().currentUserRole === 'viewer') throw new Error('Unauthorized: Viewers cannot edit.');
         const currentPeople = get().people;
-        const updatedPeople = reduceFamilyDomain(currentPeople, { type: 'updatePerson', id, updates });
+        const nextClientVersion = get().localClientVersion + 1;
+        const updatedPeople = reduceFamilyDomain(currentPeople, {
+            type: 'updatePerson',
+            id,
+            updates,
+            updatedAt: new Date().toISOString(),
+            clientId: clientInstanceId,
+            clientVersion: nextClientVersion
+        });
         if (!updatedPeople || updatedPeople === currentPeople) return;
         
         if (addToHistory) get().pushToHistory(currentPeople);

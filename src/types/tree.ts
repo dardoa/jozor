@@ -41,6 +41,10 @@ export interface TreeSettings {
     isLowGraphicsMode?: boolean;
     enableForcePhysics?: boolean;
     enableTimeOffset?: boolean;
+    sync_metadata?: {
+        lastUpdated?: Record<string, string>;
+        lastUpdatedOps?: Record<string, { client_id: string; client_version: number }>;
+    };
 }
 
 export interface DriveFile {

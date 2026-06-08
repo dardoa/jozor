@@ -13,11 +13,11 @@ import {
 export type RelationshipType = 'parent' | 'spouse' | 'child';
 
 export type FamilyDomainAction =
-  | { type: 'updatePerson'; id: string; updates: Partial<Person> }
+  | { type: 'updatePerson'; id: string; updates: Partial<Person>; updatedAt?: string; clientId?: string; clientVersion?: number }
   | { type: 'addParent'; targetId: string; gender: Gender; relatedPersonId?: string }
   | { type: 'addSpouse'; targetId: string; gender: Gender }
   | { type: 'addChild'; targetId: string; gender: Gender; relatedPersonId?: string }
-  | { type: 'addRemotePerson'; person: Person; relativeId?: string; relationshipType?: RelationshipType }
+  | { type: 'addRemotePerson'; person: Person; relativeId?: string; relationshipType?: RelationshipType; updatedAt?: string; clientId?: string; clientVersion?: number }
   | { type: 'deletePerson'; id: string }
   | { type: 'linkPerson'; focusId: string; existingId: string; relationshipType: RelationshipType; relatedPersonId?: string }
   | { type: 'removeRelationship'; targetId: string; relativeId: string; relationshipType: RelationshipType };
@@ -39,15 +39,81 @@ const normalizePersonRelationships = (person: Person): Person => ({
   children: uniqueIds(person.children),
 });
 
+const relationalPersonKeys = new Set<keyof Person>(['parents', 'spouses', 'children', 'partnerDetails']);
+
+const shouldOverwriteProperty = (
+  currentTimestamp: string | undefined,
+  currentClientId: string | undefined,
+  currentClientVersion: number | undefined,
+  incomingTimestamp: string | undefined,
+  incomingClientId: string | undefined,
+  incomingClientVersion: number | undefined
+): boolean => {
+  if (!incomingTimestamp) return true;
+  if (!currentTimestamp) return true;
+
+  if (incomingTimestamp > currentTimestamp) return true;
+  if (incomingTimestamp < currentTimestamp) return false;
+
+  const inClient = incomingClientId || '';
+  const curClient = currentClientId || '';
+  if (inClient > curClient) return true;
+  if (inClient < curClient) return false;
+
+  const inVer = incomingClientVersion || 0;
+  const curVer = currentClientVersion || 0;
+  return inVer > curVer;
+};
+
 const addRemotePerson = (
   people: Record<string, Person>,
   person: Person,
   relativeId?: string,
-  relationshipType?: RelationshipType
+  relationshipType?: RelationshipType,
+  updatedAt?: string,
+  clientId?: string,
+  clientVersion?: number
 ): Record<string, Person> => {
+  const initTimestamp = updatedAt || new Date().toISOString();
+  const initClientId = clientId || '';
+  const initClientVersion = clientVersion || 0;
+
+  const lastUpdated: Record<string, string> = {};
+  const lastUpdatedOps: Record<string, { client_id: string; client_version: number }> = {};
+
+  Object.keys(person).forEach((key) => {
+    if (
+      key !== 'parents' &&
+      key !== 'spouses' &&
+      key !== 'children' &&
+      key !== 'partnerDetails' &&
+      key !== 'metadata' &&
+      key !== 'id'
+    ) {
+      lastUpdated[key] = initTimestamp;
+      lastUpdatedOps[key] = { client_id: initClientId, client_version: initClientVersion };
+    }
+  });
+
+  const normalized = normalizePersonRelationships(person);
+  const initializedPerson: Person = {
+    ...normalized,
+    metadata: {
+      ...normalized.metadata,
+      lastUpdated: {
+        ...lastUpdated,
+        ...((normalized.metadata?.lastUpdated as Record<string, string>) || {}),
+      },
+      lastUpdatedOps: {
+        ...lastUpdatedOps,
+        ...((normalized.metadata?.lastUpdatedOps as Record<string, { client_id: string; client_version: number }>) || {}),
+      },
+    },
+  };
+
   const nextPeople = {
     ...people,
-    [person.id]: normalizePersonRelationships(person),
+    [person.id]: initializedPerson,
   };
 
   if (!relativeId || !relationshipType || !nextPeople[relativeId]) {
@@ -84,10 +150,70 @@ export const applyFamilyDomainAction = (
     case 'updatePerson': {
       const current = people[action.id];
       if (!current) return { people };
+
+      const updatedAt = action.updatedAt;
+      const clientId = action.clientId;
+      const clientVersion = action.clientVersion;
+
+      const updatedFields: Partial<Person> = {};
+      const newLastUpdated = { ...((current.metadata?.lastUpdated as Record<string, string>) || {}) };
+      const newLastUpdatedOps = { ...((current.metadata?.lastUpdatedOps as Record<string, { client_id: string; client_version: number }>) || {}) };
+      const setUpdatedField = <K extends keyof Person>(key: K, value: Person[K]) => {
+        updatedFields[key] = value;
+      };
+
+      (Object.keys(action.updates) as Array<keyof Person>).forEach((key) => {
+        const val = action.updates[key];
+        if (val === undefined) return;
+
+        if (relationalPersonKeys.has(key)) {
+          setUpdatedField(key, val);
+          return;
+        }
+
+        const metadataKey = String(key);
+        const currentTs = newLastUpdated[metadataKey];
+        const currentOp = newLastUpdatedOps[metadataKey];
+
+        if (
+          shouldOverwriteProperty(
+            currentTs,
+            currentOp?.client_id,
+            currentOp?.client_version,
+            updatedAt,
+            clientId,
+            clientVersion
+          )
+        ) {
+          setUpdatedField(key, val);
+          if (updatedAt) {
+            newLastUpdated[metadataKey] = updatedAt;
+            newLastUpdatedOps[metadataKey] = {
+              client_id: clientId || '',
+              client_version: clientVersion || 0,
+            };
+          }
+        }
+      });
+
+      if (Object.keys(updatedFields).length === 0) {
+        return { people };
+      }
+
+      const mergedPerson = {
+        ...current,
+        ...updatedFields,
+        metadata: {
+          ...current.metadata,
+          lastUpdated: newLastUpdated,
+          lastUpdatedOps: newLastUpdatedOps,
+        },
+      };
+
       return {
         people: {
           ...people,
-          [action.id]: validatePerson({ ...current, ...action.updates }),
+          [action.id]: validatePerson(mergedPerson),
         },
       };
     }
@@ -104,7 +230,7 @@ export const applyFamilyDomainAction = (
       return result ? { people: result.updatedPeople, newId: result.newId } : null;
     }
     case 'addRemotePerson':
-      return { people: addRemotePerson(people, action.person, action.relativeId, action.relationshipType) };
+      return { people: addRemotePerson(people, action.person, action.relativeId, action.relationshipType, action.updatedAt, action.clientId, action.clientVersion) };
     case 'deletePerson':
       return { people: performDeletePerson(people, action.id) };
     case 'linkPerson':
@@ -137,6 +263,9 @@ export const applyDeltaOperationToFamily = (
         type: 'updatePerson',
         id,
         updates: payload.updates as Partial<Person>,
+        updatedAt: op.created_at,
+        clientId: payload.client_id,
+        clientVersion: payload.client_version,
       });
     }
     case 'ADD_NODE': {
@@ -147,6 +276,9 @@ export const applyDeltaOperationToFamily = (
         person: payload.person,
         relativeId: typeof payload.relativeId === 'string' ? payload.relativeId : undefined,
         relationshipType: relationshipType ?? undefined,
+        updatedAt: op.created_at,
+        clientId: payload.client_id,
+        clientVersion: payload.client_version,
       });
     }
     case 'DELETE_NODE': {
