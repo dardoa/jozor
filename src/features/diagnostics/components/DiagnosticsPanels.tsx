@@ -34,6 +34,8 @@ type NotificationDiagnosticsText = {
   noNotificationActivity: string;
 };
 
+type NotificationDiagnosticsSettings = SettingsTranslator['settings'] & Partial<NotificationDiagnosticsText>;
+
 const getInvitationDiagnosticsText = (t: SettingsTranslator): InvitationDiagnosticsText => ({
   invitationDiagnostics: t.settings.invitationDiagnostics || 'Invitation Diagnostics',
   lastInvitationHydrationLabel: t.settings.lastInvitationHydrationLabel || 'Last Hydration',
@@ -50,16 +52,20 @@ const getInvitationDiagnosticsText = (t: SettingsTranslator): InvitationDiagnost
   noInvitationActivity: t.settings.noInvitationActivity || 'None',
 });
 
-const getNotificationDiagnosticsText = (t: SettingsTranslator): NotificationDiagnosticsText => ({
-  notificationDiagnostics: (t.settings as unknown as Record<string, string>).notificationDiagnostics || 'Notification Diagnostics',
-  lastNotificationEventLabel: (t.settings as unknown as Record<string, string>).lastNotificationEventLabel || 'Last Notification Event',
-  lastNotificationTypeLabel: (t.settings as unknown as Record<string, string>).lastNotificationTypeLabel || 'Last Notification Type',
-  lastNotificationSourceLabel: (t.settings as unknown as Record<string, string>).lastNotificationSourceLabel || 'Last Notification Source',
-  lastNotificationTargetLabel: (t.settings as unknown as Record<string, string>).lastNotificationTargetLabel || 'Last Notification Target',
-  lastNotificationDedupLabel: (t.settings as unknown as Record<string, string>).lastNotificationDedupLabel || 'Last Notification Key',
-  lastNotificationSkipLabel: (t.settings as unknown as Record<string, string>).lastNotificationSkipLabel || 'Last Skipped Notification',
-  noNotificationActivity: (t.settings as unknown as Record<string, string>).noNotificationActivity || 'None',
-});
+const getNotificationDiagnosticsText = (t: SettingsTranslator): NotificationDiagnosticsText => {
+  const settings = t.settings as NotificationDiagnosticsSettings;
+
+  return {
+    notificationDiagnostics: settings.notificationDiagnostics || 'Notification Diagnostics',
+    lastNotificationEventLabel: settings.lastNotificationEventLabel || 'Last Notification Event',
+    lastNotificationTypeLabel: settings.lastNotificationTypeLabel || 'Last Notification Type',
+    lastNotificationSourceLabel: settings.lastNotificationSourceLabel || 'Last Notification Source',
+    lastNotificationTargetLabel: settings.lastNotificationTargetLabel || 'Last Notification Target',
+    lastNotificationDedupLabel: settings.lastNotificationDedupLabel || 'Last Notification Key',
+    lastNotificationSkipLabel: settings.lastNotificationSkipLabel || 'Last Skipped Notification',
+    noNotificationActivity: settings.noNotificationActivity || 'None',
+  };
+};
 
 export const DiagnosticsPanels: React.FC<{
   includeTelemetry?: boolean;
