@@ -1,5 +1,5 @@
 
-import { render } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import type { ComponentProps } from 'react';
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 import { V3FamilyGraphRenderer } from '../V3FamilyGraphRenderer';
@@ -113,6 +113,7 @@ const renderGraph = (
 describe('V3FamilyGraphRenderer node stability', () => {
   beforeEach(() => {
     nodeComponentMock.mockClear();
+    delete window.__JOZOR_V3_RENDER_STATS__;
   });
 
   it('reuses unchanged TreeNode objects across people map refreshes', () => {
@@ -269,7 +270,7 @@ describe('V3FamilyGraphRenderer node stability', () => {
     expect(rightDrop?.getAttribute('d')).toMatch(/^M 60 0 L 60 119 C 60 140.32 120 140.32 120 160$/);
   });
 
-  it('culls offscreen V3 nodes and edges when viewport data is available', () => {
+  it('culls offscreen V3 nodes and edges when viewport data is available', async () => {
     const people = Object.fromEntries(
       Array.from({ length: 12 }, (_, index) => {
         const person = buildPerson({
@@ -332,6 +333,22 @@ describe('V3FamilyGraphRenderer node stability', () => {
     expect((nodeComponentMock as Mock).mock.calls[0][0].node.data.id).toBe('person-0');
     expect(container.querySelector('[data-edge-id="visible-edge"]')).toBeInTheDocument();
     expect(container.querySelector('[data-edge-id="offscreen-edge"]')).not.toBeInTheDocument();
+
+    const renderer = container.querySelector('[data-renderer="v3-family-graph"]');
+    expect(renderer).toHaveAttribute('data-visible-nodes', '1');
+    expect(renderer).toHaveAttribute('data-total-nodes', '12');
+    expect(renderer).toHaveAttribute('data-visible-edges', '1');
+    expect(renderer).toHaveAttribute('data-total-edges', '2');
+
+    await waitFor(() => {
+      expect(window.__JOZOR_V3_RENDER_STATS__).toMatchObject({
+        totalNodes: 12,
+        visibleNodes: 1,
+        totalEdges: 2,
+        visibleEdges: 1,
+        cullingEnabled: true,
+      });
+    });
   });
 });
 

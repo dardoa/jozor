@@ -1,4 +1,4 @@
-import React, { memo, useMemo, useRef } from 'react';
+import React, { memo, useEffect, useMemo, useRef } from 'react';
 import type { Person, TreeNode, TreeSettings } from '../../types';
 import type {
   V3CollapseControl,
@@ -56,6 +56,25 @@ interface V3FamilyGraphRendererProps {
   onNodeContextMenu?: (e: React.MouseEvent, id: string) => void;
   onToggleCollapse?: (uniqueKey: string) => void;
   padding?: number;
+}
+
+interface V3RenderDiagnosticsSnapshot {
+  totalNodes: number;
+  visibleNodes: number;
+  totalEdges: number;
+  visibleEdges: number;
+  totalFamilyNodes: number;
+  visibleFamilyNodes: number;
+  cullingEnabled: boolean;
+  nodeCullRatio: number;
+  edgeCullRatio: number;
+  zoomScale: number;
+}
+
+declare global {
+  interface Window {
+    __JOZOR_V3_RENDER_STATS__?: V3RenderDiagnosticsSnapshot;
+  }
 }
 
 function scalePathX(d: string | undefined | null, scaleX: ScaleX): string {
@@ -257,6 +276,19 @@ function resolveLinePath(edge: EdgeEntity, scaledPath: string, lineStyle: V3Line
 
 function normalizeV3LineStyle(lineStyle: TreeSettings['lineStyle'] | undefined): V3LineStyle {
   return lineStyle === 'curved' ? 'curved' : 'step';
+}
+
+function computeCullRatio(visibleCount: number, totalCount: number): number {
+  if (totalCount <= 0) return 0;
+  return Number((1 - visibleCount / totalCount).toFixed(4));
+}
+
+function isV3RenderDiagnosticsEnabled(): boolean {
+  try {
+    return window.localStorage.getItem('jozor.renderDiagnostics') === '1';
+  } catch {
+    return false;
+  }
 }
 
 function resolveStrokeStyle(
@@ -653,7 +685,10 @@ const V3PersonNodesLayer = memo<V3PersonNodesLayerProps>(({
   nodeWidth,
   nodeHeight,
 }) => {
-  const visiblePersonIds = new Set(treeNodes.map((visibleNode) => visibleNode.data.id));
+  const visiblePersonIds = useMemo(
+    () => new Set(treeNodes.map((visibleNode) => visibleNode.data.id)),
+    [treeNodes],
+  );
 
   return (
     <g 
@@ -760,6 +795,36 @@ export const V3FamilyGraphRenderer: React.FC<V3FamilyGraphRendererProps> = ({
 
   // Pass visibleNodes to useStableTreeNodes for identity-stable node objects
   const treeNodes = useStableTreeNodes(visibleNodes, people, focusPersonId, scaleX);
+  const renderDiagnostics = useMemo<V3RenderDiagnosticsSnapshot>(() => ({
+    totalNodes: projectedNodes.length,
+    visibleNodes: visibleNodes.length,
+    totalEdges: edgeEntities.length,
+    visibleEdges: visibleEdges.length,
+    totalFamilyNodes: familyNodes.length,
+    visibleFamilyNodes: visibleFamilyNodes.length,
+    cullingEnabled: viewportBounds !== null,
+    nodeCullRatio: computeCullRatio(visibleNodes.length, projectedNodes.length),
+    edgeCullRatio: computeCullRatio(visibleEdges.length, edgeEntities.length),
+    zoomScale: zoomScale ?? 1,
+  }), [
+    edgeEntities.length,
+    familyNodes.length,
+    projectedNodes.length,
+    viewportBounds,
+    visibleEdges.length,
+    visibleFamilyNodes.length,
+    visibleNodes.length,
+    zoomScale,
+  ]);
+
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+
+    window.__JOZOR_V3_RENDER_STATS__ = renderDiagnostics;
+    if (isV3RenderDiagnosticsEnabled()) {
+      console.table([renderDiagnostics]);
+    }
+  }, [renderDiagnostics]);
 
   if (Number.isNaN(canvasWidth) || Number.isNaN(canvasHeight)) {
     return null;
@@ -769,6 +834,10 @@ export const V3FamilyGraphRenderer: React.FC<V3FamilyGraphRendererProps> = ({
     <g
       aria-label="V3 family graph renderer"
       data-renderer="v3-family-graph"
+      data-visible-nodes={import.meta.env.DEV ? visibleNodes.length : undefined}
+      data-total-nodes={import.meta.env.DEV ? projectedNodes.length : undefined}
+      data-visible-edges={import.meta.env.DEV ? visibleEdges.length : undefined}
+      data-total-edges={import.meta.env.DEV ? edgeEntities.length : undefined}
     >
       <V3CanvasBackground
         canvasMinX={canvasMinX}
