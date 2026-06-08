@@ -21,6 +21,13 @@ export type EdgeEntityType =
   | 'sibling-bar'
   | 'child-drop';
 
+export interface EdgeBounds {
+  minX: number;
+  minY: number;
+  maxX: number;
+  maxY: number;
+}
+
 export interface EdgeEntityMetadata {
   familyId: string;
   sourcePersonId: string | null;
@@ -32,6 +39,7 @@ export interface EdgeEntity {
   type: EdgeEntityType;
   pathData: string;
   metadata: EdgeEntityMetadata;
+  bounds?: EdgeBounds | null;
 }
 
 export interface ClusterLayoutNode {

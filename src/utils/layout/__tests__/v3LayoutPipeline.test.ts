@@ -125,5 +125,29 @@ describe('v3LayoutPipeline core logic', () => {
 
       expect(pipeline?.projectedNodes.map((node) => node.personId)).toEqual([root.id]);
     });
+
+    it('attaches precomputed bounds to edge entities', () => {
+      const child = buildPerson({ id: 'child-person', firstName: 'Child', parents: ['root-person'] });
+      const root = buildPerson({ children: [child.id] });
+
+      const pipeline = computeV3PipelineData({
+        people: { [root.id]: root, [child.id]: child },
+        focusId: root.id,
+        collapsePoints: [],
+        settings: { nodeSpacingX: 120, nodeSpacingY: 400, generationLimit: 5 },
+      });
+
+      expect(pipeline?.edgeEntities.length).toBeGreaterThan(0);
+      for (const edge of pipeline?.edgeEntities ?? []) {
+        expect(edge.bounds).toBeDefined();
+        expect(edge.bounds).not.toBeNull();
+        expect(typeof edge.bounds?.minX).toBe('number');
+        expect(typeof edge.bounds?.maxX).toBe('number');
+        expect(typeof edge.bounds?.minY).toBe('number');
+        expect(typeof edge.bounds?.maxY).toBe('number');
+        expect(edge.bounds!.minX).toBeLessThanOrEqual(edge.bounds!.maxX);
+        expect(edge.bounds!.minY).toBeLessThanOrEqual(edge.bounds!.maxY);
+      }
+    });
   });
 });

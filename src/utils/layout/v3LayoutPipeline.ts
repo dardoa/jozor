@@ -8,6 +8,7 @@ import { buildFamilyGraph } from '../../domain/familyGraph';
 import { buildLayoutSemanticsSnapshot } from '../../domain/familyGraphSemantics';
 import {
   buildFamilyGraphClusterLayout,
+  type EdgeBounds,
   type EdgeEntity,
   generateClusterLayoutEdges,
 } from '../../domain/familyGraphClusterLayout';
@@ -162,6 +163,34 @@ export function applyCollapseSemantics(
   return { rootPersonId: semanticsSnapshot.rootPersonId, familyDecisions, personRoles };
 }
 
+function extractPathPoints(pathData: string): Array<{ x: number; y: number }> {
+  const points: Array<{ x: number; y: number }> = [];
+  const re = /[ML]\s*([-\d.]+)\s+([-\d.]+)/g;
+  let match: RegExpExecArray | null;
+  while ((match = re.exec(pathData)) !== null) {
+    const x = parseFloat(match[1]);
+    const y = parseFloat(match[2]);
+    if (Number.isFinite(x) && Number.isFinite(y)) {
+      points.push({ x, y });
+    }
+  }
+  return points;
+}
+
+function getPathBounds(pathData: string): EdgeBounds | null {
+  const points = extractPathPoints(pathData);
+  if (points.length === 0) return null;
+
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  for (const p of points) {
+    if (p.x < minX) minX = p.x;
+    if (p.y < minY) minY = p.y;
+    if (p.x > maxX) maxX = p.x;
+    if (p.y > maxY) maxY = p.y;
+  }
+  return { minX, minY, maxX, maxY };
+}
+
 export function computePipelineBounds(
   projectedNodes: V3ProjectedNode[],
   familyNodes: V3ProjectedFamily[],
@@ -184,12 +213,11 @@ export function computePipelineBounds(
   for (const n of projectedNodes) update(n.x, n.y);
   for (const f of familyNodes) update(f.x, f.y);
 
-  const re = /[ML]\s*([-\d.]+)\s+([-\d.]+)/g;
   for (const e of edgeEntities) {
-    let m: RegExpExecArray | null;
-    re.lastIndex = 0; // Reset regex
-    while ((m = re.exec(e.pathData)) !== null) {
-      update(parseFloat(m[1]), parseFloat(m[2]));
+    const b = e.bounds || (e.pathData ? getPathBounds(e.pathData) : null);
+    if (b) {
+      update(b.minX, b.minY);
+      update(b.maxX, b.maxY);
     }
   }
 
@@ -288,10 +316,14 @@ export function computeV3PipelineData({
   // ── 3. Cluster layout → global projection → SVG edge geometry ─────────
   const clusterLayout = buildFamilyGraphClusterLayout(graph, semanticsSnapshot, focusId, people);
 
-  const edgeEntities = generateClusterLayoutEdges(clusterLayout).map((edge) => ({
-    ...edge,
-    pathData: scalePathXY(edge.pathData, layoutScale),
-  }));
+  const edgeEntities = generateClusterLayoutEdges(clusterLayout).map((edge) => {
+    const scaledPath = scalePathXY(edge.pathData, layoutScale);
+    return {
+      ...edge,
+      pathData: scaledPath,
+      bounds: getPathBounds(scaledPath),
+    };
+  });
   const projectedNodes: V3ProjectedNode[] = Object.values(clusterLayout.nodes).map((node) => ({
     uniqueEntityId: node.entityId,
     personId: node.personId,

@@ -61,6 +61,7 @@ interface V3FamilyGraphRendererProps {
 interface V3RenderDiagnosticsSnapshot {
   totalNodes: number;
   visibleNodes: number;
+  renderedTreeNodes: number;
   totalEdges: number;
   visibleEdges: number;
   totalFamilyNodes: number;
@@ -172,8 +173,7 @@ function getPathBounds(pathData: string): { minX: number; minY: number; maxX: nu
  * Returns true if an edge's path overlaps the viewport bounds.
  */
 function isEdgeVisible(edge: EdgeEntity, vp: ViewportBounds): boolean {
-  if (!edge.pathData) return false;
-  const b = getPathBounds(edge.pathData);
+  const b = edge.bounds || (edge.pathData ? getPathBounds(edge.pathData) : null);
   if (!b) return false;
   return b.maxX >= vp.minX && b.minX <= vp.maxX && b.maxY >= vp.minY && b.minY <= vp.maxY;
 }
@@ -798,6 +798,7 @@ export const V3FamilyGraphRenderer: React.FC<V3FamilyGraphRendererProps> = ({
   const renderDiagnostics = useMemo<V3RenderDiagnosticsSnapshot>(() => ({
     totalNodes: projectedNodes.length,
     visibleNodes: visibleNodes.length,
+    renderedTreeNodes: treeNodes.length,
     totalEdges: edgeEntities.length,
     visibleEdges: visibleEdges.length,
     totalFamilyNodes: familyNodes.length,
@@ -810,6 +811,7 @@ export const V3FamilyGraphRenderer: React.FC<V3FamilyGraphRendererProps> = ({
     edgeEntities.length,
     familyNodes.length,
     projectedNodes.length,
+    treeNodes.length,
     viewportBounds,
     visibleEdges.length,
     visibleFamilyNodes.length,

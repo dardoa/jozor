@@ -344,6 +344,7 @@ describe('V3FamilyGraphRenderer node stability', () => {
       expect(window.__JOZOR_V3_RENDER_STATS__).toMatchObject({
         totalNodes: 12,
         visibleNodes: 1,
+        renderedTreeNodes: 1,
         totalEdges: 2,
         visibleEdges: 1,
         cullingEnabled: true,
