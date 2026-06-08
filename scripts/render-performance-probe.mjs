@@ -6,6 +6,7 @@ import { chromium } from '@playwright/test';
 
 const baseUrl = 'http://127.0.0.1:4173';
 const outputPath = path.join(process.cwd(), 'output', 'playwright', 'render-performance-probe.json');
+const scenarioSizes = [100, 300, 500, 1000];
 
 const waitForServer = (url, timeoutMs = 60000) =>
   new Promise((resolve, reject) => {
@@ -134,6 +135,33 @@ const captureMetrics = async (page, label) =>
     return renderMetrics;
   }, label);
 
+const summarizeScenario = (scenario) => {
+  const maxDomNodes = Math.max(...scenario.samples.map((sample) => sample.dom.totalDomNodes));
+  const maxRendererElements = Math.max(...scenario.samples.map((sample) => sample.dom.rendererElements));
+  const maxForeignObjects = Math.max(...scenario.samples.map((sample) => sample.dom.foreignObjects));
+  const farZoomSample = scenario.samples.find((sample) => sample.label === 'zoom-out-lod') ?? null;
+  const closeZoomSample = scenario.samples.find((sample) => sample.label === 'zoom-in-close') ?? null;
+
+  return {
+    requestedSize: scenario.requestedSize,
+    actualPeopleCount: scenario.actualPeopleCount,
+    maxDomNodes,
+    maxRendererElements,
+    maxForeignObjects,
+    approxAvgFps: scenario.interactionFps.approxAvgFps,
+    approxP95Fps: scenario.interactionFps.approxP95Fps,
+    closeZoomUsesFullCards: Boolean(closeZoomSample && closeZoomSample.dom.foreignObjects > 0),
+    farZoomUsesLightweightLod: Boolean(
+      farZoomSample &&
+      farZoomSample.dom.treeNodes > 0 &&
+      farZoomSample.dom.foreignObjects === 0
+    ),
+    farZoomForeignObjects: farZoomSample?.dom.foreignObjects ?? 0,
+    farZoomTreeNodes: farZoomSample?.dom.treeNodes ?? 0,
+    farZoomScale: farZoomSample?.stats?.zoomScale ?? null,
+  };
+};
+
 const zoomCanvas = async (page, direction, count) => {
   const box = await page.locator('#family-tree-canvas').boundingBox();
   if (!box) return;
@@ -253,7 +281,7 @@ try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
   const scenarios = [];
 
-  for (const size of [500, 1000]) {
+  for (const size of scenarioSizes) {
     scenarios.push(await runScenario(page, size));
   }
 
@@ -263,6 +291,7 @@ try {
     generatedAt: new Date().toISOString(),
     baseUrl,
     viewport: { width: 1440, height: 900 },
+    summary: scenarios.map(summarizeScenario),
     scenarios,
   };
 

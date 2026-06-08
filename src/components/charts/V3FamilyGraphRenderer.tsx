@@ -101,7 +101,7 @@ function scalePathX(d: string | undefined | null, scaleX: ScaleX): string {
 
 const CULL_MARGIN_FACTOR = 0.5; // 50% padding beyond screen edges to prevent pop-in
 const LOD_MIN_TOTAL_NODES = 500;
-const LOD_MAX_ZOOM_SCALE = 0.12;
+const LOD_MAX_ZOOM_SCALE = 0.1;
 
 interface ViewportBounds {
   minX: number;
@@ -693,7 +693,7 @@ const V3PersonNodesLayer = memo<V3PersonNodesLayerProps>(({
     () => new Set(treeNodes.map((visibleNode) => visibleNode.data.id)),
     [treeNodes],
   );
-  const useLightweightLOD = totalNodeCount >= LOD_MIN_TOTAL_NODES && zoomScale <= LOD_MAX_ZOOM_SCALE;
+  const useLightweightLOD = totalNodeCount >= LOD_MIN_TOTAL_NODES && zoomScale < LOD_MAX_ZOOM_SCALE;
 
   return (
     <g 

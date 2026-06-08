@@ -411,5 +411,86 @@ describe('V3FamilyGraphRenderer node stability', () => {
 
     expect((nodeComponentMock as Mock).mock.calls[0][0].useLightweightLOD).toBe(true);
   });
-});
 
+  it('keeps large trees detailed above the extreme far zoom threshold', () => {
+    const people = Object.fromEntries(
+      Array.from({ length: 500 }, (_, index) => {
+        const person = buildPerson({
+          id: `person-${index}`,
+          firstName: `Person ${index}`,
+        });
+        return [person.id, person];
+      }),
+    );
+    const largePipeline: V3RendererPipeline = {
+      projectedNodes: Object.values(people).map((person, index) => ({
+        uniqueEntityId: `person:${person.id}`,
+        personId: person.id,
+        x: index * 10,
+        y: 0,
+        isCanonical: true,
+        isReference: false,
+      })),
+      familyNodes: [],
+      edgeEntities: [],
+      collapseControls: [],
+      bounds: { minX: 0, minY: 0, maxX: 5000, maxY: 0 },
+    };
+
+    render(renderGraph(
+      people['person-0'],
+      people,
+      largePipeline,
+      settings,
+      {
+        zoomScale: 0.11,
+        zoomX: 0,
+        zoomY: 0,
+        viewportSize: { width: 300, height: 300 },
+      },
+    ));
+
+    expect((nodeComponentMock as Mock).mock.calls[0][0].useLightweightLOD).toBe(false);
+  });
+
+  it('keeps large trees detailed at the exact LOD threshold', () => {
+    const people = Object.fromEntries(
+      Array.from({ length: 500 }, (_, index) => {
+        const person = buildPerson({
+          id: `person-${index}`,
+          firstName: `Person ${index}`,
+        });
+        return [person.id, person];
+      }),
+    );
+    const largePipeline: V3RendererPipeline = {
+      projectedNodes: Object.values(people).map((person, index) => ({
+        uniqueEntityId: `person:${person.id}`,
+        personId: person.id,
+        x: index * 10,
+        y: 0,
+        isCanonical: true,
+        isReference: false,
+      })),
+      familyNodes: [],
+      edgeEntities: [],
+      collapseControls: [],
+      bounds: { minX: 0, minY: 0, maxX: 5000, maxY: 0 },
+    };
+
+    render(renderGraph(
+      people['person-0'],
+      people,
+      largePipeline,
+      settings,
+      {
+        zoomScale: 0.1,
+        zoomX: 0,
+        zoomY: 0,
+        viewportSize: { width: 300, height: 300 },
+      },
+    ));
+
+    expect((nodeComponentMock as Mock).mock.calls[0][0].useLightweightLOD).toBe(false);
+  });
+});
