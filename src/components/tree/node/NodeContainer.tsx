@@ -17,15 +17,15 @@ export const NodeContainer = memo<NodeContainerProps>(({
   onSelect,
   onNodeContextMenu,
   settings,
-  zoomScale,
   nodeWidth,
   nodeHeight,
+  useLightweightLOD = false,
   isPulsing = false,
   isDimmed = false,
   isPathHighlighted = false,
   showParentNavigation = true,
 }) => {
-  const isLOD = zoomScale < 0.3;
+  const isLOD = useLightweightLOD;
 
   const person = useAppStore((state) => state.people[node.data.id]) || (node.data as Person);
   const isNodeSyncing = useAppStore((state) => state.syncingNodes.has(person.id));

@@ -12,6 +12,7 @@ export interface NodeContainerProps {
   zoomScale: number;
   nodeWidth: number;
   nodeHeight: number;
+  useLightweightLOD?: boolean;
   isPulsing?: boolean;
   isDimmed?: boolean;
   isPathHighlighted?: boolean;
@@ -53,7 +54,7 @@ export const areNodeContainerPropsEqual = (prev: NodeContainerProps, next: NodeC
   prev.isHighlighted === next.isHighlighted &&
   prev.onSelect === next.onSelect &&
   prev.onNodeContextMenu === next.onNodeContextMenu &&
-  (prev.zoomScale < 0.3) === (next.zoomScale < 0.3) &&
+  prev.useLightweightLOD === next.useLightweightLOD &&
   prev.nodeWidth === next.nodeWidth &&
   prev.nodeHeight === next.nodeHeight &&
   prev.isPulsing === next.isPulsing &&

@@ -185,7 +185,7 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
-test('V3 renderer exposes runtime DOM metrics and switches to LOD after zooming out', async ({ page }) => {
+test('V3 renderer exposes runtime DOM metrics and keeps small trees detailed after zooming out', async ({ page }) => {
   await seedRuntimeScenario(page);
 
   const initialMetrics = await readRenderMetrics(page);
@@ -217,9 +217,9 @@ test('V3 renderer exposes runtime DOM metrics and switches to LOD after zooming 
       return metrics.foreignObjects;
     },
     { timeout: 5000 },
-  ).toBe(0);
+  ).toBeGreaterThan(0);
 
   const lodMetrics = await readRenderMetrics(page);
   expect(lodMetrics.treeNodes).toBeGreaterThan(0);
-  expect(lodMetrics.totalDomNodes).toBeLessThan(fullCardMetrics.totalDomNodes);
+  expect(lodMetrics.totalDomNodes).toBeGreaterThan(0);
 });

@@ -87,7 +87,7 @@ const settings: TreeSettings = {
   privacyMode: false,
 };
 
-const renderNode = (zoomScale: number) => {
+const renderNode = (zoomScale: number, useLightweightLOD = false) => {
   const person = buildPerson();
   const node: TreeNode = {
     id: 'person:person-1',
@@ -110,6 +110,7 @@ const renderNode = (zoomScale: number) => {
         zoomScale={zoomScale}
         nodeWidth={180}
         nodeHeight={220}
+        useLightweightLOD={useLightweightLOD}
       />
     </svg>,
   );
@@ -117,10 +118,16 @@ const renderNode = (zoomScale: number) => {
 
 describe('NodeContainer LOD rendering', () => {
   it('uses lightweight pure SVG rendering at far zoom levels', () => {
-    const { container } = renderNode(0.2);
+    const { container } = renderNode(0.1, true);
 
     expect(container.querySelector('foreignObject')).not.toBeInTheDocument();
     expect(container.querySelector('[data-testid="tree-node"] rect')).toBeInTheDocument();
+  });
+
+  it('keeps the full card at far zoom unless lightweight LOD is explicitly enabled', () => {
+    const { container } = renderNode(0.1);
+
+    expect(container.querySelector('foreignObject')).toBeInTheDocument();
   });
 
   it('uses the full foreignObject card at close zoom levels', () => {

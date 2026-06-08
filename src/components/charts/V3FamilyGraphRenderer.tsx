@@ -100,6 +100,8 @@ function scalePathX(d: string | undefined | null, scaleX: ScaleX): string {
 // ---------------------------------------------------------------------------
 
 const CULL_MARGIN_FACTOR = 0.5; // 50% padding beyond screen edges to prevent pop-in
+const LOD_MIN_TOTAL_NODES = 500;
+const LOD_MAX_ZOOM_SCALE = 0.12;
 
 interface ViewportBounds {
   minX: number;
@@ -664,6 +666,7 @@ V3CollapseControlsLayer.displayName = 'V3CollapseControlsLayer';
 
 interface V3PersonNodesLayerProps {
   treeNodes: TreeNodeWithIndex[];
+  totalNodeCount: number;
   focusPersonId?: string;
   highlightedPath?: Set<string>;
   onSelect: (id: string) => void;
@@ -676,6 +679,7 @@ interface V3PersonNodesLayerProps {
 
 const V3PersonNodesLayer = memo<V3PersonNodesLayerProps>(({
   treeNodes,
+  totalNodeCount,
   focusPersonId,
   highlightedPath,
   onSelect,
@@ -689,6 +693,7 @@ const V3PersonNodesLayer = memo<V3PersonNodesLayerProps>(({
     () => new Set(treeNodes.map((visibleNode) => visibleNode.data.id)),
     [treeNodes],
   );
+  const useLightweightLOD = totalNodeCount >= LOD_MIN_TOTAL_NODES && zoomScale <= LOD_MAX_ZOOM_SCALE;
 
   return (
     <g 
@@ -716,6 +721,7 @@ const V3PersonNodesLayer = memo<V3PersonNodesLayerProps>(({
           zoomScale={zoomScale}
           nodeWidth={nodeWidth}
           nodeHeight={nodeHeight}
+          useLightweightLOD={useLightweightLOD}
           isPathHighlighted={isPathHighlighted}
           showParentNavigation={showParentNavigation}
           isDimmed={Boolean(
@@ -862,6 +868,7 @@ export const V3FamilyGraphRenderer: React.FC<V3FamilyGraphRendererProps> = ({
       />
       <V3PersonNodesLayer
         treeNodes={treeNodes}
+        totalNodeCount={projectedNodes.length}
         focusPersonId={focusPersonId}
         highlightedPath={highlightedPath}
         onSelect={onSelect ?? noopSelect}

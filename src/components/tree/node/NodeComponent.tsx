@@ -13,6 +13,7 @@ export const NodeComponent = memo<NodeContainerProps>(({
     zoomScale,
     nodeWidth,
     nodeHeight,
+    useLightweightLOD,
     isPulsing,
     isDimmed,
     isPathHighlighted,
@@ -29,6 +30,7 @@ export const NodeComponent = memo<NodeContainerProps>(({
         zoomScale={zoomScale}
         nodeWidth={nodeWidth}
         nodeHeight={nodeHeight}
+        useLightweightLOD={useLightweightLOD}
         isPulsing={isPulsing}
         isDimmed={isDimmed}
         isPathHighlighted={isPathHighlighted}
