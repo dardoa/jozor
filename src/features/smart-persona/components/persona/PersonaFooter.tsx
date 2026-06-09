@@ -9,7 +9,6 @@ interface PersonaFooterProps {
   setIsEditing: (v: boolean) => void;
   onDelete: (id: string) => void;
   canEdit: boolean;
-  isOwner?: boolean;
 }
 
 export const PersonaFooter = memo<PersonaFooterProps>(

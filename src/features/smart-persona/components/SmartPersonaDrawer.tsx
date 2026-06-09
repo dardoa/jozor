@@ -28,7 +28,6 @@ interface SmartPersonaDrawerProps {
   settings: TreeSettings;
   user: UserProfile | null;
   canEdit?: boolean;
-  isOwner?: boolean;
 }
 
 type AboutModalType = 'calculator' | 'stats' | 'chat' | 'consistency' | 'timeline' | 'map';
@@ -47,7 +46,6 @@ export const SmartPersonaDrawer = memo<SmartPersonaDrawerProps>(
     settings,
     user,
     canEdit = true,
-    isOwner = true,
   }) => {
     const { t } = useTranslation();
     const {
@@ -166,7 +164,6 @@ export const SmartPersonaDrawer = memo<SmartPersonaDrawerProps>(
                 setIsEditing={setIsEditing}
                 onDelete={onDelete}
                 canEdit={canEdit}
-                isOwner={isOwner}
               />
             </div>
           )}

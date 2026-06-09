@@ -33,7 +33,6 @@ interface AppOverlaysProps {
   openAddPersonModal: () => void;
   effectiveTreeSettings: TreeSettings;
   canEditActiveTree: boolean;
-  isTreeOwner: boolean;
 }
 
 export const AppOverlays: React.FC<AppOverlaysProps> = ({
@@ -53,7 +52,6 @@ export const AppOverlays: React.FC<AppOverlaysProps> = ({
   openAddPersonModal,
   effectiveTreeSettings,
   canEditActiveTree,
-  isTreeOwner,
 }) => (
   <>
     <AppPersonOverlays
@@ -68,7 +66,6 @@ export const AppOverlays: React.FC<AppOverlaysProps> = ({
       focusAndNavigate={focusAndNavigate}
       effectiveTreeSettings={effectiveTreeSettings}
       canEditActiveTree={canEditActiveTree}
-      isTreeOwner={isTreeOwner}
       currentUserRole={viewSettings.currentUserRole}
     />
     <AppSystemOverlays

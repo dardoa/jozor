@@ -34,7 +34,6 @@ interface AppPersonOverlaysProps {
   focusAndNavigate: (personId: string) => void;
   effectiveTreeSettings: TreeSettings;
   canEditActiveTree: boolean;
-  isTreeOwner: boolean;
   currentUserRole?: ViewSettingsProps['currentUserRole'];
 }
 
@@ -50,7 +49,6 @@ export const AppPersonOverlays: React.FC<AppPersonOverlaysProps> = ({
   focusAndNavigate,
   effectiveTreeSettings,
   canEditActiveTree,
-  isTreeOwner,
   currentUserRole,
 }) => {
   const navigate = useNavigate();
@@ -153,7 +151,6 @@ export const AppPersonOverlays: React.FC<AppPersonOverlaysProps> = ({
             onOpenModal={toolsActions.onOpenModal}
             user={auth.user}
             canEdit={canEditActiveTree}
-            isOwner={isTreeOwner}
             familyActions={detailsPanelFamilyActions}
             settings={effectiveTreeSettings}
           />

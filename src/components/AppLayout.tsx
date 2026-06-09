@@ -11,6 +11,7 @@ import { AppOverlays } from './AppOverlays';
 import { useAppStore, selectIsSyncing } from '../store/useAppStore';
 import { useTranslation } from '../context/TranslationContext';
 import { useTreeAppearanceAdapter } from '../hooks/utils/useTreeAppearanceAdapter';
+import { useTreePermissions } from '../hooks/tree/useTreePermissions';
 import {
   AppStateAndActions,
   ModalStateAndActions,
@@ -79,10 +80,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
     ...adapterPatch,
   }), [legacyTreeSettings, adapterPatch]);
 
-  const currentUserRole = viewSettings.currentUserRole;
-  // null = guest/local mode → full local edit rights (no cloud access possible without token)
-  const canEditActiveTree = currentUserRole === 'owner' || currentUserRole === 'editor' || currentUserRole === null;
-  const isTreeOwner = currentUserRole === 'owner';
+  const { canEdit: canEditActiveTree } = useTreePermissions();
   const isSettingsDrawerOpen = useAppStore((state) => state.isSettingsDrawerOpen);
   const setSettingsDrawerOpen = useAppStore((state) => state.setSettingsDrawerOpen);
   const isDiagnosticsDrawerOpen = useAppStore((state) => state.isDiagnosticsDrawerOpen);
@@ -229,7 +227,6 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
         openAddPersonModal={openAddPersonModal}
         effectiveTreeSettings={effectiveTreeSettings}
         canEditActiveTree={canEditActiveTree}
-        isTreeOwner={isTreeOwner}
       />
       <Toaster richColors position="bottom-center" dir={language === 'ar' ? 'rtl' : 'ltr'} />
     </>
