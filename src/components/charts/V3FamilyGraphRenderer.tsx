@@ -4,6 +4,7 @@ import type {
   V3CollapseControl,
   V3RendererPipeline,
 } from '../../utils/layout/v3LayoutPipeline';
+import { extractPathPoints } from '../../utils/svgUtils';
 import type { EdgeEntity, EdgeEntityType } from '../../domain/familyGraphClusterLayout';
 import {
   NODE_HEIGHT_COMPACT,
@@ -195,17 +196,6 @@ function normalizeSiblingBarPath(edge: EdgeEntity, scaledPath: string): string {
   return `M ${x1 - MIN_SIBLING_BAR_HALF_PX} ${y} L ${x1 + MIN_SIBLING_BAR_HALF_PX} ${y}`;
 }
 
-function extractPathPoints(pathData: string): Array<{ x: number; y: number }> {
-  const points: Array<{ x: number; y: number }> = [];
-  const re = /[ML]\s*([-\d.]+)\s+([-\d.]+)/g;
-  let match: RegExpExecArray | null;
-
-  while ((match = re.exec(pathData)) !== null) {
-    points.push({ x: parseFloat(match[1]), y: parseFloat(match[2]) });
-  }
-
-  return points.filter((point) => Number.isFinite(point.x) && Number.isFinite(point.y));
-}
 
 function distanceBetweenPoints(left: { x: number; y: number }, right: { x: number; y: number }): number {
   return Math.hypot(right.x - left.x, right.y - left.y);
