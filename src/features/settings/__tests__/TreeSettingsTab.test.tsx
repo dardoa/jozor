@@ -15,6 +15,9 @@ vi.mock('../../../context/TranslationContext', () => ({
       save: 'Save',
       cancel: 'Cancel',
       unnamedPerson: 'Unnamed Person',
+      settings: {
+        maintenanceOwnerOnly: 'Maintenance tools are available only to the tree owner while a tree is open.',
+      },
       adminHub: {
         treeSettings: {
           renameTitle: 'Rename Tree',
@@ -125,6 +128,7 @@ describe('TreeSettingsTab', () => {
           ownerEmail="owner@example.com"
           people={people as never}
           currentRootId="person-1"
+          canManageTreeSettings
         />
       </OverlayProvider>
     );
@@ -147,6 +151,7 @@ describe('TreeSettingsTab', () => {
           ownerId="owner-1"
           ownerEmail="owner@example.com"
           people={people as never}
+          canManageTreeSettings
         />
       </OverlayProvider>
     );
@@ -168,6 +173,7 @@ describe('TreeSettingsTab', () => {
           ownerEmail="owner@example.com"
           people={people as never}
           currentRootId="person-1"
+          canManageTreeSettings
         />
       </OverlayProvider>
     );
@@ -178,5 +184,30 @@ describe('TreeSettingsTab', () => {
 
     expect(screen.getByText('Changing the root person re-centers the tree around a different branch. Continue?')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Change Root' })).toBeInTheDocument();
+  });
+
+  it('renders tree management actions as read-only when the user cannot manage tree settings', () => {
+    render(
+      <OverlayProvider>
+        <TreeSettingsTab
+          treeId="tree-123"
+          treeName="Family Archive"
+          ownerId="owner-1"
+          ownerEmail="owner@example.com"
+          people={people as never}
+          currentRootId="person-1"
+          canManageTreeSettings={false}
+        />
+      </OverlayProvider>
+    );
+
+    expect(screen.getByLabelText('Current Root')).toBeDisabled();
+    expect(screen.queryByRole('button', { name: 'Delete Tree' })).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('Current Root'), {
+      target: { value: 'person-2' },
+    });
+
+    expect(screen.queryByText('Changing the root person re-centers the tree around a different branch. Continue?')).not.toBeInTheDocument();
   });
 });

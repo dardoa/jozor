@@ -66,7 +66,9 @@ const getSafeArchiveMediaPath = (mediaPath: string, expectedFolder: string): str
 const findAndValidateMediaFile = async (
   zip: JSZip,
   mediaPath: string,
-  expectedFolder: string
+  expectedFolder: string,
+  filesMap?: Map<string, JSZip.JSZipObject>,
+  folderMaps?: { images: Map<string, JSZip.JSZipObject>; audio: Map<string, JSZip.JSZipObject> }
 ): Promise<string> => {
   const safeMediaPath = getSafeArchiveMediaPath(mediaPath, expectedFolder);
   if (!safeMediaPath) {
@@ -76,16 +78,30 @@ const findAndValidateMediaFile = async (
     return mediaPath;
   }
 
-  let mediaFile = zip.file(safeMediaPath);
+  let mediaFile: JSZip.JSZipObject | null = null;
+  if (filesMap) {
+    mediaFile = filesMap.get(safeMediaPath.toLowerCase()) || null;
+  } else {
+    mediaFile = zip.file(safeMediaPath);
+  }
+
   if (!mediaFile) {
     // If direct path fails, try finding by filename alone within the expected folder.
-    // This regex search is already somewhat safe as it anchors to the folder.
     const fileName = safeMediaPath.split('/').pop();
     if (fileName) {
-      // Escape special characters in fileName for regex
-      const escapedFileName = fileName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const matches = zip.file(new RegExp(`^${expectedFolder}/${escapedFileName}$`));
-      if (matches.length > 0) mediaFile = matches[0];
+      const lowerFileName = fileName.toLowerCase();
+      if (folderMaps) {
+        if (expectedFolder === 'images') {
+          mediaFile = folderMaps.images.get(lowerFileName) || null;
+        } else if (expectedFolder === 'audio') {
+          mediaFile = folderMaps.audio.get(lowerFileName) || null;
+        }
+      } else {
+        // Escape special characters in fileName for regex
+        const escapedFileName = fileName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const matches = zip.file(new RegExp(`^${expectedFolder}/${escapedFileName}$`));
+        if (matches.length > 0) mediaFile = matches[0];
+      }
     }
   }
 
@@ -264,12 +280,33 @@ export const importJozorArchiveData = async (file: File): Promise<JozorArchiveDa
 
   const people: Record<string, Person> = {};
 
+  // Build the lookup maps once to optimize performance
+  const filesMap = new Map<string, JSZip.JSZipObject>();
+  const folderMaps = {
+    images: new Map<string, JSZip.JSZipObject>(),
+    audio: new Map<string, JSZip.JSZipObject>(),
+  };
+
+  zip.forEach((relativePath, zipEntry) => {
+    filesMap.set(relativePath.toLowerCase(), zipEntry);
+    const parts = relativePath.split('/');
+    if (parts.length === 2) {
+      const folder = parts[0];
+      const filename = parts[1];
+      if (folder === 'images') {
+        folderMaps.images.set(filename.toLowerCase(), zipEntry);
+      } else if (folder === 'audio') {
+        folderMaps.audio.set(filename.toLowerCase(), zipEntry);
+      }
+    }
+  });
+
   for (const key of Object.keys(rawPeople as Record<string, unknown>)) {
     const p = validatePerson((rawPeople as Record<string, Partial<Person>>)[key]);
 
     // 1. Rehydrate Profile Photo
     if (p.photoUrl && p.photoUrl.startsWith('images/')) {
-      p.photoUrl = await findAndValidateMediaFile(zip, p.photoUrl, 'images');
+      p.photoUrl = await findAndValidateMediaFile(zip, p.photoUrl, 'images', filesMap, folderMaps);
     }
 
     // 2. Rehydrate Gallery
@@ -278,7 +315,7 @@ export const importJozorArchiveData = async (file: File): Promise<JozorArchiveDa
         p.gallery.map(async (item: string | GalleryItem) => {
           const imgPath = typeof item === 'string' ? item : item.path;
           if (imgPath && imgPath.startsWith('images/')) {
-            return await findAndValidateMediaFile(zip, imgPath, 'images');
+            return await findAndValidateMediaFile(zip, imgPath, 'images', filesMap, folderMaps);
           }
           return imgPath || '';
         })
@@ -290,7 +327,7 @@ export const importJozorArchiveData = async (file: File): Promise<JozorArchiveDa
       p.voiceNotes = await Promise.all(
         p.voiceNotes.map(async (audioPath: string) => {
           if (audioPath.startsWith('audio/')) {
-            return await findAndValidateMediaFile(zip, audioPath, 'audio');
+            return await findAndValidateMediaFile(zip, audioPath, 'audio', filesMap, folderMaps);
           }
           return audioPath;
         })

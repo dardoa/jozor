@@ -63,11 +63,22 @@ export const AppPersonOverlays: React.FC<AppPersonOverlaysProps> = ({
   const closeNodeContextMenu = React.useCallback(() => setNodeContextMenu(null), [setNodeContextMenu]);
 
   const triggerDelete = React.useCallback((personId?: string) => {
+    if (!canEditActiveTree) {
+      showToast.error(t.readOnly || 'You are viewing this tree in read-only mode.');
+      return;
+    }
     setPendingDeletePersonId(personId ?? activePerson?.id ?? null);
     setDeleteModalOpen(true);
-  }, [activePerson?.id]);
+  }, [activePerson?.id, canEditActiveTree, t]);
 
   const handleDeleteConfirm = React.useCallback(async () => {
+    if (!canEditActiveTree) {
+      showToast.error(t.readOnly || 'You are viewing this tree in read-only mode.');
+      setPendingDeletePersonId(null);
+      setDeleteModalOpen(false);
+      return;
+    }
+
     const personIdToDelete = pendingDeletePersonId ?? activePerson?.id;
     if (personIdToDelete) {
       const result = await appState.deletePerson(personIdToDelete);
@@ -87,7 +98,7 @@ export const AppPersonOverlays: React.FC<AppPersonOverlaysProps> = ({
     setPendingDeletePersonId(null);
     setDeleteModalOpen(false);
     setDetailsPanelOpen(false);
-  }, [activePerson?.id, appState, navigate, pendingDeletePersonId, setDetailsPanelOpen, t]);
+  }, [activePerson?.id, appState, canEditActiveTree, navigate, pendingDeletePersonId, setDetailsPanelOpen, t]);
 
   const openPersonDetailsPanel = React.useCallback(
     (personId: string, options?: { tab?: 'about' | 'links' | 'media'; isEditing?: boolean } | 'view' | 'edit') => {
@@ -112,6 +123,12 @@ export const AppPersonOverlays: React.FC<AppPersonOverlaysProps> = ({
   );
 
   const handleSetAsRoot = React.useCallback(async (id: string) => {
+    if (!canEditActiveTree || currentUserRole === 'editor' || currentUserRole === 'viewer') {
+      showToast.error(t.settings?.maintenanceOwnerOnly || t.readOnly || 'Only the tree owner can change tree settings.');
+      closeNodeContextMenu();
+      return;
+    }
+
     focusAndNavigate(id);
     closeNodeContextMenu();
 
@@ -128,7 +145,7 @@ export const AppPersonOverlays: React.FC<AppPersonOverlaysProps> = ({
     } catch (error) {
       console.error('Failed to update tree root', error);
     }
-  }, [appState.currentTreeId, auth.user, closeNodeContextMenu, focusAndNavigate]);
+  }, [appState.currentTreeId, auth.user, canEditActiveTree, closeNodeContextMenu, currentUserRole, focusAndNavigate, t]);
 
   const contextMenuPerson = nodeContextMenu ? people[nodeContextMenu.personId] : undefined;
   const deletePersonName = [people[pendingDeletePersonId ?? activePerson?.id ?? EMPTY_STRING]?.firstName, people[pendingDeletePersonId ?? activePerson?.id ?? EMPTY_STRING]?.lastName]
@@ -164,6 +181,7 @@ export const AppPersonOverlays: React.FC<AppPersonOverlaysProps> = ({
           y={nodeContextMenu!.y}
           onClose={closeNodeContextMenu}
           onAddRelation={(type, gender) => {
+            if (!canEditActiveTree) return;
             closeNodeContextMenu();
             modals.handleOpenLinkModal(type, gender, { initialMode: 'create' });
           }}
@@ -171,6 +189,7 @@ export const AppPersonOverlays: React.FC<AppPersonOverlaysProps> = ({
             openPersonDetailsPanel(id, { tab: 'about', isEditing: mode === 'edit' && canEditActiveTree });
           }}
           onLinkExisting={(type, gender) => {
+            if (!canEditActiveTree) return;
             closeNodeContextMenu();
             modals.handleOpenLinkModal(type, gender, { initialMode: 'existing' });
           }}

@@ -16,6 +16,7 @@ export const TreeSettingsTab: React.FC<TreeSettingsTabProps> = ({
   ownerEmail,
   people = [],
   currentRootId,
+  canManageTreeSettings = false,
   onTreeDeleted,
   onTreeRenamed,
   onRootChanged,
@@ -29,6 +30,7 @@ export const TreeSettingsTab: React.FC<TreeSettingsTabProps> = ({
     ownerEmail,
     people,
     currentRootId,
+    canManageTreeSettings,
     text,
     onTreeRenamed,
     onRootChanged,
@@ -52,6 +54,7 @@ export const TreeSettingsTab: React.FC<TreeSettingsTabProps> = ({
         people={people}
         currentRootId={currentRootId}
         unnamedPersonLabel={t.unnamedPerson}
+        disabled={!canManageTreeSettings}
         onRootChange={state.requestRootChange}
       />
 
@@ -67,6 +70,7 @@ export const TreeSettingsTab: React.FC<TreeSettingsTabProps> = ({
         ownerId={ownerId}
         ownerEmail={ownerEmail}
         peopleCount={people.length}
+        canManageTreeSettings={canManageTreeSettings}
         onTreeDeleted={onTreeDeleted}
       />
 

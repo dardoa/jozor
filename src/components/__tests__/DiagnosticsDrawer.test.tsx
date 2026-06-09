@@ -231,6 +231,7 @@ describe('DiagnosticsDrawer', () => {
 
     expect(screen.queryByRole('button', { name: 'Prune Old Sync Operations' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Prune Old Activity Logs' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Clear Pending Syncs' })).toBeDisabled();
     expect(await screen.findByText('Maintenance tools are available only to the tree owner while a tree is open.')).toBeInTheDocument();
   });
 

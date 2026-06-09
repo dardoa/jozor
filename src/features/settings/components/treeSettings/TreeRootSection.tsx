@@ -11,6 +11,7 @@ interface TreeRootSectionProps {
   people: Person[];
   currentRootId?: string;
   unnamedPersonLabel: string;
+  disabled?: boolean;
   onRootChange: (newRootId: string) => void;
 }
 
@@ -19,6 +20,7 @@ export const TreeRootSection: React.FC<TreeRootSectionProps> = ({
   people,
   currentRootId,
   unnamedPersonLabel,
+  disabled = false,
   onRootChange,
 }) => {
   if (people.length === 0) return null;
@@ -39,6 +41,7 @@ export const TreeRootSection: React.FC<TreeRootSectionProps> = ({
         id="tree-settings-root-select"
         value={currentRootId || EMPTY_STRING}
         onChange={(event) => onRootChange(event.target.value)}
+        disabled={disabled}
         className="ds-input w-full"
       >
         {people.map((person) => {

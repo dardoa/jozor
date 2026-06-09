@@ -8,6 +8,7 @@ export interface TreeSettingsTabProps {
   ownerEmail: string;
   people?: Person[];
   currentRootId?: string;
+  canManageTreeSettings?: boolean;
   onTreeDeleted?: () => void;
   onTreeRenamed?: (newName: string) => void;
   onRootChanged?: (newRootId: string) => void;
@@ -18,6 +19,7 @@ export interface TreeDangerZoneProps {
   ownerId: string;
   ownerEmail: string;
   peopleCount: number;
+  canManageTreeSettings?: boolean;
   onTreeDeleted?: () => void;
 }
 

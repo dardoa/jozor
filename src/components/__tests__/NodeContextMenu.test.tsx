@@ -74,7 +74,7 @@ describe('NodeContextMenu', () => {
     expect(screen.getByRole('menuitem', { name: 'Add Son' })).toBeEnabled();
     expect(screen.getByRole('menuitem', { name: 'Add Daughter' })).toBeEnabled();
     expect(screen.getByRole('menuitem', { name: 'Link Existing Person' })).toBeEnabled();
-    expect(screen.getByRole('menuitem', { name: 'Set As Root' })).toBeEnabled();
+    expect(screen.queryByRole('menuitem', { name: 'Set As Root' })).not.toBeInTheDocument();
     expect(screen.getByRole('menuitem', { name: 'Delete Person' })).toBeEnabled();
 
     fireEvent.click(screen.getByRole('menuitem', { name: 'Add Father' }));
@@ -91,12 +91,16 @@ describe('NodeContextMenu', () => {
     expect(baseProps.onLinkExisting).toHaveBeenCalledWith('child', 'female');
 
     fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Delete Person' }));
+    expect(baseProps.onDelete).toHaveBeenCalledWith('person-1');
+  });
+
+  it('allows only owner or local mode to change the root person', () => {
+    render(<NodeContextMenu {...baseProps} currentUserRole="owner" />);
+
     fireEvent.click(screen.getByRole('menuitem', { name: 'Set As Root' }));
 
     expect(baseProps.onSetAsRoot).toHaveBeenCalledWith('person-1');
-
-    fireEvent.click(screen.getByRole('menuitem', { name: 'Delete Person' }));
-    expect(baseProps.onDelete).toHaveBeenCalledWith('person-1');
   });
 });
 

@@ -45,7 +45,7 @@ export const SmartPersonaDrawer = memo<SmartPersonaDrawerProps>(
     familyActions,
     settings,
     user,
-    canEdit = true,
+    canEdit = false,
   }) => {
     const { t } = useTranslation();
     const {

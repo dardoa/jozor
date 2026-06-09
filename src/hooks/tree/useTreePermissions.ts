@@ -16,6 +16,7 @@ export const useTreePermissions = () => {
     const canManageMembers = role === 'owner';
     const canManageCloud = role === 'owner';
     const canManageSecurity = role === 'owner';
+    const canManageTreeSettings = role === 'owner' || role === null;
 
     // Viewer gets restricted Vault view (Export only)
     const canViewFullVault = role === 'owner';
@@ -30,6 +31,7 @@ export const useTreePermissions = () => {
         canManageMembers,
         canManageCloud,
         canManageSecurity,
+        canManageTreeSettings,
         canViewFullVault
     };
 };

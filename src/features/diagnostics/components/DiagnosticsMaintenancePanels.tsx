@@ -78,7 +78,14 @@ export const DiagnosticsMaintenancePanels: React.FC<{ layout?: 'stack' | 'grid' 
           <div className="space-y-3 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-panel-subtle)] p-4">
             <p className="px-1 text-[11px] font-bold leading-relaxed text-[var(--text-secondary)]">{t.settings.clearSyncQueueDesc}</p>
             <button
-              onClick={() => setClearSyncConfirmOpen(true)}
+              onClick={() => {
+                if (!canRunMaintenance) {
+                  showToast.error('settings.maintenanceOwnerOnly');
+                  return;
+                }
+                setClearSyncConfirmOpen(true);
+              }}
+              disabled={!canRunMaintenance}
               className="w-full rounded-xl border border-[var(--danger-500)]/20 bg-[var(--danger-500)]/10 py-2.5 text-[11px] font-semibold tracking-wide text-[var(--danger-500)] transition-all hover:bg-[var(--danger-500)]/15"
             >
               {t.settings.clearSyncQueue}
@@ -90,7 +97,10 @@ export const DiagnosticsMaintenancePanels: React.FC<{ layout?: 'stack' | 'grid' 
       <ConfirmationModal
         isOpen={isClearSyncConfirmOpen}
         onClose={() => setClearSyncConfirmOpen(false)}
-        onConfirm={() => deltaSyncService.clearOutgoingQueue()}
+        onConfirm={() => {
+          if (!canRunMaintenance) return;
+          deltaSyncService.clearOutgoingQueue();
+        }}
         title={t.settings.clearSyncQueue}
         message={t.settings.clearSyncQueueDesc}
         type="danger"

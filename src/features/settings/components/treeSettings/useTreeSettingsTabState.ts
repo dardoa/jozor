@@ -14,6 +14,7 @@ interface UseTreeSettingsTabStateArgs {
   ownerEmail: string;
   people: Person[];
   currentRootId?: string;
+  canManageTreeSettings: boolean;
   text: TreeSettingsText;
   onTreeRenamed?: (newName: string) => void;
   onRootChanged?: (newRootId: string) => void;
@@ -26,6 +27,7 @@ export const useTreeSettingsTabState = ({
   ownerEmail,
   people,
   currentRootId,
+  canManageTreeSettings,
   text,
   onTreeRenamed,
   onRootChanged,
@@ -56,9 +58,11 @@ export const useTreeSettingsTabState = ({
   );
 
   const currentRootLabel = getPersonFullName(currentRootPerson) || text.rootNotSet;
-  const canRename = Boolean(newTreeName.trim()) && newTreeName.trim() !== treeName && !isSaving;
+  const canRename = canManageTreeSettings && Boolean(newTreeName.trim()) && newTreeName.trim() !== treeName && !isSaving;
 
   const handleRename = async () => {
+    if (!canManageTreeSettings) return;
+
     const trimmedName = newTreeName.trim();
     if (!trimmedName || trimmedName === treeName) return;
 
@@ -82,6 +86,7 @@ export const useTreeSettingsTabState = ({
   };
 
   const requestRootChange = (newRootId: string) => {
+    if (!canManageTreeSettings) return;
     if (!newRootId || newRootId === currentRootId) return;
     setPendingRootId(newRootId);
     setIsConfirmRootChangeOpen(true);
@@ -93,6 +98,7 @@ export const useTreeSettingsTabState = ({
   };
 
   const confirmRootChange = async () => {
+    if (!canManageTreeSettings) return;
     if (!pendingRootId) return;
 
     try {

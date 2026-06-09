@@ -75,6 +75,7 @@ export const NodeContextMenu: React.FC<NodeContextMenuProps> = ({
 
     // null = guest/local mode → same rights as owner locally
     const canEdit = currentUserRole === 'owner' || currentUserRole === 'editor' || currentUserRole === null;
+    const canManageTreeSettings = currentUserRole === 'owner' || currentUserRole === null;
     const isRtl = language === 'ar';
     const optionalText = t as typeof t & OptionalNodeContextMenuTranslations;
     const detailsLabel = canEdit ? t.editDetails : (optionalText.viewDetails ?? 'View Details');
@@ -177,13 +178,15 @@ export const NodeContextMenu: React.FC<NodeContextMenuProps> = ({
                                         label={linkExistingLabel}
                                         rightElement={<ChevronRight className="w-3 h-3 text-[var(--text-muted)] rtl:rotate-180" />}
                                     />
-                                    <DropdownMenuItem
-                                        onClick={() => runAndClose(() => onSetAsRoot(person.id))}
-                                        icon={<Star className="w-3.5 h-3.5" />}
-                                        iconBgClass="!bg-yellow-500/20"
-                                        iconTextColorClass="!text-yellow-400"
-                                        label={t.setAsRoot}
-                                    />
+                                    {canManageTreeSettings && (
+                                        <DropdownMenuItem
+                                            onClick={() => runAndClose(() => onSetAsRoot(person.id))}
+                                            icon={<Star className="w-3.5 h-3.5" />}
+                                            iconBgClass="!bg-yellow-500/20"
+                                            iconTextColorClass="!text-yellow-400"
+                                            label={t.setAsRoot}
+                                        />
+                                    )}
                                     <DropdownMenuItem
                                         onClick={() => runAndClose(() => onDelete(person.id))}
                                         icon={<Trash2 className="w-3.5 h-3.5" />}

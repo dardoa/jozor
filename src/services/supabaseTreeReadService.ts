@@ -46,25 +46,49 @@ const fetchPeopleCountsIndividually = async (
   client: ReturnType<typeof getTreeClient>,
   treeIds: string[]
 ): Promise<Record<string, number>> => {
-  const settled = await Promise.allSettled(
-    treeIds.map(async (treeId) => {
-      const { count, error } = await client
-        .from('people')
-        .select('id', { count: 'exact', head: true })
-        .eq('tree_id', treeId);
+  try {
+    const { data, error } = await client
+      .from('people')
+      .select('tree_id')
+      .in('tree_id', treeIds);
 
-      if (error) throw error;
-      return [treeId, count ?? 0] as const;
-    })
-  );
+    if (error) throw error;
 
-  return settled.reduce<Record<string, number>>((counts, result) => {
-    if (result.status === 'fulfilled') {
-      const [treeId, count] = result.value;
-      counts[treeId] = count;
+    const counts: Record<string, number> = {};
+    for (const treeId of treeIds) {
+      counts[treeId] = 0;
     }
+
+    for (const row of (data ?? [])) {
+      const tId = (row as Record<string, unknown>).tree_id as string;
+      if (tId) {
+        counts[tId] = (counts[tId] || 0) + 1;
+      }
+    }
+
     return counts;
-  }, {});
+  } catch (err) {
+    // Ultimate fallback: individual head queries (original behavior)
+    const settled = await Promise.allSettled(
+      treeIds.map(async (treeId) => {
+        const { count, error } = await client
+          .from('people')
+          .select('id', { count: 'exact', head: true })
+          .eq('tree_id', treeId);
+
+        if (error) throw error;
+        return [treeId, count ?? 0] as const;
+      })
+    );
+
+    return settled.reduce<Record<string, number>>((counts, result) => {
+      if (result.status === 'fulfilled') {
+        const [treeId, count] = result.value;
+        counts[treeId] = count;
+      }
+      return counts;
+    }, {});
+  }
 };
 
 export const fetchPeopleCountsForTrees = async (

@@ -9,6 +9,7 @@ export const TreeDangerZone: React.FC<TreeDangerZoneProps> = ({
   ownerId,
   ownerEmail,
   peopleCount,
+  canManageTreeSettings = false,
   onTreeDeleted,
 }) => {
   const { t } = useTranslation();
@@ -17,6 +18,7 @@ export const TreeDangerZone: React.FC<TreeDangerZoneProps> = ({
     treeId,
     ownerId,
     ownerEmail,
+    canManageTreeSettings,
     text,
     onTreeDeleted,
   });
@@ -33,9 +35,12 @@ export const TreeDangerZone: React.FC<TreeDangerZoneProps> = ({
         </h4>
       </div>
 
+      {!canManageTreeSettings ? (
+        <div className="rounded-[var(--radius-lg)] border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3 py-3 text-xs font-semibold text-[var(--text-secondary)]">
+          {t.settings.maintenanceOwnerOnly}
+        </div>
+      ) : !state.showDeleteConfirm ? (
 
-
-      {!state.showDeleteConfirm ? (
         <div className="space-y-3">
           <p className="text-xs leading-5 text-[var(--color-danger)]">
             {text.dangerDescription.replace('{count}', peopleCount.toString())}

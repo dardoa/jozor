@@ -9,6 +9,7 @@ interface UseTreeDangerZoneStateArgs {
   treeId: string;
   ownerId: string;
   ownerEmail: string;
+  canManageTreeSettings: boolean;
   text: TreeSettingsText;
   onTreeDeleted?: () => void;
 }
@@ -17,6 +18,7 @@ export const useTreeDangerZoneState = ({
   treeId,
   ownerId,
   ownerEmail,
+  canManageTreeSettings,
   onTreeDeleted,
 }: UseTreeDangerZoneStateArgs) => {
   const token = useAppStore.getState().user?.supabaseToken;
@@ -27,6 +29,7 @@ export const useTreeDangerZoneState = ({
   const isDeleteConfirmed = deleteConfirmText === 'DELETE';
 
   const openDeleteConfirm = () => {
+    if (!canManageTreeSettings) return;
     setShowDeleteConfirm(true);
   };
 
@@ -36,6 +39,7 @@ export const useTreeDangerZoneState = ({
   };
 
   const handleDelete = async () => {
+    if (!canManageTreeSettings) return;
     if (!isDeleteConfirmed) return;
 
     try {

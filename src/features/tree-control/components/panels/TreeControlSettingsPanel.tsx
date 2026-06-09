@@ -1,5 +1,6 @@
 import React from 'react';
 import { TreeSettingsTab } from '../../../settings';
+import { useTreePermissions } from '../../../../hooks/tree/useTreePermissions';
 import { TreeControlPlaceholder, TreeControlSectionIntro } from '../TreeControlCenterShared';
 import type { Person } from '../../../../types';
 
@@ -25,6 +26,8 @@ export const TreeControlSettingsPanel: React.FC<{
   onRootChanged?: (newRootId: string) => void;
   onTreeRenamed?: (newName: string) => void;
 }> = ({ text, treeId, treeName, ownerId, ownerEmail, people, currentRootId, onRootChanged, onTreeRenamed }) => {
+  const { canManageTreeSettings } = useTreePermissions();
+
   if (treeId && ownerId && ownerEmail) {
     return (
       <section className="space-y-4">
@@ -36,6 +39,7 @@ export const TreeControlSettingsPanel: React.FC<{
           ownerEmail={ownerEmail}
           people={people}
           currentRootId={currentRootId ?? undefined}
+          canManageTreeSettings={canManageTreeSettings}
           onRootChanged={onRootChanged}
           onTreeRenamed={onTreeRenamed}
         />

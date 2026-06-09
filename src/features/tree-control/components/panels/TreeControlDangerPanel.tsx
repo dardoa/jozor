@@ -1,5 +1,6 @@
 import React from 'react';
 import { TreeDangerZone } from '../../../settings';
+import { useTreePermissions } from '../../../../hooks/tree/useTreePermissions';
 import { TreeControlPlaceholder, TreeControlSectionIntro } from '../TreeControlCenterShared';
 import type { Person } from '../../../../types';
 
@@ -21,11 +22,19 @@ export const TreeControlDangerPanel: React.FC<{
   ownerEmail?: string | null;
   people: Person[];
 }> = ({ text, treeId, ownerId, ownerEmail, people }) => {
+  const { canManageTreeSettings } = useTreePermissions();
+
   if (treeId && ownerId && ownerEmail) {
     return (
       <section className="space-y-4">
         <TreeControlSectionIntro title={text.sections.dangerTitle} description={text.sections.dangerDesc} />
-        <TreeDangerZone treeId={treeId} ownerId={ownerId} ownerEmail={ownerEmail} peopleCount={people.length} />
+        <TreeDangerZone
+          treeId={treeId}
+          ownerId={ownerId}
+          ownerEmail={ownerEmail}
+          peopleCount={people.length}
+          canManageTreeSettings={canManageTreeSettings}
+        />
       </section>
     );
   }
