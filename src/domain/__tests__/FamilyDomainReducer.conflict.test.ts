@@ -97,6 +97,51 @@ describe('FamilyDomainReducer - Conflict Resolution (Stage C4)', () => {
     expect(result?.['person-1'].firstName).toBe('Alice');
   });
 
+  it('applies only accepted fields from a mixed update operation', () => {
+    const person = makePerson({
+      id: 'person-1',
+      firstName: 'Alice',
+      lastName: 'Smith',
+      profession: 'Engineer',
+      metadata: {
+        lastUpdated: {
+          firstName: '2026-06-09T00:10:00.000Z',
+          lastName: '2026-06-09T00:00:00.000Z',
+          profession: '2026-06-09T00:05:00.000Z',
+        },
+        lastUpdatedOps: {
+          firstName: { client_id: 'client-Z', client_version: 1 },
+          lastName: { client_id: 'client-A', client_version: 1 },
+          profession: { client_id: 'client-B', client_version: 3 },
+        },
+      },
+    });
+
+    const result = applyDeltaOperationToFamily(
+      { 'person-1': person },
+      makeOperation({
+        created_at: '2026-06-09T00:07:00.000Z',
+        payload: {
+          id: 'person-1',
+          client_id: 'client-C',
+          client_version: 1,
+          updates: {
+            firstName: 'Bob',
+            lastName: 'Jones',
+            profession: 'Architect',
+          },
+        },
+      })
+    );
+
+    expect(result?.['person-1'].firstName).toBe('Alice');
+    expect(result?.['person-1'].lastName).toBe('Jones');
+    expect(result?.['person-1'].profession).toBe('Architect');
+    expect(result?.['person-1'].metadata?.lastUpdated?.firstName).toBe('2026-06-09T00:10:00.000Z');
+    expect(result?.['person-1'].metadata?.lastUpdated?.lastName).toBe('2026-06-09T00:07:00.000Z');
+    expect(result?.['person-1'].metadata?.lastUpdated?.profession).toBe('2026-06-09T00:07:00.000Z');
+  });
+
   it('uses lexicographical client_id tie-breaker when timestamps are equal', () => {
     const person = makePerson({
       id: 'person-1',

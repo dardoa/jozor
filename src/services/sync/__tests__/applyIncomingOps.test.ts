@@ -141,5 +141,87 @@ describe('applyIncomingOps', () => {
             client_version: 2,
         });
     });
+
+    it('applies only newer tree metadata settings from mixed remote updates', () => {
+        const applyOperationToMap = vi.fn();
+        const op: DeltaOperation = {
+            tree_id: 'tree-1',
+            user_id: 'user-2',
+            type: 'SET_TREE_METADATA',
+            payload: {
+                client_id: 'client-b',
+                client_version: 1,
+                treeMetadata: {
+                    settings: {
+                        showPhotos: false,
+                        showDates: false,
+                    },
+                },
+            },
+            created_at: '2026-06-09T01:00:00.000Z',
+            version_seq: 11,
+        };
+
+        const result = applyIncomingOps({
+            people: { 'person-1': root },
+            ops: [op],
+            deletedPersonIds: new Set(),
+            lastSyncedVersion: 10,
+            applyOperationToMap,
+            currentTreeSettings: {
+                ...DEFAULT_TREE_SETTINGS,
+                showPhotos: true,
+                showDates: true,
+                sync_metadata: {
+                    lastUpdated: {
+                        showPhotos: '2026-06-09T02:00:00.000Z',
+                        showDates: '2026-06-09T00:00:00.000Z',
+                    },
+                    lastUpdatedOps: {
+                        showPhotos: { client_id: 'client-a', client_version: 1 },
+                        showDates: { client_id: 'client-a', client_version: 1 },
+                    },
+                },
+            },
+        });
+
+        expect(result.treeMetadata.settings?.showPhotos).toBe(true);
+        expect(result.treeMetadata.settings?.showDates).toBe(false);
+        expect(result.treeMetadata.settings?.sync_metadata?.lastUpdated?.showPhotos).toBe('2026-06-09T02:00:00.000Z');
+        expect(result.treeMetadata.settings?.sync_metadata?.lastUpdated?.showDates).toBe('2026-06-09T01:00:00.000Z');
+    });
+
+    it('skips non-delete operations for persisted deleted person ids', () => {
+        const applyOperationToMap = vi.fn();
+        const onSkipBlacklisted = vi.fn();
+        const op: DeltaOperation = {
+            tree_id: 'tree-1',
+            user_id: 'user-2',
+            type: 'UPDATE_PROP',
+            payload: {
+                id: 'person-1',
+                updates: {
+                    firstName: 'Returned',
+                },
+            },
+            version_seq: 12,
+        };
+
+        const result = applyIncomingOps({
+            people: { 'person-1': root },
+            ops: [op],
+            deletedPersonIds: new Set(['person-1']),
+            lastSyncedVersion: 11,
+            applyOperationToMap,
+            onSkipBlacklisted,
+            currentTreeSettings: DEFAULT_TREE_SETTINGS,
+        });
+
+        expect(applyOperationToMap).not.toHaveBeenCalled();
+        expect(onSkipBlacklisted).toHaveBeenCalledWith({ op, targetId: 'person-1' });
+        expect(result.people).toEqual({ 'person-1': root });
+        expect(result.maxVersion).toBe(12);
+        expect(result.syncingNodeIdsToRemove).toEqual(['person-1']);
+    });
 });
 
