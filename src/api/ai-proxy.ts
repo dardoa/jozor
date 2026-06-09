@@ -571,6 +571,11 @@ async function finalizeQuota(
   if (!reservationId) return null;
 
   await completeUsageReservation(supabaseAdmin, reservationId);
+  const fallbackUsageStats: AIUsageStats = {
+    used: 0,
+    limit: 30,
+    resetAt: '',
+  };
 
   const { data: usage } = await supabaseAdmin
     .from('ai_monthly_usage')
@@ -586,7 +591,7 @@ async function finalizeQuota(
     };
   }
 
-  return null;
+  return fallbackUsageStats;
 }
 
 async function handleHandlerError(

@@ -198,7 +198,13 @@ describe('activityService', () => {
     it('creates real-time subscription channel and allows unsubscribing', () => {
       const unsubscribeMock = vi.fn();
       const subscribeMock = vi.fn(() => ({ unsubscribe: unsubscribeMock }));
-      const onMock = vi.fn(() => ({ subscribe: subscribeMock }));
+      type RealtimePayload = { new: unknown };
+      type RealtimeCallback = (payload: RealtimePayload) => void;
+      const onMock = vi.fn((
+        _event: 'postgres_changes',
+        _config: Record<string, unknown>,
+        _callback: RealtimeCallback
+      ) => ({ subscribe: subscribeMock }));
       const channelMock = vi.fn(() => ({ on: onMock, unsubscribe: unsubscribeMock }));
       getSupabaseFullMock.mockReturnValue({ channel: channelMock });
 

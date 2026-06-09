@@ -47,7 +47,12 @@ describe('AddRelativeCommand', () => {
           children: [],
         } as unknown as Person,
       },
-      addParent: vi.fn((gender, bypassSync, relatedPersonId, targetPersonId) => {
+      addParent: vi.fn((
+        gender: 'male' | 'female',
+        _bypassSync: boolean,
+        _relatedPersonId: string | undefined,
+        targetPersonId: string | undefined
+      ) => {
         const newId = 'new-parent-id';
         mockStoreState.people = {
           ...mockStoreState.people,
@@ -63,7 +68,11 @@ describe('AddRelativeCommand', () => {
         };
         return { newId };
       }),
-      addSpouse: vi.fn((gender, bypassSync, relatedPersonId) => {
+      addSpouse: vi.fn((
+        gender: 'male' | 'female',
+        _bypassSync: boolean,
+        _relatedPersonId: string | undefined
+      ) => {
         const newId = 'new-spouse-id';
         mockStoreState.people = {
           ...mockStoreState.people,
@@ -79,7 +88,12 @@ describe('AddRelativeCommand', () => {
         };
         return { newId };
       }),
-      addChild: vi.fn((gender, bypassSync, relatedPersonId, targetPersonId) => {
+      addChild: vi.fn((
+        gender: 'male' | 'female',
+        _bypassSync: boolean,
+        _relatedPersonId: string | undefined,
+        targetPersonId: string | undefined
+      ) => {
         const newId = 'new-child-id';
         mockStoreState.people = {
           ...mockStoreState.people,
@@ -158,7 +172,12 @@ describe('AddRelativeCommand', () => {
 
   it('adds parent and queues ADD_NODE and spouse ADD_RELATION if parent has spouses', async () => {
     // Modify addParent mock to return a parent with a spouse
-    mockStoreState.addParent.mockImplementation((gender, bypass, relatedId, targetId) => {
+    mockStoreState.addParent.mockImplementation((
+      gender: 'male' | 'female',
+      _bypass: boolean,
+      _relatedId: string | undefined,
+      targetId: string | undefined
+    ) => {
       const newId = 'new-parent-id';
       mockStoreState.people = {
         ...mockStoreState.people,
@@ -199,7 +218,12 @@ describe('AddRelativeCommand', () => {
 
   it('adds child and queues ADD_NODE and child ADD_RELATION for co-parent if other parent exists', async () => {
     // Modify addChild mock to return a child with multiple parents
-    mockStoreState.addChild.mockImplementation((gender, bypass, relatedId, targetId) => {
+    mockStoreState.addChild.mockImplementation((
+      gender: 'male' | 'female',
+      _bypass: boolean,
+      _relatedId: string | undefined,
+      targetId: string | undefined
+    ) => {
       const newId = 'new-child-id';
       mockStoreState.people = {
         ...mockStoreState.people,
@@ -247,7 +271,12 @@ describe('AddRelativeCommand', () => {
 
   it('rolls back store state if ADD_RELATION sync queueing fails', async () => {
     // Mock parent with a spouse to trigger ADD_RELATION
-    mockStoreState.addParent.mockImplementation((gender, bypass, relatedId, targetId) => {
+    mockStoreState.addParent.mockImplementation((
+      gender: 'male' | 'female',
+      _bypass: boolean,
+      _relatedId: string | undefined,
+      targetId: string | undefined
+    ) => {
       const newId = 'new-parent-id';
       mockStoreState.people = {
         ...mockStoreState.people,
