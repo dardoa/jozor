@@ -11,4 +11,11 @@ describe('vercel API configuration', () => {
       },
     ]);
   });
+
+  it('rewrites non-API client routes to the SPA entrypoint', () => {
+    expect(vercelConfig.rewrites).toContainEqual({
+      source: '/((?!api/).*)',
+      destination: '/index.html',
+    });
+  });
 });
