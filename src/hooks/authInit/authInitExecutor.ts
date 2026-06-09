@@ -132,7 +132,7 @@ export const executeAuthInitPlan = ({
 
     case 'RESOLVE_ROUTE_PERSON':
       if (user) {
-        const routePersonRequestKey = `${user.uid}:${plan.personId}`;
+        const routePersonRequestKey = `${user.uid}:${plan.personId}:${user.supabaseToken || 'no-token'}`;
 
         if (
           routePersonBranchRefs.inFlightRef.current === routePersonRequestKey ||
@@ -144,7 +144,7 @@ export const executeAuthInitPlan = ({
         routePersonBranchRefs.inFlightRef.current = routePersonRequestKey;
         setAuthLoading(true);
 
-        resolveTreeByPerson(plan.personId)
+        resolveTreeByPerson(plan.personId, user.supabaseToken)
           .then((resolved) => {
             return fetchTree(resolved.treeId, user.uid, user.email || '', user.supabaseToken)
               .then((full) => ({ full, resolved }));
@@ -154,7 +154,7 @@ export const executeAuthInitPlan = ({
             routePersonBranchRefs.completedRef.current = routePersonRequestKey;
           })
           .catch((err) => {
-            routePersonBranchRefs.completedRef.current = null;
+            routePersonBranchRefs.completedRef.current = routePersonRequestKey;
             routePersonBranchRefs.inFlightRef.current = null;
             treeLoadHandlers.handleTreeLoadError(err, 'SUPABASE_RESOLVE_ROUTE_PERSON_TREE_ERROR');
           })

@@ -269,7 +269,7 @@ describe('useAuthInit', () => {
     );
 
     await waitFor(() => {
-      expect(resolveTreeByPersonMock).toHaveBeenCalledWith('person-2');
+      expect(resolveTreeByPersonMock).toHaveBeenCalledWith('person-2', 'token-1');
     });
 
     await waitFor(() => {
@@ -289,6 +289,40 @@ describe('useAuthInit', () => {
     expect(setShowWelcome).toHaveBeenCalledWith(false);
     expect(reconcileTreeMock).toHaveBeenCalledWith(focusedTreeId);
     expect(recoverPendingOperationsMock).toHaveBeenCalledWith(focusedTreeId);
+  });
+
+  it('stops retrying a failed person route resolution and releases the app shell', async () => {
+    resolveTreeByPersonMock.mockRejectedValue(new Error('unauthorized'));
+
+    const setShowWelcome = vi.fn();
+    const { rerender } = renderHook(
+      ({ people }) =>
+        useAuthInit({
+          people,
+          routePersonId: 'person-2',
+          setShowWelcome,
+        }),
+      { initialProps: { people: {} as Record<string, Person> } }
+    );
+
+    await waitFor(() => {
+      expect(logErrorMock).toHaveBeenCalledWith(
+        'SUPABASE_RESOLVE_ROUTE_PERSON_TREE_ERROR',
+        expect.any(Error),
+        { showToast: false }
+      );
+    });
+
+    rerender({ people: {} });
+
+    await waitFor(() => {
+      expect(useAppStore.getState().authLoading).toBe(false);
+    }, { timeout: 2500 });
+
+    expect(resolveTreeByPersonMock).toHaveBeenCalledTimes(1);
+    expect(fetchTreeMock).not.toHaveBeenCalled();
+    expect(useAppStore.getState().currentTreeId).toBeNull();
+    expect(setShowWelcome).toHaveBeenCalledWith(false);
   });
 
   it('clears stale lastActiveTreeId when restore fails', async () => {
