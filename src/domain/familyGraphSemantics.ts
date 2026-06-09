@@ -306,6 +306,63 @@ function assignViaFamilyIds(
   });
 }
 
+function processNode(
+  node: { id: string; type: PersonRenderRole['type']; depth: number },
+  familyGraph: FamilyGraph,
+  visitedPeople: Set<string>,
+  visitedFamilies: Set<string>,
+  personRoles: Record<string, PersonRenderRole>,
+  familyDecisions: Record<string, FamilyRenderDecision>,
+  queue: Array<{ id: string; type: PersonRenderRole['type']; depth: number }>,
+  maxDepth: number
+): void {
+  const { id, type, depth } = node;
+  if (depth > maxDepth) return; // Safety limit + Appearance Lab generation cap
+
+  const personRef = familyGraph.persons[id];
+  if (!personRef) return;
+
+  const isFirstVisit = !visitedPeople.has(id);
+  const role: 'canonical' | 'reference' = isFirstVisit ? 'canonical' : 'reference';
+  
+  applyPersonRole(personRoles, id, role, type || 'spouse', null, isFirstVisit ? 'bfs-discovery' : 're-discovery');
+  
+  if (isFirstVisit) {
+    visitedPeople.add(id);
+    
+    personRef.ownUnitIds.forEach((famId) => {
+      const family = familyGraph.families[famId];
+      if (!family || visitedFamilies.has(famId)) return;
+
+      visitedFamilies.add(famId);
+      applyFamilyDecision(familyDecisions, famId, 'canonical', id, 'bfs-discovery');
+
+      family.parentIds.forEach((pid) => {
+        if (pid !== id) {
+          queue.push({ id: pid, type: 'spouse', depth: depth + 1 });
+        }
+      });
+
+      family.childIds.forEach((cid) => {
+        queue.push({ id: cid, type: 'child', depth: depth + 1 });
+      });
+    });
+
+    if (personRef.parentUnitId) {
+      const famId = personRef.parentUnitId;
+      const family = familyGraph.families[famId];
+      if (family && !visitedFamilies.has(famId)) {
+        visitedFamilies.add(famId);
+        applyFamilyDecision(familyDecisions, famId, 'reference-only', id, 'ancestor-family');
+
+        family.parentIds.forEach((pid) => {
+          queue.push({ id: pid, type: 'parent', depth: depth + 1 });
+        });
+      }
+    }
+  }
+}
+
 export function buildLayoutSemanticsSnapshot(
   familyGraphInput: FamilyGraph,
   rootPersonId: string,
@@ -345,51 +402,17 @@ export function buildLayoutSemanticsSnapshot(
     : 20;
 
   while (queue.length > 0) {
-    const { id, type, depth } = queue.shift()!;
-    if (depth > maxDepth) continue; // Safety limit + Appearance Lab generation cap
-
-    const personRef = familyGraph.persons[id];
-    if (!personRef) continue;
-
-    const isFirstVisit = !visitedPeople.has(id);
-    const role: 'canonical' | 'reference' = isFirstVisit ? 'canonical' : 'reference';
-    
-    applyPersonRole(personRoles, id, role, type || 'spouse', null, isFirstVisit ? 'bfs-discovery' : 're-discovery');
-    
-    if (isFirstVisit) {
-      visitedPeople.add(id);
-      
-      personRef.ownUnitIds.forEach((famId) => {
-        const family = familyGraph.families[famId];
-        if (!family || visitedFamilies.has(famId)) return;
-
-        visitedFamilies.add(famId);
-        applyFamilyDecision(familyDecisions, famId, 'canonical', id, 'bfs-discovery');
-
-        family.parentIds.forEach((pid) => {
-          if (pid !== id) {
-            queue.push({ id: pid, type: 'spouse', depth: depth + 1 });
-          }
-        });
-
-        family.childIds.forEach((cid) => {
-          queue.push({ id: cid, type: 'child', depth: depth + 1 });
-        });
-      });
-
-      if (personRef.parentUnitId) {
-        const famId = personRef.parentUnitId;
-        const family = familyGraph.families[famId];
-        if (family && !visitedFamilies.has(famId)) {
-          visitedFamilies.add(famId);
-          applyFamilyDecision(familyDecisions, famId, 'reference-only', id, 'ancestor-family');
-
-          family.parentIds.forEach((pid) => {
-            queue.push({ id: pid, type: 'parent', depth: depth + 1 });
-          });
-        }
-      }
-    }
+    const node = queue.shift()!;
+    processNode(
+      node,
+      familyGraph,
+      visitedPeople,
+      visitedFamilies,
+      personRoles,
+      familyDecisions,
+      queue,
+      maxDepth
+    );
   }
 
   // Finalize ownership
