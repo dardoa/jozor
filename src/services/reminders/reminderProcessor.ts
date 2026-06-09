@@ -129,6 +129,7 @@ export async function processReminderBatch(params: {
   // 3. Generate scheduled birthday notifications for each user
   const remindersToClaim: Array<{
     userId: string;
+    treeId: string;
     personId: string;
     dedupeKey: string;
     type: string;
@@ -140,21 +141,19 @@ export async function processReminderBatch(params: {
     const userTrees = userToTreeIds[uid];
     if (userTrees.length === 0) continue;
 
-    // Combine people across all trees for this user
-    const userPeople: Record<string, Person> = {};
     for (const tid of userTrees) {
-      Object.assign(userPeople, peopleByTreeId[tid] || {});
-    }
+      const treePeople = peopleByTreeId[tid] || {};
+      const treeReminders = buildScheduledBirthdayNotifications({
+        people: treePeople,
+        isRtl: false,
+        now: params.now,
+      });
 
-    const userReminders = buildScheduledBirthdayNotifications({
-      people: userPeople,
-      isRtl: false,
-      now: params.now,
-    });
-
-    for (const r of userReminders) {
-      const dedupeKey = r.spec.notification.dedupeKey;
-      if (dedupeKey) {
+      for (const r of treeReminders) {
+        const dedupeKey = r.spec.notification.dedupeKey
+          ? `${tid}:${r.spec.notification.dedupeKey}`
+          : undefined;
+        if (!dedupeKey) continue;
         remindersToClaim.push({
           userId: uid,
           personId: r.personId,
@@ -162,6 +161,7 @@ export async function processReminderBatch(params: {
           type: r.spec.notification.type,
           title: r.spec.notification.title,
           body: r.spec.notification.body,
+          treeId: tid,
         });
       }
     }
@@ -220,6 +220,7 @@ export async function processReminderBatch(params: {
           data: {
             source: 'scheduled-reminder-cron',
             dedupeKey: reminder.dedupeKey,
+            treeId: reminder.treeId,
             personId: reminder.personId,
             notificationType: reminder.type,
           },

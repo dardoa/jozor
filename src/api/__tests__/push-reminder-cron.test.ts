@@ -365,5 +365,23 @@ describe('push-reminder-cron API', () => {
     expect(res.body).toEqual({ error: 'Reminder cron failed.' });
     expect(JSON.stringify(res.body)).not.toContain('private database detail');
   });
+
+  it('returns 503 when CRON_SECRET is missing', async () => {
+    delete process.env.CRON_SECRET;
+    createClientMock.mockImplementation(() => createSupabaseMock());
+
+    const req = {
+      method: 'GET',
+      headers: { authorization: 'Bearer cron-secret' },
+      query: { date: '2026-03-27T09:00:00.000Z' },
+    };
+    const res = createResponse();
+
+    await handler(req as never, res as never);
+
+    expect(res.statusCode).toBe(503);
+    expect(res.body).toEqual({ error: 'CRON_SECRET is not configured' });
+    expect(listSubscribedUserIdsServerMock).not.toHaveBeenCalled();
+  });
 });
 

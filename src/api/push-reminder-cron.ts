@@ -13,9 +13,14 @@ const MAX_BATCHES = 25;
 const DEFAULT_DELIVERY_RETENTION_DAYS = 90;
 let serverClient: SupabaseClient | null = null;
 
+const getEnv = (name: string): string | undefined => {
+  const value = process.env[name];
+  return typeof value === 'string' && value.trim() ? value : undefined;
+};
+
 const getServerClient = () => {
-  const supabaseUrl = process.env.SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const supabaseUrl = getEnv('SUPABASE_URL') || getEnv('VITE_SUPABASE_URL');
+  const serviceRoleKey = getEnv('SUPABASE_SERVICE_ROLE_KEY');
 
   if (!supabaseUrl || !serviceRoleKey) {
     throw new Error('Supabase server environment variables are not configured for reminder cron.');
@@ -34,12 +39,12 @@ const getServerClient = () => {
   return serverClient;
 };
 
-const getCronSecret = () => process.env.CRON_SECRET?.trim();
+const getCronSecret = () => getEnv('CRON_SECRET');
 
-const isAuthorizedCronRequest = (req: VercelRequest) => {
+const getCronAuthFailure = (req: VercelRequest): { status: number; error: string } | null => {
   const cronSecret = getCronSecret();
   if (!cronSecret) {
-    throw new Error('Missing CRON_SECRET environment variable.');
+    return { status: 503, error: 'CRON_SECRET is not configured' };
   }
 
   const authorization = req.headers.authorization;
@@ -47,7 +52,7 @@ const isAuthorizedCronRequest = (req: VercelRequest) => {
     ? authorization.slice('Bearer '.length).trim()
     : undefined;
 
-  return bearerToken === cronSecret;
+  return bearerToken === cronSecret ? null : { status: 401, error: 'Unauthorized' };
 };
 
 const parseBatchSize = (value: string | string[] | undefined) => {
@@ -123,8 +128,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    if (!isAuthorizedCronRequest(req)) {
-      return res.status(401).json({ error: 'Unauthorized' });
+    const authFailure = getCronAuthFailure(req);
+    if (authFailure) {
+      return res.status(authFailure.status).json({ error: authFailure.error });
     }
 
     const batchSize = parseBatchSize(req.query.limit);
