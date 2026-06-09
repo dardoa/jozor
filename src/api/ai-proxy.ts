@@ -19,6 +19,11 @@ const resolveAllowedOrigin = () => {
   return 'http://localhost:5173';
 };
 const ALLOWED_ORIGIN = resolveAllowedOrigin();
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+};
 const MAX_PROMPT_LENGTH = 30_000;
 let supabaseAdminClient: SupabaseClient | null = null;
 
@@ -448,15 +453,9 @@ async function generateViaProvider(prompt: string, image?: AIProxyImagePayload, 
   throw lastError || new Error('All AI provider attempts failed.');
 }
 
-export default async function handler(req: Request) {
-  const corsHeaders = {
-    'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-  };
-
+function handleCorsAndMethod(req: Request): Response | null {
   if (req.method === 'OPTIONS') {
-    return new Response(null, { status: 200, headers: corsHeaders });
+    return new Response(null, { status: 200, headers: CORS_HEADERS });
   }
 
   if (req.method !== 'POST') {
@@ -465,12 +464,14 @@ export default async function handler(req: Request) {
         message: 'Method not allowed',
         code: 'METHOD_NOT_ALLOWED',
       },
-    }, { status: 405, headers: corsHeaders });
+    }, { status: 405, headers: CORS_HEADERS });
   }
 
-  // Resilient header retrieval to support both Edge Runtime and Node.js local dev.
+  return null;
+}
+
+async function authenticateRequest(req: Request): Promise<{ uid: string; email?: string } | Response> {
   const authHeader = getAuthorizationHeader(req.headers);
-  
   const user = await authenticateUser(authHeader);
   if (!user) {
     return Response.json({
@@ -478,8 +479,162 @@ export default async function handler(req: Request) {
         message: 'Unauthorized: Invalid session.',
         code: 'UNAUTHORIZED',
       },
-    }, { status: 401, headers: corsHeaders });
+    }, { status: 401, headers: CORS_HEADERS });
   }
+  return user;
+}
+
+async function checkBillingAndRateLimit(
+  supabaseAdmin: SupabaseClient,
+  userId: string
+): Promise<{ tier: BillingTier } | Response> {
+  const { data: profile, error: profileError } = await supabaseAdmin
+    .from('user_profiles')
+    .select('tier')
+    .eq('id', userId)
+    .single();
+
+  if (profileError || !profile) {
+    return Response.json({
+      error: {
+        message: 'Failed to retrieve user profile tier.',
+        code: 'PROFILE_RETRIEVAL_ERROR',
+      },
+    }, { status: 500, headers: CORS_HEADERS });
+  }
+
+  const tier = normalizeBillingTier(profile.tier);
+
+  if (tier === 'free') {
+    return Response.json({
+      error: {
+        message: 'AI Cloud features are only available on Pro and Family plans.',
+        code: 'TIER_LIMIT_EXCEEDED',
+      },
+    }, { status: 403, headers: CORS_HEADERS });
+  }
+
+  await enforceAIProxyRateLimit(supabaseAdmin, userId, tier);
+  return { tier };
+}
+
+async function reserveQuota(
+  supabaseAdmin: SupabaseClient,
+  userId: string,
+  tier: BillingTier
+): Promise<{ reservationId: string | null } | Response> {
+  if (tier !== 'pro') {
+    return { reservationId: null };
+  }
+
+  const { data: resId, error: reserveError } = await supabaseAdmin.rpc(
+    'reserve_ai_usage_atomic',
+    { p_user_id: userId }
+  );
+
+  if (reserveError) {
+    if (
+      reserveError.message.includes('quota exceeded') ||
+      reserveError.message.includes('Limit Exceeded') ||
+      reserveError.message.includes('limit exceeded')
+    ) {
+      return Response.json({
+        error: {
+          message: 'Monthly Pro AI cloud request limit exceeded. Upgrade to Family for unlimited cloud access.',
+          code: 'AI_USAGE_LIMIT_EXCEEDED',
+        },
+      }, { status: 429, headers: CORS_HEADERS });
+    }
+
+    return Response.json({
+      error: {
+        message: `Failed to reserve AI quota: ${reserveError.message}`,
+        code: 'USAGE_RESERVATION_ERROR',
+      },
+    }, { status: 500, headers: CORS_HEADERS });
+  }
+
+  return { reservationId: resId as string };
+}
+
+interface AIUsageStats {
+  used: number;
+  limit: number;
+  resetAt: string;
+}
+
+async function finalizeQuota(
+  supabaseAdmin: SupabaseClient,
+  userId: string,
+  reservationId: string | null
+): Promise<AIUsageStats | null> {
+  if (!reservationId) return null;
+
+  await completeUsageReservation(supabaseAdmin, reservationId);
+
+  const { data: usage } = await supabaseAdmin
+    .from('ai_monthly_usage')
+    .select('cloud_requests_used, cloud_requests_limit, reset_at')
+    .eq('user_id', userId)
+    .single();
+
+  if (usage) {
+    return {
+      used: usage.cloud_requests_used,
+      limit: usage.cloud_requests_limit,
+      resetAt: usage.reset_at,
+    };
+  }
+
+  return null;
+}
+
+async function handleHandlerError(
+  error: unknown,
+  reservationId: string | null,
+  supabaseAdmin: SupabaseClient | null
+): Promise<Response> {
+  if (reservationId && supabaseAdmin) {
+    try {
+      await supabaseAdmin.rpc('refund_ai_usage_reservation', { p_reservation_id: reservationId });
+    } catch (e: unknown) {
+      console.error('[AI_PROXY] Failed to refund reservation:', e);
+    }
+  }
+
+  if (error instanceof AIProxyRateLimitExceededError) {
+    return Response.json({
+      error: {
+        message: 'Too many AI requests. Please wait briefly before trying again.',
+        code: 'AI_RATE_LIMIT_EXCEEDED',
+        retryAfterSeconds: error.result.retryAfterSeconds,
+        resetAt: error.result.resetAt,
+      },
+    }, {
+      status: 429,
+      headers: {
+        ...CORS_HEADERS,
+        ...buildAIProxyRateLimitHeaders(error.result),
+      },
+    });
+  }
+
+  logServerError('API_AI_PROXY', error);
+  return Response.json({
+    error: {
+      message: error instanceof Error ? error.message : 'Internal Server Error',
+      code: 'INTERNAL_SERVER_ERROR',
+    },
+  }, { status: 500, headers: CORS_HEADERS });
+}
+
+export default async function handler(req: Request) {
+  const corsResponse = handleCorsAndMethod(req);
+  if (corsResponse) return corsResponse;
+
+  const authResult = await authenticateRequest(req);
+  if (authResult instanceof Response) return authResult;
+  const user = authResult;
 
   let reservationId: string | null = null;
   let supabaseAdmin: SupabaseClient | null = null;
@@ -488,140 +643,31 @@ export default async function handler(req: Request) {
     const body = (await req.json()) as AIProxyRequest;
     const { prompt, image, preferredModels } = getOperationPrompt(body);
     supabaseAdmin = getSupabaseAdminClient();
-    
-    // 1. Fetch user's subscription tier
-    const { data: profile, error: profileError } = await supabaseAdmin
-      .from('user_profiles')
-      .select('tier')
-      .eq('id', user.uid)
-      .single();
 
-    if (profileError || !profile) {
-      return Response.json({
-        error: {
-          message: 'Failed to retrieve user profile tier.',
-          code: 'PROFILE_RETRIEVAL_ERROR',
-        },
-      }, { status: 500, headers: corsHeaders });
-    }
+    const billingResult = await checkBillingAndRateLimit(supabaseAdmin, user.uid);
+    if (billingResult instanceof Response) return billingResult;
+    const { tier } = billingResult;
 
-    const tier = normalizeBillingTier(profile.tier);
+    const reservationResult = await reserveQuota(supabaseAdmin, user.uid, tier);
+    if (reservationResult instanceof Response) return reservationResult;
+    reservationId = reservationResult.reservationId;
 
-    // 2. Reject Free tier users
-    if (tier === 'free') {
-      return Response.json({
-        error: {
-          message: 'AI Cloud features are only available on Pro and Family plans.',
-          code: 'TIER_LIMIT_EXCEEDED',
-        },
-      }, { status: 403, headers: corsHeaders });
-    }
-
-    // 3. Enforce a short-window rate limit for all cloud AI tiers.
-    // Pro still has the monthly quota below; Family gets a generous burst cap
-    // so one user cannot exhaust provider capacity in a short spike.
-    await enforceAIProxyRateLimit(supabaseAdmin, user.uid, tier);
-
-    let cloudRequestsUsed = 0;
-    let cloudRequestsLimit = 30;
-    let resetAtStr = '';
-
-    // 4. Atomically check and reserve quota for Pro tier users
-    if (tier === 'pro') {
-      const { data: resId, error: reserveError } = await supabaseAdmin.rpc(
-        'reserve_ai_usage_atomic',
-        { p_user_id: user.uid }
-      );
-
-      if (reserveError) {
-        if (
-          reserveError.message.includes('quota exceeded') ||
-          reserveError.message.includes('Limit Exceeded') ||
-          reserveError.message.includes('limit exceeded')
-        ) {
-          return Response.json({
-            error: {
-              message: 'Monthly Pro AI cloud request limit exceeded. Upgrade to Family for unlimited cloud access.',
-              code: 'AI_USAGE_LIMIT_EXCEEDED',
-            },
-          }, { status: 429, headers: corsHeaders });
-        }
-
-        return Response.json({
-          error: {
-            message: `Failed to reserve AI quota: ${reserveError.message}`,
-            code: 'USAGE_RESERVATION_ERROR',
-          },
-        }, { status: 500, headers: corsHeaders });
-      }
-
-      reservationId = resId as string;
-    }
-
-    // 5. Generate AI response via Gemini provider
     const response = await generateViaProvider(prompt, image, preferredModels);
 
-    // 6. Complete reservation on success and fetch latest quota stats
-    if (reservationId) {
-      await completeUsageReservation(supabaseAdmin, reservationId);
-
-      const { data: usage } = await supabaseAdmin
-        .from('ai_monthly_usage')
-        .select('cloud_requests_used, cloud_requests_limit, reset_at')
-        .eq('user_id', user.uid)
-        .single();
-
-      if (usage) {
-        cloudRequestsUsed = usage.cloud_requests_used;
-        cloudRequestsLimit = usage.cloud_requests_limit;
-        resetAtStr = usage.reset_at;
-      }
-    }
+    const usageStats = await finalizeQuota(supabaseAdmin, user.uid, reservationId);
 
     return Response.json({
       result: response.result,
       model: response.model,
-      ...(tier === 'pro' ? {
+      ...(tier === 'pro' && usageStats ? {
         usage: {
-          used: cloudRequestsUsed,
-          limit: cloudRequestsLimit,
-          resetAt: resetAtStr,
+          used: usageStats.used,
+          limit: usageStats.limit,
+          resetAt: usageStats.resetAt,
         }
       } : {}),
-    }, { status: 200, headers: corsHeaders });
+    }, { status: 200, headers: CORS_HEADERS });
   } catch (error) {
-    if (reservationId && supabaseAdmin) {
-      // Refund reservation on failure/timeout
-      try {
-        await supabaseAdmin.rpc('refund_ai_usage_reservation', { p_reservation_id: reservationId });
-      } catch (e: unknown) {
-        console.error('[AI_PROXY] Failed to refund reservation:', e);
-      }
-    }
-
-    if (error instanceof AIProxyRateLimitExceededError) {
-      return Response.json({
-        error: {
-          message: 'Too many AI requests. Please wait briefly before trying again.',
-          code: 'AI_RATE_LIMIT_EXCEEDED',
-          retryAfterSeconds: error.result.retryAfterSeconds,
-          resetAt: error.result.resetAt,
-        },
-      }, {
-        status: 429,
-        headers: {
-          ...corsHeaders,
-          ...buildAIProxyRateLimitHeaders(error.result),
-        },
-      });
-    }
-
-    logServerError('API_AI_PROXY', error);
-    return Response.json({
-      error: {
-        message: error instanceof Error ? error.message : 'Internal Server Error',
-        code: 'INTERNAL_SERVER_ERROR',
-      },
-    }, { status: 500, headers: corsHeaders });
+    return handleHandlerError(error, reservationId, supabaseAdmin);
   }
 }
