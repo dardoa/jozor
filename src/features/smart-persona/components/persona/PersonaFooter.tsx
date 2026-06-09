@@ -9,11 +9,11 @@ interface PersonaFooterProps {
   setIsEditing: (v: boolean) => void;
   onDelete: (id: string) => void;
   canEdit: boolean;
-  isOwner: boolean;
+  isOwner?: boolean;
 }
 
 export const PersonaFooter = memo<PersonaFooterProps>(
-  ({ person, isEditing, setIsEditing, onDelete, canEdit, isOwner }) => {
+  ({ person, isEditing, setIsEditing, onDelete, canEdit }) => {
     const { t } = useTranslation();
     const iconButtonClass =
       'flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border-soft)] shadow-[var(--shadow-sm)] transition-all active:scale-95 disabled:opacity-30';
@@ -30,9 +30,9 @@ export const PersonaFooter = memo<PersonaFooterProps>(
             type='button'
             onClick={handleDelete}
             className={`${iconButtonClass} bg-[var(--surface-panel)] text-[var(--danger-600)] hover:border-[var(--danger-500)]/20 hover:bg-[color:rgba(179,92,75,0.12)] disabled:grayscale`}
-            title={isOwner ? t.deletePerson : t.readOnly}
-            aria-label={isOwner ? t.deletePerson : t.readOnly}
-            disabled={!isOwner}
+            title={canEdit ? t.deletePerson : t.readOnly}
+            aria-label={canEdit ? t.deletePerson : t.readOnly}
+            disabled={!canEdit}
           >
             <Trash2 className='w-5 h-5' />
           </button>
