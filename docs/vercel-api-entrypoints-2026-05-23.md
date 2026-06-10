@@ -58,7 +58,7 @@ Operational notes:
 The following diagnostic endpoint source handlers were removed from `src/api/` as they are not published to Vercel and their development utility is served directly via Vite middleware:
 
 - `src/api/debug-env.ts` (Deleted): Redundant diagnostic handler.
-- `src/api/check-env.ts` (Deleted): Redundant diagnostic handler. Local environment diagnostics are handled directly by `/api/check-env` inside the [localApiProxyMiddleware.ts](file:///d:/AppDEV/Jozor1.1/scripts/dev/localApiProxyMiddleware.ts) file.
+- `src/api/check-env.ts` (Deleted): Redundant diagnostic handler. Local environment diagnostics are handled directly by `/api/check-env` inside the [localApiProxyMiddleware.ts](../scripts/dev/localApiProxyMiddleware.ts) file.
 
 ## Verification
 

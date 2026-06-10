@@ -68,7 +68,7 @@ graph TD
 ```
 
 ### المرحلة الأولى: تفكيك وإعادة هيكلة Kindi Parsing Refactor (أعلى فائدة / أقل مخاطرة)
-*   **الهدف:** تفكيك وتبسيط منطق ملف [kindiExecutivePlanner.ts](file:///d:/AppDEV/Jozor1.1/src/features/kindi/logic/kindiExecutivePlanner.ts) البالغ طوله 643 سطراً والذي يجمع عدة مسؤوليات حساسة.
+*   **الهدف:** تفكيك وتبسيط منطق ملف [kindiExecutivePlanner.ts](../src/features/kindi/logic/kindiExecutivePlanner.ts) البالغ طوله 643 سطراً والذي يجمع عدة مسؤوليات حساسة.
 *   **الخطوات المعمارية:**
     1.  **استخلاص المسؤوليات وتوزيعها:** تفكيك الوظائف المعالجة إلى وحدات مستقلة ومختبرة:
         *   نقل `parseKindiProvidedName` و `extractAddInitialUpdates` إلى محلل مستقل لإضافة الأشخاص (`parsers/addCommandParser.ts`).
@@ -82,12 +82,12 @@ graph TD
 ### المرحلة الثانية: إغلاق بقايا ChartType القديمة وتوحيدها (ChartType Pruning & Legacy Normalization)
 *   **الهدف:** ضبط التوافقية وإزالة التعارض في تمثيل أنواع المخططات الهندسية.
 *   **التشخيص الحالي:**
-    يسمح نوع البيانات `ChartType` في [common.ts](file:///d:/AppDEV/Jozor1.1/src/types/common.ts#L4) بالقيم التالية:
+    يسمح نوع البيانات `ChartType` في [common.ts](../src/types/common.ts#L4) بالقيم التالية:
     `'focus' | 'radial' | 'descendant' | 'force'`
-    ولكن فعلياً، يقوم المحول [chartTypeAdapter.ts](file:///d:/AppDEV/Jozor1.1/src/domain/chartTypeAdapter.ts#L11) بتحويل وتوجيه أي قيمة تخالف `radial` لتعود وتسقط في خيار البؤرة `focus` بشكل قسري.
+    ولكن فعلياً، يقوم المحول [chartTypeAdapter.ts](../src/domain/chartTypeAdapter.ts#L11) بتحويل وتوجيه أي قيمة تخالف `radial` لتعود وتسقط في خيار البؤرة `focus` بشكل قسري.
 *   **الخطوات المعمارية:**
     1.  **التنظيف البرمجي:** إزالة الخيارات غير المدعومة رسمياً حالياً (`descendant` و `force`) من واجهة Typescript المعتمدة في `ChartType`.
-    2.  **التطبيع في التخزين (Legacy Normalization):** كتابة اختبارات وحدة صارمة للتأكد من أن أي شجرة محفوظة قديماً تحتمل الخيارات الملغاة يتم تطبيعها فوراً وبسلاسة إلى `focus` دون إحداث فجوة عند تحميل الملف أو تهيئة المخطط داخل [domain/treeLayout.ts](file:///d:/AppDEV/Jozor1.1/src/domain/treeLayout.ts) أو التخزين المحلي.
+    2.  **التطبيع في التخزين (Legacy Normalization):** كتابة اختبارات وحدة صارمة للتأكد من أن أي شجرة محفوظة قديماً تحتمل الخيارات الملغاة يتم تطبيعها فوراً وبسلاسة إلى `focus` دون إحداث فجوة عند تحميل الملف أو تهيئة المخطط داخل [domain/treeLayout.ts](../src/domain/treeLayout.ts) أو التخزين المحلي.
 
 ### المرحلة الثالثة: توحيد مخزن الحالة والتصميم (مكتملة ✅)
 *   **الهدف:** إزالة الفجوة المعمارية بين المخازن دون التسبب في انهيار منطق التصميم و CSS Tokens الموزعة.
