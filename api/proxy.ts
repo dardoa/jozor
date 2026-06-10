@@ -137,6 +137,30 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
+function isStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((item) => typeof item === 'string');
+}
+
+function isValidProxyPerson(person: unknown): person is ProxyPerson {
+  if (!person || typeof person !== 'object' || Array.isArray(person)) {
+    return false;
+  }
+  const p = person as Record<string, unknown>;
+  if (typeof p.id !== 'string' || !p.id) {
+    return false;
+  }
+  if ('parents' in p && p.parents !== undefined && !isStringArray(p.parents)) {
+    return false;
+  }
+  if ('spouses' in p && p.spouses !== undefined && !isStringArray(p.spouses)) {
+    return false;
+  }
+  if ('children' in p && p.children !== undefined && !isStringArray(p.children)) {
+    return false;
+  }
+  return true;
+}
+
 function formatDateForPostgres(dateStr: unknown): string | null {
   if (typeof dateStr !== 'string') return null;
   const trimmed = dateStr.trim();
@@ -306,7 +330,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(403).json({ error: 'Insufficient permissions to update this tree' });
       }
 
-      const people = Object.values(content as Record<string, ProxyPerson>);
+      const peopleValues = Object.values(content);
+      for (const val of peopleValues) {
+        if (!isValidProxyPerson(val)) {
+          return res.status(400).json({ error: 'Invalid person data in content' });
+        }
+      }
+
+      const people = peopleValues as ProxyPerson[];
       const peoplePayload = people.map((person) => mapPersonToDbRow(person, treeId));
       const relationships: ProxyRelationship[] = [];
 

@@ -294,5 +294,162 @@ describe('proxy API', () => {
       { showToast: false }
     );
   });
+
+  describe('ProxyPerson payload validation', () => {
+    let rpcMock: any;
+    let fromMock: any;
+
+    beforeEach(() => {
+      rpcMock = vi.fn(async () => ({ data: null, error: null }));
+      fromMock = vi.fn((table: string) => {
+        if (table === 'trees') {
+          return {
+            select: vi.fn(() => ({
+              eq: vi.fn(() => ({
+                maybeSingle: vi.fn(async () => ({ data: { owner_id: 'user-1' }, error: null })),
+              })),
+            })),
+          };
+        }
+        throw new Error(`Unexpected table ${table}`);
+      });
+      createSupabaseClientForUserMock.mockReturnValue({ from: fromMock, rpc: rpcMock });
+    });
+
+    it('rejects null person entries with 400', async () => {
+      const req = {
+        method: 'POST',
+        headers: { authorization: 'Bearer token' },
+        body: {
+          treeId: 'tree-1',
+          content: {
+            'person-1': null,
+          },
+        },
+      };
+      const res = createResponse();
+
+      await handler(req as never, res as never);
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body).toEqual({ error: 'Invalid person data in content' });
+      expect(rpcMock).not.toHaveBeenCalled();
+    });
+
+    it('rejects non-object person entries with 400', async () => {
+      const req = {
+        method: 'POST',
+        headers: { authorization: 'Bearer token' },
+        body: {
+          treeId: 'tree-1',
+          content: {
+            'person-1': 'not-an-object',
+          },
+        },
+      };
+      const res = createResponse();
+
+      await handler(req as never, res as never);
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body).toEqual({ error: 'Invalid person data in content' });
+      expect(rpcMock).not.toHaveBeenCalled();
+    });
+
+    it('rejects missing or non-string person ids with 400', async () => {
+      const req = {
+        method: 'POST',
+        headers: { authorization: 'Bearer token' },
+        body: {
+          treeId: 'tree-1',
+          content: {
+            'person-1': {
+              firstName: 'John',
+            },
+          },
+        },
+      };
+      const res = createResponse();
+
+      await handler(req as never, res as never);
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body).toEqual({ error: 'Invalid person data in content' });
+      expect(rpcMock).not.toHaveBeenCalled();
+    });
+
+    it('rejects non-array parents with 400', async () => {
+      const req = {
+        method: 'POST',
+        headers: { authorization: 'Bearer token' },
+        body: {
+          treeId: 'tree-1',
+          content: {
+            'person-1': {
+              id: 'person-1',
+              firstName: 'John',
+              parents: 123,
+            },
+          },
+        },
+      };
+      const res = createResponse();
+
+      await handler(req as never, res as never);
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body).toEqual({ error: 'Invalid person data in content' });
+      expect(rpcMock).not.toHaveBeenCalled();
+    });
+
+    it('rejects non-string-array parents (e.g. array containing numbers) with 400', async () => {
+      const req = {
+        method: 'POST',
+        headers: { authorization: 'Bearer token' },
+        body: {
+          treeId: 'tree-1',
+          content: {
+            'person-1': {
+              id: 'person-1',
+              firstName: 'John',
+              parents: [123],
+            },
+          },
+        },
+      };
+      const res = createResponse();
+
+      await handler(req as never, res as never);
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body).toEqual({ error: 'Invalid person data in content' });
+      expect(rpcMock).not.toHaveBeenCalled();
+    });
+
+    it('allows valid payloads and processes them successfully', async () => {
+      const req = {
+        method: 'POST',
+        headers: { authorization: 'Bearer token' },
+        body: {
+          treeId: 'tree-1',
+          content: {
+            'person-1': {
+              id: 'person-1',
+              firstName: 'Sara',
+              lastName: 'Haddad',
+              gender: 'female',
+              parents: ['person-2'],
+            },
+          },
+        },
+      };
+      const res = createResponse();
+
+      await handler(req as never, res as never);
+
+      expect(res.statusCode).toBe(200);
+      expect(rpcMock).toHaveBeenCalledOnce();
+    });
+  });
 });
 
