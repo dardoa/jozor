@@ -10,20 +10,31 @@ import type {
 
 export const config = { runtime: 'edge' };
 
-const resolveAllowedOrigin = () => {
+export const resolveAllowedOrigin = (): string | null => {
   const candidate = process.env.APP_ORIGIN ?? process.env.VITE_APP_ORIGIN;
   if (typeof candidate === 'string' && candidate.trim()) {
     return candidate;
   }
 
+  const isProd =
+    process.env.NODE_ENV === 'production' ||
+    process.env.VERCEL_ENV === 'production' ||
+    process.env.VERCEL_ENV === 'preview';
+
+  if (isProd) {
+    return null;
+  }
+
   return 'http://localhost:5173';
 };
 const ALLOWED_ORIGIN = resolveAllowedOrigin();
-const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
+const CORS_HEADERS: Record<string, string> = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
+if (ALLOWED_ORIGIN) {
+  CORS_HEADERS['Access-Control-Allow-Origin'] = ALLOWED_ORIGIN;
+}
 const MAX_PROMPT_LENGTH = 30_000;
 let supabaseAdminClient: SupabaseClient | null = null;
 
@@ -634,6 +645,15 @@ async function handleHandlerError(
 }
 
 export default async function handler(req: Request) {
+  if (!ALLOWED_ORIGIN) {
+    return Response.json({
+      error: {
+        message: 'Server configuration error: APP_ORIGIN is not configured in production.',
+        code: 'SERVER_CONFIGURATION_ERROR',
+      },
+    }, { status: 500 });
+  }
+
   const corsResponse = handleCorsAndMethod(req);
   if (corsResponse) return corsResponse;
 

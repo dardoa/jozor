@@ -43,17 +43,44 @@ async function authenticateUser(authHeader?: string): Promise<AuthenticatedUser 
   return { uid: data.user.id, email: data.user.email ?? '' };
 }
 
+const resolveAllowedOrigin = (): string | null => {
+  const candidate = getEnv('VITE_APP_ORIGIN') || getEnv('APP_ORIGIN');
+  if (candidate) return candidate;
+
+  const isProd =
+    process.env.NODE_ENV === 'production' ||
+    process.env.VERCEL_ENV === 'production' ||
+    process.env.VERCEL_ENV === 'preview';
+
+  if (isProd) return null;
+
+  return 'http://localhost:5173';
+};
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  const allowedOrigin = resolveAllowedOrigin();
+
+  if (!allowedOrigin) {
+    res.writeHead(500, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({
+      error: 'Server configuration error: APP_ORIGIN is not configured in production.'
+    }));
+    return;
+  }
+
   // CORS Headers
   const origin = req.headers.origin;
-  const allowedOrigin = getEnv('VITE_APP_ORIGIN') || getEnv('APP_ORIGIN') || 'http://localhost:5173';
-
-  const headers = {
-    'Access-Control-Allow-Origin': origin === allowedOrigin ? origin : allowedOrigin,
+  const headers: Record<string, string> = {
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Allow-Credentials': 'true',
   };
+
+  if (origin === allowedOrigin) {
+    headers['Access-Control-Allow-Origin'] = origin;
+  } else {
+    headers['Access-Control-Allow-Origin'] = allowedOrigin;
+  }
 
   if (req.method === 'OPTIONS') {
     res.writeHead(204, headers);
