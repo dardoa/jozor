@@ -53,12 +53,12 @@ Operational notes:
 - Delivery is idempotent at the reminder level through
   `push_reminder_deliveries` dedupe keys.
 
-## Intentionally Not Published
+## Intentionally Not Published (Deleted)
 
-| Source handler | Reason |
-| --- | --- |
-| `src/api/debug-env.ts` | Diagnostic-only endpoint. It should not be exposed in Vercel because it reports environment-variable presence and operational recommendations. |
-| `src/api/check-env.ts` | Development diagnostic endpoint. The local Vite middleware can serve equivalent checks; production exposure is unnecessary. |
+The following diagnostic endpoint source handlers were removed from `src/api/` as they are not published to Vercel and their development utility is served directly via Vite middleware:
+
+- `src/api/debug-env.ts` (Deleted): Redundant diagnostic handler.
+- `src/api/check-env.ts` (Deleted): Redundant diagnostic handler. Local environment diagnostics are handled directly by `/api/check-env` inside the [localApiProxyMiddleware.ts](file:///d:/AppDEV/Jozor1.1/scripts/dev/localApiProxyMiddleware.ts) file.
 
 ## Verification
 
