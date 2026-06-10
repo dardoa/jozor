@@ -144,10 +144,17 @@ export const storageService = {
         await db.settings.delete(key);
     },
 
-    // --- Pending Operations (Offline Sync) ---
     async savePendingOperation(op: Omit<PendingOperationRec, 'id'>) {
         const db = await getLocalDb();
         return await db.pending_operations.add(op as PendingOperationRec);
+    },
+
+    async savePendingOperations(ops: Array<Omit<PendingOperationRec, 'id'>>): Promise<number[]> {
+        if (ops.length === 0) return [];
+        const db = await getLocalDb();
+        return await db.transaction('rw', db.pending_operations, async () => {
+            return await db.pending_operations.bulkAdd(ops as PendingOperationRec[], { allKeys: true }) as number[];
+        });
     },
 
     async getPendingOperations(treeId: string) {

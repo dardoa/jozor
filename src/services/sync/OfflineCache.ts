@@ -17,6 +17,16 @@ export class OfflineCache {
         return await storageService.savePendingOperation(sanitized);
     }
 
+    public async savePendingOperations(ops: PendingDeltaOp[]): Promise<number[]> {
+        const sanitized = ops.map(op => {
+            const copy = { ...op };
+            delete copy.localId;
+            delete copy.id;
+            return copy;
+        });
+        return await storageService.savePendingOperations(sanitized);
+    }
+
     public async getPendingOperations(treeId: string): Promise<PendingDeltaOp[]> {
         const rows = await storageService.getPendingOperations(treeId) as StoredPendingOperation[];
         return rows.map(row => ({

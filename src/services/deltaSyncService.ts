@@ -215,6 +215,7 @@ class DeltaSyncService {
         const localIds: number[] = [];
 
         try {
+            const pendingOpsToSave: PendingDeltaOp[] = [];
             for (const operation of operations) {
                 state.incrementLocalClientVersion();
                 const clientVersion = useAppStore.getState().localClientVersion;
@@ -229,10 +230,14 @@ class DeltaSyncService {
                     },
                     created_at: new Date().toISOString(),
                 };
+                pendingOpsToSave.push(pendingOp);
+            }
 
-                const localId = await offlineCache.savePendingOperation(pendingOp);
+            const ids = await offlineCache.savePendingOperations(pendingOpsToSave);
+            for (let i = 0; i < pendingOpsToSave.length; i++) {
+                const localId = ids[i];
                 localIds.push(localId);
-                queuedOps.push({ ...pendingOp, localId });
+                queuedOps.push({ ...pendingOpsToSave[i], localId });
             }
         } catch (error) {
             if (localIds.length > 0) {
