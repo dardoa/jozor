@@ -1,8 +1,6 @@
-import CryptoJS from 'crypto-js';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { resolvedSupabaseKey, resolvedSupabaseUrl } from '../services/supabaseConfig';
-
-const SUPABASE_JWT_SECRET = process.env.SUPABASE_JWT_SECRET;
+import { verifyInternalToken as verifyInternalJwt } from '../../shared/auth/internalJwt';
 let directAuthClient: SupabaseClient | null = null;
 
 export interface AuthenticatedUser {
@@ -39,56 +37,6 @@ export function createSupabaseClientForUser(user: { uid: string; email: string |
     });
 }
 
-/**
- * Verifies our internal JWT signed with SUPABASE_JWT_SECRET.
- */
-export function verifyInternalToken(token: string): AuthenticatedUser | null {
-    if (!SUPABASE_JWT_SECRET) {
-        console.warn('SUPABASE_JWT_SECRET is not set on the server');
-        return null;
-    }
-    try {
-        const parts = token.split('.');
-        if (parts.length !== 3) return null;
-
-        const [headerB64, payloadB64, signatureB64] = parts;
-
-        // Verify signature
-        const signature = CryptoJS.HmacSHA256(headerB64 + '.' + payloadB64, SUPABASE_JWT_SECRET);
-        const expectedSignature = signature.toString(CryptoJS.enc.Base64)
-            .replace(/=/g, '')
-            .replace(/\+/g, '-')
-            .replace(/\//g, '_');
-
-        if (signatureB64 !== expectedSignature) return null;
-
-        const base64UrlDecode = (str: string) => {
-            let b64 = str.replace(/-/g, '+').replace(/_/g, '/');
-            // Pad base64 string
-            while (b64.length % 4) {
-                b64 += '=';
-            }
-            return atob(b64);
-        };
-
-        const payload = JSON.parse(base64UrlDecode(payloadB64));
-
-        // Check expiration
-        if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) {
-            return null;
-        }
-
-        return {
-            uid: payload.sub as string,
-            email: payload.email as string,
-            token,
-            type: 'internal',
-        };
-    } catch {
-        return null;
-    }
-}
-
 function getSupabaseAuthClient(): SupabaseClient | null {
     if (!resolvedSupabaseUrl || !resolvedSupabaseKey) {
         return null;
@@ -113,7 +61,7 @@ export async function authenticateUser(authHeader?: string): Promise<Authenticat
 
     const token = authHeader.split(' ')[1];
 
-    const internalUser = verifyInternalToken(token);
+    const internalUser = await verifyInternalJwt(token, process.env.SUPABASE_JWT_SECRET);
     if (internalUser) {
         return internalUser;
     }

@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import crypto from 'node:crypto';
+import { verifyInternalToken } from '../shared/auth/internalJwt';
 
 type AuthenticatedUser = {
   uid: string;
@@ -70,50 +70,6 @@ function getSupabaseAnonKey() {
   return getEnv('SUPABASE_ANON_KEY') || getEnv('VITE_SUPABASE_ANON_KEY');
 }
 
-function base64UrlDecode(value: string): Buffer {
-  const normalized = value.replace(/-/g, '+').replace(/_/g, '/');
-  return Buffer.from(normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '='), 'base64');
-}
-
-function verifyInternalToken(token: string): AuthenticatedUser | null {
-  const jwtSecret = getEnv('SUPABASE_JWT_SECRET');
-  if (!jwtSecret) return null;
-
-  try {
-    const parts = token.split('.');
-    if (parts.length !== 3) return null;
-
-    const [header, payload, signature] = parts;
-    const expectedSignature = crypto
-      .createHmac('sha256', jwtSecret)
-      .update(`${header}.${payload}`)
-      .digest('base64')
-      .replace(/=/g, '')
-      .replace(/\+/g, '-')
-      .replace(/\//g, '_');
-
-    if (signature !== expectedSignature) return null;
-
-    const parsed = JSON.parse(base64UrlDecode(payload).toString('utf8')) as {
-      sub?: string;
-      email?: string;
-      exp?: number;
-    };
-
-    if (!parsed.sub || !parsed.email) return null;
-    if (parsed.exp && parsed.exp < Math.floor(Date.now() / 1000)) return null;
-
-    return {
-      uid: parsed.sub,
-      email: parsed.email,
-      token,
-      type: 'internal',
-    };
-  } catch {
-    return null;
-  }
-}
-
 function getAuthClient(): SupabaseClient | null {
   const url = getSupabaseUrl();
   const anonKey = getSupabaseAnonKey();
@@ -132,8 +88,15 @@ async function authenticateUser(authHeader?: string): Promise<AuthenticatedUser 
   if (!authHeader?.startsWith('Bearer ')) return null;
 
   const token = authHeader.slice('Bearer '.length);
-  const internalUser = verifyInternalToken(token);
-  if (internalUser) return internalUser;
+  const internalUser = await verifyInternalToken(token, getEnv('SUPABASE_JWT_SECRET'));
+  if (internalUser) {
+    return {
+      uid: internalUser.uid,
+      email: internalUser.email,
+      token: internalUser.token ?? token,
+      type: 'internal',
+    };
+  }
 
   const authClient = getAuthClient();
   if (!authClient) return null;

@@ -65,4 +65,38 @@ describe('Vercel server API boundaries', () => {
 
     expect(violations).toEqual([]);
   });
+
+  it('enforces that shared/auth/internalJwt.ts has zero node:* or Node-specific dependencies', async () => {
+    const filePath = path.resolve(process.cwd(), 'shared/auth/internalJwt.ts');
+    const source = await readFile(filePath, 'utf8');
+    const importSources = extractImportSources(source);
+
+    const nodeImports = importSources.filter((src) => src.startsWith('node:') || src === 'crypto' || src === 'buffer');
+    expect(nodeImports).toEqual([]);
+
+    // Also verify that Buffer is not referenced in the source code
+    const hasBufferUsage = /\bBuffer\b/.test(source);
+    expect(hasBufferUsage).toBe(false);
+  });
+
+  it('enforces that root API handlers and authUtils.ts do not contain local verifyInternalToken declarations', async () => {
+    const apiFiles = await listApiFiles(apiRoot);
+    const authUtilsPath = path.resolve(process.cwd(), 'src/utils/authUtils.ts');
+    const filesToTest = [...apiFiles, authUtilsPath];
+
+    const violations: string[] = [];
+
+    for (const filePath of filesToTest) {
+      const source = await readFile(filePath, 'utf8');
+      const relativeFilePath = path.relative(process.cwd(), filePath).split(path.sep).join('/');
+
+      // Check if verifyInternalToken is declared locally as function or const (excluding comments or imports)
+      const hasLocalDeclaration = /function\s+verifyInternalToken\b/.test(source) || /const\s+verifyInternalToken\s*=/.test(source);
+      if (hasLocalDeclaration) {
+        violations.push(`${relativeFilePath} contains a local declaration of verifyInternalToken`);
+      }
+    }
+
+    expect(violations).toEqual([]);
+  });
 });
