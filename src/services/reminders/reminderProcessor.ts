@@ -3,6 +3,7 @@ import type { Person } from '../../types';
 import { mapDbPersonRowToPerson, type DbPersonRow } from '../personRowMapper';
 import { buildScheduledBirthdayNotifications } from '../scheduledNotifications';
 import { sendPushNotificationToUser } from '../../api/push-notifier';
+import { createLimit } from '../../../shared/concurrency';
 
 const MAX_BATCH_SIZE = 50;
 
@@ -11,37 +12,6 @@ export interface ReminderDeliveryResult {
   skippedNotifications: number;
   sentSubscriptions: number;
   prunedSubscriptions: number;
-}
-
-export function createLimit(concurrency: number) {
-  const queue: Array<() => void> = [];
-  let activeCount = 0;
-
-  const next = () => {
-    activeCount--;
-    if (queue.length > 0) {
-      const nextCall = queue.shift();
-      if (nextCall) {
-        activeCount++;
-        nextCall();
-      }
-    }
-  };
-
-  return <T>(fn: () => Promise<T>): Promise<T> => {
-    return new Promise<T>((resolve, reject) => {
-      const run = () => {
-        fn().then(resolve, reject).finally(next);
-      };
-
-      if (activeCount < concurrency) {
-        activeCount++;
-        run();
-      } else {
-        queue.push(run);
-      }
-    });
-  };
 }
 
 export async function processReminderBatch(params: {
@@ -62,7 +32,10 @@ export async function processReminderBatch(params: {
   // 1. Batch fetch visible tree IDs for all users
   const [ownedTreesResult, collaboratorRowsResult] = await Promise.all([
     params.client.from('trees').select('id, owner_id').in('owner_id', cappedUserIds),
-    params.client.from('tree_collaborators').select('tree_id, collaborator_uid').in('collaborator_uid', cappedUserIds),
+    params.client
+      .from('tree_collaborators')
+      .select('tree_id, collaborator_uid')
+      .in('collaborator_uid', cappedUserIds),
   ]);
 
   if (ownedTreesResult.error) throw ownedTreesResult.error;
@@ -211,20 +184,23 @@ export async function processReminderBatch(params: {
       const timeoutId = setTimeout(() => controller.abort(), 5000);
 
       try {
-        const delivery = await sendPushNotificationToUser({
-          userId: reminder.userId,
-          title: reminder.title,
-          body: reminder.body,
-          url: reminder.personId ? `/person/${reminder.personId}` : '/',
-          tag: reminder.dedupeKey,
-          data: {
-            source: 'scheduled-reminder-cron',
-            dedupeKey: reminder.dedupeKey,
-            treeId: reminder.treeId,
-            personId: reminder.personId,
-            notificationType: reminder.type,
+        const delivery = await sendPushNotificationToUser(
+          {
+            userId: reminder.userId,
+            title: reminder.title,
+            body: reminder.body,
+            url: reminder.personId ? `/person/${reminder.personId}` : '/',
+            tag: reminder.dedupeKey,
+            data: {
+              source: 'scheduled-reminder-cron',
+              dedupeKey: reminder.dedupeKey,
+              treeId: reminder.treeId,
+              personId: reminder.personId,
+              notificationType: reminder.type,
+            },
           },
-        }, { signal: controller.signal });
+          { signal: controller.signal }
+        );
 
         results.deliveredNotifications += 1;
         results.sentSubscriptions += delivery.sent;

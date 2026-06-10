@@ -13,6 +13,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc --noEmit",
+    "typecheck:api": "tsc -p tsconfig.api.json",
     "format": "prettier --write .",
     "test": "npm run test:unit:shard:1 && npm run test:unit:shard:2",
     "test:unit:shard:1": "vitest run --shard=1/2",

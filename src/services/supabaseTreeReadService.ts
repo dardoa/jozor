@@ -3,8 +3,13 @@ import { buildTreeFetchResult } from './supabaseTreeMapper';
 import { getTreeClient } from './supabaseTreeClient';
 import type { TreeSummary } from './supabaseTreeTypes';
 import type { DeltaOperation } from './sync/SyncTypes';
+import { logError } from '../utils/errorLogger';
 
-export const fetchTreesForUser = async (ownerId: string, userEmail: string, token?: string): Promise<TreeSummary[]> => {
+export const fetchTreesForUser = async (
+  ownerId: string,
+  userEmail: string,
+  token?: string
+): Promise<TreeSummary[]> => {
   const client = getTreeClient(ownerId, userEmail, token);
   const { data, error } = await client
     .from('trees')
@@ -42,52 +47,56 @@ const readEmbeddedPeopleCount = (people: unknown): number => {
   return 0;
 };
 
-const fetchPeopleCountsIndividually = async (
+const fetchPeopleCountsPaginated = async (
   client: ReturnType<typeof getTreeClient>,
   treeIds: string[]
 ): Promise<Record<string, number>> => {
+  const counts: Record<string, number> = {};
+  for (const treeId of treeIds) {
+    counts[treeId] = 0;
+  }
+
   try {
-    const { data, error } = await client
-      .from('people')
-      .select('tree_id')
-      .in('tree_id', treeIds);
+    let offset = 0;
+    const limit = 1000;
+    let hasMore = true;
 
-    if (error) throw error;
+    while (hasMore) {
+      const { data, error } = await client
+        .from('people')
+        .select('id, tree_id')
+        .in('tree_id', treeIds)
+        .order('tree_id', { ascending: true })
+        .order('id', { ascending: true })
+        .range(offset, offset + limit - 1);
 
-    const counts: Record<string, number> = {};
-    for (const treeId of treeIds) {
-      counts[treeId] = 0;
-    }
+      if (error) throw error;
 
-    for (const row of (data ?? [])) {
-      const tId = (row as Record<string, unknown>).tree_id as string;
-      if (tId) {
-        counts[tId] = (counts[tId] || 0) + 1;
+      if (!data || data.length === 0) {
+        break;
+      }
+
+      for (const row of data) {
+        const tId = (row as Record<string, unknown>).tree_id as string;
+        if (tId && tId in counts) {
+          counts[tId] = (counts[tId] || 0) + 1;
+        }
+      }
+
+      if (data.length < limit) {
+        hasMore = false;
+      } else {
+        offset += limit;
       }
     }
 
     return counts;
   } catch (err) {
-    // Ultimate fallback: individual head queries (original behavior)
-    const settled = await Promise.allSettled(
-      treeIds.map(async (treeId) => {
-        const { count, error } = await client
-          .from('people')
-          .select('id', { count: 'exact', head: true })
-          .eq('tree_id', treeId);
-
-        if (error) throw error;
-        return [treeId, count ?? 0] as const;
-      })
-    );
-
-    return settled.reduce<Record<string, number>>((counts, result) => {
-      if (result.status === 'fulfilled') {
-        const [treeId, count] = result.value;
-        counts[treeId] = count;
-      }
-      return counts;
-    }, {});
+    logError('fetchPeopleCountsPaginated', err, {
+      category: 'DATABASE',
+      severity: 'LOW',
+    });
+    return {};
   }
 };
 
@@ -107,7 +116,7 @@ export const fetchPeopleCountsForTrees = async (
     .in('id', uniqueTreeIds);
 
   if (error) {
-    return fetchPeopleCountsIndividually(client, uniqueTreeIds);
+    return fetchPeopleCountsPaginated(client, uniqueTreeIds);
   }
 
   return (data ?? []).reduce<Record<string, number>>((counts, row) => {
@@ -124,7 +133,13 @@ export const fetchTree = async (
   ownerId: string,
   userEmail: string,
   token?: string
-): Promise<Pick<FullState, 'people' | 'focusId' | 'settings'> & { ownerId: string; lastVersion: number; name: string }> => {
+): Promise<
+  Pick<FullState, 'people' | 'focusId' | 'settings'> & {
+    ownerId: string;
+    lastVersion: number;
+    name: string;
+  }
+> => {
   const client = getTreeClient(ownerId, userEmail, token);
 
   // 1. Try to fetch the latest checkpoint
@@ -138,7 +153,10 @@ export const fetchTree = async (
 
   if (checkpointError) {
     // If table doesn't exist or query fails, fall back silently but log it
-    console.warn('Failed to query tree_checkpoints, falling back to legacy load:', checkpointError.message);
+    console.warn(
+      'Failed to query tree_checkpoints, falling back to legacy load:',
+      checkpointError.message
+    );
   }
 
   if (checkpoint) {
@@ -171,7 +189,10 @@ export const fetchTree = async (
     };
 
     const operations = (operationRows ?? []) as DeltaOperation[];
-    const maxVersion = operations.reduce((max, op) => Math.max(max, Number(op.version_seq ?? 0)), result.lastVersion);
+    const maxVersion = operations.reduce(
+      (max, op) => Math.max(max, Number(op.version_seq ?? 0)),
+      result.lastVersion
+    );
     const { applyOperationToMap } = await import('../utils/syncUtils');
     const replayed = operations.reduce((people, op) => {
       if (op.type === 'SET_TREE_METADATA') {

@@ -36,6 +36,9 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      - name: API typecheck
+        run: npm run typecheck:api
+
       - name: Lint
         run: npm run lint
 
@@ -59,4 +62,3 @@ jobs:
             playwright-report
             test-results
           if-no-files-found: ignore
-

@@ -1,0 +1,8 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "types": ["node", "gapi", "gapi.client.drive", "google.accounts", "google.picker"]
+  },
+  "include": ["api/**/*.ts", "shared/**/*.ts"]
+}

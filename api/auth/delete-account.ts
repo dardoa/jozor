@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import crypto from 'node:crypto';
+import { createLimit } from '../../shared/concurrency';
 
 function getEnv(name: string): string | undefined {
   const value = process.env[name];
@@ -33,7 +34,10 @@ function verifyInternalToken(token: string): AuthenticatedUser | null {
 
     const actualBuffer = Buffer.from(signature);
     const expectedBuffer = Buffer.from(expectedSignature);
-    if (actualBuffer.length !== expectedBuffer.length || !crypto.timingSafeEqual(actualBuffer, expectedBuffer)) {
+    if (
+      actualBuffer.length !== expectedBuffer.length ||
+      !crypto.timingSafeEqual(actualBuffer, expectedBuffer)
+    ) {
       return null;
     }
 
@@ -76,49 +80,113 @@ async function authenticateUser(authHeader?: string): Promise<AuthenticatedUser 
   return { uid: data.user.id, email: data.user.email ?? '' };
 }
 
-async function deleteFolderRecursively(supabaseAdmin: SupabaseClient, bucket: string, folderPath: string) {
-  let hasMore = true;
-  while (hasMore) {
-    const { data: items, error } = await supabaseAdmin.storage
-      .from(bucket)
-      .list(folderPath, { limit: 100 });
+async function deleteFolderIteratively(
+  supabaseAdmin: SupabaseClient,
+  bucket: string,
+  rootFolderPath: string,
+  limit: ReturnType<typeof createLimit>
+) {
+  const dirQueue: string[] = [rootFolderPath];
+  const allFiles: string[] = [];
+  const scanConcurrency = 5;
+  let activeScans = 0;
+  let firstScanError: unknown = null;
 
-    if (error) {
-      throw new Error(`Failed to list storage path ${bucket}/${folderPath}: ${error.message}`);
-    }
-
-    if (!items || items.length === 0) {
-      break;
-    }
-
-    const filesToDelete: string[] = [];
-    const subdirs: string[] = [];
-
-    for (const item of items) {
-      if (item.id) {
-        filesToDelete.push(`${folderPath}/${item.name}`);
-      } else {
-        subdirs.push(`${folderPath}/${item.name}`);
+  await new Promise<void>((resolve, reject) => {
+    const pumpScans = () => {
+      if (firstScanError) {
+        if (activeScans === 0) {
+          reject(firstScanError);
+        }
+        return;
       }
-    }
 
-    // Recurse into subdirs first in parallel
-    if (subdirs.length > 0) {
-      await Promise.all(
-        subdirs.map((subdir) => deleteFolderRecursively(supabaseAdmin, bucket, subdir))
-      );
-    }
+      while (activeScans < scanConcurrency && dirQueue.length > 0) {
+        const currentDir = dirQueue.shift();
+        if (!currentDir) break;
 
-    if (filesToDelete.length > 0) {
-      const { error: deleteError } = await supabaseAdmin.storage
-        .from(bucket)
-        .remove(filesToDelete);
-      if (deleteError) {
-        throw new Error(`Failed to delete storage files under ${bucket}/${folderPath}: ${deleteError.message}`);
+        activeScans++;
+        void limit(async () => {
+          try {
+            let offset = 0;
+            const queryLimit = 100;
+            let hasMore = true;
+
+            while (hasMore) {
+              const { data: items, error } = await supabaseAdmin.storage
+                .from(bucket)
+                .list(currentDir, {
+                  limit: queryLimit,
+                  offset,
+                  sortBy: { column: 'name', order: 'asc' },
+                });
+
+              if (error) {
+                throw new Error(
+                  `Failed to list storage path ${bucket}/${currentDir}: ${error.message}`
+                );
+              }
+
+              if (!items || items.length === 0) {
+                break;
+              }
+
+              for (const item of items) {
+                if (item.id) {
+                  allFiles.push(`${currentDir}/${item.name}`);
+                } else {
+                  dirQueue.push(`${currentDir}/${item.name}`);
+                }
+              }
+
+              if (items.length < queryLimit) {
+                hasMore = false;
+              } else {
+                offset += queryLimit;
+              }
+            }
+          } catch (error) {
+            firstScanError ??= error;
+          }
+        }).finally(() => {
+          activeScans--;
+          pumpScans();
+        });
       }
-    } else {
-      hasMore = false;
-    }
+
+      if (dirQueue.length === 0 && activeScans === 0) {
+        resolve();
+      }
+    };
+
+    pumpScans();
+  });
+
+  if (firstScanError) {
+    throw firstScanError;
+  }
+
+  // Delete all collected files in chunks of 100
+  const chunks: string[][] = [];
+  for (let i = 0; i < allFiles.length; i += 100) {
+    chunks.push(allFiles.slice(i, i + 100));
+  }
+
+  const deleteResults = await Promise.allSettled(
+    chunks.map((chunk) =>
+      limit(async () => {
+        const { error: deleteError } = await supabaseAdmin.storage.from(bucket).remove(chunk);
+        if (deleteError) {
+          throw new Error(`Failed to delete storage files under ${bucket}: ${deleteError.message}`);
+        }
+      })
+    )
+  );
+
+  const failures = deleteResults.filter((r) => r.status === 'rejected') as PromiseRejectedResult[];
+  if (failures.length > 0) {
+    const errorMsg = failures.map((f) => f.reason instanceof Error ? f.reason.message : String(f.reason)).join(', ');
+    throw new Error(`Failed to delete storage files under ${bucket}: ${errorMsg}`);
   }
 }
 
@@ -167,15 +235,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(500).json({ error: 'Failed to retrieve user data for deletion' });
     }
 
-    // 2. Delete all avatars in user's profile folder recursively
-    const userFolder = `users/${user.uid}`;
-    await deleteFolderRecursively(supabaseAdmin, 'avatars', userFolder);
+    const limit = createLimit(5);
+    const deleteTasks: Promise<void>[] = [];
 
-    // 3. Delete all tree-specific folders for trees owned by user in parallel
+    // 2. Delete all avatars in user's profile folder recursively (iteratively using limiter)
+    const userFolder = `users/${user.uid}`;
+    deleteTasks.push(deleteFolderIteratively(supabaseAdmin, 'avatars', userFolder, limit));
+
+    // 3. Delete all tree-specific folders for trees owned by user in parallel (using shared limiter)
     if (trees && trees.length > 0) {
-      await Promise.all(
-        trees.map((tree) => deleteFolderRecursively(supabaseAdmin, 'avatars', tree.id))
-      );
+      for (const tree of trees) {
+        deleteTasks.push(deleteFolderIteratively(supabaseAdmin, 'avatars', tree.id, limit));
+      }
+    }
+
+    const deleteResults = await Promise.allSettled(deleteTasks);
+    const failures = deleteResults.filter((r) => r.status === 'rejected') as PromiseRejectedResult[];
+    if (failures.length > 0) {
+      const errorMsg = failures.map((f) => f.reason instanceof Error ? f.reason.message : String(f.reason)).join(', ');
+      console.error(`Storage deletion failed details: ${errorMsg}`);
+      throw new Error('Storage deletion failed');
     }
 
     // 4. Initialize user client to perform delete_my_profile_data RPC as the authenticated user
@@ -216,7 +295,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       console.log(`User ID ${user.uid} is not a valid UUID, skipping auth.users deletion.`);
     }
 
-    return res.status(200).json({ success: true, message: 'Account and associated data deleted successfully.' });
+    return res
+      .status(200)
+      .json({ success: true, message: 'Account and associated data deleted successfully.' });
   } catch (err) {
     console.error('Delete Account Handler Error:', err);
     return res.status(500).json({ error: 'Failed to delete account' });

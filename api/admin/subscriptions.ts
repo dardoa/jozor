@@ -1,5 +1,9 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { createClient, type SupabaseClient, type User as SupabaseAuthUser } from '@supabase/supabase-js';
+import {
+  createClient,
+  type SupabaseClient,
+  type User as SupabaseAuthUser,
+} from '@supabase/supabase-js';
 
 type BillingTier = 'free' | 'pro' | 'family';
 type OverrideSource = 'manual_comp' | 'sandbox_test' | 'internal_test';
@@ -142,7 +146,10 @@ function isOverrideActive(row: OverrideRow | undefined): row is OverrideRow {
   return new Date(row.expires_at).getTime() > Date.now();
 }
 
-function resolveEffectiveTier(paddleTier: BillingTier, override: OverrideRow | undefined): BillingTier {
+function resolveEffectiveTier(
+  paddleTier: BillingTier,
+  override: OverrideRow | undefined
+): BillingTier {
   if (!isOverrideActive(override)) return paddleTier;
   return tierRank[override.tier] > tierRank[paddleTier] ? override.tier : paddleTier;
 }
@@ -151,9 +158,16 @@ function json(res: VercelResponse, status: number, payload: unknown) {
   return res.status(status).json(payload);
 }
 
-async function insertAuditEvent(
+/**
+ * Inserts multiple audit events in a single bulk insert database query.
+ * WARNING: This is called sequentially following DB modifications on the subscription_overrides table,
+ * which is non-transactional/non-atomic. If the database update succeeds but this insert fails,
+ * they will be out of sync. This is accepted as a temporary risk, with a future migration planned
+ * to combine both operations into a single transactional/idempotent PostgreSQL RPC.
+ */
+async function insertAuditEvents(
   supabaseAdmin: SupabaseClient,
-  input: {
+  events: Array<{
     targetUserId: string;
     actorUserId: string;
     action: AuditAction;
@@ -163,21 +177,23 @@ async function insertAuditEvent(
     reason?: string | null;
     expiresAt?: string | null;
     metadata?: Record<string, unknown>;
-  }
+  }>
 ) {
-  const { error } = await supabaseAdmin
-    .from('subscription_override_audit_events')
-    .insert({
-      target_user_id: input.targetUserId,
-      actor_user_id: input.actorUserId,
-      action: input.action,
-      override_id: input.overrideId ?? null,
-      tier: input.tier ?? null,
-      source: input.source ?? null,
-      reason: input.reason ?? null,
-      expires_at: input.expiresAt ?? null,
-      metadata: input.metadata ?? {},
-    });
+  if (events.length === 0) return;
+
+  const { error } = await supabaseAdmin.from('subscription_override_audit_events').insert(
+    events.map((event) => ({
+      target_user_id: event.targetUserId,
+      actor_user_id: event.actorUserId,
+      action: event.action,
+      override_id: event.overrideId ?? null,
+      tier: event.tier ?? null,
+      source: event.source ?? null,
+      reason: event.reason ?? null,
+      expires_at: event.expiresAt ?? null,
+      metadata: event.metadata ?? {},
+    }))
+  );
 
   if (error) throw error;
 }
@@ -202,7 +218,11 @@ async function listAuthUsers(supabaseAdmin: SupabaseClient, query: string) {
     }));
 }
 
-async function listSubscriptions(req: VercelRequest, res: VercelResponse, supabaseAdmin: SupabaseClient) {
+async function listSubscriptions(
+  req: VercelRequest,
+  res: VercelResponse,
+  supabaseAdmin: SupabaseClient
+) {
   const query = typeof req.query.q === 'string' ? req.query.q : '';
   const authUsers = await listAuthUsers(supabaseAdmin, query);
   const userIds = authUsers.map((user) => user.id);
@@ -211,7 +231,12 @@ async function listSubscriptions(req: VercelRequest, res: VercelResponse, supaba
     return json(res, 200, { users: [] });
   }
 
-  const [{ data: profiles, error: profilesError }, { data: subscriptions, error: subscriptionsError }, { data: overrides, error: overridesError }, { data: auditEvents, error: auditEventsError }] = await Promise.all([
+  const [
+    { data: profiles, error: profilesError },
+    { data: subscriptions, error: subscriptionsError },
+    { data: overrides, error: overridesError },
+    { data: auditEvents, error: auditEventsError },
+  ] = await Promise.all([
     supabaseAdmin
       .from('user_profiles')
       .select('id, display_name, photo_url, metadata, tier, created_at, updated_at')
@@ -222,13 +247,17 @@ async function listSubscriptions(req: VercelRequest, res: VercelResponse, supaba
       .in('user_id', userIds),
     supabaseAdmin
       .from('subscription_overrides')
-      .select('id, user_id, tier, source, reason, starts_at, expires_at, is_active, created_by, revoked_at, created_at, updated_at')
+      .select(
+        'id, user_id, tier, source, reason, starts_at, expires_at, is_active, created_by, revoked_at, created_at, updated_at'
+      )
       .in('user_id', userIds)
       .is('revoked_at', null)
       .eq('is_active', true),
     supabaseAdmin
       .from('subscription_override_audit_events')
-      .select('id, target_user_id, actor_user_id, action, override_id, tier, source, reason, expires_at, metadata, created_at')
+      .select(
+        'id, target_user_id, actor_user_id, action, override_id, tier, source, reason, expires_at, metadata, created_at'
+      )
       .in('target_user_id', userIds)
       .order('created_at', { ascending: false })
       .limit(50),
@@ -239,9 +268,18 @@ async function listSubscriptions(req: VercelRequest, res: VercelResponse, supaba
   if (overridesError) throw overridesError;
   if (auditEventsError) throw auditEventsError;
 
-  const profilesById = new Map(((profiles ?? []) as UserProfileRow[]).map((profile) => [profile.id, profile]));
-  const subscriptionsByUser = new Map(((subscriptions ?? []) as SubscriptionRow[]).map((subscription) => [subscription.user_id, subscription]));
-  const overridesByUser = new Map(((overrides ?? []) as OverrideRow[]).map((override) => [override.user_id, override]));
+  const profilesById = new Map(
+    ((profiles ?? []) as UserProfileRow[]).map((profile) => [profile.id, profile])
+  );
+  const subscriptionsByUser = new Map(
+    ((subscriptions ?? []) as SubscriptionRow[]).map((subscription) => [
+      subscription.user_id,
+      subscription,
+    ])
+  );
+  const overridesByUser = new Map(
+    ((overrides ?? []) as OverrideRow[]).map((override) => [override.user_id, override])
+  );
   const auditRows = (auditEvents ?? []) as AuditEventRow[];
 
   return json(res, 200, {
@@ -269,17 +307,23 @@ async function listSubscriptions(req: VercelRequest, res: VercelResponse, supaba
 }
 
 async function ensureProfile(supabaseAdmin: SupabaseClient, userId: string) {
-  const { error } = await supabaseAdmin
-    .from('user_profiles')
-    .upsert({
+  const { error } = await supabaseAdmin.from('user_profiles').upsert(
+    {
       id: userId,
       updated_at: new Date().toISOString(),
-    }, { onConflict: 'id' });
+    },
+    { onConflict: 'id' }
+  );
 
   if (error) throw error;
 }
 
-async function grantOverride(req: VercelRequest, res: VercelResponse, supabaseAdmin: SupabaseClient, adminUser: AuthenticatedUser) {
+async function grantOverride(
+  req: VercelRequest,
+  res: VercelResponse,
+  supabaseAdmin: SupabaseClient,
+  adminUser: AuthenticatedUser
+) {
   const { userId, tier, source, reason, expiresAt } = req.body ?? {};
 
   if (typeof userId !== 'string' || !userId.trim()) {
@@ -287,7 +331,9 @@ async function grantOverride(req: VercelRequest, res: VercelResponse, supabaseAd
   }
 
   if (tier !== 'pro' && tier !== 'family') {
-    return json(res, 400, { error: { code: 'BAD_REQUEST', message: 'Only pro or family overrides can be granted.' } });
+    return json(res, 400, {
+      error: { code: 'BAD_REQUEST', message: 'Only pro or family overrides can be granted.' },
+    });
   }
 
   if (!isOverrideSource(source)) {
@@ -295,7 +341,9 @@ async function grantOverride(req: VercelRequest, res: VercelResponse, supabaseAd
   }
 
   if (expiresAt && Number.isNaN(new Date(expiresAt).getTime())) {
-    return json(res, 400, { error: { code: 'BAD_REQUEST', message: 'expiresAt must be a valid date.' } });
+    return json(res, 400, {
+      error: { code: 'BAD_REQUEST', message: 'expiresAt must be a valid date.' },
+    });
   }
 
   await ensureProfile(supabaseAdmin, userId);
@@ -324,22 +372,33 @@ async function grantOverride(req: VercelRequest, res: VercelResponse, supabaseAd
 
   if (revokeError) throw revokeError;
 
+  const auditEventsToInsert: Array<{
+    targetUserId: string;
+    actorUserId: string;
+    action: AuditAction;
+    overrideId?: string | null;
+    tier?: BillingTier | null;
+    source?: OverrideSource | null;
+    reason?: string | null;
+    expiresAt?: string | null;
+    metadata?: Record<string, unknown>;
+  }> = [];
+
   if (replacedOverrides && replacedOverrides.length > 0) {
-    await Promise.all(
-      replacedOverrides.map((replacedOverride) =>
-        insertAuditEvent(supabaseAdmin, {
-          targetUserId: userId,
-          actorUserId: adminUser.uid,
-          action: 'replace',
-          overrideId: replacedOverride.id,
-          tier: isBillingTier(replacedOverride.tier) ? replacedOverride.tier : null,
-          source: isOverrideSource(replacedOverride.source) ? replacedOverride.source : null,
-          reason: typeof replacedOverride.reason === 'string' ? replacedOverride.reason : null,
-          expiresAt: typeof replacedOverride.expires_at === 'string' ? replacedOverride.expires_at : null,
-          metadata: { replacedByTier: tier, replacedBySource: source },
-        })
-      )
-    );
+    for (const replacedOverride of replacedOverrides) {
+      auditEventsToInsert.push({
+        targetUserId: userId,
+        actorUserId: adminUser.uid,
+        action: 'replace',
+        overrideId: replacedOverride.id,
+        tier: isBillingTier(replacedOverride.tier) ? replacedOverride.tier : null,
+        source: isOverrideSource(replacedOverride.source) ? replacedOverride.source : null,
+        reason: typeof replacedOverride.reason === 'string' ? replacedOverride.reason : null,
+        expiresAt:
+          typeof replacedOverride.expires_at === 'string' ? replacedOverride.expires_at : null,
+        metadata: { replacedByTier: tier, replacedBySource: source },
+      });
+    }
   }
 
   const { data, error } = await supabaseAdmin
@@ -352,11 +411,14 @@ async function grantOverride(req: VercelRequest, res: VercelResponse, supabaseAd
       expires_at: expiresAt || null,
       created_by: adminUser.uid,
     })
-    .select('id, user_id, tier, source, reason, starts_at, expires_at, is_active, created_by, revoked_at, created_at, updated_at')
+    .select(
+      'id, user_id, tier, source, reason, starts_at, expires_at, is_active, created_by, revoked_at, created_at, updated_at'
+    )
     .single();
 
   if (error) throw error;
-  await insertAuditEvent(supabaseAdmin, {
+
+  auditEventsToInsert.push({
     targetUserId: userId,
     actorUserId: adminUser.uid,
     action: 'grant',
@@ -366,10 +428,18 @@ async function grantOverride(req: VercelRequest, res: VercelResponse, supabaseAd
     reason: data.reason,
     expiresAt: data.expires_at,
   });
+
+  await insertAuditEvents(supabaseAdmin, auditEventsToInsert);
+
   return json(res, 200, { override: data });
 }
 
-async function revokeOverride(req: VercelRequest, res: VercelResponse, supabaseAdmin: SupabaseClient, adminUser: AuthenticatedUser) {
+async function revokeOverride(
+  req: VercelRequest,
+  res: VercelResponse,
+  supabaseAdmin: SupabaseClient,
+  adminUser: AuthenticatedUser
+) {
   const { userId } = req.body ?? {};
 
   if (typeof userId !== 'string' || !userId.trim()) {
@@ -392,25 +462,27 @@ async function revokeOverride(req: VercelRequest, res: VercelResponse, supabaseA
 
   if (error) throw error;
   if (data && data.length > 0) {
-    await Promise.all(
-      data.map((revokedOverride) =>
-        insertAuditEvent(supabaseAdmin, {
-          targetUserId: userId,
-          actorUserId: adminUser.uid,
-          action: 'revoke',
-          overrideId: revokedOverride.id,
-          tier: isBillingTier(revokedOverride.tier) ? revokedOverride.tier : null,
-          source: isOverrideSource(revokedOverride.source) ? revokedOverride.source : null,
-          reason: typeof revokedOverride.reason === 'string' ? revokedOverride.reason : null,
-          expiresAt: typeof revokedOverride.expires_at === 'string' ? revokedOverride.expires_at : null,
-        })
-      )
-    );
+    const auditEvents = data.map((revokedOverride) => ({
+      targetUserId: userId,
+      actorUserId: adminUser.uid,
+      action: 'revoke' as const,
+      overrideId: revokedOverride.id,
+      tier: isBillingTier(revokedOverride.tier) ? revokedOverride.tier : null,
+      source: isOverrideSource(revokedOverride.source) ? revokedOverride.source : null,
+      reason: typeof revokedOverride.reason === 'string' ? revokedOverride.reason : null,
+      expiresAt: typeof revokedOverride.expires_at === 'string' ? revokedOverride.expires_at : null,
+    }));
+    await insertAuditEvents(supabaseAdmin, auditEvents);
   }
   return json(res, 200, { revokedCount: data?.length ?? 0 });
 }
 
-async function resetSandboxTestOverride(req: VercelRequest, res: VercelResponse, supabaseAdmin: SupabaseClient, adminUser: AuthenticatedUser) {
+async function resetSandboxTestOverride(
+  req: VercelRequest,
+  res: VercelResponse,
+  supabaseAdmin: SupabaseClient,
+  adminUser: AuthenticatedUser
+) {
   const { userId } = req.body ?? {};
 
   if (typeof userId !== 'string' || !userId.trim()) {
@@ -434,21 +506,18 @@ async function resetSandboxTestOverride(req: VercelRequest, res: VercelResponse,
 
   if (error) throw error;
   if (data && data.length > 0) {
-    await Promise.all(
-      data.map((resetOverride) =>
-        insertAuditEvent(supabaseAdmin, {
-          targetUserId: userId,
-          actorUserId: adminUser.uid,
-          action: 'revoke',
-          overrideId: resetOverride.id,
-          tier: isBillingTier(resetOverride.tier) ? resetOverride.tier : null,
-          source: 'sandbox_test',
-          reason: typeof resetOverride.reason === 'string' ? resetOverride.reason : null,
-          expiresAt: typeof resetOverride.expires_at === 'string' ? resetOverride.expires_at : null,
-          metadata: { reset: 'sandbox_test' },
-        })
-      )
-    );
+    const auditEvents = data.map((resetOverride) => ({
+      targetUserId: userId,
+      actorUserId: adminUser.uid,
+      action: 'revoke' as const,
+      overrideId: resetOverride.id,
+      tier: isBillingTier(resetOverride.tier) ? resetOverride.tier : null,
+      source: 'sandbox_test' as const,
+      reason: typeof resetOverride.reason === 'string' ? resetOverride.reason : null,
+      expiresAt: typeof resetOverride.expires_at === 'string' ? resetOverride.expires_at : null,
+      metadata: { reset: 'sandbox_test' },
+    }));
+    await insertAuditEvents(supabaseAdmin, auditEvents);
   }
   return json(res, 200, { resetCount: data?.length ?? 0 });
 }
@@ -461,13 +530,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (req.method !== 'GET' && req.method !== 'POST') {
     res.setHeader('Allow', ['GET', 'POST']);
-    return json(res, 405, { error: { code: 'METHOD_NOT_ALLOWED', message: 'Method not allowed.' } });
+    return json(res, 405, {
+      error: { code: 'METHOD_NOT_ALLOWED', message: 'Method not allowed.' },
+    });
   }
 
   try {
     const user = await authenticateRequest(req.headers.authorization);
     if (!user) {
-      return json(res, 401, { error: { code: 'UNAUTHORIZED', message: 'Invalid or expired auth token.' } });
+      return json(res, 401, {
+        error: { code: 'UNAUTHORIZED', message: 'Invalid or expired auth token.' },
+      });
     }
 
     const supabaseAdmin = getSupabaseAdminClient();
