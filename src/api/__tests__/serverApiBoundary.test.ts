@@ -6,6 +6,7 @@ const apiRoot = path.resolve(process.cwd(), 'api');
 const srcRoot = path.resolve(process.cwd(), 'src');
 const allowedSrcImports = new Set([
   'api/ai-proxy.ts -> ../src/api/ai-proxy',
+  'api/proxy.ts -> ../src/api/proxy',
   'api/push-reminder-cron.ts -> ../src/services/pushSubscriptionService',
   'api/push-reminder-cron.ts -> ../src/services/reminders/reminderProcessor',
 ]);
