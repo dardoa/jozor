@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 import { verifyInternalToken } from '../../shared/auth/internalJwt';
+import { MAX_JSON_BODY_SIZE, PayloadTooLargeError } from '../shared/server/bodyLimits';
 
 type AuthenticatedUser = {
   uid: string;
@@ -113,12 +114,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // If Vercel bodyParser is not used, get raw body and parse
     try {
       const chunks: Uint8Array[] = [];
+      let totalLength = 0;
       for await (const chunk of req) {
+        totalLength += chunk.length;
+        if (totalLength > MAX_JSON_BODY_SIZE) {
+          throw new PayloadTooLargeError();
+        }
         chunks.push(chunk);
       }
       const raw = Buffer.concat(chunks).toString('utf8');
       body = JSON.parse(raw) as CheckoutRequestBody;
-    } catch {
+    } catch (error: unknown) {
+      if (error instanceof PayloadTooLargeError) {
+        res.writeHead(413, { ...headers, 'Content-Type': 'application/json' });
+        return res.end(JSON.stringify({ error: 'Payload Too Large' }));
+      }
       res.writeHead(400, { ...headers, 'Content-Type': 'application/json' });
       return res.end(JSON.stringify({ error: 'Invalid JSON body' }));
     }

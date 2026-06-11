@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { Paddle } from '@paddle/paddle-node-sdk';
+import { MAX_JSON_BODY_SIZE, PayloadTooLargeError } from '../shared/server/bodyLimits';
 
 export const config = {
   api: {
@@ -10,7 +11,12 @@ export const config = {
 
 async function getRawBody(req: VercelRequest): Promise<string> {
   const chunks: Uint8Array[] = [];
+  let totalLength = 0;
   for await (const chunk of req) {
+    totalLength += chunk.length;
+    if (totalLength > MAX_JSON_BODY_SIZE) {
+      throw new PayloadTooLargeError();
+    }
     chunks.push(chunk);
   }
   return Buffer.concat(chunks).toString('utf8');
@@ -107,7 +113,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(500).json({ error: 'Server configuration error' });
   }
 
-  const rawBody = await getRawBody(req);
+  let rawBody: string;
+  try {
+    rawBody = await getRawBody(req);
+  } catch (error: unknown) {
+    if (error instanceof PayloadTooLargeError) {
+      await recordBillingWebhookDiagnostic({
+        processingStatus: 'failed',
+        reason: 'payload_too_large',
+        httpStatus: 413,
+      });
+      return res.status(413).json({ error: 'Payload Too Large' });
+    }
+    console.error('[PADDLE_WEBHOOK] Error reading body:', error);
+    return res.status(500).json({ error: 'Failed to read request body' });
+  }
 
   // 1. Strict Timestamp & Replay Protection (assert ts is within 5 seconds)
   const parts = signatureHeader.split(';');
