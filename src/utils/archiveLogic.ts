@@ -4,6 +4,7 @@ import { validatePerson } from './familyLogic';
 import { googleMediaService } from '../services/googleService';
 import { OFFLINE_VIEWER_HTML } from './archiveTemplates';
 import { getGalleryImageUrl } from './mediaUtils';
+import { createLimit } from '../../shared/concurrency';
 
 // Helper to extract base64 data
 const getBase64Data = (dataUrl: string) => {
@@ -301,40 +302,58 @@ export const importJozorArchiveData = async (file: File): Promise<JozorArchiveDa
     }
   });
 
-  for (const key of Object.keys(rawPeople as Record<string, unknown>)) {
-    const p = validatePerson((rawPeople as Record<string, Partial<Person>>)[key]);
+  // Apply a per-operation concurrency limit so a single person with many
+  // media files cannot monopolise the ZIP reader. The limit gates each
+  // individual findAndValidateMediaFile call, not each person as a whole.
+  const limit = createLimit(8);
 
-    // 1. Rehydrate Profile Photo
-    if (p.photoUrl && p.photoUrl.startsWith('images/')) {
-      p.photoUrl = await findAndValidateMediaFile(zip, p.photoUrl, 'images', filesMap, folderMaps);
-    }
+  const personEntries = await Promise.all(
+    Object.keys(rawPeople as Record<string, unknown>).map(async (key) => {
+      const p = validatePerson((rawPeople as Record<string, Partial<Person>>)[key]);
 
-    // 2. Rehydrate Gallery
-    if (p.gallery && Array.isArray(p.gallery)) {
-      p.gallery = await Promise.all(
-        p.gallery.map(async (item: string | GalleryItem) => {
-          const imgPath = typeof item === 'string' ? item : item.path;
-          if (imgPath && imgPath.startsWith('images/')) {
-            return await findAndValidateMediaFile(zip, imgPath, 'images', filesMap, folderMaps);
-          }
-          return imgPath || '';
-        })
-      );
-    }
+      // 1. Rehydrate Profile Photo
+      if (p.photoUrl && p.photoUrl.startsWith('images/')) {
+        p.photoUrl = await limit(() =>
+          findAndValidateMediaFile(zip, p.photoUrl!, 'images', filesMap, folderMaps)
+        );
+      }
 
-    // 3. Rehydrate Voice Notes
-    if (p.voiceNotes && Array.isArray(p.voiceNotes)) {
-      p.voiceNotes = await Promise.all(
-        p.voiceNotes.map(async (audioPath: string) => {
-          if (audioPath.startsWith('audio/')) {
-            return await findAndValidateMediaFile(zip, audioPath, 'audio', filesMap, folderMaps);
-          }
-          return audioPath;
-        })
-      );
-    }
+      // 2. Rehydrate Gallery
+      if (p.gallery && Array.isArray(p.gallery)) {
+        p.gallery = await Promise.all(
+          p.gallery.map(async (item: string | GalleryItem) => {
+            const imgPath = typeof item === 'string' ? item : item.path;
+            if (imgPath && imgPath.startsWith('images/')) {
+              return limit(() =>
+                findAndValidateMediaFile(zip, imgPath, 'images', filesMap, folderMaps)
+              );
+            }
+            return imgPath || '';
+          })
+        );
+      }
 
-    people[key] = p;
+      // 3. Rehydrate Voice Notes
+      if (p.voiceNotes && Array.isArray(p.voiceNotes)) {
+        p.voiceNotes = await Promise.all(
+          p.voiceNotes.map(async (audioPath: string) => {
+            if (audioPath.startsWith('audio/')) {
+              return limit(() =>
+                findAndValidateMediaFile(zip, audioPath, 'audio', filesMap, folderMaps)
+              );
+            }
+            return audioPath;
+          })
+        );
+      }
+
+      return { key, person: p };
+    })
+  );
+
+  // Rebuild in the original key order (Promise.all preserves input order)
+  for (const { key, person } of personEntries) {
+    people[key] = person;
   }
 
   return { people, settings };
