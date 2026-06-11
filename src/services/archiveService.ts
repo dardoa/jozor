@@ -2,6 +2,7 @@ import JSZip from 'jszip';
 
 import type { BackupManifest, FullState, Person } from '../types';
 import { getGalleryImageUrl } from '../utils/mediaUtils';
+import { createLimit } from '../../shared/concurrency';
 
 export interface ArchiveBuildOptions {
   label: string;
@@ -40,6 +41,7 @@ export const buildBlueprintArchive = async (
   const archiveDate = new Date(createdAt);
   const mediaFetcher = options.mediaFetcher ?? fetchMediaAsBlob;
   const zip = new JSZip();
+  const limit = createLimit(5);
 
   const sortedPersonIds = Object.keys(snapshot.people).sort();
   const normalizedPeople: Record<string, Person> = {};
@@ -54,24 +56,38 @@ export const buildBlueprintArchive = async (
       const normalizedPerson = clonePersonWithoutPortableMedia(person);
 
       const avatarPromise = person.photoUrl
-        ? addMediaFile({
-            zip,
-            source: person.photoUrl,
-            targetBasePath: `media/avatars/${sanitizeFileSegment(personId)}`,
-            date: archiveDate,
-            mediaFetcher,
-          })
+        ? limit(() =>
+            addMediaFile({
+              zip,
+              source: person.photoUrl!,
+              targetBasePath: `media/avatars/${sanitizeFileSegment(personId)}`,
+              date: archiveDate,
+              mediaFetcher,
+            }).catch((err) => {
+              console.warn(`[ARCHIVE] Failed to fetch avatar for ${personId}:`, err);
+              return null;
+            })
+          )
         : Promise.resolve(null);
 
       const galleryPromises = (Array.isArray(person.gallery) ? person.gallery : []).map(
-        (galleryItem, index) =>
-          addMediaFile({
-            zip,
-            source: getGalleryImageUrl(galleryItem) || '',
-            targetBasePath: `media/gallery/${sanitizeFileSegment(personId)}-${index + 1}`,
-            date: archiveDate,
-            mediaFetcher,
-          })
+        (galleryItem, index) => {
+          const sourceUrl = getGalleryImageUrl(galleryItem);
+          if (!sourceUrl) return Promise.resolve(null);
+          
+          return limit(() =>
+            addMediaFile({
+              zip,
+              source: sourceUrl,
+              targetBasePath: `media/gallery/${sanitizeFileSegment(personId)}-${index + 1}`,
+              date: archiveDate,
+              mediaFetcher,
+            }).catch((err) => {
+              console.warn(`[ARCHIVE] Failed to fetch gallery item ${index} for ${personId}:`, err);
+              return null;
+            })
+          );
+        }
       );
 
       const [avatarPath, galleryPathsRaw] = await Promise.all([
