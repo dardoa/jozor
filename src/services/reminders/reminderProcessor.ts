@@ -16,35 +16,47 @@ export interface ReminderDeliveryResult {
   prunedSubscriptions: number;
 }
 
-export async function processReminderBatch(params: {
-  userIds: string[];
-  now: Date;
-  client: SupabaseClient;
-}): Promise<ReminderDeliveryResult> {
-  const cappedUserIds = params.userIds.slice(0, MAX_BATCH_SIZE);
-  if (cappedUserIds.length === 0) {
-    return {
-      deliveredNotifications: 0,
-      skippedNotifications: 0,
-      sentSubscriptions: 0,
-      prunedSubscriptions: 0,
-    };
-  }
+// ─── Internal types ───────────────────────────────────────────────────────────
 
-  // 1. Batch fetch visible tree IDs for all users
+interface ReminderToClaim {
+  userId: string;
+  treeId: string;
+  personId: string;
+  dedupeKey: string;
+  type: string;
+  title: string;
+  body: string;
+}
+
+// Returns a fresh object each call to avoid accidental mutation of a shared reference.
+function emptyResult(): ReminderDeliveryResult {
+  return {
+    deliveredNotifications: 0,
+    skippedNotifications: 0,
+    sentSubscriptions: 0,
+    prunedSubscriptions: 0,
+  };
+}
+
+// ─── Step 1: Build user → tree-IDs map ───────────────────────────────────────
+
+async function fetchUserTreeMap(
+  userIds: string[],
+  client: SupabaseClient
+): Promise<{ userToTreeIds: Record<string, string[]>; uniqueTreeIds: string[] }> {
   const [ownedTreesResult, collaboratorRowsResult] = await Promise.all([
-    params.client.from('trees').select('id, owner_id').in('owner_id', cappedUserIds),
-    params.client
+    client.from('trees').select('id, owner_id').in('owner_id', userIds),
+    client
       .from('tree_collaborators')
       .select('tree_id, collaborator_uid')
-      .in('collaborator_uid', cappedUserIds),
+      .in('collaborator_uid', userIds),
   ]);
 
   if (ownedTreesResult.error) throw ownedTreesResult.error;
   if (collaboratorRowsResult.error) throw collaboratorRowsResult.error;
 
   const userToTreeIds: Record<string, string[]> = {};
-  for (const uid of cappedUserIds) {
+  for (const uid of userIds) {
     userToTreeIds[uid] = [];
   }
   const allTreeIds = new Set<string>();
@@ -71,18 +83,16 @@ export async function processReminderBatch(params: {
     }
   }
 
-  const uniqueTreeIds = Array.from(allTreeIds);
-  if (uniqueTreeIds.length === 0) {
-    return {
-      deliveredNotifications: 0,
-      skippedNotifications: 0,
-      sentSubscriptions: 0,
-      prunedSubscriptions: 0,
-    };
-  }
+  return { userToTreeIds, uniqueTreeIds: Array.from(allTreeIds) };
+}
 
-  // 2. Batch fetch people records for all tree IDs in one query
-  const { data: peopleData, error: peopleError } = await params.client
+// ─── Step 2: Fetch people records indexed by tree ────────────────────────────
+
+async function fetchPeopleByTree(
+  uniqueTreeIds: string[],
+  client: SupabaseClient
+): Promise<Record<string, Record<string, Person>>> {
+  const { data: peopleData, error: peopleError } = await client
     .from('people')
     .select('*')
     .in('tree_id', uniqueTreeIds);
@@ -101,18 +111,20 @@ export async function processReminderBatch(params: {
     }
   }
 
-  // 3. Generate scheduled birthday notifications for each user
-  const remindersToClaim: Array<{
-    userId: string;
-    treeId: string;
-    personId: string;
-    dedupeKey: string;
-    type: string;
-    title: string;
-    body: string;
-  }> = [];
+  return peopleByTreeId;
+}
 
-  for (const uid of cappedUserIds) {
+// ─── Step 3: Generate reminder candidates (pure, no I/O) ─────────────────────
+
+function collectReminders(
+  userIds: string[],
+  userToTreeIds: Record<string, string[]>,
+  peopleByTreeId: Record<string, Record<string, Person>>,
+  now: Date
+): ReminderToClaim[] {
+  const reminders: ReminderToClaim[] = [];
+
+  for (const uid of userIds) {
     const userTrees = userToTreeIds[uid];
     if (userTrees.length === 0) continue;
 
@@ -121,7 +133,7 @@ export async function processReminderBatch(params: {
       const treeReminders = buildScheduledBirthdayNotifications({
         people: treePeople,
         isRtl: false,
-        now: params.now,
+        now,
       });
 
       for (const r of treeReminders) {
@@ -129,7 +141,7 @@ export async function processReminderBatch(params: {
           ? `${tid}:${r.spec.notification.dedupeKey}`
           : undefined;
         if (!dedupeKey) continue;
-        remindersToClaim.push({
+        reminders.push({
           userId: uid,
           personId: r.personId,
           dedupeKey,
@@ -142,39 +154,50 @@ export async function processReminderBatch(params: {
     }
   }
 
-  // 4. Bulk claim all reminder delivery keys using the (user_id, dedupe_key) constraint
+  return reminders;
+}
+
+// ─── Step 4: Bulk-claim delivery keys via upsert ─────────────────────────────
+
+async function claimDeliveryKeys(
+  reminders: ReminderToClaim[],
+  client: SupabaseClient
+): Promise<Set<string>> {
   const claimedKeys = new Set<string>();
-  if (remindersToClaim.length > 0) {
-    const claimsPayload = remindersToClaim.map((r) => ({
-      user_id: r.userId,
-      dedupe_key: r.dedupeKey,
-      notification_type: r.type,
-    }));
+  if (reminders.length === 0) return claimedKeys;
 
-    const { data: claimsData, error: claimsError } = await params.client
-      .from('push_reminder_deliveries')
-      .upsert(claimsPayload, { onConflict: 'user_id,dedupe_key', ignoreDuplicates: true })
-      .select('user_id, dedupe_key');
+  const claimsPayload = reminders.map((r) => ({
+    user_id: r.userId,
+    dedupe_key: r.dedupeKey,
+    notification_type: r.type,
+  }));
 
-    if (claimsError) throw claimsError;
+  const { data: claimsData, error: claimsError } = await client
+    .from('push_reminder_deliveries')
+    .upsert(claimsPayload, { onConflict: 'user_id,dedupe_key', ignoreDuplicates: true })
+    .select('user_id, dedupe_key');
 
-    if (claimsData) {
-      for (const row of claimsData) {
-        claimedKeys.add(`${row.user_id}:${row.dedupe_key}`);
-      }
+  if (claimsError) throw claimsError;
+
+  if (claimsData) {
+    for (const row of claimsData) {
+      claimedKeys.add(`${row.user_id}:${row.dedupe_key}`);
     }
   }
 
-  // 5. Send push notifications concurrently with a limit of 10 and a true AbortController timeout
-  const limit = createLimit(10);
-  const results: ReminderDeliveryResult = {
-    deliveredNotifications: 0,
-    skippedNotifications: 0,
-    sentSubscriptions: 0,
-    prunedSubscriptions: 0,
-  };
+  return claimedKeys;
+}
 
-  const sendPromises = remindersToClaim.map((reminder) => {
+// ─── Step 5: Send push notifications with concurrency limit ──────────────────
+
+async function dispatchNotifications(
+  reminders: ReminderToClaim[],
+  claimedKeys: Set<string>
+): Promise<ReminderDeliveryResult> {
+  const limit = createLimit(10);
+  const results = emptyResult();
+
+  const sendPromises = reminders.map((reminder) => {
     const isClaimed = claimedKeys.has(`${reminder.userId}:${reminder.dedupeKey}`);
     if (!isClaimed) {
       results.skippedNotifications += 1;
@@ -218,4 +241,23 @@ export async function processReminderBatch(params: {
 
   await Promise.all(sendPromises);
   return results;
+}
+
+// ─── Public entry point ───────────────────────────────────────────────────────
+
+export async function processReminderBatch(params: {
+  userIds: string[];
+  now: Date;
+  client: SupabaseClient;
+}): Promise<ReminderDeliveryResult> {
+  const cappedUserIds = params.userIds.slice(0, MAX_BATCH_SIZE);
+  if (cappedUserIds.length === 0) return emptyResult();
+
+  const { userToTreeIds, uniqueTreeIds } = await fetchUserTreeMap(cappedUserIds, params.client);
+  if (uniqueTreeIds.length === 0) return emptyResult();
+
+  const peopleByTreeId = await fetchPeopleByTree(uniqueTreeIds, params.client);
+  const reminders = collectReminders(cappedUserIds, userToTreeIds, peopleByTreeId, params.now);
+  const claimedKeys = await claimDeliveryKeys(reminders, params.client);
+  return dispatchNotifications(reminders, claimedKeys);
 }

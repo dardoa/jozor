@@ -94,19 +94,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.end(JSON.stringify({ error: 'Method Not Allowed' }));
   }
 
-  // 1. Authenticate user
-  const authHeader = req.headers.authorization;
-  const user = await authenticateUser(authHeader);
-  if (!user) {
-    res.writeHead(401, { ...headers, 'Content-Type': 'application/json' });
-    return res.end(JSON.stringify({ error: 'Unauthorized: Invalid session.' }));
-  }
-
   interface CheckoutRequestBody {
     tier?: string;
   }
 
-  // 2. Parse body
+  // 1. Parse body first — reject oversized payloads before any auth/DB work
   let body: CheckoutRequestBody = {};
   if (req.body) {
     body = req.body as CheckoutRequestBody;
@@ -132,6 +124,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       res.writeHead(400, { ...headers, 'Content-Type': 'application/json' });
       return res.end(JSON.stringify({ error: 'Invalid JSON body' }));
     }
+  }
+
+  // 2. Authenticate user
+  const authHeader = req.headers.authorization;
+  const user = await authenticateUser(authHeader);
+  if (!user) {
+    res.writeHead(401, { ...headers, 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ error: 'Unauthorized: Invalid session.' }));
   }
 
   const { tier } = body;
