@@ -6,6 +6,8 @@ import { sendPushNotificationToUser } from '../../api/push-notifier';
 import { createLimit } from '../../../shared/concurrency';
 
 const MAX_BATCH_SIZE = 50;
+/** Abort push notification fetch after this many milliseconds to avoid hanging the cron run. */
+const PUSH_NOTIFICATION_TIMEOUT_MS = 5_000;
 
 export interface ReminderDeliveryResult {
   deliveredNotifications: number;
@@ -181,7 +183,7 @@ export async function processReminderBatch(params: {
 
     return limit(async () => {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      const timeoutId = setTimeout(() => controller.abort(), PUSH_NOTIFICATION_TIMEOUT_MS);
 
       try {
         const delivery = await sendPushNotificationToUser(
