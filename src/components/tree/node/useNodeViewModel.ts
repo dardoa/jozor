@@ -79,12 +79,9 @@ export const useNodeViewModel = ({
     () => buildNodeMetaLines(person, settings, isLOD),
     [isLOD, person, settings],
   );
-  const photoPath = person.photoPath;
-  const photoVersion = person.photoVersion;
-
   const photoSource = useMemo(
     () => getPersonPhoto(person),
-    [photoPath, photoVersion],
+    [person],
   );
   const shouldRenderPhoto = settings.showPhotos && !settings.privacyMode && Boolean(photoSource) && !isLOD;
   const photoAlt = useMemo(
@@ -151,9 +148,7 @@ export const useNodeViewModel = ({
     nodeHeight,
     nodeWidth,
     onFocusPerson,
-    person.id,
     person,
-    person.isDeceased,
     photoAlt,
     photoSource,
     primaryNameLine,

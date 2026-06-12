@@ -1,4 +1,4 @@
-import { memo, useEffect, useState } from 'react';
+import { memo, useState } from 'react';
 import { BriefcaseBusiness, ChevronDown, Info, Mail } from 'lucide-react';
 
 import { FamilyActionsProps, Person, PersonUpdateHandler, TreeSettings } from '../../../../types';
@@ -28,28 +28,41 @@ interface AboutTabProps {
   isMobileLayout?: boolean;
 }
 
+const createDefaultExpandedSections = (): Record<AboutSectionId, boolean> => ({
+  overview: true,
+  workBio: false,
+  contact: false,
+});
+
+interface ExpandedSectionsState {
+  personId: string;
+  sections: Record<AboutSectionId, boolean>;
+}
+
 export const AboutTab = memo<AboutTabProps>(
   ({ person, people, isEditing, canEdit, onUpdate, onSelect, onOpenModal, familyActions, settings, isMobileLayout = false }) => {
     const { t } = useTranslation();
-    const [expandedSections, setExpandedSections] = useState<Record<AboutSectionId, boolean>>({
-      overview: true,
-      workBio: false,
-      contact: false,
-    });
-
-    useEffect(() => {
-      setExpandedSections({
-        overview: true,
-        workBio: false,
-        contact: false,
-      });
-    }, [person.id]);
+    const [expandedSectionsState, setExpandedSectionsState] = useState<ExpandedSectionsState>(() => ({
+      personId: person.id,
+      sections: createDefaultExpandedSections(),
+    }));
+    const expandedSections = expandedSectionsState.personId === person.id
+      ? expandedSectionsState.sections
+      : createDefaultExpandedSections();
 
     const toggleSection = (id: AboutSectionId) => {
-      setExpandedSections(prev => ({
-        ...prev,
-        [id]: !prev[id]
-      }));
+      setExpandedSectionsState((previous) => {
+        const sections = previous.personId === person.id
+          ? previous.sections
+          : createDefaultExpandedSections();
+        return {
+          personId: person.id,
+          sections: {
+            ...sections,
+            [id]: !sections[id],
+          },
+        };
+      });
     };
 
     const sectionCards: AboutSectionCard[] = [

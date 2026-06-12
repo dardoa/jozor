@@ -30,7 +30,7 @@ export const useGoogleSync = (
     setCurrentActiveDriveFileId(null);
     setFileOwnerUid(null);
     cleanupAfterLogoutRef.current?.();
-  }, []);
+  }, [setCurrentActiveDriveFileId]);
 
   const {
     user,
@@ -114,7 +114,7 @@ export const useGoogleSync = (
   const stopSyncing = useCallback(() => {
     setCurrentActiveDriveFileId(null);
     setFileOwnerUid(null);
-  }, []);
+  }, [setCurrentActiveDriveFileId]);
 
   return useMemo(() => ({
     user,

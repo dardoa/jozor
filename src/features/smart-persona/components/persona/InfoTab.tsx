@@ -1,8 +1,7 @@
-import { lazy, memo, Suspense } from 'react';
+import { lazy, memo, Suspense, useEffect, useState } from 'react';
 import { Person, FamilyActionsProps, PersonUpdateHandler, TreeSettings } from '../../../../types';
 import { InfoTabView } from './InfoTabView';
 import { Skeleton } from '../../../../components/ui/Skeleton';
-import { useEffect, useRef, useState } from 'react';
 
 const InfoTabEdit = lazy(() =>
   import('./InfoTabEdit').then((module) => ({ default: module.InfoTabEdit }))
@@ -30,22 +29,16 @@ interface InfoTabProps {
 
 export const InfoTab = memo<InfoTabProps>(
   ({ person, people, isEditing, canEdit, onUpdate, onSelect, onOpenModal, familyActions, settings }) => {
-    const [isLoading, setIsLoading] = useState(false);
-    const prevPersonIdRef = useRef(person.id);
+    const [settledPersonId, setSettledPersonId] = useState(person.id);
+    const isLoading = settledPersonId !== person.id;
 
     useEffect(() => {
-      if (prevPersonIdRef.current !== person.id) {
-        prevPersonIdRef.current = person.id;
-        setIsLoading(true);
-      }
-    }, [person.id]);
+      if (!isLoading) return;
 
-    useEffect(() => {
-      if (isLoading) {
-        const timer = setTimeout(() => setIsLoading(false), 220);
-        return () => clearTimeout(timer);
-      }
-    }, [isLoading]);
+      const personId = person.id;
+      const timer = window.setTimeout(() => setSettledPersonId(personId), 220);
+      return () => window.clearTimeout(timer);
+    }, [isLoading, person.id]);
 
     if (isLoading && !isEditing) {
       return (
