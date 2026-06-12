@@ -452,18 +452,25 @@ function useStableTreeNodes(
 ): TreeNodeWithIndex[] {
   const previousNodesByIdRef = useRef<Map<string, TreeNodeWithIndex>>(new Map());
 
-  return useMemo(() => {
-    const treeNodes = buildTreeNodes(
+  const treeNodes = useMemo(() => {
+    // Read-only committed cache required for identity preservation.
+    // eslint-disable-next-line react-hooks/refs
+    const prevNodes = previousNodesByIdRef.current;
+
+    return buildTreeNodes(
       projectedNodes,
       people,
       focusPersonId,
       scaleX,
-      previousNodesByIdRef.current,
+      prevNodes,
     );
-
-    previousNodesByIdRef.current = new Map(treeNodes.map((node) => [node.id, node]));
-    return treeNodes;
   }, [focusPersonId, people, projectedNodes, scaleX]);
+
+  useEffect(() => {
+    previousNodesByIdRef.current = new Map(treeNodes.map((node) => [node.id, node]));
+  }, [treeNodes]);
+
+  return treeNodes;
 }
 
 interface V3CanvasBackgroundProps {
