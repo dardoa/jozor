@@ -36,5 +36,25 @@ describe('SmartAvatar', () => {
 
     expect(screen.getByRole('img', { name: 'Changed Jozor' }).getAttribute('style')).toBe(firstBackground);
   });
+
+  it('resets failure state when photoUrl changes after an image load error', () => {
+    const { rerender } = render(<SmartAvatar person={{ ...basePerson, photoUrl: 'https://example.com/avatar1.jpg' }} size={48} />);
+
+    const image1 = screen.getByRole('img', { name: 'Noura Jozor' });
+    expect(image1).toHaveAttribute('src', 'https://example.com/avatar1.jpg');
+
+    // Fail the first image
+    fireEvent.error(image1);
+
+    // Fallback is rendered
+    expect(screen.getByRole('img', { name: 'Noura Jozor' })).toHaveAttribute('data-age-band', 'adult');
+
+    // Change photoUrl
+    rerender(<SmartAvatar person={{ ...basePerson, photoUrl: 'https://example.com/avatar2.jpg' }} size={48} />);
+
+    // New image should be rendered
+    const image2 = screen.getByRole('img', { name: 'Noura Jozor' });
+    expect(image2).toHaveAttribute('src', 'https://example.com/avatar2.jpg');
+  });
 });
 

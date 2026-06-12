@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Joyride, { Step, CallBackProps, STATUS, ACTIONS, EVENTS } from 'react-joyride';
 import { useTranslation } from '../context/TranslationContext';
 import { useAppStore } from '../store/useAppStore';
@@ -10,12 +10,33 @@ interface OnboardingTourRuntimeProps {
 
 const TOUR_STORAGE_KEY = 'jozor_onboarding_completed';
 
-export const OnboardingTourRuntime: React.FC<OnboardingTourRuntimeProps> = ({ forceStartToken, setDetailsPanelOpen }) => {
-    const { t } = useTranslation();
-    const user = useAppStore((state) => state.user);
-    const updateTourStatus = useAppStore((state) => state.updateTourStatus);
+interface OnboardingTourSessionProps {
+    forceStartToken: number;
+    setDetailsPanelOpen: (open: boolean) => void;
+    user: ReturnType<typeof useAppStore.getState>['user'];
+    updateTourStatus: ReturnType<typeof useAppStore.getState>['updateTourStatus'];
+}
 
-    const [run, setRun] = useState(false);
+const OnboardingTourSession: React.FC<OnboardingTourSessionProps> = ({
+    forceStartToken,
+    setDetailsPanelOpen,
+    user,
+    updateTourStatus,
+}) => {
+    const { t } = useTranslation();
+
+    const [run, setRun] = useState(() => {
+        if (forceStartToken > 0) return true;
+
+        const localCompleted = localStorage.getItem(TOUR_STORAGE_KEY) === 'true';
+        if (localCompleted) return false;
+
+        return Boolean(
+            user?.metadata &&
+            user.metadata.has_completed_tour !== true
+        );
+    });
+
     const [stepIndex, setStepIndex] = useState(0);
 
     const steps: Step[] = [
@@ -46,25 +67,6 @@ export const OnboardingTourRuntime: React.FC<OnboardingTourRuntimeProps> = ({ fo
             placement: 'left',
         },
     ];
-
-    useEffect(() => {
-        if (forceStartToken > 0) {
-            setStepIndex(0);
-            setRun(true);
-            return;
-        }
-
-        const localCompleted = localStorage.getItem(TOUR_STORAGE_KEY) === 'true';
-        if (localCompleted) return;
-
-        if (user && user.metadata) {
-            if (user.metadata.has_completed_tour === undefined || user.metadata.has_completed_tour === false) {
-                if (localStorage.getItem(TOUR_STORAGE_KEY) !== 'true') {
-                    setTimeout(() => setRun(true), 0);
-                }
-            }
-        }
-    }, [forceStartToken, user]);
 
     const handleJoyrideCallback = (data: CallBackProps) => {
         const { status, type, action, index } = data;
@@ -142,6 +144,32 @@ export const OnboardingTourRuntime: React.FC<OnboardingTourRuntimeProps> = ({ fo
             floaterProps={{
                 disableAnimation: false,
             }}
+        />
+    );
+};
+
+export const OnboardingTourRuntime: React.FC<OnboardingTourRuntimeProps> = ({
+    forceStartToken,
+    setDetailsPanelOpen,
+}) => {
+    const user = useAppStore((state) => state.user);
+    const updateTourStatus = useAppStore((state) => state.updateTourStatus);
+
+    const tourStatus = !user
+        ? 'anonymous'
+        : user.metadata?.has_completed_tour === true
+        ? 'completed'
+        : 'available';
+
+    const sessionKey = `${forceStartToken}:${user?.uid ?? 'anonymous'}:${tourStatus}`;
+
+    return (
+        <OnboardingTourSession
+            key={sessionKey}
+            forceStartToken={forceStartToken}
+            setDetailsPanelOpen={setDetailsPanelOpen}
+            user={user}
+            updateTourStatus={updateTourStatus}
         />
     );
 };

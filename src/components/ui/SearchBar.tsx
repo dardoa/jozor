@@ -21,7 +21,10 @@ export const SearchBar = ({ people, onFocusPerson, className = '' }: SearchBarPr
     const { language } = useTranslation();
     const [query, setQuery] = useState('');
     const [isOpen, setIsOpen] = useState(false);
-    const [results, setResults] = useState<Person[]>([]);
+    const [searchState, setSearchState] = useState<{ query: string; results: Person[] }>({
+        query: '',
+        results: [],
+    });
     const inputRef = useRef<HTMLInputElement>(null);
     const resultsRef = useRef<HTMLDivElement>(null);
     const searchRequestIdRef = useRef(0);
@@ -29,34 +32,33 @@ export const SearchBar = ({ people, onFocusPerson, className = '' }: SearchBarPr
     const peopleArray = useMemo(() => Object.values(people), [people]);
 
     // Phase 1: Keep index updated (only if content version changed)
-    const peopleHash = useMemo(() => {
-        const keys = Object.keys(people);
-        return `${keys.length}:${keys.slice(0, 5).join(',')}`; // Sample hash
-    }, [people]);
-
     useEffect(() => {
         void searchService.updateSearchIndex(peopleArray);
-    }, [peopleHash]); // Only re-index if structural keys changed
+    }, [peopleArray]);
 
     // Phase 2: Perform search with intent awareness
     useEffect(() => {
-        const requestId = searchRequestIdRef.current + 1;
-        searchRequestIdRef.current = requestId;
-
         if (!query.trim()) {
-            setResults([]);
             return;
         }
+
+        const requestId = searchRequestIdRef.current + 1;
+        searchRequestIdRef.current = requestId;
 
         const timeoutId = setTimeout(() => {
             void searchService.search(query, 10).then((nextResults) => {
                 if (searchRequestIdRef.current !== requestId) return;
-                setResults(nextResults.map((result) => result.person));
+                setSearchState({
+                    query,
+                    results: nextResults.map((result) => result.person),
+                });
             });
         }, 150); // Small debounce for typing
 
         return () => clearTimeout(timeoutId);
     }, [query]);
+
+    const results = query.trim() && searchState.query === query ? searchState.results : [];
 
     // Voice Search Setup
     const { isListening, startListening, stopListening, isSupported: isVoiceSupported } = useSpeechToText({
