@@ -13,8 +13,8 @@ const TOUR_STORAGE_KEY = 'jozor_onboarding_completed';
 interface OnboardingTourSessionProps {
     forceStartToken: number;
     setDetailsPanelOpen: (open: boolean) => void;
-    user: ReturnType<typeof useAppStore>['user'];
-    updateTourStatus: ReturnType<typeof useAppStore>['updateTourStatus'];
+    user: ReturnType<typeof useAppStore.getState>['user'];
+    updateTourStatus: ReturnType<typeof useAppStore.getState>['updateTourStatus'];
 }
 
 const OnboardingTourSession: React.FC<OnboardingTourSessionProps> = ({

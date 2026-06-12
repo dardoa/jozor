@@ -265,5 +265,59 @@ describe('useFamilyTreeLayoutController highlightedPath stability', () => {
       'spouse-person',
     ]);
   });
+
+  it('triggers a Worker postMessage call when settings drawer is opened or closed, checking layout refresh triggers', () => {
+    vi.useFakeTimers();
+    const postMessageSpy = vi.spyOn(WorkerMock.prototype, 'postMessage');
+
+    const root = buildPerson({ id: 'root-person' });
+    setPeopleInStore({ [root.id]: root });
+
+    const { rerender } = renderHook(
+      ({ focusId, treeSettings }) => useFamilyTreeLayoutController({
+        people: useAppStore.getState().people,
+        focusId,
+        settings: treeSettings,
+      }),
+      { initialProps: { focusId: root.id, treeSettings: settings } },
+    );
+
+    act(() => {
+      vi.advanceTimersByTime(50);
+    });
+
+    // Initial load triggers worker
+    expect(postMessageSpy).toHaveBeenCalledTimes(1);
+    postMessageSpy.mockClear();
+
+    // Open settings drawer
+    act(() => {
+      useAppStore.setState({ isSettingsDrawerOpen: true });
+    });
+    rerender({ focusId: root.id, treeSettings: settings });
+
+    act(() => {
+      vi.advanceTimersByTime(50);
+    });
+
+    // Opening settings drawer changes geometryKey, triggering a layout recalculation (Worker postMessage)
+    expect(postMessageSpy).toHaveBeenCalledTimes(1);
+    postMessageSpy.mockClear();
+
+    // Close settings drawer
+    act(() => {
+      useAppStore.setState({ isSettingsDrawerOpen: false });
+    });
+    rerender({ focusId: root.id, treeSettings: settings });
+
+    act(() => {
+      vi.advanceTimersByTime(50);
+    });
+
+    // Closing settings drawer changes geometryKey back, triggering another layout recalculation
+    expect(postMessageSpy).toHaveBeenCalledTimes(1);
+
+    vi.useRealTimers();
+  });
 });
 

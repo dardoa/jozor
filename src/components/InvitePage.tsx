@@ -26,7 +26,7 @@ const getInvitationPromise = (token: string, uid: string, email: string, supabas
 
 interface AuthenticatedInviteAcceptorProps {
     token: string;
-    currentUser: NonNullable<ReturnType<typeof useAppStore>['user']>;
+    currentUser: NonNullable<ReturnType<typeof useAppStore.getState>['user']>;
     navigate: ReturnType<typeof useNavigate>;
 }
 

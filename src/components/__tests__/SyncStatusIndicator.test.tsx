@@ -78,6 +78,7 @@ describe('SyncStatusIndicator', () => {
     expect(syncTooltipMock).toHaveBeenCalledTimes(1);
     expect(syncTooltipMock).toHaveBeenCalledWith(
       expect.objectContaining({
+        referenceElement: expect.any(HTMLButtonElement),
         syncStatus: expect.objectContaining({ state: 'error', pendingCount: 2 }),
         forceDriveSync,
         onClearSyncCache,
