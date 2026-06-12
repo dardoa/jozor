@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useRef, useState } from 'react';
+import React, { Suspense, lazy, useState } from 'react';
 import { ShieldCheck } from 'lucide-react';
 import { useSyncStatus } from '../hooks/sync/useSyncStatus';
 import { useTranslation } from '../context/TranslationContext';
@@ -13,12 +13,12 @@ export const SyncStatusIndicator: React.FC<{
     const { t } = useTranslation();
     const { syncStatus, forceDriveSync, onClearSyncCache, resetError } = useSyncStatus();
     const [isOpen, setIsOpen] = useState(false);
-    const referenceRef = useRef<HTMLButtonElement | null>(null);
+    const [referenceElement, setReferenceElement] = useState<HTMLButtonElement | null>(null);
 
     return (
         <>
             <button
-                ref={referenceRef}
+                ref={setReferenceElement}
                 type="button"
                 onMouseEnter={() => setIsOpen(true)}
                 onFocus={() => setIsOpen(true)}
@@ -43,7 +43,7 @@ export const SyncStatusIndicator: React.FC<{
             {isOpen && (
                 <Suspense fallback={null}>
                     <SyncStatusFloatingLayer
-                        referenceElement={referenceRef.current}
+                        referenceElement={referenceElement}
                         syncStatus={syncStatus}
                         forceDriveSync={forceDriveSync}
                         onClearSyncCache={onClearSyncCache}
