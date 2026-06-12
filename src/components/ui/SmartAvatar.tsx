@@ -1,4 +1,4 @@
-import { memo, useEffect, useMemo, useState } from 'react';
+import { memo, useMemo, useState } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 
 import type { Person } from '../../types';
@@ -162,16 +162,14 @@ const getPathViewBox = (pathData: string, gender: AvatarGender, ageBand: AgeBand
 };
 
 export const SmartAvatar = memo<SmartAvatarProps>(({ person, size, className = '' }) => {
-  const [imageFailed, setImageFailed] = useState(false);
+  const [failedPhotoUrl, setFailedPhotoUrl] = useState<string | null>(null);
   const photoUrl = person.photoUrl?.trim();
   const displayName = [person.firstName, person.lastName].filter(Boolean).join(' ') || 'Person';
 
   // Only subscribe to people if we actually need it for heuristic
   const people = useAppStore((state) => (person.birthDate ? undefined : state.people));
 
-  useEffect(() => {
-    setImageFailed(false);
-  }, [photoUrl]);
+  const isImageFailed = photoUrl ? failedPhotoUrl === photoUrl : false;
 
   const ageBand = useMemo(() => getAgeBand(person, people), [person, people]);
   const gender = getGender(person);
@@ -192,7 +190,7 @@ export const SmartAvatar = memo<SmartAvatarProps>(({ person, size, className = '
     [background, size]
   );
 
-  if (photoUrl && !imageFailed) {
+  if (photoUrl && !isImageFailed) {
     return (
       <img
         src={photoUrl}
@@ -201,7 +199,7 @@ export const SmartAvatar = memo<SmartAvatarProps>(({ person, size, className = '
         height={size}
         loading="lazy"
         decoding="async"
-        onError={() => setImageFailed(true)}
+        onError={() => setFailedPhotoUrl(photoUrl)}
         className={`block shrink-0 object-cover ${className}`}
         style={{ width: size, height: size }}
       />
