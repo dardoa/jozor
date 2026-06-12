@@ -15,21 +15,19 @@ import {
 import { useAppStore } from '../../../../store/useAppStore';
 import { logError } from '../../../../utils/errorLogger';
 import { showToast } from '../../../../utils/showToast';
-import type { AccessControlState, AccessRole, AccessText, CollaboratorRow } from './accessControlTypes';
+import type { AccessControlState, AccessRole, CollaboratorRow } from './accessControlTypes';
 import { formatShareLinkLabel } from './accessControlUtils';
 
 interface UseAccessControlStateArgs {
   treeId: string;
   ownerId: string;
   ownerEmail: string;
-  t: AccessText;
 }
 
 export const useAccessControlState = ({
   treeId,
   ownerId,
   ownerEmail,
-  t,
 }: UseAccessControlStateArgs): AccessControlState => {
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
   const [pendingInvitations, setPendingInvitations] = useState<TreeInvitation[]>([]);
@@ -73,7 +71,7 @@ export const useAccessControlState = ({
     } finally {
       setIsLoading(false);
     }
-  }, [ownerEmail, ownerId, supabaseToken, t.messages.error.collaborators, treeId]);
+  }, [ownerEmail, ownerId, supabaseToken, treeId]);
 
   useEffect(() => {
     void loadCollaborators();

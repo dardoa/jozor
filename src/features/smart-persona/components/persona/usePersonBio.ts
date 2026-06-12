@@ -110,7 +110,7 @@ export const usePersonBio = ({ person, people, isEditing, onUpdate, t }: UsePers
     setNewSourceDate('');
     setNewSourceType('');
     showToast.success('messages.success.sourceAdded');
-  }, [newSourceDate, newSourceTitle, newSourceType, newSourceUrl, onUpdate, person.id, person.sources, t.messages.success.sourceAdded]);
+  }, [newSourceDate, newSourceTitle, newSourceType, newSourceUrl, onUpdate, person.id, person.sources]);
 
   const updateSource = useCallback((id: string, field: PersonSourceField, value: string | number) => {
     const nextValue = field === 'url'
@@ -125,7 +125,7 @@ export const usePersonBio = ({ person, people, isEditing, onUpdate, t }: UsePers
   const removeSource = useCallback((id: string) => {
     onUpdate(person.id, { sources: (person.sources || []).filter((source) => source.id !== id) });
     showToast.success('messages.success.sourceRemoved');
-  }, [onUpdate, person.id, person.sources, t.messages.success.sourceRemoved]);
+  }, [onUpdate, person.id, person.sources]);
 
   const addEvent = useCallback(() => {
     if (!newEventTitle.trim() || !newEventDate.trim()) return;
@@ -144,7 +144,7 @@ export const usePersonBio = ({ person, people, isEditing, onUpdate, t }: UsePers
     setNewEventDescription('');
     setNewEventType('');
     showToast.success('messages.success.eventAdded');
-  }, [newEventDate, newEventDescription, newEventPlace, newEventTitle, newEventType, onUpdate, person.events, person.id, t.messages.success.eventAdded]);
+  }, [newEventDate, newEventDescription, newEventPlace, newEventTitle, newEventType, onUpdate, person.events, person.id]);
 
   const updateEvent = useCallback((id: string, field: PersonEventField, value: string | number) => {
     const updatedEvents = (person.events || []).map((event) =>
@@ -156,7 +156,7 @@ export const usePersonBio = ({ person, people, isEditing, onUpdate, t }: UsePers
   const removeEvent = useCallback((id: string) => {
     onUpdate(person.id, { events: (person.events || []).filter((event) => event.id !== id) });
     showToast.success('messages.success.eventRemoved');
-  }, [onUpdate, person.events, person.id, t.messages.success.eventRemoved]);
+  }, [onUpdate, person.events, person.id]);
 
   return {
     bioTone,

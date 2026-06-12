@@ -32,8 +32,7 @@ export const useTreeSettings = () => {
   const currentTreeId = useAppStore((state) => state.currentTreeId);
   const user = useAppStore((state) => state.user);
 
-  // READ: Subscribe to core visual slices from the new appearanceSlice for live UI updates
-  const appearanceTrigger = useAppStore(useShallow(state => ({
+  const appearanceSettings = useAppStore(useShallow((state) => ({
     coreEngine: state.appearance.coreEngine,
     layout: state.appearance.layout,
     contentVisibility: state.appearance.contentVisibility,
@@ -45,8 +44,8 @@ export const useTreeSettings = () => {
   // Computed Merged Settings (The "Live View")
   const mergedSettings = useMemo(() => {
       // Pass the full appearance state explicitly — no internal store reads
-      return buildPersistedTreeSettings(treeSettings, useAppStore.getState().appearance);
-  }, [treeSettings, appearanceTrigger]);
+      return buildPersistedTreeSettings(treeSettings, appearanceSettings);
+  }, [appearanceSettings, treeSettings]);
 
   // Initial load from localStorage on mount (for Guest Mode)
   useEffect(() => {
@@ -74,13 +73,13 @@ export const useTreeSettings = () => {
   // Persist ONLY safe/cosmetic settings to localStorage.
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const persistedSettings = buildPersistedTreeSettings(treeSettings, useAppStore.getState().appearance);
+      const persistedSettings = buildPersistedTreeSettings(treeSettings, appearanceSettings);
       const toSave = Object.fromEntries(
         SAFE_TO_PERSIST.map(k => [k, persistedSettings[k as keyof typeof persistedSettings]])
       );
       localStorage.setItem('treeSettings', JSON.stringify(toSave));
     }
-  }, [treeSettings, appearanceTrigger]);
+  }, [appearanceSettings, treeSettings]);
 
   // Sync settings to Supabase (Debounced)
   useEffect(() => {
@@ -90,7 +89,7 @@ export const useTreeSettings = () => {
 
     debounceRef.current = setTimeout(async () => {
       try {
-        const persistedSettings = buildPersistedTreeSettings(treeSettings, useAppStore.getState().appearance);
+        const persistedSettings = buildPersistedTreeSettings(treeSettings, appearanceSettings);
         await updateTreeSettings(currentTreeId, user.uid, user.email, persistedSettings);
       } catch (e) {
         logError('useTreeSettings syncSupabase', e, {
@@ -104,7 +103,7 @@ export const useTreeSettings = () => {
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [treeSettings, currentTreeId, user, appearanceTrigger]);
+  }, [appearanceSettings, currentTreeId, treeSettings, user]);
 
   return { treeSettings: mergedSettings, setTreeSettings };
 };

@@ -101,8 +101,14 @@ export const AdminSubscriptions: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const safeUsers = Array.isArray(users) ? users : [];
-  const safeAuditEvents = Array.isArray(auditEvents) ? auditEvents : [];
+  const safeUsers = useMemo(
+    () => Array.isArray(users) ? users : [],
+    [users]
+  );
+  const safeAuditEvents = useMemo(
+    () => Array.isArray(auditEvents) ? auditEvents : [],
+    [auditEvents]
+  );
 
   const filteredUsers = useMemo(() => safeUsers.filter((entry) => {
     if (tierFilter !== 'all' && entry.effectiveTier !== tierFilter) return false;

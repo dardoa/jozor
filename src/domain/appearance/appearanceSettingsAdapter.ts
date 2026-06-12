@@ -2,8 +2,13 @@ import { AppearanceState } from './appearanceEngine';
 import { TreeSettings } from '../../types';
 import { normalizeChartType } from '../chartTypeAdapter';
 
+export type TreeSettingsAppearanceState = Pick<
+    AppearanceState,
+    'coreEngine' | 'layout' | 'contentVisibility' | 'advanced'
+>;
+
 export const mapAppearanceLabStateToTreeSettings = (
-    appearanceState: AppearanceState
+    appearanceState: TreeSettingsAppearanceState
 ): Partial<TreeSettings> => {
     const { coreEngine, layout, contentVisibility, advanced } = appearanceState;
     const treeMode = normalizeChartType(coreEngine.treeMode);

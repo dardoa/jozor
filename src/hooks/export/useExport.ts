@@ -7,6 +7,37 @@ import { useAppStore } from '../../store/useAppStore';
 import { logError, logInfo, logWarn } from '../../utils/errorLogger';
 
 export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGSVGElement | null>) => {
+    const buildExportArchive = useCallback(async (): Promise<Blob> => {
+        const { buildBlueprintArchive } = await import('../../services/archiveService');
+        const {
+            treeSettings: currentTreeSettings,
+            darkMode: currentDarkMode,
+            language,
+            focusId,
+            locations
+        } = useAppStore.getState();
+
+        const { blob } = await buildBlueprintArchive({
+            version: 1,
+            people,
+            locations,
+            settings: {
+                treeSettings: currentTreeSettings,
+                darkMode: currentDarkMode,
+                language
+            },
+            focusId,
+            metadata: {
+                lastModified: Date.now(),
+                appName: 'Jozor'
+            }
+        }, {
+            label: 'manual-export'
+        });
+
+        return blob;
+    }, [people]);
+
     const handleExport = useCallback(
         async (type: ExportType) => {
             const {
@@ -143,41 +174,10 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
                 setExportStatus({ isExporting: false });
             }
         },
-        [people, svgRef]
+        [buildExportArchive, people, svgRef]
     );
 
     return { handleExport };
-
-    async function buildExportArchive(): Promise<Blob> {
-        const { buildBlueprintArchive } = await import('../../services/archiveService');
-        const {
-            treeSettings: currentTreeSettings,
-            darkMode: currentDarkMode,
-            language,
-            focusId,
-            locations
-        } = useAppStore.getState();
-
-        const { blob } = await buildBlueprintArchive({
-            version: 1,
-            people,
-            locations,
-            settings: {
-                treeSettings: currentTreeSettings,
-                darkMode: currentDarkMode,
-                language
-            },
-            focusId,
-            metadata: {
-                lastModified: Date.now(),
-                appName: 'Jozor'
-            }
-        }, {
-            label: 'manual-export'
-        });
-
-        return blob;
-    }
 };
 
 /**

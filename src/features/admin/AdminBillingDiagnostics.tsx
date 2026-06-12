@@ -55,7 +55,10 @@ export const AdminBillingDiagnostics: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const safeEvents = Array.isArray(events) ? events : [];
+  const safeEvents = useMemo(
+    () => Array.isArray(events) ? events : [],
+    [events]
+  );
   const metrics = useMemo(() => ({
     total: safeEvents.length,
     processed: safeEvents.filter((event) => event.processing_status === 'processed').length,

@@ -1,9 +1,11 @@
-import { AppearanceState } from './appearanceEngine';
 import { TreeSettings } from '../../types';
-import { mapAppearanceLabStateToTreeSettings } from './appearanceSettingsAdapter';
+import {
+    mapAppearanceLabStateToTreeSettings,
+    type TreeSettingsAppearanceState,
+} from './appearanceSettingsAdapter';
 
 export const normalizeAppearanceLabForPersistence = (
-    appearanceState: AppearanceState
+    appearanceState: TreeSettingsAppearanceState
 ): Partial<TreeSettings> => {
     return mapAppearanceLabStateToTreeSettings(appearanceState);
 };
@@ -16,7 +18,7 @@ export const normalizeAppearanceLabForPersistence = (
  */
 export const buildPersistedTreeSettings = (
     legacySettings: TreeSettings,
-    appearanceState: AppearanceState
+    appearanceState: TreeSettingsAppearanceState
 ): TreeSettings => {
     const normalizedLabSettings = normalizeAppearanceLabForPersistence(appearanceState);
     return {
