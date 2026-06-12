@@ -33,50 +33,24 @@ interface UseFamilyTreeLayoutControllerParams {
   settings: TreeSettings;
 }
 
-function areSetsEqual<T>(left: ReadonlySet<T>, right: ReadonlySet<T>): boolean {
-  if (left.size !== right.size) return false;
 
-  for (const item of left) {
-    if (!right.has(item)) return false;
-  }
-
-  return true;
-}
 
 function useStableHighlightedPath(
   people: Record<string, Person>,
   focusId: string,
   settings: TreeSettings,
 ): Set<string> | undefined {
-  const previousPathRef = useRef<Set<string> | undefined>(undefined);
-
-  return useMemo(() => {
-    if (!settings.highlightBranch) {
-      previousPathRef.current = undefined;
-      return undefined;
-    }
-
+  const pathKey = useMemo(() => {
+    if (!settings.highlightBranch) return '';
     const rootId = settings.highlightedBranchRootId || focusId;
     const nextPath = calculateHighlightedPath(people, rootId);
-    const previousPath = previousPathRef.current;
+    return nextPath ? Array.from(nextPath).sort().join('\0') : '';
+  }, [people, focusId, settings.highlightBranch, settings.highlightedBranchRootId]);
 
-    if (!nextPath) {
-      previousPathRef.current = undefined;
-      return undefined;
-    }
-
-    if (previousPath && areSetsEqual(previousPath, nextPath)) {
-      return previousPath;
-    }
-
-    previousPathRef.current = nextPath;
-    return nextPath;
-  }, [
-    people,
-    focusId,
-    settings.highlightBranch,
-    settings.highlightedBranchRootId,
-  ]);
+  return useMemo(
+    () => (pathKey ? new Set(pathKey.split('\0')) : undefined),
+    [pathKey]
+  );
 }
 
 export const useFamilyTreeLayoutController = ({
@@ -102,7 +76,6 @@ export const useFamilyTreeLayoutController = ({
   const [latestRequestMetadataDebug, setLatestRequestMetadataDebug] = useState<LayoutRequestMetadata | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [hasReceivedLayout, setHasReceivedLayout] = useState(false);
-  const [layoutRefreshNonce, setLayoutRefreshNonce] = useState(0);
   const [viewportSize, setViewportSize] = useState({ width: window.innerWidth, height: window.innerHeight });
   const collapsedIdsRef = useRef<Set<string>>(new Set());
 
@@ -122,7 +95,6 @@ export const useFamilyTreeLayoutController = ({
   useEffect(() => {
     if (!isSettingsDrawerOpen) return;
     layoutCacheRef.current.clear();
-    setLayoutRefreshNonce((value) => value + 1);
   }, [isSettingsDrawerOpen]);
 
   const geometryKey = useMemo(() => {
@@ -131,13 +103,13 @@ export const useFamilyTreeLayoutController = ({
       settings,
       peopleVersion,
       collapsedIds: Array.from(collapsedIds),
-    }) + `::lab-${layoutRefreshNonce}`;
+    }) + `::lab-${isSettingsDrawerOpen ? 'open' : 'closed'}`;
   }, [
     focusId,
     settings,
     peopleVersion,
     collapsedIds,
-    layoutRefreshNonce,
+    isSettingsDrawerOpen,
   ]);
   const requestIdentityKey = settings.chartType;
   const prevRequestIdentityKeyRef = useRef<string>(requestIdentityKey);
