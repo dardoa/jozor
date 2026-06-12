@@ -43,6 +43,13 @@ const decodeArchivePath = (value: string): string => {
   }
 };
 
+const containsAsciiControlCharacter = (value: string): boolean => {
+  for (let index = 0; index < value.length; index += 1) {
+    if (value.charCodeAt(index) <= 0x1f) return true;
+  }
+  return false;
+};
+
 const getSafeArchiveMediaPath = (mediaPath: string, expectedFolder: string): string | null => {
   const decodedPath = decodeArchivePath(mediaPath);
   const hasSuspiciousPathSyntax =
@@ -52,7 +59,7 @@ const getSafeArchiveMediaPath = (mediaPath: string, expectedFolder: string): str
     decodedPath.startsWith('\\') ||
     /^[a-z]:/i.test(decodedPath) ||
     decodedPath.includes('\\') ||
-    /[\u0000-\u001f]/.test(decodedPath);
+    containsAsciiControlCharacter(decodedPath);
 
   if (hasSuspiciousPathSyntax) return null;
 

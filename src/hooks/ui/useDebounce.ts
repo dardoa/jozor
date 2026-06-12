@@ -105,6 +105,8 @@ export const useThrottledCallback = <Args extends unknown[]>(
     };
 
     const fn = ((...args: Args) => {
+      // This runs only when the returned event callback is invoked, never during render.
+      // eslint-disable-next-line react-hooks/purity
       const now = Date.now();
       const elapsed = now - lastRunRef.current;
 

@@ -3,10 +3,36 @@ import { createClient } from '@supabase/supabase-js';
 import { verifyInternalToken } from '../../shared/auth/internalJwt';
 import { MAX_JSON_BODY_SIZE, PayloadTooLargeError } from '../shared/server/bodyLimits';
 
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
+
 type AuthenticatedUser = {
   uid: string;
   email: string;
 };
+
+interface CheckoutRequestBody {
+  tier?: string;
+}
+
+async function readJsonBody(req: VercelRequest): Promise<CheckoutRequestBody> {
+  const chunks: Buffer[] = [];
+  let totalLength = 0;
+
+  for await (const chunk of req) {
+    const buffer = Buffer.from(chunk);
+    totalLength += buffer.length;
+    if (totalLength > MAX_JSON_BODY_SIZE) {
+      throw new PayloadTooLargeError();
+    }
+    chunks.push(buffer);
+  }
+
+  return JSON.parse(Buffer.concat(chunks).toString('utf8')) as CheckoutRequestBody;
+}
 
 function getEnv(name: string): string | undefined {
   const value = process.env[name];
@@ -94,39 +120,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.end(JSON.stringify({ error: 'Method Not Allowed' }));
   }
 
-  interface CheckoutRequestBody {
-    tier?: string;
-  }
-
-  // 1. Parse body first — reject oversized payloads before any auth/DB work
-  let body: CheckoutRequestBody = {};
-  if (req.body) {
-    body = req.body as CheckoutRequestBody;
-  } else {
-    // If Vercel bodyParser is not used, get raw body and parse
-    try {
-      const chunks: Uint8Array[] = [];
-      let totalLength = 0;
-      for await (const chunk of req) {
-        totalLength += chunk.length;
-        if (totalLength > MAX_JSON_BODY_SIZE) {
-          throw new PayloadTooLargeError();
-        }
-        chunks.push(chunk);
-      }
-      const raw = Buffer.concat(chunks).toString('utf8');
-      body = JSON.parse(raw) as CheckoutRequestBody;
-    } catch (error: unknown) {
-      if (error instanceof PayloadTooLargeError) {
-        res.writeHead(413, { ...headers, 'Content-Type': 'application/json' });
-        return res.end(JSON.stringify({ error: 'Payload Too Large' }));
-      }
-      res.writeHead(400, { ...headers, 'Content-Type': 'application/json' });
-      return res.end(JSON.stringify({ error: 'Invalid JSON body' }));
+  let body: CheckoutRequestBody;
+  try {
+    body = await readJsonBody(req);
+  } catch (error: unknown) {
+    if (error instanceof PayloadTooLargeError) {
+      res.writeHead(413, { ...headers, 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ error: 'Payload Too Large' }));
     }
+    res.writeHead(400, { ...headers, 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ error: 'Invalid JSON body' }));
   }
 
-  // 2. Authenticate user
+  // Authenticate only after malformed or oversized payloads have been rejected.
   const authHeader = req.headers.authorization;
   const user = await authenticateUser(authHeader);
   if (!user) {

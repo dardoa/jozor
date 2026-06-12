@@ -248,7 +248,7 @@ describe('importJozorArchiveData – M17 concurrency guarantees', () => {
     const data = await importJozorArchiveData(file);
 
     // All people must be present and correctly mapped
-    expect(Object.keys(data.people)).toHaveLength(orderedKeys.length);
+    expect(Object.keys(data.people)).toEqual(orderedKeys);
     for (const key of orderedKeys) {
       expect(data.people).toHaveProperty(key);
       expect(data.people[key].firstName).toBe(key);

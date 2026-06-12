@@ -63,9 +63,6 @@ export const buildBlueprintArchive = async (
               targetBasePath: `media/avatars/${sanitizeFileSegment(personId)}`,
               date: archiveDate,
               mediaFetcher,
-            }).catch((err) => {
-              console.warn(`[ARCHIVE] Failed to fetch avatar for ${personId}:`, err);
-              return null;
             })
           )
         : Promise.resolve(null);
@@ -74,7 +71,7 @@ export const buildBlueprintArchive = async (
         (galleryItem, index) => {
           const sourceUrl = getGalleryImageUrl(galleryItem);
           if (!sourceUrl) return Promise.resolve(null);
-          
+
           return limit(() =>
             addMediaFile({
               zip,
@@ -82,9 +79,6 @@ export const buildBlueprintArchive = async (
               targetBasePath: `media/gallery/${sanitizeFileSegment(personId)}-${index + 1}`,
               date: archiveDate,
               mediaFetcher,
-            }).catch((err) => {
-              console.warn(`[ARCHIVE] Failed to fetch gallery item ${index} for ${personId}:`, err);
-              return null;
             })
           );
         }

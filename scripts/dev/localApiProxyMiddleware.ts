@@ -201,13 +201,11 @@ const handleAuthExchange = async (
 const handleCheckoutSession = async (
   req: LocalRequest,
   res: ServerResponse,
-  body: LocalProxyBody,
   env: LocalApiProxyEnv
 ) => {
   try {
     syncProcessEnv(env);
     const { default: checkoutHandler } = await import('../../api/billing/create-checkout-session');
-    req.body = body;
     await (checkoutHandler as any)(req, res);
   } catch (error: unknown) {
     sendJson(res, 500, { error: getErrorMessage(error) });
@@ -314,6 +312,11 @@ export const createLocalApiProxyMiddleware = (env: LocalApiProxyEnv): Plugin => 
         return;
       }
 
+      if (pathName === '/api/billing/create-checkout-session') {
+        await handleCheckoutSession(req as LocalRequest, res, env);
+        return;
+      }
+
       const body = await parseJsonBody(req);
 
       if (pathName === '/api/ai-proxy') {
@@ -333,11 +336,6 @@ export const createLocalApiProxyMiddleware = (env: LocalApiProxyEnv): Plugin => 
 
       if (pathName === '/api/auth/exchange') {
         await handleAuthExchange(req as LocalRequest, res, body, env);
-        return;
-      }
-
-      if (pathName === '/api/billing/create-checkout-session') {
-        await handleCheckoutSession(req as LocalRequest, res, body, env);
         return;
       }
 

@@ -4,7 +4,7 @@ import createCheckoutHandler from '../../../api/billing/create-checkout-session'
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { MAX_JSON_BODY_SIZE } from '../../../api/shared/server/bodyLimits';
 
-vi.mock('../../../api/shared/auth/internalJwt', () => ({
+vi.mock('../../../shared/auth/internalJwt', () => ({
   verifyInternalToken: vi.fn().mockResolvedValue({ uid: 'user123', email: 'test@example.com' }),
 }));
 
@@ -23,7 +23,7 @@ function createMockRequest(bodySize: number, method = 'POST', headers: Record<st
   return {
     method,
     headers,
-    body: undefined, // ensure it uses the stream fallback
+    body: { tier: 'pro' },
     [Symbol.asyncIterator]: async function* () {
       for (const chunk of chunks) {
         yield chunk;
@@ -59,10 +59,10 @@ describe('Billing Webhooks SEC3 Body Limit Tests', () => {
   });
 
   describe('create-checkout-session', () => {
-    it('returns 413 Payload Too Large when payload exceeds 5MB', async () => {
+    it('returns 413 even when a parsed req.body is already present', async () => {
       const req = createMockRequest(MAX_JSON_BODY_SIZE + 1024, 'POST', {
         origin: 'http://localhost:5173', // bypass CORS
-        authorization: 'Bearer fake-token', // bypass Auth (mocked)
+        authorization: 'Bearer fake-token',
       });
       const res = createMockResponse();
 
@@ -70,6 +70,16 @@ describe('Billing Webhooks SEC3 Body Limit Tests', () => {
 
       expect(res.writeHead).toHaveBeenCalledWith(413, expect.any(Object));
       expect(res.end).toHaveBeenCalledWith(JSON.stringify({ error: 'Payload Too Large' }));
+    });
+
+    it('disables Vercel body parsing so every request uses the limited raw stream', async () => {
+      const checkoutModule = await import('../../../api/billing/create-checkout-session');
+
+      expect(checkoutModule.config).toEqual({
+        api: {
+          bodyParser: false,
+        },
+      });
     });
   });
 });

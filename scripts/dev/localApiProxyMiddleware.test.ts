@@ -101,11 +101,13 @@ describe('createLocalApiProxyMiddleware', () => {
       },
     } as never);
 
+    let bodyReadCount = 0;
     const req = {
       method: 'POST',
       url: '/billing/create-checkout-session',
       headers: { host: 'localhost:3000' },
       [Symbol.asyncIterator]: async function* () {
+        bodyReadCount += 1;
         yield Buffer.from('{}');
       },
     } as IncomingMessage;
@@ -116,6 +118,7 @@ describe('createLocalApiProxyMiddleware', () => {
 
     expect(res.statusCode).toBe(401);
     expect(JSON.parse(res.body)).toEqual({ error: 'Unauthorized: Invalid session.' });
+    expect(bodyReadCount).toBe(1);
     expect(next).not.toHaveBeenCalled();
   });
 

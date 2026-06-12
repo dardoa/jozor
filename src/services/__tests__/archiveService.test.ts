@@ -35,12 +35,9 @@ const makeSnapshot = (people: Record<string, Person>) => ({
 // ────────────────────────────────────────────────────────────────────────────
 
 describe('buildBlueprintArchive – M15 safety guarantees', () => {
-  // ── Test 1: Fault Tolerance ─────────────────────────────────────────────
+  // ── Test 1: Media integrity ─────────────────────────────────────────────
 
-  it('completes successfully even when one image fetch throws', async () => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
-
-    // mediaFetcher: succeeds for 'good-url', throws for 'bad-url'
+  it('rejects the archive when any referenced image cannot be fetched', async () => {
     const mediaFetcher = vi.fn(async (url: string): Promise<Blob> => {
       if (url.includes('bad-url')) {
         throw new Error('Simulated network failure');
@@ -57,28 +54,12 @@ describe('buildBlueprintArchive – M15 safety guarantees', () => {
       }),
     };
 
-    const { blob, manifest } = await buildBlueprintArchive(makeSnapshot(people), {
-      label: 'fault-tolerance-test',
-      mediaFetcher,
-    });
-
-    // Archive ZIP should be produced, not rejected
-    expect(blob).toBeInstanceOf(Blob);
-    expect(blob.size).toBeGreaterThan(0);
-
-    // The good avatar should be present in the manifest
-    expect(manifest.media.avatars).toHaveProperty('person_good');
-
-    // The bad avatar should NOT appear in the manifest (skipped gracefully)
-    expect(manifest.media.avatars).not.toHaveProperty('person_bad');
-
-    // A warning should have been emitted for the failed fetch
-    expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining('[ARCHIVE]'),
-      expect.anything()
-    );
-
-    warnSpy.mockRestore();
+    await expect(
+      buildBlueprintArchive(makeSnapshot(people), {
+        label: 'media-integrity-test',
+        mediaFetcher,
+      })
+    ).rejects.toThrow('Simulated network failure');
   });
 
   // ── Test 2: Gallery item with empty source is skipped without error ──────

@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import crypto from 'node:crypto';
 
 const { createClientMock } = vi.hoisted(() => ({
   createClientMock: vi.fn(),
@@ -9,6 +10,17 @@ vi.mock('@supabase/supabase-js', () => ({
 }));
 
 import handler from '../../../api/billing/create-checkout-session';
+
+const createRequest = (body: unknown, headers: Record<string, string>) => {
+  const rawBody = Buffer.from(JSON.stringify(body));
+  return {
+    method: 'POST',
+    headers,
+    [Symbol.asyncIterator]: async function* () {
+      yield rawBody;
+    },
+  };
+};
 
 const createResponse = () => {
   const response = {
@@ -36,7 +48,6 @@ const createInternalJwt = () => {
     email: 'user@example.com',
     exp: Math.floor(Date.now() / 1000) + 3600,
   })).toString('base64url');
-  const crypto = require('node:crypto') as typeof import('node:crypto');
   const signature = crypto
     .createHmac('sha256', 'test-jwt-secret-with-at-least-32-chars')
     .update(`${header}.${payload}`)
@@ -67,14 +78,13 @@ describe('create checkout session API', () => {
       text: vi.fn(async () => '{"error":{"code":"authentication_malformed","detail":"private paddle detail"}}'),
     } as never);
 
-    const req = {
-      method: 'POST',
-      headers: {
+    const req = createRequest(
+      { tier: 'pro' },
+      {
         authorization: `Bearer ${createInternalJwt()}`,
         origin: 'http://localhost:3000',
-      },
-      body: { tier: 'pro' },
-    };
+      }
+    );
     const res = createResponse();
 
     await handler(req as never, res as never);
