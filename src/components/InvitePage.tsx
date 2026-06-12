@@ -13,7 +13,7 @@ const getInvitationPromise = (token: string, uid: string, email: string, supabas
     if (!invitationCache.has(key)) {
         const promise = acceptTreeInvitation(token, uid, email, supabaseToken);
         invitationCache.set(key, promise);
-        
+
         const cleanup = () => {
             if (invitationCache.get(key) === promise) {
                 invitationCache.delete(key);
@@ -96,7 +96,7 @@ const AuthenticatedInviteAcceptor: React.FC<AuthenticatedInviteAcceptorProps> = 
                     </div>
                     <h2 className="text-xl font-bold text-[var(--text-main)]">فشل قبول الدعوة</h2>
                     <p className="text-red-500 text-sm font-medium">{errorMessage}</p>
-                    <button 
+                    <button
                         onClick={() => navigate('/')}
                         className="mt-6 px-6 py-2 bg-[var(--surface-subtle)] hover:bg-[var(--border-strong)] text-[var(--text-main)] rounded-lg font-medium transition-colors w-full"
                     >
@@ -138,7 +138,7 @@ export const InvitePage: React.FC = () => {
                         </div>
                         <h2 className="text-xl font-bold text-[var(--text-main)]">فشل قبول الدعوة</h2>
                         <p className="text-red-500 text-sm font-medium">رابط الدعوة غير صالح.</p>
-                        <button 
+                        <button
                             onClick={() => navigate('/')}
                             className="mt-6 px-6 py-2 bg-[var(--surface-subtle)] hover:bg-[var(--border-strong)] text-[var(--text-main)] rounded-lg font-medium transition-colors w-full"
                         >

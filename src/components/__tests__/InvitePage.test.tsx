@@ -1,9 +1,11 @@
+import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { InvitePage } from '../InvitePage';
 import { acceptTreeInvitation } from '../../features/sharing';
 import { useAppStore } from '../../store/useAppStore';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import type { UserProfile } from '../../types';
 
 vi.mock('../../features/sharing', () => ({
     acceptTreeInvitation: vi.fn(),
@@ -35,29 +37,43 @@ describe('InvitePage', () => {
         expect(screen.getByText('تسجيل الدخول مطلوب')).toBeInTheDocument();
     });
 
-    it('deduplicates acceptTreeInvitation calls to exactly once even when mounted twice (Strict Mode simulation)', async () => {
+    it('deduplicates acceptTreeInvitation during the Strict Mode effect replay', async () => {
+        const user: UserProfile = {
+            uid: 'user-123',
+            displayName: 'Test User',
+            email: 'user@example.com',
+            photoURL: '',
+            supabaseToken: 'token-xyz',
+        };
         useAppStore.setState({
-            user: { uid: 'user-123', email: 'user@example.com', supabaseToken: 'token-xyz' } as any,
+            user,
         });
 
-        vi.mocked(acceptTreeInvitation).mockResolvedValue({ treeId: 'tree-456' } as any);
-
-        const { rerender } = render(
-            <MemoryRouter initialEntries={['/invite/test-token']}>
-                <Routes>
-                    <Route path="/invite/:token" element={<InvitePage />} />
-                </Routes>
-            </MemoryRouter>
+        type InvitationResult = Awaited<ReturnType<typeof acceptTreeInvitation>>;
+        let resolveInvitation!: (result: InvitationResult) => void;
+        vi.mocked(acceptTreeInvitation).mockImplementation(
+            () => new Promise((resolve) => {
+                resolveInvitation = resolve;
+            })
         );
 
-        // Simulate strict mode unmount and remount with same parameters
-        rerender(
-            <MemoryRouter initialEntries={['/invite/test-token']}>
-                <Routes>
-                    <Route path="/invite/:token" element={<InvitePage />} />
-                </Routes>
-            </MemoryRouter>
+        render(
+            <React.StrictMode>
+                <MemoryRouter initialEntries={['/invite/test-token']}>
+                    <Routes>
+                        <Route path="/invite/:token" element={<InvitePage />} />
+                    </Routes>
+                </MemoryRouter>
+            </React.StrictMode>
         );
+
+        expect(acceptTreeInvitation).toHaveBeenCalledTimes(1);
+
+        resolveInvitation({
+            treeId: 'tree-456',
+            role: 'editor',
+            invitationId: 'invitation-789',
+        });
 
         await waitFor(() => {
             expect(screen.getByText('تم بنجاح!')).toBeInTheDocument();

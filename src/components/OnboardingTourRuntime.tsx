@@ -31,14 +31,10 @@ const OnboardingTourSession: React.FC<OnboardingTourSessionProps> = ({
         const localCompleted = localStorage.getItem(TOUR_STORAGE_KEY) === 'true';
         if (localCompleted) return false;
 
-        if (user && user.metadata) {
-            if (user.metadata.has_completed_tour === false) {
-                if (localStorage.getItem(TOUR_STORAGE_KEY) !== 'true') {
-                    return true;
-                }
-            }
-        }
-        return false;
+        return Boolean(
+            user?.metadata &&
+            user.metadata.has_completed_tour !== true
+        );
     });
 
     const [stepIndex, setStepIndex] = useState(0);
@@ -159,12 +155,11 @@ export const OnboardingTourRuntime: React.FC<OnboardingTourRuntimeProps> = ({
     const user = useAppStore((state) => state.user);
     const updateTourStatus = useAppStore((state) => state.updateTourStatus);
 
-    const tourStatus =
-        user?.metadata?.has_completed_tour === undefined
-            ? 'pending'
-            : user.metadata.has_completed_tour
-            ? 'completed'
-            : 'available';
+    const tourStatus = !user
+        ? 'anonymous'
+        : user.metadata?.has_completed_tour === true
+        ? 'completed'
+        : 'available';
 
     const sessionKey = `${forceStartToken}:${user?.uid ?? 'anonymous'}:${tourStatus}`;
 

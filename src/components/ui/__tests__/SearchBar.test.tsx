@@ -2,6 +2,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { SearchBar } from '../SearchBar';
 import { searchService } from '../../../services/searchService';
+import type { SearchResult } from '../../../services/searchService';
 import type { Person } from '../../../types';
 
 vi.mock('../../../services/searchService', () => ({
@@ -22,9 +23,46 @@ vi.mock('../../../context/TranslationContext', () => ({
     }),
 }));
 
+const buildPerson = (overrides: Partial<Person>): Person => ({
+    id: 'person-1',
+    title: '',
+    firstName: '',
+    middleName: '',
+    lastName: '',
+    birthName: '',
+    nickName: '',
+    suffix: '',
+    gender: 'male',
+    birthDate: '',
+    birthPlace: '',
+    birthSource: '',
+    deathDate: '',
+    deathPlace: '',
+    deathSource: '',
+    burialPlace: '',
+    residence: '',
+    isDeceased: false,
+    profession: '',
+    company: '',
+    interests: '',
+    bio: '',
+    gallery: [],
+    voiceNotes: [],
+    sources: [],
+    events: [],
+    email: '',
+    website: '',
+    blog: '',
+    address: '',
+    parents: [],
+    spouses: [],
+    children: [],
+    ...overrides,
+});
+
 const mockPeople: Record<string, Person> = {
-    'person-1': { id: 'person-1', firstName: 'Ahmad', lastName: 'Ali', gender: 'male', parents: [], children: [], spouses: [] } as any,
-    'person-2': { id: 'person-2', firstName: 'Fatima', lastName: 'Omar', gender: 'female', parents: [], children: [], spouses: [] } as any,
+    'person-1': buildPerson({ id: 'person-1', firstName: 'Ahmad', lastName: 'Ali' }),
+    'person-2': buildPerson({ id: 'person-2', firstName: 'Fatima', lastName: 'Omar', gender: 'female' }),
 };
 
 describe('SearchBar', () => {
@@ -34,7 +72,7 @@ describe('SearchBar', () => {
 
     it('performs search and displays results only when query matches current query', async () => {
         const onFocusPerson = vi.fn();
-        
+
         // Mock search to return Ahmad
         vi.mocked(searchService.search).mockResolvedValue([
             { person: mockPeople['person-1'], score: 1, matchType: 'exact' }
@@ -52,7 +90,7 @@ describe('SearchBar', () => {
 
         const resultCard = await screen.findByRole('button', { name: /Ahmad Ali/i });
         expect(resultCard).toBeInTheDocument();
-        
+
         // Click on search result
         fireEvent.click(resultCard);
         expect(onFocusPerson).toHaveBeenCalledWith('person-1');
@@ -60,8 +98,8 @@ describe('SearchBar', () => {
 
     it('does not display stale async results when query is cleared', async () => {
         const onFocusPerson = vi.fn();
-        let resolveSearch: (value: any) => void = () => {};
-        
+        let resolveSearch: (value: SearchResult[]) => void = () => {};
+
         vi.mocked(searchService.search).mockImplementation(() => {
             return new Promise((resolve) => {
                 resolveSearch = resolve;
