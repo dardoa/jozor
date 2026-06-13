@@ -205,8 +205,6 @@ test('V3 renderer exposes runtime DOM metrics and keeps small trees detailed aft
     { timeout: 5000 },
   ).toBeGreaterThan(0);
 
-  const fullCardMetrics = await readRenderMetrics(page);
-
   for (let index = 0; index < 9; index += 1) {
     await page.getByLabel(/Zoom Out/i).click();
   }

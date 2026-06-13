@@ -333,7 +333,7 @@ describe('Supabase SaaS & Security Integration Tests', () => {
       expect(reservation1).toBeDefined();
 
       // Check requests used count increased to 1
-      let { data: usage } = await supabaseAdmin
+      const { data: usage } = await supabaseAdmin
         .from('ai_monthly_usage')
         .select('cloud_requests_used')
         .eq('user_id', testUserId)

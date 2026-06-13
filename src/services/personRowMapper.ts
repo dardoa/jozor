@@ -96,7 +96,10 @@ export const mapDbPersonRowToPerson = (row: DbPersonRow): Person => {
 };
 
 export const mapPersonToDbRow = (person: Person, treeId?: string) => {
-  const { parents: _, spouses: __, children: ___, ...metadata } = person;
+  const relationshipKeys = new Set(['parents', 'spouses', 'children']);
+  const metadata = Object.fromEntries(
+    Object.entries(person).filter(([key]) => !relationshipKeys.has(key))
+  ) as Omit<Person, 'parents' | 'spouses' | 'children'>;
 
   return {
   metadata,
