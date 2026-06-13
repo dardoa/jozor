@@ -247,14 +247,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (authDeleteError) {
         const msg = authDeleteError.message.toLowerCase();
         if (msg.includes('not found') || authDeleteError.status === 404) {
-          console.log(`Auth user ${user.uid} not found in auth.users, treating as success.`);
+          console.info(`Auth user ${user.uid} not found in auth.users, treating as success.`);
         } else {
           console.error('Error deleting auth user:', authDeleteError);
           return res.status(500).json({ error: 'Failed to delete account authentication record' });
         }
       }
     } else {
-      console.log(`User ID ${user.uid} is not a valid UUID, skipping auth.users deletion.`);
+      console.info(`User ID ${user.uid} is not a valid UUID, skipping auth.users deletion.`);
     }
 
     return res
