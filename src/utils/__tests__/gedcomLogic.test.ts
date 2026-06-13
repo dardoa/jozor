@@ -4,7 +4,7 @@ import { exportToGEDCOM, importFromGEDCOM, formatGedcomDate, gedcomDateToIso } f
 import { Person } from '../../types';
 
 // Mock Data
-const mockPerson: any = {
+const mockPerson = {
     id: 'p1',
     firstName: 'John',
     lastName: 'Doe',
@@ -36,7 +36,7 @@ const mockPerson: any = {
     website: '',
     blog: '',
     address: '',
-};
+} as unknown as Person;
 
 const mockSpouse: Person = {
     ...mockPerson,

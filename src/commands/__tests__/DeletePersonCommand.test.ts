@@ -4,9 +4,19 @@ import { CommandContext } from '../types';
 import type { Person } from '../../types';
 
 describe('DeletePersonCommand', () => {
-  let mockStoreState: any;
+  type MockStoreState = {
+    currentTreeId: string;
+    focusId: string;
+    deletedPersonIds: Set<string>;
+    people: Record<string, Person>;
+    deletePerson: ReturnType<typeof vi.fn>;
+    setPeople: ReturnType<typeof vi.fn>;
+    setFocusId: ReturnType<typeof vi.fn>;
+  };
+
+  let mockStoreState: MockStoreState;
   let mockContext: CommandContext;
-  let consoleErrorSpy: any;
+  let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -35,21 +45,21 @@ describe('DeletePersonCommand', () => {
     };
 
     mockContext = {
-      getState: vi.fn(() => mockStoreState),
+      getState: vi.fn(() => mockStoreState) as unknown as CommandContext['getState'],
       syncService: {
         pushOperation: vi.fn(async () => true),
-      } as any,
+      } as unknown as CommandContext['syncService'],
       activityService: {
         logAction: vi.fn(),
-      } as any,
+      } as unknown as CommandContext['activityService'],
       storageService: {
         deletePerson: vi.fn(async () => {}),
         recordDeletedPersonId: vi.fn(async () => {}),
         removeDeletedPersonId: vi.fn(async () => {}),
-      } as any,
+      } as unknown as CommandContext['storageService'],
       searchService: {
         updateSearchIndex: vi.fn(),
-      } as any,
+      } as unknown as CommandContext['searchService'],
     };
   });
 

@@ -3,6 +3,7 @@ import '@testing-library/jest-dom';
 import { describe, expect, it, vi } from 'vitest';
 
 import { HeaderRightSection } from '../HeaderRightSection';
+import type { HeaderRightSectionProps } from '../../../types';
 
 vi.mock('../../../context/TranslationContext', () => ({
   useTranslation: () => ({
@@ -37,7 +38,7 @@ vi.mock('../AccountMenu', () => ({
   AccountMenu: () => <div>Account menu content</div>,
 }));
 
-const buildProps = (): any => ({
+const buildProps = (): HeaderRightSectionProps => ({
   themeLanguage: {
     language: 'en',
     setLanguage: vi.fn(),
@@ -78,7 +79,7 @@ const buildProps = (): any => ({
     onOpenCleanTree: vi.fn(),
     onOpenGlobalSettings: vi.fn(),
   },
-});
+} as unknown as HeaderRightSectionProps);
 
 describe('HeaderRightSection', () => {
   it('exposes an ultra-clean authenticated header surface', () => {

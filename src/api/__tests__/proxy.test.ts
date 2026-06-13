@@ -296,8 +296,8 @@ describe('proxy API', () => {
   });
 
   describe('ProxyPerson payload validation', () => {
-    let rpcMock: any;
-    let fromMock: any;
+    let rpcMock: ReturnType<typeof vi.fn>;
+    let fromMock: ReturnType<typeof vi.fn>;
 
     beforeEach(() => {
       rpcMock = vi.fn(async () => ({ data: null, error: null }));

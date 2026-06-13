@@ -3,6 +3,7 @@ import { render } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { FamilyTreeChartRenderer, type FamilyTreeChartData } from '../FamilyTreeChartRenderer';
 import type { Person, TreeSettings } from '../../../types';
+import type { TranslationSchema } from '../../../utils/translationLoader';
 
 const v3ChartMock = vi.hoisted(() => vi.fn(() => null));
 
@@ -104,7 +105,7 @@ describe('FamilyTreeChartRenderer memoization', () => {
       emptyState: {},
       fanEmpty: {},
       premiumInteractiveCanvas: '',
-    } as any;
+    } as unknown as TranslationSchema;
 
     const { rerender } = render(
       <svg>

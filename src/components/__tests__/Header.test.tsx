@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { describe, expect, it, vi } from 'vitest';
 import { Header } from '../header/Header';
+import type { HeaderProps } from '../../types';
 
 const mockAppStoreState = {
   currentTreeId: 'tree-1' as string | null,
@@ -10,7 +11,7 @@ const mockAppStoreState = {
 };
 
 vi.mock('../../store/useAppStore', () => ({
-  useAppStore: vi.fn((selector: any) => selector(mockAppStoreState)),
+  useAppStore: vi.fn((selector: (state: typeof mockAppStoreState) => unknown) => selector(mockAppStoreState)),
 }));
 
 
@@ -46,7 +47,7 @@ vi.mock('../header/HeaderRightSection', () => ({
   HeaderRightSection: () => <div data-testid="header-right" />,
 }));
 
-const buildHeaderProps = (): any => ({
+const buildHeaderProps = (): HeaderProps => ({
   toggleDetailsPanel: vi.fn(),
   detailsPanelOpen: false,
   hasActivePerson: true,
@@ -134,7 +135,7 @@ const buildHeaderProps = (): any => ({
     onOpenLoginModal: vi.fn(),
     onOpenShareModal: vi.fn(),
   } as never,
-});
+} as unknown as HeaderProps);
 
 describe('Header', () => {
   it('renders the center status strip with tree, role, and sync state', () => {
@@ -169,11 +170,11 @@ describe('Header', () => {
 
   it('falls back to the active drive file name when no tree is active in the store', async () => {
     const { useAppStore } = await import('../../store/useAppStore');
-    vi.mocked(useAppStore).mockImplementation((selector: any) =>
+    vi.mocked(useAppStore).mockImplementation(((selector: (state: typeof mockAppStoreState) => unknown) =>
       selector({
         currentTreeId: null,
         treeName: '',
-      }));
+      })) as typeof useAppStore);
 
     render(<Header {...buildHeaderProps()} />);
 

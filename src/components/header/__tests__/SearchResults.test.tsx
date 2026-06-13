@@ -2,6 +2,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { SearchResults } from '../SearchResults';
+import type { Person } from '../../../types';
 
 vi.mock('../../../context/TranslationContext', () => ({
   useTranslation: () => ({
@@ -16,7 +17,7 @@ describe('SearchResults', () => {
   it('renders a listbox with option rows and focuses a person on click', () => {
     const onFocus = vi.fn();
     const onClose = vi.fn();
-    const result: any = {
+    const result = {
       id: 'p-1',
       firstName: 'Root',
       lastName: 'Person',
@@ -25,7 +26,7 @@ describe('SearchResults', () => {
       spouses: [],
       children: [],
       parents: [],
-    };
+    } as unknown as Person;
 
     render(
       <SearchResults

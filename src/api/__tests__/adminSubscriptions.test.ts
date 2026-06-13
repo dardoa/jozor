@@ -10,6 +10,10 @@ vi.mock('@supabase/supabase-js', () => ({
 
 import handler from '../../../api/admin/subscriptions';
 
+type QueryChainMock = Record<string, unknown> & {
+  insert: ReturnType<typeof vi.fn>;
+};
+
 const createResponse = () => {
   const response = {
     statusCode: 200,
@@ -47,7 +51,7 @@ const createAuthClient = () => ({
 });
 
 const createAdminClientMock = () => {
-  const queryChain: Record<string, any> = {};
+  const queryChain = { insert: vi.fn() } as QueryChainMock;
 
   queryChain.select = vi.fn(() => queryChain);
   queryChain.eq = vi.fn(() => queryChain);
@@ -64,11 +68,14 @@ const createAdminClientMock = () => {
     error: null,
   }));
 
-  return {
-    from: vi.fn((table: string) => {
+  const from: ReturnType<typeof vi.fn> = vi.fn((table: string) => {
       queryChain._table = table;
       return queryChain;
-    }),
+    });
+
+  return {
+    from,
+    queryChain,
   };
 };
 
@@ -95,7 +102,7 @@ describe('admin subscriptions API', () => {
   });
 
   it('does not expose internal server error details to the client', async () => {
-    const adminQueryChain: Record<string, any> = {};
+    const adminQueryChain = { insert: vi.fn() } as QueryChainMock;
     adminQueryChain.select = vi.fn(() => adminQueryChain);
     adminQueryChain.eq = vi.fn(() => adminQueryChain);
     adminQueryChain.maybeSingle = vi.fn(async () => ({
@@ -132,7 +139,7 @@ describe('admin subscriptions API', () => {
 
   it('performs a single bulk insert of audit events in grantOverride containing both replace and grant actions', async () => {
     const clientMock = createAdminClientMock();
-    const queryChain = clientMock.from('admin_users');
+    const { queryChain } = clientMock;
 
     // We mock replacedOverrides returning 1 active override
     const selectReplacedPromise = Promise.resolve({
@@ -265,7 +272,7 @@ describe('admin subscriptions API', () => {
 
   it('performs a single bulk insert of audit events in revokeOverride containing all revoked overrides', async () => {
     const clientMock = createAdminClientMock();
-    const queryChain = clientMock.from('admin_users');
+    const { queryChain } = clientMock;
 
     const selectRevokedPromise = Promise.resolve({
       data: [

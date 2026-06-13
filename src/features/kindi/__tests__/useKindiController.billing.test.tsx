@@ -134,7 +134,7 @@ const submitAndFlush = async (
 };
 
 describe('useKindiController billing and quota gating', () => {
-  let dispatchEventSpy: any;
+  let dispatchEventSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     vi.useFakeTimers();
