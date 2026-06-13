@@ -14,6 +14,27 @@ vi.mock('../../utils/errorLogger', () => ({
 import { fetchPeopleCountsForTrees } from '../supabaseTreeReadService';
 import { logError } from '../../utils/errorLogger';
 
+type PeopleQueryResult = {
+  data: Array<{ id: string; tree_id: string }> | null;
+  error: Error | null;
+};
+
+type PeopleQueryChain = {
+  select: ReturnType<typeof vi.fn>;
+  in: ReturnType<typeof vi.fn>;
+  order: ReturnType<typeof vi.fn>;
+  range: ReturnType<typeof vi.fn<(...args: number[]) => Promise<PeopleQueryResult>>>;
+};
+
+const createPeopleQueryChain = (): PeopleQueryChain => {
+  const chain = {} as PeopleQueryChain;
+  chain.select = vi.fn(() => chain);
+  chain.in = vi.fn(() => chain);
+  chain.order = vi.fn(() => chain);
+  chain.range = vi.fn();
+  return chain;
+};
+
 describe('supabaseTreeReadService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -49,10 +70,7 @@ describe('supabaseTreeReadService', () => {
   });
 
   it('falls back to batch query on people if embedded counts are unavailable (less than 1000 rows)', async () => {
-    const peopleChain: Record<string, any> = {};
-    peopleChain.select = vi.fn(() => peopleChain);
-    peopleChain.in = vi.fn(() => peopleChain);
-    peopleChain.order = vi.fn(() => peopleChain);
+    const peopleChain = createPeopleQueryChain();
     peopleChain.range = vi.fn(async () => ({
       data: [
         { id: 'p1', tree_id: 'tree-1' },
@@ -95,10 +113,7 @@ describe('supabaseTreeReadService', () => {
   });
 
   it('requests subsequent pages when exactly 1000 rows are returned in the first page', async () => {
-    const peopleChain: Record<string, any> = {};
-    peopleChain.select = vi.fn(() => peopleChain);
-    peopleChain.in = vi.fn(() => peopleChain);
-    peopleChain.order = vi.fn(() => peopleChain);
+    const peopleChain = createPeopleQueryChain();
 
     // Page 1 returns exactly 1000 rows of tree-1
     const page1Data = Array.from({ length: 1000 }, (_, i) => ({ id: `p-${i}`, tree_id: 'tree-1' }));
@@ -132,10 +147,7 @@ describe('supabaseTreeReadService', () => {
   });
 
   it('aggregates counts across multiple pages (> 1000 rows)', async () => {
-    const peopleChain: Record<string, any> = {};
-    peopleChain.select = vi.fn(() => peopleChain);
-    peopleChain.in = vi.fn(() => peopleChain);
-    peopleChain.order = vi.fn(() => peopleChain);
+    const peopleChain = createPeopleQueryChain();
 
     const page1Data = Array.from({ length: 1000 }, (_, i) => ({ id: `p-${i}`, tree_id: 'tree-1' }));
     const page2Data = [
@@ -174,10 +186,7 @@ describe('supabaseTreeReadService', () => {
   });
 
   it('fails safely and returns {} immediately on query error or page failure', async () => {
-    const peopleChain: Record<string, any> = {};
-    peopleChain.select = vi.fn(() => peopleChain);
-    peopleChain.in = vi.fn(() => peopleChain);
-    peopleChain.order = vi.fn(() => peopleChain);
+    const peopleChain = createPeopleQueryChain();
 
     // Page 1 succeeds, page 2 fails
     const page1Data = Array.from({ length: 1000 }, (_, i) => ({ id: `p-${i}`, tree_id: 'tree-1' }));

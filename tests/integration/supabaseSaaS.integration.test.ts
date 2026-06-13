@@ -1,5 +1,6 @@
 ﻿import { describe, expect, it, beforeEach, afterEach } from 'vitest';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import { v4 as uuidv4 } from 'uuid';
@@ -62,7 +63,7 @@ const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
 describe('Supabase SaaS & Security Integration Tests', () => {
   let testUserId: string;
   let testTreeId: string;
-  let userClient: any;
+  let userClient: SupabaseClient;
   let testUserEmail: string;
   let testUserToken: string;
 
@@ -333,7 +334,7 @@ describe('Supabase SaaS & Security Integration Tests', () => {
       expect(reservation1).toBeDefined();
 
       // Check requests used count increased to 1
-      let { data: usage } = await supabaseAdmin
+      const { data: usage } = await supabaseAdmin
         .from('ai_monthly_usage')
         .select('cloud_requests_used')
         .eq('user_id', testUserId)
@@ -676,7 +677,12 @@ describe('Supabase SaaS & Security Integration Tests', () => {
 
   describe('Free tier replacement limits', () => {
     it('enforces 100 people limits on Free tier replace_tree_content', async () => {
-      const peoplePayload: any[] = [];
+      const peoplePayload: Array<{
+        id: string;
+        firstName: string;
+        lastName: string;
+        gender: 'male';
+      }> = [];
       for (let i = 0; i <= 100; i++) {
         peoplePayload.push({
           id: `person-${i}`,
@@ -724,20 +730,20 @@ describe('Supabase SaaS & Security Integration Tests', () => {
         headers: {
           authorization: `Bearer ${testUserToken}`,
         },
-      } as any;
+      } as unknown as VercelRequest;
 
       let resStatus = 0;
-      let resJson: any = null;
+      let resJson: { success?: boolean } | null = null;
       const mockRes = {
         status(code: number) {
           resStatus = code;
           return this;
         },
-        json(data: any) {
-          resJson = data;
+        json(data: unknown) {
+          resJson = data as { success?: boolean };
           return this;
         }
-      } as any;
+      } as unknown as VercelResponse;
 
       await deleteAccountHandler(mockReq, mockRes);
 
@@ -816,20 +822,20 @@ describe('Supabase SaaS & Security Integration Tests', () => {
         headers: {
           authorization: `Bearer ${googleToken}`
         }
-      } as any;
+      } as unknown as VercelRequest;
 
       let resStatus = 0;
-      let resJson: any = null;
+      let resJson: { success?: boolean } | null = null;
       const mockRes = {
         status(code: number) {
           resStatus = code;
           return this;
         },
-        json(data: any) {
-          resJson = data;
+        json(data: unknown) {
+          resJson = data as { success?: boolean };
           return this;
         }
-      } as any;
+      } as unknown as VercelResponse;
 
       await deleteAccountHandler(mockReq, mockRes);
       expect(resStatus).toBe(200);

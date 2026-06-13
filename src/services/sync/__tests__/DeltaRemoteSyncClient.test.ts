@@ -86,7 +86,9 @@ describe('DeltaRemoteSyncClient', () => {
         const result = await client.flushOutgoingBatch([addNodeOp], null);
 
         expect(result).toEqual({ success: true, shouldRetry: false });
-        const { localId, ...expectedOp } = addNodeOp;
+        const expectedOp = Object.fromEntries(
+            Object.entries(addNodeOp).filter(([key]) => key !== 'localId')
+        );
         expect(mocks.rpc).toHaveBeenCalledWith('sync_tree_batch', { p_ops: [expectedOp] });
         expect(mocks.bulkDeletePendingOperations).toHaveBeenCalledWith([7]);
         expect(mocks.incrementOpCount).toHaveBeenCalledWith(1);

@@ -212,7 +212,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       body: body.body!.trim(),
     });
     return res.status(200).json(result);
-  } catch (error) {
+  } catch {
     return res.status(500).json({ error: 'Push delivery failed.' });
   }
 }

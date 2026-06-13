@@ -2,7 +2,11 @@ import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { AddRelativeCommand } from '../AddRelativeCommand';
 import { CommandContext } from '../types';
 import type { Person } from '../../types';
-import { checkPersonSuggestions, describeSmartCheckIssue } from '../../domain/smartChecker';
+import {
+  checkPersonSuggestions,
+  describeSmartCheckIssue,
+  type SmartCheckIssue,
+} from '../../domain/smartChecker';
 import { validatePerson } from '../../utils/familyLogic';
 import { showToast } from '../../utils/showToast';
 
@@ -25,9 +29,21 @@ vi.mock('../../utils/showToast', () => ({
 }));
 
 describe('AddRelativeCommand', () => {
-  let mockStoreState: any;
+  type MockStoreState = {
+    currentTreeId: string;
+    focusId: string;
+    people: Record<string, Person>;
+    addParent: ReturnType<typeof vi.fn>;
+    addSpouse: ReturnType<typeof vi.fn>;
+    addChild: ReturnType<typeof vi.fn>;
+    setPeople: ReturnType<typeof vi.fn>;
+    setFocusId: ReturnType<typeof vi.fn>;
+    language: string;
+  };
+
+  let mockStoreState: MockStoreState;
   let mockContext: CommandContext;
-  let consoleErrorSpy: any;
+  let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -115,15 +131,15 @@ describe('AddRelativeCommand', () => {
     };
 
     mockContext = {
-      getState: vi.fn(() => mockStoreState),
+      getState: vi.fn(() => mockStoreState) as unknown as CommandContext['getState'],
       syncService: {
         pushOperation: vi.fn(async () => true),
-      } as any,
+      } as unknown as CommandContext['syncService'],
       activityService: {
         logAction: vi.fn(),
-      } as any,
-      storageService: {} as any,
-      searchService: {} as any,
+      } as unknown as CommandContext['activityService'],
+      storageService: {} as CommandContext['storageService'],
+      searchService: {} as CommandContext['searchService'],
     };
   });
 
@@ -322,19 +338,24 @@ describe('AddRelativeCommand', () => {
   });
 
   it('triggers toast warnings/errors based on checkPersonSuggestions results', async () => {
-    const mockIssues = [
-      { code: 'ERR_1', severity: 'error', message: 'Error issue' },
-      { code: 'WRN_1', severity: 'warning', message: 'Warning issue' },
-      { code: 'INF_1', severity: 'info', message: 'Info issue' },
+    const mockIssues: SmartCheckIssue[] = [
+      { code: 'death_before_birth', severity: 'error' },
+      { code: 'missing_birth_date', severity: 'warning' },
+      { code: 'missing_photo', severity: 'info' },
     ];
-    vi.mocked(checkPersonSuggestions).mockReturnValue(mockIssues as any);
-    vi.mocked(describeSmartCheckIssue).mockImplementation((issue: any) => issue.message);
+    vi.mocked(checkPersonSuggestions).mockReturnValue(mockIssues);
+    vi.mocked(describeSmartCheckIssue).mockImplementation((issue) => {
+      if (issue.code === 'death_before_birth') return 'Error issue';
+      if (issue.code === 'missing_birth_date') return 'Warning issue';
+      if (issue.code === 'missing_photo') return 'Info issue';
+      return issue.code;
+    });
 
     const command = new AddRelativeCommand('spouse', 'female', undefined, true);
     await command.execute(mockContext);
 
-    expect(showToast.error).toHaveBeenCalledWith('Error issue', { id: 'smart-check:ERR_1:new-spouse-id' });
-    expect(showToast.warning).toHaveBeenCalledWith('Warning issue', { id: 'smart-check:WRN_1:new-spouse-id' });
-    expect(showToast.info).toHaveBeenCalledWith('Info issue', { id: 'smart-check:INF_1:new-spouse-id' });
+    expect(showToast.error).toHaveBeenCalledWith('Error issue', { id: 'smart-check:death_before_birth:new-spouse-id' });
+    expect(showToast.warning).toHaveBeenCalledWith('Warning issue', { id: 'smart-check:missing_birth_date:new-spouse-id' });
+    expect(showToast.info).toHaveBeenCalledWith('Info issue', { id: 'smart-check:missing_photo:new-spouse-id' });
   });
 });

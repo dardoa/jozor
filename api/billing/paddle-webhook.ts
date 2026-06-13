@@ -301,7 +301,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     if (!processed) {
-      console.log(`[PADDLE_WEBHOOK] Event ${event.event_id} was ignored (duplicate or older).`);
+      console.info(`[PADDLE_WEBHOOK] Event ${event.event_id} was ignored (duplicate or older).`);
       await recordBillingWebhookDiagnostic({
         supabaseAdmin,
         eventId: event.event_id,
@@ -319,7 +319,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({ status: 'ignored', reason: 'duplicate or out-of-order' });
     }
 
-    console.log(`[PADDLE_WEBHOOK] Successfully processed event ${event.event_id} for user ${userId} -> Tier: ${tier}`);
+    console.info(`[PADDLE_WEBHOOK] Successfully processed event ${event.event_id} for user ${userId} -> Tier: ${tier}`);
     await recordBillingWebhookDiagnostic({
       supabaseAdmin,
       eventId: event.event_id,

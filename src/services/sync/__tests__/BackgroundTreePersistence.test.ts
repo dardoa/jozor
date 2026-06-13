@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { BackgroundTreePersistence } from '../BackgroundTreePersistence';
 import { offlineCache } from '../OfflineCache';
+import type { Person } from '../../../types';
 
 vi.mock('../OfflineCache', () => ({
     offlineCache: {
@@ -11,7 +12,7 @@ vi.mock('../OfflineCache', () => ({
     },
 }));
 
-const people: any = {
+const people: Record<string, Person> = {
     p1: {
         id: 'p1',
         firstName: 'A',
@@ -20,8 +21,7 @@ const people: any = {
         parents: [],
         children: [],
         spouses: [],
-        order: 0,
-    },
+    } as unknown as Person,
 };
 
 describe('BackgroundTreePersistence', () => {
@@ -67,7 +67,7 @@ describe('BackgroundTreePersistence', () => {
 
     it('coalesces multiple queued saves into the latest people map', async () => {
         const persistence = new BackgroundTreePersistence();
-        const latestPeople: any = {
+        const latestPeople: Record<string, Person> = {
             ...people,
             p2: {
                 ...people.p1,

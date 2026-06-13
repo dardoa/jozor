@@ -1,4 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 import type { Plugin } from 'vite';
 
 type LocalProxyBody = Record<string, unknown>;
@@ -10,6 +11,10 @@ type LocalResponse = ServerResponse & {
   status: (code: number) => LocalResponse;
   json: (payload: unknown) => LocalResponse;
 };
+type VercelHandler = (
+  req: VercelRequest,
+  res: VercelResponse
+) => unknown | Promise<unknown>;
 
 interface LocalApiProxyEnv {
   SUPABASE_URL?: string;
@@ -104,6 +109,16 @@ const createLocalResponse = (res: ServerResponse): LocalResponse => {
   return localResponse as LocalResponse;
 };
 
+const invokeVercelHandler = (
+  handler: VercelHandler,
+  req: LocalRequest,
+  res: ServerResponse | LocalResponse
+): Promise<unknown> =>
+  Promise.resolve(handler(
+    req as unknown as VercelRequest,
+    res as unknown as VercelResponse
+  ));
+
 const createFetchHeaders = (req: IncomingMessage): Headers => {
   const headers = new Headers();
   for (const [key, value] of Object.entries(req.headers)) {
@@ -192,7 +207,7 @@ const handleAuthExchange = async (
     const { default: authExchangeHandler } = await import('../../src/api/auth/exchange');
     const localResponse = createLocalResponse(res);
     req.body = body;
-    await (authExchangeHandler as any)(req, localResponse);
+    await invokeVercelHandler(authExchangeHandler, req, localResponse);
   } catch (error: unknown) {
     sendJson(res, 500, { error: getErrorMessage(error) });
   }
@@ -206,7 +221,7 @@ const handleCheckoutSession = async (
   try {
     syncProcessEnv(env);
     const { default: checkoutHandler } = await import('../../api/billing/create-checkout-session');
-    await (checkoutHandler as any)(req, res);
+    await invokeVercelHandler(checkoutHandler, req, res);
   } catch (error: unknown) {
     sendJson(res, 500, { error: getErrorMessage(error) });
   }
@@ -220,7 +235,7 @@ const handlePaddleWebhook = async (
   try {
     syncProcessEnv(env);
     const { default: paddleWebhookHandler } = await import('../../api/billing/paddle-webhook');
-    await (paddleWebhookHandler as any)(req, createLocalResponse(res));
+    await invokeVercelHandler(paddleWebhookHandler, req, createLocalResponse(res));
   } catch (error: unknown) {
     sendJson(res, 500, { error: getErrorMessage(error) });
   }
@@ -238,7 +253,7 @@ const handleAdminSubscriptions = async (
     const { default: adminSubscriptionsHandler } = await import('../../api/admin/subscriptions');
     req.body = body;
     req.query = toQueryObject(url);
-    await (adminSubscriptionsHandler as any)(req, createLocalResponse(res));
+    await invokeVercelHandler(adminSubscriptionsHandler, req, createLocalResponse(res));
   } catch (error: unknown) {
     sendJson(res, 500, { error: getErrorMessage(error) });
   }
@@ -254,7 +269,7 @@ const handleAdminBillingDiagnostics = async (
     syncProcessEnv(env);
     const { default: adminBillingDiagnosticsHandler } = await import('../../api/admin/billing-diagnostics');
     req.query = toQueryObject(url);
-    await (adminBillingDiagnosticsHandler as any)(req, createLocalResponse(res));
+    await invokeVercelHandler(adminBillingDiagnosticsHandler, req, createLocalResponse(res));
   } catch (error: unknown) {
     sendJson(res, 500, { error: getErrorMessage(error) });
   }
@@ -276,7 +291,7 @@ const handleDbProxy = async (
     const localResponse = createLocalResponse(res);
     req.body = body;
     req.query = toQueryObject(url);
-    await (proxyHandler as any)(req, localResponse);
+    await invokeVercelHandler(proxyHandler, req, localResponse);
   } catch (error: unknown) {
     sendJson(res, 500, { error: getErrorMessage(error) });
   }

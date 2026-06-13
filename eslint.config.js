@@ -23,7 +23,7 @@ export default tseslint.config(
             'react/react-in-jsx-scope': 'off',
             '@typescript-eslint/no-explicit-any': 'warn',
             '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
-            'no-console': ['warn', { allow: ['warn', 'error'] }],
+            'no-console': ['warn', { allow: ['info', 'warn', 'error'] }],
             '@typescript-eslint/ban-ts-comment': 'off',
             'react-hooks/set-state-in-effect': 'warn',
             'react-hooks/preserve-manual-memoization': 'warn',
@@ -61,5 +61,17 @@ export default tseslint.config(
                 }
             ]
         }
+    },
+    {
+        // These files intentionally emit developer-facing terminal or performance diagnostics.
+        files: [
+            'vite.config.ts',
+            'src/hooks/ui/useTreeRenderDiagnostics.ts',
+            'src/domain/__tests__/familyGraphPerformance.test.ts',
+            'src/features/kindi/__tests__/kindiPerformance.test.ts',
+        ],
+        rules: {
+            'no-console': 'off',
+        },
     }
 );

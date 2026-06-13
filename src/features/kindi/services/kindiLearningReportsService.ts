@@ -295,15 +295,43 @@ const buildReportsFromEvents = (events: KindiLearningEventRow[]): Omit<KindiLear
         : confirmedAiSuccesses / confirmedEvents.length,
     },
     failures: sortByCount(Array.from(failures.values())).slice(0, 20),
-    fallbacks: sortByCount(Array.from(fallbacks.values()).map(({ confidenceValues, ...row }) => row)).slice(0, 20),
-    ambiguousNames: sortByCount(Array.from(ambiguousNames.values()).map(({ candidateValues, ...row }) => row)).slice(0, 20),
+    fallbacks: sortByCount(Array.from(fallbacks.values()).map((row) => ({
+      fallback_result: row.fallback_result,
+      event_count: row.event_count,
+      avg_confidence: row.avg_confidence,
+      last_seen_at: row.last_seen_at,
+    }))).slice(0, 20),
+    ambiguousNames: sortByCount(Array.from(ambiguousNames.values()).map((row) => ({
+      redacted_pattern: row.redacted_pattern,
+      event_count: row.event_count,
+      avg_candidate_count: row.avg_candidate_count,
+      last_seen_at: row.last_seen_at,
+    }))).slice(0, 20),
     redactedQueries: sortByCount(Array.from(redactedQueries.values())).slice(0, 20),
     localOpportunities: sortByCount(
-      Array.from(localOpportunities.values()).map(({ confidenceValues, ...row }) => ({
-        ...row,
+      Array.from(localOpportunities.values()).map((row) => ({
+        redacted_query: row.redacted_query,
+        route_kind: row.route_kind,
+        intent_guess: row.intent_guess,
+        failure_reason: row.failure_reason,
+        parser_stage: row.parser_stage,
+        parser_version: row.parser_version,
+        opportunity_count: row.opportunity_count,
+        avg_ai_confidence: row.avg_ai_confidence,
+        last_seen_at: row.last_seen_at,
         event_count: row.opportunity_count,
       }))
-    ).map(({ event_count, ...row }) => row).slice(0, 20),
+    ).map((row) => ({
+      redacted_query: row.redacted_query,
+      route_kind: row.route_kind,
+      intent_guess: row.intent_guess,
+      failure_reason: row.failure_reason,
+      parser_stage: row.parser_stage,
+      parser_version: row.parser_version,
+      opportunity_count: row.opportunity_count,
+      avg_ai_confidence: row.avg_ai_confidence,
+      last_seen_at: row.last_seen_at,
+    })).slice(0, 20),
     recentEvents: events.slice(0, 100),
   };
 };

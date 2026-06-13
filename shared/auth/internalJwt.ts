@@ -56,7 +56,7 @@ export async function verifyInternalToken(
     }
 
     // Verify signature using Web Crypto HMAC verification
-    const cryptoInstance = typeof crypto !== 'undefined' ? crypto : (globalThis as any).crypto;
+    const cryptoInstance = globalThis.crypto;
     if (!cryptoInstance || !cryptoInstance.subtle) {
       throw new Error('Web Crypto API is not available');
     }

@@ -16,7 +16,7 @@ vi.mock('../../store/useAppStore', () => {
   const mockGetState = vi.fn(() => mockState);
   const useAppStoreMock = {
     getState: mockGetState,
-    setState: (fn: any) => {
+    setState: (fn: Partial<typeof mockState> | ((state: typeof mockState) => Partial<typeof mockState>)) => {
       const next = typeof fn === 'function' ? fn(mockState) : fn;
       Object.assign(mockState, next);
     },

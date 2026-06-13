@@ -28,7 +28,7 @@ const loadSavedUnreadCounts = (): Record<string, number> => {
   try {
     const saved = localStorage.getItem(UNREAD_STORAGE_KEY);
     return saved ? JSON.parse(saved) : {};
-  } catch (e) {
+  } catch {
     return {};
   }
 };
@@ -37,7 +37,7 @@ const saveUnreadCounts = (counts: Record<string, number>) => {
   if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(UNREAD_STORAGE_KEY, JSON.stringify(counts));
-  } catch (e) {
+  } catch {
     // Ignore storage errors
   }
 };

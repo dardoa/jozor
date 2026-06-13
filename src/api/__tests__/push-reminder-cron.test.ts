@@ -8,6 +8,19 @@ const deleteOldDeliveriesMock = vi.fn();
 const insertDeliveryClaimMock = vi.fn();
 let duplicateClaimMode = false;
 
+type DeliveryClaim = {
+  user_id: string;
+  dedupe_key: string;
+};
+
+const toDeliveryClaim = (payload: unknown): DeliveryClaim => {
+  const claim = payload as Partial<DeliveryClaim>;
+  return {
+    user_id: claim.user_id ?? '',
+    dedupe_key: claim.dedupe_key ?? '',
+  };
+};
+
 vi.mock('../../services/pushSubscriptionService', () => ({
   listSubscribedUserIdsServer: (...args: unknown[]) => listSubscribedUserIdsServerMock(...args),
 }));
@@ -115,7 +128,7 @@ const createSupabaseMock = () => ({
             },
           };
         },
-        upsert(payload: unknown, _options?: any) {
+        upsert(payload: unknown, _options?: unknown) {
           insertDeliveryClaimMock(payload);
           return {
             select(_cols?: string) {
@@ -124,10 +137,7 @@ const createSupabaseMock = () => ({
                 duplicateClaimMode
                   ? { data: [], error: null }
                   : {
-                      data: payloadArray.map((p: any) => ({
-                        user_id: p.user_id,
-                        dedupe_key: p.dedupe_key,
-                      })),
+                      data: payloadArray.map(toDeliveryClaim),
                       error: null,
                     }
               );
@@ -143,10 +153,7 @@ const createSupabaseMock = () => ({
                 duplicateClaimMode
                   ? { data: [], error: null }
                   : {
-                      data: payloadArray.map((p: any) => ({
-                        user_id: p.user_id,
-                        dedupe_key: p.dedupe_key,
-                      })),
+                      data: payloadArray.map(toDeliveryClaim),
                       error: null,
                     }
               );

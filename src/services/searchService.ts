@@ -371,7 +371,7 @@ export const searchService = {
         
         const parsed = parseSearchQuery(query);
         let candidates = indexedPeople;
-        let intentDetected = parsed.intents.length > 0;
+        const intentDetected = parsed.intents.length > 0;
         let inferenceSucceeded = false;
 
         if (!intentDetected) {
@@ -406,7 +406,7 @@ export const searchService = {
                                 break;
                             case 'rel_grandchildren':
                             case 'rel_granddaughters':
-                            case 'rel_grandsons':
+                            case 'rel_grandsons': {
                                 const allChildIds = new Set(targets.flatMap(t => t.children || []));
                                 candidates = candidates.filter(p => 
                                     (intent.id === 'rel_granddaughters' ? p.gender === 'female' : 
@@ -415,18 +415,20 @@ export const searchService = {
                                     !targetIds.has(p.id)
                                 );
                                 break;
+                            }
                             case 'rel_spouses':
                                 candidates = candidates.filter(p => targets.some(t => t.spouses?.includes(p.id)));
                                 break;
-                            case 'rel_siblings':
+                            case 'rel_siblings': {
                                 const allParentIds = new Set(targets.flatMap(t => t.parents || []));
                                 candidates = candidates.filter(p => 
                                     !targetIds.has(p.id) && 
                                     getParentIdsForSearch(p).some(parentId => allParentIds.has(parentId))
                                 );
                                 break;
+                            }
                             case 'rel_uncles_paternal':
-                            case 'rel_aunts_paternal':
+                            case 'rel_aunts_paternal': {
                                 // 1. Find the fathers of the targets
                                 const targetFatherIds = new Set<string>();
                                 targets.forEach(t => {
@@ -451,8 +453,9 @@ export const searchService = {
                                     !targetFatherIds.has(p.id)
                                 );
                                 break;
+                            }
                             case 'rel_uncles_maternal':
-                            case 'rel_aunts_maternal':
+                            case 'rel_aunts_maternal': {
                                 // 1. Find the mothers of the targets
                                 const targetMotherIds = new Set<string>();
                                 targets.forEach(t => {
@@ -476,8 +479,9 @@ export const searchService = {
                                     !targetMotherIds.has(p.id)
                                 );
                                 break;
+                            }
                             case 'rel_cousins_paternal_uncle':
-                            case 'rel_cousins_paternal_aunt':
+                            case 'rel_cousins_paternal_aunt': {
                                 // 1. Find the target's father's siblings
                                 const tFatherIdsP = new Set<string>();
                                 targets.forEach(t => {
@@ -504,8 +508,9 @@ export const searchService = {
                                     !targetIds.has(p.id)
                                 );
                                 break;
+                            }
                             case 'rel_cousins_maternal_uncle':
-                            case 'rel_cousins_maternal_aunt':
+                            case 'rel_cousins_maternal_aunt': {
                                 // 1. Find the target's mother's siblings
                                 const tMotherIdsM = new Set<string>();
                                 targets.forEach(t => {
@@ -532,8 +537,9 @@ export const searchService = {
                                     !targetIds.has(p.id)
                                 );
                                 break;
+                            }
                             case 'rel_grandparents':
-                            case 'rel_grandmothers':
+                            case 'rel_grandmothers': {
                                 // 1. Find all parents of the targets
                                 const parentsOfTargetsIds = new Set<string>();
                                 targets.forEach(t => {
@@ -552,6 +558,7 @@ export const searchService = {
                                     (intent.id === 'rel_grandmothers' ? p.gender === 'female' : true)
                                 );
                                 break;
+                            }
                         }
                     }
                 } else if (intent.logicType === 'LOCATIONAL' && intent.locationCity) {
