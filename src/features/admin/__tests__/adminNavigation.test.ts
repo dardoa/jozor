@@ -1,3 +1,4 @@
+import { renderHook, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -6,15 +7,19 @@ import {
   openAdminDiagnostics,
   openAdminTreeDefaults,
   openKindiLearningReports,
+  useKindiReportsAdminAccess,
 } from '../useKindiReportsAdminAccess';
 
+const checkKindiReportsAdminAccessMock = vi.hoisted(() => vi.fn());
+
 vi.mock('../../kindi', () => ({
-  checkKindiReportsAdminAccess: vi.fn(),
+  checkKindiReportsAdminAccess: checkKindiReportsAdminAccessMock,
 }));
 
 describe('admin navigation helpers', () => {
   afterEach(() => {
     window.history.pushState(null, '', '/');
+    checkKindiReportsAdminAccessMock.mockReset();
   });
 
   it('opens the unified admin dashboard without a tab by default', () => {
@@ -42,5 +47,38 @@ describe('admin navigation helpers', () => {
 
     openAdminDiagnostics();
     expect(window.location.pathname + window.location.search).toBe('/admin?tab=diagnostics');
+  });
+
+  it('does not expose stale admin access while a different user is being checked', async () => {
+    checkKindiReportsAdminAccessMock
+      .mockResolvedValueOnce(true)
+      .mockResolvedValueOnce(false);
+
+    const firstUser = {
+      uid: 'admin-1',
+      email: 'admin@example.com',
+      displayName: 'Admin',
+      photoURL: '',
+      supabaseToken: 'token-1',
+    };
+    const secondUser = {
+      ...firstUser,
+      uid: 'user-2',
+      email: 'user@example.com',
+      displayName: 'User',
+      supabaseToken: 'token-2',
+    };
+    const { result, rerender } = renderHook(
+      ({ user }) => useKindiReportsAdminAccess(user),
+      { initialProps: { user: firstUser } }
+    );
+
+    await waitFor(() => expect(result.current).toBe(true));
+
+    rerender({ user: secondUser });
+
+    expect(result.current).toBe(false);
+    await waitFor(() => expect(checkKindiReportsAdminAccessMock).toHaveBeenCalledTimes(2));
+    expect(result.current).toBe(false);
   });
 });

@@ -284,7 +284,7 @@ export const useKindiController = ({ people, onFocusPerson }: UseKindiController
     }
 
     return false;
-  }, [addAssistantMessageWithCue, planWithAI]);
+  }, [addAssistantMessageWithCue]);
 
   const respondToPlannedAI = useCallback((
     aiPlanning: Awaited<ReturnType<typeof planWithAI>>,
@@ -335,7 +335,7 @@ export const useKindiController = ({ people, onFocusPerson }: UseKindiController
     }
 
     return false;
-  }, [addAssistantMessageWithCue, planWithAI, requestDisambiguation, requestMissingAddName]);
+  }, [addAssistantMessageWithCue, requestDisambiguation, requestMissingAddName]);
 
   const respondToPendingAddName = useCallback(async (query: string): Promise<boolean> => {
     if (!pendingAddNameRequest) return false;
@@ -768,7 +768,7 @@ export const useKindiController = ({ people, onFocusPerson }: UseKindiController
     } finally {
       setIsThinking(false);
     }
-  }, [addAssistantMessage, addAssistantMessageWithCue, addUserMessage, clearConversationCue, draft, focusId, hasPendingDecision, lastContextPersonId, lastConversationCue, peopleList, planWithAI, respondToClassifiedAI, respondToCommandIntent, respondToConversationFlow, respondToPendingAddName, respondToPlannedAI, respondToQueryIntent, respondToSupportIntent]);
+  }, [addAssistantMessage, addAssistantMessageWithCue, addUserMessage, clearConversationCue, draft, focusId, hasPendingDecision, lastContextPersonId, lastConversationCue, logKindiFailure, peopleList, planWithAI, respondToClassifiedAI, respondToCommandIntent, respondToConversationFlow, respondToPendingAddName, respondToPlannedAI, respondToQueryIntent, respondToSupportIntent]);
 
   const chooseDisambiguation = useCallback((messageId: string, personId: string) => {
     const message = messages.find((item) => item.id === messageId);

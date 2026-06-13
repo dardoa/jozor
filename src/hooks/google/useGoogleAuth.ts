@@ -113,6 +113,8 @@ export const useGoogleAuth = ({
     refreshDriveFilesRef,
     runWithAuth,
     setCurrentActiveDriveFileId,
+    setDriveSyncUiStatus,
+    setIsDemoMode,
     setShowWelcome,
     showGoogleError,
   ]);
@@ -126,7 +128,7 @@ export const useGoogleAuth = ({
     cleanupOnLogout();
     setIsDemoMode(false);
     showToast.success('Logged out successfully.');
-  }, [cleanupOnLogout]);
+  }, [cleanupOnLogout, setIsDemoMode]);
 
   return {
     user,

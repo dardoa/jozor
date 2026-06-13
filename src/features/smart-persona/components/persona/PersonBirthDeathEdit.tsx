@@ -1,4 +1,4 @@
-import { memo, useEffect, useState } from 'react';
+import { memo, useState } from 'react';
 import { Person, PersonUpdateHandler } from '../../../../types';
 import { DateSelect } from '../../../../components/DateSelect';
 import { FormField } from '../../../../components/ui/FormField';
@@ -14,16 +14,46 @@ interface PersonBirthDeathEditProps {
   onUpdate: PersonUpdateHandler;
 }
 
+interface DateDraftState {
+  personId: string;
+  sourceBirthDate: string;
+  sourceDeathDate: string;
+  birthDate: string;
+  deathDate: string;
+}
+
+const createDateDraftState = (person: Person): DateDraftState => ({
+  personId: person.id,
+  sourceBirthDate: person.birthDate,
+  sourceDeathDate: person.deathDate,
+  birthDate: person.birthDate,
+  deathDate: person.deathDate,
+});
+
+const isDateDraftCurrent = (draft: DateDraftState, person: Person): boolean => (
+  draft.personId === person.id
+  && draft.sourceBirthDate === person.birthDate
+  && draft.sourceDeathDate === person.deathDate
+);
+
 export const PersonBirthDeathEdit = memo<PersonBirthDeathEditProps>(({ person, onUpdate }) => {
   const { t, language } = useTranslation();
   const [showDeathDetails, setShowDeathDetails] = useState(true);
-  const [birthDateDraft, setBirthDateDraft] = useState(person.birthDate);
-  const [deathDateDraft, setDeathDateDraft] = useState(person.deathDate);
+  const [dateDraft, setDateDraft] = useState<DateDraftState>(() => createDateDraftState(person));
+  const currentDateDraft = isDateDraftCurrent(dateDraft, person)
+    ? dateDraft
+    : createDateDraftState(person);
+  const birthDateDraft = currentDateDraft.birthDate;
+  const deathDateDraft = currentDateDraft.deathDate;
 
-  useEffect(() => {
-    setBirthDateDraft(person.birthDate);
-    setDeathDateDraft(person.deathDate);
-  }, [person.id, person.birthDate, person.deathDate]);
+  const updateDateDraft = (field: 'birthDate' | 'deathDate', value: string) => {
+    setDateDraft((previous) => {
+      const current = isDateDraftCurrent(previous, person)
+        ? previous
+        : createDateDraftState(person);
+      return { ...current, [field]: value };
+    });
+  };
 
   const handleChange = (field: keyof Person, value: string) => {
     void onUpdate(person.id, { [field]: value });
@@ -44,9 +74,9 @@ export const PersonBirthDeathEdit = memo<PersonBirthDeathEditProps>(({ person, o
         id: `smart-check:${blockingIssues[0].code}:${person.id}`,
       });
       if (field === 'birthDate') {
-        setBirthDateDraft(person.birthDate);
+        updateDateDraft('birthDate', person.birthDate);
       } else {
-        setDeathDateDraft(person.deathDate);
+        updateDateDraft('deathDate', person.deathDate);
       }
       return;
     }
@@ -70,7 +100,7 @@ export const PersonBirthDeathEdit = memo<PersonBirthDeathEditProps>(({ person, o
             </label>
             <DateSelect
               value={birthDateDraft}
-              onChange={setBirthDateDraft}
+              onChange={(value) => updateDateDraft('birthDate', value)}
               onBlur={() => {
                 void commitDateField('birthDate', birthDateDraft);
               }}
@@ -121,7 +151,7 @@ export const PersonBirthDeathEdit = memo<PersonBirthDeathEditProps>(({ person, o
                 </label>
                 <DateSelect
                   value={deathDateDraft}
-                  onChange={setDeathDateDraft}
+                  onChange={(value) => updateDateDraft('deathDate', value)}
                   onBlur={() => {
                     void commitDateField('deathDate', deathDateDraft);
                   }}

@@ -40,10 +40,9 @@ export const useSmartPersonaDrawerState = ({
     return [person.firstName, person.lastName].filter(Boolean).join(' ') || unnamedPersonLabel;
   }, [fallbackProfileLabel, person, unnamedPersonLabel]);
 
-  const safeBirthYear = useMemo(() => {
-    if (!person?.birthDate) return '';
-    return getDisplayDate(person.birthDate);
-  }, [person?.birthDate]);
+  const safeBirthYear = person?.birthDate
+    ? getDisplayDate(person.birthDate)
+    : '';
 
   const fallbackInitial = useMemo(() => {
     const source = person?.firstName?.trim() || person?.lastName?.trim() || '?';

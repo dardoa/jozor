@@ -3,31 +3,66 @@ import { useEffect, useState } from 'react';
 import type { UserProfile } from '../../types';
 import { checkKindiReportsAdminAccess } from '../kindi';
 
+interface AdminAccessResult {
+  uid: string;
+  email: string;
+  supabaseToken?: string;
+  hasAccess: boolean;
+}
+
 export const useKindiReportsAdminAccess = (user: UserProfile | null): boolean => {
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [accessResult, setAccessResult] = useState<AdminAccessResult | null>(null);
+  const uid = user?.uid;
+  const email = user?.email;
+  const supabaseToken = user?.supabaseToken;
 
   useEffect(() => {
-    let active = true;
-    setIsAdmin(false);
+    if (!uid || email === undefined) return;
 
-    if (!user) return () => {
-      active = false;
+    let active = true;
+    const accessUser: UserProfile = {
+      uid,
+      email,
+      supabaseToken,
+      displayName: '',
+      photoURL: '',
     };
 
-    void checkKindiReportsAdminAccess(user)
+    void checkKindiReportsAdminAccess(accessUser)
       .then((hasAccess) => {
-        if (active) setIsAdmin(hasAccess);
+        if (active) {
+          setAccessResult({
+            uid,
+            email,
+            supabaseToken,
+            hasAccess,
+          });
+        }
       })
       .catch(() => {
-        if (active) setIsAdmin(false);
+        if (active) {
+          setAccessResult({
+            uid,
+            email,
+            supabaseToken,
+            hasAccess: false,
+          });
+        }
       });
 
     return () => {
       active = false;
     };
-  }, [user]);
+  }, [email, supabaseToken, uid]);
 
-  return isAdmin;
+  return Boolean(
+    uid
+    && email !== undefined
+    && accessResult?.uid === uid
+    && accessResult.email === email
+    && accessResult.supabaseToken === supabaseToken
+    && accessResult.hasAccess
+  );
 };
 
 export const openAdminDashboard = (tab?: 'kindi' | 'subscriptions' | 'billing' | 'tree-defaults' | 'diagnostics'): void => {

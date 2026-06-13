@@ -92,7 +92,7 @@ export const TimelineModal = ({ isOpen, onClose, people, onSelectPerson }: Timel
         icon: Home,
       },
     }),
-    [t]
+    [t, timelineText.birth, timelineText.births]
   );
 
   const events = useMemo(() => {

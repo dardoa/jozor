@@ -24,7 +24,7 @@ export const AccessControlTab: React.FC<AccessControlTabProps> = ({
 }) => {
   const { t } = useTranslation();
   const sectionText = t.adminHub.accessSections;
-  const state = useAccessControlState({ treeId, ownerId, ownerEmail, t });
+  const state = useAccessControlState({ treeId, ownerId, ownerEmail });
   const revokeAccessLabel = t.treeManager.revokeAccess || 'Revoke Access';
   const confirmRevokeMessage = (t.treeManager.confirmRevoke || 'Revoke access for {email}?').replace(
     '{email}',

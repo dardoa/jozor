@@ -230,7 +230,7 @@ export const useVaultTreeManagement = ({
       setBusyTreeId(null);
       if (fileInputRef.current) fileInputRef.current.value = '';
     });
-  }, [currentUser, handleOpenTree]);
+  }, [currentUser, handleOpenTree, ownedTrees.length]);
 
   const handleRenameTree = useCallback(async (treeId: string) => {
     if (!currentUser?.uid || !currentUser?.email || !editTreeName.trim()) return;
