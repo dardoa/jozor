@@ -193,6 +193,7 @@ describe('DiagnosticsDrawer', () => {
     render(<DiagnosticsDrawer />);
 
     expect(screen.getByText('Sync Diagnostics')).toBeInTheDocument();
+    expect(screen.getByText('Budget status')).toBeInTheDocument();
     expect(screen.getByText('Notification Diagnostics')).toBeInTheDocument();
     expect(screen.getByText('Invitation Diagnostics')).toBeInTheDocument();
     expect(screen.getByText('synced')).toBeInTheDocument();

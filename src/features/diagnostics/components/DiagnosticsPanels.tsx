@@ -4,6 +4,12 @@ import { useTranslation } from '../../../context/TranslationContext';
 import { useAppStore } from '../../../store/useAppStore';
 import { DiagnosticsMaintenancePanels } from './DiagnosticsMaintenancePanels';
 import { deltaSyncService } from '../../../services/deltaSyncService';
+import {
+  evaluatePerformanceBudget,
+  getStartupBudgetMetric,
+  getWorstPerformanceStatus,
+  type PerformanceBudgetStatus,
+} from '../logic/performanceBudgets';
 
 type SettingsTranslator = ReturnType<typeof useTranslation>['t'];
 
@@ -35,6 +41,22 @@ type NotificationDiagnosticsText = {
 };
 
 type NotificationDiagnosticsSettings = SettingsTranslator['settings'] & Partial<NotificationDiagnosticsText>;
+
+const budgetStatusClasses: Record<PerformanceBudgetStatus, string> = {
+  healthy: 'bg-emerald-500/10 text-emerald-500',
+  warning: 'bg-amber-500/10 text-amber-500',
+  critical: 'bg-rose-500/10 text-rose-500',
+  unknown: 'bg-slate-500/10 text-[var(--text-muted)]',
+};
+
+const PerformanceBudgetBadge: React.FC<{
+  label: string;
+  status: PerformanceBudgetStatus;
+}> = ({ label, status }) => (
+  <span className={`inline-flex items-center rounded px-1 py-0.5 text-[8px] font-bold ${budgetStatusClasses[status]}`}>
+    {label}
+  </span>
+);
 
 const getInvitationDiagnosticsText = (t: SettingsTranslator): InvitationDiagnosticsText => ({
   invitationDiagnostics: t.settings.invitationDiagnostics || 'Invitation Diagnostics',
@@ -85,7 +107,7 @@ export const DiagnosticsPanels: React.FC<{
   const notificationText = useMemo(() => getNotificationDiagnosticsText(t), [t]);
 
   const [fps, setFps] = React.useState<number | null>(null);
-  const [domNodeCount, setDomNodeCount] = React.useState<number>(0);
+  const [domNodeCount, setDomNodeCount] = React.useState<number | null>(null);
 
   React.useEffect(() => {
     let frameCount = 0;
@@ -135,9 +157,6 @@ export const DiagnosticsPanels: React.FC<{
   const perfText = useMemo(() => ({
     performanceDiagnostics: t.settings.performanceDiagnostics || 'Performance & Graphics',
     renderingFps: t.settings.renderingFps || 'Rendering Frame Rate',
-    fpsExcellent: t.settings.fpsExcellent || 'Excellent',
-    fpsFair: t.settings.fpsFair || 'Fair',
-    fpsPoor: t.settings.fpsPoor || 'Poor',
     domNodeCount: t.settings.domNodeCount || 'Active DOM Nodes',
     layoutDuration: t.settings.layoutDuration || 'Layout Execution',
     layoutCached: t.settings.layoutCached || 'Cached',
@@ -149,7 +168,22 @@ export const DiagnosticsPanels: React.FC<{
     stepHydration: t.settings.stepHydration || 'State Hydration',
     stepInteractive: t.settings.stepInteractive || 'Render to Interactive',
     stepUid: t.settings.stepUid || 'UID Resolved',
+    budgetHealthy: t.settings.performanceBudgetHealthy || 'Healthy',
+    budgetWarning: t.settings.performanceBudgetWarning || 'Watch',
+    budgetCritical: t.settings.performanceBudgetCritical || 'Action needed',
+    budgetUnknown: t.settings.performanceBudgetUnknown || 'Not measured',
+    budgetStatus: t.settings.performanceBudgetStatus || 'Budget status',
+    budgetHint: t.settings.performanceBudgetHint || 'Review performance settings or inspect the slow phase before changing architecture.',
   }), [t]);
+
+  const getBudgetLabel = useCallback((status: PerformanceBudgetStatus) => {
+    switch (status) {
+      case 'healthy': return perfText.budgetHealthy;
+      case 'warning': return perfText.budgetWarning;
+      case 'critical': return perfText.budgetCritical;
+      default: return perfText.budgetUnknown;
+    }
+  }, [perfText]);
 
   const getLocalizedStepName = useCallback((name: string) => {
     switch (name) {
@@ -211,6 +245,22 @@ export const DiagnosticsPanels: React.FC<{
     return steps.sort((a, b) => a.timestampMs - b.timestampMs);
   }, []);
 
+  const fpsBudgetStatus = evaluatePerformanceBudget('fps', fps);
+  const domBudgetStatus = evaluatePerformanceBudget('domNodes', domNodeCount);
+  const layoutBudgetStatus: PerformanceBudgetStatus = layoutCached
+    ? 'healthy'
+    : evaluatePerformanceBudget('layout', layoutDuration);
+  const startupBudgetStatuses = startupSteps.map((step) => {
+    const metric = getStartupBudgetMetric(step.name);
+    return metric ? evaluatePerformanceBudget(metric, step.durationMs) : 'unknown';
+  });
+  const overallPerformanceStatus = getWorstPerformanceStatus([
+    fpsBudgetStatus,
+    domBudgetStatus,
+    layoutBudgetStatus,
+    ...startupBudgetStatuses,
+  ]);
+
   const formatRelativeTime = useCallback((time: Date | null | undefined) => {
     if (!time) return t.settings.neverSynced;
     return formatDistanceToNow(time, { addSuffix: true, locale: dateLocale });
@@ -256,25 +306,35 @@ export const DiagnosticsPanels: React.FC<{
         <section className="space-y-4">
           <h4 className="px-3 text-xs font-semibold tracking-wide text-[var(--text-muted)]">{perfText.performanceDiagnostics}</h4>
           <div className="space-y-3 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-panel-subtle)] p-4">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+                {perfText.budgetStatus}
+              </span>
+              <PerformanceBudgetBadge
+                label={getBudgetLabel(overallPerformanceStatus)}
+                status={overallPerformanceStatus}
+              />
+            </div>
             <div className="grid grid-cols-2 gap-2">
               <div className="rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3 py-2">
                 <div className="text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">{perfText.renderingFps}</div>
                 <div className="mt-1 flex items-baseline gap-1.5">
                   <span className="text-xs font-black text-[var(--text-main)]">{fps !== null ? `${fps} FPS` : '...'}</span>
-                  {fps !== null && (
-                    <span className={`inline-flex items-center rounded px-1 py-0.5 text-[8px] font-bold ${
-                      fps >= 55 ? 'bg-emerald-500/10 text-emerald-500' :
-                      fps >= 30 ? 'bg-amber-500/10 text-amber-500' :
-                      'bg-rose-500/10 text-rose-500'
-                    }`}>
-                      {fps >= 55 ? perfText.fpsExcellent : fps >= 30 ? perfText.fpsFair : perfText.fpsPoor}
-                    </span>
-                  )}
+                  <PerformanceBudgetBadge
+                    label={getBudgetLabel(fpsBudgetStatus)}
+                    status={fpsBudgetStatus}
+                  />
                 </div>
               </div>
               <div className="rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3 py-2">
                 <div className="text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">{perfText.domNodeCount}</div>
-                <div className="mt-1 text-xs font-bold text-[var(--text-main)]">{domNodeCount}</div>
+                <div className="mt-1 flex items-baseline gap-1.5">
+                  <span className="text-xs font-bold text-[var(--text-main)]">{domNodeCount ?? '...'}</span>
+                  <PerformanceBudgetBadge
+                    label={getBudgetLabel(domBudgetStatus)}
+                    status={domBudgetStatus}
+                  />
+                </div>
               </div>
             </div>
 
@@ -294,6 +354,10 @@ export const DiagnosticsPanels: React.FC<{
                     '-'
                   )}
                 </span>
+                <PerformanceBudgetBadge
+                  label={getBudgetLabel(layoutBudgetStatus)}
+                  status={layoutBudgetStatus}
+                />
               </div>
               <div className="flex items-center justify-between gap-3">
                 <span>{perfText.lastCheckpoint}</span>
@@ -307,23 +371,43 @@ export const DiagnosticsPanels: React.FC<{
               <div className="mt-3 pt-3 border-t border-[var(--border-soft)]">
                 <div className="text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)] mb-2">{perfText.startupTimeline}</div>
                 <div className="space-y-3 relative pl-3 border-l border-[var(--border-soft)] ml-1">
-                  {startupSteps.map((step, idx) => (
-                    <div key={idx} className="relative flex flex-col gap-0.5">
-                      <div className="absolute -left-[17px] top-1.5 w-2 h-2 rounded-full border border-[var(--surface-panel-subtle)] bg-[var(--primary-500)]" />
-                      <div className="flex items-center justify-between text-[10px] text-[var(--text-secondary)]">
-                        <span className="font-bold text-[var(--text-main)]">{getLocalizedStepName(step.name)}</span>
-                        <span className="font-mono">{step.timestampMs}ms</span>
-                      </div>
-                      {step.durationMs !== null && (
-                        <div className="text-[9px] text-[var(--text-muted)] font-medium">
-                          Duration: <span className="font-mono">{step.durationMs}ms</span>
+                  {startupSteps.map((step) => {
+                    const metric = getStartupBudgetMetric(step.name);
+                    const status = metric
+                      ? evaluatePerformanceBudget(metric, step.durationMs)
+                      : 'unknown';
+
+                    return (
+                      <div key={step.name} className="relative flex flex-col gap-0.5">
+                        <div className="absolute -left-[17px] top-1.5 w-2 h-2 rounded-full border border-[var(--surface-panel-subtle)] bg-[var(--primary-500)]" />
+                        <div className="flex items-center justify-between text-[10px] text-[var(--text-secondary)]">
+                          <span className="font-bold text-[var(--text-main)]">{getLocalizedStepName(step.name)}</span>
+                          <span className="flex items-center gap-1.5">
+                            <span className="font-mono">{step.timestampMs}ms</span>
+                            {step.durationMs !== null ? (
+                              <PerformanceBudgetBadge
+                                label={getBudgetLabel(status)}
+                                status={status}
+                              />
+                            ) : null}
+                          </span>
                         </div>
-                      )}
-                    </div>
-                  ))}
+                        {step.durationMs !== null && (
+                          <div className="text-[9px] text-[var(--text-muted)] font-medium">
+                            Duration: <span className="font-mono">{step.durationMs}ms</span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
+            {overallPerformanceStatus === 'warning' || overallPerformanceStatus === 'critical' ? (
+              <div className="rounded-xl border border-amber-500/15 bg-amber-500/5 px-3 py-2 text-[10px] text-[var(--text-secondary)]">
+                {perfText.budgetHint}
+              </div>
+            ) : null}
           </div>
         </section>
         ) : null}

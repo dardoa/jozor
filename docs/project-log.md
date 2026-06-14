@@ -1,5 +1,24 @@
 # Project Log
 
+## 2026-06-14 - Local Performance Observability Budgets
+
+- Summary:
+  - Centralized actionable budgets for rendering FPS, active DOM nodes, layout
+    execution, and measured bootstrap phases.
+  - Added local-only health classifications to the diagnostics panel:
+    healthy, watch, action needed, and not measured.
+  - Kept all measurements in the browser and avoided collecting family data,
+    names, queries, or cloud telemetry.
+- Verification:
+  - Performance budget unit tests: pass
+  - Diagnostics drawer tests: pass
+  - `npm run lint`: pass
+  - `npm run typecheck`: pass
+  - `npm run build`: pass
+- Operational intent:
+  - Use the status to identify the slow phase before considering rendering or
+    orchestration changes.
+
 ## 2026-06-14 - AI Proxy Request Validation, Batch 2
 
 - Summary:
