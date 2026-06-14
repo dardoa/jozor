@@ -33,12 +33,37 @@ export interface KindiPlanAIRequestData {
   redactedText: string;
 }
 
+export interface ExtractPersonDataAIRequestData {
+  text: string;
+}
+
+export interface FamilyStoryMember {
+  personToken: string;
+  name: string;
+  birthDate?: string;
+  birthPlace?: string;
+  deathDate?: string;
+  deathPlace?: string;
+  parents: string[];
+  spouses: string[];
+  children: string[];
+}
+
+export interface FamilyStoryAIRequestData {
+  language: 'ar' | 'en';
+  members: FamilyStoryMember[];
+}
+
+export interface AnalyzeImageAIRequestData {
+  preferredLanguage: 'ar' | 'en';
+}
+
 export type AIProxyRequest =
   | { operation: 'biography'; data: BiographyAIRequestData }
   | { operation: 'ancestor_chat'; data: AncestorChatAIRequestData }
-  | { operation: 'extract_person_data'; prompt: string }
-  | { operation: 'family_story'; prompt: string }
-  | { operation: 'analyze_image'; prompt: string; image: AIProxyImagePayload }
+  | { operation: 'extract_person_data'; data: ExtractPersonDataAIRequestData }
+  | { operation: 'family_story'; data: FamilyStoryAIRequestData }
+  | { operation: 'analyze_image'; data: AnalyzeImageAIRequestData; image: AIProxyImagePayload }
   | { operation: 'kindi_plan'; data: KindiPlanAIRequestData };
 
 export interface AIProxyResponse {

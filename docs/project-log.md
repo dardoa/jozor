@@ -642,3 +642,11 @@
 - Added bounded lengths for names, dates, places, professions, and biographies.
 - Rejected non-object extraction results and oversized AI proxy text responses.
 - Added focused tests for unknown-field removal, invalid-type rejection, length limits, and explicit boolean values.
+
+# 2026-06-14 - AI proxy structured operation boundaries
+
+- Removed client-controlled free-form prompts from person extraction, family story, and image analysis proxy operations.
+- Moved operation instructions into the server-side AI proxy and validated structured operation data before provider usage.
+- Replaced family-tree UUIDs with request-local `P1`, `P2`, and related anonymized tokens before story generation.
+- Added language, member-count, relation-token, image MIME, and operation-shape validation.
+- Added tests proving legacy arbitrary prompts and real identifiers are rejected at the proxy boundary.

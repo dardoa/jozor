@@ -197,29 +197,11 @@ export const startAncestorChat = async (
 
 export const extractPersonData = async (text: string): Promise<Partial<Person>> => {
   try {
-    const safeText = text ?? '';
-    const prompt = `Analyze the following unstructured text and extract details about a person to fill a family tree profile.
-Return ONLY a valid JSON object. Do not add markdown formatting, code fences (such as triple backticks), or any text before or after the JSON.
-
-Fields to extract:
-- firstName, middleName, lastName, nickName, title
-- gender (infer "male" or "female")
-- birthDate (YYYY-MM-DD format if possible, otherwise YYYY)
-- birthPlace
-- isDeceased (boolean)
-- deathDate (YYYY-MM-DD format if possible)
-- deathPlace
-- profession
-- bio (a concise summary of the text, 2-4 sentences)
-
-If a field is unknown or not clearly stated, either omit it from the JSON or set it to an empty string/null as appropriate.
-
-TEXT:
-"""${safeText}"""`;
-
     const data = await callAIProxy({
       operation: 'extract_person_data',
-      prompt,
+      data: {
+        text: text ?? '',
+      },
     });
     const rawResult = readProxyResult(data, 'AI proxy returned an empty response for extraction.');
 
@@ -260,38 +242,33 @@ export const generateFamilyStory = async (
       throw new Error(msg);
     }
 
-    const simplifiedData = Object.values(people).map((p) => ({
-      id: p.id,
+    const selectedPeople = Object.values(people).slice(0, 50);
+    const personTokens = new Map(
+      selectedPeople.map((person, index) => [person.id, `P${index + 1}`]),
+    );
+    const toKnownTokens = (ids: string[] | undefined): string[] =>
+      (ids ?? []).flatMap((id) => {
+        const token = personTokens.get(id);
+        return token ? [token] : [];
+      });
+    const members = selectedPeople.map((p) => ({
+      personToken: personTokens.get(p.id) as string,
       name: buildFullName(p),
       birthDate: p.birthDate || undefined,
       birthPlace: p.birthPlace || undefined,
       deathDate: p.deathDate || undefined,
       deathPlace: p.deathPlace || undefined,
-      parents: p.parents || [],
-      spouses: p.spouses || [],
-      children: p.children || [],
+      parents: toKnownTokens(p.parents),
+      spouses: toKnownTokens(p.spouses),
+      children: toKnownTokens(p.children),
     }));
-
-    const storyPrompt = `Act as a master storyteller. Based on the JSON data of a family tree provided below, write a compelling, chronological narrative history of this family.
-
-LANGUAGE: ${language === 'ar' ? 'Arabic' : 'English'}
-
-INSTRUCTIONS:
-1. Start from the oldest known ancestors and move forward in time to the youngest generation.
-2. Highlight key locations (migrations), longevity, large families, or interesting professions if noted.
-3. Use a warm, nostalgic, and respectful tone.
-4. Structure the story in clear paragraphs. Use HTML formatting for the output (e.g. <h3> for eras/generations, <p> for text, <strong> for names).
-5. Do NOT output Markdown code blocks. Just return the raw HTML string suitable for placing in a div.
-6. Focus on the flow of generations. "The story begins with...".
-7. If LANGUAGE is Arabic, write the entire story in Modern Standard Arabic. If it is English, write in clear, simple English.
-
-FAMILY DATA:
-${JSON.stringify(simplifiedData.slice(0, 50))}
-(Data limited to 50 key members for brevity if tree is huge)`;
 
     const data = await callAIProxy({
       operation: 'family_story',
-      prompt: storyPrompt,
+      data: {
+        language: language === 'ar' ? 'ar' : 'en',
+        members,
+      },
     });
 
     return readProxyResult(
@@ -311,17 +288,22 @@ ${JSON.stringify(simplifiedData.slice(0, 50))}
   }
 };
 
-export const analyzeImage = async (base64Image: string): Promise<string> => {
+export const analyzeImage = async (
+  base64Image: string,
+  preferredLanguage: 'ar' | 'en' = 'en',
+): Promise<string> => {
   try {
-    const prompt = 'Analyze this family photo and describe the people, their estimated ages, clothing style, and any potential historical or emotional context. Identify if there are any specific recognizable traits. Keep the description concise but meaningful. Output in Arabic if the interface or context suggests it, otherwise English.';
     const base64Content = base64Image.includes(',') ? base64Image.split(',')[1] : base64Image;
+    const mimeTypeMatch = base64Image.match(/^data:(image\/(?:jpeg|png|webp));base64,/i);
 
     const data = await callAIProxy({
       operation: 'analyze_image',
-      prompt,
+      data: {
+        preferredLanguage,
+      },
       image: {
         data: base64Content,
-        mimeType: 'image/jpeg',
+        mimeType: mimeTypeMatch?.[1]?.toLowerCase() ?? 'image/jpeg',
       },
     });
 

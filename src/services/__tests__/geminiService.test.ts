@@ -122,9 +122,12 @@ describe('geminiService', () => {
       expect(extracted.gender).toBe('male');
       expect(extracted.isDeceased).toBe(true);
       expect(callAIProxy).toHaveBeenCalledWith(
-        expect.objectContaining({
+        {
           operation: 'extract_person_data',
-        })
+          data: {
+            text: 'Ahmad was a doctor who died in 2010.',
+          },
+        }
       );
     });
 
@@ -183,8 +186,18 @@ describe('geminiService', () => {
       expect(callAIProxy).toHaveBeenCalledWith(
         expect.objectContaining({
           operation: 'family_story',
+          data: expect.objectContaining({
+            language: 'ar',
+            members: [
+              expect.objectContaining({
+                personToken: 'P1',
+                name: 'Mahmoud Jozor',
+              }),
+            ],
+          }),
         })
       );
+      expect(JSON.stringify(vi.mocked(callAIProxy).mock.calls[0][0])).not.toContain('person-1');
     });
   });
 
@@ -199,7 +212,9 @@ describe('geminiService', () => {
       expect(analysis).toBe('The photo depicts a family gathering.');
       expect(callAIProxy).toHaveBeenCalledWith({
         operation: 'analyze_image',
-        prompt: expect.any(String),
+        data: {
+          preferredLanguage: 'en',
+        },
         image: {
           data: 'abcdef123456',
           mimeType: 'image/jpeg',
