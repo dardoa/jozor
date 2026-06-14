@@ -922,7 +922,7 @@ async function finalizeQuota(
   return fallbackUsageStats;
 }
 
-async function handleHandlerError(
+export async function handleHandlerError(
   error: unknown,
   reservationId: string | null,
   supabaseAdmin: SupabaseClient | null
@@ -973,7 +973,7 @@ async function handleHandlerError(
   logServerError('API_AI_PROXY', error);
   return Response.json({
     error: {
-      message: error instanceof Error ? error.message : 'Internal Server Error',
+      message: 'AI request failed due to an internal server error.',
       code: 'INTERNAL_SERVER_ERROR',
     },
   }, { status: 500, headers: CORS_HEADERS });
@@ -983,7 +983,7 @@ export default async function handler(req: Request) {
   if (!ALLOWED_ORIGIN) {
     return Response.json({
       error: {
-        message: 'Server configuration error: APP_ORIGIN is not configured in production.',
+        message: 'Server configuration error.',
         code: 'SERVER_CONFIGURATION_ERROR',
       },
     }, { status: 500 });

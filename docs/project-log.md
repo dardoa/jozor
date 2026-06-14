@@ -650,3 +650,4 @@
 - Replaced family-tree UUIDs with request-local `P1`, `P2`, and related anonymized tokens before story generation.
 - Added language, member-count, relation-token, image MIME, and operation-shape validation.
 - Added tests proving legacy arbitrary prompts and real identifiers are rejected at the proxy boundary.
+- Replaced provider and server exception messages in `500` responses with a stable public error while preserving detailed server-side logging.

@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import rootHandler, { config as rootConfig } from '../../../api/ai-proxy';
 import srcHandler, {
   config as srcConfig,
+  handleHandlerError,
   resolveAllowedOrigin,
   validateAIProxyRequest,
   validateKindiPlanRequestData,
@@ -235,6 +236,24 @@ describe('root AI proxy API function', () => {
           newMessage: '',
         },
       })).toThrow('newMessage cannot be empty');
+    });
+  });
+
+  describe('AI proxy error boundary', () => {
+    it('does not expose provider or server error details to the client', async () => {
+      const response = await handleHandlerError(
+        new Error('GEMINI_API_KEY secret and private provider response'),
+        null,
+        null,
+      );
+
+      expect(response.status).toBe(500);
+      expect(await response.json()).toEqual({
+        error: {
+          message: 'AI request failed due to an internal server error.',
+          code: 'INTERNAL_SERVER_ERROR',
+        },
+      });
     });
   });
 });
