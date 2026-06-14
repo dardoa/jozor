@@ -1,5 +1,46 @@
 # Project Log
 
+## 2026-06-13 - Kindi AI Boundary Hardening, Batch 1
+
+- Summary:
+  - Validated `kindi_plan` request shape and normalized redacted text before
+    billing quota reservation or provider invocation.
+  - Added a 2,000-character request limit and rejected UUID-like internal IDs.
+  - Hardened provider-output sanitation with field size limits and UUID rejection.
+  - Rejected invented `[NAME_n]` tokens that were absent from the redacted request.
+  - Prevented non-executable classifications from retaining executable drafts.
+  - Kept all AI output behind the existing local planning and confirmation flow.
+- Verification:
+  - AI proxy and sanitizer tests: pass
+  - Kindi planning, privacy, and billing-flow tests: pass
+  - `npm run lint`: pass
+  - `npm run typecheck`: pass
+  - `npm run typecheck:api`: pass
+  - `npm run build`: pass
+- Safety:
+  - No automatic rule injection or direct AI execution was introduced.
+
+## 2026-06-13 - React Stabilization Closure and Current Baseline
+
+- Summary:
+  - Completed the React Hooks and ESLint stabilization track with zero warnings.
+  - Made `npm run lint` reject any future warning through `--max-warnings 0`.
+  - Re-audited older roadmap assumptions against the current source tree.
+  - Confirmed that the Kindi planner decomposition, ChartType pruning, rendering
+    guardrails, and pending-operation projection/replay tracks are already complete.
+  - Added `docs/current-execution-baseline-2026-06-13.md` as the current source of
+    truth for the next implementation track.
+- Verification:
+  - `npm run lint`: pass
+  - `npm run typecheck`: pass
+  - `npm run typecheck:api`: pass
+  - `npm run build`: pass
+  - Unit shard 1: 370 passed, 8 skipped
+  - Unit shard 2: 404 passed
+- Next recommended track:
+  - AI request/output boundary validation and adversarial tests.
+  - No automatic cloud rule injection.
+
 ## 2026-06-07 - TypeScript Hygiene: Discussions Feature Boundary
 
 - Summary:

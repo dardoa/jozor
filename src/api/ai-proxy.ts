@@ -36,6 +36,8 @@ if (ALLOWED_ORIGIN) {
   CORS_HEADERS['Access-Control-Allow-Origin'] = ALLOWED_ORIGIN;
 }
 const MAX_PROMPT_LENGTH = 30_000;
+const MAX_KINDI_REDACTED_TEXT_LENGTH = 2_000;
+const UUID_PATTERN = /\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b/i;
 let supabaseAdminClient: SupabaseClient | null = null;
 
 type BillingTier = 'free' | 'pro' | 'family';
@@ -54,6 +56,56 @@ export class AIProxyRateLimitExceededError extends Error {
     super('AI proxy rate limit exceeded.');
     this.name = 'AIProxyRateLimitExceededError';
   }
+}
+
+export class AIProxyValidationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'AIProxyValidationError';
+  }
+}
+
+const asRequestRecord = (value: unknown): Record<string, unknown> | null =>
+  value && typeof value === 'object' && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : null;
+
+export function validateKindiPlanRequestData(value: unknown): KindiPlanAIRequestData {
+  const data = asRequestRecord(value);
+  if (!data || typeof data.redactedText !== 'string') {
+    throw new AIProxyValidationError('Kindi planning requires redactedText.');
+  }
+
+  const redactedText = data.redactedText.replace(/\s+/g, ' ').trim();
+  if (!redactedText) {
+    throw new AIProxyValidationError('Kindi planning text cannot be empty.');
+  }
+  if (redactedText.length > MAX_KINDI_REDACTED_TEXT_LENGTH) {
+    throw new AIProxyValidationError(
+      `Kindi planning text exceeds ${MAX_KINDI_REDACTED_TEXT_LENGTH} characters.`
+    );
+  }
+  if (UUID_PATTERN.test(redactedText)) {
+    throw new AIProxyValidationError('Kindi planning text must not contain internal identifiers.');
+  }
+
+  return { redactedText };
+}
+
+export function validateAIProxyRequest(value: unknown): AIProxyRequest {
+  const body = asRequestRecord(value);
+  if (!body || typeof body.operation !== 'string') {
+    throw new AIProxyValidationError('Invalid AI request.');
+  }
+
+  if (body.operation === 'kindi_plan') {
+    return {
+      operation: 'kindi_plan',
+      data: validateKindiPlanRequestData(body.data),
+    };
+  }
+
+  return value as AIProxyRequest;
 }
 
 function logServerError(context: string, error: unknown) {
@@ -635,6 +687,15 @@ async function handleHandlerError(
     });
   }
 
+  if (error instanceof AIProxyValidationError) {
+    return Response.json({
+      error: {
+        message: error.message,
+        code: 'INVALID_REQUEST',
+      },
+    }, { status: 400, headers: CORS_HEADERS });
+  }
+
   logServerError('API_AI_PROXY', error);
   return Response.json({
     error: {
@@ -665,7 +726,7 @@ export default async function handler(req: Request) {
   let supabaseAdmin: SupabaseClient | null = null;
 
   try {
-    const body = (await req.json()) as AIProxyRequest;
+    const body = validateAIProxyRequest(await req.json());
     const { prompt, image, preferredModels } = getOperationPrompt(body);
     supabaseAdmin = getSupabaseAdminClient();
 

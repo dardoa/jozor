@@ -1,7 +1,12 @@
 import { afterEach, describe, expect, it } from 'vitest';
 
 import rootHandler, { config as rootConfig } from '../../../api/ai-proxy';
-import srcHandler, { config as srcConfig, resolveAllowedOrigin } from '../ai-proxy';
+import srcHandler, {
+  config as srcConfig,
+  resolveAllowedOrigin,
+  validateAIProxyRequest,
+  validateKindiPlanRequestData,
+} from '../ai-proxy';
 
 describe('root AI proxy API function', () => {
   it('exports the shared Edge handler and runtime config for Vercel', () => {
@@ -61,6 +66,35 @@ describe('root AI proxy API function', () => {
       delete process.env.VITE_APP_ORIGIN;
 
       expect(resolveAllowedOrigin()).toBeNull();
+    });
+  });
+
+  describe('Kindi request validation', () => {
+    it('normalizes valid redacted text', () => {
+      expect(validateKindiPlanRequestData({
+        redactedText: '  add   son for [NAME_1]  ',
+      })).toEqual({
+        redactedText: 'add son for [NAME_1]',
+      });
+    });
+
+    it('rejects empty, oversized, and identifier-bearing requests', () => {
+      expect(() => validateKindiPlanRequestData({ redactedText: '   ' })).toThrow(
+        'cannot be empty'
+      );
+      expect(() => validateKindiPlanRequestData({ redactedText: 'x'.repeat(2_001) })).toThrow(
+        'exceeds 2000'
+      );
+      expect(() => validateKindiPlanRequestData({
+        redactedText: 'delete 64392415-5ef0-46f3-b869-8adddb4fa9e3',
+      })).toThrow('must not contain internal identifiers');
+    });
+
+    it('rejects malformed Kindi request data before provider processing', () => {
+      expect(() => validateAIProxyRequest({
+        operation: 'kindi_plan',
+        data: {},
+      })).toThrow('requires redactedText');
     });
   });
 });
