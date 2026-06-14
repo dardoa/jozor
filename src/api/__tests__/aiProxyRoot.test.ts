@@ -97,4 +97,71 @@ describe('root AI proxy API function', () => {
       })).toThrow('requires redactedText');
     });
   });
+
+  describe('AI request boundary validation', () => {
+    it('rejects unsupported operations and malformed direct prompts', () => {
+      expect(() => validateAIProxyRequest({
+        operation: 'unknown_operation',
+      })).toThrow('Unsupported AI operation');
+
+      expect(() => validateAIProxyRequest({
+        operation: 'family_story',
+        prompt: '   ',
+      })).toThrow('prompt cannot be empty');
+    });
+
+    it('validates biography counts and required data shape', () => {
+      expect(() => validateAIProxyRequest({
+        operation: 'biography',
+        data: {
+          fullName: 'Test User',
+          parentsCount: -1,
+          spousesCount: 0,
+          childrenCount: 0,
+          relatives: '',
+          toneInstruction: '',
+          preferredLanguage: 'en',
+        },
+      })).toThrow('parentsCount must be a non-negative integer');
+    });
+
+    it('accepts supported image payloads and rejects invalid image data', () => {
+      expect(validateAIProxyRequest({
+        operation: 'analyze_image',
+        prompt: 'Describe this family photo.',
+        image: {
+          data: 'YWJjZA==',
+          mimeType: 'image/png',
+        },
+      })).toEqual({
+        operation: 'analyze_image',
+        prompt: 'Describe this family photo.',
+        image: {
+          data: 'YWJjZA==',
+          mimeType: 'image/png',
+        },
+      });
+
+      expect(() => validateAIProxyRequest({
+        operation: 'analyze_image',
+        prompt: 'Describe this file.',
+        image: {
+          data: '<svg></svg>',
+          mimeType: 'image/svg+xml',
+        },
+      })).toThrow('Unsupported image MIME type');
+    });
+
+    it('bounds ancestor conversation history and requires a current message', () => {
+      expect(() => validateAIProxyRequest({
+        operation: 'ancestor_chat',
+        data: {
+          fullName: 'Ancestor',
+          preferredLanguage: 'en',
+          historyText: '',
+          newMessage: '',
+        },
+      })).toThrow('newMessage cannot be empty');
+    });
+  });
 });

@@ -37,6 +37,11 @@ if (ALLOWED_ORIGIN) {
 }
 const MAX_PROMPT_LENGTH = 30_000;
 const MAX_KINDI_REDACTED_TEXT_LENGTH = 2_000;
+const MAX_SHORT_TEXT_LENGTH = 500;
+const MAX_MEDIUM_TEXT_LENGTH = 5_000;
+const MAX_HISTORY_TEXT_LENGTH = 20_000;
+const MAX_IMAGE_BASE64_LENGTH = 6_000_000;
+const ALLOWED_IMAGE_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const UUID_PATTERN = /\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b/i;
 let supabaseAdminClient: SupabaseClient | null = null;
 
@@ -70,6 +75,100 @@ const asRequestRecord = (value: unknown): Record<string, unknown> | null =>
     ? value as Record<string, unknown>
     : null;
 
+const requireString = (
+  value: unknown,
+  fieldName: string,
+  maxLength: number,
+  allowEmpty = false,
+): string => {
+  if (typeof value !== 'string') {
+    throw new AIProxyValidationError(`${fieldName} must be a string.`);
+  }
+
+  const normalized = value.trim();
+  if (!allowEmpty && !normalized) {
+    throw new AIProxyValidationError(`${fieldName} cannot be empty.`);
+  }
+  if (normalized.length > maxLength) {
+    throw new AIProxyValidationError(`${fieldName} exceeds ${maxLength} characters.`);
+  }
+  return normalized;
+};
+
+const optionalString = (
+  value: unknown,
+  fieldName: string,
+  maxLength: number,
+): string | undefined => {
+  if (value === undefined || value === null || value === '') return undefined;
+  return requireString(value, fieldName, maxLength);
+};
+
+const requireCount = (value: unknown, fieldName: string): number => {
+  if (!Number.isInteger(value) || (value as number) < 0 || (value as number) > 100_000) {
+    throw new AIProxyValidationError(`${fieldName} must be a non-negative integer.`);
+  }
+  return value as number;
+};
+
+const validateBiographyRequestData = (value: unknown): BiographyAIRequestData => {
+  const data = asRequestRecord(value);
+  if (!data) throw new AIProxyValidationError('Biography data is required.');
+
+  return {
+    fullName: requireString(data.fullName, 'fullName', MAX_SHORT_TEXT_LENGTH, true),
+    gender: optionalString(data.gender, 'gender', 50),
+    birthDate: optionalString(data.birthDate, 'birthDate', 100),
+    birthPlace: optionalString(data.birthPlace, 'birthPlace', MAX_SHORT_TEXT_LENGTH),
+    deathDate: optionalString(data.deathDate, 'deathDate', 100),
+    deathPlace: optionalString(data.deathPlace, 'deathPlace', MAX_SHORT_TEXT_LENGTH),
+    parentsCount: requireCount(data.parentsCount, 'parentsCount'),
+    spousesCount: requireCount(data.spousesCount, 'spousesCount'),
+    childrenCount: requireCount(data.childrenCount, 'childrenCount'),
+    relatives: requireString(data.relatives, 'relatives', MAX_MEDIUM_TEXT_LENGTH, true),
+    toneInstruction: requireString(
+      data.toneInstruction,
+      'toneInstruction',
+      MAX_SHORT_TEXT_LENGTH,
+      true,
+    ),
+    preferredLanguage: requireString(data.preferredLanguage, 'preferredLanguage', 20),
+  };
+};
+
+const validateAncestorChatRequestData = (value: unknown): AncestorChatAIRequestData => {
+  const data = asRequestRecord(value);
+  if (!data) throw new AIProxyValidationError('Ancestor chat data is required.');
+
+  return {
+    fullName: requireString(data.fullName, 'fullName', MAX_SHORT_TEXT_LENGTH, true),
+    birthPlace: optionalString(data.birthPlace, 'birthPlace', MAX_SHORT_TEXT_LENGTH),
+    birthDate: optionalString(data.birthDate, 'birthDate', 100),
+    deathPlace: optionalString(data.deathPlace, 'deathPlace', MAX_SHORT_TEXT_LENGTH),
+    deathDate: optionalString(data.deathDate, 'deathDate', 100),
+    preferredLanguage: requireString(data.preferredLanguage, 'preferredLanguage', 20),
+    historyText: requireString(data.historyText, 'historyText', MAX_HISTORY_TEXT_LENGTH, true),
+    newMessage: requireString(data.newMessage, 'newMessage', MAX_MEDIUM_TEXT_LENGTH),
+  };
+};
+
+const validateImagePayload = (value: unknown): AIProxyImagePayload => {
+  const image = asRequestRecord(value);
+  if (!image) throw new AIProxyValidationError('Image payload is required.');
+
+  const mimeType = requireString(image.mimeType, 'image.mimeType', 100).toLowerCase();
+  if (!ALLOWED_IMAGE_MIME_TYPES.has(mimeType)) {
+    throw new AIProxyValidationError('Unsupported image MIME type.');
+  }
+
+  const data = requireString(image.data, 'image.data', MAX_IMAGE_BASE64_LENGTH);
+  if (!/^[A-Za-z0-9+/]+={0,2}$/.test(data)) {
+    throw new AIProxyValidationError('Image data must be valid base64.');
+  }
+
+  return { data, mimeType };
+};
+
 export function validateKindiPlanRequestData(value: unknown): KindiPlanAIRequestData {
   const data = asRequestRecord(value);
   if (!data || typeof data.redactedText !== 'string') {
@@ -98,14 +197,31 @@ export function validateAIProxyRequest(value: unknown): AIProxyRequest {
     throw new AIProxyValidationError('Invalid AI request.');
   }
 
-  if (body.operation === 'kindi_plan') {
-    return {
-      operation: 'kindi_plan',
-      data: validateKindiPlanRequestData(body.data),
-    };
+  switch (body.operation) {
+    case 'biography':
+      return { operation: 'biography', data: validateBiographyRequestData(body.data) };
+    case 'ancestor_chat':
+      return { operation: 'ancestor_chat', data: validateAncestorChatRequestData(body.data) };
+    case 'extract_person_data':
+    case 'family_story':
+      return {
+        operation: body.operation,
+        prompt: requireString(body.prompt, 'prompt', MAX_PROMPT_LENGTH),
+      };
+    case 'analyze_image':
+      return {
+        operation: 'analyze_image',
+        prompt: requireString(body.prompt, 'prompt', MAX_PROMPT_LENGTH),
+        image: validateImagePayload(body.image),
+      };
+    case 'kindi_plan':
+      return {
+        operation: 'kindi_plan',
+        data: validateKindiPlanRequestData(body.data),
+      };
+    default:
+      throw new AIProxyValidationError('Unsupported AI operation.');
   }
-
-  return value as AIProxyRequest;
 }
 
 function logServerError(context: string, error: unknown) {
@@ -691,6 +807,15 @@ async function handleHandlerError(
     return Response.json({
       error: {
         message: error.message,
+        code: 'INVALID_REQUEST',
+      },
+    }, { status: 400, headers: CORS_HEADERS });
+  }
+
+  if (error instanceof SyntaxError) {
+    return Response.json({
+      error: {
+        message: 'Request body must contain valid JSON.',
         code: 'INVALID_REQUEST',
       },
     }, { status: 400, headers: CORS_HEADERS });

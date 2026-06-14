@@ -1,5 +1,23 @@
 # Project Log
 
+## 2026-06-14 - AI Proxy Request Validation, Batch 2
+
+- Summary:
+  - Replaced the remaining unchecked AI request cast with operation-specific
+    runtime validation.
+  - Added field and prompt size limits for biography, ancestor chat, story,
+    extraction, image analysis, and Kindi planning requests.
+  - Validated count fields and rejected unsupported operations before billing
+    quota reservation.
+  - Restricted image analysis to JPEG, PNG, and WebP base64 payloads with a
+    bounded encoded size.
+- Verification:
+  - AI proxy boundary tests cover unsupported operations, malformed prompts,
+    invalid counts, invalid image payloads, and empty chat messages.
+- Safety:
+  - No provider, billing, quota, or user-facing behavior changed for valid
+    requests.
+
 ## 2026-06-13 - Kindi AI Boundary Hardening, Batch 1
 
 - Summary:
