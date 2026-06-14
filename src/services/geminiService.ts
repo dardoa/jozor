@@ -19,16 +19,83 @@ const cleanJsonCodeBlock = (raw: string): string => {
   return cleaned.trim();
 };
 
+const MAX_AI_RESULT_LENGTH = 50_000;
+const EXTRACTED_FIELD_LIMITS = {
+  short: 120,
+  date: 32,
+  place: 300,
+  profession: 300,
+  bio: 4_000,
+} as const;
+
 const readProxyResult = (data: AIProxyResponse, fallbackMessage: string): string => {
-  const result = data.result || '';
+  const result = typeof data.result === 'string' ? data.result.trim() : '';
   if (!result) {
     throw new Error(fallbackMessage);
+  }
+  if (result.length > MAX_AI_RESULT_LENGTH) {
+    throw new Error('AI proxy returned a response that exceeds the allowed size.');
   }
   return result;
 };
 
 const getProxyErrorMessage = (error: unknown, fallbackMessage: string): string =>
   error instanceof Error && error.message ? error.message : fallbackMessage;
+
+const readLimitedString = (
+  record: Record<string, unknown>,
+  key: string,
+  maxLength: number
+): string | undefined => {
+  const value = record[key];
+  if (value === null || value === undefined || value === '') {
+    return undefined;
+  }
+  if (typeof value !== 'string') {
+    return undefined;
+  }
+
+  const normalized = value.trim();
+  return normalized ? normalized.slice(0, maxLength) : undefined;
+};
+
+export const sanitizeExtractedPersonData = (value: unknown): Partial<Person> => {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    throw new Error('AI extraction result must be a JSON object.');
+  }
+
+  const record = value as Record<string, unknown>;
+  const result: Partial<Person> = {};
+  const stringFields = [
+    ['firstName', EXTRACTED_FIELD_LIMITS.short],
+    ['middleName', EXTRACTED_FIELD_LIMITS.short],
+    ['lastName', EXTRACTED_FIELD_LIMITS.short],
+    ['nickName', EXTRACTED_FIELD_LIMITS.short],
+    ['title', EXTRACTED_FIELD_LIMITS.short],
+    ['birthDate', EXTRACTED_FIELD_LIMITS.date],
+    ['birthPlace', EXTRACTED_FIELD_LIMITS.place],
+    ['deathDate', EXTRACTED_FIELD_LIMITS.date],
+    ['deathPlace', EXTRACTED_FIELD_LIMITS.place],
+    ['profession', EXTRACTED_FIELD_LIMITS.profession],
+    ['bio', EXTRACTED_FIELD_LIMITS.bio],
+  ] as const;
+
+  for (const [key, maxLength] of stringFields) {
+    const fieldValue = readLimitedString(record, key, maxLength);
+    if (fieldValue !== undefined) {
+      result[key] = fieldValue;
+    }
+  }
+
+  if (record.gender === 'male' || record.gender === 'female') {
+    result.gender = record.gender;
+  }
+  if (typeof record.isDeceased === 'boolean') {
+    result.isDeceased = record.isDeceased;
+  }
+
+  return result;
+};
 
 export const generateBiography = async (
   person: Person,
@@ -166,22 +233,7 @@ TEXT:
       throw parseError;
     }
 
-    const p = parsed as Partial<Person>;
-    return {
-      firstName: p.firstName ?? '',
-      middleName: p.middleName ?? '',
-      lastName: p.lastName ?? '',
-      nickName: p.nickName ?? '',
-      title: p.title ?? '',
-      gender: p.gender as Person['gender'] | undefined,
-      birthDate: p.birthDate ?? '',
-      birthPlace: p.birthPlace ?? '',
-      isDeceased: p.isDeceased ?? false,
-      deathDate: p.deathDate ?? '',
-      deathPlace: p.deathPlace ?? '',
-      profession: p.profession ?? '',
-      bio: p.bio ?? '',
-    };
+    return sanitizeExtractedPersonData(parsed);
   } catch (error) {
     const message = getProxyErrorMessage(error, 'Failed to extract data. Ensure AI proxy is configured.');
     logError('AI_EXTRACTION_ERROR', error, {

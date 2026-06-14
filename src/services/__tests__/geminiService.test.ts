@@ -5,6 +5,7 @@ import {
   extractPersonData,
   generateFamilyStory,
   analyzeImage,
+  sanitizeExtractedPersonData,
 } from '../geminiService';
 import { callAIProxy } from '../aiProxyClient';
 import { showToast } from '../../utils/showToast';
@@ -135,6 +136,38 @@ describe('geminiService', () => {
       await expect(extractPersonData('Invalid text')).rejects.toThrow();
       expect(showToast.error).toHaveBeenCalledWith('Failed to parse extracted data from AI.');
       expect(logError).toHaveBeenCalled();
+    });
+
+    it('keeps only supported fields with valid runtime types', () => {
+      expect(sanitizeExtractedPersonData({
+        firstName: '  Ahmad  ',
+        gender: 'unknown',
+        isDeceased: 'yes',
+        parents: ['person-2'],
+        id: 'provider-controlled-id',
+        profession: 'Doctor',
+      })).toEqual({
+        firstName: 'Ahmad',
+        profession: 'Doctor',
+      });
+    });
+
+    it('limits extracted field lengths and preserves explicit false booleans', () => {
+      const extracted = sanitizeExtractedPersonData({
+        firstName: 'A'.repeat(200),
+        bio: 'B'.repeat(5_000),
+        isDeceased: false,
+      });
+
+      expect(extracted.firstName).toHaveLength(120);
+      expect(extracted.bio).toHaveLength(4_000);
+      expect(extracted.isDeceased).toBe(false);
+    });
+
+    it('rejects non-object extraction results', () => {
+      expect(() => sanitizeExtractedPersonData(['not', 'a', 'person'])).toThrow(
+        'AI extraction result must be a JSON object.'
+      );
     });
   });
 

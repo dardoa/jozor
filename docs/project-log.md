@@ -635,3 +635,10 @@
   - `npm run build`
 - Deferred:
   - Smart Persona gallery item shape casts remain a separate data-model cleanup task.
+# 2026-06-14 - AI extraction output boundary hardening
+
+- Added runtime sanitization for AI-extracted person profile data before Smart Fill updates application state.
+- Restricted extraction output to the supported profile fields and accepted only valid string, gender, and boolean values.
+- Added bounded lengths for names, dates, places, professions, and biographies.
+- Rejected non-object extraction results and oversized AI proxy text responses.
+- Added focused tests for unknown-field removal, invalid-type rejection, length limits, and explicit boolean values.
