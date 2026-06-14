@@ -96,4 +96,21 @@ describe('create checkout session API', () => {
 
     fetchMock.mockRestore();
   });
+
+  it('normalizes a polluted configured origin in CORS responses', async () => {
+    process.env.APP_ORIGIN = '%C3%AF%C2%BB%C2%BFhttps://jozor.vercel.app';
+    delete process.env.VITE_APP_ORIGIN;
+    const req = {
+      method: 'OPTIONS',
+      headers: {
+        origin: 'https://jozor.vercel.app',
+      },
+    };
+    const res = createResponse();
+
+    await handler(req as never, res as never);
+
+    expect(res.statusCode).toBe(204);
+    expect(res.headers['Access-Control-Allow-Origin']).toBe('https://jozor.vercel.app');
+  });
 });

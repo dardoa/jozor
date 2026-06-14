@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 import { verifyInternalToken } from '../../shared/auth/internalJwt';
+import { normalizeHttpOrigin } from '../../shared/http/origin';
 import { MAX_JSON_BODY_SIZE, PayloadTooLargeError } from '../shared/server/bodyLimits';
 
 export const config = {
@@ -72,7 +73,8 @@ async function authenticateUser(authHeader?: string): Promise<AuthenticatedUser 
 
 const resolveAllowedOrigin = (): string | null => {
   const candidate = getEnv('VITE_APP_ORIGIN') || getEnv('APP_ORIGIN');
-  if (candidate) return candidate;
+  const normalizedCandidate = normalizeHttpOrigin(candidate);
+  if (normalizedCandidate) return normalizedCandidate;
 
   const isProd =
     process.env.NODE_ENV === 'production' ||

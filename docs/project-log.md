@@ -651,3 +651,10 @@
 - Added language, member-count, relation-token, image MIME, and operation-shape validation.
 - Added tests proving legacy arbitrary prompts and real identifiers are rejected at the proxy boundary.
 - Replaced provider and server exception messages in `500` responses with a stable public error while preserving detailed server-side logging.
+
+# 2026-06-14 - Production CORS origin normalization
+
+- Detected an encoded mojibake BOM prefix in the production `APP_ORIGIN` response header during deployment verification.
+- Added a shared HTTP origin normalizer that removes BOM variants, validates HTTP(S), strips paths, and rejects credential-bearing URLs.
+- Applied the normalizer to both AI Proxy and Paddle checkout CORS configuration.
+- Added shared unit tests and endpoint-level regression coverage for polluted Vercel environment values.

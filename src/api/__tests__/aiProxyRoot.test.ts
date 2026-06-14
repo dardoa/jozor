@@ -43,6 +43,13 @@ describe('root AI proxy API function', () => {
       expect(resolveAllowedOrigin()).toBe('https://myfamilytree.com');
     });
 
+    it('removes a polluted BOM prefix from the configured origin', () => {
+      process.env.NODE_ENV = 'production';
+      process.env.APP_ORIGIN = '%C3%AF%C2%BB%C2%BFhttps://jozor.vercel.app';
+
+      expect(resolveAllowedOrigin()).toBe('https://jozor.vercel.app');
+    });
+
     it('resolves configured VITE_APP_ORIGIN if APP_ORIGIN is not set', () => {
       process.env.NODE_ENV = 'production';
       delete process.env.APP_ORIGIN;

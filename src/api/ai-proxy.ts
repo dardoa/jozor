@@ -1,5 +1,6 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { authenticateUser } from '../utils/authUtils';
+import { normalizeHttpOrigin } from '../../shared/http/origin';
 import type {
   AIProxyImagePayload,
   AIProxyRequest,
@@ -16,8 +17,9 @@ export const config = { runtime: 'edge' };
 
 export const resolveAllowedOrigin = (): string | null => {
   const candidate = process.env.APP_ORIGIN ?? process.env.VITE_APP_ORIGIN;
-  if (typeof candidate === 'string' && candidate.trim()) {
-    return candidate;
+  const normalizedCandidate = normalizeHttpOrigin(candidate);
+  if (normalizedCandidate) {
+    return normalizedCandidate;
   }
 
   const isProd =
