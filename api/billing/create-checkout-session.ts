@@ -1,7 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 import { verifyInternalToken } from '../../shared/auth/internalJwt';
-import { normalizeHttpOrigin } from '../../shared/http/origin';
 import { MAX_JSON_BODY_SIZE, PayloadTooLargeError } from '../shared/server/bodyLimits';
 
 export const config = {
@@ -42,6 +41,27 @@ function getEnv(name: string): string | undefined {
   return trimmed ? trimmed : undefined;
 }
 
+function normalizeCheckoutOrigin(value: string | undefined): string | null {
+  if (!value) return null;
+
+  const protocolMatch = /https?:\/\//i.exec(value);
+  if (!protocolMatch || protocolMatch.index === undefined) return null;
+
+  try {
+    const url = new URL(value.slice(protocolMatch.index).trim());
+    if (
+      (url.protocol !== 'https:' && url.protocol !== 'http:')
+      || url.username
+      || url.password
+    ) {
+      return null;
+    }
+    return url.origin;
+  } catch {
+    return null;
+  }
+}
+
 async function authenticateUser(authHeader?: string): Promise<AuthenticatedUser | null> {
   if (!authHeader?.startsWith('Bearer ')) return null;
 
@@ -73,7 +93,7 @@ async function authenticateUser(authHeader?: string): Promise<AuthenticatedUser 
 
 const resolveAllowedOrigin = (): string | null => {
   const candidate = getEnv('VITE_APP_ORIGIN') || getEnv('APP_ORIGIN');
-  const normalizedCandidate = normalizeHttpOrigin(candidate);
+  const normalizedCandidate = normalizeCheckoutOrigin(candidate);
   if (normalizedCandidate) return normalizedCandidate;
 
   const isProd =

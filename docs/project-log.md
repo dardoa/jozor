@@ -658,3 +658,4 @@
 - Added a shared HTTP origin normalizer that removes BOM variants, validates HTTP(S), strips paths, and rejects credential-bearing URLs.
 - Applied the normalizer to both AI Proxy and Paddle checkout CORS configuration.
 - Added shared unit tests and endpoint-level regression coverage for polluted Vercel environment values.
+- Kept checkout origin normalization local to the Node function after production verification exposed a Vercel invocation failure from the new shared import boundary.
