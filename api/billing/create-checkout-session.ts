@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
-import { verifyInternalToken } from '../../shared/auth/internalJwt';
-import { MAX_JSON_BODY_SIZE, PayloadTooLargeError } from '../shared/server/bodyLimits';
+import { verifyInternalToken } from '../../shared/auth/internalJwt.js';
+import { MAX_JSON_BODY_SIZE, PayloadTooLargeError } from '../shared/server/bodyLimits.js';
 
 export const config = {
   api: {

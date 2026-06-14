@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { Paddle } from '@paddle/paddle-node-sdk';
-import { MAX_JSON_BODY_SIZE, PayloadTooLargeError } from '../shared/server/bodyLimits';
+import { MAX_JSON_BODY_SIZE, PayloadTooLargeError } from '../shared/server/bodyLimits.js';
 
 export const config = {
   api: {

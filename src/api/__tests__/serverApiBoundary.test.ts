@@ -44,6 +44,32 @@ function resolveLocalImport(filePath: string, importSource: string): string | nu
 }
 
 describe('Vercel server API boundaries', () => {
+  it('uses explicit .js extensions for shared modules imported by root API handlers', async () => {
+    const violations: string[] = [];
+    const apiFiles = await listApiFiles(apiRoot);
+    const sharedRoot = path.resolve(process.cwd(), 'shared');
+
+    for (const filePath of apiFiles) {
+      const source = await readFile(filePath, 'utf8');
+
+      for (const importSource of extractImportSources(source)) {
+        const resolved = resolveLocalImport(filePath, importSource);
+        if (!resolved) continue;
+
+        const resolvedWithoutExtension = resolved.replace(/\.[cm]?[jt]s$/, '');
+        const isSharedImport = resolvedWithoutExtension.startsWith(sharedRoot)
+          || resolvedWithoutExtension.includes(`${path.sep}api${path.sep}shared${path.sep}`);
+
+        if (isSharedImport && !importSource.endsWith('.js')) {
+          const relativeFilePath = path.relative(process.cwd(), filePath).split(path.sep).join('/');
+          violations.push(`${relativeFilePath} -> ${importSource}`);
+        }
+      }
+    }
+
+    expect(violations).toEqual([]);
+  });
+
   it('keeps root API functions server-only and self-contained', async () => {
     const violations: string[] = [];
     const apiFiles = await listApiFiles(apiRoot);

@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import webpush from 'web-push';
-import { verifyInternalToken } from '../shared/auth/internalJwt';
+import { verifyInternalToken } from '../shared/auth/internalJwt.js';
 
 type PushSubscriptionRecord = {
   id: string;

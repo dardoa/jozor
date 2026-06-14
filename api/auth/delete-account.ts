@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import { createLimit } from '../../shared/concurrency';
-import { verifyInternalToken } from '../../shared/auth/internalJwt';
+import { createLimit } from '../../shared/concurrency.js';
+import { verifyInternalToken } from '../../shared/auth/internalJwt.js';
 
 function getEnv(name: string): string | undefined {
   const value = process.env[name];
