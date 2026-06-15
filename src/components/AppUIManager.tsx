@@ -1,22 +1,15 @@
 import * as React from 'react';
 
 import {
-  Routes,
-  Route,
-  Navigate,
   useMatch,
   useNavigate,
-  useParams,
   useLocation,
 } from 'react-router-dom';
 
 import { Person } from '../types';
-import type { AuthProps } from '../types';
 import { isUuid } from '../utils/isUuid';
 
 import { EMPTY_STRING } from '../constants';
-
-import { SharedTreeLoader } from '../features/tree-manager';
 
 import { LandingPage } from '../features/landing';
 
@@ -28,12 +21,12 @@ import { useAppStore, loadFullState } from '../store/useAppStore';
 
 import { ModalManagerContainer } from './ModalManagerContainer';
 import { BootstrapStatusScreen } from './app/BootstrapStatusScreen';
-import { MinimalLogin } from './app/MinimalLogin';
 import {
   getRouteReturnTo,
   hasOAuthCallbackParams,
   resolveAppSurface,
 } from './app/appSurfaceDecision';
+import { AppRoutes } from './app/AppRoutes';
 
 import { useAppOrchestration } from '../hooks/ui/useAppOrchestration';
 import { useJozorDebugApi } from '../hooks/utils/useJozorDebugApi';
@@ -41,18 +34,10 @@ import { useJozorDebugApi } from '../hooks/utils/useJozorDebugApi';
 import { NotFound } from './NotFound';
 
 import { useTranslation } from '../context/TranslationContext';
-import { InvitePage } from './InvitePage';
-import { ProtectedRoute } from './ProtectedRoute';
 import { MobileActionBar } from './ui/MobileActionBar';
 
-const HelpCenter = React.lazy(() =>
-  import('./HelpCenter').then((m) => ({ default: m.HelpCenter }))
-);
 const TheVaultDrawer = React.lazy(() =>
   import('../features/the-vault').then((m) => ({ default: m.TheVaultDrawer }))
-);
-const AdminDashboard = React.lazy(() =>
-  import('../features/admin/AdminDashboard').then((m) => ({ default: m.AdminDashboard }))
 );
 const DiagnosticsDrawer = React.lazy(() =>
   import('../features/diagnostics').then((m) => ({ default: m.DiagnosticsDrawer }))
@@ -237,6 +222,7 @@ export const AppUIManager: React.FC = () => {
       />
     );
   };
+  const mainSurface = renderMainLayout();
 
   return (
     <>
@@ -271,34 +257,11 @@ export const AppUIManager: React.FC = () => {
           </div>
         }
       >
-        <Routes>
-          <Route path='/help' element={<HelpCenter />} />
-          <Route path='/support' element={<Navigate to='/help' replace />} />
-          <Route path='/admin' element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
-          <Route path='/admin/kindi-learning' element={<Navigate to='/admin?tab=kindi' replace />} />
-          <Route path='/admin/tree-defaults' element={<Navigate to='/admin?tab=tree-defaults' replace />} />
-          <Route path='/admin/diagnostics' element={<Navigate to='/admin?tab=diagnostics' replace />} />
-          <Route path='/admin/billing-diagnostics' element={<Navigate to='/admin?tab=billing' replace />} />
-          <Route path='/shared/:shareToken' element={<InvitePage />} />
-
-          <Route
-            path='/tree/db/:ownerUid/:fileId'
-            element={
-              <SharedTreeRouteWrapper
-                auth={auth}
-                isDbTree={true}
-                onLoadComplete={handleSharedTreeLoaded}
-                onCancel={() => navigate('/', { replace: true })}
-              />
-            }
-          />
-
-          <Route path='/tree/:treeId' element={<ProtectedRoute>{renderMainLayout()}</ProtectedRoute>} />
-          <Route path='/person/:personId' element={<ProtectedRoute>{renderMainLayout()}</ProtectedRoute>} />
-          <Route path="/login" element={<LoginRouteElement auth={auth} />} />
-          <Route path='/' element={renderMainLayout()} />
-          <Route path='*' element={<NotFound />} />
-        </Routes>
+        <AppRoutes
+          auth={auth}
+          mainSurface={mainSurface}
+          onSharedTreeLoaded={handleSharedTreeLoaded}
+        />
       </React.Suspense>
 
       {isVaultOpen ? (
@@ -332,66 +295,5 @@ export const AppUIManager: React.FC = () => {
       />
     </>
   );
-};
-
-interface SharedTreeRouteWrapperProps {
-  auth: AuthProps;
-  onLoadComplete: (
-    data: Record<string, Person>,
-    fileId: string,
-    isDbTree: boolean,
-    role?: 'owner' | 'editor' | 'viewer',
-    treeName?: string
-  ) => void;
-  onCancel: () => void;
-  isDbTree?: boolean;
-}
-
-const SharedTreeRouteWrapper: React.FC<SharedTreeRouteWrapperProps> = ({
-  auth,
-  onLoadComplete,
-  onCancel,
-  isDbTree,
-}) => {
-  const { ownerUid, fileId } = useParams<{ ownerUid: string; fileId: string }>();
-  const location = useLocation();
-  const inviteToken = new URLSearchParams(location.search).get('invite');
-  if (!ownerUid || !fileId) return <Navigate to='/' replace />;
-  if (inviteToken) return <Navigate to={`/shared/${inviteToken}`} replace />;
-
-  return (
-    <SharedTreeLoader
-      ownerUid={ownerUid}
-      fileId={fileId}
-      auth={auth}
-      onLoadComplete={onLoadComplete}
-      onCancel={onCancel}
-      isDbTree={isDbTree}
-    />
-  );
-};
-
-const LoginRouteElement: React.FC<{ auth: AuthProps }> = ({ auth }) => {
-  const { t } = useTranslation();
-  const authLoading = useAppStore((state) => state.authLoading);
-  const storedReturnTo =
-    sessionStorage.getItem('jozor:return_to') ||
-    sessionStorage.getItem('jozor:post-login-redirect') ||
-    '/';
-
-  if (auth.user) {
-    return <Navigate to={storedReturnTo} replace />;
-  }
-
-  if (authLoading) {
-    return (
-      <BootstrapStatusScreen
-        title={t.authBootstrapTitle}
-        description={t.authBootstrapDescription}
-      />
-    );
-  }
-
-  return <MinimalLogin auth={auth} />;
 };
 
