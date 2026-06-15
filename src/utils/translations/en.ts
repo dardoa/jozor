@@ -12,6 +12,7 @@ import { familyTree } from './en/familyTree';
 import { helpEn } from './en/help';
 import { notifications } from './en/notifications';
 import { landingPageEn } from './en/landingPage';
+import { landingPageEnInfo } from './en/infoPages';
 
 export const en = {
   ...general,
@@ -28,6 +29,7 @@ export const en = {
   notifications,
   help: helpEn,
   landingPage: landingPageEn,
+  infoPages: landingPageEnInfo,
 };
 
 export type EnglishTranslation = typeof en;

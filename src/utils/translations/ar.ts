@@ -12,6 +12,7 @@ import { familyTree } from './ar/familyTree';
 import { helpAr } from './ar/help';
 import { notifications } from './ar/notifications';
 import { landingPageAr } from './ar/landingPage';
+import { landingPageArInfo } from './ar/infoPages';
 
 export const ar = {
   ...general,
@@ -28,4 +29,5 @@ export const ar = {
   notifications,
   help: helpAr,
   landingPage: landingPageAr,
+  infoPages: landingPageArInfo,
 };

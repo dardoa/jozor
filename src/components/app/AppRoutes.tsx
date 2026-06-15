@@ -20,6 +20,9 @@ import { MinimalLogin } from './MinimalLogin';
 const HelpCenter = React.lazy(() =>
   import('../HelpCenter').then((module) => ({ default: module.HelpCenter }))
 );
+const InfoContentPage = React.lazy(() =>
+  import('../info/InfoContentPage').then((module) => ({ default: module.InfoContentPage }))
+);
 const AdminDashboard = React.lazy(() =>
   import('../../features/admin/AdminDashboard').then((module) => ({
     default: module.AdminDashboard,
@@ -51,6 +54,11 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
     <Routes>
       <Route path='/help' element={<HelpCenter />} />
       <Route path='/support' element={<Navigate to='/help' replace />} />
+      <Route path='/privacy' element={<InfoContentPage page="privacy" />} />
+      <Route path='/terms' element={<InfoContentPage page="terms" />} />
+      <Route path='/security' element={<InfoContentPage page="security" />} />
+      <Route path='/about' element={<InfoContentPage page="about" />} />
+      <Route path='/contact' element={<InfoContentPage page="contact" />} />
       <Route path='/admin' element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
       <Route path='/admin/kindi-learning' element={<Navigate to='/admin?tab=kindi' replace />} />
       <Route path='/admin/tree-defaults' element={<Navigate to='/admin?tab=tree-defaults' replace />} />

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useTranslation } from '../../../context/TranslationContext';
 import { Logo } from '../../../components/Logo';
 import { Lock } from 'lucide-react';
@@ -29,9 +30,9 @@ export const LandingFooter: React.FC = () => {
           <div className="flex flex-col gap-4">
             <h4 className="font-bold text-[var(--text-main)] text-xl">{t.landingPage.legal}</h4>
             <div className="flex flex-col gap-4 text-[var(--text-main)] opacity-80 font-medium">
-              <a href="#" className="hover:text-[var(--color-primary-600)] transition-colors">{t.landingPage.privacyPolicy}</a>
-              <a href="#" className="hover:text-[var(--color-primary-600)] transition-colors">{t.landingPage.terms}</a>
-              <a href="#" className="hover:text-[var(--color-primary-600)] transition-colors">{t.landingPage.security}</a>
+              <Link to="/privacy" className="hover:text-[var(--color-primary-600)] transition-colors">{t.landingPage.privacyPolicy}</Link>
+              <Link to="/terms" className="hover:text-[var(--color-primary-600)] transition-colors">{t.landingPage.terms}</Link>
+              <Link to="/security" className="hover:text-[var(--color-primary-600)] transition-colors">{t.landingPage.security}</Link>
             </div>
           </div>
 
@@ -39,9 +40,9 @@ export const LandingFooter: React.FC = () => {
           <div className="flex flex-col gap-4">
             <h4 className="font-bold text-[var(--text-main)] text-xl">{t.landingPage.quickLinks}</h4>
             <div className="flex flex-col gap-4 text-[var(--text-main)] opacity-80 font-medium">
-              <a href="#" className="hover:text-[var(--color-primary-600)] transition-colors">{t.landingPage.helpCenter}</a>
-              <a href="#" className="hover:text-[var(--color-primary-600)] transition-colors">{t.landingPage.about}</a>
-              <a href="#" className="hover:text-[var(--color-primary-600)] transition-colors">{t.landingPage.contact}</a>
+              <Link to="/help" className="hover:text-[var(--color-primary-600)] transition-colors">{t.landingPage.helpCenter}</Link>
+              <Link to="/about" className="hover:text-[var(--color-primary-600)] transition-colors">{t.landingPage.about}</Link>
+              <Link to="/contact" className="hover:text-[var(--color-primary-600)] transition-colors">{t.landingPage.contact}</Link>
             </div>
           </div>
 
