@@ -178,13 +178,22 @@ export const OverlayPrimitive: React.FC<OverlayPrimitiveProps> = ({
   const { register, unregister } = useOverlayManager();
   const contentRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
+  const onCloseRef = useRef(onClose);
 
   useFocusTrap(contentRef, isOpen);
 
   useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
+  const closeFromManager = useCallback(() => {
+    onCloseRef.current();
+  }, []);
+
+  useEffect(() => {
     if (isOpen) {
       previousFocusRef.current = document.activeElement as HTMLElement;
-      register(id, onClose);
+      register(id, closeFromManager);
     } else {
       unregister(id);
       // Restore focus to the element that triggered the overlay
@@ -193,8 +202,7 @@ export const OverlayPrimitive: React.FC<OverlayPrimitiveProps> = ({
     return () => {
       unregister(id);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, id]);
+  }, [closeFromManager, id, isOpen, register, unregister]);
 
   if (!isOpen) return null;
 

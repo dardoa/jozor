@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useMemo, useRef } from 'react';
+import React, { memo, useEffect, useMemo } from 'react';
 import type { Person, TreeNode, TreeSettings } from '../../types';
 import type { V3RendererPipeline } from '../../utils/layout/v3LayoutPipeline';
 import { extractPathPoints } from '../../utils/svgUtils';
@@ -397,10 +397,9 @@ function buildTreeNodes(
   people: Record<string, Person>,
   focusPersonId: string | undefined,
   scaleX: ScaleX,
-  previousNodesById?: ReadonlyMap<string, TreeNodeWithIndex>,
 ): TreeNodeWithIndex[] {
   return projectedNodes
-    .map((node, index) => {
+    .map<TreeNodeWithIndex | null>((node, index) => {
       const person = people[node.personId];
       if (!person) return null;
 
@@ -412,19 +411,6 @@ function buildTreeNodes(
       const id = node.uniqueEntityId || `fallback:${node.personId}:${index}`;
       const type = node.personId === focusPersonId ? 'focus' : 'descendant';
       const isReference = node.isReference ?? node.uniqueEntityId?.startsWith('ref:') ?? false;
-      const previousNode = previousNodesById?.get(id);
-
-      if (
-        previousNode &&
-        previousNode.x === x &&
-        previousNode.y === y &&
-        previousNode.index === index &&
-        previousNode.data === person &&
-        previousNode.type === type &&
-        previousNode.isReference === isReference
-      ) {
-        return previousNode;
-      }
 
       return {
         id,
@@ -434,38 +420,9 @@ function buildTreeNodes(
         type,
         isReference,
         index,
-      } satisfies TreeNodeWithIndex;
+      };
     })
     .filter((node): node is TreeNodeWithIndex => node !== null);
-}
-
-function useStableTreeNodes(
-  projectedNodes: V3RendererPipeline['projectedNodes'],
-  people: Record<string, Person>,
-  focusPersonId: string | undefined,
-  scaleX: ScaleX,
-): TreeNodeWithIndex[] {
-  const previousNodesByIdRef = useRef<Map<string, TreeNodeWithIndex>>(new Map());
-
-  const treeNodes = useMemo(() => {
-    // Read-only committed cache required for identity preservation.
-    // eslint-disable-next-line react-hooks/refs
-    const prevNodes = previousNodesByIdRef.current;
-
-    return buildTreeNodes(
-      projectedNodes,
-      people,
-      focusPersonId,
-      scaleX,
-      prevNodes,
-    );
-  }, [focusPersonId, people, projectedNodes, scaleX]);
-
-  useEffect(() => {
-    previousNodesByIdRef.current = new Map(treeNodes.map((node) => [node.id, node]));
-  }, [treeNodes]);
-
-  return treeNodes;
 }
 
 interface V3CanvasBackgroundProps {
@@ -715,8 +672,10 @@ export const V3FamilyGraphRenderer: React.FC<V3FamilyGraphRendererProps> = ({
   const canvasWidth = Math.max(320, canvasMaxX - canvasMinX);
   const canvasHeight = Math.max(240, canvasMaxY - canvasMinY);
 
-  // Pass visibleNodes to useStableTreeNodes for identity-stable node objects
-  const treeNodes = useStableTreeNodes(visibleNodes, people, focusPersonId, scaleX);
+  const treeNodes = useMemo(
+    () => buildTreeNodes(visibleNodes, people, focusPersonId, scaleX),
+    [focusPersonId, people, scaleX, visibleNodes],
+  );
   const renderDiagnostics = useMemo<V3RenderDiagnosticsSnapshot>(() => ({
     totalNodes: projectedNodes.length,
     visibleNodes: visibleNodes.length,

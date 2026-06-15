@@ -116,7 +116,7 @@ describe('V3FamilyGraphRenderer node stability', () => {
     delete window.__JOZOR_V3_RENDER_STATS__;
   });
 
-  it('reuses unchanged TreeNode objects across people map refreshes', () => {
+  it('preserves equivalent TreeNode values across people map refreshes', () => {
     const person = buildPerson();
     const { rerender } = render(renderGraph(person));
 
@@ -125,7 +125,9 @@ describe('V3FamilyGraphRenderer node stability', () => {
     rerender(renderGraph(person, { [person.id]: person }));
 
     const refreshedNode = (nodeComponentMock as Mock).mock.calls.at(-1)?.[0].node;
-    expect(refreshedNode).toBe(initialNode);
+    expect(refreshedNode).not.toBe(initialNode);
+    expect(refreshedNode).toEqual(initialNode);
+    expect(refreshedNode.data).toBe(person);
   });
 
   it('replaces the TreeNode object when the rendered person changes', () => {
