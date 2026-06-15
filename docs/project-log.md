@@ -1,5 +1,22 @@
 # Project Log
 
+## 2026-06-15 - Supabase SECURITY DEFINER Boundary Revalidation
+
+- Summary:
+  - Re-ran linked Supabase security advisors and confirmed that the historical
+    authenticated/anonymous SECURITY DEFINER warnings are closed.
+  - Confirmed the only remaining advisor warning is leaked-password protection,
+    deferred while the project remains on the Free plan.
+  - Replaced the hard-coded function inventory with a dynamic public/private
+    function and policy inventory.
+  - Added a read-only boundary check for public privileged RPC exposure and
+    private trigger-helper execution grants.
+- Remaining narrow cleanup:
+  - Revoke browser-role EXECUTE ACLs from the two private trigger-only helpers
+    in a dedicated migration when migration approval is available.
+- Safety:
+  - No production schema or data was changed in this pass.
+
 ## 2026-06-14 - Local Performance Observability Budgets
 
 - Summary:

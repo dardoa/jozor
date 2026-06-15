@@ -1,5 +1,43 @@
 # Supabase SECURITY DEFINER Redesign Inventory - 2026-05-22
 
+## Closure Update - 2026-06-15
+
+This document is retained as implementation history. Its original list of 11
+authenticated warnings is no longer the current production boundary.
+
+Verified against the linked project on 2026-06-15:
+
+- Supabase security advisors report no
+  `authenticated_security_definer_function_executable` or
+  `anon_security_definer_function_executable` findings.
+- The only remaining security warning is
+  `auth_leaked_password_protection`, which remains unavailable on the current
+  Supabase Free plan.
+- Public invitation, tree creation, collaboration claim, import, profile, photo,
+  and sync RPCs are now `SECURITY INVOKER` wrappers.
+- Privileged implementations live in the unexposed `private` schema.
+- Public legacy and maintenance `SECURITY DEFINER` functions are not executable
+  by `anon` or `authenticated`.
+- `public.sync_tree_batch(jsonb)` is `SECURITY INVOKER`.
+
+The current read-only source of truth is:
+
+- `supabase/diagnostics/security_definer_inventory.sql`
+- `supabase/diagnostics/security_definer_boundary_check.sql`
+
+One narrow cleanup remains:
+
+- `private.prune_old_checkpoints_and_ops()` and
+  `private.enforce_collaborator_limits()` are trigger-only functions whose ACLs
+  still include browser roles.
+- The `private` schema is not usable by `anon`, and is not exposed through the
+  Data API, so this is not a current public RPC exposure.
+- A future migration should revoke `PUBLIC`, `anon`, and `authenticated`
+  execution from these two trigger-only functions. Trigger execution does not
+  require caller EXECUTE privilege.
+- That migration was intentionally not created during this pass because the
+  local approval tool was unavailable. No production schema was changed.
+
 ## Scope
 
 This document starts the separate redesign track for the remaining Supabase
