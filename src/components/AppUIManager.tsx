@@ -29,6 +29,11 @@ import { useAppStore, loadFullState } from '../store/useAppStore';
 import { ModalManagerContainer } from './ModalManagerContainer';
 import { BootstrapStatusScreen } from './app/BootstrapStatusScreen';
 import { MinimalLogin } from './app/MinimalLogin';
+import {
+  getRouteReturnTo,
+  hasOAuthCallbackParams,
+  resolveAppSurface,
+} from './app/appSurfaceDecision';
 
 import { useAppOrchestration } from '../hooks/ui/useAppOrchestration';
 import { useJozorDebugApi } from '../hooks/utils/useJozorDebugApi';
@@ -65,10 +70,11 @@ export const AppUIManager: React.FC = () => {
   const isSharedMode = !!dbSharedMatch || !!shareTokenMatch;
   const routeTreeId = canonicalTreeMatch?.params.treeId ?? null;
   const routePersonId = canonicalPersonMatch?.params.personId ?? null;
-  const routeReturnTo =
-    location.pathname === '/' && !location.search && !location.hash
-      ? undefined
-      : `${location.pathname}${location.search}${location.hash}`;
+  const routeReturnTo = getRouteReturnTo(
+    location.pathname,
+    location.search,
+    location.hash
+  );
 
   const orchestrationObj = useAppOrchestration(isSharedMode, routeTreeId, routePersonId);
 
@@ -110,21 +116,6 @@ export const AppUIManager: React.FC = () => {
   useJozorDebugApi(welcomeScreen.setShowWelcome);
 
   const { fileInputRef, onFileUpload, showWelcome, handleStartNewTree } = welcomeScreen;
-  const isTreeBootstrapPending =
-    Boolean(auth.user) &&
-    authLoading &&
-    (Boolean(routeTreeId) || Boolean(routePersonId) || Boolean(currentTreeId));
-
-  const treeBootstrapTitle = routePersonId
-    ? t.treeBootstrapResolvingTitle
-    : routeTreeId
-      ? t.treeBootstrapLoadingTitle
-      : t.treeBootstrapGenericTitle;
-  const treeBootstrapDescription = routePersonId
-    ? t.treeBootstrapResolvingDescription
-    : routeTreeId
-      ? t.treeBootstrapLoadingDescription
-      : t.treeBootstrapGenericDescription;
 
   const handleSharedTreeLoaded = (
     data: Record<string, Person>,
@@ -157,14 +148,20 @@ export const AppUIManager: React.FC = () => {
   };
 
   const renderMainLayout = () => {
-    // Guard: if OAuth callback params exist in the URL, wait for auth to resolve
-    // This prevents the flash of LandingPage before Supabase picks up the session
-    const isOAuthCallback =
-      location.hash.includes('access_token') ||
-      location.search.includes('code=') ||
-      location.search.includes('error=');
+    const surface = resolveAppSurface({
+      authLoading,
+      hasOAuthCallback: hasOAuthCallbackParams(location.search, location.hash),
+      hasUser: Boolean(auth.user),
+      showWelcome,
+      hasCurrentTree: Boolean(currentTreeId),
+      hasRouteTree: Boolean(routeTreeId),
+      hasRoutePerson: Boolean(routePersonId),
+      routePersonExists: routePersonId
+        ? Boolean(appState.people[routePersonId])
+        : true,
+    });
 
-    if (authLoading || (isOAuthCallback && !auth.user)) {
+    if (surface === 'auth-bootstrap') {
       return (
         <BootstrapStatusScreen
           title={t.authBootstrapTitle}
@@ -173,7 +170,7 @@ export const AppUIManager: React.FC = () => {
       );
     }
 
-    if (showWelcome) {
+    if (surface === 'landing') {
       return (
         <LandingPage
           onStartNew={handleStartNewTree}
@@ -183,18 +180,7 @@ export const AppUIManager: React.FC = () => {
       );
     }
 
-    if (!showWelcome && auth.user && !currentTreeId) {
-      if (isTreeBootstrapPending) {
-        return (
-          <BootstrapStatusScreen
-            title={treeBootstrapTitle}
-            description={treeBootstrapDescription}
-          />
-        );
-      }
-      if (routeTreeId) {
-        return <NotFound />;
-      }
+    if (surface === 'tree-selector' && auth.user) {
       return (
         <>
           <TreeSelector
@@ -223,7 +209,7 @@ export const AppUIManager: React.FC = () => {
       );
     }
 
-    if (routePersonId && currentTreeId && !appState.people[routePersonId]) {
+    if (surface === 'not-found') {
       return <NotFound />;
     }
 
