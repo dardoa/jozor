@@ -17,6 +17,7 @@ This file is the operational companion to:
 
 - [`supabase-bootstrap-runbook.md`](./supabase-bootstrap-runbook.md)
 - Supabase diagnostics under [`supabase/diagnostics`](../supabase/diagnostics)
+- [`production-readiness-audit-2026-06-15.md`](./production-readiness-audit-2026-06-15.md)
 
 ## 1. Code Health
 

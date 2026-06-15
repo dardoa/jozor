@@ -1,5 +1,20 @@
 # Project Log
 
+## 2026-06-15 - Production Readiness Audit
+
+- Summary:
+  - Added a production-readiness audit that separates sandbox-ready status from
+    true production blockers.
+  - Re-ran Supabase security advisors and confirmed the only remaining warning
+    is leaked-password protection.
+  - Confirmed Vercel has the expected environment variable names for Supabase,
+    Google, Paddle, VAPID, cron, Kindi AI, Gemini, and app origin.
+  - Identified likely legacy `VITE_FIREBASE_*` Vercel variables as non-blocking
+    cleanup before production.
+- Current stance:
+  - `https://jozor.vercel.app` remains a sandbox/staging environment until the
+    production gates are explicitly completed.
+
 ## 2026-06-15 - Supabase RPC Execution Contract Revalidation
 
 - Summary:
