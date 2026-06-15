@@ -12,10 +12,13 @@
   - Added a read-only boundary check for public privileged RPC exposure and
     private trigger-helper execution grants.
 - Remaining narrow cleanup:
-  - Revoke browser-role EXECUTE ACLs from the two private trigger-only helpers
-    in a dedicated migration when migration approval is available.
+  - Completed through
+    `20260615194119_restrict_private_trigger_function_execute.sql`.
+  - Browser-role EXECUTE privileges were removed from both private trigger-only
+    helpers without detaching their triggers.
 - Safety:
-  - No production schema or data was changed in this pass.
+  - No table data or application RPC contract changed.
+  - The post-migration boundary check returned no violations.
 
 ## 2026-06-14 - Local Performance Observability Budgets
 

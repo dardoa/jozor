@@ -25,18 +25,18 @@ The current read-only source of truth is:
 - `supabase/diagnostics/security_definer_inventory.sql`
 - `supabase/diagnostics/security_definer_boundary_check.sql`
 
-One narrow cleanup remains:
+Final narrow cleanup applied:
 
-- `private.prune_old_checkpoints_and_ops()` and
-  `private.enforce_collaborator_limits()` are trigger-only functions whose ACLs
-  still include browser roles.
-- The `private` schema is not usable by `anon`, and is not exposed through the
-  Data API, so this is not a current public RPC exposure.
-- A future migration should revoke `PUBLIC`, `anon`, and `authenticated`
-  execution from these two trigger-only functions. Trigger execution does not
-  require caller EXECUTE privilege.
-- That migration was intentionally not created during this pass because the
-  local approval tool was unavailable. No production schema was changed.
+- Migration
+  `20260615194119_restrict_private_trigger_function_execute.sql` revoked
+  `PUBLIC`, `anon`, and `authenticated` execution from
+  `private.prune_old_checkpoints_and_ops()` and
+  `private.enforce_collaborator_limits()`.
+- Both functions remain attached to their expected tables:
+  `tree_checkpoints`, `tree_collaborators`, and `tree_invitations`.
+- The post-migration boundary check returned no rows.
+- Supabase security advisors still report only
+  `auth_leaked_password_protection`.
 
 ## Scope
 
