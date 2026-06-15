@@ -233,15 +233,13 @@ Post-membership claim hardening check on 2026-05-22:
    - Move pruning functions away from normal signed-in client access.
    - Prefer an admin/server-only path or scheduled job with a private function.
 
-3. **Unused tree mutation cleanup**
-   - Confirm whether `create_person_and_relationship`,
-     `delete_person_and_relations`, and `sync_tree_batch` are still needed by
-     production clients.
-   - If not needed, remove public execution first, then drop only after a
-     compatibility window.
-   - Current code no longer calls `sync_tree_batch` as an RPC; sync writes the
-     readable projection and then inserts sanitized rows into `tree_operations`
-     directly.
+3. **Tree mutation RPC contracts**
+   - `sync_tree_batch` is a live production contract used by
+     `DeltaRemoteSyncClient` to flush sanitized pending operations. Keep the
+     public SECURITY INVOKER wrapper executable by `authenticated`.
+   - `create_person_and_relationship` and `delete_person_and_relations` have no
+     current application callers. Browser execution was revoked while the
+     functions remain available for compatibility review.
    - Current code also has no direct `src` caller for
      `create_person_and_relationship` or `delete_person_and_relations`; person
      and relationship edits are projected through table writes under RLS.
@@ -254,6 +252,8 @@ Post-membership claim hardening check on 2026-05-22:
    - `claim_collaborator_memberships` is still a live app RPC. It has been
      guarded for missing identity claims, but moving it behind a server API is a
      separate redesign task.
+   - `supabase/diagnostics/rpc_execution_contract_check.sql` now guards this
+     distinction and should return no rows before release promotion.
 
 4. **High-blast-radius sync redesign**
    - Redesign `replace_tree_content` with the strongest tests first.

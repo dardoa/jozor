@@ -1,5 +1,24 @@
 # Project Log
 
+## 2026-06-15 - Supabase RPC Execution Contract Revalidation
+
+- Summary:
+  - Revalidated application RPC callers against the current migration history.
+  - Confirmed `sync_tree_batch` is a live browser contract used by the delta
+    sync client and must remain executable by `authenticated`.
+  - Confirmed the retired `create_person_and_relationship` and
+    `delete_person_and_relations` RPCs have no current application callers and
+    must remain unavailable to browser roles.
+  - Added a read-only RPC execution contract diagnostic and removed retired RPCs
+    from the required schema audit list.
+- Safety:
+  - No function definition, grant, table data, or application behavior changed.
+  - The new diagnostic reports only contract violations.
+- Live verification:
+  - Ran `supabase/diagnostics/rpc_execution_contract_check.sql` against the
+    linked Supabase project on 2026-06-15.
+  - Result: `0` contract violations.
+
 ## 2026-06-15 - Supabase SECURITY DEFINER Boundary Revalidation
 
 - Summary:

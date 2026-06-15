@@ -54,6 +54,7 @@ For a newly bootstrapped or patched environment:
 
 1. Run [`bootstrap_audit.sql`](/D:/AppDEV/Jozor1.1/supabase/diagnostics/bootstrap_audit.sql)
 2. Run [`schema_audit.sql`](/D:/AppDEV/Jozor1.1/supabase/diagnostics/schema_audit.sql)
+3. Run [`rpc_execution_contract_check.sql`](../supabase/diagnostics/rpc_execution_contract_check.sql)
 
 Expected result:
 
@@ -62,8 +63,9 @@ Expected result:
 - RPCs exist
 - RLS policies exist
 - storage bucket `avatars` exists
+- the RPC execution contract check returns no rows
 
-If either audit fails:
+If any audit fails:
 
 - stop release validation
 - fix schema drift before app testing

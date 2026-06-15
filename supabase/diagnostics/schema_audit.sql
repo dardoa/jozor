@@ -43,9 +43,8 @@ where specific_schema = 'public'
   and routine_name in (
     'sync_tree_batch',
     'create_tree_with_root',
-    'create_person_and_relationship',
-    'delete_person_and_relations',
     'replace_tree_content',
+    'claim_collaborator_memberships',
     'current_user_id_text',
     'is_tree_collaborator'
   )
