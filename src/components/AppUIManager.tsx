@@ -19,7 +19,6 @@ import { TreeSelector } from '../features/tree-manager';
 
 import { useAppStore, loadFullState } from '../store/useAppStore';
 
-import { ModalManagerContainer } from './ModalManagerContainer';
 import { BootstrapStatusScreen } from './app/BootstrapStatusScreen';
 import {
   getRouteReturnTo,
@@ -27,6 +26,7 @@ import {
   resolveAppSurface,
 } from './app/appSurfaceDecision';
 import { AppRoutes } from './app/AppRoutes';
+import { AppGlobalOverlays } from './app/AppGlobalOverlays';
 
 import { useAppOrchestration } from '../hooks/ui/useAppOrchestration';
 import { useJozorDebugApi } from '../hooks/utils/useJozorDebugApi';
@@ -35,13 +35,6 @@ import { NotFound } from './NotFound';
 
 import { useTranslation } from '../context/TranslationContext';
 import { MobileActionBar } from './ui/MobileActionBar';
-
-const TheVaultDrawer = React.lazy(() =>
-  import('../features/the-vault').then((m) => ({ default: m.TheVaultDrawer }))
-);
-const DiagnosticsDrawer = React.lazy(() =>
-  import('../features/diagnostics').then((m) => ({ default: m.DiagnosticsDrawer }))
-);
 
 export const AppUIManager: React.FC = () => {
   const { t } = useTranslation();
@@ -91,12 +84,9 @@ export const AppUIManager: React.FC = () => {
   const setCurrentTreeId = useAppStore((state) => state.setCurrentTreeId);
   const setCurrentUserRole = useAppStore((state) => state.setCurrentUserRole);
   const authLoading = useAppStore((state) => state.authLoading);
-  const isVaultOpen = useAppStore((state) => state.isVaultOpen);
   const setVaultOpen = useAppStore((state) => state.setVaultOpen);
   const setVaultTab = useAppStore((state) => state.setVaultTab);
-  const setActivityLogOpen = useAppStore((state) => state.setActivityLogOpen);
   const darkMode = useAppStore((state) => state.darkMode);
-  const isDiagnosticsDrawerOpen = useAppStore((state) => state.isDiagnosticsDrawerOpen);
   const setDarkMode = useAppStore((state) => state.setDarkMode);
   useJozorDebugApi(welcomeScreen.setShowWelcome);
 
@@ -264,27 +254,7 @@ export const AppUIManager: React.FC = () => {
         />
       </React.Suspense>
 
-      {isVaultOpen ? (
-        <React.Suspense fallback={null}>
-          <TheVaultDrawer
-            googleSync={googleSync}
-            auth={auth}
-            exportActions={exportActions}
-            toolsActions={toolsActions}
-            onOpenDiagnostics={() => useAppStore.getState().setDiagnosticsDrawerOpen(true)}
-            onOpenActivityLog={() => setActivityLogOpen(true)}
-            onOpenCleanTree={modals.onOpenCleanTreeOptions}
-          />
-        </React.Suspense>
-      ) : null}
-
-      {isDiagnosticsDrawerOpen ? (
-        <React.Suspense fallback={null}>
-          <DiagnosticsDrawer />
-        </React.Suspense>
-      ) : null}
-
-      <ModalManagerContainer
+      <AppGlobalOverlays
         appState={appState}
         modals={modals}
         googleSync={googleSync}
@@ -292,6 +262,8 @@ export const AppUIManager: React.FC = () => {
         familyActions={coreFamilyActions}
         themeLanguage={themeLanguage}
         auth={auth}
+        exportActions={exportActions}
+        toolsActions={toolsActions}
       />
     </>
   );
