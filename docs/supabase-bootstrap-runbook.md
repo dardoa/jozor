@@ -2,7 +2,7 @@
 
 This runbook describes the recommended way to stand up a fresh Supabase environment for the app and verify that it matches the current schema contract.
 
-For the full promotion path from environment bootstrap to app release sign-off, use [`release-readiness-checklist.md`](/D:/AppDEV/Jozor1.1/docs/release-readiness-checklist.md).
+For the full promotion path from environment bootstrap to app release sign-off, use [`release-readiness-checklist.md`](./release-readiness-checklist.md).
 
 ## Goal
 
@@ -14,20 +14,21 @@ Use this when you need to:
 
 ## Source of Truth
 
-- Preferred bootstrap migration: [`20260218_bootstrap_core_schema.sql`](/D:/AppDEV/Jozor1.1/supabase/migrations/20260218_bootstrap_core_schema.sql)
-- Canonical schema contract: [`20260318_document_core_schema_baseline.sql`](/D:/AppDEV/Jozor1.1/supabase/migrations/20260318_document_core_schema_baseline.sql)
-- Immediate bootstrap verification: [`bootstrap_audit.sql`](/D:/AppDEV/Jozor1.1/supabase/diagnostics/bootstrap_audit.sql)
-- Full schema verification: [`schema_audit.sql`](/D:/AppDEV/Jozor1.1/supabase/diagnostics/schema_audit.sql)
+- Preferred bootstrap migration: [`20260218_bootstrap_core_schema.sql`](../supabase/migrations/20260218_bootstrap_core_schema.sql)
+- Canonical schema contract: the additive bootstrap migrations plus
+  [`schema_audit.sql`](../supabase/diagnostics/schema_audit.sql)
+- Immediate bootstrap verification: [`bootstrap_audit.sql`](../supabase/diagnostics/bootstrap_audit.sql)
+- Full schema verification: [`schema_audit.sql`](../supabase/diagnostics/schema_audit.sql)
 - RPC execution verification: [`rpc_execution_contract_check.sql`](../supabase/diagnostics/rpc_execution_contract_check.sql)
 
-Do not treat [`20260318_bootstrap_core_schema.sql`](/D:/AppDEV/Jozor1.1/supabase/migrations/20260318_bootstrap_core_schema.sql) as the preferred entrypoint. It is retained as a historical duplicate for migration-history compatibility.
+Do not treat [`20260318000100_bootstrap_core_schema.sql`](../supabase/migrations/20260318000100_bootstrap_core_schema.sql) as the preferred entrypoint. It is retained as a historical duplicate for migration-history compatibility.
 
 ## Recommended Order
 
-1. Apply [`20260218_bootstrap_core_schema.sql`](/D:/AppDEV/Jozor1.1/supabase/migrations/20260218_bootstrap_core_schema.sql).
+1. Apply [`20260218_bootstrap_core_schema.sql`](../supabase/migrations/20260218_bootstrap_core_schema.sql).
 2. Apply the remaining migrations in chronological order.
-3. Run [`bootstrap_audit.sql`](/D:/AppDEV/Jozor1.1/supabase/diagnostics/bootstrap_audit.sql).
-4. Run [`schema_audit.sql`](/D:/AppDEV/Jozor1.1/supabase/diagnostics/schema_audit.sql).
+3. Run [`bootstrap_audit.sql`](../supabase/diagnostics/bootstrap_audit.sql).
+4. Run [`schema_audit.sql`](../supabase/diagnostics/schema_audit.sql).
 5. Run [`rpc_execution_contract_check.sql`](../supabase/diagnostics/rpc_execution_contract_check.sql).
 6. Perform the application smoke test.
 

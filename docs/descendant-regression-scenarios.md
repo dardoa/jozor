@@ -6,9 +6,9 @@ This document captures the descendant-mode regression scenarios that were stabil
 
 It complements:
 
-- [descendantVisibleTreeAdapter.test.ts](/D:/AppDEV/Jozor1.1/utils/__tests__/descendantVisibleTreeAdapter.test.ts)
-- [visibleTreeDescendant.ts](/D:/AppDEV/Jozor1.1/domain/visibleTreeDescendant.ts)
-- [descendantVisibleTreeAdapter.ts](/D:/AppDEV/Jozor1.1/utils/layout/descendantVisibleTreeAdapter.ts)
+- [visibleTreeDescendant.ts](../legacy_archive/domain/visibleTree/visibleTreeDescendant.ts)
+- [visibleTreeDescendant.test.ts](../legacy_archive/domain/visibleTree/__tests__/visibleTreeDescendant.test.ts)
+- [descendantVisibleTreeFixtures.ts](../legacy_archive/domain/visibleTree/descendantVisibleTreeFixtures.ts)
 
 The goal is to preserve the current expected runtime behavior and avoid reintroducing:
 

@@ -8,8 +8,8 @@ Use this checklist before:
 
 This file is the operational companion to:
 
-- [`supabase-bootstrap-runbook.md`](/D:/AppDEV/Jozor1.1/docs/supabase-bootstrap-runbook.md)
-- [`supabase-audit-checklist.md`](/D:/AppDEV/Jozor1.1/docs/supabase-audit-checklist.md)
+- [`supabase-bootstrap-runbook.md`](./supabase-bootstrap-runbook.md)
+- Supabase diagnostics under [`supabase/diagnostics`](../supabase/diagnostics)
 
 ## 1. Code Health
 
@@ -33,7 +33,7 @@ Recommended before release candidates:
 
 ## 2. CI Status
 
-Confirm the GitHub Actions workflow at [`ci.yml`](/D:/AppDEV/Jozor1.1/.github/workflows/ci.yml) is green for the target commit.
+Confirm the GitHub Actions workflow at [`ci.yml`](../.github/workflows/ci.yml) is green for the target commit.
 
 Expected result:
 
@@ -52,8 +52,8 @@ If Playwright fails:
 
 For a newly bootstrapped or patched environment:
 
-1. Run [`bootstrap_audit.sql`](/D:/AppDEV/Jozor1.1/supabase/diagnostics/bootstrap_audit.sql)
-2. Run [`schema_audit.sql`](/D:/AppDEV/Jozor1.1/supabase/diagnostics/schema_audit.sql)
+1. Run [`bootstrap_audit.sql`](../supabase/diagnostics/bootstrap_audit.sql)
+2. Run [`schema_audit.sql`](../supabase/diagnostics/schema_audit.sql)
 3. Run [`rpc_execution_contract_check.sql`](../supabase/diagnostics/rpc_execution_contract_check.sql)
 
 Expected result:
@@ -113,8 +113,8 @@ Minimum acceptance:
 
 Current automated coverage:
 
-- [`app-smoke.spec.ts`](/D:/AppDEV/Jozor1.1/tests/e2e/app-smoke.spec.ts) covers role-sensitive behavior and persistence
-- [`collaboration-live.spec.ts`](/D:/AppDEV/Jozor1.1/tests/e2e/collaboration-live.spec.ts) is available for real multi-user validation when test credentials are configured
+- [`app-smoke.spec.ts`](../tests/e2e/app-smoke.spec.ts) covers role-sensitive behavior and persistence
+- [`collaboration-live.spec.ts`](../tests/e2e/collaboration-live.spec.ts) is available for real multi-user validation when test credentials are configured
 
 ## 7. Observability Check
 
