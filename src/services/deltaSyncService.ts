@@ -46,6 +46,18 @@ class DeltaSyncService {
             incomingBatchDelay: 150,
             onFlushOutgoing: (batch) => this.flushOutgoingBatch(batch),
             onFlushIncoming: (batch) => this.processIncomingBatch(batch),
+            onRetryBatchUpdated: (batch) => offlineCache.updatePendingOperationRetryCounts(batch),
+            onRetryStateChange: (retryState) => {
+                const store = useAppStore.getState();
+                store.setSyncStatus({
+                    ...store.syncStatus,
+                    pendingCount: this.queue.getPendingOutgoingCount(),
+                    retryAttempt: retryState.attempt,
+                    retryPaused: retryState.paused,
+                    nextRetryAt: retryState.nextRetryAt,
+                    ...(retryState.error ? { errorMessage: retryState.error } : {}),
+                });
+            },
         });
 
         this.resolver = new ConflictResolver({
@@ -297,6 +309,11 @@ class DeltaSyncService {
     public async flushPendingChanges(): Promise<void> {
         await this.flushQueuedUpdates();
         await this.queue.flushOutgoingNow();
+    }
+
+    public async retryPendingChanges(): Promise<void> {
+        await this.flushQueuedUpdates();
+        await this.queue.retryOutgoingNow();
     }
 
     public applyOperation(op: DeltaOperation) {

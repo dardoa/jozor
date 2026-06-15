@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 import type { FanArc, Person, TreeNode, TreeSettings } from '../../types';
-import type { CollapsePoint } from '../../utils/layout/constants';
 import type { V3RendererPipeline } from '../../utils/layout/v3LayoutPipeline';
 import type { ActiveLayoutData } from '../../hooks/tree/useFamilyTreeLayoutController';
 import type { TranslationSchema } from '../../utils/translationLoader';
@@ -29,7 +28,6 @@ interface FamilyTreeCanvasProps {
   activeLayout: ActiveLayoutData;
   displayNodes: TreeNode[];
   displayFanArcs: FanArc[];
-  displayCollapsePoints: CollapsePoint[];
   displayPipeline?: V3RendererPipeline | null;
   highlightedPath?: Set<string>;
   zoomScale: number;
@@ -42,7 +40,6 @@ interface FamilyTreeCanvasProps {
   onSelect: (id: string) => void;
   onNodeContextMenu: (e: React.MouseEvent, id: string) => void;
   onAddFirstPerson: (gender: 'male' | 'female') => void;
-  toggleCollapse: (uniqueKey: string) => void;
   onZoomIn: () => void;
   onZoomOut: () => void;
   onResetZoom: () => void;
@@ -64,7 +61,6 @@ export const FamilyTreeCanvas: React.FC<FamilyTreeCanvasProps> = ({
   activeLayout,
   displayNodes,
   displayFanArcs,
-  displayCollapsePoints,
   displayPipeline,
   highlightedPath,
   zoomScale,
@@ -77,7 +73,6 @@ export const FamilyTreeCanvas: React.FC<FamilyTreeCanvasProps> = ({
   onSelect,
   onNodeContextMenu,
   onAddFirstPerson,
-  toggleCollapse,
   onZoomIn,
   onZoomOut,
   onResetZoom,
@@ -94,11 +89,9 @@ export const FamilyTreeCanvas: React.FC<FamilyTreeCanvasProps> = ({
     settings,
     nodes: displayNodes,
     fanArcs: displayFanArcs,
-    collapsePoints: displayCollapsePoints,
     highlightedPath,
     pipeline: displayPipeline,
   }), [
-    displayCollapsePoints,
     displayFanArcs,
     displayNodes,
     displayPipeline,
@@ -117,12 +110,10 @@ export const FamilyTreeCanvas: React.FC<FamilyTreeCanvasProps> = ({
     onSelect,
     onNodeContextMenu,
     onAddFirstPerson,
-    toggleCollapse,
   }), [
     onAddFirstPerson,
     onNodeContextMenu,
     onSelect,
-    toggleCollapse,
   ]);
   useTreeRenderDiagnostics({ hasReceivedLayout });
 

@@ -11,7 +11,6 @@
  */
 import React from 'react';
 import type { Person, TreeSettings } from '../../types';
-import type { CollapsePoint } from '../../utils/layout/constants';
 import type { V3RendererPipeline } from '../../utils/layout/v3LayoutPipeline';
 import { V3FamilyGraphRenderer } from './V3FamilyGraphRenderer';
 
@@ -19,7 +18,6 @@ interface V3FamilyGraphChartProps {
   people: Record<string, Person>;
   focusId: string;
   settings: TreeSettings;
-  collapsePoints?: CollapsePoint[];
   highlightedPath?: Set<string>;
   pipeline?: V3RendererPipeline | null;
   zoomScale?: number;
@@ -28,7 +26,6 @@ interface V3FamilyGraphChartProps {
   viewportSize?: { width: number; height: number };
   onSelect?: (id: string) => void;
   onNodeContextMenu?: (e: React.MouseEvent, id: string) => void;
-  onToggleCollapse?: (uniqueKey: string) => void;
 }
 
 export const V3FamilyGraphChart: React.FC<V3FamilyGraphChartProps> = ({
@@ -43,7 +40,6 @@ export const V3FamilyGraphChart: React.FC<V3FamilyGraphChartProps> = ({
   viewportSize,
   onSelect,
   onNodeContextMenu,
-  onToggleCollapse,
 }) => {
   const activePipeline = propPipeline;
 
@@ -64,7 +60,6 @@ export const V3FamilyGraphChart: React.FC<V3FamilyGraphChartProps> = ({
       viewportSize={viewportSize}
       onSelect={onSelect}
       onNodeContextMenu={onNodeContextMenu}
-      onToggleCollapse={onToggleCollapse}
     />
   );
 };

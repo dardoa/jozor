@@ -1,9 +1,6 @@
 import React, { memo, useEffect, useMemo, useRef } from 'react';
 import type { Person, TreeNode, TreeSettings } from '../../types';
-import type {
-  V3CollapseControl,
-  V3RendererPipeline,
-} from '../../utils/layout/v3LayoutPipeline';
+import type { V3RendererPipeline } from '../../utils/layout/v3LayoutPipeline';
 import { extractPathPoints } from '../../utils/svgUtils';
 import type { EdgeEntity, EdgeEntityType } from '../../domain/familyGraphClusterLayout';
 import {
@@ -18,7 +15,6 @@ const FAMILY_DOT_RADIUS = 6;
 const MIN_SIBLING_BAR_HALF_PX = 16;
 const CURVED_CORNER_RADIUS = 18;
 const CURVED_PARENT_CARD_CLEARANCE = 14;
-const COLLAPSE_CONTROLS_ENABLED = false;
 const noopSelect = () => undefined;
 const noopContextMenu = () => undefined;
 
@@ -55,7 +51,6 @@ interface V3FamilyGraphRendererProps {
   viewportSize?: { width: number; height: number };
   onSelect?: (id: string) => void;
   onNodeContextMenu?: (e: React.MouseEvent, id: string) => void;
-  onToggleCollapse?: (uniqueKey: string) => void;
   padding?: number;
 }
 
@@ -586,81 +581,6 @@ const V3FamilyDotsLayer = memo<V3FamilyDotsLayerProps>(({ familyNodes, scaleX })
 
 V3FamilyDotsLayer.displayName = 'V3FamilyDotsLayer';
 
-interface V3CollapseControlsLayerProps {
-  collapseControls: V3CollapseControl[];
-  onToggleCollapse?: (uniqueKey: string) => void;
-  scaleX: ScaleX;
-}
-
-const V3CollapseControlsLayer = memo<V3CollapseControlsLayerProps>(({
-  collapseControls,
-  onToggleCollapse,
-  scaleX,
-}) => {
-  if (!COLLAPSE_CONTROLS_ENABLED) return <g aria-label="V3 collapse controls" />;
-
-  return (
-    <g aria-label="V3 collapse controls">
-      {collapseControls.map((control) => {
-        const scaledOriginX = scaleX(control.originX);
-        const scaledX = scaleX(control.x);
-        const stemPath = control.direction === 'up'
-          ? `M ${scaledOriginX} ${control.originY} V ${control.y + 12}`
-          : `M ${scaledOriginX} ${control.originY} V ${control.y - 12}`;
-
-        return (
-          <g key={control.uniqueKey} data-collapse-key={control.uniqueKey}>
-            <path
-              d={stemPath}
-              fill="none"
-              stroke="#94a3b8"
-              strokeWidth={1.5}
-              strokeLinecap="round"
-            />
-            <g
-              transform={`translate(${scaledX}, ${control.y})`}
-              onClick={(event) => {
-                event.stopPropagation();
-                onToggleCollapse?.(control.uniqueKey);
-              }}
-              style={{ cursor: onToggleCollapse ? 'pointer' : 'default' }}
-            >
-              <circle
-                r={12}
-                fill="#ffffff"
-                stroke={control.isCollapsed ? '#2563eb' : '#94a3b8'}
-                strokeWidth={control.isCollapsed ? 2 : 1.5}
-              />
-              <line
-                x1={-4}
-                y1={0}
-                x2={4}
-                y2={0}
-                stroke={control.isCollapsed ? '#2563eb' : '#475569'}
-                strokeWidth={1.8}
-                strokeLinecap="round"
-              />
-              {control.isCollapsed ? (
-                <line
-                  x1={0}
-                  y1={-4}
-                  x2={0}
-                  y2={4}
-                  stroke="#2563eb"
-                  strokeWidth={1.8}
-                  strokeLinecap="round"
-                />
-              ) : null}
-            </g>
-          </g>
-        );
-      })}
-    </g>
-  );
-});
-
-V3CollapseControlsLayer.displayName = 'V3CollapseControlsLayer';
-
 interface V3PersonNodesLayerProps {
   treeNodes: TreeNodeWithIndex[];
   totalNodeCount: number;
@@ -745,13 +665,12 @@ export const V3FamilyGraphRenderer: React.FC<V3FamilyGraphRendererProps> = ({
   viewportSize,
   onSelect,
   onNodeContextMenu,
-  onToggleCollapse,
   padding = 48,
 }) => {
   const nodeWidth =
     settings.nodeWidth || (settings.isCompact ? NODE_WIDTH_COMPACT : NODE_WIDTH_DEFAULT);
   const nodeHeight = settings.isCompact ? NODE_HEIGHT_COMPACT : NODE_HEIGHT_DEFAULT;
-  const { projectedNodes, familyNodes, edgeEntities, collapseControls, bounds } = pipeline;
+  const { projectedNodes, familyNodes, edgeEntities, bounds } = pipeline;
   const scaleX = useMemo<ScaleX>(() => (x) => x, []);
 
   // --- Viewport Culling ---
@@ -859,11 +778,6 @@ export const V3FamilyGraphRenderer: React.FC<V3FamilyGraphRendererProps> = ({
         nodeHeight={nodeHeight}
       />
       <V3FamilyDotsLayer familyNodes={visibleFamilyNodes} scaleX={scaleX} />
-      <V3CollapseControlsLayer
-        collapseControls={collapseControls}
-        onToggleCollapse={onToggleCollapse}
-        scaleX={scaleX}
-      />
       <V3PersonNodesLayer
         treeNodes={treeNodes}
         totalNodeCount={projectedNodes.length}

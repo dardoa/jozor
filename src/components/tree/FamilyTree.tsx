@@ -58,7 +58,6 @@ export const FamilyTree = React.memo(React.forwardRef<SVGSVGElement, FamilyTreeP
     displayPipeline,
     isForce,
     isFanChart,
-    toggleCollapse,
     debugLayoutState,
   } = useFamilyTreeLayoutController({
     people,
@@ -161,7 +160,6 @@ export const FamilyTree = React.memo(React.forwardRef<SVGSVGElement, FamilyTreeP
       activeLayout={activeLayout}
       displayNodes={displayNodes}
       displayFanArcs={displayFanArcs}
-      displayCollapsePoints={displayCollapsePoints}
       displayPipeline={displayPipeline}
       highlightedPath={highlightedPath}
       zoomScale={zoomScale}
@@ -174,7 +172,6 @@ export const FamilyTree = React.memo(React.forwardRef<SVGSVGElement, FamilyTreeP
       onSelect={onSelect}
       onNodeContextMenu={onNodeContextMenu}
       onAddFirstPerson={onAddFirstPerson}
-      toggleCollapse={toggleCollapse}
       onZoomIn={handleZoomIn}
       onZoomOut={handleZoomOut}
       onResetZoom={handleResetZoom}

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useEffect, useRef } from 'react';
-import { useAppStore } from '../store/useAppStore';
+import { selectCanonicalSyncState, useAppStore } from '../store/useAppStore';
 import { useSessionBootstrap } from '../hooks/auth/useSessionBootstrap';
 import { useConsistency } from '../hooks/sync/useConsistency';
 import { useGeocodingSync } from '../features/geography';
@@ -30,7 +30,7 @@ export const AppStateManager: React.FC = () => {
   const user = useAppStore(state => state.user);
   const currentTreeId = useAppStore(state => state.currentTreeId);
   const authLoading = useAppStore(state => state.authLoading);
-  const syncState = useAppStore(state => state.syncStatus.state);
+  const syncState = useAppStore(selectCanonicalSyncState);
   
   const hasLoggedUidAvailabilityRef = useRef(false);
   const hasLoggedGateReleaseRef = useRef(false);

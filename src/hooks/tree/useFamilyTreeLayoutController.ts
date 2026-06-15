@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { FanArc, Person, TreeLink, TreeNode, TreeSettings } from '../../types';
 import type { CollapsePoint } from '../../utils/layout/constants';
 import type { V3RendererPipeline } from '../../utils/layout/v3LayoutPipeline';
@@ -328,15 +328,6 @@ export const useFamilyTreeLayoutController = ({
     return () => window.removeEventListener('resize', handleResize);
   }, [handleResize]);
 
-  const toggleCollapse = useCallback((uniqueKey: string) => {
-    setCollapsedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(uniqueKey)) next.delete(uniqueKey);
-      else next.add(uniqueKey);
-      return next;
-    });
-  }, []);
-
   return {
     collapsedIds,
     isAdvancedBarOpen,
@@ -355,7 +346,6 @@ export const useFamilyTreeLayoutController = ({
     displayPipeline: activeLayout.v3Pipeline,
     isForce: false,
     isFanChart: chartModel === 'radial',
-    toggleCollapse,
     debugLayoutState: import.meta.env.DEV
       ? {
           geometryKey,

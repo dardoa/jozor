@@ -27,6 +27,10 @@ export interface FamilyDomainResult {
   newId?: string;
 }
 
+const assertUnreachable = (value: never, context: string): never => {
+  throw new Error(`Unhandled ${context}: ${String(value)}`);
+};
+
 const toRelationshipType = (value: unknown): RelationshipType | null =>
   value === 'parent' || value === 'spouse' || value === 'child' ? value : null;
 
@@ -240,7 +244,7 @@ export const applyFamilyDomainAction = (
     case 'removeRelationship':
       return { people: performRemoveRelationship(people, action.targetId, action.relativeId, action.relationshipType) };
     default:
-      return null;
+      return assertUnreachable(action, 'family domain action');
   }
 };
 
@@ -307,7 +311,9 @@ export const applyDeltaOperationToFamily = (
         relationshipType,
       });
     }
-    default:
+    case 'SET_TREE_METADATA':
       return people;
+    default:
+      return assertUnreachable(type, 'delta operation type');
   }
 };

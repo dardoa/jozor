@@ -1,17 +1,22 @@
 
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Header } from '../header/Header';
-import type { HeaderProps } from '../../types';
+import type { HeaderProps, SyncState } from '../../types';
 
 const mockAppStoreState = {
   currentTreeId: 'tree-1' as string | null,
   treeName: 'Active Shared Tree',
+  isLowGraphicsMode: false,
+  syncStatus: {
+    state: 'error' as SyncState,
+  },
 };
 
 vi.mock('../../store/useAppStore', () => ({
   useAppStore: vi.fn((selector: (state: typeof mockAppStoreState) => unknown) => selector(mockAppStoreState)),
+  selectCanonicalSyncState: (state: typeof mockAppStoreState) => state.syncStatus.state,
 }));
 
 
@@ -138,6 +143,12 @@ const buildHeaderProps = (): HeaderProps => ({
 } as unknown as HeaderProps);
 
 describe('Header', () => {
+  beforeEach(() => {
+    mockAppStoreState.currentTreeId = 'tree-1';
+    mockAppStoreState.treeName = 'Active Shared Tree';
+    mockAppStoreState.syncStatus.state = 'error';
+  });
+
   it('renders the center status strip with tree, role, and sync state', () => {
     render(<Header {...buildHeaderProps()} />);
 
@@ -160,6 +171,7 @@ describe('Header', () => {
       lastErrorRetryable: undefined,
     };
     props.viewSettings.currentUserRole = 'owner';
+    mockAppStoreState.syncStatus.state = 'synced';
 
     render(<Header {...props} />);
 
@@ -174,6 +186,8 @@ describe('Header', () => {
       selector({
         currentTreeId: null,
         treeName: '',
+        isLowGraphicsMode: false,
+        syncStatus: { state: 'error' },
       })) as typeof useAppStore);
 
     render(<Header {...buildHeaderProps()} />);

@@ -1,5 +1,9 @@
 import { useEffect, useCallback, useRef } from 'react';
-import { selectIsSyncing, useAppStore } from '../../store/useAppStore';
+import {
+    selectCanonicalSyncState,
+    selectIsSyncing,
+    useAppStore,
+} from '../../store/useAppStore';
 import { deltaSyncService } from '../../services/deltaSyncService';
 import { logError } from '../../utils/errorLogger';
 import { Person } from '../../types';
@@ -81,7 +85,7 @@ export const useAuthInit = ({
     const setFocusId = useAppStore((state) => state.setFocusId);
     const setAuthLoading = useAppStore((state) => state.setAuthLoading);
     const logout = useAppStore((state) => state.logout);
-    const syncState = useAppStore((state) => state.syncStatus.state);
+    const syncState = useAppStore(selectCanonicalSyncState);
     const authLoading = useAppStore((state) => state.authLoading);
     const treeName = useAppStore((state) => state.treeName);
     const treeSettings = useAppStore((state) => state.treeSettings);

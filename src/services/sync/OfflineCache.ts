@@ -46,6 +46,15 @@ export class OfflineCache {
         await storageService.bulkDeletePendingOperations(localIds);
     }
 
+    public async updatePendingOperationRetryCounts(ops: PendingDeltaOp[]): Promise<void> {
+        const updates = ops.flatMap((op) =>
+            op.localId === undefined
+                ? []
+                : [{ id: op.localId, retryCount: op.retryCount ?? 0 }]
+        );
+        await storageService.updatePendingOperationRetryCounts(updates);
+    }
+
     public async saveFullTree(people: Record<string, Person>): Promise<void> {
         await storageService.saveFullTree(people);
     }

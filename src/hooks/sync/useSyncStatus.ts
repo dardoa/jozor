@@ -1,9 +1,32 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
+import { useShallow } from 'zustand/react/shallow';
+import { deriveCanonicalTreeSync } from '../../domain/sync/canonicalSyncState';
 import { useAppStore } from '../../store/useAppStore';
 
 export function useSyncStatus() {
-    const syncStatus = useAppStore((state) => state.syncStatus);
+    const {
+        rawSyncStatus,
+        pendingOperationsCount,
+        syncingNodesCount,
+    } = useAppStore(useShallow((state) => ({
+        rawSyncStatus: state.syncStatus,
+        pendingOperationsCount: state.pendingOperations.length,
+        syncingNodesCount: state.syncingNodes.size,
+    })));
     const setSyncStatus = useAppStore((state) => state.setSyncStatus);
+    const syncStatus = useMemo(() => {
+        const canonical = deriveCanonicalTreeSync({
+            syncStatus: rawSyncStatus,
+            pendingOperationsCount,
+            syncingNodesCount,
+        });
+
+        return {
+            ...rawSyncStatus,
+            state: canonical.state,
+            pendingCount: canonical.pendingCount,
+        };
+    }, [pendingOperationsCount, rawSyncStatus, syncingNodesCount]);
 
     const forceDriveSync = useCallback(() => {
         window.dispatchEvent(new CustomEvent('force-drive-sync'));
@@ -16,16 +39,19 @@ export function useSyncStatus() {
     const resetError = useCallback(() => {
         setSyncStatus({
             ...useAppStore.getState().syncStatus,
-            state: 'synced',
+            state: useAppStore.getState().pendingOperations.length > 0 ? 'saving' : 'synced',
             errorMessage: undefined,
             lastErrorCategory: undefined,
             lastErrorAt: null,
             lastErrorRetryable: undefined,
-            supabaseStatus: 'idle',
+            supabaseStatus: useAppStore.getState().pendingOperations.length > 0 ? 'syncing' : 'idle',
             syncBlockedByPlan: false,
+            retryPaused: false,
+            retryAttempt: 0,
+            nextRetryAt: null,
         });
         import('../../services/deltaSyncService').then(({ deltaSyncService }) => {
-            deltaSyncService.flushPendingChanges();
+            deltaSyncService.retryPendingChanges();
         });
     }, [setSyncStatus]);
 

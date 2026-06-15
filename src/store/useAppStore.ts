@@ -13,6 +13,7 @@ import { AppStore } from './storeTypes';
 import { createAppearanceSlice } from './slices/appearanceSlice';
 import { hydrateAppearanceLabFromLegacy } from '../domain/appearance/appearanceHydration';
 import { normalizeChartType } from '../domain/chartTypeAdapter';
+import { deriveCanonicalTreeSync } from '../domain/sync/canonicalSyncState';
 
 /** State shape when loading from file (people + settings + focusId). */
 export interface LoadedState {
@@ -118,11 +119,18 @@ export const selectFocusId = (state: AppStore) => state.focusId;
 export const selectActivePerson = (state: AppStore) => state.people[state.focusId];
 export const selectTreeSettings = (state: AppStore) => state.treeSettings;
 export const selectUser = (state: AppStore) => state.user;
+export const selectCanonicalTreeSync = (state: AppStore) => deriveCanonicalTreeSync({
+    syncStatus: state.syncStatus,
+    pendingOperationsCount: state.pendingOperations.length,
+    syncingNodesCount: state.syncingNodes.size,
+});
+export const selectCanonicalSyncState = (state: AppStore) => selectCanonicalTreeSync(state).state;
+export const selectCanonicalPendingCount = (state: AppStore) => selectCanonicalTreeSync(state).pendingCount;
+export const selectHasPendingTreeSync = (state: AppStore) => !selectCanonicalTreeSync(state).isSynced;
+export const selectIsTreeSyncing = (state: AppStore) => selectCanonicalTreeSync(state).isSyncing;
 export const selectIsSyncing = (state: AppStore) =>
     state.driveSyncUiStatus === 'syncing' ||
-    state.syncStatus.supabaseStatus === 'syncing' ||
-    state.syncStatus.state === 'saving' ||
-    state.syncStatus.pendingCount > 0;
+    selectCanonicalTreeSync(state).isSyncing;
 export const selectCanUndo = (state: AppStore) => state.past.length > 0;
 export const selectSyncingNodes = (state: AppStore) => state.syncingNodes;
 export const selectHealthScore = (state: AppStore) => state.healthScore;

@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { HeaderProps } from '../../types';
-import { useAppStore } from '../../store/useAppStore';
+import { selectCanonicalSyncState, useAppStore } from '../../store/useAppStore';
 import { useTranslation } from '../../context/TranslationContext';
 
 // Import sub-components
@@ -23,6 +23,7 @@ export const Header = memo<HeaderProps>(
     const currentTreeId = useAppStore((state) => state.currentTreeId);
     const currentTreeName = useAppStore((state) => state.treeName);
     const isLowGraphicsMode = useAppStore(state => state.isLowGraphicsMode);
+    const syncState = useAppStore(selectCanonicalSyncState);
     const activeFile = auth.driveFiles.find((f) => f.id === auth.currentActiveDriveFileId) || null;
     const resolvedTreeName = currentTreeId && currentTreeName.trim()
       ? currentTreeName
@@ -41,7 +42,6 @@ export const Header = memo<HeaderProps>(
             : t.roles.unknown;
     const roleLabel = `${roleLabelPrefix}${roleName}`;
 
-    const syncState = auth.syncStatus.state;
     const syncStatusLabel =
       syncState === 'checking'
         ? (t.syncStatus.checking || t.loading)

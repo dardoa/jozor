@@ -41,6 +41,14 @@ describe('syncStatusHelpers', () => {
             const result = buildSyncSuccess(defaultStatus, 0, { lastSyncSupabase: date });
             expect(result.lastSyncSupabase).toBe(date);
         });
+
+        it('keeps saving state while another queued operation remains', () => {
+            const result = buildSyncSuccess(defaultStatus, 2);
+
+            expect(result.state).toBe('saving');
+            expect(result.supabaseStatus).toBe('syncing');
+            expect(result.pendingCount).toBe(2);
+        });
     });
 
     describe('buildSyncError', () => {

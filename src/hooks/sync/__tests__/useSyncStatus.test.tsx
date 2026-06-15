@@ -2,10 +2,17 @@
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useSyncStatus } from '../useSyncStatus';
+import { useAppStore } from '../../../store/useAppStore';
 
 describe('useSyncStatus', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+    act(() => {
+      useAppStore.setState({
+        pendingOperations: [],
+        syncingNodes: new Set(),
+      });
+    });
   });
 
   it('dispatches force and clear maintenance events', () => {
@@ -29,6 +36,31 @@ describe('useSyncStatus', () => {
     });
     expect(result.current.syncStatus.state).toBe('synced');
     expect(result.current.syncStatus.errorMessage).toBeUndefined();
+  });
+
+  it('exposes saving state when pending operations contradict raw synced state', () => {
+    act(() => {
+      useAppStore.setState({
+        syncStatus: {
+          ...useAppStore.getState().syncStatus,
+          state: 'synced',
+          supabaseStatus: 'idle',
+          pendingCount: 0,
+        },
+        pendingOperations: [{
+          tree_id: 'tree-1',
+          user_id: 'user-1',
+          type: 'UPDATE_PROP',
+          payload: { id: 'person-1', updates: { firstName: 'Updated' } },
+          created_at: '2026-06-15T00:00:00.000Z',
+        }],
+      });
+    });
+
+    const { result } = renderHook(() => useSyncStatus());
+
+    expect(result.current.syncStatus.state).toBe('saving');
+    expect(result.current.syncStatus.pendingCount).toBe(1);
   });
 });
 

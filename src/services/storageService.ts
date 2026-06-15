@@ -173,5 +173,19 @@ export const storageService = {
     async bulkDeletePendingOperations(ids: number[]) {
         const db = await getLocalDb();
         await db.pending_operations.bulkDelete(ids);
+    },
+
+    async updatePendingOperationRetryCounts(
+        updates: Array<{ id: number; retryCount: number }>
+    ) {
+        if (updates.length === 0) return;
+        const db = await getLocalDb();
+        await db.transaction('rw', db.pending_operations, async () => {
+            await Promise.all(
+                updates.map(({ id, retryCount }) =>
+                    db.pending_operations.update(id, { retryCount })
+                )
+            );
+        });
     }
 };

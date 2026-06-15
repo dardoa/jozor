@@ -129,6 +129,15 @@ export const SyncStatusTooltip: React.FC<SyncStatusTooltipProps> = ({
                             {syncStatus.lastErrorRetryable !== undefined && (
                                 <div>{syncText.retryLabel || 'Retry'}: {syncStatus.lastErrorRetryable ? (syncText.retryAutomatic || 'Automatic retry expected') : (syncText.retryManual || 'Manual action may be required')}</div>
                             )}
+                            {(syncStatus.retryAttempt ?? 0) > 0 && (
+                                <div>{syncText.retryAttemptLabel || 'Attempt'}: {syncStatus.retryAttempt}</div>
+                            )}
+                            {syncStatus.nextRetryAt && (
+                                <div>{syncText.nextRetryLabel || 'Next retry'}: {formatTime(syncStatus.nextRetryAt)}</div>
+                            )}
+                            {syncStatus.retryPaused && (
+                                <div>{syncText.retryPausedLabel || 'Automatic retries paused. Your changes remain saved locally.'}</div>
+                            )}
                         </div>
                     )}
                 </div>
@@ -163,7 +172,9 @@ export const SyncStatusTooltip: React.FC<SyncStatusTooltipProps> = ({
                         }}
                         className="w-full py-2 px-3 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg text-sm font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
                     >
-                        {syncText.dismissError || 'Dismiss Error'}
+                        {syncStatus.retryPaused
+                            ? (syncText.retryNow || 'Retry pending changes now')
+                            : (syncText.dismissError || 'Dismiss Error')}
                     </button>
                 )}
             </div>

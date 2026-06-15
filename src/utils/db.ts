@@ -15,6 +15,7 @@ export interface PendingOperationRec {
     type: string;
     payload: Record<string, unknown>;
     created_at: string;
+    retryCount?: number;
 }
 
 export interface PersonTombstoneRec {

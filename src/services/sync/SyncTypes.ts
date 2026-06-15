@@ -61,3 +61,10 @@ export interface SyncFlushResult {
     shouldRetry: boolean;
     error?: string;
 }
+
+export interface SyncRetryState {
+    attempt: number;
+    paused: boolean;
+    nextRetryAt: Date | null;
+    error?: string;
+}

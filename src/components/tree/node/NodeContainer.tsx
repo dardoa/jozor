@@ -1,4 +1,5 @@
 import { memo, useCallback } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import type { Person } from '../../../types';
 import { useAppStore } from '../../../store/useAppStore';
 import { NodeView } from './NodeView';
@@ -27,10 +28,21 @@ export const NodeContainer = memo<NodeContainerProps>(({
 }) => {
   const isLOD = useLightweightLOD;
 
-  const person = useAppStore((state) => state.people[node.data.id]) || (node.data as Person);
-  const isNodeSyncing = useAppStore((state) => state.syncingNodes.has(person.id));
-  const isPulsingTarget = useAppStore((state) => state.pulseTargetId === person.id);
-  const validationErrors = useAppStore((state) => state.validationErrors[person.id] || EMPTY_ARRAY);
+  const {
+    person,
+    isNodeSyncing,
+    isPulsingTarget,
+    validationErrors,
+  } = useAppStore(useShallow((state) => {
+    const currentPerson = state.people[node.data.id] || (node.data as Person);
+
+    return {
+      person: currentPerson,
+      isNodeSyncing: state.syncingNodes.has(currentPerson.id),
+      isPulsingTarget: state.pulseTargetId === currentPerson.id,
+      validationErrors: state.validationErrors[currentPerson.id] || EMPTY_ARRAY,
+    };
+  }));
   const hasErrors = validationErrors.length > 0;
 
   const {

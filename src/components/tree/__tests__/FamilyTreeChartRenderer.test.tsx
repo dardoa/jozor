@@ -92,14 +92,12 @@ describe('FamilyTreeChartRenderer memoization', () => {
       settings,
       nodes: [],
       fanArcs: [],
-      collapsePoints: [],
     };
     const viewport = { zoomScale: 1, zoomX: 0, zoomY: 0, viewportSize: { width: 1280, height: 800 } };
     const handlers = {
       onSelect: () => undefined,
       onNodeContextMenu: () => undefined,
       onAddFirstPerson: () => undefined,
-      toggleCollapse: () => undefined,
     };
     const t = {
       emptyState: {},

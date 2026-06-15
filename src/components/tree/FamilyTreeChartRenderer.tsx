@@ -1,6 +1,5 @@
 import React from 'react';
 import type { FanArc, Person, TreeNode, TreeSettings } from '../../types';
-import type { CollapsePoint } from '../../utils/layout/constants';
 import type { V3RendererPipeline } from '../../utils/layout/v3LayoutPipeline';
 import type { TranslationSchema } from '../../utils/translationLoader';
 import { V3FamilyGraphChart } from '../charts/V3FamilyGraphChart';
@@ -18,7 +17,6 @@ export interface FamilyTreeChartData {
   settings: TreeSettings;
   nodes: TreeNode[];
   fanArcs: FanArc[];
-  collapsePoints: CollapsePoint[];
   highlightedPath?: Set<string>;
   pipeline?: V3RendererPipeline | null;
 }
@@ -34,7 +32,6 @@ export interface FamilyTreeChartHandlers {
   onSelect: (id: string) => void;
   onNodeContextMenu: (e: React.MouseEvent, id: string) => void;
   onAddFirstPerson: (gender: 'male' | 'female') => void;
-  toggleCollapse: (uniqueKey: string) => void;
 }
 
 interface FamilyTreeChartRendererProps {
@@ -105,7 +102,6 @@ const ChartFactory = React.memo<ChartFactoryProps>(({
     focusId,
     settings,
     fanArcs,
-    collapsePoints,
     highlightedPath,
     pipeline,
   } = chartData;
@@ -113,7 +109,6 @@ const ChartFactory = React.memo<ChartFactoryProps>(({
     onSelect,
     onNodeContextMenu,
     onAddFirstPerson,
-    toggleCollapse,
   } = handlers;
 
   if (rendererMode === 'radial') {
@@ -150,7 +145,6 @@ const ChartFactory = React.memo<ChartFactoryProps>(({
         people={people}
         focusId={focusId}
         settings={settings}
-        collapsePoints={collapsePoints}
         highlightedPath={highlightedPath}
         pipeline={pipeline}
         zoomScale={viewport.zoomScale}
@@ -159,7 +153,6 @@ const ChartFactory = React.memo<ChartFactoryProps>(({
         viewportSize={viewport.viewportSize}
         onSelect={onSelect}
         onNodeContextMenu={onNodeContextMenu}
-        onToggleCollapse={toggleCollapse}
       />
     );
   }

@@ -122,5 +122,34 @@ describe('SyncStatusTooltip', () => {
     expect(onClearSyncCache).toHaveBeenCalledTimes(1);
     expect(onClose).toHaveBeenCalledTimes(1);
   });
+
+  it('shows paused retry diagnostics and offers an explicit retry action', () => {
+    const onResetError = vi.fn();
+
+    render(
+      <SyncStatusTooltip
+        syncStatus={buildSyncStatus({
+          retryAttempt: 6,
+          retryPaused: true,
+          nextRetryAt: null,
+        })}
+        onForceSync={vi.fn()}
+        onClearSyncCache={vi.fn()}
+        onResetError={onResetError}
+        onClose={vi.fn()}
+        setFloating={vi.fn()}
+        setArrowElement={vi.fn()}
+        floatingStyles={{}}
+        getFloatingProps={() => ({})}
+        context={{} as never}
+      />
+    );
+
+    expect(screen.getByText('Attempt: 6')).toBeInTheDocument();
+    expect(screen.getByText('Automatic retries paused. Your changes remain saved locally.')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Retry pending changes now' }));
+    expect(onResetError).toHaveBeenCalledTimes(1);
+  });
 });
 

@@ -60,6 +60,10 @@ const mockState = {
     lastSkippedSource: 'integrity',
     lastSkippedReason: 'integrity-session-guard:2026-03-27',
   },
+  past: [],
+  future: [],
+  historyStepLimit: 50,
+  historyEstimatedBytes: 0,
   currentTreeId: 'tree-1' as string | null,
   currentUserRole: 'owner' as 'owner' | 'editor' | 'viewer' | null,
   user: {
@@ -73,6 +77,8 @@ const mockState = {
 
 vi.mock('../../store/useAppStore', () => ({
   useAppStore: (selector: (state: typeof mockState) => unknown) => selector(mockState),
+  selectCanonicalSyncState: (state: typeof mockState) => state.syncStatus.state,
+  selectCanonicalPendingCount: (state: typeof mockState) => state.syncStatus.pendingCount,
 }));
 
 vi.mock('../../context/TranslationContext', () => ({

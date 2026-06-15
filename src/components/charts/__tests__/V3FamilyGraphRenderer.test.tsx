@@ -142,6 +142,32 @@ describe('V3FamilyGraphRenderer node stability', () => {
     expect(refreshedNode.data).toBe(renamedPerson);
   });
 
+  it('does not render inactive collapse controls from the layout pipeline', () => {
+    const person = buildPerson();
+    const pipelineWithCollapseControl: V3RendererPipeline = {
+      ...pipeline,
+      collapseControls: [{
+        uniqueKey: 'collapse:root-person:down',
+        personId: person.id,
+        isCollapsed: false,
+        direction: 'down',
+        x: 24,
+        y: 120,
+        originX: 24,
+        originY: 48,
+      }],
+    };
+
+    const { container } = render(renderGraph(
+      person,
+      { [person.id]: person },
+      pipelineWithCollapseControl,
+    ));
+
+    expect(container.querySelector('[data-collapse-key]')).not.toBeInTheDocument();
+    expect(container.querySelector('[aria-label="V3 collapse controls"]')).not.toBeInTheDocument();
+  });
+
   it('keeps the original V3 step path and applies line thickness', () => {
     const person = buildPerson();
     const edgePipeline: V3RendererPipeline = {

@@ -4,7 +4,7 @@ import { select } from 'd3-selection';
 import 'd3-transition';
 import { zoom, zoomIdentity, type D3ZoomEvent, type ZoomBehavior } from 'd3-zoom';
 import { extent } from 'd3-array';
-import { useAppStore } from '../../store/useAppStore';
+import { selectIsTreeSyncing, useAppStore } from '../../store/useAppStore';
 import { TreeNode } from '../../types';
 import { useThrottledCallback } from '../ui/useDebounce';
 
@@ -58,10 +58,7 @@ export const useTreeInteraction = ({
     const zoomScaleRef = useRef(1);
 
     // Sync guard: prevents auto-centering from interrupting user interaction or background saves
-    const isSyncing = useAppStore(state => 
-        state.syncStatus?.supabaseStatus === 'syncing' || 
-        state.syncStatus?.state === 'saving'
-    );
+    const isSyncing = useAppStore(selectIsTreeSyncing);
     const isUserInteracting = useRef(false);
     const isTransitioning = useRef(false);
 

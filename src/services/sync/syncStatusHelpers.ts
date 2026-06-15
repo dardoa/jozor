@@ -2,13 +2,16 @@ import { SyncStatus } from '../../types';
 
 export const buildSyncSuccess = (current: SyncStatus, pendingCount: number, options?: { lastSyncSupabase?: Date }): SyncStatus => ({
     ...current,
-    state: 'synced',
-    supabaseStatus: 'idle',
+    state: pendingCount > 0 ? 'saving' : 'synced',
+    supabaseStatus: pendingCount > 0 ? 'syncing' : 'idle',
     pendingCount,
     errorMessage: undefined,
     lastErrorCategory: undefined,
     lastErrorAt: null,
     lastErrorRetryable: undefined,
+    retryAttempt: 0,
+    retryPaused: false,
+    nextRetryAt: null,
     ...(options?.lastSyncSupabase ? { lastSyncSupabase: options.lastSyncSupabase } : {})
 });
 

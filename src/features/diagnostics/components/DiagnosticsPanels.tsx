@@ -1,7 +1,11 @@
 import React, { useCallback, useMemo } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { useTranslation } from '../../../context/TranslationContext';
-import { useAppStore } from '../../../store/useAppStore';
+import {
+  selectCanonicalPendingCount,
+  selectCanonicalSyncState,
+  useAppStore,
+} from '../../../store/useAppStore';
 import { DiagnosticsMaintenancePanels } from './DiagnosticsMaintenancePanels';
 import { deltaSyncService } from '../../../services/deltaSyncService';
 import {
@@ -58,6 +62,12 @@ const PerformanceBudgetBadge: React.FC<{
   </span>
 );
 
+const formatByteEstimate = (bytes: number): string => {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+};
+
 const getInvitationDiagnosticsText = (t: SettingsTranslator): InvitationDiagnosticsText => ({
   invitationDiagnostics: t.settings.invitationDiagnostics || 'Invitation Diagnostics',
   lastInvitationHydrationLabel: t.settings.lastInvitationHydrationLabel || 'Last Hydration',
@@ -100,8 +110,13 @@ export const DiagnosticsPanels: React.FC<{
 }) => {
   const { t, dateLocale } = useTranslation();
   const syncStatus = useAppStore((state) => state.syncStatus);
+  const canonicalSyncState = useAppStore(selectCanonicalSyncState);
+  const canonicalPendingCount = useAppStore(selectCanonicalPendingCount);
   const invitationTelemetry = useAppStore((state) => state.invitationTelemetry);
   const notificationTelemetry = useAppStore((state) => state.notificationTelemetry);
+  const historyEntryCount = useAppStore((state) => state.past.length + state.future.length);
+  const historyStepLimit = useAppStore((state) => state.historyStepLimit);
+  const historyEstimatedBytes = useAppStore((state) => state.historyEstimatedBytes);
 
   const invitationText = useMemo(() => getInvitationDiagnosticsText(t), [t]);
   const notificationText = useMemo(() => getNotificationDiagnosticsText(t), [t]);
@@ -276,11 +291,19 @@ export const DiagnosticsPanels: React.FC<{
             <div className="grid grid-cols-2 gap-2">
               <div className="rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3 py-2">
                 <div className="text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">{t.settings.syncStateLabel}</div>
-                <div className="mt-1 text-xs font-bold text-[var(--text-main)]">{syncStatus.state}</div>
+                <div className="mt-1 text-xs font-bold text-[var(--text-main)]">{canonicalSyncState}</div>
               </div>
               <div className="rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3 py-2">
                 <div className="text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">{t.settings.pendingChangesLabel}</div>
-                <div className="mt-1 text-xs font-bold text-[var(--text-main)]">{syncStatus.pendingCount}</div>
+                <div className="mt-1 text-xs font-bold text-[var(--text-main)]">{canonicalPendingCount}</div>
+              </div>
+              <div className="rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3 py-2">
+                <div className="text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">{t.settings.historyEntriesLabel}</div>
+                <div className="mt-1 text-xs font-bold text-[var(--text-main)]">{historyEntryCount} / {historyStepLimit}</div>
+              </div>
+              <div className="rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3 py-2">
+                <div className="text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">{t.settings.historyMemoryEstimateLabel}</div>
+                <div className="mt-1 text-xs font-bold text-[var(--text-main)]">{formatByteEstimate(historyEstimatedBytes)}</div>
               </div>
             </div>
             <div className="space-y-2 text-[11px] text-[var(--text-secondary)]">

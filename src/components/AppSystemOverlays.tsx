@@ -1,7 +1,7 @@
 import * as React from 'react';
 
 import { EMPTY_STRING } from '../constants';
-import { useAppStore } from '../store/useAppStore';
+import { selectHasPendingTreeSync, useAppStore } from '../store/useAppStore';
 import { useTranslation } from '../context/TranslationContext';
 import type {
   AppStateAndActions,
@@ -51,6 +51,7 @@ export const AppSystemOverlays: React.FC<AppSystemOverlaysProps> = ({
   const setDiscussionOpen = useAppStore((state) => state.setDiscussionOpen);
   const treeName = useAppStore((state) => state.treeName);
   const setTreeName = useAppStore((state) => state.setTreeName);
+  const hasPendingTreeSync = useAppStore(selectHasPendingTreeSync);
   const currentRootName = focusId ? [people[focusId]?.firstName, people[focusId]?.lastName].filter(Boolean).join(' ').trim() : EMPTY_STRING;
 
   return (
@@ -97,7 +98,7 @@ export const AppSystemOverlays: React.FC<AppSystemOverlaysProps> = ({
             people={Object.values(people)}
             currentRootName={currentRootName || null}
             currentRootId={focusId || null}
-            hasPendingSync={auth.syncStatus.state !== 'synced'}
+            hasPendingSync={hasPendingTreeSync}
             googleSync={{
               handleCreateSnapshot: googleSync.handleCreateSnapshot,
               handleRestoreSnapshot: googleSync.handleRestoreSnapshot,

@@ -10,6 +10,7 @@ vi.mock('../../storageService', () => ({
         getPendingOperations: vi.fn(),
         deletePendingOperation: vi.fn(),
         bulkDeletePendingOperations: vi.fn(),
+        updatePendingOperationRetryCounts: vi.fn(),
     }
 }));
 
@@ -41,6 +42,19 @@ describe('OfflineCache', () => {
         expect(storageService.savePendingOperations).toHaveBeenCalledWith([
             { tree_id: 'tree-1', user_id: 'user-1', type: 'ADD_NODE', payload: {}, created_at: '2026' },
             { tree_id: 'tree-1', user_id: 'user-1', type: 'UPDATE_PROP', payload: {}, created_at: '2026' }
+        ]);
+    });
+
+    it('persists retry counts only for operations with local IDs', async () => {
+        const ops: PendingDeltaOp[] = [
+            { localId: 10, retryCount: 2, tree_id: 'tree-1', user_id: 'user-1', type: 'ADD_NODE', payload: {}, created_at: '2026' },
+            { retryCount: 3, tree_id: 'tree-1', user_id: 'user-1', type: 'UPDATE_PROP', payload: {}, created_at: '2026' },
+        ];
+
+        await offlineCache.updatePendingOperationRetryCounts(ops);
+
+        expect(storageService.updatePendingOperationRetryCounts).toHaveBeenCalledWith([
+            { id: 10, retryCount: 2 },
         ]);
     });
 });
