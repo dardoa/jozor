@@ -381,6 +381,7 @@ export const searchService = {
 
         // 1. Process Relational and Locational Intents (Inference Layer)
         if (intentDetected) {
+            const indexedPeopleById = new Map(indexedPeople.map(p => [p.id, p]));
             for (const intent of parsed.intents) {
                 if (intent.logicType === 'RELATIONAL' && intent.targetName) {
                     const targets = await findTargetPeople(intent.targetName, indexedPeople);
@@ -435,7 +436,7 @@ export const searchService = {
                                     if (t.fatherId) targetFatherIds.add(t.fatherId);
                                     // Also check parents array for male parents
                                     t.parents?.forEach(pid => {
-                                        const p = indexedPeople.find(ip => ip.id === pid);
+                                        const p = indexedPeopleById.get(pid);
                                         if (p?.gender === 'male') targetFatherIds.add(pid);
                                     });
                                 });
@@ -461,7 +462,7 @@ export const searchService = {
                                 targets.forEach(t => {
                                     if (t.motherId) targetMotherIds.add(t.motherId);
                                     t.parents?.forEach(pid => {
-                                        const p = indexedPeople.find(ip => ip.id === pid);
+                                        const p = indexedPeopleById.get(pid);
                                         if (p?.gender === 'female') targetMotherIds.add(pid);
                                     });
                                 });
@@ -487,7 +488,7 @@ export const searchService = {
                                 targets.forEach(t => {
                                     if (t.fatherId) tFatherIdsP.add(t.fatherId);
                                     t.parents?.forEach(pid => {
-                                        const p = indexedPeople.find(ip => ip.id === pid);
+                                        const p = indexedPeopleById.get(pid);
                                         if (p?.gender === 'male') tFatherIdsP.add(pid);
                                     });
                                 });
@@ -516,7 +517,7 @@ export const searchService = {
                                 targets.forEach(t => {
                                     if (t.motherId) tMotherIdsM.add(t.motherId);
                                     t.parents?.forEach(pid => {
-                                        const p = indexedPeople.find(ip => ip.id === pid);
+                                        const p = indexedPeopleById.get(pid);
                                         if (p?.gender === 'female') tMotherIdsM.add(pid);
                                     });
                                 });
