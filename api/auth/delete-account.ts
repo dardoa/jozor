@@ -198,16 +198,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const limit = createLimit(5);
+    const folderLimit = createLimit(3);
     const deleteTasks: Promise<void>[] = [];
 
     // 2. Delete all avatars in user's profile folder recursively (iteratively using limiter)
     const userFolder = `users/${user.uid}`;
-    deleteTasks.push(deleteFolderIteratively(supabaseAdmin, 'avatars', userFolder, limit));
+    deleteTasks.push(
+      folderLimit(() => deleteFolderIteratively(supabaseAdmin, 'avatars', userFolder, limit))
+    );
 
     // 3. Delete all tree-specific folders for trees owned by user in parallel (using shared limiter)
     if (trees && trees.length > 0) {
       for (const tree of trees) {
-        deleteTasks.push(deleteFolderIteratively(supabaseAdmin, 'avatars', tree.id, limit));
+        deleteTasks.push(
+          folderLimit(() => deleteFolderIteratively(supabaseAdmin, 'avatars', tree.id, limit))
+        );
       }
     }
 
