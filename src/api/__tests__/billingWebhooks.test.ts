@@ -8,6 +8,8 @@ vi.mock('../../../shared/auth/internalJwt', () => ({
   verifyInternalToken: vi.fn().mockResolvedValue({ uid: 'user123', email: 'test@example.com' }),
 }));
 
+import { Readable } from 'stream';
+
 // Helper to create a fake streaming request
 function createMockRequest(bodySize: number, method = 'POST', headers: Record<string, string> = {}): VercelRequest {
   const chunks: Uint8Array[] = [];
@@ -20,16 +22,11 @@ function createMockRequest(bodySize: number, method = 'POST', headers: Record<st
     remaining -= size;
   }
 
-  return {
-    method,
-    headers,
-    body: { tier: 'pro' },
-    [Symbol.asyncIterator]: async function* () {
-      for (const chunk of chunks) {
-        yield chunk;
-      }
-    }
-  } as unknown as VercelRequest;
+  const req = Readable.from(chunks) as any;
+  req.method = method;
+  req.headers = headers;
+  req.body = { tier: 'pro' };
+  return req as unknown as VercelRequest;
 }
 
 function createMockResponse() {

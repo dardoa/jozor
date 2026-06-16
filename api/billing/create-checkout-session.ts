@@ -19,19 +19,46 @@ interface CheckoutRequestBody {
 }
 
 async function readJsonBody(req: VercelRequest): Promise<CheckoutRequestBody> {
-  const chunks: Buffer[] = [];
-  let totalLength = 0;
+  return new Promise((resolve, reject) => {
+    const chunks: Buffer[] = [];
+    let totalLength = 0;
 
-  for await (const chunk of req) {
-    const buffer = Buffer.from(chunk);
-    totalLength += buffer.length;
-    if (totalLength > MAX_JSON_BODY_SIZE) {
-      throw new PayloadTooLargeError();
+    const onData = (chunk: Buffer | Uint8Array) => {
+      const buffer = Buffer.from(chunk);
+      totalLength += buffer.length;
+      if (totalLength > MAX_JSON_BODY_SIZE) {
+        cleanup();
+        reject(new PayloadTooLargeError());
+      } else {
+        chunks.push(buffer);
+      }
+    };
+
+    const onEnd = () => {
+      cleanup();
+      try {
+        const body = JSON.parse(Buffer.concat(chunks).toString('utf8')) as CheckoutRequestBody;
+        resolve(body);
+      } catch (err) {
+        reject(err);
+      }
+    };
+
+    const onError = (err: Error) => {
+      cleanup();
+      reject(err);
+    };
+
+    function cleanup() {
+      req.off('data', onData);
+      req.off('end', onEnd);
+      req.off('error', onError);
     }
-    chunks.push(buffer);
-  }
 
-  return JSON.parse(Buffer.concat(chunks).toString('utf8')) as CheckoutRequestBody;
+    req.on('data', onData);
+    req.on('end', onEnd);
+    req.on('error', onError);
+  });
 }
 
 function getEnv(name: string): string | undefined {

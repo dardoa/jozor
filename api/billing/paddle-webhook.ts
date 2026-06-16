@@ -10,16 +10,40 @@ export const config = {
 };
 
 async function getRawBody(req: VercelRequest): Promise<string> {
-  const chunks: Uint8Array[] = [];
-  let totalLength = 0;
-  for await (const chunk of req) {
-    totalLength += chunk.length;
-    if (totalLength > MAX_JSON_BODY_SIZE) {
-      throw new PayloadTooLargeError();
+  return new Promise((resolve, reject) => {
+    const chunks: Uint8Array[] = [];
+    let totalLength = 0;
+
+    const onData = (chunk: Uint8Array) => {
+      totalLength += chunk.length;
+      if (totalLength > MAX_JSON_BODY_SIZE) {
+        cleanup();
+        reject(new PayloadTooLargeError());
+      } else {
+        chunks.push(chunk);
+      }
+    };
+
+    const onEnd = () => {
+      cleanup();
+      resolve(Buffer.concat(chunks).toString('utf8'));
+    };
+
+    const onError = (err: Error) => {
+      cleanup();
+      reject(err);
+    };
+
+    function cleanup() {
+      req.off('data', onData);
+      req.off('end', onEnd);
+      req.off('error', onError);
     }
-    chunks.push(chunk);
-  }
-  return Buffer.concat(chunks).toString('utf8');
+
+    req.on('data', onData);
+    req.on('end', onEnd);
+    req.on('error', onError);
+  });
 }
 
 function getEnv(name: string): string | undefined {

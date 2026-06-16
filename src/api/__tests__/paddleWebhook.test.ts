@@ -17,20 +17,17 @@ vi.mock('@paddle/paddle-node-sdk', () => ({
   }),
 }));
 
+import { Readable } from 'stream';
 import handler from '../../../api/billing/paddle-webhook';
 
 const createRequest = (body: unknown) => {
   const rawBody = JSON.stringify(body);
-
-  return {
-    method: 'POST',
-    headers: {
-      'paddle-signature': `ts=${Math.floor(Date.now() / 1000)};h1=test-signature`,
-    },
-    async *[Symbol.asyncIterator]() {
-      yield Buffer.from(rawBody);
-    },
+  const req = Readable.from(Buffer.from(rawBody)) as any;
+  req.method = 'POST';
+  req.headers = {
+    'paddle-signature': `ts=${Math.floor(Date.now() / 1000)};h1=test-signature`,
   };
+  return req;
 };
 
 const createResponse = () => {

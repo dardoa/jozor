@@ -9,17 +9,15 @@ vi.mock('@supabase/supabase-js', () => ({
   createClient: (...args: unknown[]) => createClientMock(...args),
 }));
 
+import { Readable } from 'stream';
 import handler from '../../../api/billing/create-checkout-session';
 
 const createRequest = (body: unknown, headers: Record<string, string>) => {
   const rawBody = Buffer.from(JSON.stringify(body));
-  return {
-    method: 'POST',
-    headers,
-    [Symbol.asyncIterator]: async function* () {
-      yield rawBody;
-    },
-  };
+  const req = Readable.from(rawBody) as any;
+  req.method = 'POST';
+  req.headers = headers;
+  return req;
 };
 
 const createResponse = () => {

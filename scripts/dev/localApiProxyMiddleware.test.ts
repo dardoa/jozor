@@ -1,4 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
+import { Readable } from 'node:stream';
 import { describe, expect, it, vi } from 'vitest';
 import { createLocalApiProxyMiddleware } from './localApiProxyMiddleware';
 
@@ -102,15 +103,17 @@ describe('createLocalApiProxyMiddleware', () => {
     } as never);
 
     let bodyReadCount = 0;
-    const req = {
-      method: 'POST',
-      url: '/billing/create-checkout-session',
-      headers: { host: 'localhost:3000' },
-      [Symbol.asyncIterator]: async function* () {
-        bodyReadCount += 1;
-        yield Buffer.from('{}');
-      },
-    } as IncomingMessage;
+    const req = Readable.from(Buffer.from('{}')) as any;
+    req.method = 'POST';
+    req.url = '/billing/create-checkout-session';
+    req.headers = { host: 'localhost:3000' };
+    const originalOn = req.on;
+    req.on = function(event: string, listener: any) {
+      if (event === 'data') {
+        bodyReadCount = 1;
+      }
+      return originalOn.call(this, event, listener);
+    };
     const res = createResponse();
     const next = vi.fn();
 
@@ -141,14 +144,10 @@ describe('createLocalApiProxyMiddleware', () => {
       },
     } as never);
 
-    const req = {
-      method: 'POST',
-      url: '/billing/paddle-webhook',
-      headers: { host: 'localhost:3000' },
-      [Symbol.asyncIterator]: async function* () {
-        yield Buffer.from('{"event_type":"subscription.created"}');
-      },
-    } as IncomingMessage;
+    const req = Readable.from(Buffer.from('{"event_type":"subscription.created"}')) as any;
+    req.method = 'POST';
+    req.url = '/billing/paddle-webhook';
+    req.headers = { host: 'localhost:3000' };
     const res = createResponse();
     const next = vi.fn();
 
