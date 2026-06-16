@@ -9,12 +9,14 @@ interface InfoPageLayoutProps {
   title: string;
   description: string;
   children: React.ReactNode;
+  action?: React.ReactNode;
 }
 
 export const InfoPageLayout: React.FC<InfoPageLayoutProps> = ({
   title,
   description,
   children,
+  action,
 }) => {
   const navigate = useNavigate();
   const { language, setLanguage } = useTranslation();
@@ -54,6 +56,7 @@ export const InfoPageLayout: React.FC<InfoPageLayoutProps> = ({
 
           {/* Actions */}
           <div className="flex items-center gap-4">
+            {action}
             <button
               onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
               className="inline-flex items-center gap-2 text-sm font-bold text-[var(--text-secondary)] hover:text-[var(--text-main)] transition-colors"
