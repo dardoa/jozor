@@ -100,13 +100,14 @@ async function fetchPeopleByTree(
   if (peopleError) throw peopleError;
 
   const peopleByTreeId: Record<string, Record<string, Person>> = {};
-  for (const tid of uniqueTreeIds) {
-    peopleByTreeId[tid] = {};
-  }
+  const allowedTreeIds = new Set(uniqueTreeIds);
 
   for (const row of (peopleData ?? []) as DbPersonRow[]) {
     const tid = row.tree_id;
-    if (tid && peopleByTreeId[tid]) {
+    if (tid && allowedTreeIds.has(tid)) {
+      if (!peopleByTreeId[tid]) {
+        peopleByTreeId[tid] = {};
+      }
       peopleByTreeId[tid][row.id] = mapDbPersonRowToPerson(row);
     }
   }
