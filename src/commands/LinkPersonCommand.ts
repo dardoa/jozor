@@ -2,6 +2,7 @@ import { TreeCommand, CommandContext } from './types';
 import { MutationActionResult } from '../types';
 import { checkRelationshipAction, checkRelationshipContext, checkPersonSuggestions, describeSmartCheckIssue } from '../domain/smartChecker';
 import { showToast } from '../utils/showToast';
+import { executeCommandSync } from '../utils/syncUtils';
 
 export class LinkPersonCommand implements TreeCommand {
     constructor(
@@ -58,70 +59,68 @@ export class LinkPersonCommand implements TreeCommand {
         if (!this.bypassSync) {
             const treeId = freshStore.currentTreeId;
 
-            if (treeId && this.type) {
-                try {
-                    // PUSH: ADD_RELATION (Primary)
-                    const primaryQueued = await context.syncService.pushOperation(treeId, 'ADD_RELATION', {
-                        focusId,
-                        existingId: this.existingId,
-                        type: this.type
-                    });
-                    if (primaryQueued === false) {
-                        rollback();
-                        return { success: false, error: 'The relationship was added locally, but could not be queued for sync.' };
-                    }
+            if (this.type) {
+                const syncResult = await executeCommandSync({
+                    treeId,
+                    operationType: 'ADD_RELATION',
+                    errorPrefix: 'Failed to sync ADD_RELATION via DeltaSync:',
+                    fallbackErrorMessage: 'The relationship was added locally, but sync failed.',
+                    rollback,
+                    syncAction: async () => {
+                        // PUSH: ADD_RELATION (Primary)
+                        const primaryQueued = await context.syncService.pushOperation(treeId!, 'ADD_RELATION', {
+                            focusId,
+                            existingId: this.existingId,
+                            type: this.type!
+                        });
+                        if (primaryQueued === false) {
+                            return { success: false, error: 'The relationship was added locally, but could not be queued for sync.' };
+                        }
 
-                    // Handle complex rules (like co-parents)
-                    const { 
-                        resolveOtherParentForLinkedParent, 
-                        resolveCoParentForLinkedChild 
-                    } = await import('../domain/relationshipRules');
+                        // Handle complex rules (like co-parents)
+                        const { 
+                            resolveOtherParentForLinkedParent, 
+                            resolveCoParentForLinkedChild 
+                        } = await import('../domain/relationshipRules');
 
-                    if (this.type === 'parent') {
-                        const otherParentId = resolveOtherParentForLinkedParent(preLinkPeople, focusId, this.relatedPersonId);
-                        if (otherParentId && otherParentId !== this.existingId) {
-                            const relationQueued = await context.syncService.pushOperation(treeId, 'ADD_RELATION', {
-                                focusId: this.existingId,
-                                existingId: otherParentId,
-                                type: 'spouse'
-                            });
-                            if (relationQueued === false) {
-                                rollback();
-                                return { success: false, error: 'The relationship was added locally, but could not be queued for sync.' };
+                        if (this.type === 'parent') {
+                            const otherParentId = resolveOtherParentForLinkedParent(preLinkPeople, focusId, this.relatedPersonId);
+                            if (otherParentId && otherParentId !== this.existingId) {
+                                const relationQueued = await context.syncService.pushOperation(treeId!, 'ADD_RELATION', {
+                                    focusId: this.existingId,
+                                    existingId: otherParentId,
+                                    type: 'spouse'
+                                });
+                                if (relationQueued === false) {
+                                    return { success: false, error: 'The relationship was added locally, but could not be queued for sync.' };
+                                }
+                            }
+                        } else if (this.type === 'child') {
+                            const coParentId = resolveCoParentForLinkedChild(preLinkPeople, focusId, this.existingId, this.relatedPersonId);
+                            if (coParentId) {
+                                const relationQueued = await context.syncService.pushOperation(treeId!, 'ADD_RELATION', {
+                                    focusId: coParentId,
+                                    existingId: this.existingId,
+                                    type: 'child'
+                                });
+                                if (relationQueued === false) {
+                                    return { success: false, error: 'The relationship was added locally, but could not be queued for sync.' };
+                                }
                             }
                         }
-                    } else if (this.type === 'child') {
-                        const coParentId = resolveCoParentForLinkedChild(preLinkPeople, focusId, this.existingId, this.relatedPersonId);
-                        if (coParentId) {
-                            const relationQueued = await context.syncService.pushOperation(treeId, 'ADD_RELATION', {
-                                focusId: coParentId,
-                                existingId: this.existingId,
-                                type: 'child'
-                            });
-                            if (relationQueued === false) {
-                                rollback();
-                                return { success: false, error: 'The relationship was added locally, but could not be queued for sync.' };
-                            }
-                        }
-                    }
 
-                    void context.activityService.logAction(treeId, 'ADD_RELATION', {
-                        focusId,
-                        existingId: this.existingId,
-                        type: this.type,
-                        focusName: `${preLinkPeople[focusId]?.firstName} ${preLinkPeople[focusId]?.lastName}`.trim(),
-                        existingName: `${preLinkPeople[this.existingId]?.firstName} ${preLinkPeople[this.existingId]?.lastName}`.trim(),
-                    });
-                } catch (error) {
-                    console.error('Failed to sync ADD_RELATION via DeltaSync:', error);
-                    rollback();
-                    return {
-                        success: false,
-                        error: error instanceof Error ? error.message : 'The relationship was added locally, but sync failed.',
-                    };
+                        void context.activityService.logAction(treeId!, 'ADD_RELATION', {
+                            focusId,
+                            existingId: this.existingId,
+                            type: this.type!,
+                            focusName: `${preLinkPeople[focusId]?.firstName} ${preLinkPeople[focusId]?.lastName}`.trim(),
+                            existingName: `${preLinkPeople[this.existingId]?.firstName} ${preLinkPeople[this.existingId]?.lastName}`.trim(),
+                        });
+                    }
+                });
+                if (!syncResult.success) {
+                    return syncResult;
                 }
-            } else {
-                console.warn('DeltaSync: Skip pushOperation (ADD_RELATION) - currentTreeId is missing');
             }
         }
 

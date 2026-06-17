@@ -1,5 +1,6 @@
 import { TreeCommand, CommandContext } from './types';
 import { MutationActionResult } from '../types';
+import { executeCommandSync } from '../utils/syncUtils';
 
 export class DeletePersonCommand implements TreeCommand {
     constructor(
@@ -60,28 +61,26 @@ export class DeletePersonCommand implements TreeCommand {
         if (!this.bypassSync) {
             const treeId = freshStore.currentTreeId;
 
-            if (treeId) {
-                try {
-                    const queued = await context.syncService.pushOperation(treeId, 'DELETE_NODE', { id: this.id });
+            const syncResult = await executeCommandSync({
+                treeId,
+                operationType: 'DELETE_NODE',
+                errorPrefix: 'Failed to sync DELETE_NODE via DeltaSync:',
+                fallbackErrorMessage: 'The person was deleted locally, but sync failed.',
+                rollback,
+                syncAction: async () => {
+                    const queued = await context.syncService.pushOperation(treeId!, 'DELETE_NODE', { id: this.id });
                     if (queued === false) {
-                        rollback();
                         return { success: false, error: 'The person was deleted locally, but could not be queued for sync.' };
                     }
                     
-                    void context.activityService.logAction(treeId, 'DELETE_PERSON', {
+                    void context.activityService.logAction(treeId!, 'DELETE_PERSON', {
                         personId: this.id,
                         personName: `${personToDelete.firstName} ${personToDelete.lastName}`.trim(),
                     });
-                } catch (error) {
-                    console.error('Failed to sync DELETE_NODE via DeltaSync:', error);
-                    rollback();
-                    return {
-                        success: false,
-                        error: error instanceof Error ? error.message : 'The person was deleted locally, but sync failed.',
-                    };
                 }
-            } else {
-                console.warn('DeltaSync: Skip pushOperation (DELETE_NODE) - currentTreeId is missing');
+            });
+            if (!syncResult.success) {
+                return syncResult;
             }
         }
 

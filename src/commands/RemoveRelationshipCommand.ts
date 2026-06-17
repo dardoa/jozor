@@ -1,5 +1,6 @@
 import { TreeCommand, CommandContext } from './types';
 import { MutationActionResult } from '../types';
+import { executeCommandSync } from '../utils/syncUtils';
 
 export class RemoveRelationshipCommand implements TreeCommand {
     constructor(
@@ -24,9 +25,13 @@ export class RemoveRelationshipCommand implements TreeCommand {
         if (!this.bypassSync) {
             const treeId = freshStore.currentTreeId;
 
-            if (treeId) {
-                try {
-                    const queued = await context.syncService.pushOperation(treeId, 'DELETE_RELATION', {
+            const syncResult = await executeCommandSync({
+                treeId,
+                operationType: 'DELETE_RELATION',
+                errorPrefix: 'Failed to sync DELETE_RELATION via DeltaSync:',
+                fallbackErrorMessage: 'The relationship was removed locally, but sync failed.',
+                syncAction: async () => {
+                    const queued = await context.syncService.pushOperation(treeId!, 'DELETE_RELATION', {
                         targetId: this.targetId,
                         relativeId: this.relativeId,
                         type: this.type
@@ -35,22 +40,17 @@ export class RemoveRelationshipCommand implements TreeCommand {
                         return { success: false, error: 'The relationship was removed locally, but could not be queued for sync.' };
                     }
                      
-                    void context.activityService.logAction(treeId, 'DELETE_RELATION', {
+                    void context.activityService.logAction(treeId!, 'DELETE_RELATION', {
                         targetId: this.targetId,
                         relativeId: this.relativeId,
                         type: this.type,
                         targetName: `${preDeletePeople[this.targetId]?.firstName} ${preDeletePeople[this.targetId]?.lastName}`.trim(),
                         relativeName: `${preDeletePeople[this.relativeId]?.firstName} ${preDeletePeople[this.relativeId]?.lastName}`.trim()
                     });
-                } catch (error) {
-                    console.error('Failed to sync DELETE_RELATION via DeltaSync:', error);
-                    return {
-                        success: false,
-                        error: error instanceof Error ? error.message : 'The relationship was removed locally, but sync failed.',
-                    };
                 }
-            } else {
-                console.warn('DeltaSync: Skip pushOperation (DELETE_RELATION) - currentTreeId is missing');
+            });
+            if (!syncResult.success) {
+                return syncResult;
             }
         }
 

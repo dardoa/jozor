@@ -3,6 +3,7 @@ import { MutationActionResult, Person } from '../types';
 import { checkPersonSuggestions, describeSmartCheckIssue } from '../domain/smartChecker';
 import { showToast } from '../utils/showToast';
 import { validatePerson } from '../utils/familyLogic';
+import { executeCommandSync } from '../utils/syncUtils';
 
 export type RelativeType = 'parent' | 'spouse' | 'child';
 
@@ -68,17 +69,21 @@ export class AddRelativeCommand implements TreeCommand {
         // 2. Sync and Side Effects
         if (!this.bypassSync) {
             const treeId = freshStore.currentTreeId;
-            if (treeId) {
-                try {
+            const syncResult = await executeCommandSync({
+                treeId,
+                operationType: 'ADD_NODE',
+                errorPrefix: `Failed to sync ${this.type} via DeltaSync:`,
+                fallbackErrorMessage: `The ${this.type} was added locally, but sync failed.`,
+                rollback,
+                syncAction: async () => {
                     // PUSH: ADD_NODE
                     // The applier on other clients will add the node AND the relationship to focusId
-                    const nodeQueued = await context.syncService.pushOperation(treeId, 'ADD_NODE', { 
+                    const nodeQueued = await context.syncService.pushOperation(treeId!, 'ADD_NODE', { 
                         person: newPerson, 
                         relativeId: focusId, 
                         type: this.type 
                     });
                     if (nodeQueued === false) {
-                        rollback();
                         return { success: false, error: `The ${this.type} was added locally, but could not be queued for sync.` };
                     }
 
@@ -88,48 +93,40 @@ export class AddRelativeCommand implements TreeCommand {
                     if (this.type === 'parent') {
                         const spouseId = resolveSpouseForNewParent(newPerson, this.relatedPersonId);
                         if (spouseId) {
-                            const relationQueued = await context.syncService.pushOperation(treeId, 'ADD_RELATION', {
+                            const relationQueued = await context.syncService.pushOperation(treeId!, 'ADD_RELATION', {
                                 focusId: newId,
                                 existingId: spouseId,
                                 type: 'spouse'
                             });
                             if (relationQueued === false) {
-                                rollback();
                                 return { success: false, error: 'The relationship was added locally, but could not be queued for sync.' };
                             }
                         }
                     } else if (this.type === 'child') {
                         const coParentId = resolveCoParentForNewChild(newPerson, focusId, this.relatedPersonId);
                         if (coParentId) {
-                            const relationQueued = await context.syncService.pushOperation(treeId, 'ADD_RELATION', {
+                            const relationQueued = await context.syncService.pushOperation(treeId!, 'ADD_RELATION', {
                                 focusId: coParentId,
                                 existingId: newId,
                                 type: 'child'
                             });
                             if (relationQueued === false) {
-                                rollback();
                                 return { success: false, error: 'The relationship was added locally, but could not be queued for sync.' };
                             }
                         }
                     }
 
                     // Activity Logging (Local & Remote)
-                    void context.activityService.logAction(treeId, 'ADD_PERSON', {
+                    void context.activityService.logAction(treeId!, 'ADD_PERSON', {
                         personId: newPerson.id,
                         personName: `${newPerson.firstName} ${newPerson.lastName}`.trim(),
                         type: this.type,
                         relativeId: focusId,
                     });
-                } catch (error) {
-                    console.error(`Failed to sync ${this.type} via DeltaSync:`, error);
-                    rollback();
-                    return {
-                        success: false,
-                        error: error instanceof Error ? error.message : `The ${this.type} was added locally, but sync failed.`,
-                    };
                 }
-            } else {
-                console.warn('DeltaSync: Skip pushOperation (ADD_NODE) - currentTreeId is missing');
+            });
+            if (!syncResult.success) {
+                return syncResult;
             }
         }
 

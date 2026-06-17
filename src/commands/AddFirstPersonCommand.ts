@@ -2,6 +2,7 @@ import { TreeCommand, CommandContext } from './types';
 import { MutationActionResult } from '../types';
 import { checkPersonSuggestions, describeSmartCheckIssue } from '../domain/smartChecker';
 import { showToast } from '../utils/showToast';
+import { executeCommandSync } from '../utils/syncUtils';
 
 export class AddFirstPersonCommand implements TreeCommand {
     constructor(
@@ -24,9 +25,13 @@ export class AddFirstPersonCommand implements TreeCommand {
         // 2. Sync and Side Effects
         if (!this.bypassSync && newPerson) {
             const treeId = freshStore.currentTreeId;
-            if (treeId) {
-                try {
-                    const queued = await context.syncService.pushOperations(treeId, [
+            const syncResult = await executeCommandSync({
+                treeId,
+                operationType: 'ADD_NODE',
+                errorPrefix: 'Failed to sync first person via DeltaSync:',
+                fallbackErrorMessage: 'The first person was added locally, but sync failed.',
+                syncAction: async () => {
+                    const queued = await context.syncService.pushOperations(treeId!, [
                         {
                             type: 'ADD_NODE',
                             payload: {
@@ -48,20 +53,15 @@ export class AddFirstPersonCommand implements TreeCommand {
                         return { success: false, error: 'The first person was added locally, but could not be queued for sync.' };
                     }
 
-                    void context.activityService.logAction(treeId, 'ADD_PERSON', {
+                    void context.activityService.logAction(treeId!, 'ADD_PERSON', {
                         personId: newPerson.id,
                         personName: `${newPerson.firstName} ${newPerson.lastName}`.trim(),
                         type: 'initial',
                     });
-                } catch (error) {
-                    console.error('Failed to sync first person via DeltaSync:', error);
-                    return {
-                        success: false,
-                        error: error instanceof Error ? error.message : 'The first person was added locally, but sync failed.',
-                    };
                 }
-            } else {
-                console.warn('DeltaSync: Skip pushOperation (ADD_NODE) - currentTreeId is missing');
+            });
+            if (!syncResult.success) {
+                return syncResult;
             }
         }
 

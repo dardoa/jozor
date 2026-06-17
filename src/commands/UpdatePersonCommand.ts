@@ -2,6 +2,7 @@ import { TreeCommand, CommandContext } from './types';
 import { MutationActionResult, Person } from '../types';
 import { checkVitalDateConsistency, checkRelationshipContext, describeSmartCheckIssue } from '../domain/smartChecker';
 import { showToast } from '../utils/showToast';
+import { executeCommandSync } from '../utils/syncUtils';
 
 export class UpdatePersonCommand implements TreeCommand {
     constructor(
@@ -47,14 +48,23 @@ export class UpdatePersonCommand implements TreeCommand {
         // 3. Sync and Side Effects
         if (!this.bypassSync && updatedPerson) {
             const treeId = freshStore.currentTreeId;
-            if (treeId) {
-                const queued = await context.syncService.debouncedPush(treeId, this.id, this.updates);
-                if (queued === false) {
+            const syncResult = await executeCommandSync({
+                treeId,
+                operationType: 'UPDATE_PROP',
+                errorPrefix: 'Failed to sync UPDATE_PROP via DeltaSync:',
+                fallbackErrorMessage: 'The change was applied locally, but sync failed.',
+                rollback: () => {
                     context.getState().setPeople(currentPeople, false);
-                    return { success: false, error: 'The change was applied locally, but could not be queued for sync.' };
+                },
+                syncAction: async () => {
+                    const queued = await context.syncService.debouncedPush(treeId!, this.id, this.updates);
+                    if (queued === false) {
+                        return { success: false, error: 'The change was applied locally, but could not be queued for sync.' };
+                    }
                 }
-            } else {
-                console.warn('DeltaSync: Skip pushOperation (UPDATE_PROP) - currentTreeId is missing');
+            });
+            if (!syncResult.success) {
+                return syncResult;
             }
         }
 
