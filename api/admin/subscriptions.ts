@@ -4,6 +4,7 @@ import {
   type SupabaseClient,
   type User as SupabaseAuthUser,
 } from '@supabase/supabase-js';
+import { verifyInternalToken } from '../../shared/auth/internalJwt.js';
 
 type BillingTier = 'free' | 'pro' | 'family';
 type OverrideSource = 'manual_comp' | 'sandbox_test' | 'internal_test';
@@ -108,6 +109,18 @@ async function authenticateRequest(authHeader?: string): Promise<AuthenticatedUs
   if (!authHeader?.startsWith('Bearer ')) return null;
 
   const token = authHeader.slice('Bearer '.length);
+
+  // 1. Attempt local JWT verification
+  const internalUser = await verifyInternalToken(token, getEnv('SUPABASE_JWT_SECRET'));
+  if (internalUser) {
+    return {
+      uid: internalUser.uid,
+      email: internalUser.email,
+      token,
+    };
+  }
+
+  // 2. Fall back to Supabase client auth
   const authClient = getSupabaseAuthClient();
   const { data, error } = await authClient.auth.getUser(token);
 

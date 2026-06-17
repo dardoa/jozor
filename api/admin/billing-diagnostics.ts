@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { verifyInternalToken } from '../../shared/auth/internalJwt.js';
 
 type AuthenticatedUser = { uid: string; email: string; token: string };
 type ProcessingStatus = 'received' | 'processed' | 'ignored' | 'failed';
@@ -64,6 +65,18 @@ async function authenticateRequest(authHeader?: string): Promise<AuthenticatedUs
   if (!authHeader?.startsWith('Bearer ')) return null;
 
   const token = authHeader.slice('Bearer '.length);
+
+  // 1. Attempt local JWT verification
+  const internalUser = await verifyInternalToken(token, getEnv('SUPABASE_JWT_SECRET'));
+  if (internalUser) {
+    return {
+      uid: internalUser.uid,
+      email: internalUser.email,
+      token,
+    };
+  }
+
+  // 2. Fall back to Supabase client auth
   const authClient = getSupabaseAuthClient();
   const { data, error } = await authClient.auth.getUser(token);
 
@@ -95,12 +108,14 @@ function isProcessingStatus(value: unknown): value is ProcessingStatus {
 function sanitizeSearchQuery(value: unknown): string {
   if (typeof value !== 'string') return '';
 
-  return value
+  const sanitized = value
     .normalize('NFKC')
     .replace(/[^\w@.:\-/\s]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
     .slice(0, 100);
+
+  return sanitized.replace(/_/g, '\\_');
 }
 
 function json(res: VercelResponse, status: number, payload: unknown) {

@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import crypto from 'node:crypto';
 
 const { createClientMock } = vi.hoisted(() => ({
   createClientMock: vi.fn(),
@@ -37,16 +38,24 @@ const createResponse = () => {
   return response;
 };
 
-const createAuthClient = (user: { id: string; email?: string } | null) => ({
-  auth: {
-    getUser: vi.fn(async () => ({
-      data: { user },
-      error: user ? null : { message: 'Invalid token' },
-    })),
-  },
-});
+const createInternalJwt = (user = { id: 'admin-1', email: 'owner@example.com' }) => {
+  const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url');
+  const payload = Buffer.from(
+    JSON.stringify({
+      sub: user.id,
+      email: user.email,
+      exp: Math.floor(Date.now() / 1000) + 3600,
+    })
+  ).toString('base64url');
+  const signature = crypto
+    .createHmac('sha256', 'test-jwt-secret-with-at-least-32-chars')
+    .update(`${header}.${payload}`)
+    .digest('base64url');
+  return `${header}.${payload}.${signature}`;
+};
 
-const createAdminClient = (input: {
+const setupMockClient = (input: {
+  user?: { id: string; email?: string } | null;
   isAdmin: boolean;
   diagnostics?: unknown[];
   adminError?: unknown;
@@ -72,18 +81,28 @@ const createAdminClient = (input: {
 
   input.onDiagnosticsBuilder?.(diagnosticsQuery);
 
-  return {
+  const client = {
+    auth: {
+      getUser: vi.fn(async () => ({
+        data: { user: input.user ?? null },
+        error: input.user ? null : { message: 'Invalid token' },
+      })),
+    },
     from: vi.fn((table: string) => {
       if (table === 'admin_users') return adminUsersQuery;
       if (table === 'billing_webhook_diagnostics') return diagnosticsQuery;
       throw new Error(`Unexpected table ${table}`);
     }),
   };
+
+  createClientMock.mockReturnValue(client);
+  return client;
 };
 
 describe('admin billing diagnostics API', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    process.env.SUPABASE_JWT_SECRET = 'test-jwt-secret-with-at-least-32-chars';
     process.env.SUPABASE_URL = 'https://example.supabase.co';
     process.env.SUPABASE_ANON_KEY = 'anon-key';
     process.env.SUPABASE_SERVICE_ROLE_KEY = 'service-role-key';
@@ -113,9 +132,10 @@ describe('admin billing diagnostics API', () => {
   });
 
   it('rejects authenticated non-admin users', async () => {
-    createClientMock
-      .mockReturnValueOnce(createAuthClient({ id: 'user-1', email: 'user@example.com' }))
-      .mockReturnValueOnce(createAdminClient({ isAdmin: false }));
+    setupMockClient({
+      user: { id: 'user-1', email: 'user@example.com' },
+      isAdmin: false,
+    });
 
     const req = { method: 'GET', headers: { authorization: 'Bearer token-1' }, query: {} };
     const res = createResponse();
@@ -147,15 +167,14 @@ describe('admin billing diagnostics API', () => {
       received_at: '2026-06-05T10:00:05.000Z',
       metadata: {},
     }];
-    createClientMock
-      .mockReturnValueOnce(createAuthClient({ id: 'admin-1', email: 'owner@example.com' }))
-      .mockReturnValueOnce(createAdminClient({
-        isAdmin: true,
-        diagnostics,
-        onDiagnosticsBuilder: (builder) => {
-          diagnosticsBuilder = builder;
-        },
-      }));
+    setupMockClient({
+      user: { id: 'admin-1', email: 'owner@example.com' },
+      isAdmin: true,
+      diagnostics,
+      onDiagnosticsBuilder: (builder) => {
+        diagnosticsBuilder = builder;
+      },
+    });
 
     const req = {
       method: 'GET',
@@ -175,17 +194,16 @@ describe('admin billing diagnostics API', () => {
     expect(diagnosticsBuilder?.limit).toHaveBeenCalledWith(100);
     expect(diagnosticsBuilder?.eq).toHaveBeenCalledWith('processing_status', 'processed');
     expect(diagnosticsBuilder?.or).toHaveBeenCalledWith(
-      'event_id.ilike.%evt_123 price_id.ilike. pri_999%,target_user_id.ilike.%evt_123 price_id.ilike. pri_999%,subscription_id.ilike.%evt_123 price_id.ilike. pri_999%,customer_id.ilike.%evt_123 price_id.ilike. pri_999%,price_id.ilike.%evt_123 price_id.ilike. pri_999%'
+      'event_id.ilike.%evt\\_123 price\\_id.ilike. pri\\_999%,target_user_id.ilike.%evt\\_123 price\\_id.ilike. pri\\_999%,subscription_id.ilike.%evt\\_123 price\\_id.ilike. pri\\_999%,customer_id.ilike.%evt\\_123 price\\_id.ilike. pri\\_999%,price_id.ilike.%evt\\_123 price\\_id.ilike. pri\\_999%'
     );
   });
 
   it('does not expose internal server error details to the client', async () => {
-    createClientMock
-      .mockReturnValueOnce(createAuthClient({ id: 'admin-1', email: 'owner@example.com' }))
-      .mockReturnValueOnce(createAdminClient({
-        isAdmin: true,
-        adminError: { message: 'private database policy detail' },
-      }));
+    setupMockClient({
+      user: { id: 'admin-1', email: 'owner@example.com' },
+      isAdmin: true,
+      adminError: { message: 'private database policy detail' },
+    });
 
     const req = { method: 'GET', headers: { authorization: 'Bearer token-1' }, query: {} };
     const res = createResponse();
@@ -199,5 +217,86 @@ describe('admin billing diagnostics API', () => {
         message: 'Admin billing diagnostics request failed.',
       },
     });
+  });
+
+  it('escapes underscore wildcards in search query to ensure they are treated literally', async () => {
+    let diagnosticsBuilder: Record<string, unknown> | undefined;
+    setupMockClient({
+      user: { id: 'admin-1', email: 'owner@example.com' },
+      isAdmin: true,
+      onDiagnosticsBuilder: (builder) => {
+        diagnosticsBuilder = builder;
+      },
+    });
+
+    const req = {
+      method: 'GET',
+      headers: { authorization: 'Bearer token-1' },
+      query: { q: 'my_test_event' },
+    };
+    const res = createResponse();
+
+    await handler(req as never, res as never);
+
+    expect(res.statusCode).toBe(200);
+    expect(diagnosticsBuilder?.or).toHaveBeenCalledWith(
+      'event_id.ilike.%my\\_test\\_event%,target_user_id.ilike.%my\\_test\\_event%,subscription_id.ilike.%my\\_test\\_event%,customer_id.ilike.%my\\_test\\_event%,price_id.ilike.%my\\_test\\_event%'
+    );
+  });
+
+  it('authenticates request with valid locally verified JWT', async () => {
+    const client = setupMockClient({
+      user: null, // should not be used as it is verified locally
+      isAdmin: true,
+    });
+
+    const req = {
+      method: 'GET',
+      headers: { authorization: `Bearer ${createInternalJwt({ id: 'admin-1', email: 'owner@example.com' })}` },
+      query: {},
+    };
+    const res = createResponse();
+
+    await handler(req as never, res as never);
+
+    expect(res.statusCode).toBe(200);
+    expect(client.auth.getUser).not.toHaveBeenCalled();
+  });
+
+  it('falls back to Supabase getUser when local verification fails', async () => {
+    const client = setupMockClient({
+      user: { id: 'admin-1', email: 'owner@example.com' },
+      isAdmin: true,
+    });
+
+    const req = {
+      method: 'GET',
+      headers: { authorization: 'Bearer token-1' },
+      query: {},
+    };
+    const res = createResponse();
+
+    await handler(req as never, res as never);
+
+    expect(res.statusCode).toBe(200);
+    expect(client.auth.getUser).toHaveBeenCalledWith('token-1');
+  });
+
+  it('rejects invalid token (fails local verification and Supabase getUser)', async () => {
+    setupMockClient({
+      user: null,
+      isAdmin: false,
+    });
+
+    const req = {
+      method: 'GET',
+      headers: { authorization: 'Bearer invalid-token' },
+      query: {},
+    };
+    const res = createResponse();
+
+    await handler(req as never, res as never);
+
+    expect(res.statusCode).toBe(401);
   });
 });

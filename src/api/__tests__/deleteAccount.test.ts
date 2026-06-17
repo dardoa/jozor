@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { createClientMock } = vi.hoisted(() => ({
   createClientMock: vi.fn(),
@@ -15,12 +15,19 @@ const createResponse = () => {
   const response = {
     statusCode: 200,
     body: undefined as unknown,
+    headers: {} as Record<string, string | string[]>,
+    setHeader(name: string, value: string | string[]) {
+      this.headers[name] = value;
+    },
     status(code: number) {
       this.statusCode = code;
       return this;
     },
     json(payload: unknown) {
       this.body = payload;
+      return this;
+    },
+    end() {
       return this;
     },
   };
@@ -46,13 +53,23 @@ const createInternalJwt = () => {
 };
 
 describe('delete account API', () => {
+  const originalEnv = { ...process.env };
+
   beforeEach(() => {
     createClientMock.mockReset();
     vi.clearAllMocks();
-    process.env.SUPABASE_JWT_SECRET = 'test-jwt-secret-with-at-least-32-chars';
-    process.env.SUPABASE_URL = 'https://example.supabase.co';
-    process.env.SUPABASE_SERVICE_ROLE_KEY = 'service-role-key';
-    process.env.VITE_SUPABASE_ANON_KEY = 'anon-key';
+    process.env = {
+      ...originalEnv,
+      SUPABASE_JWT_SECRET: 'test-jwt-secret-with-at-least-32-chars',
+      SUPABASE_URL: 'https://example.supabase.co',
+      SUPABASE_SERVICE_ROLE_KEY: 'service-role-key',
+      VITE_SUPABASE_ANON_KEY: 'anon-key',
+      APP_ORIGIN: 'http://localhost:5173',
+    };
+  });
+
+  afterEach(() => {
+    process.env = originalEnv;
   });
 
   it('does not expose profile deletion RPC details to the client', async () => {
@@ -527,5 +544,137 @@ describe('delete account API', () => {
     expect(listMock).toHaveBeenCalledTimes(6);
     // Verify remove was NEVER called
     expect(removeMock).not.toHaveBeenCalled();
+  });
+
+  it('returns 204 No Content and sets CORS headers for OPTIONS requests', async () => {
+    const req = {
+      method: 'OPTIONS',
+      headers: {},
+    };
+    const res = createResponse();
+
+    await handler(req as never, res as never);
+
+    expect(res.statusCode).toBe(204);
+    expect(res.headers['Access-Control-Allow-Origin']).toBe('http://localhost:5173');
+    expect(res.headers['Access-Control-Allow-Methods']).toBe('POST, OPTIONS');
+    expect(res.headers['Access-Control-Allow-Headers']).toBe('Content-Type, Authorization');
+  });
+
+  it('accepts POST requests with allowed Origin and sets correct Access-Control-Allow-Origin header', async () => {
+    const serviceClient = {
+      from: vi.fn((table: string) => {
+        if (table !== 'trees') throw new Error(`Unexpected table ${table}`);
+        return {
+          select: vi.fn(() => ({
+            eq: vi.fn(async () => ({ data: [], error: null })),
+          })),
+        };
+      }),
+      storage: {
+        from: vi.fn(() => ({
+          list: vi.fn(async () => ({ data: [], error: null })),
+          remove: vi.fn(async () => ({ error: null })),
+        })),
+      },
+      auth: {
+        admin: {
+          deleteUser: vi.fn(async () => ({ error: null })),
+        },
+      },
+    };
+    const userClient = {
+      rpc: vi.fn(async () => ({ data: null, error: null })),
+    };
+    createClientMock.mockReturnValueOnce(serviceClient).mockReturnValueOnce(userClient);
+
+    const req = {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${createInternalJwt()}`,
+        origin: 'http://localhost:5173',
+      },
+    };
+    const res = createResponse();
+
+    await handler(req as never, res as never);
+
+    expect(res.statusCode).not.toBe(400);
+    expect(res.headers['Access-Control-Allow-Origin']).toBe('http://localhost:5173');
+  });
+
+  it('rejects POST requests with invalid Origin with 400 Bad Request', async () => {
+    const req = {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${createInternalJwt()}`,
+        origin: 'https://malicious-site.com',
+      },
+    };
+    const res = createResponse();
+
+    await handler(req as never, res as never);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body).toEqual({ error: 'Invalid request origin.' });
+  });
+
+  it('accepts POST requests with no Origin header', async () => {
+    const serviceClient = {
+      from: vi.fn((table: string) => {
+        if (table !== 'trees') throw new Error(`Unexpected table ${table}`);
+        return {
+          select: vi.fn(() => ({
+            eq: vi.fn(async () => ({ data: [], error: null })),
+          })),
+        };
+      }),
+      storage: {
+        from: vi.fn(() => ({
+          list: vi.fn(async () => ({ data: [], error: null })),
+          remove: vi.fn(async () => ({ error: null })),
+        })),
+      },
+      auth: {
+        admin: {
+          deleteUser: vi.fn(async () => ({ error: null })),
+        },
+      },
+    };
+    const userClient = {
+      rpc: vi.fn(async () => ({ data: null, error: null })),
+    };
+    createClientMock.mockReturnValueOnce(serviceClient).mockReturnValueOnce(userClient);
+
+    const req = {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${createInternalJwt()}`,
+      },
+    };
+    const res = createResponse();
+
+    await handler(req as never, res as never);
+
+    expect(res.statusCode).not.toBe(400);
+  });
+
+  it('fails closed in production/preview if no valid APP_ORIGIN or VITE_APP_ORIGIN is configured', async () => {
+    process.env.NODE_ENV = 'production';
+    delete process.env.APP_ORIGIN;
+    delete process.env.VITE_APP_ORIGIN;
+
+    const req = {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${createInternalJwt()}`,
+      },
+    };
+    const res = createResponse();
+
+    await handler(req as never, res as never);
+
+    expect(res.statusCode).toBe(500);
+    expect(res.body).toEqual({ error: 'Server configuration error: APP_ORIGIN is not configured.' });
   });
 });

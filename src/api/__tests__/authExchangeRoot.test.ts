@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import rootHandler from '../../../api/auth/exchange';
 
@@ -6,6 +6,10 @@ const createResponse = () => {
   const response = {
     statusCode: 200,
     body: undefined as unknown,
+    headers: {} as Record<string, string | string[]>,
+    setHeader(name: string, value: string | string[]) {
+      this.headers[name] = value;
+    },
     status(code: number) {
       this.statusCode = code;
       return this;
@@ -14,12 +18,35 @@ const createResponse = () => {
       this.body = payload;
       return this;
     },
+    end() {
+      return this;
+    },
   };
 
   return response;
 };
 
 describe('root auth exchange API function', () => {
+  const originalEnv = { ...process.env };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    process.env = {
+      ...originalEnv,
+      SUPABASE_JWT_SECRET: 'jwt-secret',
+      ENCRYPTION_SECRET: 'encryption-secret',
+      GOOGLE_CLIENT_ID: 'google-client-id',
+      GOOGLE_CLIENT_SECRET: 'google-client-secret',
+      APP_ORIGIN: 'http://localhost:5173',
+    };
+    delete process.env.SUPABASE_URL;
+    delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+  });
+
+  afterEach(() => {
+    process.env = originalEnv;
+  });
+
   it('returns 405 for GET before reading server configuration', async () => {
     const req = { method: 'GET', body: {} };
     const res = createResponse();
@@ -38,5 +65,103 @@ describe('root auth exchange API function', () => {
 
     expect(res.statusCode).toBe(400);
     expect(res.body).toEqual({ error: 'Missing auth code' });
+  });
+
+  it('returns 204 No Content and sets CORS headers for OPTIONS requests', async () => {
+    const req = {
+      method: 'OPTIONS',
+      headers: {},
+    };
+    const res = createResponse();
+
+    await rootHandler(req as never, res as never);
+
+    expect(res.statusCode).toBe(204);
+    expect(res.headers['Access-Control-Allow-Origin']).toBe('http://localhost:5173');
+    expect(res.headers['Access-Control-Allow-Methods']).toBe('POST, OPTIONS');
+    expect(res.headers['Access-Control-Allow-Headers']).toBe('Content-Type, Authorization');
+  });
+
+  it('accepts POST requests with allowed Origin and sets correct Access-Control-Allow-Origin header', async () => {
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    vi.stubGlobal('fetch', vi.fn(async () => ({
+      status: 200,
+      json: async () => ({
+        access_token: 'access-token',
+        refresh_token: 'refresh-token',
+      }),
+    })));
+
+    const req = {
+      method: 'POST',
+      headers: {
+        origin: 'http://localhost:5173',
+      },
+      body: { code: 'valid-code' },
+    };
+    const res = createResponse();
+
+    await rootHandler(req as never, res as never);
+
+    expect(res.statusCode).not.toBe(400);
+    expect(res.headers['Access-Control-Allow-Origin']).toBe('http://localhost:5173');
+    consoleErrorSpy.mockRestore();
+  });
+
+  it('rejects POST requests with invalid Origin with 400 Bad Request', async () => {
+    const req = {
+      method: 'POST',
+      headers: {
+        origin: 'https://malicious-site.com',
+      },
+      body: { code: 'valid-code' },
+    };
+    const res = createResponse();
+
+    await rootHandler(req as never, res as never);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body).toEqual({ error: 'Invalid request origin.' });
+  });
+
+  it('accepts POST requests with no Origin header', async () => {
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    vi.stubGlobal('fetch', vi.fn(async () => ({
+      status: 200,
+      json: async () => ({
+        access_token: 'access-token',
+        refresh_token: 'refresh-token',
+      }),
+    })));
+
+    const req = {
+      method: 'POST',
+      headers: {},
+      body: { code: 'valid-code' },
+    };
+    const res = createResponse();
+
+    await rootHandler(req as never, res as never);
+
+    expect(res.statusCode).not.toBe(400);
+    consoleErrorSpy.mockRestore();
+  });
+
+  it('fails closed in production/preview if no valid APP_ORIGIN or VITE_APP_ORIGIN is configured', async () => {
+    process.env.NODE_ENV = 'production';
+    delete process.env.APP_ORIGIN;
+    delete process.env.VITE_APP_ORIGIN;
+
+    const req = {
+      method: 'POST',
+      headers: {},
+      body: { code: 'valid-code' },
+    };
+    const res = createResponse();
+
+    await rootHandler(req as never, res as never);
+
+    expect(res.statusCode).toBe(500);
+    expect(res.body).toEqual({ error: 'Server configuration error: APP_ORIGIN is not configured.' });
   });
 });

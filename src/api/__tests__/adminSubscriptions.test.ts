@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import crypto from 'node:crypto';
 
 const { createClientMock } = vi.hoisted(() => ({
   createClientMock: vi.fn(),
@@ -41,24 +42,40 @@ const createResponse = () => {
   return response;
 };
 
-const createAuthClient = () => ({
-  auth: {
-    getUser: vi.fn(async () => ({
-      data: { user: { id: 'admin-1', email: 'owner@example.com' } },
-      error: null,
-    })),
-  },
-});
+const createInternalJwt = (user = { id: 'admin-1', email: 'owner@example.com' }) => {
+  const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url');
+  const payload = Buffer.from(
+    JSON.stringify({
+      sub: user.id,
+      email: user.email,
+      exp: Math.floor(Date.now() / 1000) + 3600,
+    })
+  ).toString('base64url');
+  const signature = crypto
+    .createHmac('sha256', 'test-jwt-secret-with-at-least-32-chars')
+    .update(`${header}.${payload}`)
+    .digest('base64url');
+  return `${header}.${payload}.${signature}`;
+};
 
-const createAdminClientMock = () => {
+const setupMockClient = (input: {
+  user?: { id: string; email?: string } | null;
+  isAdmin: boolean;
+  adminError?: unknown;
+}) => {
   const queryChain = { insert: vi.fn() } as QueryChainMock;
 
   queryChain.select = vi.fn(() => queryChain);
   queryChain.eq = vi.fn(() => queryChain);
-  queryChain.maybeSingle = vi.fn(async () => ({
-    data: { user_id: 'admin-1', is_active: true },
-    error: null,
-  }));
+  queryChain.maybeSingle = vi.fn(async () => {
+    if (queryChain._table === 'admin_users') {
+      return {
+        data: input.isAdmin ? { user_id: 'admin-1', is_active: true } : null,
+        error: input.adminError ?? null,
+      };
+    }
+    return { data: null, error: null };
+  });
   queryChain.is = vi.fn(() => queryChain);
   queryChain.upsert = vi.fn(async () => ({ error: null }));
   queryChain.update = vi.fn(() => queryChain);
@@ -68,21 +85,37 @@ const createAdminClientMock = () => {
     error: null,
   }));
 
-  const from: ReturnType<typeof vi.fn> = vi.fn((table: string) => {
-      queryChain._table = table;
-      return queryChain;
-    });
+  const from = vi.fn((table: string) => {
+    queryChain._table = table;
+    return queryChain;
+  });
 
-  return {
-    from,
+  const client = {
+    auth: {
+      getUser: vi.fn(async () => ({
+        data: { user: input.user ?? null },
+        error: input.user ? null : { message: 'Invalid token' },
+      })),
+      admin: {
+        listUsers: vi.fn(async () => ({
+          data: { users: [] },
+          error: null,
+        })),
+      },
+    },
+    from: from as any,
     queryChain,
   };
+
+  createClientMock.mockReturnValue(client);
+  return client;
 };
 
 describe('admin subscriptions API', () => {
   beforeEach(() => {
     createClientMock.mockReset();
     vi.clearAllMocks();
+    process.env.SUPABASE_JWT_SECRET = 'test-jwt-secret-with-at-least-32-chars';
     process.env.SUPABASE_URL = 'https://example.supabase.co';
     process.env.SUPABASE_ANON_KEY = 'anon-key';
     process.env.SUPABASE_SERVICE_ROLE_KEY = 'service-role-key';
@@ -102,22 +135,11 @@ describe('admin subscriptions API', () => {
   });
 
   it('does not expose internal server error details to the client', async () => {
-    const adminQueryChain = { insert: vi.fn() } as QueryChainMock;
-    adminQueryChain.select = vi.fn(() => adminQueryChain);
-    adminQueryChain.eq = vi.fn(() => adminQueryChain);
-    adminQueryChain.maybeSingle = vi.fn(async () => ({
-      data: null,
-      error: { message: 'private admin_users policy detail' },
-    }));
-
-    const clientMock = {
-      from: vi.fn((table: string) => {
-        if (table === 'admin_users') return adminQueryChain;
-        throw new Error(`Unexpected table ${table}`);
-      }),
-    };
-
-    createClientMock.mockReturnValueOnce(createAuthClient()).mockReturnValueOnce(clientMock);
+    setupMockClient({
+      user: { id: 'admin-1', email: 'owner@example.com' },
+      isAdmin: true,
+      adminError: { message: 'private admin_users policy detail' },
+    });
 
     const req = {
       method: 'GET',
@@ -138,7 +160,7 @@ describe('admin subscriptions API', () => {
   });
 
   it('performs a single bulk insert of audit events in grantOverride containing both replace and grant actions', async () => {
-    const clientMock = createAdminClientMock();
+    const clientMock = setupMockClient({ user: { id: 'admin-1', email: 'owner@example.com' }, isAdmin: true });
     const { queryChain } = clientMock;
 
     // We mock replacedOverrides returning 1 active override
@@ -217,7 +239,7 @@ describe('admin subscriptions API', () => {
       throw new Error(`Unexpected table ${table}`);
     });
 
-    createClientMock.mockReturnValueOnce(createAuthClient()).mockReturnValueOnce(clientMock);
+
 
     const req = {
       method: 'POST',
@@ -271,7 +293,7 @@ describe('admin subscriptions API', () => {
   });
 
   it('performs a single bulk insert of audit events in revokeOverride containing all revoked overrides', async () => {
-    const clientMock = createAdminClientMock();
+    const clientMock = setupMockClient({ user: { id: 'admin-1', email: 'owner@example.com' }, isAdmin: true });
     const { queryChain } = clientMock;
 
     const selectRevokedPromise = Promise.resolve({
@@ -330,7 +352,7 @@ describe('admin subscriptions API', () => {
       throw new Error(`Unexpected table ${table}`);
     });
 
-    createClientMock.mockReturnValueOnce(createAuthClient()).mockReturnValueOnce(clientMock);
+
 
     const req = {
       method: 'POST',
@@ -378,7 +400,7 @@ describe('admin subscriptions API', () => {
   });
 
   it('fails and returns 500 when insertAuditEvents fails', async () => {
-    const clientMock = createAdminClientMock();
+    const clientMock = setupMockClient({ user: { id: 'admin-1', email: 'owner@example.com' }, isAdmin: true });
 
     clientMock.from = vi.fn((table: string) => {
       if (table === 'admin_users') {
@@ -429,7 +451,7 @@ describe('admin subscriptions API', () => {
       throw new Error(`Unexpected table ${table}`);
     });
 
-    createClientMock.mockReturnValueOnce(createAuthClient()).mockReturnValueOnce(clientMock);
+
 
     const req = {
       method: 'POST',
@@ -450,5 +472,61 @@ describe('admin subscriptions API', () => {
         message: 'Admin subscription request failed.',
       },
     });
+  });
+
+  it('authenticates request with valid locally verified JWT', async () => {
+    const client = setupMockClient({
+      user: null, // should not be called since local verification succeeds
+      isAdmin: true,
+    });
+
+    const req = {
+      method: 'GET',
+      headers: { authorization: `Bearer ${createInternalJwt({ id: 'admin-1', email: 'owner@example.com' })}` },
+      query: {},
+    };
+    const res = createResponse();
+
+    await handler(req as never, res as never);
+
+    expect(res.statusCode).toBe(200);
+    expect(client.auth.getUser).not.toHaveBeenCalled();
+  });
+
+  it('falls back to Supabase getUser when local verification fails', async () => {
+    const client = setupMockClient({
+      user: { id: 'admin-1', email: 'owner@example.com' },
+      isAdmin: true,
+    });
+
+    const req = {
+      method: 'GET',
+      headers: { authorization: 'Bearer token-1' },
+      query: {},
+    };
+    const res = createResponse();
+
+    await handler(req as never, res as never);
+
+    expect(res.statusCode).toBe(200);
+    expect(client.auth.getUser).toHaveBeenCalledWith('token-1');
+  });
+
+  it('rejects invalid token (fails local verification and Supabase getUser)', async () => {
+    setupMockClient({
+      user: null,
+      isAdmin: false,
+    });
+
+    const req = {
+      method: 'GET',
+      headers: { authorization: 'Bearer invalid-token' },
+      query: {},
+    };
+    const res = createResponse();
+
+    await handler(req as never, res as never);
+
+    expect(res.statusCode).toBe(401);
   });
 });

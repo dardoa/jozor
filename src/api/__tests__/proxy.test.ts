@@ -1,5 +1,5 @@
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const authenticateUserMock = vi.fn();
 const createSupabaseClientForUserMock = vi.fn();
@@ -33,14 +33,23 @@ const createResponse = () => {
       this.body = payload;
       return this;
     },
+    end() {
+      return this;
+    },
   };
 
   return response;
 };
 
 describe('proxy API', () => {
+  const originalEnv = process.env;
+
   beforeEach(() => {
     vi.clearAllMocks();
+    process.env = {
+      ...originalEnv,
+      APP_ORIGIN: 'http://localhost:5173',
+    };
     authenticateUserMock.mockResolvedValue({
       type: 'internal',
       token: 'supabase-token',
@@ -48,6 +57,10 @@ describe('proxy API', () => {
       email: 'user@example.com',
     });
     createSupabaseClientForUserMock.mockReturnValue({});
+  });
+
+  afterEach(() => {
+    process.env = originalEnv;
   });
 
   it('rejects legacy Drive fileId proxy reads', async () => {
@@ -449,6 +462,103 @@ describe('proxy API', () => {
 
       expect(res.statusCode).toBe(200);
       expect(rpcMock).toHaveBeenCalledOnce();
+    });
+  });
+
+  describe('Origin and CORS validation', () => {
+    it('returns 204 and CORS headers for OPTIONS requests', async () => {
+      const req = {
+        method: 'OPTIONS',
+        headers: {},
+      };
+      const res = createResponse();
+
+      await handler(req as never, res as never);
+
+      expect(res.statusCode).toBe(204);
+      expect(res.headers['Access-Control-Allow-Origin']).toBe('http://localhost:5173');
+      expect(res.headers['Access-Control-Allow-Methods']).toBe('GET, POST, OPTIONS');
+      expect(res.headers['Access-Control-Allow-Headers']).toBe('Content-Type, Authorization');
+      expect(res.headers['Access-Control-Allow-Credentials']).toBe('true');
+    });
+
+    it('allows GET/POST requests with allowed Origin', async () => {
+      const req = {
+        method: 'GET',
+        headers: {
+          authorization: 'Bearer token',
+          origin: 'http://localhost:5173',
+        },
+        query: { treeId: 'tree-1' },
+      };
+      const res = createResponse();
+
+      await handler(req as never, res as never);
+
+      expect(res.statusCode).not.toBe(400);
+      expect(res.headers['Access-Control-Allow-Origin']).toBe('http://localhost:5173');
+    });
+
+    it('rejects requests with invalid Origin with 400 Bad Request', async () => {
+      const req = {
+        method: 'GET',
+        headers: {
+          authorization: 'Bearer token',
+          origin: 'https://malicious-site.com',
+        },
+        query: { treeId: 'tree-1' },
+      };
+      const res = createResponse();
+
+      await handler(req as never, res as never);
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body).toEqual({
+        error: {
+          message: 'Invalid request origin.',
+          code: 'INVALID_ORIGIN',
+        },
+      });
+    });
+
+    it('allows requests with no Origin header', async () => {
+      const req = {
+        method: 'GET',
+        headers: {
+          authorization: 'Bearer token',
+        },
+        query: { treeId: 'tree-1' },
+      };
+      const res = createResponse();
+
+      await handler(req as never, res as never);
+
+      expect(res.statusCode).not.toBe(400);
+    });
+
+    it('fails closed in production/preview if no valid APP_ORIGIN or VITE_APP_ORIGIN is configured', async () => {
+      process.env.NODE_ENV = 'production';
+      delete process.env.APP_ORIGIN;
+      delete process.env.VITE_APP_ORIGIN;
+
+      const req = {
+        method: 'GET',
+        headers: {
+          authorization: 'Bearer token',
+        },
+        query: { treeId: 'tree-1' },
+      };
+      const res = createResponse();
+
+      await handler(req as never, res as never);
+
+      expect(res.statusCode).toBe(500);
+      expect(res.body).toEqual({
+        error: {
+          message: 'Server configuration error: APP_ORIGIN is not configured.',
+          code: 'SERVER_CONFIGURATION_ERROR',
+        },
+      });
     });
   });
 });

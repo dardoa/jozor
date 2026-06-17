@@ -3,6 +3,7 @@ import type { Person } from '../types';
 import { logError, logInfo } from '../utils/errorLogger';
 import { authenticateUser, createSupabaseClientForUser } from '../utils/authUtils';
 import { mapPersonToDbRow } from '../services/personRowMapper';
+import { normalizeHttpOrigin } from '../../shared/http/origin';
 
 type ProxyPerson = Person & { id: string };
 type ProxyRelationship = { tree_id: string; person_id: string; relative_id: string; type: 'parent' | 'spouse' };
@@ -35,7 +36,67 @@ function isValidProxyPerson(person: unknown): person is ProxyPerson {
   return true;
 }
 
+const resolveAllowedOrigin = (): string | null => {
+  const candidate = process.env.APP_ORIGIN ?? process.env.VITE_APP_ORIGIN;
+  const normalizedCandidate = normalizeHttpOrigin(candidate);
+  if (normalizedCandidate) {
+    return normalizedCandidate;
+  }
+
+  const isProd =
+    process.env.NODE_ENV === 'production' ||
+    process.env.VERCEL_ENV === 'production' ||
+    process.env.VERCEL_ENV === 'preview';
+
+  if (isProd) {
+    return null;
+  }
+
+  return 'http://localhost:5173';
+};
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  const allowedOrigin = resolveAllowedOrigin();
+  if (!allowedOrigin) {
+    return res.status(500).json({
+      error: {
+        message: 'Server configuration error: APP_ORIGIN is not configured.',
+        code: 'SERVER_CONFIGURATION_ERROR',
+      },
+    });
+  }
+
+  const origin = req.headers.origin;
+  const corsHeaders: Record<string, string> = {
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Allow-Credentials': 'true',
+  };
+
+  if (origin === allowedOrigin) {
+    corsHeaders['Access-Control-Allow-Origin'] = origin;
+  } else {
+    corsHeaders['Access-Control-Allow-Origin'] = allowedOrigin;
+  }
+
+  Object.entries(corsHeaders).forEach(([key, value]) => {
+    res.setHeader(key, value);
+  });
+
+  if (origin && origin !== allowedOrigin) {
+    return res.status(400).json({
+      error: {
+        message: 'Invalid request origin.',
+        code: 'INVALID_ORIGIN',
+      },
+    });
+  }
+
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Allow', ['GET', 'POST', 'OPTIONS']);
+    return res.status(204).end();
+  }
+
   try {
     const user = await authenticateUser(req.headers.authorization);
 
