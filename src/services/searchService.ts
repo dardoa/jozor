@@ -1,5 +1,6 @@
 import { Person } from '../types';
-import { normalizeArabic, stripArabicPrefixes } from '../utils/search/arabicUtils';
+import { normalizeArabic } from '../utils/search/arabicUtils';
+import { normalizeSearchText, tokenizeSearchQuery } from '../utils/search/searchUtils';
 import { parseSearchQuery } from './search/queryParser';
 import { getDisplayDate } from '../utils/familyLogic';
 
@@ -59,28 +60,7 @@ const loadFuse = async () => {
     return fuseLoader;
 };
 
-const SEARCH_STOP_WORDS = new Set([
-    'of',
-    'the',
-    'and',
-    'with',
-    'a',
-    'an',
-    'عن',
-    'على',
-    'في',
-    'من',
-    'هو',
-    'هي',
-    'هذا',
-    'هذه',
-    'اسم',
-    'صاحب',
-    'صاحبة',
-]);
 
-const normalizeSearchText = (text: string | undefined): string =>
-    stripArabicPrefixes(normalizeArabic(text || '')).replace(/\s+/g, ' ').trim();
 
 const asSearchablePerson = (person: Person): SearchablePerson => person as SearchablePerson;
 
@@ -130,10 +110,7 @@ const getPersonNameTokens = (person: Person) => ({
     full: normalizeSearchText(getPersonFullName(person)),
 });
 
-const tokenizeSearchQuery = (query: string): string[] =>
-    normalizeSearchText(query)
-        .split(/\s+/)
-        .filter((token) => token && !SEARCH_STOP_WORDS.has(token));
+
 
 const levenshteinDistance = (a: string, b: string): number => {
     if (a === b) return 0;
