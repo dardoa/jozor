@@ -176,10 +176,17 @@ export const buildMigrationJourney = (
     });
   });
 
+  const nodeByPersonId = new Map<string, MigrationNode>();
+  nodes.forEach(node => {
+    if (!nodeByPersonId.has(node.personId)) {
+      nodeByPersonId.set(node.personId, node);
+    }
+  });
+
   Object.values(people).forEach(person => {
     person.parents.forEach(parentId => {
-      const childNode = nodes.find(node => node.personId === person.id);
-      const parentNode = nodes.find(node => node.personId === parentId);
+      const childNode = nodeByPersonId.get(person.id);
+      const parentNode = nodeByPersonId.get(parentId);
 
       if (!childNode || !parentNode) {
         return;

@@ -286,31 +286,67 @@ const calculateAge = (birthDate: string): number | null => {
     return new Date().getFullYear() - year;
 };
 
-const findTargetPeople = async (name: string, people: readonly IndexedPerson[]): Promise<IndexedPerson[]> => {
+interface PreparedTargetQuery {
+    normalizedQuery: string;
+    words: string[];
+}
+
+const prepareTargetQuery = (name: string): PreparedTargetQuery => {
     const normalizedQuery = normalizeSearchText(name);
     const words = normalizedQuery.split(/\s+/).filter(Boolean);
-    
-    if (words.length === 0) return [];
+    return { normalizedQuery, words };
+};
 
-    return people.filter(p => {
-        const nameTokens = getPersonNameTokens(p);
-        const variants = getPersonNameVariants(p);
+const isPersonTargetMatch = (p: IndexedPerson, prepared: PreparedTargetQuery): boolean => {
+    const { normalizedQuery, words } = prepared;
+    if (words.length === 0) return false;
 
-        if (words.length === 1) {
-            return nameTokens.first === words[0] || nameTokens.nick === words[0];
+    const nameTokens = getPersonNameTokens(p);
+    const variants = getPersonNameVariants(p);
+
+    if (words.length === 1) {
+        return nameTokens.first === words[0] || nameTokens.nick === words[0];
+    }
+
+    if (variants.some((variant) => isNormalizedNameMatch(normalizedQuery, variant))) {
+        return true;
+    }
+
+    if (words.length >= 2 && nameTokens.first !== words[0] && nameTokens.nick !== words[0]) {
+        return false;
+    }
+
+    const fullWords = nameTokens.full.split(/\s+/).filter(Boolean);
+    return words.every((word) => fullWords.includes(word));
+};
+
+const findTargetPeopleBatch = async (
+    names: string[],
+    people: readonly IndexedPerson[]
+): Promise<Map<string, IndexedPerson[]>> => {
+    const targetPeopleMap = new Map<string, IndexedPerson[]>();
+    const uniqueNames = Array.from(new Set(names));
+
+    const preparedQueries = uniqueNames.map(name => ({
+        name,
+        prepared: prepareTargetQuery(name)
+    })).filter(q => q.prepared.words.length > 0);
+
+    uniqueNames.forEach(name => targetPeopleMap.set(name, []));
+
+    if (preparedQueries.length === 0) {
+        return targetPeopleMap;
+    }
+
+    for (const p of people) {
+        for (const { name, prepared } of preparedQueries) {
+            if (isPersonTargetMatch(p, prepared)) {
+                targetPeopleMap.get(name)!.push(p);
+            }
         }
+    }
 
-        if (variants.some((variant) => isNormalizedNameMatch(normalizedQuery, variant))) {
-            return true;
-        }
-
-        if (words.length >= 2 && nameTokens.first !== words[0] && nameTokens.nick !== words[0]) {
-            return false;
-        }
-
-        const fullWords = nameTokens.full.split(/\s+/).filter(Boolean);
-        return words.every((word) => fullWords.includes(word));
-    });
+    return targetPeopleMap;
 };
 
 const mappedPeopleCache = new Map<string, { ref: Person; mapped: IndexedPerson }>();
@@ -382,9 +418,15 @@ export const searchService = {
         // 1. Process Relational and Locational Intents (Inference Layer)
         if (intentDetected) {
             const indexedPeopleById = new Map(indexedPeople.map(p => [p.id, p]));
+            const relationalTargetNames = parsed.intents
+                .filter(intent => intent.logicType === 'RELATIONAL' && intent.targetName)
+                .map(intent => intent.targetName!);
+
+            const targetPeopleMap = await findTargetPeopleBatch(relationalTargetNames, indexedPeople);
+
             for (const intent of parsed.intents) {
                 if (intent.logicType === 'RELATIONAL' && intent.targetName) {
-                    const targets = await findTargetPeople(intent.targetName, indexedPeople);
+                    const targets = targetPeopleMap.get(intent.targetName) || [];
                     if (targets.length > 0) {
                         inferenceSucceeded = true;
                         const targetIds = new Set(targets.map(t => t.id));

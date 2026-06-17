@@ -378,6 +378,13 @@ export function calculateV3FocusLayout(
   const clusterLayout = buildFamilyGraphClusterLayout(graph, semanticsSnapshot, focusId, people);
   const edgeEntities = generateClusterLayoutEdges(clusterLayout);
 
+  const canonicalEntityIdByPersonId = new Map<string, string>();
+  Object.values(clusterLayout.nodes).forEach((entity) => {
+    if (entity.renderRole === 'canonical') {
+      canonicalEntityIdByPersonId.set(entity.personId, entity.entityId);
+    }
+  });
+
   const nodes = Object.values(clusterLayout.nodes)
     .map((entity) => {
       const personData = people[entity.personId];
@@ -405,9 +412,7 @@ export function calculateV3FocusLayout(
       .find((entityId) => clusterLayout.nodes[entityId]?.personId === personId);
     if (scopedEntityId) return scopedEntityId;
 
-    return Object.values(clusterLayout.nodes)
-      .find((entity) => entity.personId === personId && entity.renderRole === 'canonical')
-      ?.entityId ?? null;
+    return canonicalEntityIdByPersonId.get(personId) ?? null;
   };
 
   const links = edgeEntities

@@ -143,19 +143,24 @@ export const redactKindiPrompt = (text: string): KindiPromptRedaction => {
   return { redactedText, entities };
 };
 
-const restoreString = (value: string, entities: KindiRedactionEntity[]): string =>
-  value.replace(NAME_TOKEN_PATTERN, (token) => entities.find((entity) => entity.token === token)?.original || token);
+const restoreString = (value: string, entityMap: Map<string, string>): string =>
+  value.replace(NAME_TOKEN_PATTERN, (token) => entityMap.get(token) || token);
 
-const restoreValue = (value: unknown, entities: KindiRedactionEntity[]): unknown => {
-  if (typeof value === 'string') return restoreString(value, entities);
-  if (Array.isArray(value)) return value.map((item) => restoreValue(item, entities));
+const restoreValue = (value: unknown, entityMap: Map<string, string>): unknown => {
+  if (typeof value === 'string') return restoreString(value, entityMap);
+  if (Array.isArray(value)) return value.map((item) => restoreValue(item, entityMap));
   if (value && typeof value === 'object') {
     return Object.fromEntries(
-      Object.entries(value).map(([key, entry]) => [key, restoreValue(entry, entities)]),
+      Object.entries(value).map(([key, entry]) => [key, restoreValue(entry, entityMap)]),
     );
   }
   return value;
 };
 
-export const restoreKindiDraft = <T extends KindiAIPlanDraft>(draft: T, entities: KindiRedactionEntity[]): T =>
-  restoreValue(draft, entities) as T;
+export const restoreKindiDraft = <T extends KindiAIPlanDraft>(draft: T, entities: KindiRedactionEntity[]): T => {
+  const entityMap = new Map<string, string>();
+  entities.forEach((entity) => {
+    entityMap.set(entity.token, entity.original);
+  });
+  return restoreValue(draft, entityMap) as T;
+};

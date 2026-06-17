@@ -64,4 +64,72 @@ describe('kindiPrivacy', () => {
       confidence: 0.92,
     });
   });
+
+  it('restores the same token in multiple places', () => {
+    const entities = [{ token: '[NAME_1]', original: 'سليمان', kind: 'target' }] as any;
+    const draft: KindiAIPlanDraft = {
+      intent: 'ADD',
+      targetMention: '[NAME_1]',
+      updates: {
+        bio: 'مساعد لـ [NAME_1] وصديق لـ [NAME_1]',
+      },
+      confidence: 1,
+    } as any;
+
+    expect(restoreKindiDraft(draft, entities)).toEqual({
+      intent: 'ADD',
+      targetMention: 'سليمان',
+      updates: {
+        bio: 'مساعد لـ سليمان وصديق لـ سليمان',
+      },
+      confidence: 1,
+    });
+  });
+
+  it('keeps unknown or unmapped tokens unchanged', () => {
+    const entities = [{ token: '[NAME_1]', original: 'سليمان', kind: 'target' }] as any;
+    const draft: KindiAIPlanDraft = {
+      intent: 'ADD',
+      targetMention: '[NAME_1]',
+      newPersonName: '[NAME_2]',
+      updates: {
+        bio: 'تعديل لـ [NAME_99]',
+      },
+      confidence: 1,
+    } as any;
+
+    expect(restoreKindiDraft(draft, entities)).toEqual({
+      intent: 'ADD',
+      targetMention: 'سليمان',
+      newPersonName: '[NAME_2]',
+      updates: {
+        bio: 'تعديل لـ [NAME_99]',
+      },
+      confidence: 1,
+    });
+  });
+
+  it('restores deeply nested objects and arrays correctly', () => {
+    const entities = [
+      { token: '[NAME_1]', original: 'أحمد', kind: 'target' },
+      { token: '[NAME_2]', original: 'خالد', kind: 'new_person' },
+    ] as any;
+    const draft: KindiAIPlanDraft = {
+      intent: 'ADD',
+      targetMention: '[NAME_1]',
+      updates: {
+        list: ['[NAME_2]', 'نص عادي', { info: 'مرتبط بـ [NAME_1]' }],
+      },
+      confidence: 1,
+    } as any;
+
+    expect(restoreKindiDraft(draft, entities)).toEqual({
+      intent: 'ADD',
+      targetMention: 'أحمد',
+      updates: {
+        list: ['خالد', 'نص عادي', { info: 'مرتبط بـ أحمد' }],
+      },
+      confidence: 1,
+    });
+  });
 });
