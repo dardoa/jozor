@@ -29,8 +29,20 @@ export function usePlaceSuggestions(query: string) {
   const [suggestions, setSuggestions] = useState<PlaceSuggestion[]>([]);
   const [isLoadingRemote, setIsLoadingRemote] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const requestIdRef = useRef(0);
+  const isMountedRef = useRef(false);
 
   useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    const requestId = requestIdRef.current + 1;
+    requestIdRef.current = requestId;
+
     if (query.length < MIN_CHARS) {
       setSuggestions([]);
       setIsLoadingRemote(false);
@@ -57,6 +69,8 @@ export function usePlaceSuggestions(query: string) {
     // Tier 2: Debounced Supabase query
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(async () => {
+      if (!isMountedRef.current || requestIdRef.current !== requestId) return;
+
       setIsLoadingRemote(true);
       try {
         const client = getSupabaseWithAuth('', '', authTokenService.getStoredSupabaseTokenOrUndefined());
@@ -68,6 +82,7 @@ export function usePlaceSuggestions(query: string) {
           .limit(8);
 
         if (error || !data) return;
+        if (!isMountedRef.current || requestIdRef.current !== requestId) return;
 
         const rows = data as CacheRow[];
         const localKeys = new Set(localMatches.map(m => normalizePlaceName(m.displayName)));
@@ -92,7 +107,9 @@ export function usePlaceSuggestions(query: string) {
       } catch {
         // Autocomplete is a nice-to-have; silently ignore network errors
       } finally {
-        setIsLoadingRemote(false);
+        if (isMountedRef.current && requestIdRef.current === requestId) {
+          setIsLoadingRemote(false);
+        }
       }
     }, DEBOUNCE_MS);
 
