@@ -28,7 +28,16 @@ export const useGlobalSettingsModalState = (onClose: () => void) => {
   const [showTourConfirm, setShowTourConfirm] = useState(false);
 
   const deleteTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const resetTourTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isMountedRef = useRef(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (user) setDisplayName(user.displayName);
@@ -36,6 +45,7 @@ export const useGlobalSettingsModalState = (onClose: () => void) => {
 
   useEffect(() => () => {
     if (deleteTimerRef.current) clearInterval(deleteTimerRef.current);
+    if (resetTourTimerRef.current) clearTimeout(resetTourTimerRef.current);
   }, []);
 
   const handleAvatarClick = () => fileInputRef.current?.click();
@@ -55,14 +65,22 @@ export const useGlobalSettingsModalState = (onClose: () => void) => {
         photoVersion: uploadResult.photoVersion
       };
 
+      if (!isMountedRef.current) return;
+
       useAppStore.setState({ user: { ...user, ...userUpdate } });
       await updateUserProfile(user.uid, user.email, userUpdate, user.supabaseToken);
+      if (!isMountedRef.current) return;
+
       showToast.success('globalSettings.profile.avatarUpdateSuccess');
     } catch (error) {
+      if (!isMountedRef.current) return;
+
       console.error('Failed to upload avatar:', error);
       showToast.error('globalSettings.profile.avatarUpdateError');
     } finally {
-      setIsUploading(false);
+      if (isMountedRef.current) {
+        setIsUploading(false);
+      }
     }
   };
 
@@ -73,12 +91,18 @@ export const useGlobalSettingsModalState = (onClose: () => void) => {
     try {
       useAppStore.setState({ user: { ...user, displayName } });
       await updateUserProfile(user.uid, user.email, { displayName }, user.supabaseToken);
+      if (!isMountedRef.current) return;
+
       showToast.success('preferencesSaveSuccess');
     } catch (error) {
+      if (!isMountedRef.current) return;
+
       console.error('Failed to update profile:', error);
       showToast.error('globalSettings.profile.saveChangesError');
     } finally {
-      setIsSaving(false);
+      if (isMountedRef.current) {
+        setIsSaving(false);
+      }
     }
   };
 
@@ -94,8 +118,9 @@ export const useGlobalSettingsModalState = (onClose: () => void) => {
     updateTourStatus(false);
     localStorage.removeItem('jozor_onboarding_completed');
     onClose();
-    setTimeout(() => {
+    resetTourTimerRef.current = setTimeout(() => {
       window.dispatchEvent(new CustomEvent('start-onboarding-tour'));
+      resetTourTimerRef.current = null;
     }, 300);
   };
 
@@ -110,12 +135,19 @@ export const useGlobalSettingsModalState = (onClose: () => void) => {
       showToast.success('globalSettings.security.deleteSuccess');
     } catch (error) {
       console.error('Delete failed:', error);
-      setIsDeleting(false);
+      if (isMountedRef.current) {
+        setIsDeleting(false);
+      }
       showToast.error('globalSettings.security.deleteError');
     }
   };
 
   const startDeleteHold = () => {
+    if (deleteTimerRef.current) {
+      clearInterval(deleteTimerRef.current);
+      deleteTimerRef.current = null;
+    }
+
     setDeleteProgress(0);
     const step = 20;
     const duration = 5000;
