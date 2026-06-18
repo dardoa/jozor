@@ -87,20 +87,27 @@ export const useTreeSettings = () => {
 
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
+    let active = true;
+    const syncTreeId = currentTreeId;
+    const syncUser = user;
+
     debounceRef.current = setTimeout(async () => {
       try {
+        if (!active) return;
         const persistedSettings = buildPersistedTreeSettings(treeSettings, appearanceSettings);
-        await updateTreeSettings(currentTreeId, user.uid, user.email, persistedSettings);
+        await updateTreeSettings(syncTreeId, syncUser.uid, syncUser.email, persistedSettings);
       } catch (e) {
+        if (!active) return;
         logError('useTreeSettings syncSupabase', e, {
           category: 'SYNC',
           severity: 'MEDIUM',
-          metadata: { treeId: currentTreeId, operationType: 'sync_tree_settings' }
+          metadata: { treeId: syncTreeId, operationType: 'sync_tree_settings' }
         });
       }
     }, 1000); // 1s debounce to prevent spamming
 
     return () => {
+      active = false;
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
   }, [appearanceSettings, currentTreeId, treeSettings, user]);
