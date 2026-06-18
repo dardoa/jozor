@@ -66,6 +66,8 @@ export interface ThrottledFunction<Args extends unknown[]> {
   flush: (...args: Args) => void;
 }
 
+const getCurrentTimestamp = () => Date.now();
+
 /**
  * Custom hook for throttling a callback while preserving the latest trailing call.
  * The returned function also exposes cancel/flush helpers for lifecycle and final-state sync.
@@ -98,7 +100,7 @@ export const useThrottledCallback = <Args extends unknown[]>(
     };
 
     const invoke = (args: Args) => {
-      lastRunRef.current = Date.now();
+      lastRunRef.current = getCurrentTimestamp();
       hasRunRef.current = true;
       pendingArgsRef.current = null;
       callbackRef.current(...args);
@@ -106,8 +108,7 @@ export const useThrottledCallback = <Args extends unknown[]>(
 
     const fn = ((...args: Args) => {
       // This runs only when the returned event callback is invoked, never during render.
-      // eslint-disable-next-line react-hooks/purity
-      const now = Date.now();
+      const now = getCurrentTimestamp();
       const elapsed = now - lastRunRef.current;
 
       pendingArgsRef.current = args;

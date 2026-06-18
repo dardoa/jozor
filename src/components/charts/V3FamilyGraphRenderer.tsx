@@ -705,8 +705,7 @@ export const V3FamilyGraphRenderer: React.FC<V3FamilyGraphRendererProps> = ({
 
     window.__JOZOR_V3_RENDER_STATS__ = renderDiagnostics;
     if (isV3RenderDiagnosticsEnabled()) {
-      // eslint-disable-next-line no-console
-      console.table([renderDiagnostics]);
+      window.console.table([renderDiagnostics]);
     }
   }, [renderDiagnostics]);
 
