@@ -192,9 +192,12 @@ describe('importJozorArchiveData – M17 concurrency guarantees', () => {
         const zip = await originalLoadAsync(...args);
 
         zip.forEach((_path, entry) => {
-          const originalEntryAsync = entry.async.bind(entry);
-          // @ts-expect-error – patching internal method for concurrency tracking
-          entry.async = async (...asyncArgs: Parameters<typeof entry.async>) => {
+          type MutableZipEntry = {
+            async: (...asyncArgs: unknown[]) => Promise<unknown>;
+          };
+          const trackedEntry = entry as unknown as MutableZipEntry;
+          const originalEntryAsync = trackedEntry.async.bind(trackedEntry);
+          trackedEntry.async = async (...asyncArgs: unknown[]) => {
             active += 1;
             maxActive = Math.max(maxActive, active);
             // Yield to the microtask queue so concurrent tasks overlap

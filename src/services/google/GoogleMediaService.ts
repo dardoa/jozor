@@ -52,8 +52,9 @@ export class GoogleMediaService implements IGoogleMediaService {
                 }
             };
 
-            // @ts-expect-error - Types incorrectly mark View as abstract
-            const view = new win.google.picker.View(win.google.picker.ViewId.DOCS_IMAGES);
+            type PickerViewConstructor = new (viewId: google.picker.ViewId) => google.picker.DocsView;
+            const PickerView = win.google.picker.View as unknown as PickerViewConstructor;
+            const view = new PickerView(win.google.picker.ViewId.DOCS_IMAGES);
             view.setMimeTypes('image/png,image/jpeg,image/jpg,image/webp');
 
             const picker = new win.google.picker.PickerBuilder()
