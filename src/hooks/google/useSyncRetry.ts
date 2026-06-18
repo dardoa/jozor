@@ -31,7 +31,7 @@ export const useSyncRetry = ({
 
     const handleOnline = () => {
       const pending = localStorage.getItem('pending_google_sync');
-      if (pending === 'true' && currentActiveDriveFileId) {
+      if (pending === 'true' && currentActiveDriveFileId && !isSyncing) {
         logWarn('useSyncRetry', 'Network restored. Retrying pending Google Drive sync.', {
           category: 'NETWORK',
           metadata: { fileId: currentActiveDriveFileId, operationType: 'retry_drive_sync' }

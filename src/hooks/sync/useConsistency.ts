@@ -12,7 +12,7 @@ export const useConsistency = () => {
     const people = useAppStore((state) => state.people);
     const setValidationErrors = useAppStore((state) => state.setValidationErrors);
     const workerRef = useRef<Worker | null>(null);
-    const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     useEffect(() => {
         // Initialize Worker
@@ -44,18 +44,27 @@ export const useConsistency = () => {
     }, [setValidationErrors]);
 
     useEffect(() => {
+        if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+            timeoutRef.current = null;
+        }
+
         if (!workerRef.current || Object.keys(people).length === 0) return;
 
-        // Debounce validation (1000ms delay)
-        if (timeoutRef.current) clearTimeout(timeoutRef.current);
-
         const checkConsistency = () => {
+            timeoutRef.current = null;
             if (workerRef.current) {
                 workerRef.current.postMessage({ type: 'CHECK', people });
             }
         };
         timeoutRef.current = setTimeout(checkConsistency, 1000);
 
+        return () => {
+            if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current);
+                timeoutRef.current = null;
+            }
+        };
     }, [people]);
 
     return null; // Side-effect only hook
