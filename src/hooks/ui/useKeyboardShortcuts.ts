@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 type KeyHandler = (e: KeyboardEvent) => void;
 
@@ -11,10 +11,17 @@ export interface ShortcutMap {
  * Supports simple keys (like '?') and combinations (like 'ctrl+z').
  */
 export const useKeyboardShortcuts = (shortcuts: ShortcutMap, active = true) => {
-  useEffect(() => {
-    if (!active) return;
+  const shortcutsRef = useRef(shortcuts);
+  const activeRef = useRef(active);
 
+  useEffect(() => {
+    shortcutsRef.current = shortcuts;
+    activeRef.current = active;
+  }, [shortcuts, active]);
+
+  useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (!activeRef.current) return;
       if (['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement).tagName)) return;
       if ((e.target as HTMLElement).isContentEditable) return;
 
@@ -28,7 +35,7 @@ export const useKeyboardShortcuts = (shortcuts: ShortcutMap, active = true) => {
       combo += key;
 
       // Try specific combo first, then the base key
-      const handler = shortcuts[combo] || shortcuts[key];
+      const handler = shortcutsRef.current[combo] || shortcutsRef.current[key];
 
       if (handler) {
         // Only prevent default if it's one of our shortcuts
@@ -39,5 +46,5 @@ export const useKeyboardShortcuts = (shortcuts: ShortcutMap, active = true) => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [shortcuts, active]);
+  }, []);
 };
