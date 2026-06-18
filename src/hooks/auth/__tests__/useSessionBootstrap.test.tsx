@@ -5,6 +5,19 @@ import type { Session, User } from '@supabase/supabase-js';
 import { useSessionBootstrap } from '../useSessionBootstrap';
 import { useAppStore } from '../../../store/useAppStore';
 
+interface Deferred<T> {
+  promise: Promise<T>;
+  resolve: (value: T) => void;
+}
+
+const createDeferred = <T,>(): Deferred<T> => {
+  let resolve: (value: T) => void = () => undefined;
+  const promise = new Promise<T>((promiseResolve) => {
+    resolve = promiseResolve;
+  });
+  return { promise, resolve };
+};
+
 const {
   getSessionMock,
   onAuthStateChangeMock,
@@ -212,6 +225,75 @@ describe('useSessionBootstrap', () => {
     expect(useAppStore.getState().authLoading).toBe(false);
     expect(useAppStore.getState().syncStatus.state).toBe('offline');
     expect(useAppStore.getState().syncStatus.lastErrorCategory).toBe('AUTH');
+  });
+
+  it('does not apply background profile refinements after unmount', async () => {
+    const profileDeferred = createDeferred<{
+      metadata: { has_completed_tour: boolean };
+      tier: 'pro';
+    }>();
+
+    const sessionUser: User = {
+      id: 'user-1',
+      aud: 'authenticated',
+      role: 'authenticated',
+      email: 'user@example.com',
+      app_metadata: {},
+      user_metadata: {
+        full_name: 'User One',
+      },
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    const session: Session = {
+      access_token: 'session-token',
+      refresh_token: 'refresh-token',
+      expires_in: 3600,
+      token_type: 'bearer',
+      user: sessionUser,
+    };
+
+    useAppStore.setState((state) => ({
+      ...state,
+      subscriptionTier: 'free',
+      aiCloudQuotaRemaining: 0,
+    }));
+    getSessionMock.mockResolvedValue({ data: { session } });
+    mapSupabaseUserToUserProfileMock.mockReturnValue({
+      uid: 'user-1',
+      email: 'user@example.com',
+      displayName: 'User One',
+      photoURL: '',
+      metadata: {},
+    });
+    fetchUserProfileMock.mockReturnValue(profileDeferred.promise);
+    fetchAiMonthlyUsageMock.mockResolvedValue({
+      cloud_requests_limit: 30,
+      cloud_requests_used: 5,
+    });
+    claimCollaboratorMembershipsMock.mockResolvedValue(0);
+
+    const { unmount } = renderHook(() => useSessionBootstrap());
+
+    await waitFor(() => {
+      expect(useAppStore.getState().user?.uid).toBe('user-1');
+    });
+
+    unmount();
+
+    await act(async () => {
+      profileDeferred.resolve({
+        metadata: { has_completed_tour: true },
+        tier: 'pro',
+      });
+      await profileDeferred.promise;
+    });
+
+    expect(useAppStore.getState().subscriptionTier).toBe('free');
+    expect(useAppStore.getState().aiCloudQuotaRemaining).toBe(0);
+    expect(useAppStore.getState().user?.metadata?.has_completed_tour).toBeUndefined();
+    expect(unsubscribeMock).toHaveBeenCalledTimes(1);
   });
 });
 

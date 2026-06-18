@@ -24,7 +24,7 @@ const SESSION_BOOTSTRAP_TIMEOUT_MS = 6000;
  *
  * @param session - The current Supabase session, or null when signed out
  */
-const applySessionToStore = async (session: Session | null) => {
+const applySessionToStore = async (session: Session | null, isActive: () => boolean = () => true) => {
   const store = useAppStore.getState();
 
   if (useAppStore.getState().isE2E) {
@@ -89,6 +89,8 @@ const applySessionToStore = async (session: Session | null) => {
       email ? claimCollaboratorMemberships(user.uid, email, user.supabaseToken) : Promise.resolve(0)
     ]);
 
+    if (!isActive()) return;
+
     // Apply metadata refinements if successful
     let refinedMetadata = { ...user.metadata };
     let resolvedTier: 'free' | 'pro' | 'family' = 'free';
@@ -146,7 +148,7 @@ export const useSessionBootstrap = () => {
       performance.mark('diagnostic-1-auth-session-available');
       performance.mark('jozor-session-start');
       authEventHandled = true;
-      await applySessionToStore(session);
+      await applySessionToStore(session, () => active);
     };
 
     timeoutId = setTimeout(() => {
