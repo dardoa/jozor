@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { Person, UserProfile } from '../../types';
 import { storageProvider } from '../../services/storageProvider';
@@ -50,6 +50,14 @@ export const useDrivePersistence = ({
   const isSyncing = useAppStore((state) => state.driveSyncUiStatus === 'syncing');
   const setDriveSyncUiStatus = useAppStore((state) => state.setDriveSyncUiStatus);
   const [isSavingDriveFile, setIsSavingDriveFile] = useState(false);
+  const isMountedRef = useRef(false);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   const onLoadCloudData = useCallback(
     async (fileId: string) => {
@@ -61,11 +69,14 @@ export const useDrivePersistence = ({
           throw new Error('File is empty or corrupted');
         }
 
-        loadDrivePayloadIntoStore(cloudData);
+        if (!isMountedRef.current) return;
 
+        loadDrivePayloadIntoStore(cloudData);
         setCurrentActiveDriveFileId(fileId);
         showToast.success('File loaded successfully from Google Drive.');
       } catch (e: unknown) {
+        if (!isMountedRef.current) return;
+
         const err = e as Error;
         logError('useGoogleSync onLoadCloudData', err, {
           category: 'NETWORK',
@@ -82,7 +93,9 @@ export const useDrivePersistence = ({
         }
       } finally {
         setDriveSyncUiStatus('idle');
-        onCloseGoogleSyncChoice();
+        if (isMountedRef.current) {
+          onCloseGoogleSyncChoice();
+        }
       }
     },
     [onCloseGoogleSyncChoice, runWithAuth, setCurrentActiveDriveFileId, setDriveSyncUiStatus, showGoogleError]
@@ -93,10 +106,14 @@ export const useDrivePersistence = ({
     try {
       const fullState = buildCurrentDriveFullState();
       const newId = await runWithAuth(() => storageProvider.saveFile(fullState, null), true);
+      if (!isMountedRef.current) return;
+
       setCurrentActiveDriveFileId(newId);
       showToast.success('Tree saved as a new file to Google Drive!');
       refreshDriveFiles(true);
     } catch (e) {
+      if (!isMountedRef.current) return;
+
       logError('useGoogleSync onSaveNewCloudFile', e, {
         category: 'NETWORK',
         severity: 'MEDIUM',
@@ -105,7 +122,9 @@ export const useDrivePersistence = ({
       showGoogleError(e, 'Failed to save new file to Google Drive.');
     } finally {
       setDriveSyncUiStatus('idle');
-      onCloseGoogleSyncChoice();
+      if (isMountedRef.current) {
+        onCloseGoogleSyncChoice();
+      }
     }
   }, [onCloseGoogleSyncChoice, refreshDriveFiles, runWithAuth, setCurrentActiveDriveFileId, setDriveSyncUiStatus, showGoogleError]);
 
@@ -115,10 +134,14 @@ export const useDrivePersistence = ({
       try {
         const fullState = buildCurrentDriveFullState();
         const newId = await runWithAuth(() => storageProvider.saveFile(fullState, null, fileName), true);
+        if (!isMountedRef.current) return;
+
         setCurrentActiveDriveFileId(newId);
         showToast.success(`Tree saved as '${fileName}' to Google Drive!`);
         await refreshDriveFiles(true);
       } catch (e) {
+        if (!isMountedRef.current) return;
+
         logError('useGoogleSync handleSaveAsNewDriveFile', e, {
           category: 'NETWORK',
           severity: 'MEDIUM',
@@ -126,7 +149,9 @@ export const useDrivePersistence = ({
         });
         showGoogleError(e, 'Failed to save as new file to Google Drive.');
       } finally {
-        setIsSavingDriveFile(false);
+        if (isMountedRef.current) {
+          setIsSavingDriveFile(false);
+        }
       }
     },
     [refreshDriveFiles, runWithAuth, setCurrentActiveDriveFileId, showGoogleError]
@@ -143,6 +168,7 @@ export const useDrivePersistence = ({
 
       try {
         const newId = await saveCurrentDriveState({ fileId, forceNew, user, runWithAuth, allowPopup });
+        if (!isMountedRef.current) return;
 
         setCurrentActiveDriveFileId(newId);
         localStorage.setItem('jozor_gdrive_file_id', newId);
@@ -154,6 +180,8 @@ export const useDrivePersistence = ({
           await refreshDriveFiles(allowPopup);
         }
       } catch (e: unknown) {
+        if (!isMountedRef.current) return;
+
         const err = e as { message?: string; status?: number; result?: { error?: { code?: number } } };
         const status = getDriveErrorStatus(err);
         logError('useGoogleSync handleOverwriteExistingDriveFile', e, {
@@ -172,7 +200,9 @@ export const useDrivePersistence = ({
           if (!silent) showGoogleError(err, errorMessage);
         }
       } finally {
-        setIsSavingDriveFile(false);
+        if (isMountedRef.current) {
+          setIsSavingDriveFile(false);
+        }
       }
     },
     [refreshDriveFiles, runWithAuth, setCurrentActiveDriveFileId, showGoogleError, user]
@@ -183,11 +213,15 @@ export const useDrivePersistence = ({
       setDriveSyncUiStatus('syncing');
       try {
         const cloudData = await runWithAuth(() => storageProvider.loadFile(fileId), true);
+        if (!isMountedRef.current) return;
+
         loadFullState(cloudData);
         setCurrentActiveDriveFileId(fileId);
         setFileOwnerUid(ownerUid || user?.uid || null);
         showToast.success('File loaded successfully from Google Drive.');
       } catch (e) {
+        if (!isMountedRef.current) return;
+
         logError('useGoogleSync handleLoadDriveFile', e, {
           category: 'NETWORK',
           severity: 'MEDIUM',
@@ -250,6 +284,8 @@ export const useDrivePersistence = ({
       showToast.success('Sync cache cleared. Creating fresh backup...');
       await handleOverwriteExistingDriveFile(null, false, true, true);
     } catch (e: unknown) {
+      if (!isMountedRef.current) return;
+
       logError('useGoogleSync handleClearSyncCache', e, {
         category: 'SYNC',
         severity: 'HIGH',
