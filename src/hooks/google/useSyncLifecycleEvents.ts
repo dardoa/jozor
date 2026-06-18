@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { logError } from '../../utils/errorLogger';
 
 interface GoogleSyncEvents {
@@ -14,14 +14,24 @@ interface GoogleSyncEvents {
  * (periodic backups, forced syncs, cache clearing).
  */
 export const useSyncLifecycleEvents = (googleSync: GoogleSyncEvents) => {
+  const googleSyncRef = useRef(googleSync);
+
+  useEffect(() => {
+    googleSyncRef.current = googleSync;
+  }, [googleSync]);
+
   useEffect(() => {
     const handleBackupRequest = async () => {
+      const currentGoogleSync = googleSyncRef.current;
+
       console.warn('Periodic backup requested (50 operations reached)');
       try {
-        if (googleSync.currentActiveDriveFileId) {
-          await googleSync.handleOverwriteExistingDriveFile(googleSync.currentActiveDriveFileId);
+        if (currentGoogleSync.currentActiveDriveFileId) {
+          await currentGoogleSync.handleOverwriteExistingDriveFile(
+            currentGoogleSync.currentActiveDriveFileId
+          );
         } else {
-          await googleSync.onSaveNewCloudFile();
+          await currentGoogleSync.onSaveNewCloudFile();
         }
       } catch (error) {
         logError('PERIODIC_BACKUP_ERROR', error, { showToast: false });
@@ -30,22 +40,26 @@ export const useSyncLifecycleEvents = (googleSync: GoogleSyncEvents) => {
 
     window.addEventListener('jozor-backup-requested', handleBackupRequest);
     return () => window.removeEventListener('jozor-backup-requested', handleBackupRequest);
-  }, [googleSync]);
+  }, []);
 
   useEffect(() => {
     const handleForceSync = () => {
+      const currentGoogleSync = googleSyncRef.current;
+
       console.warn('Force sync to Drive triggered');
-      if (googleSync.onSaveToGoogleDrive) {
-        googleSync
+      if (currentGoogleSync.onSaveToGoogleDrive) {
+        currentGoogleSync
           .onSaveToGoogleDrive()
           .catch((error) => logError('SYNC_FORCE_SAVE_ERROR', error, { showToast: false }));
       }
     };
 
     const handleClearCache = () => {
+      const currentGoogleSync = googleSyncRef.current;
+
       console.warn('Emergency sync reset triggered');
-      if (googleSync.handleClearSyncCache) {
-        googleSync
+      if (currentGoogleSync.handleClearSyncCache) {
+        currentGoogleSync
           .handleClearSyncCache()
           .catch((error) => logError('SYNC_CLEAR_CACHE_ERROR', error, { showToast: false }));
       }
@@ -58,5 +72,5 @@ export const useSyncLifecycleEvents = (googleSync: GoogleSyncEvents) => {
       window.removeEventListener('force-drive-sync', handleForceSync);
       window.removeEventListener('clear-vault-sync-cache', handleClearCache);
     };
-  }, [googleSync]);
+  }, []);
 };
