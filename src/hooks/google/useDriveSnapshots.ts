@@ -24,6 +24,14 @@ export const useDriveSnapshots = ({
 }: UseDriveSnapshotsParams) => {
   const setDriveSyncUiStatus = useAppStore((state) => state.setDriveSyncUiStatus);
   const archiveRestoreCleanupRef = useRef<(() => void) | null>(null);
+  const isMountedRef = useRef(false);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   const buildSnapshotArchive = useCallback(async (fullState: FullState, label: string): Promise<Blob> => {
     const { buildBlueprintArchive } = await import('../../services/archiveService');
@@ -41,17 +49,24 @@ export const useDriveSnapshots = ({
       const treeId = state.currentTreeId;
 
       if (!treeId) {
-        showToast.error('Cannot create snapshot: Tree ID undefined.');
         setDriveSyncUiStatus('idle');
+        if (isMountedRef.current) {
+          showToast.error('Cannot create snapshot: Tree ID undefined.');
+        }
         return;
       }
 
       await runWithAuth(() => storageProvider.cleanupSnapshots(treeId, 2), true);
+      if (!isMountedRef.current) return;
 
       const snapshotArchive = await buildSnapshotArchive(fullState, label);
       await runWithAuth(() => storageProvider.saveSnapshot(snapshotArchive, treeId, label), true);
+      if (!isMountedRef.current) return;
+
       showToast.success('Snapshot saved successfully!');
     } catch (e) {
+      if (!isMountedRef.current) return;
+
       logError('useGoogleSync handleCreateSnapshot', e, {
         category: 'NETWORK',
         severity: 'MEDIUM',
@@ -80,13 +95,17 @@ export const useDriveSnapshots = ({
           true
         );
       }
+      if (!isMountedRef.current) return;
 
       const archiveBlob = await runWithAuth(
         () => storageProvider.loadSnapshotFileRaw(snapshot.id),
         true
       );
+      if (!isMountedRef.current) return;
+
       const { restoreBlueprintArchive } = await import('../../services/archiveRestoreService');
       const restoredArchive = await restoreBlueprintArchive(archiveBlob);
+      if (!isMountedRef.current) return;
 
       archiveRestoreCleanupRef.current?.();
       archiveRestoreCleanupRef.current = restoredArchive.revokeObjectUrls;
@@ -114,6 +133,8 @@ export const useDriveSnapshots = ({
 
       showToast.success(`Restored version '${snapshot.name}' successfully!`);
     } catch (e) {
+      if (!isMountedRef.current) return;
+
       logError('useGoogleSync handleRestoreSnapshot', e, {
         category: 'SYNC',
         severity: 'MEDIUM',
