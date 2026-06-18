@@ -32,6 +32,14 @@ export const useDriveFiles = ({
   const [hasSessionError, setHasSessionError] = useState(false);
   const [isAuthorized, setIsAuthorized] = useState(false);
   const isRefreshingDriveFilesRef = useRef(false);
+  const isMountedRef = useRef(false);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (user?.supabaseToken || user?.uid) {
@@ -41,8 +49,10 @@ export const useDriveFiles = ({
 
   const refreshDriveFiles = useCallback(async (allowPopup: boolean = false) => {
     if (!user) {
-      setDriveFiles([]);
-      setIsAuthorized(false);
+      if (isMountedRef.current) {
+        setDriveFiles([]);
+        setIsAuthorized(false);
+      }
       return;
     }
     if (isRefreshingDriveFilesRef.current && !allowPopup) {
@@ -50,13 +60,19 @@ export const useDriveFiles = ({
     }
 
     isRefreshingDriveFilesRef.current = true;
-    setIsListingDriveFiles(true);
+    if (isMountedRef.current) {
+      setIsListingDriveFiles(true);
+    }
     try {
       const files = await runWithAuth(() => storageProvider.listFiles(), allowPopup);
+      if (!isMountedRef.current) return;
+
       setHasSessionError(false);
       setIsAuthorized(true);
       setDriveFiles(files);
     } catch (e: unknown) {
+      if (!isMountedRef.current) return;
+
       const err = e as Error;
       if (err.message === 'Missing authentication') {
         const hasPreviousToken = !!localStorage.getItem('jozor_google_access_token');
@@ -83,7 +99,9 @@ export const useDriveFiles = ({
       setIsAuthorized(false);
     } finally {
       isRefreshingDriveFilesRef.current = false;
-      setIsListingDriveFiles(false);
+      if (isMountedRef.current) {
+        setIsListingDriveFiles(false);
+      }
     }
   }, [showGoogleError, user, runWithAuth]);
 
@@ -97,6 +115,8 @@ export const useDriveFiles = ({
       setIsDeletingDriveFile(true);
       try {
         await runWithAuth(() => storageProvider.deleteFile(fileId), true);
+        if (!isMountedRef.current) return;
+
         showToast.success('File deleted from Google Drive.');
         if (currentActiveDriveFileId === fileId) {
           setCurrentActiveDriveFileId(null);
@@ -104,6 +124,8 @@ export const useDriveFiles = ({
         }
         await refreshDriveFiles(true);
       } catch (e) {
+        if (!isMountedRef.current) return;
+
         logError('useGoogleSync handleDeleteDriveFile', e, {
           category: 'NETWORK',
           severity: 'MEDIUM',
@@ -111,7 +133,9 @@ export const useDriveFiles = ({
         });
         showGoogleError(e, 'Failed to delete file from Google Drive.');
       } finally {
-        setIsDeletingDriveFile(false);
+        if (isMountedRef.current) {
+          setIsDeletingDriveFile(false);
+        }
       }
     },
     [
