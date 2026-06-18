@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { redactKindiPrompt, restoreKindiDraft } from '../logic/kindiPrivacy';
+import type { KindiRedactionEntity } from '../logic/kindiPrivacy';
 import type { KindiAIPlanDraft } from '../types';
 
 describe('kindiPrivacy', () => {
@@ -66,7 +67,7 @@ describe('kindiPrivacy', () => {
   });
 
   it('restores the same token in multiple places', () => {
-    const entities = [{ token: '[NAME_1]', original: 'سليمان', kind: 'target' }] as any;
+    const entities: KindiRedactionEntity[] = [{ token: '[NAME_1]', original: 'سليمان', kind: 'target' }];
     const draft: KindiAIPlanDraft = {
       intent: 'ADD',
       targetMention: '[NAME_1]',
@@ -74,7 +75,7 @@ describe('kindiPrivacy', () => {
         bio: 'مساعد لـ [NAME_1] وصديق لـ [NAME_1]',
       },
       confidence: 1,
-    } as any;
+    };
 
     expect(restoreKindiDraft(draft, entities)).toEqual({
       intent: 'ADD',
@@ -87,7 +88,7 @@ describe('kindiPrivacy', () => {
   });
 
   it('keeps unknown or unmapped tokens unchanged', () => {
-    const entities = [{ token: '[NAME_1]', original: 'سليمان', kind: 'target' }] as any;
+    const entities: KindiRedactionEntity[] = [{ token: '[NAME_1]', original: 'سليمان', kind: 'target' }];
     const draft: KindiAIPlanDraft = {
       intent: 'ADD',
       targetMention: '[NAME_1]',
@@ -96,7 +97,7 @@ describe('kindiPrivacy', () => {
         bio: 'تعديل لـ [NAME_99]',
       },
       confidence: 1,
-    } as any;
+    };
 
     expect(restoreKindiDraft(draft, entities)).toEqual({
       intent: 'ADD',
@@ -110,18 +111,18 @@ describe('kindiPrivacy', () => {
   });
 
   it('restores deeply nested objects and arrays correctly', () => {
-    const entities = [
+    const entities: KindiRedactionEntity[] = [
       { token: '[NAME_1]', original: 'أحمد', kind: 'target' },
       { token: '[NAME_2]', original: 'خالد', kind: 'new_person' },
-    ] as any;
-    const draft: KindiAIPlanDraft = {
+    ];
+    const draft = {
       intent: 'ADD',
       targetMention: '[NAME_1]',
       updates: {
         list: ['[NAME_2]', 'نص عادي', { info: 'مرتبط بـ [NAME_1]' }],
       },
       confidence: 1,
-    } as any;
+    } as unknown as KindiAIPlanDraft;
 
     expect(restoreKindiDraft(draft, entities)).toEqual({
       intent: 'ADD',

@@ -78,9 +78,9 @@ export class LinkPersonCommand implements TreeCommand {
                         }
 
                         // Handle complex rules (like co-parents)
-                        const { 
-                            resolveOtherParentForLinkedParent, 
-                            resolveCoParentForLinkedChild 
+                        const {
+                            resolveOtherParentForLinkedParent,
+                            resolveCoParentForLinkedChild
                         } = await import('../domain/relationshipRules');
 
                         if (this.type === 'parent') {

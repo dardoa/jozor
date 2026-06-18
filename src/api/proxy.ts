@@ -3,7 +3,12 @@ import type { Person } from '../types';
 import { logError, logInfo } from '../utils/errorLogger';
 import { authenticateUser, createSupabaseClientForUser } from '../utils/authUtils';
 import { mapPersonToDbRow } from '../services/personRowMapper';
-import { normalizeHttpOrigin } from '../../shared/http/origin';
+import {
+  buildCorsHeaders,
+  getHeaderOrigin,
+  isRequestOriginAllowed,
+  resolveAllowedOriginFromEnv,
+} from '../../shared/http/cors';
 
 type ProxyPerson = Person & { id: string };
 type ProxyRelationship = { tree_id: string; person_id: string; relative_id: string; type: 'parent' | 'spouse' };
@@ -36,24 +41,7 @@ function isValidProxyPerson(person: unknown): person is ProxyPerson {
   return true;
 }
 
-const resolveAllowedOrigin = (): string | null => {
-  const candidate = process.env.APP_ORIGIN ?? process.env.VITE_APP_ORIGIN;
-  const normalizedCandidate = normalizeHttpOrigin(candidate);
-  if (normalizedCandidate) {
-    return normalizedCandidate;
-  }
-
-  const isProd =
-    process.env.NODE_ENV === 'production' ||
-    process.env.VERCEL_ENV === 'production' ||
-    process.env.VERCEL_ENV === 'preview';
-
-  if (isProd) {
-    return null;
-  }
-
-  return 'http://localhost:5173';
-};
+const resolveAllowedOrigin = (): string | null => resolveAllowedOriginFromEnv(process.env);
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const allowedOrigin = resolveAllowedOrigin();
@@ -66,24 +54,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   }
 
-  const origin = req.headers.origin;
-  const corsHeaders: Record<string, string> = {
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    'Access-Control-Allow-Credentials': 'true',
-  };
-
-  if (origin === allowedOrigin) {
-    corsHeaders['Access-Control-Allow-Origin'] = origin;
-  } else {
-    corsHeaders['Access-Control-Allow-Origin'] = allowedOrigin;
-  }
+  const origin = getHeaderOrigin(req.headers);
+  const corsHeaders = buildCorsHeaders(allowedOrigin, {
+    methods: 'GET, POST, OPTIONS',
+    allowCredentials: true,
+  }, origin);
 
   Object.entries(corsHeaders).forEach(([key, value]) => {
     res.setHeader(key, value);
   });
 
-  if (origin && origin !== allowedOrigin) {
+  if (!isRequestOriginAllowed(origin, allowedOrigin)) {
     return res.status(400).json({
       error: {
         message: 'Invalid request origin.',

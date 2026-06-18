@@ -10,11 +10,12 @@ vi.mock('@supabase/supabase-js', () => ({
 }));
 
 import { Readable } from 'stream';
+import type { VercelRequest } from '@vercel/node';
 import handler from '../../../api/billing/create-checkout-session';
 
 const createRequest = (body: unknown, headers: Record<string, string>) => {
   const rawBody = Buffer.from(JSON.stringify(body));
-  const req = Readable.from(rawBody) as any;
+  const req = Readable.from(rawBody) as unknown as VercelRequest;
   req.method = 'POST';
   req.headers = headers;
   return req;
@@ -110,5 +111,25 @@ describe('create checkout session API', () => {
 
     expect(res.statusCode).toBe(204);
     expect(res.headers['Access-Control-Allow-Origin']).toBe('https://jozor.vercel.app');
+  });
+
+  it('rejects invalid request origins before creating checkout transactions', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch');
+    const req = createRequest(
+      { tier: 'pro' },
+      {
+        authorization: `Bearer ${createInternalJwt()}`,
+        origin: 'https://evil.example',
+      }
+    );
+    const res = createResponse();
+
+    await handler(req as never, res as never);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body).toEqual({ error: 'Invalid request origin.' });
+    expect(fetchMock).not.toHaveBeenCalled();
+
+    fetchMock.mockRestore();
   });
 });

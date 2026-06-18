@@ -18,11 +18,12 @@ vi.mock('@paddle/paddle-node-sdk', () => ({
 }));
 
 import { Readable } from 'stream';
+import type { VercelRequest } from '@vercel/node';
 import handler from '../../../api/billing/paddle-webhook';
 
 const createRequest = (body: unknown) => {
   const rawBody = JSON.stringify(body);
-  const req = Readable.from(Buffer.from(rawBody)) as any;
+  const req = Readable.from(Buffer.from(rawBody)) as unknown as VercelRequest;
   req.method = 'POST';
   req.headers = {
     'paddle-signature': `ts=${Math.floor(Date.now() / 1000)};h1=test-signature`,

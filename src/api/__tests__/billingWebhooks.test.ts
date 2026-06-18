@@ -22,11 +22,11 @@ function createMockRequest(bodySize: number, method = 'POST', headers: Record<st
     remaining -= size;
   }
 
-  const req = Readable.from(chunks) as any;
+  const req = Readable.from(chunks) as unknown as VercelRequest;
   req.method = method;
   req.headers = headers;
   req.body = { tier: 'pro' };
-  return req as unknown as VercelRequest;
+  return req;
 }
 
 function createMockResponse() {

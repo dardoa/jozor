@@ -1,6 +1,11 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { authenticateUser } from '../utils/authUtils';
-import { normalizeHttpOrigin } from '../../shared/http/origin';
+import {
+  buildCorsHeaders,
+  getHeaderOrigin,
+  isRequestOriginAllowed,
+  resolveAllowedOriginFromEnv,
+} from '../../shared/http/cors';
 import type {
   AIProxyImagePayload,
   AIProxyRequest,
@@ -33,32 +38,14 @@ export {
 
 export const config = { runtime: 'edge' };
 
-export const resolveAllowedOrigin = (): string | null => {
-  const candidate = process.env.APP_ORIGIN ?? process.env.VITE_APP_ORIGIN;
-  const normalizedCandidate = normalizeHttpOrigin(candidate);
-  if (normalizedCandidate) {
-    return normalizedCandidate;
-  }
-
-  const isProd =
-    process.env.NODE_ENV === 'production' ||
-    process.env.VERCEL_ENV === 'production' ||
-    process.env.VERCEL_ENV === 'preview';
-
-  if (isProd) {
-    return null;
-  }
-
-  return 'http://localhost:5173';
-};
+export const resolveAllowedOrigin = (): string | null => resolveAllowedOriginFromEnv(process.env);
 const ALLOWED_ORIGIN = resolveAllowedOrigin();
-const CORS_HEADERS: Record<string, string> = {
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-};
-if (ALLOWED_ORIGIN) {
-  CORS_HEADERS['Access-Control-Allow-Origin'] = ALLOWED_ORIGIN;
-}
+const CORS_HEADERS: Record<string, string> = ALLOWED_ORIGIN
+  ? buildCorsHeaders(ALLOWED_ORIGIN, { methods: 'POST, OPTIONS' })
+  : {
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    };
 
 
 let supabaseAdminClient: SupabaseClient | null = null;
@@ -510,6 +497,16 @@ async function generateViaProvider(prompt: string, image?: AIProxyImagePayload, 
 }
 
 function handleCorsAndMethod(req: Request): Response | null {
+  const origin = getHeaderOrigin(req.headers);
+  if (ALLOWED_ORIGIN && !isRequestOriginAllowed(origin, ALLOWED_ORIGIN)) {
+    return Response.json({
+      error: {
+        message: 'Invalid request origin.',
+        code: 'INVALID_ORIGIN',
+      },
+    }, { status: 400, headers: CORS_HEADERS });
+  }
+
   if (req.method === 'OPTIONS') {
     return new Response(null, { status: 200, headers: CORS_HEADERS });
   }

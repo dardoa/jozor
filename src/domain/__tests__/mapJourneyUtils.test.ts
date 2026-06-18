@@ -2,41 +2,84 @@ import { describe, expect, it } from 'vitest';
 import type { LocationData, Person } from '../../types';
 import { buildEventLocations, buildMigrationJourney } from '../mapJourneyUtils';
 
+const makeLocation = (location: LocationData): LocationData => location;
+
+const makePerson = (person: Partial<Person> & Pick<Person, 'id' | 'firstName' | 'lastName'>): Person => {
+  const { id, firstName, lastName, ...overrides } = person;
+
+  return {
+  id,
+  title: '',
+  firstName,
+  middleName: '',
+  lastName,
+  birthName: '',
+  nickName: '',
+  suffix: '',
+  gender: person.gender ?? 'male',
+  birthDate: '',
+  birthPlace: '',
+  birthSource: '',
+  deathDate: '',
+  deathPlace: '',
+  deathSource: '',
+  burialPlace: '',
+  residence: '',
+  isDeceased: false,
+  profession: '',
+  company: '',
+  interests: '',
+  bio: '',
+  gallery: [],
+  voiceNotes: [],
+  sources: [],
+  events: [],
+  email: '',
+  website: '',
+  blog: '',
+  address: '',
+  parents: [],
+  spouses: [],
+  children: [],
+  ...overrides,
+  };
+};
+
 const mockLocations: Record<string, LocationData> = {
-  'Cairo': {
+  'Cairo': makeLocation({
     status: 'resolved',
     lat: 30.0444,
     lng: 31.2357,
     resolvedName: 'Cairo, Egypt',
-  } as any,
-  'Alexandria': {
+  }),
+  'Alexandria': makeLocation({
     status: 'resolved',
     lat: 31.2001,
     lng: 29.9187,
     resolvedName: 'Alexandria, Egypt',
-  } as any,
-  'Aswan': {
+  }),
+  'Aswan': makeLocation({
     status: 'resolved',
     lat: 24.0889,
     lng: 32.8998,
     resolvedName: 'Aswan, Egypt',
-  } as any,
-  'Luxor': {
+  }),
+  'Luxor': makeLocation({
     status: 'resolved',
     lat: 25.6872,
     lng: 32.6396,
     resolvedName: 'Luxor, Egypt',
-  } as any,
-  'Giza': {
+  }),
+  'Giza': makeLocation({
     status: 'resolved',
     lat: 30.0131,
     lng: 31.2089,
     resolvedName: 'Giza, Egypt',
-  } as any,
+  }),
 };
 
 const mockPeople: Record<string, Person> = {
-  'person-1': {
+  'person-1': makePerson({
     id: 'person-1',
     firstName: 'Child',
     lastName: 'One',
@@ -46,8 +89,8 @@ const mockPeople: Record<string, Person> = {
     deathPlace: 'Cairo',
     birthDate: '1990-01-01',
     parents: ['person-2'],
-  } as any,
-  'person-2': {
+  }),
+  'person-2': makePerson({
     id: 'person-2',
     firstName: 'Parent',
     lastName: 'One',
@@ -56,8 +99,8 @@ const mockPeople: Record<string, Person> = {
     residence: 'Cairo',
     birthDate: '1960-01-01',
     parents: [],
-  } as any,
-  'person-3': {
+  }),
+  'person-3': makePerson({
     id: 'person-3',
     firstName: 'Child',
     lastName: 'Aswan',
@@ -65,8 +108,8 @@ const mockPeople: Record<string, Person> = {
     birthPlace: 'Aswan',
     birthDate: '1985-05-05',
     parents: ['person-4'],
-  } as any,
-  'person-4': {
+  }),
+  'person-4': makePerson({
     id: 'person-4',
     firstName: 'Parent',
     lastName: 'Aswan',
@@ -74,8 +117,8 @@ const mockPeople: Record<string, Person> = {
     birthPlace: 'Aswan',
     birthDate: '1955-05-05',
     parents: [],
-  } as any,
-  'person-5': {
+  }),
+  'person-5': makePerson({
     id: 'person-5',
     firstName: 'Event',
     lastName: 'Person',
@@ -83,16 +126,18 @@ const mockPeople: Record<string, Person> = {
     birthPlace: 'Luxor',
     birthDate: '2000-01-01',
     events: [
-      { place: 'Cairo', date: '2010-01-01' }
+      { id: 'event-1', title: 'Move', place: 'Cairo', date: '2010-01-01' }
     ],
     partnerDetails: {
       'partner-1': {
+        type: 'married',
+        startDate: '2005-01-01',
         startPlace: 'Giza',
         endPlace: 'Cairo'
       }
     },
     parents: [],
-  } as any,
+  }),
 };
 
 describe('mapJourneyUtils', () => {
@@ -115,13 +160,13 @@ describe('mapJourneyUtils', () => {
 
     it('skips unresolved location coordinates', () => {
       const customPeople = {
-        'person-x': {
+        'person-x': makePerson({
           id: 'person-x',
           firstName: 'No',
           lastName: 'Coords',
           birthPlace: 'NonExistentPlace',
           parents: [],
-        } as any,
+        }),
       };
 
       const locations = buildEventLocations(customPeople, mockLocations);

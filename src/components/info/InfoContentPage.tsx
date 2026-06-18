@@ -42,11 +42,11 @@ export const InfoContentPage: React.FC<InfoContentPageProps> = ({ page }) => {
           <div className="mx-auto mb-6 w-16 h-16 rounded-2xl bg-[var(--color-primary-500)]/10 flex items-center justify-center border border-[var(--border-soft)]/50">
             <Mail className="h-8 w-8 text-[var(--color-primary-600)]" />
           </div>
-          
+
           <h2 className="text-2xl font-black text-[var(--text-main)] mb-2">
             {emailLabel}
           </h2>
-          
+
           <p className="text-xl font-bold text-[var(--color-primary-600)] mb-8 select-all">
             {emailAddress}
           </p>

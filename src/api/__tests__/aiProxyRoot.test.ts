@@ -77,6 +77,25 @@ describe('root AI proxy API function', () => {
     });
   });
 
+  describe('CORS request validation', () => {
+    it('rejects disallowed request origins before method handling', async () => {
+      const response = await srcHandler(new Request('https://jozor.test/api/ai-proxy', {
+        method: 'OPTIONS',
+        headers: {
+          Origin: 'https://evil.example',
+        },
+      }));
+
+      expect(response.status).toBe(400);
+      expect(await response.json()).toEqual({
+        error: {
+          message: 'Invalid request origin.',
+          code: 'INVALID_ORIGIN',
+        },
+      });
+    });
+  });
+
   describe('Kindi request validation', () => {
     it('normalizes valid redacted text', () => {
       expect(validateKindiPlanRequestData({

@@ -78,10 +78,10 @@ export class AddRelativeCommand implements TreeCommand {
                 syncAction: async () => {
                     // PUSH: ADD_NODE
                     // The applier on other clients will add the node AND the relationship to focusId
-                    const nodeQueued = await context.syncService.pushOperation(treeId!, 'ADD_NODE', { 
-                        person: newPerson, 
-                        relativeId: focusId, 
-                        type: this.type 
+                    const nodeQueued = await context.syncService.pushOperation(treeId!, 'ADD_NODE', {
+                        person: newPerson,
+                        relativeId: focusId,
+                        type: this.type
                     });
                     if (nodeQueued === false) {
                         return { success: false, error: `The ${this.type} was added locally, but could not be queued for sync.` };

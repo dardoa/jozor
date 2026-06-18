@@ -3,6 +3,12 @@ import { Readable } from 'node:stream';
 import { describe, expect, it, vi } from 'vitest';
 import { createLocalApiProxyMiddleware } from './localApiProxyMiddleware';
 
+type MutableIncomingRequest = IncomingMessage & {
+  method: string;
+  url: string;
+  headers: IncomingMessage['headers'];
+};
+
 const authenticateUserMock = vi.fn();
 const createSupabaseClientForUserMock = vi.fn();
 
@@ -103,17 +109,17 @@ describe('createLocalApiProxyMiddleware', () => {
     } as never);
 
     let bodyReadCount = 0;
-    const req = Readable.from(Buffer.from('{}')) as any;
+    const req = Readable.from(Buffer.from('{}')) as MutableIncomingRequest;
     req.method = 'POST';
     req.url = '/billing/create-checkout-session';
     req.headers = { host: 'localhost:3000' };
     const originalOn = req.on;
-    req.on = function(event: string, listener: any) {
+    req.on = function(event, listener) {
       if (event === 'data') {
         bodyReadCount = 1;
       }
       return originalOn.call(this, event, listener);
-    };
+    } as IncomingMessage['on'];
     const res = createResponse();
     const next = vi.fn();
 
@@ -144,7 +150,7 @@ describe('createLocalApiProxyMiddleware', () => {
       },
     } as never);
 
-    const req = Readable.from(Buffer.from('{"event_type":"subscription.created"}')) as any;
+    const req = Readable.from(Buffer.from('{"event_type":"subscription.created"}')) as MutableIncomingRequest;
     req.method = 'POST';
     req.url = '/billing/paddle-webhook';
     req.headers = { host: 'localhost:3000' };

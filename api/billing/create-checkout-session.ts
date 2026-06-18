@@ -1,6 +1,12 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 import { verifyInternalToken } from '../../shared/auth/internalJwt.js';
+import {
+  buildCorsHeaders,
+  getHeaderOrigin,
+  isRequestOriginAllowed,
+  resolveAllowedOriginFromEnv,
+} from '../../shared/http/cors.js';
 import { MAX_JSON_BODY_SIZE, PayloadTooLargeError } from '../shared/server/bodyLimits.js';
 
 export const config = {
@@ -68,27 +74,6 @@ function getEnv(name: string): string | undefined {
   return trimmed ? trimmed : undefined;
 }
 
-function normalizeCheckoutOrigin(value: string | undefined): string | null {
-  if (!value) return null;
-
-  const protocolMatch = /https?:\/\//i.exec(value);
-  if (!protocolMatch || protocolMatch.index === undefined) return null;
-
-  try {
-    const url = new URL(value.slice(protocolMatch.index).trim());
-    if (
-      (url.protocol !== 'https:' && url.protocol !== 'http:')
-      || url.username
-      || url.password
-    ) {
-      return null;
-    }
-    return url.origin;
-  } catch {
-    return null;
-  }
-}
-
 async function authenticateUser(authHeader?: string): Promise<AuthenticatedUser | null> {
   if (!authHeader?.startsWith('Bearer ')) return null;
 
@@ -118,20 +103,7 @@ async function authenticateUser(authHeader?: string): Promise<AuthenticatedUser 
   return { uid: data.user.id, email: data.user.email ?? '' };
 }
 
-const resolveAllowedOrigin = (): string | null => {
-  const candidate = getEnv('VITE_APP_ORIGIN') || getEnv('APP_ORIGIN');
-  const normalizedCandidate = normalizeCheckoutOrigin(candidate);
-  if (normalizedCandidate) return normalizedCandidate;
-
-  const isProd =
-    process.env.NODE_ENV === 'production' ||
-    process.env.VERCEL_ENV === 'production' ||
-    process.env.VERCEL_ENV === 'preview';
-
-  if (isProd) return null;
-
-  return 'http://localhost:5173';
-};
+const resolveAllowedOrigin = (): string | null => resolveAllowedOriginFromEnv(process.env);
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const allowedOrigin = resolveAllowedOrigin();
@@ -144,19 +116,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
-  // CORS Headers
-  const origin = req.headers.origin;
-  const headers: Record<string, string> = {
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    'Access-Control-Allow-Credentials': 'true',
-  };
-
-  if (origin === allowedOrigin) {
-    headers['Access-Control-Allow-Origin'] = origin;
-  } else {
-    headers['Access-Control-Allow-Origin'] = allowedOrigin;
-  }
+  const origin = getHeaderOrigin(req.headers);
+  const headers = buildCorsHeaders(allowedOrigin, {
+    methods: 'POST, OPTIONS',
+    allowCredentials: true,
+  }, origin);
 
   if (req.method === 'OPTIONS') {
     res.writeHead(204, headers);
@@ -179,6 +143,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
     res.writeHead(400, { ...headers, 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({ error: 'Invalid JSON body' }));
+  }
+
+  if (!isRequestOriginAllowed(origin, allowedOrigin)) {
+    res.writeHead(400, { ...headers, 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ error: 'Invalid request origin.' }));
   }
 
   // Authenticate only after malformed or oversized payloads have been rejected.

@@ -90,7 +90,16 @@ const setupMockClient = (input: {
     return queryChain;
   });
 
-  const client = {
+  const client: {
+    auth: {
+      getUser: ReturnType<typeof vi.fn>;
+      admin: {
+        listUsers: ReturnType<typeof vi.fn>;
+      };
+    };
+    from: (table: string) => unknown;
+    queryChain: QueryChainMock;
+  } = {
     auth: {
       getUser: vi.fn(async () => ({
         data: { user: input.user ?? null },
@@ -103,7 +112,7 @@ const setupMockClient = (input: {
         })),
       },
     },
-    from: from as any,
+    from,
     queryChain,
   };
 
