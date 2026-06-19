@@ -37,6 +37,9 @@ type EventTypeMeta = {
 type TimelineTranslations = {
   birth?: string;
   births?: string;
+  familyScope?: string;
+  personScope?: string;
+  personTimeline?: string;
 };
 
 const buildPersonName = (person: Person) =>
@@ -49,8 +52,12 @@ export const TimelineModal = ({ isOpen, onClose, people, onSelectPerson, focusPe
   const [activeFilters, setActiveFilters] = useState<Set<TimelineEvent['type']>>(
     new Set(['birth', 'death', 'marriage', 'custom'])
   );
+  const [scope, setScope] = useState<'person' | 'family'>(focusPersonId ? 'person' : 'family');
   const focusPerson = focusPersonId ? people[focusPersonId] : undefined;
-  const title = focusPerson ? `${buildPersonName(focusPerson) || t.unnamedPerson} - ${t.familyTimelineHeader}` : t.familyTimeline;
+  const isPersonScope = scope === 'person' && !!focusPerson;
+  const title = isPersonScope
+    ? `${buildPersonName(focusPerson) || t.unnamedPerson} - ${timelineText.personTimeline || t.familyTimelineHeader}`
+    : t.familyTimeline;
 
   const toggleFilter = (type: TimelineEvent['type']) => {
     setActiveFilters((prev) => {
@@ -104,7 +111,7 @@ export const TimelineModal = ({ isOpen, onClose, people, onSelectPerson, focusPe
   const events = useMemo(() => {
     const list: TimelineEvent[] = [];
 
-    const scopedPeople = focusPerson ? [focusPerson] : Object.values(people);
+    const scopedPeople = isPersonScope ? [focusPerson] : Object.values(people);
 
     scopedPeople.forEach((person) => {
       if (person.birthDate) {
@@ -177,7 +184,7 @@ export const TimelineModal = ({ isOpen, onClose, people, onSelectPerson, focusPe
         if (!sortAsc && a.year !== b.year) return b.year - a.year;
         return sortAsc ? a.dateStr.localeCompare(b.dateStr) : b.dateStr.localeCompare(a.dateStr);
       });
-  }, [people, focusPerson, sortAsc, activeFilters, t]);
+  }, [people, focusPerson, isPersonScope, sortAsc, activeFilters, t]);
 
   const groupedEvents = useMemo(() => {
     const groups = new Map<number, TimelineEvent[]>();
@@ -217,6 +224,28 @@ export const TimelineModal = ({ isOpen, onClose, people, onSelectPerson, focusPe
         </div>
 
         <div className='flex flex-wrap gap-2 border-b border-black/[0.05] bg-[#F6F1E7]/90 p-4'>
+          {focusPerson ? (
+            <div className='me-2 inline-flex rounded-full border border-black/[0.06] bg-white/70 p-1 shadow-sm'>
+              <button
+                type='button'
+                onClick={() => setScope('person')}
+                className={`rounded-full px-3 py-1.5 text-xs font-bold transition-colors ${
+                  scope === 'person' ? 'bg-[#3B271E] text-white' : 'text-slate-600 hover:bg-white'
+                }`}
+              >
+                {timelineText.personScope || 'Person only'}
+              </button>
+              <button
+                type='button'
+                onClick={() => setScope('family')}
+                className={`rounded-full px-3 py-1.5 text-xs font-bold transition-colors ${
+                  scope === 'family' ? 'bg-[#3B271E] text-white' : 'text-slate-600 hover:bg-white'
+                }`}
+              >
+                {timelineText.familyScope || t.familyTimeline}
+              </button>
+            </div>
+          ) : null}
           <span className='me-2 flex items-center gap-1 text-xs font-bold uppercase text-[var(--text-muted)]'>
             <Filter className='h-3.5 w-3.5' /> {t.filterBy}:
           </span>
