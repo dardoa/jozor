@@ -50,12 +50,9 @@ export interface VaultRenderContext {
   isTreeLoading: boolean;
   editingTreeId: string | null;
   editTreeName: string;
-  isPasswordResetting: boolean;
-  canResetPassword: boolean;
   treePanelLabels: VaultTreesPanelLabels;
   onCloseVault: () => void;
   onOpenTool: (modalType: Parameters<ToolsActionsProps['onOpenModal']>[0]) => void;
-  onResetPassword: () => void;
   onUpdateVisibilitySetting: (key: keyof TreeSettings, value: boolean | string | number | null) => void;
   onCreateTree: () => void;
   onImportTree: () => void;

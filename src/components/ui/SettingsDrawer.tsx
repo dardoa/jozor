@@ -60,13 +60,13 @@ export const SettingsDrawer = memo(() => {
                     onClick={() => setSettingsDrawerOpen(false)}
                 />
             ) : null}
-            <div className={`fixed inset-0 z-[calc(var(--z-index-drawer)+1)] flex items-stretch pointer-events-none ${isRtl ? 'justify-start' : 'justify-end'}`}>
+            <div className="fixed inset-0 z-[calc(var(--z-index-drawer)+1)] pointer-events-none">
                 <div
-                    className={`pointer-events-auto flex min-h-0 w-full flex-col overflow-hidden transition-all transition-[height,transform] duration-300 ease-in-out md:max-w-[420px] ${isMobile ? 'fixed inset-0 h-[100dvh] rounded-none' : 'h-full'} ${isSettingsDrawerOpen ? 'translate-x-0' : isRtl ? '-translate-x-full' : 'translate-x-full'}`}
+                    data-testid="settings-drawer-panel"
+                    className={`pointer-events-auto fixed flex min-h-0 w-full flex-col overflow-hidden transition-transform duration-300 ease-in-out md:max-w-[420px] ${isMobile ? 'inset-0 h-[100dvh] rounded-none' : isRtl ? 'bottom-0 left-0 top-0 h-full border-r' : 'bottom-0 right-0 top-0 h-full border-l'} ${isSettingsDrawerOpen ? 'translate-x-0' : isRtl ? '-translate-x-full' : 'translate-x-full'}`}
                     style={{
                         backgroundColor: 'var(--surface-app)',
-                        borderInlineStart: !isMobile && !isRtl ? '1px solid var(--border-soft)' : 'none',
-                        borderInlineEnd: !isMobile && isRtl ? '1px solid var(--border-soft)' : 'none',
+                        borderColor: !isMobile ? 'var(--border-soft)' : undefined,
                         boxShadow: 'var(--shadow-lg)',
                         height: isMobile ? '100dvh' : '100%',
                         isolation: isMobile ? 'isolate' : undefined,

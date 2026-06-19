@@ -1,5 +1,5 @@
 
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { describe, expect, it, vi } from 'vitest';
 import { MobileAccountSheet } from '../MobileAccountSheet';
@@ -42,8 +42,17 @@ vi.mock('../../../features/admin', () => ({
   openAdminBillingDiagnostics: openAdminBillingDiagnosticsMock,
 }));
 
+vi.mock('../../../services/supabaseAuthService', () => ({
+  supabaseAuthService: {
+    getSession: vi.fn(async () => ({
+      data: { session: { user: { app_metadata: { provider: 'email', providers: ['email'] } } } },
+    })),
+    sendPasswordReset: vi.fn(async () => {}),
+  },
+}));
+
 describe('MobileAccountSheet', () => {
-  it('renders account actions in a mobile sheet and opens global settings', () => {
+  it('renders account actions in a mobile sheet and opens global settings', async () => {
     useKindiReportsAdminAccessMock.mockReturnValue(false);
     const onClose = vi.fn();
     const setLanguage = vi.fn();
@@ -77,6 +86,7 @@ describe('MobileAccountSheet', () => {
     expect(screen.getByRole('heading', { name: 'Account' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Global Settings/i })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Admin Dashboard/i })).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole('button', { name: /Reset password/i })).toBeInTheDocument());
 
     fireEvent.click(screen.getByRole('button', { name: /Global Settings/i }));
 
@@ -84,7 +94,7 @@ describe('MobileAccountSheet', () => {
     expect(onOpenGlobalSettings).toHaveBeenCalledTimes(1);
   });
 
-  it('shows admin tools for app admins', () => {
+  it('shows admin tools for app admins', async () => {
     useKindiReportsAdminAccessMock.mockReturnValue(true);
     openAdminBillingDiagnosticsMock.mockClear();
     const onClose = vi.fn();
@@ -112,6 +122,7 @@ describe('MobileAccountSheet', () => {
     );
 
     expect(screen.getByRole('button', { name: /Admin Dashboard/i })).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole('button', { name: /Reset password/i })).toBeInTheDocument());
     fireEvent.click(screen.getByRole('button', { name: /Billing diagnostics/i }));
     expect(openAdminBillingDiagnosticsMock).toHaveBeenCalledTimes(1);
     expect(onClose).toHaveBeenCalledTimes(1);

@@ -1,5 +1,5 @@
 
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { describe, expect, it, vi } from 'vitest';
 import { AccountMenu } from '../AccountMenu';
@@ -42,8 +42,17 @@ vi.mock('../../../features/admin', () => ({
   openAdminBillingDiagnostics: openAdminBillingDiagnosticsMock,
 }));
 
+vi.mock('../../../services/supabaseAuthService', () => ({
+  supabaseAuthService: {
+    getSession: vi.fn(async () => ({
+      data: { session: { user: { app_metadata: { provider: 'email', providers: ['email'] } } } },
+    })),
+    sendPasswordReset: vi.fn(async () => {}),
+  },
+}));
+
 describe('AccountMenu', () => {
-  it('renders authenticated actions and toggles language', () => {
+  it('renders authenticated actions and toggles language', async () => {
     useKindiReportsAdminAccessMock.mockReturnValue(false);
     const setLanguage = vi.fn();
     const setDarkMode = vi.fn();
@@ -77,6 +86,7 @@ describe('AccountMenu', () => {
     expect(screen.queryByRole('menuitem', { name: /Backup now/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('menuitem', { name: /Global Settings/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('menuitem', { name: /Admin Dashboard/i })).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole('menuitem', { name: /Reset password/i })).toBeEnabled());
 
     fireEvent.click(screen.getByRole('menuitem', { name: /Switch to Arabic/i }));
     expect(setLanguage).toHaveBeenCalledWith('ar');
@@ -118,7 +128,7 @@ describe('AccountMenu', () => {
     expect(onLogin).toHaveBeenCalledTimes(1);
   });
 
-  it('shows admin tools only for app admins', () => {
+  it('shows admin tools only for app admins', async () => {
     useKindiReportsAdminAccessMock.mockReturnValue(true);
     openAdminBillingDiagnosticsMock.mockClear();
 
@@ -145,6 +155,7 @@ describe('AccountMenu', () => {
     );
 
     expect(screen.getByRole('menuitem', { name: /Admin Dashboard/i })).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole('menuitem', { name: /Reset password/i })).toBeEnabled());
     fireEvent.click(screen.getByRole('menuitem', { name: /Billing diagnostics/i }));
     expect(openAdminBillingDiagnosticsMock).toHaveBeenCalledTimes(1);
     expect(screen.queryByRole('menuitem', { name: /Kindi learning reports/i })).not.toBeInTheDocument();

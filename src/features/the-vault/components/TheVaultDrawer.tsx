@@ -9,8 +9,6 @@ import { useTranslation } from '../../../context/TranslationContext';
 import { OverlayPrimitive } from '../../../context/OverlayContext';
 import type { AuthProps, ExportActionsProps, GoogleSyncStateAndActions, TreeSettings, ToolsActionsProps } from '../../../types';
 import { useTreePermissions } from '../../../hooks/tree/useTreePermissions';
-import { showToast } from '../../../utils/showToast';
-import { supabaseAuthService } from '../../../services/supabaseAuthService';
 import { useVaultTreeManagement } from '../hooks/useVaultTreeManagement';
 import { ConfirmationModal } from '../../../components/ConfirmationModal';
 import { VaultDesktopNavigation, VaultMobileHubNavigation } from './VaultNavigation';
@@ -69,8 +67,6 @@ export const TheVaultDrawer: React.FC<TheVaultDrawerProps> = ({
   const people = useAppStore((state) => state.people);
   const healthScore = useAppStore((state) => state.healthScore);
 
-  const [isPasswordResetting, setIsPasswordResetting] = useState(false);
-  const [canResetPassword, setCanResetPassword] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [mobileHub, setMobileHub] = useState<MobileVaultHub>('management');
   const [mobileManagementSection, setMobileManagementSection] = useState<MobileManagementSection>('trees');
@@ -154,36 +150,6 @@ export const TheVaultDrawer: React.FC<TheVaultDrawerProps> = ({
   }, [currentUser?.supabaseToken, resetSessionFailure]);
 
   useEffect(() => {
-    let cancelled = false;
-
-    const resolvePasswordResetCapability = async () => {
-      if (!currentUser?.email) {
-        setCanResetPassword(false);
-        return;
-      }
-
-      try {
-        const { data } = await supabaseAuthService.getSession();
-        const metadata = data.session?.user?.app_metadata as { provider?: string; providers?: unknown } | undefined;
-        const providers = Array.isArray(metadata?.providers) ? metadata.providers : [];
-        const canReset = metadata?.provider === 'email' || providers.includes('email');
-        if (!cancelled) {
-          setCanResetPassword(canReset);
-        }
-      } catch {
-        if (!cancelled) {
-          setCanResetPassword(false);
-        }
-      }
-    };
-
-    void resolvePasswordResetCapability();
-    return () => {
-      cancelled = true;
-    };
-  }, [currentUser?.email, currentUser?.supabaseToken]);
-
-  useEffect(() => {
     if (typeof window === 'undefined') return;
 
     const mediaQuery = window.matchMedia('(max-width: 767px)');
@@ -201,23 +167,6 @@ export const TheVaultDrawer: React.FC<TheVaultDrawerProps> = ({
     mediaQuery.addListener(handleChange);
     return () => mediaQuery.removeListener(handleChange);
   }, []);
-
-  const handleResetPassword = useCallback(async () => {
-    if (!currentUser?.email) return;
-    if (!canResetPassword) {
-      showToast.info('Password reset is available only for email/password accounts.');
-      return;
-    }
-    try {
-      setIsPasswordResetting(true);
-      await supabaseAuthService.sendPasswordReset(currentUser.email);
-      showToast.success('resetPasswordSent');
-    } catch (error) {
-      showToast.error(error instanceof Error ? error.message : 'Failed to send reset email.');
-    } finally {
-      setIsPasswordResetting(false);
-    }
-  }, [canResetPassword, currentUser]);
 
   const updateVisibilitySetting = useCallback((key: keyof TreeSettings, value: boolean | string | number | null) => {
     setTreeSettings((prev) => ({ ...prev, [key]: value }));
@@ -330,12 +279,9 @@ export const TheVaultDrawer: React.FC<TheVaultDrawerProps> = ({
     isTreeLoading,
     editingTreeId,
     editTreeName,
-    isPasswordResetting,
-    canResetPassword,
     treePanelLabels,
     onCloseVault: () => setVaultOpen(false),
     onOpenTool: handleOpenTool,
-    onResetPassword: () => void handleResetPassword(),
     onUpdateVisibilitySetting: updateVisibilitySetting,
     onCreateTree: () => void handleCreateTree(),
     onImportTree: () => fileInputRef.current?.click(),

@@ -62,6 +62,7 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ isOpen, onClose }) =
   const currentTier = useAppStore(state => state.subscriptionTier);
   const [paddle, setPaddle] = useState<Paddle>();
   const [checkoutLoading, setCheckoutLoading] = useState<BillingTier | null>(null);
+  const [portalLoading, setPortalLoading] = useState<'overview' | 'cancel' | 'payment' | null>(null);
 
   const isRtl = language === 'ar';
   const isRtlRef = useRef(isRtl);
@@ -125,6 +126,21 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ isOpen, onClose }) =
     loginRequired: isRtl ? 'يرجى تسجيل الدخول أولاً لإتمام الاشتراك.' : 'Please log in to subscribe.',
     gatewayError: isRtl ? 'تعذر تحميل بوابة الدفع. يرجى المحاولة لاحقاً.' : 'Payment gateway failed to load. Please try again.',
     checkoutError: isRtl ? 'عذراً، فشل فتح بوابة الدفع' : 'Failed to open checkout',
+    manageTitle: isRtl ? 'إدارة الاشتراك' : 'Manage subscription',
+    manageSubtitle: isRtl
+      ? 'راجع باقتك الحالية، أو ترقّ إلى باقة أعلى، أو افتح Paddle للإلغاء وتحديث الدفع.'
+      : 'Review your current plan, upgrade when useful, or open Paddle to cancel and update payment details.',
+    currentPlanHeading: isRtl ? 'الباقة الحالية' : 'Current plan',
+    availableUpgrades: isRtl ? 'الترقيات المتاحة' : 'Available upgrades',
+    manageInPaddle: isRtl ? 'إدارة عبر Paddle' : 'Manage in Paddle',
+    updatePayment: isRtl ? 'تحديث طريقة الدفع' : 'Update payment method',
+    cancelSubscription: isRtl ? 'إلغاء الاشتراك' : 'Cancel subscription',
+    portalLoading: isRtl ? 'جاري فتح Paddle...' : 'Opening Paddle...',
+    portalUnavailable: isRtl
+      ? 'لا يوجد اشتراك Paddle نشط لهذا الحساب. قد تكون الباقة منحة إدارية.'
+      : 'No active Paddle subscription was found for this account. This plan may be an admin grant.',
+    noUpgrade: isRtl ? 'أنت على أعلى باقة متاحة.' : 'You are already on the highest available plan.',
+    portalError: isRtl ? 'تعذر فتح إدارة الاشتراك' : 'Failed to open subscription management',
   }), [isRtl]);
 
   const plans: PlanCard[] = useMemo(() => [
@@ -225,6 +241,50 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ isOpen, onClose }) =
     }
   };
 
+  const handleOpenPortal = async (action: 'overview' | 'cancel' | 'payment') => {
+    if (!user) {
+      toast.error(text.loginRequired);
+      return;
+    }
+
+    setPortalLoading(action);
+
+    try {
+      const token = user.supabaseToken || useAppStore.getState().supabaseAccessToken;
+      const response = await fetch('/api/billing/customer-portal', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token || ''}`,
+        },
+        body: JSON.stringify({ action }),
+      });
+
+      if (response.status === 404) {
+        toast.error(text.portalUnavailable);
+        return;
+      }
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP error ${response.status}`);
+      }
+
+      const { portalUrl } = await response.json();
+      if (typeof portalUrl !== 'string' || !portalUrl.startsWith('https://')) {
+        throw new Error('Invalid portal URL');
+      }
+
+      window.open(portalUrl, '_blank', 'noopener,noreferrer');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error('Paddle customer portal failed:', error);
+      toast.error(`${text.portalError}: ${message}`);
+    } finally {
+      setPortalLoading(null);
+    }
+  };
+
   const getButtonLabel = (plan: PlanCard) => {
     if (checkoutLoading === plan.tier) return text.loading;
     if (currentTier === plan.tier) return text.currentPlan;
@@ -238,6 +298,73 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ isOpen, onClose }) =
     currentTier === plan.tier ||
     (currentTier === 'family' && plan.tier === 'pro') ||
     checkoutLoading !== null;
+
+  const tierRank: Record<BillingTier, number> = { free: 0, pro: 1, family: 2 };
+  const currentPlan = plans.find((plan) => plan.tier === currentTier) ?? plans[0];
+  const upgradePlans = plans.filter((plan) => tierRank[plan.tier] > tierRank[currentTier]);
+  const hasPaddleActions = currentTier === 'pro' || currentTier === 'family';
+  const isBusy = checkoutLoading !== null || portalLoading !== null;
+  const CurrentIcon = currentPlan.icon;
+
+  const renderPlanCard = (plan: PlanCard) => {
+    const Icon = plan.icon;
+    const accent = accentClasses[plan.accent];
+    const isCurrent = currentTier === plan.tier;
+
+    return (
+      <div
+        key={plan.tier}
+        className={`relative flex flex-col rounded-xl border p-6 transition-all duration-300 ${
+          isCurrent ? accent.border : `border-[#2b2d3c] bg-[#1c1d29]/40 ${accent.hover} hover:-translate-y-1`
+        }`}
+      >
+        {plan.badge && !isCurrent && (
+          <span className="absolute -top-3 right-4 rounded bg-gradient-to-r from-purple-600 to-indigo-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow-md">
+            {plan.badge}
+          </span>
+        )}
+
+        <div className="mb-4 flex items-center gap-3">
+          <div className={`rounded-lg p-2 ${accent.icon}`}>
+            <Icon className="h-6 w-6" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-white">{plan.title}</h3>
+            <div className="mt-1 text-xl font-extrabold text-white">{plan.price}</div>
+          </div>
+        </div>
+
+        <div className="my-4 h-px bg-[#2b2d3c]" />
+
+        <ul className="mb-6 flex-1 space-y-3">
+          {plan.features.map((feature) => (
+            <li key={feature.text} className={`flex items-start gap-2.5 text-sm ${feature.available === false ? 'text-gray-400' : 'text-gray-300'} ${feature.emphasized ? 'font-semibold' : ''}`}>
+              {feature.available === false ? (
+                <X className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
+              ) : (
+                <Check className={`mt-0.5 h-4 w-4 shrink-0 ${accent.check}`} />
+              )}
+              <span>{feature.text}</span>
+            </li>
+          ))}
+        </ul>
+
+        <button
+          onClick={() => plan.tier !== 'free' && handleSubscribe(plan.tier)}
+          disabled={isButtonDisabled(plan)}
+          className={`w-full rounded-lg px-4 py-3 text-center text-sm font-bold transition-all ${
+            isCurrent
+              ? accent.current
+              : plan.tier === 'free' || (currentTier === 'family' && plan.tier === 'pro')
+                ? 'cursor-not-allowed bg-gray-800 text-gray-400'
+                : accent.button
+          }`}
+        >
+          {getButtonLabel(plan)}
+        </button>
+      </div>
+    );
+  };
 
   return (
     <OverlayPrimitive
@@ -256,9 +383,9 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ isOpen, onClose }) =
           <div>
             <h2 className="flex items-center gap-2 text-2xl font-bold text-white">
               <Sparkles className="h-6 w-6 animate-pulse text-yellow-500" />
-              {text.title}
+              {text.manageTitle}
             </h2>
-            <p className="mt-1 text-sm text-gray-400">{text.subtitle}</p>
+            <p className="mt-1 text-sm text-gray-400">{text.manageSubtitle}</p>
           </div>
           <button
             onClick={onClose}
@@ -269,71 +396,62 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ isOpen, onClose }) =
           </button>
         </div>
 
-        <div className="grid max-h-[70vh] grid-cols-1 gap-6 overflow-y-auto p-6 md:grid-cols-3 md:p-8">
-          {plans.map((plan) => {
-            const Icon = plan.icon;
-            const accent = accentClasses[plan.accent];
-            const isCurrent = currentTier === plan.tier;
-
-            return (
-              <div
-                key={plan.tier}
-                className={`relative flex flex-col rounded-xl border p-6 transition-all duration-300 ${
-                  isCurrent ? accent.border : `border-[#2b2d3c] bg-[#1c1d29]/40 ${accent.hover} hover:-translate-y-1`
-                }`}
-              >
-                {plan.badge && (
-                  <span className="absolute -top-3 right-4 rounded bg-gradient-to-r from-purple-600 to-indigo-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow-md">
-                    {plan.badge}
-                  </span>
-                )}
-                {isCurrent && (
-                  <span className={`absolute -top-3 left-4 rounded border px-2 py-0.5 text-xs font-semibold ${accent.current}`}>
-                    {text.currentPlan}
-                  </span>
-                )}
-
-                <div className="mb-4 flex items-center gap-3">
-                  <div className={`rounded-lg p-2 ${accent.icon}`}>
-                    <Icon className="h-6 w-6" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-white">{plan.title}</h3>
-                    <div className="mt-1 text-xl font-extrabold text-white">{plan.price}</div>
-                  </div>
+        <div className="max-h-[70vh] space-y-6 overflow-y-auto p-6 md:p-8">
+          <section className="rounded-2xl border border-[#2b2d3c] bg-[#1c1d29]/60 p-6">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-gray-400">{text.currentPlanHeading}</p>
+            <div className="mt-4 flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+              <div className="flex items-center gap-4">
+                <div className={`rounded-xl p-3 ${accentClasses[currentPlan.accent].icon}`}>
+                  <CurrentIcon className="h-7 w-7" />
                 </div>
-
-                <div className="my-4 h-px bg-[#2b2d3c]" />
-
-                <ul className="mb-6 flex-1 space-y-3">
-                  {plan.features.map((feature) => (
-                    <li key={feature.text} className={`flex items-start gap-2.5 text-sm ${feature.available === false ? 'text-gray-400' : 'text-gray-300'} ${feature.emphasized ? 'font-semibold' : ''}`}>
-                      {feature.available === false ? (
-                        <X className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
-                      ) : (
-                        <Check className={`mt-0.5 h-4 w-4 shrink-0 ${accent.check}`} />
-                      )}
-                      <span>{feature.text}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                <button
-                  onClick={() => plan.tier !== 'free' && handleSubscribe(plan.tier)}
-                  disabled={isButtonDisabled(plan)}
-                  className={`w-full rounded-lg px-4 py-3 text-center text-sm font-bold transition-all ${
-                    isCurrent
-                      ? accent.current
-                      : plan.tier === 'free' || (currentTier === 'family' && plan.tier === 'pro')
-                        ? 'cursor-not-allowed bg-gray-800 text-gray-400'
-                        : accent.button
-                  }`}
-                >
-                  {getButtonLabel(plan)}
-                </button>
+                <div>
+                  <h3 className="text-2xl font-black text-white">{currentPlan.title}</h3>
+                  <p className="mt-1 text-sm font-semibold text-gray-300">{currentPlan.price}</p>
+                </div>
               </div>
-            );
-          })}
+
+              {hasPaddleActions ? (
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <button
+                    type="button"
+                    onClick={() => void handleOpenPortal('overview')}
+                    disabled={isBusy}
+                    className="rounded-lg border border-[#3b3d51] px-4 py-3 text-sm font-bold text-gray-200 transition hover:bg-[#2b2d3c] disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {portalLoading === 'overview' ? text.portalLoading : text.manageInPaddle}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void handleOpenPortal('payment')}
+                    disabled={isBusy}
+                    className="rounded-lg border border-[#3b3d51] px-4 py-3 text-sm font-bold text-gray-200 transition hover:bg-[#2b2d3c] disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {portalLoading === 'payment' ? text.portalLoading : text.updatePayment}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void handleOpenPortal('cancel')}
+                    disabled={isBusy}
+                    className="rounded-lg border border-red-500/40 px-4 py-3 text-sm font-bold text-red-300 transition hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {portalLoading === 'cancel' ? text.portalLoading : text.cancelSubscription}
+                  </button>
+                </div>
+              ) : null}
+            </div>
+          </section>
+
+          <section>
+            <div className="mb-4 flex items-center justify-between gap-4">
+              <h3 className="text-sm font-black uppercase tracking-[0.18em] text-gray-300">{text.availableUpgrades}</h3>
+              {upgradePlans.length === 0 ? <p className="text-sm text-gray-400">{text.noUpgrade}</p> : null}
+            </div>
+            {upgradePlans.length > 0 ? (
+              <div className={`grid grid-cols-1 gap-6 ${upgradePlans.length > 1 ? 'md:grid-cols-2' : 'md:grid-cols-[minmax(0,24rem)]'}`}>
+                {upgradePlans.map(renderPlanCard)}
+              </div>
+            ) : null}
+          </section>
         </div>
       </div>
     </OverlayPrimitive>

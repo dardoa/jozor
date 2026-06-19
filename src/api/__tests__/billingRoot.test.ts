@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import deleteAccountHandler from '../../../api/auth/delete-account';
 import createCheckoutHandler from '../../../api/billing/create-checkout-session';
+import customerPortalHandler from '../../../api/billing/customer-portal';
 import paddleWebhookHandler from '../../../api/billing/paddle-webhook';
 
 const createResponse = () => {
@@ -36,6 +37,7 @@ describe('root SaaS API functions', () => {
   it.each([
     ['account deletion', deleteAccountHandler],
     ['checkout creation', createCheckoutHandler],
+    ['customer portal', customerPortalHandler],
     ['Paddle webhook', paddleWebhookHandler],
   ])('loads the %s handler and returns 405 for GET', async (_name, handler) => {
     const req = { method: 'GET', headers: {} };

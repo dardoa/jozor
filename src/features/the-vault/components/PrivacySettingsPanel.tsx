@@ -1,20 +1,15 @@
 import React from 'react';
-import { EyeOff, Loader2, Lock, ShieldCheck } from 'lucide-react';
+import { EyeOff, Lock, ShieldCheck } from 'lucide-react';
 
-import type { TreeSettings, UserProfile } from '../../../types';
+import type { TreeSettings } from '../../../types';
 import type { TranslationSchema } from '../../../utils/translationLoader';
 import { Checkbox } from '../../../components/ui/settingsDrawer/shared';
 
 interface PrivacySettingsPanelProps {
   currentTreeId: string | null;
-  currentUser: UserProfile | null;
   treeSettings: TreeSettings;
   treeIsPrivate: boolean;
   canManageSecurity: boolean;
-  isPasswordResetting: boolean;
-  canResetPassword: boolean;
-  onResetPassword: () => void;
-  onOpenDiagnostics: () => void;
   onOpenCleanTree: () => void;
   onUpdateSetting: (key: keyof TreeSettings, value: boolean | string | number | null) => void;
   section?: 'all' | 'privacy' | 'maintenance';
@@ -23,14 +18,9 @@ interface PrivacySettingsPanelProps {
 
 export const PrivacySettingsPanel: React.FC<PrivacySettingsPanelProps> = ({
   currentTreeId,
-  currentUser,
   treeSettings,
   treeIsPrivate,
   canManageSecurity,
-  isPasswordResetting,
-  canResetPassword,
-  onResetPassword,
-  onOpenDiagnostics,
   onOpenCleanTree,
   onUpdateSetting,
   section = 'all',
@@ -112,23 +102,6 @@ export const PrivacySettingsPanel: React.FC<PrivacySettingsPanelProps> = ({
       {showMaintenance && (
       <section className="rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-panel)] p-6 shadow-[var(--shadow-xs)]">
         <h4 className="text-[16px] font-bold tracking-tight text-[var(--text-main)]">{t.vaultSecurityActions}</h4>
-        <div className="mt-4 flex flex-wrap gap-3">
-          <button
-            type="button"
-            onClick={onResetPassword}
-            disabled={isPasswordResetting || !currentUser?.email || !canResetPassword}
-            className="min-h-11 rounded-xl border border-[var(--border-soft)] bg-[var(--surface-subtle)] px-4 py-2 text-sm font-semibold text-[var(--text-secondary)] transition-all duration-200 ease-in-out hover:bg-[var(--surface-hover)] disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {isPasswordResetting ? <Loader2 className="h-4 w-4 animate-spin" /> : t.vaultResetPassword}
-          </button>
-          <button
-            type="button"
-            onClick={onOpenDiagnostics}
-            className="min-h-11 rounded-xl border border-[var(--border-soft)] bg-[var(--surface-subtle)] px-4 py-2 text-sm font-semibold text-[var(--text-secondary)] transition-all duration-200 ease-in-out hover:bg-[var(--surface-hover)]"
-          >
-            {t.vaultDiagnostics}
-          </button>
-        </div>
         <div className="mt-4">
           <button
             type="button"

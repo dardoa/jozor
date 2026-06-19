@@ -1,10 +1,12 @@
-import { memo } from 'react';
-import { BrainCircuit, CreditCard, FolderArchive, Languages, LayoutDashboard, LogIn, LogOut, Moon, Settings, Sun, Sparkles } from 'lucide-react';
+import { memo, useCallback, useEffect, useState } from 'react';
+import { BrainCircuit, CreditCard, FolderArchive, KeyRound, Languages, LayoutDashboard, Loader2, LogIn, LogOut, Moon, Settings, Sun, Sparkles } from 'lucide-react';
 import { DropdownContent, DropdownMenuDivider, DropdownMenuHeader, DropdownMenuItem } from '../ui/DropdownMenu';
 import { useTranslation } from '../../context/TranslationContext';
 import type { ThemeLanguageProps, UserProfile } from '../../types';
 import { useAppStore } from '../../store/useAppStore';
 import { openAdminBillingDiagnostics, openAdminDashboard, useKindiReportsAdminAccess } from '../../features/admin';
+import { supabaseAuthService } from '../../services/supabaseAuthService';
+import { showToast } from '../../utils/showToast';
 
 interface AccountMenuProps {
   themeLanguage: ThemeLanguageProps;
@@ -32,6 +34,53 @@ export const AccountMenu = memo<AccountMenuProps>(
     const setVaultTab = useAppStore((state) => state.setVaultTab);
     const canOpenKindiReports = useKindiReportsAdminAccess(user);
     const subscriptionTier = useAppStore((state) => state.subscriptionTier);
+    const [canResetPassword, setCanResetPassword] = useState(false);
+    const [isPasswordResetting, setIsPasswordResetting] = useState(false);
+
+    useEffect(() => {
+      let cancelled = false;
+
+      const resolvePasswordResetCapability = async () => {
+        if (!user?.email) {
+          setCanResetPassword(false);
+          return;
+        }
+
+        try {
+          const { data } = await supabaseAuthService.getSession();
+          const metadata = data.session?.user?.app_metadata as { provider?: string; providers?: unknown } | undefined;
+          const providers = Array.isArray(metadata?.providers) ? metadata.providers : [];
+          const canReset = metadata?.provider === 'email' || providers.includes('email');
+          if (!cancelled) setCanResetPassword(canReset);
+        } catch {
+          if (!cancelled) setCanResetPassword(false);
+        }
+      };
+
+      void resolvePasswordResetCapability();
+
+      return () => {
+        cancelled = true;
+      };
+    }, [user?.email, user?.supabaseToken]);
+
+    const handleResetPassword = useCallback(async () => {
+      if (!user?.email) return;
+      if (!canResetPassword) {
+        showToast.info('Password reset is available only for email/password accounts.');
+        return;
+      }
+
+      try {
+        setIsPasswordResetting(true);
+        await supabaseAuthService.sendPasswordReset(user.email);
+        showToast.success('resetPasswordSent');
+      } catch (error) {
+        showToast.error(error instanceof Error ? error.message : 'Failed to send reset email.');
+      } finally {
+        setIsPasswordResetting(false);
+      }
+    }, [canResetPassword, user?.email]);
 
     const handleOpenVault = () => {
       // Guest → stats tab; Logged in → trees tab
@@ -82,6 +131,25 @@ export const AccountMenu = memo<AccountMenuProps>(
                 subscriptionTier === 'family' ? (themeLanguage.language === 'ar' ? 'أنت على باقة العائلة المميزة' : 'You are on the Family plan') :
                 subscriptionTier === 'pro' ? (themeLanguage.language === 'ar' ? 'ترقية لباقة العائلة للحصول على ميزات أكثر' : 'Upgrade to Family for more features') :
                 (themeLanguage.language === 'ar' ? 'ترقية للحصول على ميزات الذكاء الاصطناعي والمشاركة' : 'Upgrade to unlock cloud AI and sharing')
+              }
+            />
+            <DropdownMenuDivider />
+          </>
+        )}
+
+        {user && (
+          <>
+            <DropdownMenuHeader icon={<KeyRound className="w-3 h-3" />} label={themeLanguage.language === 'ar' ? 'الأمان' : 'Security'} />
+            <DropdownMenuItem
+              onClick={() => { void handleResetPassword(); }}
+              disabled={isPasswordResetting || !canResetPassword}
+              closeOnClick={false}
+              icon={isPasswordResetting ? <Loader2 className="w-4 h-4 animate-spin" /> : <KeyRound className="w-4 h-4" />}
+              label={themeLanguage.language === 'ar' ? 'إعادة تعيين كلمة المرور' : 'Reset password'}
+              subLabel={
+                canResetPassword
+                  ? (themeLanguage.language === 'ar' ? 'إرسال رابط إعادة التعيين إلى بريدك.' : 'Send a reset link to your email.')
+                  : (themeLanguage.language === 'ar' ? 'متاح فقط لحسابات البريد وكلمة المرور.' : 'Available only for email/password accounts.')
               }
             />
             <DropdownMenuDivider />

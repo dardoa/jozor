@@ -227,6 +227,20 @@ const handleCheckoutSession = async (
   }
 };
 
+const handleCustomerPortal = async (
+  req: LocalRequest,
+  res: ServerResponse,
+  env: LocalApiProxyEnv
+) => {
+  try {
+    syncProcessEnv(env);
+    const { default: customerPortalHandler } = await import('../../api/billing/customer-portal');
+    await invokeVercelHandler(customerPortalHandler, req, res);
+  } catch (error: unknown) {
+    sendJson(res, 500, { error: getErrorMessage(error) });
+  }
+};
+
 const handlePaddleWebhook = async (
   req: LocalRequest,
   res: ServerResponse,
@@ -329,6 +343,11 @@ export const createLocalApiProxyMiddleware = (env: LocalApiProxyEnv): Plugin => 
 
       if (pathName === '/api/billing/create-checkout-session') {
         await handleCheckoutSession(req as LocalRequest, res, env);
+        return;
+      }
+
+      if (pathName === '/api/billing/customer-portal') {
+        await handleCustomerPortal(req as LocalRequest, res, env);
         return;
       }
 

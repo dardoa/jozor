@@ -1,8 +1,10 @@
-import { memo } from 'react';
-import { CloudUpload, CreditCard, Languages, LayoutDashboard, LogIn, LogOut, Moon, Settings, Sun, X } from 'lucide-react';
+import { memo, useCallback, useEffect, useState } from 'react';
+import { CloudUpload, CreditCard, KeyRound, Languages, LayoutDashboard, Loader2, LogIn, LogOut, Moon, Settings, Sun, X } from 'lucide-react';
 import { useTranslation } from '../../context/TranslationContext';
 import type { ThemeLanguageProps, UserProfile } from '../../types';
 import { openAdminBillingDiagnostics, openAdminDashboard, useKindiReportsAdminAccess } from '../../features/admin';
+import { supabaseAuthService } from '../../services/supabaseAuthService';
+import { showToast } from '../../utils/showToast';
 
 interface MobileAccountSheetProps {
   isOpen: boolean;
@@ -91,6 +93,53 @@ export const MobileAccountSheet = memo(({
   const text = t as typeof t & MobileAccountTranslations;
   const accountLabel = text.accountMenu || t.accountProfile;
   const canOpenKindiReports = useKindiReportsAdminAccess(user);
+  const [canResetPassword, setCanResetPassword] = useState(false);
+  const [isPasswordResetting, setIsPasswordResetting] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const resolvePasswordResetCapability = async () => {
+      if (!user?.email) {
+        setCanResetPassword(false);
+        return;
+      }
+
+      try {
+        const { data } = await supabaseAuthService.getSession();
+        const metadata = data.session?.user?.app_metadata as { provider?: string; providers?: unknown } | undefined;
+        const providers = Array.isArray(metadata?.providers) ? metadata.providers : [];
+        const canReset = metadata?.provider === 'email' || providers.includes('email');
+        if (!cancelled) setCanResetPassword(canReset);
+      } catch {
+        if (!cancelled) setCanResetPassword(false);
+      }
+    };
+
+    void resolvePasswordResetCapability();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.email, user?.supabaseToken]);
+
+  const handleResetPassword = useCallback(async () => {
+    if (!user?.email) return;
+    if (!canResetPassword) {
+      showToast.info('Password reset is available only for email/password accounts.');
+      return;
+    }
+
+    try {
+      setIsPasswordResetting(true);
+      await supabaseAuthService.sendPasswordReset(user.email);
+      showToast.success('resetPasswordSent');
+    } catch (error) {
+      showToast.error(error instanceof Error ? error.message : 'Failed to send reset email.');
+    } finally {
+      setIsPasswordResetting(false);
+    }
+  }, [canResetPassword, user?.email]);
 
   if (!isOpen) return null;
 
@@ -154,6 +203,24 @@ export const MobileAccountSheet = memo(({
                 label={t.globalSettings.title}
                 subLabel={text.globalSettingsHint || 'Open broader application preferences and defaults.'}
                 onClick={closeThen(() => onOpenGlobalSettings())}
+              />
+            </section>
+          ) : null}
+
+          {user ? (
+            <section className="space-y-3">
+              <h3 className="px-1 text-[11px] font-bold uppercase tracking-wider text-[var(--text-dim)] opacity-50">
+                {themeLanguage.language === 'ar' ? 'الأمان' : 'Security'}
+              </h3>
+              <SheetAction
+                icon={isPasswordResetting ? <Loader2 className="h-5 w-5 animate-spin" /> : <KeyRound className="h-5 w-5" />}
+                label={themeLanguage.language === 'ar' ? 'إعادة تعيين كلمة المرور' : 'Reset password'}
+                subLabel={
+                  canResetPassword
+                    ? (themeLanguage.language === 'ar' ? 'إرسال رابط إعادة التعيين إلى بريدك.' : 'Send a reset link to your email.')
+                    : (themeLanguage.language === 'ar' ? 'متاح فقط لحسابات البريد وكلمة المرور.' : 'Available only for email/password accounts.')
+                }
+                onClick={() => { void handleResetPassword(); }}
               />
             </section>
           ) : null}

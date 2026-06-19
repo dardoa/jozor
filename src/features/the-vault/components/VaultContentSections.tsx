@@ -110,14 +110,9 @@ export const VaultSettingsContent = ({
   <Suspense fallback={<VaultTabLoader />}>
     <VaultSettingsTab
       currentTreeId={context.currentTreeId}
-      currentUser={context.currentUser}
       treeSettings={context.treeSettings}
       treeIsPrivate={context.treeIsPrivate}
       canManageSecurity={context.canManageSecurity}
-      isPasswordResetting={context.isPasswordResetting}
-      canResetPassword={context.canResetPassword}
-      onResetPassword={context.onResetPassword}
-      onOpenDiagnostics={context.onOpenDiagnostics}
       onOpenCleanTree={context.onOpenCleanTree}
       onUpdateSetting={context.onUpdateVisibilitySetting}
       section={section}

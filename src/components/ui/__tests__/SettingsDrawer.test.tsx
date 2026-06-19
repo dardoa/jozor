@@ -20,12 +20,15 @@ const mockState = {
   appearance: DEFAULT_APPEARANCE_STATE,
 };
 
+let mockLanguage: 'en' | 'ar' = 'en';
+
 vi.mock('../../../store/useAppStore', () => ({
   useAppStore: (selector: (state: typeof mockState) => unknown) => selector(mockState),
 }));
 
 vi.mock('../../../context/TranslationContext', () => ({
   useTranslation: () => ({
+    language: mockLanguage,
     t: {
       close: 'Close',
       cancel: 'Cancel',
@@ -162,6 +165,7 @@ vi.mock('../../ConfirmationModal', () => ({
 describe('SettingsDrawer', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockLanguage = 'en';
     mockState.treeSettings = DEFAULT_TREE_SETTINGS;
     mockState.appearance = DEFAULT_APPEARANCE_STATE;
   });
@@ -237,5 +241,23 @@ describe('SettingsDrawer', () => {
     expect(screen.getByRole('button', { name: 'Performance' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Engine' })).not.toBeInTheDocument();
     expect(screen.queryByText('Layout Engine')).not.toBeInTheDocument();
+  });
+
+  it('anchors the appearance lab to the physical left side in Arabic', () => {
+    mockLanguage = 'ar';
+
+    render(<SettingsDrawer />);
+
+    const panel = screen.getByTestId('settings-drawer-panel');
+    expect(panel).toHaveClass('left-0');
+    expect(panel).not.toHaveClass('right-0');
+  });
+
+  it('anchors the appearance lab to the physical right side in English', () => {
+    render(<SettingsDrawer />);
+
+    const panel = screen.getByTestId('settings-drawer-panel');
+    expect(panel).toHaveClass('right-0');
+    expect(panel).not.toHaveClass('left-0');
   });
 });
