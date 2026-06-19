@@ -123,6 +123,10 @@ export type ModalType =
 
 export type ModalRouteType = ModalType | 'map';
 
+export interface ModalOpenContext {
+    sourcePersonId?: string;
+}
+
 export type SmartPersonaTabId = 'about' | 'links' | 'media';
 
 export type ExportType = 'jozor' | 'json' | 'gedcom' | 'ics' | 'print' | 'png' | 'pdf' | 'svg' | 'jpeg';

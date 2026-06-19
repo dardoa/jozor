@@ -21,6 +21,9 @@ export const StatisticsDashboard = lazy(() =>
 export const TimelineModal = lazy(() =>
   import('../../features/activity-log').then((module) => ({ default: module.TimelineModal }))
 );
+export const AncestorChatModal = lazy(() =>
+  import('./AncestorChatModal').then((module) => ({ default: module.AncestorChatModal }))
+);
 export const ShareModal = lazy(() =>
   import('../../features/sharing').then((module) => ({ default: module.ShareModal }))
 );

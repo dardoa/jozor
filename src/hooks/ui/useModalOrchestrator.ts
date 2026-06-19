@@ -16,6 +16,7 @@ export const useModalOrchestrator = () => {
     setDetailsPanelOpen,
     activeModal,
     setActiveModal,
+    modalContext,
     geographicJourneyMode,
     setGeographicJourneyMode,
     isPresentMode,
@@ -43,6 +44,7 @@ export const useModalOrchestrator = () => {
   const modals: ModalStateAndActions = {
     activeModal,
     setActiveModal,
+    modalContext,
     geographicJourneyMode,
     setGeographicJourneyMode,
     linkModal,

@@ -1,10 +1,9 @@
 import React from 'react';
-import type { SharedTreeSummary, TreeSummary } from '../../../services/supabaseTreeTypes';
 import { TreeListItem, type TreeListLabels, type TreeRow } from './TreeListItem';
 
 interface TreeGridListProps {
   title: string;
-  items: Array<TreeSummary | SharedTreeSummary>;
+  items: TreeRow[];
   activeTreeId: string | null;
   busyId: string | null;
   editingId: string | null;
@@ -29,6 +28,9 @@ const DEFAULT_TREE_LIST_LABELS: TreeListLabels = {
   updated: 'Updated',
   justNow: 'Just now',
   sharedAccessNote: 'Shared tree access is managed from the collaboration tab.',
+  ownerRole: 'Owner',
+  editorRole: 'Editor',
+  viewerRole: 'Viewer',
 };
 
 export const TreeGridList: React.FC<TreeGridListProps> = ({
@@ -64,8 +66,7 @@ export const TreeGridList: React.FC<TreeGridListProps> = ({
     <section className="space-y-4">
       {!hideTitle && <h4 className="px-1 text-[16px] font-bold tracking-tight text-[var(--text-main)]">{title}</h4>}
       <div className={compact ? 'space-y-3' : 'grid grid-cols-2 gap-4'}>
-        {items.map((rawItem) => {
-          const tree = rawItem as TreeRow;
+        {items.map((tree) => {
           return (
             <TreeListItem
               key={tree.id}

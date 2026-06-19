@@ -3,6 +3,7 @@ import type {
     ExportType,
     Gender,
     Language,
+    ModalOpenContext,
     ModalRouteType,
     SyncStatus,
     UserProfile,
@@ -87,7 +88,7 @@ export interface ViewSettingsProps {
 }
 
 export interface ToolsActionsProps {
-    onOpenModal: (modalType: ModalRouteType) => void;
+    onOpenModal: (modalType: ModalRouteType, context?: ModalOpenContext) => void;
 }
 
 export interface HeaderGlobalActionsProps {

@@ -281,6 +281,9 @@ export const TheVaultDrawer: React.FC<TheVaultDrawerProps> = ({
     updated: t.vaultTreeUpdated,
     justNow: t.vaultTreeJustNow,
     sharedAccessNote: t.vaultTreeSharedAccessNote,
+    ownerRole: t.roles.owner,
+    editorRole: t.roles.editor,
+    viewerRole: t.roles.viewer,
   };
   const treePanelLabels = {
     activeTree: t.vaultActiveTreeLabel,

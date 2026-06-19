@@ -11,7 +11,8 @@ export const SettingsDrawer = memo(() => {
     const isSettingsDrawerOpen = useAppStore(state => state.isSettingsDrawerOpen);
     const setSettingsDrawerOpen = useAppStore(state => state.setSettingsDrawerOpen);
     const people = useAppStore(state => state.people);
-    const { t } = useTranslation();
+    const { t, language } = useTranslation();
+    const isRtl = language === 'ar';
 
     const { isConfirmOpen, requestReset, cancelReset, confirmReset } = useGlobalReset();
     const [isMobile, setIsMobile] = React.useState(false);
@@ -59,12 +60,13 @@ export const SettingsDrawer = memo(() => {
                     onClick={() => setSettingsDrawerOpen(false)}
                 />
             ) : null}
-            <div className="fixed inset-0 z-[calc(var(--z-index-drawer)+1)] flex items-stretch justify-end pointer-events-none rtl:justify-start">
+            <div className={`fixed inset-0 z-[calc(var(--z-index-drawer)+1)] flex items-stretch pointer-events-none ${isRtl ? 'justify-start' : 'justify-end'}`}>
                 <div
-                    className={`pointer-events-auto flex min-h-0 w-full flex-col overflow-hidden transition-all transition-[height,transform] duration-300 ease-in-out md:max-w-[420px] ${isMobile ? 'fixed inset-0 h-[100dvh] rounded-none' : 'h-full'} ${isSettingsDrawerOpen ? 'translate-x-0' : 'translate-x-full rtl:-translate-x-full'}`}
+                    className={`pointer-events-auto flex min-h-0 w-full flex-col overflow-hidden transition-all transition-[height,transform] duration-300 ease-in-out md:max-w-[420px] ${isMobile ? 'fixed inset-0 h-[100dvh] rounded-none' : 'h-full'} ${isSettingsDrawerOpen ? 'translate-x-0' : isRtl ? '-translate-x-full' : 'translate-x-full'}`}
                     style={{
                         backgroundColor: 'var(--surface-app)',
-                        borderInlineStart: isMobile ? 'none' : '1px solid var(--border-soft)',
+                        borderInlineStart: !isMobile && !isRtl ? '1px solid var(--border-soft)' : 'none',
+                        borderInlineEnd: !isMobile && isRtl ? '1px solid var(--border-soft)' : 'none',
                         boxShadow: 'var(--shadow-lg)',
                         height: isMobile ? '100dvh' : '100%',
                         isolation: isMobile ? 'isolate' : undefined,

@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import type { Gender, GeographicJourneyMode, ModalRouteType, ModalType } from '../../types';
+import type { Gender, GeographicJourneyMode, ModalOpenContext, ModalRouteType, ModalType } from '../../types';
 import type { SharedTreeSummary } from '../../services/supabaseTreeTypes';
 import { useAppStore } from '../../store/useAppStore';
 
@@ -18,6 +18,7 @@ export const useModalAndDetailsPanelLogic = ({ canUndo, canRedo }: UseModalAndDe
 
   const [detailsPanelOpen, setDetailsPanelOpen] = useState(false);
   const [activeModal, setActiveModal] = useState<'none' | ModalType>('none');
+  const [modalContext, setModalContext] = useState<ModalOpenContext | null>(null);
   const [geographicJourneyMode, setGeographicJourneyMode] = useState<GeographicJourneyMode>('events');
   const [isPresentMode, setIsPresentMode] = useState(false);
 
@@ -74,7 +75,9 @@ export const useModalAndDetailsPanelLogic = ({ canUndo, canRedo }: UseModalAndDe
   }, []);
 
   const handleOpenModal = useCallback(
-    (modalType: ModalRouteType) => {
+    (modalType: ModalRouteType, context?: ModalOpenContext) => {
+      setModalContext(context ?? null);
+
       if (modalType === 'map') {
         setGeographicJourneyMode('events');
         setActiveModal('geographicJourney');
@@ -102,6 +105,7 @@ export const useModalAndDetailsPanelLogic = ({ canUndo, canRedo }: UseModalAndDe
     setDetailsPanelOpen,
     activeModal,
     setActiveModal,
+    modalContext,
     geographicJourneyMode,
     setGeographicJourneyMode,
     isPresentMode,

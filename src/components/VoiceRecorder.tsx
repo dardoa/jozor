@@ -4,13 +4,22 @@ import { useTranslation } from '../context/TranslationContext';
 
 interface VoiceRecorderProps {
   onSave: (audioBlob: Blob) => void;
+  maxDurationMs?: number;
 }
 
-export const VoiceRecorder: React.FC<VoiceRecorderProps> = memo(({ onSave }) => {
+export const VoiceRecorder: React.FC<VoiceRecorderProps> = memo(({ onSave, maxDurationMs = 5 * 60 * 1000 }) => {
   const { t } = useTranslation();
   const [isRecording, setIsRecording] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+  const stopTimerRef = useRef<number | null>(null);
+
+  const clearStopTimer = () => {
+    if (stopTimerRef.current !== null) {
+      window.clearTimeout(stopTimerRef.current);
+      stopTimerRef.current = null;
+    }
+  };
 
   const startRecording = async () => {
     try {
@@ -24,6 +33,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = memo(({ onSave }) => 
       };
 
       mediaRecorder.onstop = () => {
+        clearStopTimer();
         const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
         // setAudioBlob(blob); // Removed
 
@@ -35,6 +45,12 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = memo(({ onSave }) => 
       };
 
       mediaRecorder.start();
+      stopTimerRef.current = window.setTimeout(() => {
+        if (mediaRecorderRef.current?.state === 'recording') {
+          mediaRecorderRef.current.stop();
+          setIsRecording(false);
+        }
+      }, maxDurationMs);
       setIsRecording(true);
     } catch (err) {
       console.error('Mic access denied', err);
@@ -44,6 +60,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = memo(({ onSave }) => 
 
   const stopRecording = () => {
     if (mediaRecorderRef.current && isRecording) {
+      clearStopTimer();
       mediaRecorderRef.current.stop();
       setIsRecording(false);
     }

@@ -1,6 +1,7 @@
 import type { ModalManagerProps } from './modalManagerTypes';
 import type { LocationData } from '../../types';
 import {
+  AncestorChatModal,
   GeographicJourneyModal,
   RelationshipModal,
   ShareModal,
@@ -15,6 +16,7 @@ interface ActiveModalRendererProps {
     ModalManagerProps,
     | 'activeModal'
     | 'setActiveModal'
+    | 'modalContext'
     | 'geographicJourneyMode'
     | 'people'
     | 'setFocusId'
@@ -29,6 +31,7 @@ interface ActiveModalRendererProps {
 
 export const ActiveModalRenderer = ({ modal, locations }: ActiveModalRendererProps) => {
   const closeModal = () => modal.setActiveModal('none');
+  const sourcePersonId = modal.modalContext?.sourcePersonId;
 
   if (modal.activeModal === 'calculator') {
     return (
@@ -51,6 +54,7 @@ export const ActiveModalRenderer = ({ modal, locations }: ActiveModalRendererPro
           modal.setFocusId(id);
           closeModal();
         }}
+        initialView={modal.activeModal === 'consistency' ? 'consistency' : 'stats'}
       />
     );
   }
@@ -62,6 +66,21 @@ export const ActiveModalRenderer = ({ modal, locations }: ActiveModalRendererPro
         onClose={closeModal}
         people={modal.people}
         onSelectPerson={modal.setFocusId}
+        language={modal.language}
+        focusPersonId={sourcePersonId}
+      />
+    );
+  }
+
+  if (modal.activeModal === 'chat') {
+    const person = sourcePersonId ? modal.people[sourcePersonId] : undefined;
+
+    return (
+      <AncestorChatModal
+        isOpen={true}
+        onClose={closeModal}
+        person={person}
+        people={modal.people}
         language={modal.language}
       />
     );
@@ -76,6 +95,7 @@ export const ActiveModalRenderer = ({ modal, locations }: ActiveModalRendererPro
         locations={locations}
         language={modal.language}
         initialMode={modal.geographicJourneyMode}
+        focusPersonId={sourcePersonId}
         onSelectPerson={(id) => {
           modal.setFocusId(id);
           closeModal();

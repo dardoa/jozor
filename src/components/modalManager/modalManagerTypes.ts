@@ -11,6 +11,7 @@ import type { SharedTreeSummary } from '../../services/supabaseTreeTypes';
 export interface ModalManagerProps {
   activeModal: ModalStateAndActions['activeModal'];
   setActiveModal: ModalStateAndActions['setActiveModal'];
+  modalContext: ModalStateAndActions['modalContext'];
   geographicJourneyMode: ModalStateAndActions['geographicJourneyMode'];
   linkModal: ModalStateAndActions['linkModal'];
   setLinkModal: ModalStateAndActions['setLinkModal'];

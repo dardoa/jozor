@@ -34,6 +34,7 @@ type GeographicJourneyModalProps = {
   language: Language;
   initialMode: GeographicJourneyMode;
   onSelectPerson?: (id: string) => void;
+  focusPersonId?: string;
 };
 
 type GeographicJourneyTranslations = {
@@ -48,6 +49,9 @@ const modeButtonClass = (active: boolean) =>
       : 'bg-[#F2EEE8] text-[#6B5A49] hover:bg-[#ECE6DC]'
   }`;
 
+const buildPersonName = (person: Person) =>
+  [person.firstName, person.middleName, person.lastName].filter(Boolean).join(' ').trim();
+
 export const GeographicJourneyModal: React.FC<GeographicJourneyModalProps> = ({
   isOpen,
   onClose,
@@ -56,6 +60,7 @@ export const GeographicJourneyModal: React.FC<GeographicJourneyModalProps> = ({
   language,
   initialMode,
   onSelectPerson,
+  focusPersonId,
 }) => {
   const { t } = useTranslation();
   const geographyText = t as typeof t & GeographicJourneyTranslations;
@@ -68,14 +73,19 @@ export const GeographicJourneyModal: React.FC<GeographicJourneyModalProps> = ({
   const [isExporting, setIsExporting] = useState(false);
   const [hideUIForExport, setHideUIForExport] = useState(false);
   const [selectedPersonId, setSelectedPersonId] = useState<string | null>(null);
+  const focusPerson = focusPersonId ? people[focusPersonId] : undefined;
+  const scopedPeople = useMemo(
+    () => focusPerson ? { [focusPerson.id]: focusPerson } : people,
+    [focusPerson, people]
+  );
 
   useEffect(() => {
     setMode(initialMode);
     setSelectedPersonId(null);
   }, [initialMode, isOpen]);
 
-  const eventLocations = useMemo(() => buildEventLocations(people, locations), [people, locations]);
-  const migrationJourney = useMemo(() => buildMigrationJourney(people, locations), [people, locations]);
+  const eventLocations = useMemo(() => buildEventLocations(scopedPeople, locations), [scopedPeople, locations]);
+  const migrationJourney = useMemo(() => buildMigrationJourney(scopedPeople, locations), [scopedPeople, locations]);
 
   const superclusterIndex = useMemo(() => {
     const cluster = new Supercluster({ radius: 60, maxZoom: 16 });
@@ -157,7 +167,9 @@ export const GeographicJourneyModal: React.FC<GeographicJourneyModalProps> = ({
             <div className="pointer-events-auto rounded-[20px] border border-[#C4A882] bg-[rgba(250,247,242,0.94)] p-4 shadow-[0_18px_44px_rgba(44,24,16,0.14)]">
               <h3 className="flex items-center gap-3 text-lg font-medium tracking-tight text-[#2C1810]">
                 <Globe className="h-6 w-6 text-[#8B6914]" />
-                {t.geography?.toUpperCase()}
+                {focusPerson
+                  ? `${buildPersonName(focusPerson) || t.unnamedPerson} - ${t.geography}`
+                  : t.geography?.toUpperCase()}
               </h3>
               <div className={`mt-4 flex flex-wrap gap-2 ${isRtl ? 'justify-end' : ''}`}>
                 <button type="button" onClick={() => setMode('events')} className={modeButtonClass(mode === 'events')}>

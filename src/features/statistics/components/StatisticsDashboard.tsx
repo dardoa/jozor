@@ -1,4 +1,4 @@
-import { memo, useMemo } from 'react';
+import { memo, useEffect, useMemo, useRef } from 'react';
 import {
   Activity,
   AlertTriangle,
@@ -27,6 +27,7 @@ interface StatisticsDashboardProps {
   onClose: () => void;
   people: Record<string, Person>;
   onNavigateToPerson?: (id: string) => void;
+  initialView?: 'stats' | 'consistency';
 }
 
 export const buildStatisticsDashboardDisplayStats = (
@@ -100,10 +101,17 @@ const ProgressBarGroup = ({
   );
 };
 
-export const StatisticsDashboard = memo(({ isOpen, onClose, people, onNavigateToPerson }: StatisticsDashboardProps) => {
+export const StatisticsDashboard = memo(({
+  isOpen,
+  onClose,
+  people,
+  onNavigateToPerson,
+  initialView = 'stats',
+}: StatisticsDashboardProps) => {
   const { t } = useTranslation();
   const validationErrors = useAppStore((state) => state.validationErrors);
   const treeName = useAppStore((state) => state.treeName);
+  const healthSectionRef = useRef<HTMLElement | null>(null);
 
   const canonicalStats = useMemo(
     () => calculateCanonicalTreeAnalytics(people, validationErrors).stats,
@@ -155,7 +163,10 @@ export const StatisticsDashboard = memo(({ isOpen, onClose, people, onNavigateTo
   ];
 
   const birthdaysLabel = t.statistics.birthdays;
-  const overviewLabel = `${t.statistics.title}: ${treeName?.trim() || t.untitledTree}`;
+  const isConsistencyView = initialView === 'consistency';
+  const overviewLabel = isConsistencyView
+    ? `${t.consistencyChecker}: ${treeName?.trim() || t.untitledTree}`
+    : `${t.statistics.title}: ${treeName?.trim() || t.untitledTree}`;
   const oldestLabel = t.oldestMember;
   const mostChildrenLabel = t.mostChildren;
   const topPlacesLabel = t.topPlaces;
@@ -182,6 +193,16 @@ export const StatisticsDashboard = memo(({ isOpen, onClose, people, onNavigateTo
     value: entry.count,
     color: index === 0 ? '#8A9B7A' : '#8E7E74',
   }));
+
+  useEffect(() => {
+    if (!isOpen || !isConsistencyView) return;
+
+    const timer = window.setTimeout(() => {
+      healthSectionRef.current?.scrollIntoView({ block: 'start' });
+    }, 80);
+
+    return () => window.clearTimeout(timer);
+  }, [isConsistencyView, isOpen]);
 
   return (
     <OverlayPrimitive isOpen={isOpen} onClose={onClose} id="stats-dashboard">
@@ -266,7 +287,7 @@ export const StatisticsDashboard = memo(({ isOpen, onClose, people, onNavigateTo
 
           <div className="h-px bg-black/[0.04]" />
 
-          <section className="space-y-3">
+          <section ref={healthSectionRef} className="space-y-3">
             <h3 className="mb-[10px] text-[15px] font-semibold tracking-[0.2px] text-slate-800 antialiased">
               {t.statistics.coreRecords}
             </h3>

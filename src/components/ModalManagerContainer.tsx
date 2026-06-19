@@ -34,6 +34,7 @@ export const ModalManagerContainer: React.FC<ModalManagerContainerProps> = memo(
       <ModalManager
         activeModal={modals.activeModal}
         setActiveModal={modals.setActiveModal}
+        modalContext={modals.modalContext}
         geographicJourneyMode={modals.geographicJourneyMode}
         linkModal={modals.linkModal}
         setLinkModal={modals.setLinkModal}

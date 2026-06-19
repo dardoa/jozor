@@ -24,6 +24,7 @@ interface TimelineModalProps {
   people: Record<string, Person>;
   onSelectPerson: (id: string) => void;
   language?: Language;
+  focusPersonId?: string;
 }
 
 type EventTypeMeta = {
@@ -38,13 +39,18 @@ type TimelineTranslations = {
   births?: string;
 };
 
-export const TimelineModal = ({ isOpen, onClose, people, onSelectPerson }: TimelineModalProps) => {
+const buildPersonName = (person: Person) =>
+  [person.firstName, person.middleName, person.lastName].filter(Boolean).join(' ').trim();
+
+export const TimelineModal = ({ isOpen, onClose, people, onSelectPerson, focusPersonId }: TimelineModalProps) => {
   const { t } = useTranslation();
   const timelineText = t as typeof t & TimelineTranslations;
   const [sortAsc, setSortAsc] = useState(true);
   const [activeFilters, setActiveFilters] = useState<Set<TimelineEvent['type']>>(
     new Set(['birth', 'death', 'marriage', 'custom'])
   );
+  const focusPerson = focusPersonId ? people[focusPersonId] : undefined;
+  const title = focusPerson ? `${buildPersonName(focusPerson) || t.unnamedPerson} - ${t.familyTimelineHeader}` : t.familyTimeline;
 
   const toggleFilter = (type: TimelineEvent['type']) => {
     setActiveFilters((prev) => {
@@ -98,7 +104,9 @@ export const TimelineModal = ({ isOpen, onClose, people, onSelectPerson }: Timel
   const events = useMemo(() => {
     const list: TimelineEvent[] = [];
 
-    Object.values(people).forEach((person) => {
+    const scopedPeople = focusPerson ? [focusPerson] : Object.values(people);
+
+    scopedPeople.forEach((person) => {
       if (person.birthDate) {
         const y = parseInt(getDisplayDate(person.birthDate));
         if (!isNaN(y)) {
@@ -129,7 +137,7 @@ export const TimelineModal = ({ isOpen, onClose, people, onSelectPerson }: Timel
 
       if (person.partnerDetails) {
         Object.entries(person.partnerDetails).forEach(([spouseId, info]) => {
-          if (info.startDate && person.id < spouseId) {
+          if (info.startDate && (focusPerson || person.id < spouseId)) {
             const y = parseInt(getDisplayDate(info.startDate));
             if (!isNaN(y)) {
               const spouse = people[spouseId];
@@ -169,7 +177,7 @@ export const TimelineModal = ({ isOpen, onClose, people, onSelectPerson }: Timel
         if (!sortAsc && a.year !== b.year) return b.year - a.year;
         return sortAsc ? a.dateStr.localeCompare(b.dateStr) : b.dateStr.localeCompare(a.dateStr);
       });
-  }, [people, sortAsc, activeFilters, t]);
+  }, [people, focusPerson, sortAsc, activeFilters, t]);
 
   const groupedEvents = useMemo(() => {
     const groups = new Map<number, TimelineEvent[]>();
@@ -192,7 +200,7 @@ export const TimelineModal = ({ isOpen, onClose, people, onSelectPerson }: Timel
             <div className='rounded-xl bg-[#a67c37]/10 p-2 text-[#a67c37]'>
               <Calendar className='h-5 w-5' />
             </div>
-            <h3 className='text-[16px] font-semibold tracking-[0.2px] text-slate-800'>{t.familyTimeline}</h3>
+            <h3 className='text-[16px] font-semibold tracking-[0.2px] text-slate-800'>{title}</h3>
           </div>
           <div className='flex items-center gap-2'>
             <Button onClick={() => setSortAsc(!sortAsc)} variant='secondary' size='sm' className='text-xs'>
@@ -229,7 +237,7 @@ export const TimelineModal = ({ isOpen, onClose, people, onSelectPerson }: Timel
           {groupedEvents.length === 0 ? (
             <EmptyState
               icon={<Info className='h-6 w-6' />}
-              title={t.familyTimeline}
+              title={title}
               description={t.noEvents}
               className='mx-auto mt-16 max-w-md'
             />

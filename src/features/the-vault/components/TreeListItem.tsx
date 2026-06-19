@@ -18,6 +18,9 @@ export interface TreeListLabels {
   updated: string;
   justNow: string;
   sharedAccessNote: string;
+  ownerRole: string;
+  editorRole: string;
+  viewerRole: string;
 }
 
 interface TreeListItemProps {
@@ -46,6 +49,13 @@ const formatDateLabel = (tree: TreeRow, justNowLabel: string) => {
   }
 };
 
+const getRoleLabel = (role: TreeRow['role'], labels: TreeListLabels) => {
+  if (role === 'owner') return labels.ownerRole;
+  if (role === 'editor') return labels.editorRole;
+  if (role === 'viewer') return labels.viewerRole;
+  return null;
+};
+
 export const TreeListItem: React.FC<TreeListItemProps> = ({
   tree,
   labels,
@@ -64,6 +74,7 @@ export const TreeListItem: React.FC<TreeListItemProps> = ({
   const isActive = activeTreeId === tree.id;
   const isEditing = editingId === tree.id;
   const isBusy = busyId === tree.id;
+  const roleLabel = getRoleLabel(tree.role, labels);
 
   return (
     <div
@@ -104,9 +115,9 @@ export const TreeListItem: React.FC<TreeListItemProps> = ({
                 <h5 className={`truncate text-sm font-bold ${isActive ? 'text-white' : 'text-[var(--text-main)]'}`}>
                   {tree.name}
                 </h5>
-                {tree.isShared && tree.role && (
+                {roleLabel && (
                   <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${isActive ? 'bg-white/15 text-white' : 'bg-[var(--surface-panel)] text-[var(--text-muted)]'}`}>
-                    {tree.role}
+                    {roleLabel}
                   </span>
                 )}
                 {isActive && (

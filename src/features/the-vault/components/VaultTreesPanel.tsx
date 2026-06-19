@@ -63,7 +63,13 @@ export const VaultTreesPanel: React.FC<VaultTreesPanelProps> = ({
   onCancelRename,
   onEditTreeNameChange,
   onDeleteTree,
-}) => (
+}) => {
+  const ownedTreeRows: TreeRow[] = ownedTrees.map((tree) => ({
+    ...tree,
+    role: 'owner',
+  }));
+
+  return (
   <div className={compact ? 'mt-4 space-y-8 px-4' : 'space-y-6'}>
     {compact && (
       <div className="mt-4 space-y-0.5">
@@ -92,7 +98,7 @@ export const VaultTreesPanel: React.FC<VaultTreesPanelProps> = ({
     />
     <TreeGridList
       title={labels.ownedTitle}
-      items={ownedTrees}
+      items={ownedTreeRows}
       activeTreeId={treeId}
       busyId={busyTreeId}
       editingId={editingTreeId}
@@ -123,4 +129,5 @@ export const VaultTreesPanel: React.FC<VaultTreesPanelProps> = ({
       hideTitle={compact}
     />
   </div>
-);
+  );
+};

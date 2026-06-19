@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Person, Language } from '../../../types';
-import { X, Calculator, User } from 'lucide-react'; // Removed ArrowRight
+import { X, Calculator, User, Search } from 'lucide-react'; // Removed ArrowRight
 import { calculateRelationship } from '../../../utils/relationshipLogic';
 import { useTranslation } from '../../../context/TranslationContext';
 import { OverlayPrimitive } from '../../../context/OverlayContext';
+import { SmartAvatar } from '../../../components/ui/SmartAvatar';
 
 interface RelationshipModalProps {
   isOpen: boolean;
@@ -11,6 +12,104 @@ interface RelationshipModalProps {
   people: Record<string, Person>;
   language: Language;
 }
+
+const getPersonName = (person: Person) =>
+  [person.firstName, person.middleName, person.lastName].filter(Boolean).join(' ').trim();
+
+const normalizeSearchText = (value: string) =>
+  value.toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '').trim();
+
+interface PersonSearchSelectProps {
+  label: string;
+  people: Person[];
+  value: string;
+  onChange: (personId: string) => void;
+  placeholder: string;
+}
+
+const PersonSearchSelect = ({
+  label,
+  people,
+  value,
+  onChange,
+  placeholder,
+}: PersonSearchSelectProps) => {
+  const [query, setQuery] = useState('');
+  const selectedPerson = value ? people.find((person) => person.id === value) : undefined;
+
+  const filteredPeople = useMemo(() => {
+    const normalizedQuery = normalizeSearchText(query);
+    const candidates = normalizedQuery
+      ? people.filter((person) => {
+          const haystack = normalizeSearchText([
+            person.firstName,
+            person.middleName,
+            person.lastName,
+            person.nickName,
+            person.birthName,
+          ].filter(Boolean).join(' '));
+          return haystack.includes(normalizedQuery);
+        })
+      : people;
+
+    return candidates.slice(0, 8);
+  }, [people, query]);
+
+  return (
+    <div className="space-y-2">
+      <label className="ds-label">{label}</label>
+      <div className="rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-panel)] p-2 shadow-[var(--shadow-sm)]">
+        <div className="flex items-center gap-2 rounded-xl border border-[var(--border-soft)] bg-[var(--surface-app)] px-3 py-2">
+          <Search className="h-4 w-4 shrink-0 text-[var(--text-muted)]" />
+          <input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder={placeholder}
+            className="min-w-0 flex-1 bg-transparent text-sm text-[var(--text-main)] outline-none placeholder:text-[var(--text-muted)]"
+          />
+        </div>
+
+        {selectedPerson ? (
+          <div className="mt-2 flex items-center gap-3 rounded-xl bg-[var(--primary-50)] px-3 py-2 text-[var(--primary-700)]">
+            <SmartAvatar person={selectedPerson} size={32} className="rounded-full" />
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-sm font-bold">{getPersonName(selectedPerson)}</div>
+              <div className="text-[10px] text-[var(--text-muted)]">{selectedPerson.birthDate || '-'}</div>
+            </div>
+            <button
+              type="button"
+              onClick={() => onChange('')}
+              className="rounded-full p-1 text-[var(--text-muted)] hover:bg-white/80 hover:text-[var(--text-main)]"
+              aria-label="Clear"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        ) : null}
+
+        <div className="mt-2 max-h-56 space-y-1 overflow-y-auto">
+          {filteredPeople.map((person) => (
+            <button
+              key={person.id}
+              type="button"
+              onClick={() => {
+                onChange(person.id);
+                setQuery('');
+              }}
+              className="flex w-full items-center gap-3 rounded-xl px-2 py-2 text-start transition-colors hover:bg-[var(--surface-subtle)]"
+            >
+              <SmartAvatar person={person} size={34} className="rounded-full" />
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-sm font-semibold text-[var(--text-main)]">{getPersonName(person)}</div>
+                <div className="truncate text-[10px] text-[var(--text-muted)]">{person.birthPlace || person.birthDate || '-'}</div>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export const RelationshipModal = ({
   isOpen,
@@ -26,6 +125,7 @@ export const RelationshipModal = ({
   const peopleList = (Object.values(people) as Person[]).sort((a, b) =>
     a.firstName.localeCompare(b.firstName)
   );
+  const searchPlaceholder = language === 'ar' ? 'ابحث بالاسم...' : 'Search by name...';
 
   const handleClose = () => {
     setResult(null);
@@ -70,39 +170,21 @@ export const RelationshipModal = ({
 
         <div className='ds-modal-body space-y-5 overflow-y-auto bg-[var(--surface-app)]/45'>
           <div className='space-y-4'>
-            <div className='space-y-1'>
-              <label className='ds-label'>{t.person1}</label>
-              <select
-                value={person1Id}
-                onChange={(e) => setPerson1Id(e.target.value)}
-                aria-label={t.person1}
-                className='ds-input w-full px-4 py-3 text-sm'
-              >
-                <option value=''>-- Select --</option>
-                {peopleList.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.firstName} {p.lastName}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <PersonSearchSelect
+              label={t.person1}
+              people={peopleList}
+              value={person1Id}
+              onChange={setPerson1Id}
+              placeholder={searchPlaceholder}
+            />
 
-            <div className='space-y-1'>
-              <label className='ds-label'>{t.person2}</label>
-              <select
-                value={person2Id}
-                onChange={(e) => setPerson2Id(e.target.value)}
-                aria-label={t.person2}
-                className='ds-input w-full px-4 py-3 text-sm'
-              >
-                <option value=''>-- Select --</option>
-                {peopleList.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.firstName} {p.lastName}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <PersonSearchSelect
+              label={t.person2}
+              people={peopleList}
+              value={person2Id}
+              onChange={setPerson2Id}
+              placeholder={searchPlaceholder}
+            />
 
             <button
               onClick={handleCalculate}

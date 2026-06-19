@@ -1,6 +1,6 @@
 import { lazy, memo, Suspense, useRef, useState, type ChangeEvent } from 'react';
 import { Person, UserProfile } from '../../../../types';
-import { Plus, Image as ImageIcon, X, Mic, Trash2, Cloud, Loader2 } from 'lucide-react';
+import { Plus, Image as ImageIcon, X, Mic, Trash2, Cloud, Loader2, Upload } from 'lucide-react';
 import { Card } from '../../../../components/ui/Card';
 import { useTranslation } from '../../../../context/TranslationContext';
 import { EmptyState } from '../../../../components/ui/EmptyState';
@@ -21,6 +21,36 @@ type MediaTabTranslations = {
   addPhoto?: string;
 };
 
+const MAX_VOICE_FILE_SIZE_BYTES = 15 * 1024 * 1024;
+const MAX_VOICE_DURATION_SECONDS = 10 * 60;
+const ACCEPTED_VOICE_TYPES = new Set([
+  'audio/mpeg',
+  'audio/mp3',
+  'audio/mp4',
+  'audio/wav',
+  'audio/webm',
+  'audio/ogg',
+  'audio/aac',
+  'audio/x-m4a',
+]);
+
+const getAudioDurationSeconds = (file: File): Promise<number> =>
+  new Promise((resolve, reject) => {
+    const audio = document.createElement('audio');
+    const objectUrl = URL.createObjectURL(file);
+
+    audio.preload = 'metadata';
+    audio.onloadedmetadata = () => {
+      URL.revokeObjectURL(objectUrl);
+      resolve(Number.isFinite(audio.duration) ? audio.duration : 0);
+    };
+    audio.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error('Unable to read audio metadata.'));
+    };
+    audio.src = objectUrl;
+  });
+
 const ImageLightbox = lazy(() =>
   import('../../../../components/ui/ImageLightbox').then((module) => ({ default: module.ImageLightbox }))
 );
@@ -36,11 +66,11 @@ interface MediaTabProps {
 }
 
 export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user }) => {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const mediaText = t as typeof t & MediaTabTranslations;
   const galleryInputRef = useRef<HTMLInputElement>(null);
+  const voiceInputRef = useRef<HTMLInputElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [isDriveLoading, setIsDriveLoading] = useState(false);
   const [selectedImgIndex, setSelectedImgIndex] = useState<number | null>(null);
   const isGuest = !user || user?.uid.startsWith('mock-');
 
@@ -54,42 +84,18 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
     e.target.value = '';
   };
 
-  const handleDriveSelect = async () => {
-    if (!user || user?.uid.startsWith('mock-')) {
-      showToast.error('demoModeNote');
-      return;
-    }
-
-    setIsDriveLoading(true);
-    try {
-      const { googleMediaService } = await import('../../../../services/googleService');
-      const driveUrl = await googleMediaService.pickAndDownloadImage();
-      if (driveUrl) {
-        const currentGallery = Array.isArray(person.gallery) ? person.gallery : [];
-        onUpdate(person.id, { gallery: [...currentGallery, driveUrl] });
-        showToast.success('messages.success.uploadSuccess');
-      }
-    } catch (error: unknown) {
-      if (error !== 'Cancelled') {
-        console.error(error);
-        showToast.error('messages.error.import');
-      }
-    } finally {
-      setIsDriveLoading(false);
-    }
-  };
-
-  const handleVoiceSave = async (audioBlob: Blob) => {
+  const handleVoiceSave = async (audioBlob: Blob, fileName?: string, mimeType?: string) => {
     if (!user) {
       showToast.error('loginRequired');
       return;
     }
     try {
       const { googleMediaService } = await import('../../../../services/googleService');
+      const uploadMimeType = mimeType || audioBlob.type || 'audio/webm';
       const driveUrl = await googleMediaService.uploadFile(
         audioBlob,
-        `voice_${person.id}_${Date.now()}.webm`,
-        'audio/webm'
+        fileName || `voice_${person.id}_${Date.now()}.webm`,
+        uploadMimeType
       );
       const currentNotes = person.voiceNotes || [];
       onUpdate(person.id, { voiceNotes: [...currentNotes, driveUrl] });
@@ -100,12 +106,42 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
     }
   };
 
+  const handleVoiceFileUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+
+    if (!ACCEPTED_VOICE_TYPES.has(file.type)) {
+      showToast.error('Unsupported audio file type.');
+      return;
+    }
+
+    if (file.size > MAX_VOICE_FILE_SIZE_BYTES) {
+      showToast.error('Audio file is too large. Maximum size is 15 MB.');
+      return;
+    }
+
+    try {
+      const duration = await getAudioDurationSeconds(file);
+      if (duration > MAX_VOICE_DURATION_SECONDS) {
+        showToast.error('Audio file is too long. Maximum duration is 10 minutes.');
+        return;
+      }
+
+      await handleVoiceSave(file, file.name || `voice_${person.id}_${Date.now()}`, file.type);
+    } catch (error) {
+      console.error('Audio validation failed', error);
+      showToast.error('Unable to read this audio file.');
+    }
+  };
+
   const gallery: GalleryMediaItem[] = Array.isArray(person.gallery)
     ? person.gallery as unknown as GalleryMediaItem[]
     : [];
   const voiceNotes = person.voiceNotes || [];
   const hasPhotos = gallery.length > 0;
   const hasVoiceNotes = voiceNotes.length > 0;
+  const uploadAudioLabel = language === 'ar' ? 'رفع صوت' : 'Upload audio';
 
   const personFullName = [person.firstName, person.lastName].filter(Boolean).join(' ');
   const galleryUrls = gallery.map(item => getGalleryImageUrl(item)).filter(Boolean) as string[];
@@ -144,21 +180,6 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
         <div className='flex justify-between items-center relative z-10 mb-3'>
           {isEditing && !isGuest && (
             <div className='flex gap-1.5 ms-auto'>
-              {user && (
-                <button
-                  onClick={handleDriveSelect}
-                  disabled={isDriveLoading || isUploading}
-                className='text-xs font-bold text-[var(--text-muted)] hover:bg-[var(--surface-subtle)] flex items-center gap-1 disabled:opacity-50 px-2 py-1 rounded-full transition-colors'
-                  title={t.settings.importDrive}
-                >
-                  {isDriveLoading ? (
-                    <Loader2 className='w-3.5 h-3.5 animate-spin' />
-                  ) : (
-                    <Cloud className='w-3.5 h-3.5' />
-                  )}
-                  <span className='hidden sm:inline'>{t.settings.drive || 'Google Drive'}</span>
-                </button>
-              )}
               <button
                 onClick={() => galleryInputRef.current?.click()}
                 disabled={isUploading}
@@ -288,11 +309,29 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
       <Card title={t.voiceMemories} tone='flat'>
         <div className='flex justify-between items-center relative z-10 mb-3'>
           {isEditing && !isGuest && (
-            <Suspense fallback={null}>
-              <VoiceRecorder onSave={handleVoiceSave} />
-            </Suspense>
+            <div className="flex flex-wrap items-center gap-2 ms-auto">
+              <button
+                type="button"
+                onClick={() => voiceInputRef.current?.click()}
+                className="flex items-center gap-2 px-3 py-1.5 bg-[var(--surface-subtle)] text-[var(--text-main)] rounded-full text-xs font-bold hover:bg-[var(--surface-hover)] transition-colors border border-[var(--border-soft)]"
+              >
+                <Upload className="w-3.5 h-3.5" />
+                {uploadAudioLabel}
+              </button>
+              <Suspense fallback={null}>
+                <VoiceRecorder onSave={(blob) => handleVoiceSave(blob)} />
+              </Suspense>
+            </div>
           )}
         </div>
+        <input
+          ref={voiceInputRef}
+          type="file"
+          accept="audio/mpeg,audio/mp3,audio/mp4,audio/wav,audio/webm,audio/ogg,audio/aac,audio/x-m4a"
+          className="hidden"
+          onChange={handleVoiceFileUpload}
+          aria-label={uploadAudioLabel}
+        />
 
         {!hasVoiceNotes && !isEditing ? (
           <EmptyState
