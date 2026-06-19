@@ -127,7 +127,8 @@ export const StatisticsDashboard = memo(({
   const maleCount = stats.kpis.genderRatio.male;
   const femaleCount = stats.kpis.genderRatio.female;
   const otherCount = stats.kpis.genderRatio.other;
-  const issuesCount = Object.keys(validationErrors).length;
+  const issueEntries = Object.entries(validationErrors);
+  const issuesCount = issueEntries.length;
 
   const infoStats: MiniStat[] = [
     {
@@ -227,6 +228,66 @@ export const StatisticsDashboard = memo(({
         </div>
 
         <div className="flex-1 space-y-7 overflow-y-auto bg-[#FAF7F2] p-4 sm:p-6">
+          {isConsistencyView ? (
+            <section ref={healthSectionRef} className="space-y-4 rounded-[24px] border border-red-100 bg-white/70 p-4 shadow-[0_2px_10px_rgba(0,0,0,0.03)] sm:p-5">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="space-y-1">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.05em] text-red-400">
+                    {t.consistencyChecker}
+                  </p>
+                  <h3 className="text-[15px] font-semibold tracking-tight text-slate-800 antialiased">
+                    {issuesCount === 0 ? noIssuesLabel : t.issuesFound}
+                  </h3>
+                </div>
+                <div className="flex gap-2">
+                  <div className="rounded-2xl bg-emerald-50 px-3 py-2 text-right text-emerald-700">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.08em] opacity-80">{t.statistics.dataHealth}</p>
+                    <p className="text-[15px] font-medium tabular-nums">{stats.kpis.healthScore}%</p>
+                  </div>
+                  <div className="rounded-2xl bg-red-50 px-3 py-2 text-right text-red-700">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.08em] opacity-80">{t.statistics.issues}</p>
+                    <p className="text-[15px] font-medium tabular-nums">{issuesCount}</p>
+                  </div>
+                </div>
+              </div>
+
+              {issuesCount === 0 ? (
+                <div className="inline-flex items-center gap-2 rounded-2xl bg-emerald-50 px-4 py-3 text-[13px] font-medium text-emerald-700">
+                  <Check className="h-4 w-4" />
+                  <span>{noIssuesLabel}</span>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {issueEntries.map(([id, errors]) => (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => onNavigateToPerson?.(id)}
+                      className="group flex w-full items-center justify-between gap-3 rounded-2xl bg-[#f3efe6] px-4 py-3 text-start transition-all duration-200 ease-in-out hover:bg-white"
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-slate-800">
+                          {people[id]?.firstName} {people[id]?.lastName}
+                        </p>
+                        <div className="mt-1 flex flex-wrap gap-1.5">
+                          {errors.map((error, index) => (
+                            <span
+                              key={`${id}-${index}`}
+                              className="rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-medium text-red-600"
+                            >
+                              {error}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                      <ChevronRight className="h-4 w-4 shrink-0 text-slate-400 transition-colors group-hover:text-slate-600 rtl:rotate-180" />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </section>
+          ) : null}
+
           <section className="space-y-5 rounded-[24px] bg-white/60 p-4 shadow-[0_2px_10px_rgba(0,0,0,0.03)] sm:space-y-6 sm:p-5">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="space-y-1">
@@ -287,7 +348,7 @@ export const StatisticsDashboard = memo(({
 
           <div className="h-px bg-black/[0.04]" />
 
-          <section ref={healthSectionRef} className="space-y-3">
+          <section ref={isConsistencyView ? undefined : healthSectionRef} className="space-y-3">
             <h3 className="mb-[10px] text-[15px] font-semibold tracking-[0.2px] text-slate-800 antialiased">
               {t.statistics.coreRecords}
             </h3>
@@ -431,7 +492,7 @@ export const StatisticsDashboard = memo(({
               </div>
             ) : (
               <div className="space-y-2">
-                {Object.entries(validationErrors).map(([id, errors]) => (
+                {issueEntries.map(([id, errors]) => (
                   <button
                     key={id}
                     type="button"
