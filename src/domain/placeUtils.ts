@@ -13,13 +13,14 @@ const buildCoordinatePlaceId = (latitude: number, longitude: number) =>
 
 export function normalizePlaceName(value: string): string {
   if (!value) return '';
-  let normalized = value.toLowerCase();
+  let normalized = value.toLowerCase().normalize('NFD');
 
-  normalized = normalized.replace(/[\u064B-\u065F]/g, '');
-  normalized = normalized.replace(/[أإآ]/g, 'ا');
-  normalized = normalized.replace(/ة/g, 'ه');
-  normalized = normalized.replace(/ى/g, 'ي');
-  normalized = normalized.replace(/[,/\\_.،؛|()-]/g, ' ');
+  normalized = normalized.replace(/[\u064B-\u065F\u0670]/g, '');
+  normalized = normalized.replace(/[\u0623\u0625\u0622]/g, '\u0627');
+  normalized = normalized.replace(/\u0629/g, '\u0647');
+  normalized = normalized.replace(/\u0649/g, '\u064A');
+  normalized = normalized.replace(/\u0640/g, '');
+  normalized = normalized.replace(/[\u060C\u061B,\/\\_.|()[\]{}-]/g, ' ');
   normalized = normalized.replace(/\s+/g, ' ').trim();
 
   return normalized;

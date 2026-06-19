@@ -1,5 +1,13 @@
 import { Person } from '../types';
+import { normalizePlaceName } from '../domain/placeUtils';
 import { getDisplayDate } from '../utils/familyLogic';
+
+interface PlaceBucket {
+    key: string;
+    name: string;
+    count: number;
+    firstSeen: number;
+}
 
 export interface StatsData {
     kpis: {
@@ -55,7 +63,8 @@ export class StatsEngine {
         const surnameMap: Record<string, number> = {};
         const maleNames: Record<string, number> = {};
         const femaleNames: Record<string, number> = {};
-        const placesMap: Record<string, number> = {};
+        const placesMap: Record<string, PlaceBucket> = {};
+        let placeOrder = 0;
         const ageDistribution: Record<string, number> = {
             '0-19': 0,
             '20-39': 0,
@@ -142,8 +151,7 @@ export class StatsEngine {
 
             // Places
             if (p.birthPlace) {
-                const place = p.birthPlace.trim();
-                if (place) placesMap[place] = (placesMap[place] || 0) + 1;
+                placeOrder = this.addPlaceCount(placesMap, p.birthPlace, placeOrder);
             }
 
             // Most Children
@@ -186,7 +194,7 @@ export class StatsEngine {
             demographics,
             vitality,
             surnames,
-            topPlaces: Object.entries(placesMap).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([name, count]) => ({ name, count })),
+            topPlaces: this.buildTopPlaces(placesMap, 5),
             ageDistribution: Object.entries(ageDistribution).map(([range, count]) => ({ range, count })),
             upcomingBirthdays: upcomingBirthdays.sort((a, b) => a.daysUntil - b.daysUntil).slice(0, 5),
             topNames: {
@@ -194,6 +202,101 @@ export class StatsEngine {
                 female: Object.entries(femaleNames).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([name, count]) => ({ name, count })),
             }
         };
+    }
+
+    private static addPlaceCount(
+        placesMap: Record<string, PlaceBucket>,
+        rawPlace: string,
+        firstSeen: number
+    ): number {
+        const displayName = this.formatPlaceDisplayName(rawPlace);
+        if (!displayName) return firstSeen;
+
+        const key = normalizePlaceName(displayName);
+        if (!key) return firstSeen;
+
+        const existing = placesMap[key];
+        if (existing) {
+            existing.count += 1;
+            existing.name = this.choosePlaceDisplayName(existing.name, displayName);
+            return firstSeen;
+        }
+
+        placesMap[key] = {
+            key,
+            name: displayName,
+            count: 1,
+            firstSeen,
+        };
+
+        return firstSeen + 1;
+    }
+
+    private static buildTopPlaces(placesMap: Record<string, PlaceBucket>, limit: number): StatsData['topPlaces'] {
+        const buckets = Object.values(placesMap).map(bucket => ({ ...bucket }));
+        const expandedBuckets = buckets.filter(bucket => this.isExpandedPlaceKey(bucket.key));
+
+        buckets.forEach(bucket => {
+            if (this.isExpandedPlaceKey(bucket.key) || !bucket.count) return;
+
+            const matchingExpandedBuckets = expandedBuckets.filter(expanded => (
+                expanded.key !== bucket.key &&
+                (expanded.key.startsWith(`${bucket.key} `) || expanded.key.endsWith(` ${bucket.key}`))
+            ));
+
+            if (matchingExpandedBuckets.length !== 1) return;
+
+            const target = matchingExpandedBuckets[0];
+            target.count += bucket.count;
+            target.firstSeen = Math.min(target.firstSeen, bucket.firstSeen);
+            target.name = this.choosePlaceDisplayName(target.name, bucket.name);
+            bucket.count = 0;
+        });
+
+        return buckets
+            .filter(bucket => bucket.count > 0)
+            .sort((a, b) => b.count - a.count || a.firstSeen - b.firstSeen || a.name.localeCompare(b.name))
+            .slice(0, limit)
+            .map(({ name, count }) => ({ name, count }));
+    }
+
+    private static isExpandedPlaceKey(key: string): boolean {
+        return key.split(' ').filter(Boolean).length > 1;
+    }
+
+    private static formatPlaceDisplayName(rawPlace: string): string {
+        return rawPlace
+            .trim()
+            .replace(/\s*([\u060C,])\s*/g, '$1 ')
+            .replace(/\s*[/\\|]\s*/g, ' / ')
+            .replace(/\s*-\s*/g, ' - ')
+            .replace(/\s+/g, ' ')
+            .trim();
+    }
+
+    private static choosePlaceDisplayName(currentName: string, candidateName: string): string {
+        const currentScore = this.getPlaceDisplayScore(currentName);
+        const candidateScore = this.getPlaceDisplayScore(candidateName);
+
+        if (candidateScore !== currentScore) {
+            return candidateScore > currentScore ? candidateName : currentName;
+        }
+
+        if (candidateName.length !== currentName.length) {
+            return candidateName.length > currentName.length ? candidateName : currentName;
+        }
+
+        return currentName.localeCompare(candidateName) <= 0 ? currentName : candidateName;
+    }
+
+    private static getPlaceDisplayScore(placeName: string): number {
+        const normalized = normalizePlaceName(placeName);
+        let score = this.isExpandedPlaceKey(normalized) ? 2 : 0;
+
+        if (/[\u060C,]/.test(placeName)) score += 3;
+        if (/[-/\\|]/.test(placeName)) score += 1;
+
+        return score;
     }
 
     /**

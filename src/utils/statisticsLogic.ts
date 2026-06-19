@@ -1,4 +1,5 @@
 import { Person } from '../types';
+import { normalizePlaceName } from '../domain/placeUtils';
 import { getDisplayDate } from './familyLogic';
 
 export interface StatisticItem {
@@ -42,6 +43,104 @@ export interface AgeDistribution {
   average: number;
 }
 
+interface PlaceBucket {
+  key: string;
+  name: string;
+  count: number;
+  firstSeen: number;
+}
+
+const isExpandedPlaceKey = (key: string): boolean => key.split(' ').filter(Boolean).length > 1;
+
+const formatPlaceDisplayName = (rawPlace: string): string => rawPlace
+  .trim()
+  .replace(/\s*([\u060C,])\s*/g, '$1 ')
+  .replace(/\s*[/\\|]\s*/g, ' / ')
+  .replace(/\s*-\s*/g, ' - ')
+  .replace(/\s+/g, ' ')
+  .trim();
+
+const getPlaceDisplayScore = (placeName: string): number => {
+  const normalized = normalizePlaceName(placeName);
+  let score = isExpandedPlaceKey(normalized) ? 2 : 0;
+
+  if (/[\u060C,]/.test(placeName)) score += 3;
+  if (/[-/\\|]/.test(placeName)) score += 1;
+
+  return score;
+};
+
+const choosePlaceDisplayName = (currentName: string, candidateName: string): string => {
+  const currentScore = getPlaceDisplayScore(currentName);
+  const candidateScore = getPlaceDisplayScore(candidateName);
+
+  if (candidateScore !== currentScore) {
+    return candidateScore > currentScore ? candidateName : currentName;
+  }
+
+  if (candidateName.length !== currentName.length) {
+    return candidateName.length > currentName.length ? candidateName : currentName;
+  }
+
+  return currentName.localeCompare(candidateName) <= 0 ? currentName : candidateName;
+};
+
+const addPlaceCount = (
+  placesMap: Record<string, PlaceBucket>,
+  rawPlace: string,
+  firstSeen: number
+): number => {
+  const displayName = formatPlaceDisplayName(rawPlace);
+  if (!displayName) return firstSeen;
+
+  const key = normalizePlaceName(displayName);
+  if (!key) return firstSeen;
+
+  const existing = placesMap[key];
+  if (existing) {
+    existing.count += 1;
+    existing.name = choosePlaceDisplayName(existing.name, displayName);
+    return firstSeen;
+  }
+
+  placesMap[key] = {
+    key,
+    name: displayName,
+    count: 1,
+    firstSeen,
+  };
+
+  return firstSeen + 1;
+};
+
+const buildTopPlaces = (placesMap: Record<string, PlaceBucket>, limit: number = 5): StatisticItem[] => {
+  const buckets = Object.values(placesMap).map(bucket => ({ ...bucket }));
+  const expandedBuckets = buckets.filter(bucket => isExpandedPlaceKey(bucket.key));
+
+  buckets.forEach(bucket => {
+    if (isExpandedPlaceKey(bucket.key) || !bucket.count) return;
+
+    const matchingExpandedBuckets = expandedBuckets.filter(expanded => (
+      expanded.key !== bucket.key &&
+      (expanded.key.startsWith(`${bucket.key} `) || expanded.key.endsWith(` ${bucket.key}`))
+    ));
+
+    if (matchingExpandedBuckets.length !== 1) return;
+
+    const target = matchingExpandedBuckets[0];
+    target.count += bucket.count;
+    target.firstSeen = Math.min(target.firstSeen, bucket.firstSeen);
+    target.name = choosePlaceDisplayName(target.name, bucket.name);
+    bucket.count = 0;
+  });
+
+  return buckets
+    .filter(bucket => bucket.count > 0)
+    .sort((a, b) => b.count - a.count || a.firstSeen - b.firstSeen || a.name.localeCompare(b.name))
+    .slice(0, limit)
+    .map(({ name, count }) => ({ name, count }));
+};
+
 /**
  * Calculates various statistics for the family tree.
  * @param people The record of all people in the tree.
@@ -78,7 +177,8 @@ export const calculateStatistics = (people: Record<string, Person>): FamilyStati
   const decadeMap: Record<string, number> = {};
   const maleNames: Record<string, number> = {};
   const femaleNames: Record<string, number> = {};
-  const placesMap: Record<string, number> = {};
+  const placesMap: Record<string, PlaceBucket> = {};
+  let placeOrder = 0;
 
   list.forEach((p) => {
     // Gender Counts & Names
@@ -139,8 +239,7 @@ export const calculateStatistics = (people: Record<string, Person>): FamilyStati
 
     // Places
     if (p.birthPlace) {
-      const place = p.birthPlace.trim();
-      if (place) placesMap[place] = (placesMap[place] || 0) + 1;
+      placeOrder = addPlaceCount(placesMap, p.birthPlace, placeOrder);
     }
 
     // Most Children
@@ -197,7 +296,7 @@ export const calculateStatistics = (people: Record<string, Person>): FamilyStati
     birthsPerDecade: decadeMap,
     topMaleNames: sortAndSlice(maleNames),
     topFemaleNames: sortAndSlice(femaleNames),
-    topPlaces: sortAndSlice(placesMap),
+    topPlaces: buildTopPlaces(placesMap),
     upcomingBirthdays: upcomingBirthdays.sort((a, b) => a.daysUntil - b.daysUntil).slice(0, 5),
     ageDistribution: {
       ranges: Object.entries(ageDistributionCounts).map(([range, count]) => ({ range, count })),
