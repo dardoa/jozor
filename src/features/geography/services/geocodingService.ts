@@ -1,5 +1,7 @@
 import { LocationData } from '../../../types';
 import { locationCacheService } from './locationCacheService';
+import { localLocationCacheService } from './localLocationCacheService';
+import { normalizePlaceName } from '../../../domain/placeUtils';
 
 // Nominatim usage policy requires max 1 request per second
 const DELAY_BETWEEN_REQUESTS_MS = 1100;
@@ -10,26 +12,7 @@ interface GeocodeQueueItem {
     reject: (error: Error) => void;
 }
 
-export function normalizePlaceName(val: string): string {
-    if (!val) return '';
-    let s = val.toLowerCase();
-
-    // Remove Arabic diacritics (tashkeel)
-    s = s.replace(/[\u064B-\u065F]/g, '');
-
-    // Normalize Arabic letters
-    s = s.replace(/[أإآ]/g, 'ا');
-    s = s.replace(/ة/g, 'ه');
-    s = s.replace(/ى/g, 'ي');
-
-    // Replace punctuation with space
-    s = s.replace(/[,/\\_.،؛|()-]/g, ' ');
-
-    // Remove extra spaces
-    s = s.replace(/\s+/g, ' ').trim();
-
-    return s;
-}
+export { normalizePlaceName };
 
 /**
  * Shortens a full Nominatim display_name to "City, Country" format.
@@ -72,10 +55,20 @@ class GeocodingService {
             const normalizedKey = normalizePlaceName(item.placeName);
 
             try {
+                // Tier 1.5: Browser-local cache. This prevents repeated Nominatim
+                // calls for the same normalized place across app reloads, including
+                // guest sessions that cannot write to the Supabase cache.
+                const localCache = localLocationCacheService.getLocation(normalizedKey);
+                if (localCache) {
+                    item.resolve(localCache);
+                    continue;
+                }
+
                 // Tier 2: Check Supabase Global Cache using normalized key
                 const dbCache = await locationCacheService.getLocation(normalizedKey);
 
                 if (dbCache) {
+                    localLocationCacheService.saveLocation(normalizedKey, dbCache);
                     item.resolve(dbCache);
                     continue;
                 }
@@ -85,6 +78,7 @@ class GeocodingService {
 
                 // Save back to Supabase (Tier 2) immediately using normalizedKey
                 await locationCacheService.saveLocation(normalizedKey, data);
+                localLocationCacheService.saveLocation(normalizedKey, data);
 
                 // Resolve to update Zustand (Tier 1)
                 item.resolve(data);

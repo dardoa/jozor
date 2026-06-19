@@ -1,4 +1,5 @@
 import type { LocationData, Person } from '../types';
+import { resolvePlace } from './placeUtils';
 
 export type GeographicEventKind =
   | 'birth'
@@ -38,32 +39,8 @@ export type MigrationLink = {
   color: string;
 };
 
-const hasResolvedCoordinates = (location?: LocationData) =>
-  location?.status === 'resolved' &&
-  typeof location.lat === 'number' &&
-  typeof location.lng === 'number';
-
 const getDisplayName = (person: Person) =>
   [person.firstName, person.middleName, person.lastName].filter(Boolean).join(' ').trim();
-
-const getResolvedLocation = (
-  placeName: string,
-  locations: Record<string, LocationData>
-) => {
-  const trimmedPlace = placeName.trim();
-  const location = locations[trimmedPlace];
-
-  if (!hasResolvedCoordinates(location)) {
-    return null;
-  }
-
-  return {
-    id: trimmedPlace,
-    name: location.resolvedName || trimmedPlace,
-    latitude: location.lat!,
-    longitude: location.lng!,
-  };
-};
 
 /**
  * Builds event-map points from already-resolved location rows only.
@@ -82,7 +59,7 @@ export const buildEventLocations = (
       return;
     }
 
-    const resolvedLocation = getResolvedLocation(placeName, locations);
+    const resolvedLocation = resolvePlace(placeName, locations);
     if (!resolvedLocation) {
       return;
     }
@@ -149,7 +126,7 @@ export const buildMigrationJourney = (
         return;
       }
 
-      const resolvedLocation = getResolvedLocation(placeName, locations);
+      const resolvedLocation = resolvePlace(placeName, locations);
       if (!resolvedLocation || visitedPlaces.has(resolvedLocation.id)) {
         return;
       }

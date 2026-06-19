@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useAppStore } from '../../store/useAppStore';
+import { normalizePlaceName } from '../../domain/placeUtils';
 import {
   createIntegrityNotificationSpec,
   deliverNotificationWithPolicy,
@@ -120,9 +121,11 @@ export function runDataIntegrityCheck(
     return;
   }
 
-  const missingCount = Array.from(allPlaces).filter(
-    place => !locations?.[place] || locations[place].status === 'pending'
-  ).length;
+  const missingCount = Array.from(allPlaces).filter((place) => {
+    const normalizedPlace = normalizePlaceName(place);
+    const location = locations?.[normalizedPlace] ?? locations?.[place];
+    return !location || location.status === 'pending';
+  }).length;
 
   if (missingCount === 0) {
     updateNotificationTelemetry({

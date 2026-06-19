@@ -56,7 +56,10 @@ export function usePlaceSuggestions(query: string) {
     const localMatches: PlaceSuggestion[] = Object.entries(locations || {})
       .filter(([key, data]) => {
         if (data.status !== 'resolved') return false;
-        return normalizePlaceName(key).includes(normalizedQuery);
+        return (
+          normalizePlaceName(key).includes(normalizedQuery) ||
+          normalizePlaceName(data.resolvedName || '').includes(normalizedQuery)
+        );
       })
       .map(([key, data]) => ({
         displayName: shortenDisplayName(data.resolvedName || key),

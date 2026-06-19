@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { LocationData, Person } from '../../types';
 import { buildEventLocations, buildMigrationJourney } from '../mapJourneyUtils';
+import { normalizePlaceName } from '../placeUtils';
 
 const makeLocation = (location: LocationData): LocationData => location;
 
@@ -146,7 +147,7 @@ describe('mapJourneyUtils', () => {
       const locations = buildEventLocations(mockPeople, mockLocations);
 
       // Cairo location should contain multiple people and events
-      const cairoLoc = locations.find(l => l.id === 'Cairo');
+      const cairoLoc = locations.find(l => l.name === 'Cairo, Egypt');
       expect(cairoLoc).toBeDefined();
       expect(cairoLoc?.latitude).toBe(30.0444);
       expect(cairoLoc?.longitude).toBe(31.2357);
@@ -171,6 +172,52 @@ describe('mapJourneyUtils', () => {
 
       const locations = buildEventLocations(customPeople, mockLocations);
       expect(locations).toHaveLength(0);
+    });
+
+    it('aggregates equivalent raw place spellings under one resolved place', () => {
+      const people = {
+        'person-a': makePerson({
+          id: 'person-a',
+          firstName: 'Arabic',
+          lastName: 'Comma',
+          birthPlace: 'كفرنبل، سوريا',
+          parents: [],
+        }),
+        'person-b': makePerson({
+          id: 'person-b',
+          firstName: 'Arabic',
+          lastName: 'Dash',
+          birthPlace: 'كفرنبل - سوريا',
+          parents: [],
+        }),
+        'person-c': makePerson({
+          id: 'person-c',
+          firstName: 'English',
+          lastName: 'Name',
+          birthPlace: 'Kafranbel, Syria',
+          parents: [],
+        }),
+      };
+
+      const locationData = makeLocation({
+        status: 'resolved',
+        lat: 35.613,
+        lng: 36.56,
+        resolvedName: 'Kafranbel, Syria',
+      });
+
+      const locations = buildEventLocations(people, {
+        [normalizePlaceName('كفرنبل سوريا')]: locationData,
+        [normalizePlaceName('Kafranbel, Syria')]: locationData,
+      });
+
+      expect(locations).toHaveLength(1);
+      expect(locations[0].name).toBe('Kafranbel, Syria');
+      expect(locations[0].people.map(person => person.id)).toEqual([
+        'person-a',
+        'person-b',
+        'person-c',
+      ]);
     });
   });
 
