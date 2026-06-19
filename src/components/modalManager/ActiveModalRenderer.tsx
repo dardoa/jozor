@@ -25,6 +25,7 @@ interface ActiveModalRendererProps {
     | 'onGoogleLogin'
     | 'currentActiveDriveFileId'
     | 'activeTreeId'
+    | 'activePerson'
   >;
   locations: Record<string, LocationData>;
 }
@@ -73,7 +74,7 @@ export const ActiveModalRenderer = ({ modal, locations }: ActiveModalRendererPro
   }
 
   if (modal.activeModal === 'chat') {
-    const person = sourcePersonId ? modal.people[sourcePersonId] : undefined;
+    const person = sourcePersonId ? modal.people[sourcePersonId] : modal.activePerson;
 
     return (
       <AncestorChatModal

@@ -1,5 +1,5 @@
 import { FormEvent, useMemo, useState } from 'react';
-import { Loader2, MessageCircle, Send, X } from 'lucide-react';
+import { AlertCircle, Loader2, MessageCircle, Send, X } from 'lucide-react';
 
 import { OverlayPrimitive } from '../../context/OverlayContext';
 import { startAncestorChat } from '../../services/geminiService';
@@ -30,12 +30,17 @@ export const AncestorChatModal = ({
   const [messages, setMessages] = useState<Message[]>([]);
   const [draft, setDraft] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const labels = useMemo(() => ({
     title: isRtl ? 'الدردشة مع السلف' : 'Chat with ancestor',
     missingPerson: isRtl ? 'تعذر فتح المحادثة لهذا الشخص.' : 'Unable to open chat for this person.',
     placeholder: isRtl ? 'اكتب سؤالك هنا...' : 'Ask a question...',
     send: isRtl ? 'إرسال' : 'Send',
+    thinking: isRtl ? 'يستحضر الرد...' : 'Thinking...',
+    failed: isRtl
+      ? 'تعذر توليد الرد الآن. تحقق من اتصال الذكاء الاصطناعي ثم حاول مرة أخرى.'
+      : 'Unable to generate a reply right now. Check the AI connection and try again.',
     intro: isRtl
       ? 'هذه محادثة تخيلية مبنية على بيانات الشخص المتاحة في الشجرة.'
       : 'This is an imaginative chat based on the available tree data.',
@@ -51,11 +56,14 @@ export const AncestorChatModal = ({
     const nextMessages: Message[] = [...messages, { role: 'user', text }];
     setMessages(nextMessages);
     setDraft('');
+    setErrorMessage('');
     setIsSending(true);
 
     try {
       const response = await startAncestorChat(person, people, nextMessages, text);
       setMessages((current) => [...current, { role: 'model', text: response }]);
+    } catch {
+      setErrorMessage(labels.failed);
     } finally {
       setIsSending(false);
     }
@@ -120,7 +128,15 @@ export const AncestorChatModal = ({
                 <div className="flex justify-start">
                   <div className="inline-flex items-center gap-2 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-panel)] px-4 py-3 text-sm text-[var(--text-muted)]">
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    {isRtl ? 'يستحضر الرد...' : 'Thinking...'}
+                    {labels.thinking}
+                  </div>
+                </div>
+              ) : null}
+              {errorMessage ? (
+                <div className="flex justify-start">
+                  <div className="inline-flex max-w-[82%] items-start gap-2 rounded-2xl border border-[var(--color-danger-200)] bg-[var(--color-danger-50)] px-4 py-3 text-sm leading-6 text-[var(--color-danger-700)]">
+                    <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                    <span>{errorMessage}</span>
                   </div>
                 </div>
               ) : null}
