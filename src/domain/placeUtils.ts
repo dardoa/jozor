@@ -20,7 +20,7 @@ export function normalizePlaceName(value: string): string {
   normalized = normalized.replace(/\u0629/g, '\u0647');
   normalized = normalized.replace(/\u0649/g, '\u064A');
   normalized = normalized.replace(/\u0640/g, '');
-  normalized = normalized.replace(/[\u060C\u061B,\/\\_.|()[\]{}-]/g, ' ');
+  normalized = normalized.replace(/[\u060C\u061B,/\\_.|()[\]{}-]/g, ' ');
   normalized = normalized.replace(/\s+/g, ' ').trim();
 
   return normalized;

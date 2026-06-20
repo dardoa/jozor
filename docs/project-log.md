@@ -732,3 +732,20 @@
 - Applied the normalizer to both AI Proxy and Paddle checkout CORS configuration.
 - Added shared unit tests and endpoint-level regression coverage for polluted Vercel environment values.
 - Kept checkout origin normalization local to the Node function after production verification exposed a Vercel invocation failure from the new shared import boundary.
+
+# 2026-06-20 - Geography place normalization and migration route map
+
+- Centralized person-place extraction across birth, death, burial, residence, address, marriage, custom events, and partner relationship places.
+- Reused the same place extraction path for geocoding sync, map journeys, and data-integrity notifications so equivalent places resolve consistently instead of fragmenting by punctuation or spelling variants.
+- Updated family statistics and consistency place grouping to use canonical place keys and display names.
+- Reworked the geography modal into a unified map workspace with a side panel, search, route/person selection, and event/migration modes.
+- Added true migration-route rendering by aggregating person journeys into curved map paths with route counts and selectable route details.
+- Added focused coverage for centralized place extraction, migration link aggregation, route rendering, and geography modal route summaries.
+
+Deferred geography improvements:
+
+- Tune migration path visuals after wider use: smaller arrowheads, softer selected states, and better curve geometry for short routes.
+- Add a map timeline filter as a separate package after route rendering stabilizes.
+- Add person and branch filters later; branch filtering is intentionally deferred to avoid complicating the first route-map package.
+- Consider route clustering or edge bundling if large trees produce too many overlapping paths.
+- Consider route hover popups only if the side-panel details are not enough in real use.

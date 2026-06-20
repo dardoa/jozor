@@ -138,6 +138,12 @@ const locations: Record<string, LocationData> = {
     resolvedName: 'Aleppo',
     status: 'resolved',
   },
+  Damascus: {
+    lat: 33.5,
+    lng: 36.3,
+    resolvedName: 'Damascus',
+    status: 'resolved',
+  },
 };
 
 describe('GeographicJourneyModal', () => {
@@ -175,5 +181,38 @@ describe('GeographicJourneyModal', () => {
 
     expect(document.querySelector('.journey-label-tiles')).toBeInTheDocument();
     expect(screen.getAllByTestId('tile-layer')).toHaveLength(2);
+  });
+
+  it('renders migration route counters and selected route details', () => {
+    const migratingPerson: Person = {
+      ...person,
+      residence: 'Damascus',
+    };
+
+    render(
+      <GeographicJourneyModal
+        isOpen
+        onClose={vi.fn()}
+        people={{ [migratingPerson.id]: migratingPerson }}
+        locations={locations}
+        language="en"
+        initialMode="migration"
+      />
+    );
+
+    expect(screen.getByText('Routes')).toBeInTheDocument();
+    expect(screen.getByText('Points')).toBeInTheDocument();
+    expect(screen.getByText('Migration Routes')).toBeInTheDocument();
+
+    const damascusText = screen.getAllByText('Damascus').find(element => element.closest('button'));
+    const routeButton = damascusText?.closest('button');
+    expect(routeButton).not.toBeNull();
+    fireEvent.click(routeButton as HTMLButtonElement);
+
+    expect(screen.getByText('Selected route')).toBeInTheDocument();
+    expect(screen.getByText('From')).toBeInTheDocument();
+    expect(screen.getByText('To')).toBeInTheDocument();
+    expect(screen.getByText('Show all paths')).toBeInTheDocument();
+    expect(mockMap.fitBounds).toHaveBeenCalled();
   });
 });

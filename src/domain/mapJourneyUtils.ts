@@ -1,13 +1,8 @@
 import type { LocationData, Person } from '../types';
 import { resolvePlace } from './placeUtils';
+import { collectPersonPlaceEntries, type PersonPlaceKind } from './personPlaceUtils';
 
-export type GeographicEventKind =
-  | 'birth'
-  | 'death'
-  | 'residence'
-  | 'burial'
-  | 'marriage'
-  | 'event';
+export type GeographicEventKind = PersonPlaceKind;
 
 export type GeographicEventLocation = {
   id: string;
@@ -34,13 +29,26 @@ export type MigrationNode = {
 };
 
 export type MigrationLink = {
+  id: string;
   source: MigrationNode;
   target: MigrationNode;
   color: string;
+  count: number;
+  people: Array<{
+    id: string;
+    name: string;
+    year?: number;
+  }>;
 };
 
 const getDisplayName = (person: Person) =>
   [person.firstName, person.middleName, person.lastName].filter(Boolean).join(' ').trim();
+
+const getYearFromDate = (date?: string) => {
+  if (!date) return undefined;
+  const year = Number.parseInt(date.substring(0, 4), 10);
+  return Number.isFinite(year) ? year : undefined;
+};
 
 /**
  * Builds event-map points from already-resolved location rows only.
@@ -88,98 +96,99 @@ export const buildEventLocations = (
   };
 
   Object.values(people).forEach(person => {
-    addLocation(person.birthPlace, person, 'birth');
-    addLocation(person.deathPlace, person, 'death');
-    addLocation(person.residence, person, 'residence');
-    addLocation(person.burialPlace, person, 'burial');
-
-    if (person.marriagePlace?.trim()) {
-      addLocation(person.marriagePlace, person, 'marriage');
-    }
-
-    person.events?.forEach(event => {
-      if (event.place?.trim()) {
-        addLocation(event.place, person, 'event');
-      }
+    collectPersonPlaceEntries(person).forEach(entry => {
+      addLocation(entry.placeName, person, entry.type);
     });
   });
 
   return Array.from(eventLocations.values());
 };
 
-/**
- * Preserves the current migration-map semantics while moving the derivation
- * out of the modal component. Parent-to-child links remain the main narrative.
- */
 export const buildMigrationJourney = (
   people: Record<string, Person>,
   locations: Record<string, LocationData>
 ): { nodes: MigrationNode[]; links: MigrationLink[] } => {
   const nodes: MigrationNode[] = [];
-  const links: MigrationLink[] = [];
+  const linksByRoute = new Map<string, MigrationLink>();
 
   Object.values(people).forEach(person => {
+    if (person.isPrivate) {
+      return;
+    }
+
+    const personName = getDisplayName(person);
     const visitedPlaces = new Set<string>();
+    const itinerary: MigrationNode[] = [];
 
-    const collectPlace = (placeName?: string) => {
-      if (!placeName?.trim()) {
+    const collectPlace = (placeName?: string, date?: string) => {
+      const trimmedPlace = placeName?.trim();
+      if (!trimmedPlace) {
         return;
       }
 
-      const resolvedLocation = resolvePlace(placeName, locations);
-      if (!resolvedLocation || visitedPlaces.has(resolvedLocation.id)) {
+      const resolvedLocation = resolvePlace(trimmedPlace, locations);
+      if (!resolvedLocation) {
         return;
       }
 
-      visitedPlaces.add(resolvedLocation.id);
-      nodes.push({
+      const year = getYearFromDate(date) ?? getYearFromDate(person.birthDate);
+      const node = {
         personId: person.id,
-        name: getDisplayName(person),
+        name: personName,
         locationName: resolvedLocation.name,
         lat: resolvedLocation.latitude,
         lng: resolvedLocation.longitude,
-        year: person.birthDate ? Number.parseInt(person.birthDate.substring(0, 4), 10) || undefined : undefined,
-      });
+        year,
+      };
+
+      if (!visitedPlaces.has(resolvedLocation.id)) {
+        visitedPlaces.add(resolvedLocation.id);
+        nodes.push(node);
+      }
+
+      if (itinerary[itinerary.length - 1]?.locationName !== resolvedLocation.name) {
+        itinerary.push(node);
+      }
     };
 
-    collectPlace(person.birthPlace);
-    collectPlace(person.residence);
-    collectPlace(person.deathPlace);
-    collectPlace(person.burialPlace);
-    person.events?.forEach(event => collectPlace(event.place));
-    Object.values(person.partnerDetails || {}).forEach(partner => {
-      collectPlace(partner.startPlace);
-      collectPlace(partner.endPlace);
+    collectPersonPlaceEntries(person).forEach(entry => {
+      collectPlace(entry.placeName, entry.date);
     });
-  });
 
-  const nodeByPersonId = new Map<string, MigrationNode>();
-  nodes.forEach(node => {
-    if (!nodeByPersonId.has(node.personId)) {
-      nodeByPersonId.set(node.personId, node);
+    for (let index = 1; index < itinerary.length; index += 1) {
+      const source = itinerary[index - 1];
+      const target = itinerary[index];
+
+      if (source.lat === target.lat && source.lng === target.lng) {
+        continue;
+      }
+
+      const routeKey = `${source.locationName}=>${target.locationName}`;
+      const existing = linksByRoute.get(routeKey);
+      const personEntry = {
+        id: person.id,
+        name: personName,
+        year: target.year,
+      };
+
+      if (existing) {
+        if (!existing.people.some(candidate => candidate.id === person.id)) {
+          existing.people.push(personEntry);
+          existing.count = existing.people.length;
+        }
+        continue;
+      }
+
+      linksByRoute.set(routeKey, {
+        id: routeKey,
+        source,
+        target,
+        color: '#8B6914',
+        count: 1,
+        people: [personEntry],
+      });
     }
   });
 
-  Object.values(people).forEach(person => {
-    person.parents.forEach(parentId => {
-      const childNode = nodeByPersonId.get(person.id);
-      const parentNode = nodeByPersonId.get(parentId);
-
-      if (!childNode || !parentNode) {
-        return;
-      }
-
-      if (childNode.lat === parentNode.lat && childNode.lng === parentNode.lng) {
-        return;
-      }
-
-      links.push({
-        source: parentNode,
-        target: childNode,
-        color: '#3b82f6',
-      });
-    });
-  });
-
-  return { nodes, links };
+  return { nodes, links: Array.from(linksByRoute.values()) };
 };

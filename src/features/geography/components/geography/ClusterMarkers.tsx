@@ -25,6 +25,8 @@ const getEventTypeTone = (type: string) => {
       return 'text-amber-300';
     case 'residence':
       return 'text-sky-300';
+    case 'address':
+      return 'text-cyan-300';
     case 'burial':
       return 'text-purple-300';
     default:

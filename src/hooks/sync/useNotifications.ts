@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import { normalizePlaceName } from '../../domain/placeUtils';
+import { collectPersonPlaceNames } from '../../domain/personPlaceUtils';
 import {
   createIntegrityNotificationSpec,
   deliverNotificationWithPolicy,
@@ -107,9 +108,7 @@ export function runDataIntegrityCheck(
 
   const allPlaces = new Set<string>();
   Object.values(people).forEach(person => {
-    if (person.birthPlace?.trim()) allPlaces.add(person.birthPlace.trim());
-    if (person.deathPlace?.trim()) allPlaces.add(person.deathPlace.trim());
-    if (person.residence?.trim()) allPlaces.add(person.residence.trim());
+    collectPersonPlaceNames(person).forEach(place => allPlaces.add(place));
   });
 
   if (allPlaces.size === 0) {

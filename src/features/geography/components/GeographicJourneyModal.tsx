@@ -16,10 +16,7 @@ import {
   buildEventLocations,
   buildMigrationJourney,
   type GeographicEventLocation,
-  type MigrationNode,
 } from '../../../domain/mapJourneyUtils';
-
-// Extracted Pieces
 import { mapStyles } from './geography/MapStyles';
 import { ClusterMarkers } from './geography/ClusterMarkers';
 import { MigrationPathsOverlay } from './geography/MigrationPathsOverlay';
@@ -42,6 +39,23 @@ type GeographicJourneyTranslations = {
   viewOnMap?: string;
 };
 
+const arabicMapCopy = {
+  clearSearch: '\u0645\u0633\u062D \u0627\u0644\u0628\u062D\u062B',
+  from: '\u0645\u0646',
+  to: '\u0625\u0644\u0649',
+  noMatchingItems: '\u0644\u0627 \u062A\u0648\u062C\u062F \u0646\u062A\u0627\u0626\u062C \u0645\u0637\u0627\u0628\u0642\u0629.',
+  peopleCount: '\u0623\u0634\u062E\u0627\u0635',
+  placeLabels: '\u0623\u0633\u0645\u0627\u0621 \u0627\u0644\u0623\u0645\u0627\u0643\u0646',
+  results: '\u0646\u062A\u0627\u0626\u062C',
+  routesCount: '\u0645\u0633\u0627\u0631\u0627\u062A',
+  pointsCount: '\u0646\u0642\u0627\u0637',
+  search: '\u0628\u062D\u062B...',
+  searchItems: '\u0628\u062D\u062B \u0641\u064A \u0639\u0646\u0627\u0635\u0631 \u0627\u0644\u062E\u0631\u064A\u0637\u0629',
+  showAllPaths: '\u0625\u0638\u0647\u0627\u0631 \u062C\u0645\u064A\u0639 \u0627\u0644\u0645\u0633\u0627\u0631\u0627\u062A',
+  migrationRoutes: '\u0645\u0633\u0627\u0631\u0627\u062A \u0627\u0644\u0647\u062C\u0631\u0629',
+  year: '\u0633\u0646\u0629',
+};
+
 const modeButtonClass = (active: boolean) =>
   `inline-flex w-full items-center gap-2 rounded-2xl px-4 py-3 text-xs font-semibold uppercase tracking-[0.16em] transition-all ${
     active
@@ -51,6 +65,13 @@ const modeButtonClass = (active: boolean) =>
 
 const buildPersonName = (person: Person) =>
   [person.firstName, person.middleName, person.lastName].filter(Boolean).join(' ').trim();
+
+const getEventPreview = (location: GeographicEventLocation) =>
+  location.people
+    .slice(0, 2)
+    .map(person => person.name)
+    .filter(Boolean)
+    .join('\u060C ');
 
 export const GeographicJourneyModal: React.FC<GeographicJourneyModalProps> = ({
   isOpen,
@@ -76,6 +97,7 @@ export const GeographicJourneyModal: React.FC<GeographicJourneyModalProps> = ({
   const [hideUIForExport, setHideUIForExport] = useState(false);
   const [showPlaceLabels, setShowPlaceLabels] = useState(false);
   const [selectedPersonId, setSelectedPersonId] = useState<string | null>(null);
+  const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null);
   const [sidebarSearchQuery, setSidebarSearchQuery] = useState('');
   const focusPerson = focusPersonId ? people[focusPersonId] : undefined;
   const scopedPeople = useMemo(
@@ -86,6 +108,7 @@ export const GeographicJourneyModal: React.FC<GeographicJourneyModalProps> = ({
   useEffect(() => {
     setMode(initialMode);
     setSelectedPersonId(null);
+    setSelectedRouteId(null);
     setSidebarSearchQuery('');
   }, [initialMode, isOpen]);
 
@@ -183,25 +206,29 @@ export const GeographicJourneyModal: React.FC<GeographicJourneyModalProps> = ({
         }),
     [eventLocations, normalizedSidebarSearch]
   );
-  const migrationSummaryItems = useMemo(
+  const migrationRouteItems = useMemo(
     () =>
-      [...migrationJourney.nodes]
-        .sort((left, right) => {
-          const yearCompare = (left.year ?? Number.MAX_SAFE_INTEGER) - (right.year ?? Number.MAX_SAFE_INTEGER);
-          return yearCompare || left.name.localeCompare(right.name) || left.locationName.localeCompare(right.locationName);
-        })
-        .filter(node => {
+      [...migrationJourney.links]
+        .sort((left, right) => right.count - left.count || left.source.locationName.localeCompare(right.source.locationName))
+        .filter(link => {
           if (!normalizedSidebarSearch) return true;
           return (
-            node.name.toLocaleLowerCase().includes(normalizedSidebarSearch) ||
-            node.locationName.toLocaleLowerCase().includes(normalizedSidebarSearch) ||
-            String(node.year ?? '').includes(normalizedSidebarSearch)
+            link.source.locationName.toLocaleLowerCase().includes(normalizedSidebarSearch) ||
+            link.target.locationName.toLocaleLowerCase().includes(normalizedSidebarSearch) ||
+            link.people.some(person => person.name.toLocaleLowerCase().includes(normalizedSidebarSearch)) ||
+            String(link.count).includes(normalizedSidebarSearch)
           );
         }),
-    [migrationJourney.nodes, normalizedSidebarSearch]
+    [migrationJourney.links, normalizedSidebarSearch]
   );
-  const summaryItems: Array<GeographicEventLocation | MigrationNode> =
-    mode === 'events' ? eventSummaryItems : migrationSummaryItems;
+  const selectedMigrationRoute = useMemo(
+    () =>
+      selectedRouteId
+        ? migrationJourney.links.find(link => link.id === selectedRouteId) ?? null
+        : null,
+    [migrationJourney.links, selectedRouteId]
+  );
+  const visibleSummaryCount = mode === 'events' ? eventSummaryItems.length : migrationRouteItems.length;
   const maxEventLocationCount = Math.max(1, ...eventLocations.map(location => location.people.length));
   const title = focusPerson
     ? `${buildPersonName(focusPerson) || t.unnamedPerson} - ${t.geography}`
@@ -209,7 +236,10 @@ export const GeographicJourneyModal: React.FC<GeographicJourneyModalProps> = ({
   const subtitle =
     mode === 'events'
       ? `${eventLocations.length} ${t.statistics.uniqueLocations}`
-      : `${migrationJourney.nodes.length} ${geographyText.migrationMap || 'Migration points'}`;
+      : `${migrationJourney.links.length} ${geographyText.migrationMap || 'Migration routes'}`;
+  const sidebarTitle = mode === 'events'
+    ? t.statistics.uniqueLocations
+    : isRtl ? arabicMapCopy.migrationRoutes : 'Migration Routes';
 
   if (!isOpen) {
     return null;
@@ -221,13 +251,13 @@ export const GeographicJourneyModal: React.FC<GeographicJourneyModalProps> = ({
       onClose={onClose}
       id="geographic-journey-modal"
       backdropClassName="fixed inset-0 z-[var(--z-index-modal)] flex items-center justify-center bg-[rgba(24,20,16,0.34)] p-3 backdrop-blur-[2px] sm:p-6"
-      contentClassName="relative z-[calc(var(--z-index-modal)+1)] w-full max-w-[1180px]"
+      contentClassName="relative z-[calc(var(--z-index-modal)+1)] w-full max-w-[1240px]"
     >
       <style>{mapStyles}</style>
 
       <div
         ref={containerRef}
-        className="ds-overlay-card relative flex h-[calc(100dvh-32px)] max-h-[780px] w-full flex-col overflow-hidden rounded-[24px] bg-[#FAF7F2] shadow-[0_34px_90px_rgba(44,24,16,0.24)]"
+        className="ds-overlay-card relative flex h-[calc(100dvh-32px)] max-h-[820px] w-full flex-col overflow-hidden rounded-[24px] bg-[#FAF7F2] shadow-[0_34px_90px_rgba(44,24,16,0.24)]"
         onClick={event => event.stopPropagation()}
       >
         {!hideUIForExport && (
@@ -265,10 +295,10 @@ export const GeographicJourneyModal: React.FC<GeographicJourneyModalProps> = ({
         <div className="flex min-h-0 flex-1 flex-col md:flex-row">
           {!hideUIForExport && (
             <aside
-              className={`flex max-h-[34vh] flex-none flex-col border-b border-[#E3D8C8] bg-[#FCFAF6] p-4 md:max-h-none md:w-[280px] md:border-b-0 md:p-5 ${isRtl ? 'md:border-l' : 'md:border-r'}`}
+              className={`flex max-h-[44vh] flex-none flex-col border-b border-[#E3D8C8] bg-[#FCFAF6] p-4 md:max-h-none md:w-[330px] md:border-b-0 md:p-5 ${isRtl ? 'md:border-l' : 'md:border-r'}`}
               style={{ order: 1 }}
             >
-              <div className="space-y-2">
+              <div className="grid grid-cols-2 gap-2 md:grid-cols-1">
                 <button type="button" onClick={() => setMode('events')} className={modeButtonClass(mode === 'events')}>
                   <MapPin className="h-4 w-4" />
                   {geographyText.viewOnMap || 'View on Map'}
@@ -287,10 +317,11 @@ export const GeographicJourneyModal: React.FC<GeographicJourneyModalProps> = ({
                 type="button"
                 onClick={() => setShowPlaceLabels(value => !value)}
                 className={`mt-4 flex items-center justify-between gap-3 rounded-2xl border border-[#E3D8C8] bg-[#F8F3EB] px-4 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-[#6B5A49] transition-colors hover:bg-[#F2EEE8] ${isRtl ? 'flex-row-reverse' : ''}`}
+                aria-pressed={showPlaceLabels}
               >
                 <span className={`flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
                   <Eye className="h-4 w-4 text-[#8B6914]" />
-                  {isRtl ? 'أسماء الأماكن' : 'Place labels'}
+                  {isRtl ? arabicMapCopy.placeLabels : 'Place labels'}
                 </span>
                 <span className={`h-5 w-9 rounded-full p-0.5 transition-colors ${showPlaceLabels ? 'bg-[#2C1810]' : 'bg-[#DDD2C2]'}`}>
                   <span className={`block h-4 w-4 rounded-full bg-[#FAF7F2] transition-transform ${showPlaceLabels ? (isRtl ? '-translate-x-4' : 'translate-x-4') : ''}`} />
@@ -298,28 +329,86 @@ export const GeographicJourneyModal: React.FC<GeographicJourneyModalProps> = ({
               </button>
 
               <label className="mt-4 block">
-                <span className="sr-only">{isRtl ? 'بحث في عناصر الخريطة' : 'Search map items'}</span>
+                <span className="sr-only">{isRtl ? arabicMapCopy.searchItems : 'Search map items'}</span>
                 <span className={`flex items-center gap-2 rounded-2xl border border-[#E3D8C8] bg-[#FAF7F2] px-3 py-2.5 text-[#7A6A59] ${isRtl ? 'flex-row-reverse' : ''}`}>
                   <Search className="h-4 w-4 flex-none text-[#8B6914]" />
                   <input
                     value={sidebarSearchQuery}
                     onChange={event => setSidebarSearchQuery(event.target.value)}
-                    placeholder={isRtl ? 'بحث...' : 'Search...'}
+                    placeholder={isRtl ? arabicMapCopy.search : 'Search...'}
                     className={`min-w-0 flex-1 bg-transparent text-sm text-[#2C1810] outline-none placeholder:text-[#9A8B7A] ${isRtl ? 'text-right' : 'text-left'}`}
                   />
+                  {sidebarSearchQuery ? (
+                    <button
+                      type="button"
+                      onClick={() => setSidebarSearchQuery('')}
+                      className="flex h-7 w-7 flex-none items-center justify-center rounded-full text-[#7A6A59] transition-colors hover:bg-[#ECE6DC] hover:text-[#2C1810]"
+                      aria-label={isRtl ? arabicMapCopy.clearSearch : 'Clear search'}
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  ) : null}
                 </span>
               </label>
 
-              <div className="mt-5 min-h-0 flex-1 overflow-y-auto pr-1">
-                <h4 className={`mb-3 flex items-center gap-2 text-xs font-medium uppercase tracking-[0.18em] text-[#8B6914] ${isRtl ? 'flex-row-reverse text-right' : ''}`}>
-                  <Users className="h-3.5 w-3.5" />
-                  {mode === 'events'
-                    ? t.statistics.uniqueLocations
-                    : geographyText.migrationMap || 'Migration Map'}
-                </h4>
-                <div className="space-y-3">
+              <div className="mt-5 flex min-h-0 flex-1 flex-col">
+                <div className={`mb-3 flex items-center justify-between gap-3 ${isRtl ? 'flex-row-reverse text-right' : ''}`}>
+                  <h4 className={`flex min-w-0 items-center gap-2 text-xs font-medium uppercase tracking-[0.18em] text-[#8B6914] ${isRtl ? 'flex-row-reverse' : ''}`}>
+                    <Users className="h-3.5 w-3.5 flex-none" />
+                    <span className="truncate">{sidebarTitle}</span>
+                  </h4>
+                  <span className="flex-none rounded-full bg-[#F2EEE8] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#7A6A59]">
+                    {visibleSummaryCount} {isRtl ? arabicMapCopy.results : 'results'}
+                  </span>
+                </div>
+
+                {mode === 'migration' && selectedMigrationRoute ? (
+                  <div className={`mb-3 rounded-2xl border border-[#D8C5A8] bg-[#F8F3EB] px-3 py-3 text-[#2C1810] ${isRtl ? 'text-right' : 'text-left'}`}>
+                    <div className={`flex items-center justify-between gap-3 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                      <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#8B6914]">
+                        {isRtl ? arabicMapCopy.migrationRoutes : 'Selected route'}
+                      </span>
+                      <span className="rounded-full bg-[#EFE7DA] px-2 py-0.5 text-[10px] font-semibold text-[#8B6914]">
+                        {selectedMigrationRoute.count} {isRtl ? arabicMapCopy.peopleCount : 'people'}
+                      </span>
+                    </div>
+                    <div className="mt-3 space-y-2 text-xs">
+                      <div className={`flex gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                        <span className="flex-none text-[#8B6914]">{isRtl ? arabicMapCopy.from : 'From'}</span>
+                        <span className="min-w-0 truncate font-semibold">{selectedMigrationRoute.source.locationName}</span>
+                      </div>
+                      <div className={`flex gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                        <span className="flex-none text-[#8B6914]">{isRtl ? arabicMapCopy.to : 'To'}</span>
+                        <span className="min-w-0 truncate font-semibold">{selectedMigrationRoute.target.locationName}</span>
+                      </div>
+                      <div className="truncate text-[11px] text-[#7A6A59]">
+                        {selectedMigrationRoute.people.slice(0, 4).map(person => person.name).join('\u060C ')}
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
+
+                {mode === 'migration' && !selectedMigrationRoute ? (
+                  <div className={`mb-3 grid grid-cols-2 gap-2 ${isRtl ? 'text-right' : 'text-left'}`}>
+                    <div className="rounded-2xl bg-[#F8F3EB] px-3 py-2">
+                      <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8B6914]">
+                        {isRtl ? arabicMapCopy.routesCount : 'Routes'}
+                      </div>
+                      <div className="mt-1 text-lg font-bold text-[#2C1810]">{migrationJourney.links.length}</div>
+                    </div>
+                    <div className="rounded-2xl bg-[#F8F3EB] px-3 py-2">
+                      <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8B6914]">
+                        {isRtl ? arabicMapCopy.pointsCount : 'Points'}
+                      </div>
+                      <div className="mt-1 text-lg font-bold text-[#2C1810]">{migrationJourney.nodes.length}</div>
+                    </div>
+                  </div>
+                ) : null}
+
+                <div className={`min-h-0 flex-1 space-y-2 overflow-y-auto pr-1 ${isRtl ? 'pl-1 pr-0' : ''}`}>
                   {mode === 'events'
                     ? eventSummaryItems.map(location => {
+                        const previewPeople = getEventPreview(location);
                         return (
                           <button
                             type="button"
@@ -327,15 +416,22 @@ export const GeographicJourneyModal: React.FC<GeographicJourneyModalProps> = ({
                             className={`group w-full rounded-2xl border border-transparent bg-[#F8F3EB] px-3 py-3 text-left transition-colors hover:border-[#D8C5A8] hover:bg-[#F2EEE8] ${isRtl ? 'text-right' : ''}`}
                             onClick={() => mapRef.current?.setView([location.latitude, location.longitude], 10)}
                           >
-                            <div className={`mb-2 flex items-end justify-between gap-3 ${isRtl ? 'flex-row-reverse' : ''}`}>
-                              <span className="truncate text-xs font-bold text-[#2C1810] transition-colors group-hover:text-[#8B6914]">
-                                {location.name}
-                              </span>
-                              <span className="text-[10px] font-semibold text-[#8B6914]">
-                                {location.people.length}
+                            <div className={`flex items-start justify-between gap-3 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                              <div className="min-w-0">
+                                <span className="block truncate text-xs font-bold text-[#2C1810] transition-colors group-hover:text-[#8B6914]">
+                                  {location.name}
+                                </span>
+                                {previewPeople ? (
+                                  <span className="mt-1 block truncate text-[11px] text-[#7A6A59]">
+                                    {previewPeople}
+                                  </span>
+                                ) : null}
+                              </div>
+                              <span className="flex-none rounded-full bg-[#EFE7DA] px-2 py-0.5 text-[10px] font-semibold text-[#8B6914]">
+                                {location.people.length} {isRtl ? arabicMapCopy.peopleCount : 'people'}
                               </span>
                             </div>
-                            <div className="h-1 w-full overflow-hidden rounded-full bg-[#E8E1D8]">
+                            <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-[#E8E1D8]">
                               <div
                                 className="h-full bg-gradient-to-r from-[#C4A882] to-[#8B6914]"
                                 style={{ width: `${Math.min((location.people.length / maxEventLocationCount) * 100, 100)}%` }}
@@ -344,40 +440,61 @@ export const GeographicJourneyModal: React.FC<GeographicJourneyModalProps> = ({
                           </button>
                         );
                       })
-                    : migrationSummaryItems.map((node, index) => {
-                        return (
-                          <button
-                            type="button"
-                            key={`${node.personId}-${node.locationName}-${index}`}
-                            className={`group w-full rounded-2xl border border-transparent bg-[#F8F3EB] px-3 py-3 text-left transition-colors hover:border-[#D8C5A8] hover:bg-[#F2EEE8] ${isRtl ? 'text-right' : ''}`}
-                            onClick={() => {
-                              mapRef.current?.setView([node.lat, node.lng], 8);
-                              setSelectedPersonId(node.personId);
-                            }}
-                          >
-                            <div className="truncate text-xs font-bold text-[#2C1810] transition-colors group-hover:text-[#8B6914]">
-                              {node.name}
+                    : migrationRouteItems.map((link, index) => (
+                        <button
+                          type="button"
+                          key={`${link.id}-${index}`}
+                          className={`group w-full rounded-2xl border px-3 py-3 text-left transition-colors hover:border-[#D8C5A8] hover:bg-[#F2EEE8] ${selectedRouteId === link.id ? 'border-[#C4A882] bg-[#F2EEE8]' : 'border-transparent bg-[#F8F3EB]'} ${isRtl ? 'text-right' : ''}`}
+                          onClick={() => {
+                            const bounds = L.latLngBounds([
+                              [link.source.lat, link.source.lng],
+                              [link.target.lat, link.target.lng],
+                            ]);
+                            mapRef.current?.fitBounds(bounds, { animate: true, maxZoom: 7, padding: [80, 80] });
+                            setSelectedRouteId(link.id);
+                            setSelectedPersonId(null);
+                          }}
+                        >
+                          <div className={`flex items-start justify-between gap-3 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                            <div className="min-w-0">
+                              <div className="truncate text-xs font-bold text-[#2C1810] transition-colors group-hover:text-[#8B6914]">
+                                {link.source.locationName}
+                              </div>
+                              <div className="mt-1 truncate text-[11px] text-[#7A6A59]">
+                                {link.target.locationName}
+                              </div>
+                              <div className="mt-1 truncate text-[10px] text-[#9A8B7A]">
+                                {link.people.slice(0, 2).map(person => person.name).join('، ')}
+                              </div>
                             </div>
-                            <div className="mt-1 text-[10px] uppercase tracking-[0.16em] text-[#7A6A59]">
-                              {node.locationName}
-                            </div>
-                          </button>
-                        );
-                      })}
+                            <span className="flex-none rounded-full bg-[#EFE7DA] px-2 py-0.5 text-[10px] font-semibold text-[#8B6914]">
+                              {link.count} {isRtl ? arabicMapCopy.peopleCount : 'people'}
+                            </span>
+                          </div>
+                          <div className={`mt-2 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#8B6914] ${isRtl ? 'flex-row-reverse' : ''}`}>
+                            <span className="h-px flex-1 bg-[#D8C5A8]" />
+                            <Route className="h-3 w-3" />
+                            <span className="h-px flex-1 bg-[#D8C5A8]" />
+                          </div>
+                        </button>
+                      ))}
                 </div>
 
-                {(mode === 'events' ? eventSummaryItems.length : migrationSummaryItems.length) === 0 ? (
+                {visibleSummaryCount === 0 ? (
                   <div className={`rounded-2xl border border-dashed border-[#D8C5A8] bg-[#FAF7F2] px-4 py-5 text-sm text-[#7A6A59] ${isRtl ? 'text-right' : 'text-left'}`}>
-                    {isRtl ? 'لا توجد نتائج مطابقة.' : 'No matching map items.'}
+                    {isRtl ? arabicMapCopy.noMatchingItems : 'No matching map items.'}
                   </div>
                 ) : null}
 
-                {mode === 'migration' && selectedPersonId ? (
+                {mode === 'migration' && selectedRouteId ? (
                   <button
-                    onClick={() => setSelectedPersonId(null)}
+                    onClick={() => {
+                      setSelectedRouteId(null);
+                      setSelectedPersonId(null);
+                    }}
                     className="mt-4 w-full rounded-2xl bg-[#F2EEE8] px-3 py-2 text-xs font-semibold text-[#8B6914] transition-colors hover:bg-[#ECE6DC]"
                   >
-                    {isRtl ? 'إظهار جميع المسارات' : 'Show all paths'}
+                    {isRtl ? arabicMapCopy.showAllPaths : 'Show all paths'}
                   </button>
                 ) : null}
               </div>
@@ -385,161 +502,96 @@ export const GeographicJourneyModal: React.FC<GeographicJourneyModalProps> = ({
           )}
 
           <div className="relative min-h-0 flex-1" style={{ order: 2 }}>
-          <MapContainer
-            center={[20, 0]}
-            zoom={3}
-            zoomControl={false}
-            className="h-full w-full"
-            ref={map => {
-              mapRef.current = map;
-              setMapInstance(map);
-            }}
-            preferCanvas={true}
-            renderer={canvasRenderer}
-          >
-            <MapLabelPane />
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-              url="https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png"
-              crossOrigin="anonymous"
-            />
-            {showPlaceLabels ? (
+            <MapContainer
+              center={[20, 0]}
+              zoom={3}
+              zoomControl={false}
+              className="h-full w-full"
+              ref={map => {
+                mapRef.current = map;
+                setMapInstance(map);
+              }}
+              preferCanvas={true}
+              renderer={canvasRenderer}
+            >
+              <MapLabelPane />
               <TileLayer
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-                url="https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png"
-                pane="journey-labels"
-                className="journey-label-tiles"
+                url="https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png"
                 crossOrigin="anonymous"
               />
-            ) : null}
-
-            {mode === 'events' && mapInstance ? (
-              <ClusterMarkers
-                cluster={superclusterIndex}
-                points={eventLocations}
-                map={mapInstance}
-                onSelectPerson={onSelectPerson}
-              />
-            ) : null}
-
-            {mode === 'migration' ? (
-              <>
-                {migrationJourney.nodes.map(node => (
-                  <Marker
-                    key={`${node.personId}-${node.locationName}`}
-                    position={[node.lat, node.lng]}
-                    icon={L.divIcon({
-                      html: `<div style="width:18px;height:18px;border-radius:9999px;background:#FAF7F2;border:1px solid #C4A882;box-shadow:0 12px 24px rgba(44,24,16,0.14);display:flex;align-items:center;justify-content:center;"><div style="width:8px;height:8px;border-radius:9999px;background:#8B6914;"></div></div>`,
-                      className: '',
-                      iconSize: L.point(18, 18),
-                    })}
-                    eventHandlers={{
-                      click: () => {
-                        setSelectedPersonId(node.personId === selectedPersonId ? null : node.personId);
-                      },
-                    }}
-                  >
-                    <Popup>
-                      <div className={`p-1 ${isRtl ? 'text-right' : 'text-left'}`}>
-                        <h3 className="font-bold text-[#2C1810]">{node.name}</h3>
-                        <p className="text-sm text-[#6B5A49]">{node.locationName}</p>
-                        {node.year ? (
-                          <p className="text-xs font-semibold text-[#8B6914]">{node.year}</p>
-                        ) : null}
-                      </div>
-                    </Popup>
-                  </Marker>
-                ))}
-                <MigrationPathsOverlay links={migrationJourney.links} selectedPersonId={selectedPersonId} />
-              </>
-            ) : null}
-          </MapContainer>
-
-          {!hideUIForExport && (
-            <div className={`hidden absolute bottom-8 z-[var(--z-index-tips)] w-64 rounded-[24px] border border-[#C4A882] bg-[rgba(250,247,242,0.94)] p-6 shadow-[0_24px_56px_rgba(44,24,16,0.16)] ${isRtl ? 'left-8' : 'right-8'}`}>
-              <h4 className="mb-4 flex items-center gap-2 text-xs font-medium uppercase tracking-[0.2em] text-[#8B6914]">
-                <Users className="h-3 w-3" />
-                {mode === 'events'
-                  ? t.statistics.uniqueLocations
-                  : geographyText.migrationMap || 'Migration Map'}
-              </h4>
-              <div className="space-y-4">
-                {mode === 'events'
-                  ? summaryItems.map(item => {
-                      const location = item as GeographicEventLocation;
-                      return (
-                        <div
-                          key={location.id}
-                          className="group cursor-pointer"
-                          onClick={() => mapRef.current?.setView([location.latitude, location.longitude], 10)}
-                        >
-                          <div className="mb-1 flex items-end justify-between">
-                            <span className="truncate text-xs font-bold text-[#2C1810] transition-colors group-hover:text-[#8B6914]">
-                              {location.name}
-                            </span>
-                            <span className="text-[10px] font-semibold text-[#8B6914]">
-                              {location.people.length}
-                            </span>
-                          </div>
-                          <div className="h-1 w-full overflow-hidden rounded-full bg-[#E8E1D8]">
-                            <div
-                              className="h-full bg-gradient-to-r from-[#C4A882] to-[#8B6914]"
-                              style={{
-                                width: `${
-                                  eventLocations[0]
-                                    ? Math.min((location.people.length / eventLocations[0].people.length) * 100, 100)
-                                    : 0
-                                  }%`,
-                                }}
-                            />
-                          </div>
-                        </div>
-                      );
-                    })
-                  : summaryItems.map((item, index) => {
-                      const node = item as MigrationNode;
-                      return (
-                        <div
-                          key={`${node.personId}-${node.locationName}-${index}`}
-                          className="group cursor-pointer"
-                          onClick={() => {
-                            mapRef.current?.setView([node.lat, node.lng], 8);
-                            setSelectedPersonId(node.personId);
-                          }}
-                        >
-                          <div className="truncate text-xs font-bold text-[#2C1810] transition-colors group-hover:text-[#8B6914]">
-                            {node.name}
-                          </div>
-                          <div className="mt-1 text-[10px] uppercase tracking-[0.16em] text-[#7A6A59]">
-                            {node.locationName}
-                          </div>
-                        </div>
-                      );
-                    })}
-              </div>
-
-              {mode === 'migration' && selectedPersonId ? (
-                <button
-                  onClick={() => setSelectedPersonId(null)}
-                  className="mt-4 w-full rounded-lg bg-[#F2EEE8] px-3 py-1.5 text-xs font-semibold text-[#8B6914] transition-colors hover:bg-[#ECE6DC]"
-                >
-                  {isRtl ? 'إظهار جميع المسارات' : 'Show all paths'}
-                </button>
+              {showPlaceLabels ? (
+                <TileLayer
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                  url="https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png"
+                  pane="journey-labels"
+                  className="journey-label-tiles"
+                  crossOrigin="anonymous"
+                />
               ) : null}
-            </div>
-          )}
 
-          {!hideUIForExport && (
-            <button
-              onClick={handleExportSnapshot}
-              disabled={isExporting}
-              className={`export-btn absolute bottom-4 z-[var(--z-index-tips)] flex items-center gap-3 rounded-2xl bg-[#2C1810] px-5 py-3 text-xs font-semibold uppercase tracking-widest text-[#FAF7F2] shadow-[0_20px_40px_rgba(44,24,16,0.2)] transition-all hover:bg-[#4A2E14] active:scale-95 disabled:opacity-50 sm:hidden ${isRtl ? 'right-4' : 'left-4'}`}
-            >
-              {isExporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
-              {isExporting ? t.capturing : t.exportImage}
-            </button>
-          )}
-        </div>
+              {mode === 'events' && mapInstance ? (
+                <ClusterMarkers
+                  cluster={superclusterIndex}
+                  points={eventLocations}
+                  map={mapInstance}
+                  onSelectPerson={onSelectPerson}
+                />
+              ) : null}
+
+              {mode === 'migration' ? (
+                <>
+                  {migrationJourney.nodes.map(node => (
+                    <Marker
+                      key={`${node.personId}-${node.locationName}`}
+                      position={[node.lat, node.lng]}
+                      icon={L.divIcon({
+                        html: '<div style="width:18px;height:18px;border-radius:9999px;background:#FAF7F2;border:1px solid #C4A882;box-shadow:0 12px 24px rgba(44,24,16,0.14);display:flex;align-items:center;justify-content:center;"><div style="width:8px;height:8px;border-radius:9999px;background:#8B6914;"></div></div>',
+                        className: '',
+                        iconSize: L.point(18, 18),
+                      })}
+                      eventHandlers={{
+                        click: () => {
+                          setSelectedPersonId(node.personId === selectedPersonId ? null : node.personId);
+                          setSelectedRouteId(null);
+                        },
+                      }}
+                    >
+                      <Popup>
+                        <div className={`p-1 ${isRtl ? 'text-right' : 'text-left'}`}>
+                          <h3 className="font-bold text-[#2C1810]">{node.name}</h3>
+                          <p className="text-sm text-[#6B5A49]">{node.locationName}</p>
+                          {node.year ? (
+                            <p className="text-xs font-semibold text-[#8B6914]">{node.year}</p>
+                          ) : null}
+                        </div>
+                      </Popup>
+                    </Marker>
+                  ))}
+                  <MigrationPathsOverlay
+                    links={migrationJourney.links}
+                    selectedPersonId={selectedPersonId}
+                    selectedRouteId={selectedRouteId}
+                    onSelectRoute={(routeId) => {
+                      setSelectedRouteId(routeId);
+                      setSelectedPersonId(null);
+                    }}
+                  />
+                </>
+              ) : null}
+            </MapContainer>
+
+            {!hideUIForExport && (
+              <button
+                onClick={handleExportSnapshot}
+                disabled={isExporting}
+                className={`export-btn absolute bottom-4 z-[var(--z-index-tips)] flex items-center gap-3 rounded-2xl bg-[#2C1810] px-5 py-3 text-xs font-semibold uppercase tracking-widest text-[#FAF7F2] shadow-[0_20px_40px_rgba(44,24,16,0.2)] transition-all hover:bg-[#4A2E14] active:scale-95 disabled:opacity-50 sm:hidden ${isRtl ? 'right-4' : 'left-4'}`}
+              >
+                {isExporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
+                {isExporting ? t.capturing : t.exportImage}
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </OverlayPrimitive>

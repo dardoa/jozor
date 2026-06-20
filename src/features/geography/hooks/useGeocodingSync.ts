@@ -3,35 +3,13 @@ import { useAppStore } from '../../../store/useAppStore';
 import { geocodingService } from '../services/geocodingService';
 import { Person } from '../../../types';
 import { normalizePlaceName } from '../../../domain/placeUtils';
+import { collectPersonPlaceNames } from '../../../domain/personPlaceUtils';
 
 /**
  * Extracts all unique location strings from a Person object.
  */
 function extractLocationsFromPerson(person: Person): string[] {
-    const places = new Set<string>();
-
-    if (person.birthPlace?.trim()) places.add(person.birthPlace.trim());
-    if (person.deathPlace?.trim()) places.add(person.deathPlace.trim());
-    if (person.burialPlace?.trim()) places.add(person.burialPlace.trim());
-    if (person.residence?.trim()) places.add(person.residence.trim());
-    if (person.marriagePlace?.trim()) places.add(person.marriagePlace.trim());
-
-    if (person.events && Array.isArray(person.events)) {
-        person.events.forEach(event => {
-            if (event.place?.trim()) {
-                places.add(event.place.trim());
-            }
-        });
-    }
-
-    if (person.partnerDetails) {
-        Object.values(person.partnerDetails).forEach(partnerDetails => {
-            if (partnerDetails.startPlace?.trim()) places.add(partnerDetails.startPlace.trim());
-            if (partnerDetails.endPlace?.trim()) places.add(partnerDetails.endPlace.trim());
-        });
-    }
-
-    return Array.from(places);
+    return collectPersonPlaceNames(person);
 }
 
 export function useGeocodingSync() {
