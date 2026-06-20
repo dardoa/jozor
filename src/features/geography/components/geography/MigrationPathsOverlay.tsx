@@ -2,6 +2,14 @@ import { useEffect, useRef, useState } from 'react';
 import { useMap, useMapEvents } from 'react-leaflet';
 import type { MigrationLink } from '../../../../domain/mapJourneyUtils';
 
+const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(value, max));
+
+const getRouteCurveOffset = (distance: number, index: number) => {
+  const baseCurve = clamp(distance * 0.16, 8, 68);
+  const stagger = ((index % 3) - 1) * clamp(distance * 0.015, 0, 5);
+  return baseCurve + stagger;
+};
+
 export const MigrationPathsOverlay = ({
   links,
   selectedPersonId,
@@ -60,25 +68,25 @@ export const MigrationPathsOverlay = ({
       <defs>
         <marker
           id="migration-arrow"
-          markerWidth="10"
-          markerHeight="10"
-          refX="7"
+          markerWidth="6"
+          markerHeight="6"
+          refX="5.1"
           refY="3"
           orient="auto"
           markerUnits="strokeWidth"
         >
-          <path d="M0,0 L0,6 L8,3 z" fill="#8B6914" fillOpacity="0.76" />
+          <path d="M0,0.7 L0,5.3 L5.2,3 z" fill="#8B6914" fillOpacity="0.72" />
         </marker>
         <marker
           id="migration-arrow-muted"
-          markerWidth="10"
-          markerHeight="10"
-          refX="7"
-          refY="3"
+          markerWidth="5.4"
+          markerHeight="5.4"
+          refX="4.7"
+          refY="2.7"
           orient="auto"
           markerUnits="strokeWidth"
         >
-          <path d="M0,0 L0,6 L8,3 z" fill="#B8AA96" fillOpacity="0.55" />
+          <path d="M0,0.7 L0,4.7 L4.8,2.7 z" fill="#B8AA96" fillOpacity="0.46" />
         </marker>
       </defs>
       {visibleLinks.map((link, index) => {
@@ -87,7 +95,7 @@ export const MigrationPathsOverlay = ({
         const dx = targetPoint.x - sourcePoint.x;
         const dy = targetPoint.y - sourcePoint.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
-        const curve = Math.max(24, Math.min(distance * 0.22, 92));
+        const curve = getRouteCurveOffset(distance, index);
         const normalX = distance === 0 ? 0 : -dy / distance;
         const normalY = distance === 0 ? 0 : dx / distance;
         const controlX = (sourcePoint.x + targetPoint.x) / 2 + normalX * curve;
@@ -95,29 +103,45 @@ export const MigrationPathsOverlay = ({
         const path = `M${sourcePoint.x},${sourcePoint.y} Q${controlX},${controlY} ${targetPoint.x},${targetPoint.y}`;
         const isHighlighted = selectedRouteId === link.id || Boolean(selectedPersonId);
         const strength = link.count / maxCount;
-        const strokeWidth = isHighlighted ? 4 : 2.2 + strength * 3.8;
+        const strokeWidth = isHighlighted ? 3.8 : 1.7 + strength * 2.8;
         const strokeColor = isHighlighted ? '#8B6914' : link.color;
-        const strokeOpacity = isHighlighted ? 0.9 : 0.42 + strength * 0.38;
+        const strokeOpacity = isHighlighted ? 0.86 : 0.34 + strength * 0.34;
         const routeTitle = `${link.source.locationName} -> ${link.target.locationName} (${link.count})`;
 
         return (
-          <path
+          <g
             key={`${link.source.personId}-${link.target.personId}-${index}`}
-            d={path}
-            fill="none"
-            markerEnd={`url(#${isHighlighted ? 'migration-arrow' : 'migration-arrow-muted'})`}
             onClick={() => {
               onSelectRoute?.(link.id);
             }}
-            pointerEvents="visibleStroke"
-            stroke={strokeColor}
-            strokeLinecap="round"
-            strokeWidth={strokeWidth}
-            strokeOpacity={strokeOpacity}
             style={{ cursor: 'pointer' }}
           >
-            <title>{routeTitle}</title>
-          </path>
+            <path
+              aria-hidden="true"
+              d={path}
+              fill="none"
+              pointerEvents="visibleStroke"
+              stroke="transparent"
+              strokeLinecap="round"
+              strokeWidth={Math.max(strokeWidth + 10, 14)}
+            />
+            <path
+              d={path}
+              fill="none"
+              markerEnd={`url(#${isHighlighted ? 'migration-arrow' : 'migration-arrow-muted'})`}
+              pointerEvents="visibleStroke"
+              stroke={strokeColor}
+              strokeLinecap="round"
+              strokeWidth={strokeWidth}
+              strokeOpacity={strokeOpacity}
+              style={{
+                filter: isHighlighted ? 'drop-shadow(0 2px 5px rgba(139,105,20,0.18))' : 'none',
+                transition: 'stroke-opacity 160ms ease, stroke-width 160ms ease',
+              }}
+            >
+              <title>{routeTitle}</title>
+            </path>
+          </g>
         );
       })}
     </svg>
