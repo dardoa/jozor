@@ -45,10 +45,12 @@ export function applyIncomingOps(params: {
         name?: string;
         settings?: TreeSettings;
     };
+    peopleChanged: boolean;
 } {
     const { ops, deletedPersonIds, applyOperationToMap, onSkipBlacklisted, excludeClientId } = params;
 
-    let people = { ...params.people };
+    let people = params.people;
+    let peopleChanged = false;
     let maxVersion = params.lastSyncedVersion;
     const syncingNodeIdsToRemove: string[] = [];
     const deletedPersonIdsToRecord: string[] = [];
@@ -174,7 +176,10 @@ export function applyIncomingOps(params: {
             }
         } else {
             const updated = applyOperationToMap(people, op);
-            if (updated) people = updated;
+            if (updated) {
+                people = updated;
+                peopleChanged = true;
+            }
             if (op.type === 'DELETE_NODE' && targetId) {
                 deletedPersonIdsToRecord.push(targetId);
             }
@@ -184,5 +189,5 @@ export function applyIncomingOps(params: {
         if (targetId) syncingNodeIdsToRemove.push(targetId);
     });
 
-    return { people, maxVersion, syncingNodeIdsToRemove, deletedPersonIdsToRecord, treeMetadata };
+    return { people, maxVersion, syncingNodeIdsToRemove, deletedPersonIdsToRecord, treeMetadata, peopleChanged };
 }

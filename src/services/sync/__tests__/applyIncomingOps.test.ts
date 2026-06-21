@@ -78,6 +78,7 @@ describe('applyIncomingOps', () => {
         });
         expect(result.maxVersion).toBe(8);
         expect(result.deletedPersonIdsToRecord).toEqual([]);
+        expect(result.peopleChanged).toBe(false);
     });
 
     it('returns deleted person ids from incoming delete operations for persistence', () => {
@@ -102,6 +103,7 @@ describe('applyIncomingOps', () => {
         expect(result.people).toEqual({});
         expect(result.deletedPersonIdsToRecord).toEqual(['person-1']);
         expect(result.maxVersion).toBe(9);
+        expect(result.peopleChanged).toBe(true);
     });
 
     it('keeps intentionally empty tree names and merges accepted settings metadata', () => {
@@ -222,6 +224,40 @@ describe('applyIncomingOps', () => {
         expect(result.people).toEqual({ 'person-1': root });
         expect(result.maxVersion).toBe(12);
         expect(result.syncingNodeIdsToRemove).toEqual(['person-1']);
+        expect(result.peopleChanged).toBe(false);
+    });
+
+    it('does not report people changes when operations from the current client are skipped', () => {
+        const applyOperationToMap = vi.fn();
+        const op: DeltaOperation = {
+            tree_id: 'tree-1',
+            user_id: 'user-1',
+            type: 'UPDATE_PROP',
+            payload: {
+                id: 'person-1',
+                client_id: 'client-current',
+                updates: {
+                    firstName: 'Local echo',
+                },
+            },
+            version_seq: 13,
+        };
+        const people = { 'person-1': root };
+
+        const result = applyIncomingOps({
+            people,
+            ops: [op],
+            deletedPersonIds: new Set(),
+            lastSyncedVersion: 12,
+            applyOperationToMap,
+            excludeClientId: 'client-current',
+            currentTreeSettings: DEFAULT_TREE_SETTINGS,
+        });
+
+        expect(applyOperationToMap).not.toHaveBeenCalled();
+        expect(result.people).toBe(people);
+        expect(result.maxVersion).toBe(13);
+        expect(result.peopleChanged).toBe(false);
     });
 });
 

@@ -60,8 +60,18 @@ export class DeltaOperationApplier {
                             state.pendingOperations
                         );
 
+                        const hasRemoteChanges =
+                            result.peopleChanged ||
+                            result.treeMetadata.focusId !== undefined ||
+                            result.treeMetadata.name !== undefined ||
+                            result.treeMetadata.settings !== undefined;
+
                         state.setConfirmedPeople(result.people);
                         state.setPeople(projected, false);
+
+                        if (hasRemoteChanges) {
+                            state.markHistoryStale();
+                        }
 
                         if (result.treeMetadata.focusId !== undefined && result.people[result.treeMetadata.focusId]) {
                             state.setFocusId(result.treeMetadata.focusId);

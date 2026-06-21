@@ -106,5 +106,33 @@ describe('smartChecker', () => {
       )
     ).toContain('تاريخ');
   });
+
+  it('blocks cyclic relationship links', () => {
+    // C is parent of B, B is parent of A. So C is grandparent (ancestor) of A.
+    const personA = buildPerson({ id: 'A', parents: ['B'] });
+    const personB = buildPerson({ id: 'B', parents: ['C'] });
+    const personC = buildPerson({ id: 'C', parents: [] });
+    const people = { A: personA, B: personB, C: personC };
+
+    // Linking C as a child of A creates a cycle: A -> B -> C -> A
+    expect(
+      checkRelationshipAction({
+        currentPersonId: 'A',
+        existingId: 'C',
+        relationType: 'child',
+        people,
+      })
+    ).toEqual([{ code: 'relationship_cycle', severity: 'error', personId: 'A' }]);
+
+    // Linking A as a parent of C also creates a cycle: C -> A -> B -> C
+    expect(
+      checkRelationshipAction({
+        currentPersonId: 'C',
+        existingId: 'A',
+        relationType: 'parent',
+        people,
+      })
+    ).toEqual([{ code: 'relationship_cycle', severity: 'error', personId: 'C' }]);
+  });
 });
 

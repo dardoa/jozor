@@ -31,7 +31,14 @@ export function calculateHighlightedPath(
         if (people[parentId]) branch.add(parentId);
     });
 
+    const paternalVisited = new Set<string>();
     while (paternalCursorId) {
+        if (paternalVisited.has(paternalCursorId)) {
+            console.warn('[calculateHighlightedPath] Directed cycle detected in paternal lineage:', paternalCursorId);
+            break;
+        }
+        paternalVisited.add(paternalCursorId);
+
         const father = people[paternalCursorId];
         if (!father) break;
 

@@ -9,7 +9,8 @@ export type SmartCheckCode =
   | 'mother_under_13'
   | 'marriage_child_gap_under_5_months'
   | 'missing_birth_date'
-  | 'missing_photo';
+  | 'missing_photo'
+  | 'relationship_cycle';
 
 export interface SmartCheckIssue {
   code: SmartCheckCode;
@@ -86,15 +87,46 @@ export const checkVitalDateConsistency = (person: Person): SmartCheckIssue[] => 
   return [];
 };
 
+const hasAncestorRelationship = (
+  people: Record<string, Person> | undefined,
+  startId: string,
+  targetId: string,
+  visited = new Set<string>()
+): boolean => {
+  if (!people) return false;
+  if (startId === targetId) return true;
+  if (visited.has(startId)) return false;
+  visited.add(startId);
+
+  const person = people[startId];
+  if (!person || !person.parents) return false;
+
+  for (const parentId of person.parents) {
+    if (hasAncestorRelationship(people, parentId, targetId, visited)) {
+      return true;
+    }
+  }
+  return false;
+};
+
 export const checkRelationshipAction = (params: {
   currentPersonId: string;
   existingId: string;
   relationType: 'parent' | 'spouse' | 'child' | null;
+  people?: Record<string, Person>;
 }): SmartCheckIssue[] => {
-  const { currentPersonId, existingId, relationType } = params;
+  const { currentPersonId, existingId, relationType, people } = params;
 
   if (relationType === 'parent' && currentPersonId === existingId) {
     return [{ code: 'self_parent', severity: 'error', personId: currentPersonId }];
+  }
+
+  if (relationType === 'parent' && people && hasAncestorRelationship(people, existingId, currentPersonId)) {
+    return [{ code: 'relationship_cycle', severity: 'error', personId: currentPersonId }];
+  }
+
+  if (relationType === 'child' && people && hasAncestorRelationship(people, currentPersonId, existingId)) {
+    return [{ code: 'relationship_cycle', severity: 'error', personId: currentPersonId }];
   }
 
   return [];
@@ -159,6 +191,7 @@ export const describeSmartCheckIssue = (
       marriage_child_gap_under_5_months: `تحذير: الفارق بين الزواج وولادة ${name} أقل من 5 أشهر.`,
       missing_birth_date: `اقتراح: أضف تاريخ ميلاد لـ ${name}.`,
       missing_photo: `اقتراح: أضف صورة لـ ${name}.`,
+      relationship_cycle: 'لا يمكن إنشاء العلاقة لأنها تؤدي إلى حلقة دورية (أبناء مرتبطين كآباء).',
     },
     en: {
       death_before_birth: 'Cannot save a death date earlier than the birth date.',
@@ -167,6 +200,7 @@ export const describeSmartCheckIssue = (
       marriage_child_gap_under_5_months: `Warning: the gap between marriage and ${name}'s birth is under 5 months.`,
       missing_birth_date: `Suggestion: add a birth date for ${name}.`,
       missing_photo: `Suggestion: add a photo for ${name}.`,
+      relationship_cycle: 'Cannot create relationship because it creates a cycle (descendants linked as ancestors).',
     },
   } as const;
 

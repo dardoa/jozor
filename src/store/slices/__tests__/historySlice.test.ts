@@ -122,4 +122,44 @@ describe('historySlice memory budget', () => {
     expect(state.historyEstimatedBytes).toBe(0);
     expect(state.historyStepLimit).toBe(getHistoryStepLimit(5_000));
   });
+
+  it('blocks undo and redo when history is marked stale', () => {
+    const first = buildPeople(1, 'first');
+    const second = buildPeople(1, 'second');
+
+    act(() => {
+      useAppStore.setState({ people: first });
+      useAppStore.getState().pushToHistory(first);
+      useAppStore.setState({ people: second });
+    });
+
+    expect(useAppStore.getState().isHistoryStale).toBe(false);
+
+    // Mark history stale
+    act(() => {
+      useAppStore.getState().markHistoryStale();
+    });
+    expect(useAppStore.getState().isHistoryStale).toBe(true);
+
+    // Try undoing while stale
+    let undoRes;
+    act(() => {
+      undoRes = useAppStore.getState().undo();
+    });
+    expect(undoRes).toEqual({ success: false, blockedReason: 'stale_history' });
+    expect(useAppStore.getState().people).toBe(second); // State unchanged
+
+    // Reset stale flag directly
+    act(() => {
+      useAppStore.setState({ isHistoryStale: false });
+    });
+    expect(useAppStore.getState().isHistoryStale).toBe(false);
+
+    // Try undoing now (should succeed)
+    act(() => {
+      undoRes = useAppStore.getState().undo();
+    });
+    expect(undoRes).toEqual({ success: true });
+    expect(useAppStore.getState().people).toBe(first);
+  });
 });

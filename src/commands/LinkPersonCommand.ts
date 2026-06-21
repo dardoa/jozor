@@ -33,6 +33,7 @@ export class LinkPersonCommand implements TreeCommand {
             currentPersonId: focusId,
             existingId: this.existingId,
             relationType: this.type,
+            people: preLinkPeople,
         });
 
         const language = store.language;

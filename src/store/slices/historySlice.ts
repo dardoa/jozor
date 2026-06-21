@@ -8,12 +8,14 @@ export interface HistorySlice {
     future: Record<string, Person>[];
     historyStepLimit: number;
     historyEstimatedBytes: number;
+    isHistoryStale: boolean;
     
     // Actions
     pushToHistory: (people: Record<string, Person>) => void;
-    undo: () => void;
-    redo: () => void;
+    undo: () => { success: boolean; blockedReason?: 'stale_history' };
+    redo: () => { success: boolean; blockedReason?: 'stale_history' };
     clearHistory: () => void;
+    markHistoryStale: () => void;
 }
 
 export const MAX_HISTORY_STEPS = 50;
@@ -72,6 +74,7 @@ export const createHistorySlice: StateCreator<AppStore, [["zustand/devtools", ne
     future: [],
     historyStepLimit: MAX_HISTORY_STEPS,
     historyEstimatedBytes: 0,
+    isHistoryStale: false,
 
     pushToHistory: (people) => {
         // Deep clone not needed as people objects are replaced on mutation in familySlice
@@ -82,14 +85,18 @@ export const createHistorySlice: StateCreator<AppStore, [["zustand/devtools", ne
 
             return {
                 ...trimmed,
+                isHistoryStale: false,
                 ...getHistoryMetrics(trimmed.past, trimmed.future, peopleCount),
             };
         });
     },
 
     undo: () => {
-        const { past, people, peopleVersion } = get();
-        if (past.length === 0) return;
+        const { past, people, peopleVersion, isHistoryStale } = get();
+        if (isHistoryStale) {
+            return { success: false, blockedReason: 'stale_history' };
+        }
+        if (past.length === 0) return { success: false };
 
         const previous = past[past.length - 1];
         const newPast = past.slice(0, -1);
@@ -103,11 +110,15 @@ export const createHistorySlice: StateCreator<AppStore, [["zustand/devtools", ne
             ...trimmed,
             ...getHistoryMetrics(trimmed.past, trimmed.future, peopleCount),
         });
+        return { success: true };
     },
 
     redo: () => {
-        const { future, people, peopleVersion } = get();
-        if (future.length === 0) return;
+        const { future, people, peopleVersion, isHistoryStale } = get();
+        if (isHistoryStale) {
+            return { success: false, blockedReason: 'stale_history' };
+        }
+        if (future.length === 0) return { success: false };
 
         const next = future[0];
         const newFuture = future.slice(1);
@@ -121,6 +132,7 @@ export const createHistorySlice: StateCreator<AppStore, [["zustand/devtools", ne
             ...trimmed,
             ...getHistoryMetrics(trimmed.past, trimmed.future, peopleCount),
         });
+        return { success: true };
     },
 
     clearHistory: () => {
@@ -128,8 +140,13 @@ export const createHistorySlice: StateCreator<AppStore, [["zustand/devtools", ne
         set({
             past: [],
             future: [],
+            isHistoryStale: false,
             historyStepLimit: getHistoryStepLimit(peopleCount),
             historyEstimatedBytes: 0,
         });
+    },
+
+    markHistoryStale: () => {
+        set({ isHistoryStale: true });
     },
 });
