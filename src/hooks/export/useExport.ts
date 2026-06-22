@@ -226,7 +226,7 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
             let outputName = '';
 
             try {
-                setExportStatus({ isExporting: true, format: 'pdf' });
+                setExportStatus({ isExporting: true, format });
 
                 const { PublishingPipeline } = await import('../../features/publishing/services/PublishingPipeline');
                 const { TemplateRegistry } = await import('../../features/publishing/services/TemplateRegistry');
