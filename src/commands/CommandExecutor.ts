@@ -24,6 +24,7 @@ export class CommandExecutor {
 
         try {
             const previousPeople = useAppStore.getState().people;
+            const previousRelationships = { ...useAppStore.getState().relationships };
 
             // Execute the command synchronously or asynchronously
             const result = await Promise.resolve(command.execute(context));
@@ -36,9 +37,24 @@ export class CommandExecutor {
                     previousPeople[person.id] !== person
                 ));
                 
-                // Update local offline cache incrementally. Full snapshots remain owned by
-                // import/load/reconcile flows rather than routine commands.
+                // Update local offline cache incrementally.
                 localTreePersistenceService.saveChangedPeople(changedPeople);
+                
+                // Save and delete relationships incrementally
+                const updatedRelationships = useAppStore.getState().relationships || {};
+                const changedRelationships = Object.values(updatedRelationships).filter((edge) => (
+                    !previousRelationships[edge.id] || previousRelationships[edge.id] !== edge
+                ));
+                const deletedRelationshipIds = Object.keys(previousRelationships).filter((id) => (
+                    !updatedRelationships[id]
+                ));
+
+                if (changedRelationships.length > 0) {
+                    await storageService.saveRelationships(changedRelationships);
+                }
+                if (deletedRelationshipIds.length > 0) {
+                    await storageService.deleteRelationships(deletedRelationshipIds);
+                }
                 
                 // Update search index for immediate searchability
                 void searchService.updateSearchIndex(Object.values(updatedPeople));

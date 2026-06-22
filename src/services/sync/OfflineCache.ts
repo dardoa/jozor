@@ -55,12 +55,12 @@ export class OfflineCache {
         await storageService.updatePendingOperationRetryCounts(updates);
     }
 
-    public async saveFullTree(people: Record<string, Person>): Promise<void> {
-        await storageService.saveFullTree(people);
+    public async saveFullTree(people: Record<string, Person>, treeId?: string): Promise<void> {
+        await storageService.saveFullTree(people, treeId);
     }
 
-    public async createSnapshot(people: Record<string, Person>): Promise<void> {
-        await storageService.createSnapshot(people);
+    public async createSnapshot(people: Record<string, Person>, treeId?: string): Promise<void> {
+        await storageService.createSnapshot(people, treeId);
     }
 }
 

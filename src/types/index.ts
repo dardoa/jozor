@@ -7,3 +7,5 @@ export * from './props';
 export * from './ui';
 export * from './state';
 export * from './ai';
+export * from './relationship';
+

@@ -1,9 +1,9 @@
 import type { SettingValue, PendingOperationRec, PersonTombstoneRec } from '../utils/db';
-import { Person } from '../types';
+import { db } from '../utils/db';
+import { Person, RelationshipEdge, deriveRelationshipsFromPeople } from '../types';
 import { logError, logInfo } from '../utils/errorLogger';
 
 const getLocalDb = async () => {
-    const { db } = await import('../utils/db');
     return db;
 };
 
@@ -13,17 +13,14 @@ const normalizeTreeScope = (treeId?: string | null) => treeId || LOCAL_TREE_SCOP
 
 export const storageService = {
     // --- People Data ---
-    async saveFullTree(people: Record<string, Person>) {
-        // Optimization: bulkPut is efficient for existing records.
-        // To handle deletions, we can either clear() (slow) or fetch IDs and delete orphans.
-        // Let's use bulkPut for the main work. For deletions, the app logic usually handles
-        // it via deletePerson, but this serves as a safety catch.
+    async saveFullTree(people: Record<string, Person>, treeId?: string) {
         try {
             const db = await getLocalDb();
             const peopleArray = Object.values(people);
-            await db.transaction('rw', db.people, async () => {
+            await db.transaction('rw', [db.people, db.relationships], async () => {
                 if (peopleArray.length === 0) {
                     await db.people.clear();
+                    await db.relationships.clear();
                     return;
                 }
 
@@ -37,6 +34,15 @@ export const storageService = {
                     const toDelete = dbIds.filter(id => typeof id === 'string' && !memIds.has(id));
                     if (toDelete.length > 0) await db.people.bulkDelete(toDelete);
                 }
+
+                // Reconstruct and save relationships
+                const activeTreeId = treeId || 'default-tree';
+                const derivedEdges = deriveRelationshipsFromPeople(activeTreeId, people);
+                await db.relationships.where('treeId').equals(activeTreeId).delete();
+                const edgesArray = Object.values(derivedEdges);
+                if (edgesArray.length > 0) {
+                    await db.relationships.bulkPut(edgesArray);
+                }
             });
         } catch (e) {
             logError('storageService saveFullTree', e, {
@@ -47,11 +53,9 @@ export const storageService = {
         }
     },
 
-    async createSnapshot(people: Record<string, Person>) {
+    async createSnapshot(people: Record<string, Person>, treeId?: string) {
         try {
-            await this.saveFullTree(people);
-            // Operations that successfully flush are deleted by their localId in deltaSyncService.
-            // This snapshot acts as a base tree consolidation point.
+            await this.saveFullTree(people, treeId);
             logInfo('storageService createSnapshot', 'Memory snapshot created and consolidated.', {
                 operationType: 'create_snapshot'
             });
@@ -125,6 +129,29 @@ export const storageService = {
             .equals(treeScope)
             .toArray();
         return rows.map((row) => row.person_id);
+    },
+
+    // --- Relationships Data ---
+    async saveRelationships(relationships: RelationshipEdge[]) {
+        if (relationships.length === 0) return;
+        const db = await getLocalDb();
+        await db.relationships.bulkPut(relationships);
+    },
+
+    async deleteRelationships(ids: string[]) {
+        if (ids.length === 0) return;
+        const db = await getLocalDb();
+        await db.relationships.bulkDelete(ids);
+    },
+
+    async loadRelationships(treeId: string): Promise<RelationshipEdge[]> {
+        const db = await getLocalDb();
+        return await db.relationships.where('treeId').equals(treeId).toArray();
+    },
+
+    async clearRelationships() {
+        const db = await getLocalDb();
+        await db.relationships.clear();
     },
 
     // --- Settings & Metadata ---

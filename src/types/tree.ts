@@ -41,6 +41,7 @@ export interface TreeSettings {
     isLowGraphicsMode?: boolean;
     enableForcePhysics?: boolean;
     enableTimeOffset?: boolean;
+    ownerPersonId?: string | null;
     sync_metadata?: {
         lastUpdated?: Record<string, string>;
         lastUpdatedOps?: Record<string, { client_id: string; client_version: number }>;

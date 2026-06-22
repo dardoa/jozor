@@ -39,6 +39,10 @@ export interface Person {
     residence: string;
     isDeceased: boolean;
 
+    currentResidence?: string;
+    occupation?: string;
+    workplace?: string;
+
     profession: string;
     company: string;
     interests: string;

@@ -1,5 +1,5 @@
 import Dexie, { Table } from 'dexie';
-import { Person } from '../types';
+import { Person, RelationshipEdge, deriveRelationshipsFromPeople } from '../types';
 import { ExportHistoryEntry } from '../features/publishing';
 
 export type SettingValue = string | number | boolean | object | null;
@@ -31,6 +31,7 @@ export class JozorDatabase extends Dexie {
     pending_operations!: Table<PendingOperationRec, number>;
     person_tombstones!: Table<PersonTombstoneRec, [string, string]>;
     export_history!: Table<ExportHistoryEntry, number>;
+    relationships!: Table<RelationshipEdge, string>;
 
     constructor() {
         super('JozorDB');
@@ -59,6 +60,32 @@ export class JozorDatabase extends Dexie {
             pending_operations: '++id, tree_id',
             person_tombstones: '[tree_id+person_id], tree_id, person_id, deleted_at',
             export_history: '++id, publicationId, treeId, templateId, exportType, createdAt'
+        });
+
+        this.version(5).stores({
+            people: 'id',
+            settings: 'key',
+            pending_operations: '++id, tree_id',
+            person_tombstones: '[tree_id+person_id], tree_id, person_id, deleted_at',
+            export_history: '++id, publicationId, treeId, templateId, exportType, createdAt',
+            relationships: 'id, treeId, fromPersonId, toPersonId, type, [treeId+fromPersonId], [treeId+toPersonId], [treeId+type]'
+        }).upgrade(async tx => {
+            const people = await tx.table('people').toArray();
+            const peopleMap: Record<string, Person> = {};
+            people.forEach(p => {
+                peopleMap[p.id] = p;
+            });
+
+            const settings = await tx.table('settings').toArray();
+            const activeTreeIdEntry = settings.find(s => s.key === 'currentTreeId');
+            const treeId = typeof activeTreeIdEntry?.value === 'string' ? activeTreeIdEntry.value : 'default-tree';
+
+            const derivedEdges = deriveRelationshipsFromPeople(treeId, peopleMap);
+            const edgesArray = Object.values(derivedEdges);
+
+            if (edgesArray.length > 0) {
+                await tx.table('relationships').bulkPut(edgesArray);
+            }
         });
     }
 }

@@ -1,5 +1,5 @@
 import { StateCreator } from 'zustand';
-import { Person } from '../../types';
+import { Person, RelationshipEdge, RelationshipEdgeType, syncRelationshipsWithPeople } from '../../types';
 import { DEFAULT_PERSON_TEMPLATE } from '../../constants';
 import { createPerson } from '../../utils/familyLogic';
 import { applyFamilyDomainAction, reduceFamilyDomain } from '../../domain/FamilyDomainReducer';
@@ -18,6 +18,7 @@ const getInitialFamilyState = () => {
     };
     return {
         people: { [initialId]: initialPerson },
+        relationships: {} as Record<string, RelationshipEdge>,
         focusId: initialId,
     };
 };
@@ -27,6 +28,7 @@ export interface FamilySlice {
     // State
     people: Record<string, Person>;
     confirmedPeople: Record<string, Person>;
+    relationships: Record<string, RelationshipEdge>;
     locations: Record<string, import('../../types').LocationData>;
     focusId: string;
     searchTarget: { id: string; timestamp: number } | null;
@@ -42,6 +44,8 @@ export interface FamilySlice {
     setTreeName: (name: string) => void;
     setPeople: (people: Record<string, Person>, addToHistory?: boolean) => void;
     setConfirmedPeople: (people: Record<string, Person>) => void;
+    setRelationships: (relationships: Record<string, RelationshipEdge>) => void;
+    updateRelationshipType: (id: string, type: RelationshipEdgeType) => void;
     setDeletedPersonIds: (ids: Iterable<string>) => void;
     addDeletedPersonId: (id: string) => void;
     setFocusId: (id: string) => void;
@@ -79,38 +83,74 @@ const filterDeletedPeople = (
     );
 };
 
-export const createFamilySlice: StateCreator<AppStore, [["zustand/devtools", never]], [], FamilySlice> = (set, get) => {
+export const createFamilySlice: StateCreator<AppStore, [["zustand/devtools", never]], [], FamilySlice> = (originalSet, get) => {
+    const set: typeof originalSet = (partial, replace) => {
+        originalSet((state) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const nextState = typeof partial === 'function' ? (partial as any)(state) : partial;
+            const updated = { ...nextState };
+            
+            if (updated.people && updated.people !== state.people) {
+                const treeId = updated.currentTreeId || state.currentTreeId || 'default-tree';
+                const currentRels = updated.relationships || state.relationships || {};
+                updated.relationships = syncRelationshipsWithPeople(currentRels, treeId, updated.people);
+            }
+            
+            if (updated.confirmedPeople && updated.confirmedPeople !== state.confirmedPeople) {
+                const treeId = updated.currentTreeId || state.currentTreeId || 'default-tree';
+                const currentRels = updated.relationships || state.relationships || {};
+                updated.relationships = syncRelationshipsWithPeople(currentRels, treeId, updated.confirmedPeople);
+            }
+            
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            return updated as any;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        }, replace as any);
+    };
+
     const initial = getInitialFamilyState();
     return {
         // Initial State
         people: initial.people,
         confirmedPeople: initial.people,
+        relationships: initial.relationships,
         locations: {},
         focusId: initial.focusId,
-    searchTarget: null,
-    treeName: 'Family Lineage',
-    peopleVersion: 0,
-    deletedPersonIds: new Set<string>(),
+        searchTarget: null,
+        treeName: 'Family Lineage',
+        peopleVersion: 0,
+        deletedPersonIds: new Set<string>(),
 
-    // Actions
-    setTreeName: (name) => set({ treeName: name }),
+        // Actions
+        setTreeName: (name) => set({ treeName: name }),
 
-    setPeople: (people, addToHistory = true) => {
-        const current = get().people;
-        const deletedIds = get().deletedPersonIds;
-        const filteredPeople = filterDeletedPeople(people, deletedIds);
+        setPeople: (people, addToHistory = true) => {
+            const current = get().people;
+            const deletedIds = get().deletedPersonIds;
+            const filteredPeople = filterDeletedPeople(people, deletedIds);
 
-        if (addToHistory) get().pushToHistory(current);
+            if (addToHistory) get().pushToHistory(current);
 
-        set((state) => ({
-            confirmedPeople: filteredPeople,
-            people: filteredPeople,
-            peopleVersion: state.peopleVersion + 1,
-            focusId: resolveValidFocusId(filteredPeople, state.focusId),
-        }));
-    },
+            set((state) => ({
+                confirmedPeople: filteredPeople,
+                people: filteredPeople,
+                peopleVersion: state.peopleVersion + 1,
+                focusId: resolveValidFocusId(filteredPeople, state.focusId),
+            }));
+        },
 
-    setConfirmedPeople: (people) => set({ confirmedPeople: people }),
+        setConfirmedPeople: (people) => set({ confirmedPeople: people }),
+
+        setRelationships: (relationships) => set({ relationships }),
+
+        updateRelationshipType: (id, type) => {
+            const edge = get().relationships[id];
+            if (!edge) return;
+            const updatedEdge = { ...edge, type, updatedAt: new Date().toISOString() };
+            set((state) => ({
+                relationships: { ...state.relationships, [id]: updatedEdge },
+            }));
+        },
 
     setDeletedPersonIds: (ids) => {
         const deletedPersonIds = new Set(ids);

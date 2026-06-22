@@ -10,8 +10,20 @@ const dbMock = vi.hoisted(() => {
     bulkDelete: vi.fn(),
   };
 
+  const relationships = {
+    clear: vi.fn(),
+    bulkPut: vi.fn(),
+    delete: vi.fn(),
+    where: vi.fn().mockImplementation(() => ({
+      equals: vi.fn().mockImplementation(() => ({
+        delete: vi.fn().mockResolvedValue(undefined),
+      })),
+    })),
+  };
+
   return {
     people,
+    relationships,
     transaction: vi.fn(async (_mode: string, _table: unknown, callback: () => Promise<void>) => {
       await callback();
     }),
@@ -77,6 +89,8 @@ describe('storageService', () => {
       primaryKeys: vi.fn().mockResolvedValue([]),
     });
     dbMock.people.bulkDelete.mockResolvedValue(undefined);
+    dbMock.relationships.clear.mockResolvedValue(undefined);
+    dbMock.relationships.bulkPut.mockResolvedValue(undefined);
   });
 
   it('saves the full tree and orphan cleanup in one IndexedDB transaction', async () => {
@@ -88,7 +102,7 @@ describe('storageService', () => {
 
     await storageService.saveFullTree({ 'person-1': person });
 
-    expect(dbMock.transaction).toHaveBeenCalledWith('rw', dbMock.people, expect.any(Function));
+    expect(dbMock.transaction).toHaveBeenCalledWith('rw', [dbMock.people, dbMock.relationships], expect.any(Function));
     expect(dbMock.people.bulkPut).toHaveBeenCalledWith([person]);
     expect(dbMock.people.bulkDelete).toHaveBeenCalledWith(['deleted-person']);
   });
@@ -96,7 +110,7 @@ describe('storageService', () => {
   it('clears local people inside the transaction when the full tree is empty', async () => {
     await storageService.saveFullTree({});
 
-    expect(dbMock.transaction).toHaveBeenCalledWith('rw', dbMock.people, expect.any(Function));
+    expect(dbMock.transaction).toHaveBeenCalledWith('rw', [dbMock.people, dbMock.relationships], expect.any(Function));
     expect(dbMock.people.clear).toHaveBeenCalled();
     expect(dbMock.people.bulkPut).not.toHaveBeenCalled();
   });
