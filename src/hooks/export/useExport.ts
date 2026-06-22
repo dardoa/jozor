@@ -177,7 +177,68 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
         [buildExportArchive, people, svgRef]
     );
 
-    return { handleExport };
+    const handlePublishingExport = useCallback(
+        async (options: { templateId: string; format: 'png' | 'pdf' }) => {
+            const { templateId, format } = options;
+            const {
+                setExportStatus,
+                focusId
+            } = useAppStore.getState();
+
+            try {
+                setExportStatus({ isExporting: true, format: 'pdf' });
+
+                const { PublishingPipeline } = await import('../../features/publishing/services/PublishingPipeline');
+                const { TemplateRegistry } = await import('../../features/publishing/services/TemplateRegistry');
+                const { PosterRenderer } = await import('../../features/publishing/renderers/PosterRenderer');
+                const { PdfRenderer } = await import('../../features/publishing/renderers/PdfRenderer');
+
+                const template = TemplateRegistry.getTemplate(templateId);
+                const rootPersonId = focusId || Object.keys(people)[0];
+                if (!rootPersonId) {
+                    throw new Error('No root person found for the export.');
+                }
+
+                const request = {
+                    templateId,
+                    rootPersonId,
+                    scope: {
+                        type: (templateId.includes('book') ? 'all' : 'ancestor') as 'all' | 'ancestor',
+                        generationsDepth: templateId.includes('book') ? 3 : 4,
+                    },
+                };
+                const doc = PublishingPipeline.composeDocument(request, people);
+                const placedDoc = PublishingPipeline.layoutDocument(doc, template);
+
+                if (format === 'png') {
+                    const browserCanvasFactory = {
+                        createCanvas(w: number, h: number) {
+                            const canvas = document.createElement('canvas');
+                            canvas.width = w;
+                            canvas.height = h;
+                            return canvas;
+                        }
+                    };
+                    const canvas = PosterRenderer.renderToCanvas(placedDoc, browserCanvasFactory, template.theme);
+                    let dataUrl = canvas.toDataURL('image/png');
+                    dataUrl = await applyWatermark(dataUrl, 'JOZOR FAMILY PUBLISHING', 'image/png');
+                    downloadFile(dataUrl, `${doc.title}.png`, 'image/png');
+                } else {
+                    const pdfInstance = PdfRenderer.renderToPdf(placedDoc, template.theme);
+                    pdfInstance.save(`${doc.title}.pdf`);
+                }
+            } catch (e: unknown) {
+                logError('PUBLISHING_EXPORT_FAILED', e, { showToast: false, metadata: { templateId, format } });
+                const message = e instanceof Error ? e.message : 'Check console';
+                showToast.error(`Failed: ${message}`);
+            } finally {
+                setExportStatus({ isExporting: false });
+            }
+        },
+        [people]
+    );
+
+    return { handleExport, handlePublishingExport };
 };
 
 /**

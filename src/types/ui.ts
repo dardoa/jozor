@@ -28,6 +28,9 @@ export interface HelpTranslations {
     resetZoom: string;
     fitToScreen: string;
     advancedSettings: string;
+    searchPlaceholder: string;
+    noResults: string;
+    allCategories: string;
 }
 
 export interface HistoryControlsProps {
@@ -104,6 +107,7 @@ export interface HeaderGlobalActionsProps {
 
 export interface ExportActionsProps {
     handleExport: (type: ExportType) => Promise<void>;
+    handlePublishingExport?: (options: { templateId: string; format: 'png' | 'pdf' }) => Promise<void>;
 }
 
 export interface SearchProps {

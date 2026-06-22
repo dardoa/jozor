@@ -11,11 +11,15 @@ import {
   RefreshCw,
   Save,
   Trash2,
+  BookOpen,
+  Download,
+  Sparkles,
 } from 'lucide-react';
 
 import type { DriveFile, ExportType } from '../../../types';
 import type { TranslationSchema } from '../../../utils/translationLoader';
 import { showToast } from '../../../utils/showToast';
+import { useAppStore } from '../../../store/useAppStore';
 
 interface ExportCloudPanelProps {
   canManageCloud: boolean;
@@ -30,6 +34,7 @@ interface ExportCloudPanelProps {
   onOverwriteDriveFile: (fileId: string) => Promise<void> | void;
   onDeleteDriveFile: (fileId: string) => Promise<void> | void;
   onRunExport: (type: ExportType) => Promise<void>;
+  onRunPublishingExport?: (options: { templateId: string; format: 'png' | 'pdf' }) => Promise<void>;
   hasSessionError: boolean;
   isAuthorized: boolean;
   onGoogleLogin: () => void;
@@ -85,6 +90,7 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
   onOverwriteDriveFile,
   onDeleteDriveFile,
   onRunExport,
+  onRunPublishingExport,
   hasSessionError,
   isAuthorized,
   onGoogleLogin,
@@ -97,6 +103,7 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
   const [newFileName, setNewFileName] = useState('');
   const [confirmOverwriteId, setConfirmOverwriteId] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const language = useAppStore((state) => state.language);
 
   const handleExport = useCallback(
     async (type: ExportType) => {
@@ -107,6 +114,15 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
       await onRunExport(type);
     },
     [onCloseVault, onRunExport]
+  );
+
+  const handlePublishingExport = useCallback(
+    async (options: { templateId: string; format: 'png' | 'pdf' }) => {
+      onCloseVault();
+      await waitForDrawerDismissal();
+      await onRunPublishingExport?.(options);
+    },
+    [onCloseVault, onRunPublishingExport]
   );
 
   const sortedFiles = useMemo(
@@ -217,6 +233,147 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
             >
               {t.vaultActivityLog}
             </button>
+          </div>
+        </div>
+      </section>
+
+      <section className="rounded-[20px] border border-[var(--primary-500)]/20 bg-gradient-to-br from-[var(--surface-panel)] via-[var(--surface-panel)] to-[var(--primary-500)]/5 p-5 shadow-sm relative overflow-hidden">
+        {/* Decorative background glow */}
+        <div className="absolute -right-16 -top-16 h-36 w-36 rounded-full bg-[var(--primary-500)]/5 blur-3xl pointer-events-none" />
+        
+        <div className="flex items-center gap-3">
+          <div className="rounded-xl bg-[var(--primary-500)]/10 p-2.5 text-[var(--primary-600)]">
+            <Sparkles className="h-5 w-5" />
+          </div>
+          <div>
+            <h4 className="text-[17px] font-bold tracking-tight text-[var(--text-main)]">
+              {language === 'ar' ? 'نظام النشر والطباعة (جذور 1.0)' : 'Publishing & Printing Engine (Jozor 1.0)'}
+            </h4>
+            <p className="mt-1 text-xs text-[var(--text-muted)]">
+              {language === 'ar' 
+                ? 'تصدير شجرتك باستخدام محرك التخطيط التلقائي وتوزيع الصفحات الذكي.' 
+                : 'Export your tree using the automated publishing layouts and page distribution.'}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-5 space-y-4">
+          {/* Template 1: Classic Family Book */}
+          <div className="flex flex-col gap-4 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-subtle)] p-4 transition-all hover:border-[var(--primary-500)]/30 hover:shadow-sm">
+            <div className="flex items-start gap-3">
+              <div className="mt-0.5 rounded-xl bg-[var(--surface-panel)] p-2 text-[var(--primary-600)]">
+                <BookOpen className="h-5 w-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h5 className="text-sm font-bold text-[var(--text-main)]">
+                    {language === 'ar' ? 'كتاب العائلة الكلاسيكي المصغر' : 'Classic Family Book Manuscript'}
+                  </h5>
+                  <span className="rounded-full bg-[var(--primary-500)]/10 px-2 py-0.5 text-[10px] font-semibold text-[var(--primary-600)]">
+                    A4 PDF
+                  </span>
+                </div>
+                <p className="mt-1 text-[11px] leading-relaxed text-[var(--text-muted)]">
+                  {language === 'ar' 
+                    ? 'كتاب عائلي أنيق من 4 صفحات: غلاف ملكي، مقدمة توثيقية، شجرة الأسلاف (3 أجيال)، والخط الزمني للأحداث.'
+                    : 'An elegant 4-page family book: royal cover, documentation intro, ancestor tree (3 generations), and events timeline.'}
+                </p>
+              </div>
+            </div>
+            <div className="flex justify-end border-t border-[var(--border-soft)] pt-3">
+              <button
+                type="button"
+                onClick={() => void handlePublishingExport({ templateId: 'classic-book-manuscript', format: 'pdf' })}
+                className="flex items-center gap-2 rounded-xl bg-[var(--primary-600)] hover:bg-[var(--primary-700)] text-white px-4 py-2 text-xs font-bold transition-all hover:brightness-105 active:scale-[0.98] shadow-sm shadow-[var(--primary-600)]/10"
+              >
+                <Download className="h-3.5 w-3.5" />
+                {language === 'ar' ? 'تحميل ملف PDF المتجهة' : 'Download Vector PDF'}
+              </button>
+            </div>
+          </div>
+
+          {/* Template 2: Classic Ancestor Poster */}
+          <div className="flex flex-col gap-4 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-subtle)] p-4 transition-all hover:border-[var(--primary-500)]/30 hover:shadow-sm">
+            <div className="flex items-start gap-3">
+              <div className="mt-0.5 rounded-xl bg-[var(--surface-panel)] p-2 text-[var(--primary-600)]">
+                <ImageIcon className="h-5 w-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h5 className="text-sm font-bold text-[var(--text-main)]">
+                    {language === 'ar' ? 'شجرة الأسلاف الكلاسيكية الدافئة' : 'Classic Ancestor Poster'}
+                  </h5>
+                  <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-600">
+                    {language === 'ar' ? 'ثيم دافئ' : 'Warm Theme'}
+                  </span>
+                </div>
+                <p className="mt-1 text-[11px] leading-relaxed text-[var(--text-muted)]">
+                  {language === 'ar' 
+                    ? 'تصميم بوستر تقليدي مريح للعين، يعتمد على نبرات لونية هادئة (4 أجيال)، ملائم للطباعة الورقية والتأطير.'
+                    : 'Traditional cozy poster design featuring warm vintage tones (4 generations), perfect for print and framing.'}
+                </p>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 border-t border-[var(--border-soft)] pt-3">
+              <button
+                type="button"
+                onClick={() => void handlePublishingExport({ templateId: 'classic-ancestor-poster', format: 'png' })}
+                className="flex items-center gap-1.5 rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] hover:bg-[var(--surface-hover)] text-[var(--text-main)] px-3 py-2 text-xs font-bold transition-all active:scale-[0.98]"
+              >
+                <Download className="h-3.5 w-3.5 text-[var(--text-secondary)]" />
+                {language === 'ar' ? 'تنزيل PNG' : 'Download PNG'}
+              </button>
+              <button
+                type="button"
+                onClick={() => void handlePublishingExport({ templateId: 'classic-ancestor-poster', format: 'pdf' })}
+                className="flex items-center gap-1.5 rounded-xl bg-[var(--primary-600)] hover:bg-[var(--primary-700)] text-white px-3 py-2 text-xs font-bold transition-all hover:brightness-105 active:scale-[0.98]"
+              >
+                <Download className="h-3.5 w-3.5" />
+                {language === 'ar' ? 'تنزيل PDF' : 'Download PDF'}
+              </button>
+            </div>
+          </div>
+
+          {/* Template 3: Modern Ancestor Poster */}
+          <div className="flex flex-col gap-4 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-subtle)] p-4 transition-all hover:border-[var(--primary-500)]/30 hover:shadow-sm">
+            <div className="flex items-start gap-3">
+              <div className="mt-0.5 rounded-xl bg-[var(--surface-panel)] p-2 text-[var(--primary-600)]">
+                <Sparkles className="h-5 w-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h5 className="text-sm font-bold text-[var(--text-main)]">
+                    {language === 'ar' ? 'شجرة الأسلاف العصرية الداكنة' : 'Modern Ancestor Poster'}
+                  </h5>
+                  <span className="rounded-full bg-indigo-500/10 px-2 py-0.5 text-[10px] font-semibold text-indigo-600">
+                    {language === 'ar' ? 'ثيم داكن' : 'Dark Theme'}
+                  </span>
+                </div>
+                <p className="mt-1 text-[11px] leading-relaxed text-[var(--text-muted)]">
+                  {language === 'ar' 
+                    ? 'تصميم شجرة عصري بألوان داكنة ونظام ألوان ذكي يبرز التباين والعمق (4 أجيال) للتعليق الإلكتروني والطباعة الفاخرة.'
+                    : 'Modern dark-themed poster design utilizing contrasting elements (4 generations) for screens or premium prints.'}
+                </p>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 border-t border-[var(--border-soft)] pt-3">
+              <button
+                type="button"
+                onClick={() => void handlePublishingExport({ templateId: 'modern-ancestor-poster', format: 'png' })}
+                className="flex items-center gap-1.5 rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] hover:bg-[var(--surface-hover)] text-[var(--text-main)] px-3 py-2 text-xs font-bold transition-all active:scale-[0.98]"
+              >
+                <Download className="h-3.5 w-3.5 text-[var(--text-secondary)]" />
+                {language === 'ar' ? 'تنزيل PNG' : 'Download PNG'}
+              </button>
+              <button
+                type="button"
+                onClick={() => void handlePublishingExport({ templateId: 'modern-ancestor-poster', format: 'pdf' })}
+                className="flex items-center gap-1.5 rounded-xl bg-[var(--primary-600)] hover:bg-[var(--primary-700)] text-white px-3 py-2 text-xs font-bold transition-all hover:brightness-105 active:scale-[0.98]"
+              >
+                <Download className="h-3.5 w-3.5" />
+                {language === 'ar' ? 'تنزيل PDF' : 'Download PDF'}
+              </button>
+            </div>
           </div>
         </div>
       </section>

@@ -8,10 +8,11 @@ export function useAppExportBindings(
 ): {
   svgRef: React.RefObject<SVGSVGElement | null>;
   handleExport: ExportActionsProps['handleExport'];
+  handlePublishingExport?: ExportActionsProps['handlePublishingExport'];
   exportActions: ExportActionsProps;
 } {
   const svgRef = useRef<SVGSVGElement | null>(null);
-  const { handleExport: rawHandleExport } = useExport(people, svgRef);
+  const { handleExport: rawHandleExport, handlePublishingExport } = useExport(people, svgRef);
   const handleExport = useDebugExportHandler({
     people,
     svgRef,
@@ -21,8 +22,10 @@ export function useAppExportBindings(
   return {
     svgRef,
     handleExport,
+    handlePublishingExport,
     exportActions: {
       handleExport,
+      handlePublishingExport,
     },
   };
 }

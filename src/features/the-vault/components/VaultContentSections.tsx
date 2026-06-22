@@ -87,6 +87,7 @@ export const VaultBackupsContent = ({ context }: { context: VaultRenderContext }
         onOverwriteDriveFile={(fileId) => context.auth.handleOverwriteExistingDriveFile(fileId)}
         onDeleteDriveFile={(fileId) => context.auth.handleDeleteDriveFile(fileId)}
         onRunExport={(type) => context.exportActions.handleExport(type)}
+        onRunPublishingExport={(options) => context.exportActions.handlePublishingExport ? context.exportActions.handlePublishingExport(options) : Promise.resolve()}
         hasSessionError={context.auth.hasSessionError}
         isAuthorized={context.auth.isAuthorized}
         onGoogleLogin={() => context.auth.onLogin()}

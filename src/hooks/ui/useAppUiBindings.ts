@@ -11,12 +11,14 @@ interface UseAppUiBindingsOptions {
   modals: ModalStateAndActions;
   handleOpenModal: (type: ModalRouteType, context?: ModalOpenContext) => void;
   handleExport: ExportActionsProps['handleExport'];
+  handlePublishingExport?: ExportActionsProps['handlePublishingExport'];
 }
 
 export function useAppUiBindings({
   modals,
   handleOpenModal,
   handleExport,
+  handlePublishingExport,
 }: UseAppUiBindingsOptions): {
   modalsReturn: ModalStateAndActions;
   toolsActions: ToolsActionsProps;
@@ -28,7 +30,8 @@ export function useAppUiBindings({
 
   const exportActions = useMemo<ExportActionsProps>(() => ({
     handleExport,
-  }), [handleExport]);
+    handlePublishingExport,
+  }), [handleExport, handlePublishingExport]);
 
   return {
     modalsReturn: modals,

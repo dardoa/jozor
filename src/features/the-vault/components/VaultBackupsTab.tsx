@@ -17,6 +17,7 @@ interface VaultBackupsTabProps {
   onOverwriteDriveFile: (fileId: string) => Promise<void> | void;
   onDeleteDriveFile: (fileId: string) => Promise<void> | void;
   onRunExport: (type: ExportType) => Promise<void>;
+  onRunPublishingExport?: (options: { templateId: string; format: 'png' | 'pdf' }) => Promise<void>;
   hasSessionError: boolean;
   isAuthorized: boolean;
   onGoogleLogin: () => void;
