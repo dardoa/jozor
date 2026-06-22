@@ -17,7 +17,7 @@ export const useTreeActions = () => {
     const setPeople = (people: Record<string, Person>, addToHistory = true) => {
         store.setPeople(people, addToHistory);
         void searchService.updateSearchIndex(Object.values(people));
-        localTreePersistenceService.scheduleFullTreeSave(people);
+        localTreePersistenceService.scheduleFullTreeSave(people, store.currentTreeId ?? undefined);
     };
 
     const updatePerson = async (

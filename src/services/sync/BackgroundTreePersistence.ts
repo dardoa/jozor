@@ -16,16 +16,19 @@ type IdleWindow = Window & {
 
 export class BackgroundTreePersistence {
     private pendingPeople: Record<string, Person> | null = null;
+    private pendingTreeId: string | undefined;
     private pendingSnapshot = false;
     private idleHandle: IdleCallbackHandle | null = null;
 
-    scheduleSave(people: Record<string, Person>): void {
+    scheduleSave(people: Record<string, Person>, treeId?: string): void {
         this.pendingPeople = people;
+        this.pendingTreeId = treeId;
         this.scheduleFlush();
     }
 
-    scheduleSnapshot(people: Record<string, Person>): void {
+    scheduleSnapshot(people: Record<string, Person>, treeId?: string): void {
         this.pendingPeople = people;
+        this.pendingTreeId = treeId;
         this.pendingSnapshot = true;
         this.scheduleFlush();
     }
@@ -69,24 +72,26 @@ export class BackgroundTreePersistence {
 
     async flush(): Promise<void> {
         const people = this.pendingPeople;
+        const treeId = this.pendingTreeId;
         const shouldSnapshot = this.pendingSnapshot;
 
         this.idleHandle = null;
         this.pendingPeople = null;
+        this.pendingTreeId = undefined;
         this.pendingSnapshot = false;
 
         if (!people) return;
 
         try {
             if (shouldSnapshot) {
-                await offlineCache.createSnapshot(people);
+                await offlineCache.createSnapshot(people, treeId);
                 if (typeof window !== 'undefined') {
                     window.dispatchEvent(new CustomEvent('jozor-backup-requested'));
                 }
                 return;
             }
 
-            await offlineCache.saveFullTree(people);
+            await offlineCache.saveFullTree(people, treeId);
         } catch (error) {
             logError('BackgroundTreePersistence flush', error, {
                 category: 'SYNC',

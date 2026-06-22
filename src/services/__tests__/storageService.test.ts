@@ -108,10 +108,11 @@ describe('storageService', () => {
   });
 
   it('clears local people inside the transaction when the full tree is empty', async () => {
-    await storageService.saveFullTree({});
+    await storageService.saveFullTree({}, 'tree-1');
 
     expect(dbMock.transaction).toHaveBeenCalledWith('rw', [dbMock.people, dbMock.relationships], expect.any(Function));
     expect(dbMock.people.clear).toHaveBeenCalled();
+    expect(dbMock.relationships.where).toHaveBeenCalledWith('treeId');
     expect(dbMock.people.bulkPut).not.toHaveBeenCalled();
   });
 });

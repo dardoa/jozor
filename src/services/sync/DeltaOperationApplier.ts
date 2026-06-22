@@ -87,10 +87,10 @@ export class DeltaOperationApplier {
                         this.snapshotCounter += sequential.length;
                         if (this.snapshotCounter >= 50) {
                             this.snapshotCounter = 0;
-                            backgroundTreePersistence.scheduleSnapshot(result.people);
+                            backgroundTreePersistence.scheduleSnapshot(result.people, state.currentTreeId ?? undefined);
                             state.incrementOpCount(-state.opCount);
                         } else {
-                            backgroundTreePersistence.scheduleSave(result.people);
+                            backgroundTreePersistence.scheduleSave(result.people, state.currentTreeId ?? undefined);
                         }
                     } catch (err) {
                         logError('DeltaSyncService processIncomingBatch', err, { category: 'SYNC', severity: 'HIGH' });

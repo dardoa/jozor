@@ -37,13 +37,13 @@ describe('BackgroundTreePersistence', () => {
     it('defers full-tree saves outside the caller turn', async () => {
         const persistence = new BackgroundTreePersistence();
 
-        persistence.scheduleSave(people);
+        persistence.scheduleSave(people, 'tree-1');
 
         expect(offlineCache.saveFullTree).not.toHaveBeenCalled();
 
         await vi.runOnlyPendingTimersAsync();
 
-        expect(offlineCache.saveFullTree).toHaveBeenCalledWith(people);
+        expect(offlineCache.saveFullTree).toHaveBeenCalledWith(people, 'tree-1');
         expect(offlineCache.createSnapshot).not.toHaveBeenCalled();
     });
 
@@ -52,14 +52,14 @@ describe('BackgroundTreePersistence', () => {
         const backupListener = vi.fn();
         window.addEventListener('jozor-backup-requested', backupListener);
 
-        persistence.scheduleSnapshot(people);
+        persistence.scheduleSnapshot(people, 'tree-1');
 
         expect(offlineCache.createSnapshot).not.toHaveBeenCalled();
         expect(backupListener).not.toHaveBeenCalled();
 
         await vi.runOnlyPendingTimersAsync();
 
-        expect(offlineCache.createSnapshot).toHaveBeenCalledWith(people);
+        expect(offlineCache.createSnapshot).toHaveBeenCalledWith(people, 'tree-1');
         expect(backupListener).toHaveBeenCalledTimes(1);
 
         window.removeEventListener('jozor-backup-requested', backupListener);
@@ -76,13 +76,13 @@ describe('BackgroundTreePersistence', () => {
             },
         };
 
-        persistence.scheduleSave(people);
-        persistence.scheduleSave(latestPeople);
+        persistence.scheduleSave(people, 'tree-1');
+        persistence.scheduleSave(latestPeople, 'tree-2');
 
         await vi.runOnlyPendingTimersAsync();
 
         expect(offlineCache.saveFullTree).toHaveBeenCalledTimes(1);
-        expect(offlineCache.saveFullTree).toHaveBeenCalledWith(latestPeople);
+        expect(offlineCache.saveFullTree).toHaveBeenCalledWith(latestPeople, 'tree-2');
     });
 });
 

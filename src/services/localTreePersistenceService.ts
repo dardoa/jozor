@@ -4,9 +4,9 @@ import { storageService } from './storageService';
 
 const SAVE_FULL_TREE_THROTTLE_MS = 3000;
 
-const throttledSaveFullTree = throttle((people: Record<string, Person>) => {
+const throttledSaveFullTree = throttle((people: Record<string, Person>, treeId?: string) => {
     if (Object.keys(people).length === 0) return;
-    void storageService.saveFullTree(people).catch((error) => {
+    void storageService.saveFullTree(people, treeId).catch((error) => {
         console.error('Auto-save failed', error);
     });
 }, SAVE_FULL_TREE_THROTTLE_MS);
@@ -19,7 +19,7 @@ export const localTreePersistenceService = {
         });
     },
 
-    scheduleFullTreeSave(people: Record<string, Person>) {
-        throttledSaveFullTree(people);
+    scheduleFullTreeSave(people: Record<string, Person>, treeId?: string) {
+        throttledSaveFullTree(people, treeId);
     },
 };

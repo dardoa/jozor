@@ -18,9 +18,10 @@ export const storageService = {
             const db = await getLocalDb();
             const peopleArray = Object.values(people);
             await db.transaction('rw', [db.people, db.relationships], async () => {
+                const activeTreeId = treeId || 'default-tree';
                 if (peopleArray.length === 0) {
                     await db.people.clear();
-                    await db.relationships.clear();
+                    await db.relationships.where('treeId').equals(activeTreeId).delete();
                     return;
                 }
 
@@ -36,7 +37,6 @@ export const storageService = {
                 }
 
                 // Reconstruct and save relationships
-                const activeTreeId = treeId || 'default-tree';
                 const derivedEdges = deriveRelationshipsFromPeople(activeTreeId, people);
                 await db.relationships.where('treeId').equals(activeTreeId).delete();
                 const edgesArray = Object.values(derivedEdges);
