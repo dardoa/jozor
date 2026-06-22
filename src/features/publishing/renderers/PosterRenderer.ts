@@ -1,4 +1,4 @@
-import type { PlacedDocument, PosterTheme } from '../types';
+﻿import type { PlacedDocument, PosterTheme } from '../types';
 import type { PlacedTreeDiagramPayload } from '../layout/AncestorTreeLayout';
 
 export interface CanvasLike {

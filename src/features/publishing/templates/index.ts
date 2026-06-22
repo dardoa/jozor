@@ -1,4 +1,4 @@
-import type { PublicationTemplate } from '../types';
+﻿import type { PublicationTemplate } from '../types';
 import { CLASSIC_THEME, MODERN_THEME } from '../renderers/PosterRenderer';
 
 export const CLASSIC_ANCESTOR_POSTER_TEMPLATE: PublicationTemplate = {

@@ -1,4 +1,4 @@
-import type { PublicationTemplate } from '../types';
+﻿import type { PublicationTemplate } from '../types';
 import { ALL_TEMPLATES } from '../templates';
 
 export class TemplateRegistry {

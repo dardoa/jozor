@@ -1,4 +1,4 @@
-import { jsPDF } from 'jspdf';
+﻿import { jsPDF } from 'jspdf';
 import type { PlacedDocument, PublicationTheme } from '../types';
 import type { PlacedTreeDiagramPayload } from '../layout/AncestorTreeLayout';
 import { CLASSIC_THEME } from './PosterRenderer';

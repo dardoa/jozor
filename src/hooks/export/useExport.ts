@@ -228,10 +228,12 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
             try {
                 setExportStatus({ isExporting: true, format });
 
-                const { PublishingPipeline } = await import('../../features/publishing/services/PublishingPipeline');
-                const { TemplateRegistry } = await import('../../features/publishing/services/TemplateRegistry');
-                const { PosterRenderer } = await import('../../features/publishing/renderers/PosterRenderer');
-                const { PdfRenderer } = await import('../../features/publishing/renderers/PdfRenderer');
+                const { 
+                    PublishingPipeline, 
+                    TemplateRegistry, 
+                    PosterRenderer, 
+                    PdfRenderer 
+                } = await import('../../features/publishing');
 
                 const template = TemplateRegistry.getTemplate(templateId);
                 const rootPersonId = focusId || Object.keys(people)[0];

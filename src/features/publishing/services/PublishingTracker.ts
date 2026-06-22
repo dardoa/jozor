@@ -1,4 +1,4 @@
-import { PublicationManifest, ExportHistoryEntry } from '../types/manifest';
+﻿import { PublicationManifest, ExportHistoryEntry } from '../types/manifest';
 import { useAppStore } from '../../../store/useAppStore';
 import { buildFamilyGraph } from '../../../domain/familyGraph';
 import { Person } from '../../../types';

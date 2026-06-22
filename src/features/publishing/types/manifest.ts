@@ -1,4 +1,4 @@
-export interface PublicationManifest {
+﻿export interface PublicationManifest {
   readonly publicationId: string;
   readonly templateId: string; // e.g., 'classic-book-manuscript', 'gedcom', 'json', etc.
   readonly createdAt: string; // ISO string

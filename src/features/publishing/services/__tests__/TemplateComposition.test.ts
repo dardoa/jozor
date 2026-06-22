@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+﻿import { describe, expect, it, vi } from 'vitest';
 import { TemplateRegistry } from '../TemplateRegistry';
 import { PublishingPipeline } from '../PublishingPipeline';
 import type { Person } from '../../../../types';

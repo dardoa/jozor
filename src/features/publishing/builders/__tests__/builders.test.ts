@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+﻿import { describe, expect, it } from 'vitest';
 import { AncestorBuilder } from '../AncestorBuilder';
 import { BranchBuilder } from '../BranchBuilder';
 import { TimelineBuilder } from '../TimelineBuilder';

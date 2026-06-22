@@ -28,9 +28,6 @@ export interface HelpTranslations {
     resetZoom: string;
     fitToScreen: string;
     advancedSettings: string;
-    searchPlaceholder: string;
-    noResults: string;
-    allCategories: string;
 }
 
 export interface HistoryControlsProps {

@@ -1,4 +1,4 @@
-import type { Person } from '../../../types';
+﻿import type { Person } from '../../../types';
 import type { PublicationDocument, PublicationSection, PublicationBlock } from '../types';
 
 export class BranchBuilder {
