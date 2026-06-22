@@ -25,6 +25,8 @@ export class CommandExecutor {
         try {
             const previousPeople = useAppStore.getState().people;
             const previousRelationships = { ...useAppStore.getState().relationships };
+            const previousSources = { ...useAppStore.getState().sources };
+            const previousCitations = { ...useAppStore.getState().citations };
 
             // Execute the command synchronously or asynchronously
             const result = await Promise.resolve(command.execute(context));
@@ -54,6 +56,38 @@ export class CommandExecutor {
                 }
                 if (deletedRelationshipIds.length > 0) {
                     await storageService.deleteRelationships(deletedRelationshipIds);
+                }
+
+                // Save and delete sources incrementally
+                const updatedSources = useAppStore.getState().sources || {};
+                const changedSources = Object.values(updatedSources).filter((source) => (
+                    !previousSources[source.id] || previousSources[source.id] !== source
+                ));
+                const deletedSourceIds = Object.keys(previousSources).filter((id) => (
+                    !updatedSources[id]
+                ));
+
+                if (changedSources.length > 0) {
+                    await storageService.saveSources(changedSources);
+                }
+                if (deletedSourceIds.length > 0) {
+                    await storageService.deleteSources(deletedSourceIds);
+                }
+
+                // Save and delete citations incrementally
+                const updatedCitations = useAppStore.getState().citations || {};
+                const changedCitations = Object.values(updatedCitations).filter((citation) => (
+                    !previousCitations[citation.id] || previousCitations[citation.id] !== citation
+                ));
+                const deletedCitationIds = Object.keys(previousCitations).filter((id) => (
+                    !updatedCitations[id]
+                ));
+
+                if (changedCitations.length > 0) {
+                    await storageService.saveCitations(changedCitations);
+                }
+                if (deletedCitationIds.length > 0) {
+                    await storageService.deleteCitations(deletedCitationIds);
                 }
                 
                 // Update search index for immediate searchability

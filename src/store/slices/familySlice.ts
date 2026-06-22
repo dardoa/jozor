@@ -1,5 +1,5 @@
 import { StateCreator } from 'zustand';
-import { Person, RelationshipEdge, RelationshipEdgeType, syncRelationshipsWithPeople } from '../../types';
+import { Person, RelationshipEdge, RelationshipEdgeType, syncRelationshipsWithPeople, Source, Citation, deriveSourcesAndCitationsFromPeople } from '../../types';
 import { DEFAULT_PERSON_TEMPLATE } from '../../constants';
 import { createPerson } from '../../utils/familyLogic';
 import { applyFamilyDomainAction, reduceFamilyDomain } from '../../domain/FamilyDomainReducer';
@@ -19,6 +19,8 @@ const getInitialFamilyState = () => {
     return {
         people: { [initialId]: initialPerson },
         relationships: {} as Record<string, RelationshipEdge>,
+        sources: {} as Record<string, Source>,
+        citations: {} as Record<string, Citation>,
         focusId: initialId,
     };
 };
@@ -29,6 +31,8 @@ export interface FamilySlice {
     people: Record<string, Person>;
     confirmedPeople: Record<string, Person>;
     relationships: Record<string, RelationshipEdge>;
+    sources: Record<string, Source>;
+    citations: Record<string, Citation>;
     locations: Record<string, import('../../types').LocationData>;
     focusId: string;
     searchTarget: { id: string; timestamp: number } | null;
@@ -46,6 +50,13 @@ export interface FamilySlice {
     setConfirmedPeople: (people: Record<string, Person>) => void;
     setRelationships: (relationships: Record<string, RelationshipEdge>) => void;
     updateRelationshipType: (id: string, type: RelationshipEdgeType) => void;
+    setSources: (sources: Record<string, Source>) => void;
+    setCitations: (citations: Record<string, Citation>) => void;
+    addSource: (source: Source) => void;
+    updateSource: (id: string, updates: Partial<Source>) => void;
+    deleteSource: (id: string) => void;
+    addCitation: (citation: Citation) => void;
+    removeCitation: (id: string) => void;
     setDeletedPersonIds: (ids: Iterable<string>) => void;
     addDeletedPersonId: (id: string) => void;
     setFocusId: (id: string) => void;
@@ -94,12 +105,20 @@ export const createFamilySlice: StateCreator<AppStore, [["zustand/devtools", nev
                 const treeId = updated.currentTreeId || state.currentTreeId || 'default-tree';
                 const currentRels = updated.relationships || state.relationships || {};
                 updated.relationships = syncRelationshipsWithPeople(currentRels, treeId, updated.people);
+
+                const { sources: derivedSources, citations: derivedCitations } = deriveSourcesAndCitationsFromPeople(treeId, updated.people);
+                updated.sources = derivedSources;
+                updated.citations = derivedCitations;
             }
             
             if (updated.confirmedPeople && updated.confirmedPeople !== state.confirmedPeople) {
                 const treeId = updated.currentTreeId || state.currentTreeId || 'default-tree';
                 const currentRels = updated.relationships || state.relationships || {};
                 updated.relationships = syncRelationshipsWithPeople(currentRels, treeId, updated.confirmedPeople);
+
+                const { sources: derivedSources, citations: derivedCitations } = deriveSourcesAndCitationsFromPeople(treeId, updated.confirmedPeople);
+                updated.sources = derivedSources;
+                updated.citations = derivedCitations;
             }
             
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -114,6 +133,8 @@ export const createFamilySlice: StateCreator<AppStore, [["zustand/devtools", nev
         people: initial.people,
         confirmedPeople: initial.people,
         relationships: initial.relationships,
+        sources: initial.sources,
+        citations: initial.citations,
         locations: {},
         focusId: initial.focusId,
         searchTarget: null,
@@ -151,6 +172,46 @@ export const createFamilySlice: StateCreator<AppStore, [["zustand/devtools", nev
                 relationships: { ...state.relationships, [id]: updatedEdge },
             }));
         },
+
+        setSources: (sources) => set({ sources }),
+        setCitations: (citations) => set({ citations }),
+
+        addSource: (source) => set((state) => ({
+            sources: { ...state.sources, [source.id]: source }
+        })),
+
+        updateSource: (id, updates) => {
+            const current = get().sources[id];
+            if (!current) return;
+            const updated = { ...current, ...updates, updatedAt: new Date().toISOString() };
+            set((state) => ({
+                sources: { ...state.sources, [id]: updated }
+            }));
+        },
+
+        deleteSource: (id) => set((state) => {
+            const nextSources = { ...state.sources };
+            delete nextSources[id];
+            
+            const nextCitations = { ...state.citations };
+            Object.keys(nextCitations).forEach((cid) => {
+                if (nextCitations[cid].sourceId === id) {
+                    delete nextCitations[cid];
+                }
+            });
+
+            return { sources: nextSources, citations: nextCitations };
+        }),
+
+        addCitation: (citation) => set((state) => ({
+            citations: { ...state.citations, [citation.id]: citation }
+        })),
+
+        removeCitation: (id) => set((state) => {
+            const nextCitations = { ...state.citations };
+            delete nextCitations[id];
+            return { citations: nextCitations };
+        }),
 
     setDeletedPersonIds: (ids) => {
         const deletedPersonIds = new Set(ids);

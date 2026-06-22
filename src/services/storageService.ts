@@ -1,6 +1,6 @@
 import type { SettingValue, PendingOperationRec, PersonTombstoneRec } from '../utils/db';
 import { db } from '../utils/db';
-import { Person, RelationshipEdge, deriveRelationshipsFromPeople } from '../types';
+import { Person, RelationshipEdge, deriveRelationshipsFromPeople, Source, Citation, deriveSourcesAndCitationsFromPeople } from '../types';
 import { logError, logInfo } from '../utils/errorLogger';
 
 const getLocalDb = async () => {
@@ -17,11 +17,13 @@ export const storageService = {
         try {
             const db = await getLocalDb();
             const peopleArray = Object.values(people);
-            await db.transaction('rw', [db.people, db.relationships], async () => {
+            await db.transaction('rw', [db.people, db.relationships, db.sources, db.citations], async () => {
                 const activeTreeId = treeId || 'default-tree';
                 if (peopleArray.length === 0) {
                     await db.people.clear();
                     await db.relationships.where('treeId').equals(activeTreeId).delete();
+                    await db.sources.where('treeId').equals(activeTreeId).delete();
+                    await db.citations.where('treeId').equals(activeTreeId).delete();
                     return;
                 }
 
@@ -42,6 +44,19 @@ export const storageService = {
                 const edgesArray = Object.values(derivedEdges);
                 if (edgesArray.length > 0) {
                     await db.relationships.bulkPut(edgesArray);
+                }
+
+                // Reconstruct and save sources and citations
+                const { sources: derivedSources, citations: derivedCitations } = deriveSourcesAndCitationsFromPeople(activeTreeId, people);
+                await db.sources.where('treeId').equals(activeTreeId).delete();
+                await db.citations.where('treeId').equals(activeTreeId).delete();
+                const sourcesArray = Object.values(derivedSources);
+                if (sourcesArray.length > 0) {
+                    await db.sources.bulkPut(sourcesArray);
+                }
+                const citationsArray = Object.values(derivedCitations);
+                if (citationsArray.length > 0) {
+                    await db.citations.bulkPut(citationsArray);
                 }
             });
         } catch (e) {
@@ -152,6 +167,42 @@ export const storageService = {
     async clearRelationships() {
         const db = await getLocalDb();
         await db.relationships.clear();
+    },
+
+    // --- Sources Data ---
+    async saveSources(sources: Source[]) {
+        if (sources.length === 0) return;
+        const db = await getLocalDb();
+        await db.sources.bulkPut(sources);
+    },
+
+    async deleteSources(ids: string[]) {
+        if (ids.length === 0) return;
+        const db = await getLocalDb();
+        await db.sources.bulkDelete(ids);
+    },
+
+    async loadSources(treeId: string): Promise<Source[]> {
+        const db = await getLocalDb();
+        return await db.sources.where('treeId').equals(treeId).toArray();
+    },
+
+    // --- Citations Data ---
+    async saveCitations(citations: Citation[]) {
+        if (citations.length === 0) return;
+        const db = await getLocalDb();
+        await db.citations.bulkPut(citations);
+    },
+
+    async deleteCitations(ids: string[]) {
+        if (ids.length === 0) return;
+        const db = await getLocalDb();
+        await db.citations.bulkDelete(ids);
+    },
+
+    async loadCitations(treeId: string): Promise<Citation[]> {
+        const db = await getLocalDb();
+        return await db.citations.where('treeId').equals(treeId).toArray();
     },
 
     // --- Settings & Metadata ---

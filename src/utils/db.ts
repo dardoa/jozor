@@ -1,5 +1,5 @@
 import Dexie, { Table } from 'dexie';
-import { Person, RelationshipEdge, deriveRelationshipsFromPeople } from '../types';
+import { Person, RelationshipEdge, deriveRelationshipsFromPeople, Source, Citation, deriveSourcesAndCitationsFromPeople } from '../types';
 import { ExportHistoryEntry } from '../features/publishing';
 
 export type SettingValue = string | number | boolean | object | null;
@@ -32,6 +32,8 @@ export class JozorDatabase extends Dexie {
     person_tombstones!: Table<PersonTombstoneRec, [string, string]>;
     export_history!: Table<ExportHistoryEntry, number>;
     relationships!: Table<RelationshipEdge, string>;
+    sources!: Table<Source, string>;
+    citations!: Table<Citation, string>;
 
     constructor() {
         super('JozorDB');
@@ -85,6 +87,39 @@ export class JozorDatabase extends Dexie {
 
             if (edgesArray.length > 0) {
                 await tx.table('relationships').bulkPut(edgesArray);
+            }
+        });
+
+        this.version(6).stores({
+            people: 'id',
+            settings: 'key',
+            pending_operations: '++id, tree_id',
+            person_tombstones: '[tree_id+person_id], tree_id, person_id, deleted_at',
+            export_history: '++id, publicationId, treeId, templateId, exportType, createdAt',
+            relationships: 'id, treeId, fromPersonId, toPersonId, type, [treeId+fromPersonId], [treeId+toPersonId], [treeId+type]',
+            sources: 'id, treeId, type, normalizedKey, [treeId+type], [treeId+normalizedKey]',
+            citations: 'id, treeId, sourceId, targetType, targetId, targetField, [treeId+targetId], [treeId+sourceId], [treeId+targetType], [treeId+targetType+targetId]'
+        }).upgrade(async tx => {
+            const people = await tx.table('people').toArray();
+            const peopleMap: Record<string, Person> = {};
+            people.forEach(p => {
+                peopleMap[p.id] = p;
+            });
+
+            const settings = await tx.table('settings').toArray();
+            const activeTreeIdEntry = settings.find(s => s.key === 'currentTreeId');
+            const treeId = typeof activeTreeIdEntry?.value === 'string' ? activeTreeIdEntry.value : 'default-tree';
+
+            const { sources: derivedSources, citations: derivedCitations } = deriveSourcesAndCitationsFromPeople(treeId, peopleMap);
+            
+            const sourcesArray = Object.values(derivedSources);
+            if (sourcesArray.length > 0) {
+                await tx.table('sources').bulkPut(sourcesArray);
+            }
+            
+            const citationsArray = Object.values(derivedCitations);
+            if (citationsArray.length > 0) {
+                await tx.table('citations').bulkPut(citationsArray);
             }
         });
     }
