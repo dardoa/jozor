@@ -11,6 +11,7 @@ import { createHistorySlice } from './slices/historySlice';
 import { createDiscussionSlice } from '../features/discussions';
 import { AppStore } from './storeTypes';
 import { createAppearanceSlice } from './slices/appearanceSlice';
+import { createExportHistorySlice } from './slices/exportHistorySlice';
 import { hydrateAppearanceLabFromLegacy } from '../domain/appearance/appearanceHydration';
 import { normalizeChartType } from '../domain/chartTypeAdapter';
 import { deriveCanonicalTreeSync } from '../domain/sync/canonicalSyncState';
@@ -68,6 +69,7 @@ export const useAppStore = create<AppStore>()(
             ...createHistorySlice(...args),
             ...createDiscussionSlice(...args),
             ...createAppearanceSlice(...args),
+            ...createExportHistorySlice(...args),
         }),
         { name: 'AppStore' }
     ),

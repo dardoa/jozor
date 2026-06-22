@@ -162,3 +162,6 @@ export interface PlacedDocument {
   };
   readonly sections: readonly PlacedSection[];
 }
+
+export * from './manifest';
+

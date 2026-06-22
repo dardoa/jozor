@@ -1,5 +1,6 @@
 import Dexie, { Table } from 'dexie';
 import { Person } from '../types';
+import { ExportHistoryEntry } from '../features/publishing';
 
 export type SettingValue = string | number | boolean | object | null;
 
@@ -29,6 +30,7 @@ export class JozorDatabase extends Dexie {
     settings!: Table<LocalSetting, string>;
     pending_operations!: Table<PendingOperationRec, number>;
     person_tombstones!: Table<PersonTombstoneRec, [string, string]>;
+    export_history!: Table<ExportHistoryEntry, number>;
 
     constructor() {
         super('JozorDB');
@@ -49,6 +51,14 @@ export class JozorDatabase extends Dexie {
             settings: 'key',
             pending_operations: '++id, tree_id',
             person_tombstones: '[tree_id+person_id], tree_id, person_id, deleted_at',
+        });
+
+        this.version(4).stores({
+            people: 'id',
+            settings: 'key',
+            pending_operations: '++id, tree_id',
+            person_tombstones: '[tree_id+person_id], tree_id, person_id, deleted_at',
+            export_history: '++id, publicationId, treeId, templateId, exportType, createdAt'
         });
     }
 }

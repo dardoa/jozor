@@ -5,6 +5,7 @@ import { downloadFile } from '../../utils/fileUtils';
 import { showToast } from '../../utils/showToast';
 import { useAppStore } from '../../store/useAppStore';
 import { logError, logInfo, logWarn } from '../../utils/errorLogger';
+import { PublishingTracker } from '../../features/publishing';
 
 export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGSVGElement | null>) => {
     const buildExportArchive = useCallback(async (): Promise<Blob> => {
@@ -48,6 +49,16 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
                 supabaseAccessToken
             } = useAppStore.getState();
 
+            const trackerState = PublishingTracker.startTracking({
+                templateId: type,
+                exportType: 'legacy',
+                people,
+                totalPages: 1
+            });
+            let success = false;
+            const warnings: string[] = [];
+            let outputName = '';
+
             try {
                 setExportStatus({ isExporting: true, format: type });
 
@@ -58,22 +69,32 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
 
                 // Data Formats
                 if (type === 'jozor') {
+                    outputName = 'family.jozor';
                     const blob = await buildExportArchive();
-                    downloadFile(blob, 'family.jozor', 'application/octet-stream');
+                    downloadFile(blob, outputName, 'application/octet-stream');
+                    success = true;
                     return;
                 } else if (type === 'json') {
+                    outputName = 'tree.json';
                     const data = { people, ...fullState, metadata: { exportedAt: new Date().toISOString() } };
-                    downloadFile(JSON.stringify(data, null, 2), 'tree.json', 'application/json');
+                    downloadFile(JSON.stringify(data, null, 2), outputName, 'application/json');
+                    success = true;
                     return;
                 } else if (type === 'gedcom') {
+                    outputName = 'tree.ged';
                     const { exportToGEDCOM } = await import('../../utils/gedcomLogic');
-                    downloadFile(exportToGEDCOM(people), 'tree.ged', 'application/octet-stream');
+                    downloadFile(exportToGEDCOM(people), outputName, 'application/octet-stream');
+                    success = true;
                     return;
                 } else if (type === 'ics') {
-                    downloadFile(generateICS(people), 'family_calendar.ics', 'text/calendar');
+                    outputName = 'family_calendar.ics';
+                    downloadFile(generateICS(people), outputName, 'text/calendar');
+                    success = true;
                     return;
                 } else if (type === 'print') {
+                    outputName = 'print';
                     window.print();
+                    success = true;
                     return;
                 }
 
@@ -102,15 +123,13 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
                 await document.fonts.ready;
 
                 // 2. Tainted Canvas Protection: Convert all Images to Base64
-                // We do this on the live element temporarily, then revert it later if needed,
-                // but html-to-image is about to capture it.
                 if (user) {
                     await convertSupabaseImagesToBase64(svg, {
                         token: user.supabaseToken || supabaseAccessToken || ''
                     });
                 }
 
-                const scaleFactor = 2; // Reduced from 3 to 2 for stability (Retina quality is typically sufficient)
+                const scaleFactor = 2;
                 const options = {
                     quality: 0.95,
                     pixelRatio: scaleFactor,
@@ -120,7 +139,7 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
                     cacheBust: true,
                     canvasWidth: captureWidth * scaleFactor,
                     canvasHeight: captureHeight * scaleFactor,
-                    useCORS: true, // Enable CORS for external images
+                    useCORS: true,
                     style: {
                         transform: 'none',
                         transition: 'none',
@@ -153,6 +172,7 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
 
                 // 4. Trigger Download
                 if (type === 'pdf') {
+                    outputName = 'family_tree.pdf';
                     const { default: jsPDF } = await import('jspdf');
                     const pdf = new jsPDF({
                         orientation: captureWidth > captureHeight ? 'landscape' : 'portrait',
@@ -160,17 +180,27 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
                         format: [captureWidth * scaleFactor, captureHeight * scaleFactor]
                     });
                     pdf.addImage(dataUrl, 'PNG', 0, 0, captureWidth * scaleFactor, captureHeight * scaleFactor);
-                    pdf.save('family_tree.pdf');
+                    pdf.save(outputName);
                 } else {
                     const extension = type === 'jpeg' ? 'jpg' : type;
+                    outputName = `family_tree.${extension}`;
                     const mime = type === 'jpeg' ? 'image/jpeg' : (type === 'svg' ? 'image/svg+xml' : 'image/png');
-                    downloadFile(dataUrl, `family_tree.${extension}`, mime);
+                    downloadFile(dataUrl, outputName, mime);
                 }
+                success = true;
             } catch (e: unknown) {
                 logError('EXPORT_FAILED', e, { showToast: false, metadata: { type } });
                 const message = e instanceof Error ? e.message : 'Check console';
                 showToast.error(`Failed: ${message}`);
+                success = false;
+                warnings.push(message);
             } finally {
+                await PublishingTracker.endTracking(
+                    trackerState,
+                    success,
+                    warnings,
+                    success ? [{ name: outputName, format: type }] : []
+                );
                 setExportStatus({ isExporting: false });
             }
         },
@@ -184,6 +214,16 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
                 setExportStatus,
                 focusId
             } = useAppStore.getState();
+
+            const trackerState = PublishingTracker.startTracking({
+                templateId,
+                exportType: 'publishing',
+                people,
+                totalPages: 1
+            });
+            let success = false;
+            const warnings: string[] = [];
+            let outputName = '';
 
             try {
                 setExportStatus({ isExporting: true, format: 'pdf' });
@@ -210,7 +250,11 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
                 const doc = PublishingPipeline.composeDocument(request, people);
                 const placedDoc = PublishingPipeline.layoutDocument(doc, template);
 
+                // Update total pages in manifest
+                (trackerState.manifest as { totalPages: number }).totalPages = placedDoc.totalPages || 1;
+
                 if (format === 'png') {
+                    outputName = `${doc.title}.png`;
                     const browserCanvasFactory = {
                         createCanvas(w: number, h: number) {
                             const canvas = document.createElement('canvas');
@@ -222,16 +266,26 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
                     const canvas = PosterRenderer.renderToCanvas(placedDoc, browserCanvasFactory, template.theme);
                     let dataUrl = canvas.toDataURL('image/png');
                     dataUrl = await applyWatermark(dataUrl, 'JOZOR FAMILY PUBLISHING', 'image/png');
-                    downloadFile(dataUrl, `${doc.title}.png`, 'image/png');
+                    downloadFile(dataUrl, outputName, 'image/png');
                 } else {
+                    outputName = `${doc.title}.pdf`;
                     const pdfInstance = PdfRenderer.renderToPdf(placedDoc, template.theme);
-                    pdfInstance.save(`${doc.title}.pdf`);
+                    pdfInstance.save(outputName);
                 }
+                success = true;
             } catch (e: unknown) {
                 logError('PUBLISHING_EXPORT_FAILED', e, { showToast: false, metadata: { templateId, format } });
                 const message = e instanceof Error ? e.message : 'Check console';
                 showToast.error(`Failed: ${message}`);
+                success = false;
+                warnings.push(message);
             } finally {
+                await PublishingTracker.endTracking(
+                    trackerState,
+                    success,
+                    warnings,
+                    success ? [{ name: outputName, format }] : []
+                );
                 setExportStatus({ isExporting: false });
             }
         },
