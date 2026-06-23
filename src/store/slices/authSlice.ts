@@ -5,6 +5,7 @@ import { googleAuthService } from '../../services/googleService';
 import { clearSupabaseInstances } from '../../services/supabaseClient';
 import { supabaseAuthService } from '../../services/supabaseAuthService';
 import { updateUserTourStatus } from '../../services/supabaseProfileService';
+import { storageService } from '../../services/storageService';
 
 export interface AuthSlice {
     // State
@@ -137,7 +138,20 @@ export const createAuthSlice: StateCreator<AppStore, [["zustand/devtools", never
             },
         })),
     setSupabaseAccessToken: (token) => set({ supabaseAccessToken: token }),
-    setCurrentUserRole: (role) => set({ currentUserRole: role }),
+    setCurrentUserRole: (role) => {
+        storageService?.setRole?.(role);
+        set({ currentUserRole: role });
+        if (role === 'viewer') {
+            const currentPeople = get().people;
+            if (currentPeople) {
+                get().setPeople(currentPeople, false);
+            }
+            const activeTreeId = get().currentTreeId;
+            if (activeTreeId) {
+                void storageService?.clearActiveTreeCache?.(activeTreeId);
+            }
+        }
+    },
     setSubscriptionTier: (tier) => set({ subscriptionTier: tier }),
     setAiCloudQuotaRemaining: (quota) => set({ aiCloudQuotaRemaining: quota }),
     updateTourStatus: async (hasCompleted: boolean) => {
@@ -174,6 +188,7 @@ export const createAuthSlice: StateCreator<AppStore, [["zustand/devtools", never
         await supabaseAuthService.signOut();
         googleAuthService.logout();
         clearSupabaseInstances();
+        storageService?.setRole?.(null);
         set({
             user: null,
             notifications: [],

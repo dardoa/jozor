@@ -11,16 +11,22 @@ const LOCAL_TREE_SCOPE = '__local__';
 
 const normalizeTreeScope = (treeId?: string | null) => treeId || LOCAL_TREE_SCOPE;
 
+let activeUserRole: string | null = null;
+
 export const storageService = {
+    setRole(role: string | null) {
+        activeUserRole = role;
+    },
     // --- People Data ---
     async saveFullTree(people: Record<string, Person>, treeId?: string) {
         try {
             const db = await getLocalDb();
             const peopleArray = Object.values(people);
-            await db.transaction('rw', [db.people, db.relationships, db.sources, db.citations], async () => {
+            await db.transaction('rw', [db.people, db.relationships, db.sources, db.citations, db.settings], async () => {
                 const activeTreeId = treeId || 'default-tree';
                 if (peopleArray.length === 0) {
                     await db.people.clear();
+                    await db.settings.delete('currentTreeId');
                     await db.relationships.where('treeId').equals(activeTreeId).delete();
                     await db.sources.where('treeId').equals(activeTreeId).delete();
                     await db.citations.where('treeId').equals(activeTreeId).delete();
@@ -28,6 +34,7 @@ export const storageService = {
                 }
 
                 await db.people.bulkPut(peopleArray);
+                await db.settings.put({ key: 'currentTreeId', value: activeTreeId });
 
                 // Safety: Cleanup orphans so deletions persist across reloads.
                 const dbCount = await db.people.count();
@@ -280,5 +287,82 @@ export const storageService = {
                 )
             );
         });
+    },
+
+    async clearActiveTreeCache(treeId: string) {
+        try {
+            const db = await getLocalDb();
+            const activeTreeId = treeId || 'default-tree';
+            
+            // Read currently cached tree ID from settings
+            const cachedTreeIdEntry = await db.settings.get('currentTreeId');
+            const cachedTreeId = cachedTreeIdEntry ? cachedTreeIdEntry.value : null;
+
+            await db.transaction('rw', [db.people, db.relationships, db.sources, db.citations, db.person_tombstones, db.pending_operations, db.settings], async () => {
+                // Clear the people table only if the currently cached tree matches the target treeId
+                if (!cachedTreeId || cachedTreeId === activeTreeId) {
+                    await db.people.clear();
+                    await db.settings.delete('currentTreeId');
+                }
+
+                // Delete scoped records from multi-tree tables
+                await db.relationships.where('treeId').equals(activeTreeId).delete();
+                await db.sources.where('treeId').equals(activeTreeId).delete();
+                await db.citations.where('treeId').equals(activeTreeId).delete();
+                await db.person_tombstones.where('tree_id').equals(activeTreeId).delete();
+                await db.pending_operations.where('tree_id').equals(activeTreeId).delete();
+            });
+
+            logInfo('storageService clearActiveTreeCache', `Cleared local cache for tree ${activeTreeId}`, {
+                treeId: activeTreeId
+            });
+        } catch (e) {
+            logError('storageService clearActiveTreeCache', e, {
+                category: 'DATABASE',
+                severity: 'MEDIUM',
+                metadata: { treeId, operationType: 'clear_active_tree_cache' }
+            });
+        }
     }
 };
+
+const writeOperations = new Set([
+    'saveFullTree',
+    'createSnapshot',
+    'savePerson',
+    'savePeople',
+    'deletePerson',
+    'recordDeletedPersonId',
+    'recordDeletedPersonIds',
+    'removeDeletedPersonId',
+    'saveRelationships',
+    'deleteRelationships',
+    'clearRelationships',
+    'saveSources',
+    'deleteSources',
+    'saveCitations',
+    'deleteCitations',
+    'saveSetting',
+    'removeSetting',
+    'savePendingOperation',
+    'savePendingOperations',
+    'deletePendingOperation',
+    'bulkDeletePendingOperations',
+    'updatePendingOperationRetryCounts',
+]);
+
+for (const key of Object.keys(storageService)) {
+    if (writeOperations.has(key)) {
+        /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+        const originalMethod = (storageService as any)[key];
+        /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+        (storageService as any)[key] = function (...args: any[]) {
+            if (activeUserRole === 'viewer') {
+                if (key === 'savePendingOperation') return Promise.resolve(0);
+                if (key === 'savePendingOperations') return Promise.resolve([]);
+                return Promise.resolve();
+            }
+            return originalMethod.apply(this, args);
+        };
+    }
+}

@@ -6,6 +6,7 @@ import { applyFamilyDomainAction, reduceFamilyDomain } from '../../domain/Family
 import { storageService } from '../../services/storageService';
 import { clientInstanceId } from '../../services/sync/syncInstance';
 import { logError } from '../../utils/errorLogger';
+import { maskPeopleMap } from '../../utils/privacyUtils';
 
 const getInitialFamilyState = () => {
     const initialId = crypto.randomUUID();
@@ -100,6 +101,23 @@ export const createFamilySlice: StateCreator<AppStore, [["zustand/devtools", nev
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const nextState = typeof partial === 'function' ? (partial as any)(state) : partial;
             const updated = { ...nextState };
+            
+            const currentRole = updated.currentUserRole !== undefined ? updated.currentUserRole : state.currentUserRole;
+            const isViewer = currentRole === 'viewer';
+            
+            if (isViewer) {
+                if (updated.people) {
+                    updated.people = maskPeopleMap(updated.people);
+                } else if (state.people && updated.currentUserRole === 'viewer') {
+                    updated.people = maskPeopleMap(state.people);
+                }
+                
+                if (updated.confirmedPeople) {
+                    updated.confirmedPeople = maskPeopleMap(updated.confirmedPeople);
+                } else if (state.confirmedPeople && updated.currentUserRole === 'viewer') {
+                    updated.confirmedPeople = maskPeopleMap(state.confirmedPeople);
+                }
+            }
             
             if (updated.people && updated.people !== state.people) {
                 const treeId = updated.currentTreeId || state.currentTreeId || 'default-tree';
