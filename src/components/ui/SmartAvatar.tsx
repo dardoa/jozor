@@ -1,5 +1,6 @@
 import { memo, useMemo, useState } from 'react';
 import { useAppStore } from '../../store/useAppStore';
+import { useCachedImage } from '../../hooks/utils/useCachedImage';
 
 import type { Person } from '../../types';
 import { stringToGradient } from '../../utils/stringToColor';
@@ -190,10 +191,13 @@ export const SmartAvatar = memo<SmartAvatarProps>(({ person, size, className = '
     [background, size]
   );
 
+  const { cachedUrl } = useCachedImage(isImageFailed ? undefined : photoUrl, { width: size, height: size });
+  const displayUrl = cachedUrl || photoUrl;
+
   if (photoUrl && !isImageFailed) {
     return (
       <img
-        src={photoUrl}
+        src={displayUrl}
         alt={displayName}
         width={size}
         height={size}

@@ -1,9 +1,17 @@
-
 import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi, beforeEach } from 'vitest';
 
 import type { Person } from '../../../types';
 import { SmartAvatar } from '../SmartAvatar';
+import { useCachedImage } from '../../../hooks/utils/useCachedImage';
+
+vi.mock('../../../hooks/utils/useCachedImage', () => ({
+  useCachedImage: vi.fn().mockImplementation(() => ({
+    cachedUrl: null,
+    isLoading: false,
+    error: null,
+  })),
+}));
 
 const basePerson: Pick<Person, 'id' | 'firstName' | 'lastName' | 'gender' | 'birthDate' | 'photoUrl' | 'parents' | 'children' | 'spouses'> = {
   id: 'person-123',
@@ -17,6 +25,14 @@ const basePerson: Pick<Person, 'id' | 'firstName' | 'lastName' | 'gender' | 'bir
 };
 
 describe('SmartAvatar', () => {
+  beforeEach(() => {
+    vi.mocked(useCachedImage).mockImplementation(() => ({
+      cachedUrl: null,
+      isLoading: false,
+      error: null,
+    }));
+  });
+
   it('renders the person image first and falls back to the deterministic SVG on load error', () => {
     render(<SmartAvatar person={{ ...basePerson, photoUrl: 'https://example.com/avatar.jpg' }} size={48} className="rounded-full" />);
 
@@ -55,6 +71,18 @@ describe('SmartAvatar', () => {
     // New image should be rendered
     const image2 = screen.getByRole('img', { name: 'Noura Jozor' });
     expect(image2).toHaveAttribute('src', 'https://example.com/avatar2.jpg');
+  });
+
+  it('renders local cached URL when resolved by useCachedImage hook', () => {
+    vi.mocked(useCachedImage).mockReturnValue({
+      cachedUrl: 'blob:cached-url-xyz',
+      isLoading: false,
+      error: null,
+    });
+
+    render(<SmartAvatar person={{ ...basePerson, photoUrl: 'https://example.com/original.jpg' }} size={48} />);
+    const image = screen.getByRole('img', { name: 'Noura Jozor' });
+    expect(image).toHaveAttribute('src', 'blob:cached-url-xyz');
   });
 });
 
