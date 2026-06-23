@@ -5,6 +5,7 @@ import {
   getNormalizedSourceKey,
   deriveSourcesAndCitationsFromPeople,
   applyCitationsToLegacyPersonFields,
+  mergeDerivedSourcesAndCitations,
 } from '../citation';
 
 describe('Citation Engine Kernel', () => {
@@ -130,6 +131,52 @@ describe('Citation Engine Kernel', () => {
       );
       expect(p2GeneralCit).toBeDefined();
       expect(sources[p2GeneralCit!.sourceId].title).toBe('1920 US Census');
+    });
+  });
+
+  describe('mergeDerivedSourcesAndCitations', () => {
+    it('preserves non-derived sources and citations while replacing derived records', () => {
+      const derived = deriveSourcesAndCitationsFromPeople(treeId, peopleMap);
+      const manualSource = {
+        id: 'manual-source',
+        treeId,
+        type: 'BOOK' as const,
+        title: 'Family Archive',
+        normalizedKey: `${treeId}:BOOK:family archive`,
+        origin: 'USER_CREATED',
+        createdAt: '2026-01-01T00:00:00.000Z',
+      };
+      const manualCitation = {
+        id: 'manual-citation',
+        treeId,
+        sourceId: manualSource.id,
+        targetType: 'PERSON' as const,
+        targetId: 'p1',
+        targetField: 'person.profile.sources',
+        origin: 'USER_CREATED',
+        createdAt: '2026-01-01T00:00:00.000Z',
+      };
+      const staleDerivedSource = {
+        id: 'stale-derived-source',
+        treeId,
+        type: 'DOCUMENT' as const,
+        title: 'Removed legacy source',
+        normalizedKey: `${treeId}:DOCUMENT:removed legacy source`,
+        origin: 'migration',
+        createdAt: '2026-01-01T00:00:00.000Z',
+      };
+
+      const merged = mergeDerivedSourcesAndCitations(
+        { [manualSource.id]: manualSource, [staleDerivedSource.id]: staleDerivedSource },
+        { [manualCitation.id]: manualCitation },
+        derived.sources,
+        derived.citations
+      );
+
+      expect(merged.sources[manualSource.id]).toBe(manualSource);
+      expect(merged.citations[manualCitation.id]).toBe(manualCitation);
+      expect(merged.sources[staleDerivedSource.id]).toBeUndefined();
+      expect(Object.keys(merged.sources).length).toBe(Object.keys(derived.sources).length + 1);
     });
   });
 

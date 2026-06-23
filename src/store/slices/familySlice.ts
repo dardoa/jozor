@@ -1,5 +1,5 @@
 import { StateCreator } from 'zustand';
-import { Person, RelationshipEdge, RelationshipEdgeType, syncRelationshipsWithPeople, Source, Citation, deriveSourcesAndCitationsFromPeople } from '../../types';
+import { Person, RelationshipEdge, RelationshipEdgeType, syncRelationshipsWithPeople, Source, Citation, deriveSourcesAndCitationsFromPeople, mergeDerivedSourcesAndCitations } from '../../types';
 import { DEFAULT_PERSON_TEMPLATE } from '../../constants';
 import { createPerson } from '../../utils/familyLogic';
 import { applyFamilyDomainAction, reduceFamilyDomain } from '../../domain/FamilyDomainReducer';
@@ -107,8 +107,14 @@ export const createFamilySlice: StateCreator<AppStore, [["zustand/devtools", nev
                 updated.relationships = syncRelationshipsWithPeople(currentRels, treeId, updated.people);
 
                 const { sources: derivedSources, citations: derivedCitations } = deriveSourcesAndCitationsFromPeople(treeId, updated.people);
-                updated.sources = derivedSources;
-                updated.citations = derivedCitations;
+                const merged = mergeDerivedSourcesAndCitations(
+                    updated.sources || state.sources || {},
+                    updated.citations || state.citations || {},
+                    derivedSources,
+                    derivedCitations
+                );
+                updated.sources = merged.sources;
+                updated.citations = merged.citations;
             }
             
             if (updated.confirmedPeople && updated.confirmedPeople !== state.confirmedPeople) {
@@ -117,8 +123,14 @@ export const createFamilySlice: StateCreator<AppStore, [["zustand/devtools", nev
                 updated.relationships = syncRelationshipsWithPeople(currentRels, treeId, updated.confirmedPeople);
 
                 const { sources: derivedSources, citations: derivedCitations } = deriveSourcesAndCitationsFromPeople(treeId, updated.confirmedPeople);
-                updated.sources = derivedSources;
-                updated.citations = derivedCitations;
+                const merged = mergeDerivedSourcesAndCitations(
+                    updated.sources || state.sources || {},
+                    updated.citations || state.citations || {},
+                    derivedSources,
+                    derivedCitations
+                );
+                updated.sources = merged.sources;
+                updated.citations = merged.citations;
             }
             
             // eslint-disable-next-line @typescript-eslint/no-explicit-any

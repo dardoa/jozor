@@ -1,6 +1,8 @@
 ﻿﻿import CryptoJS from 'crypto-js';
 import type { Person } from './person';
 
+export const LEGACY_DERIVED_CITATION_ORIGIN = 'migration';
+
 export type CitationClaimKey =
   | 'person.birth.date'
   | 'person.birth.place'
@@ -40,6 +42,10 @@ export interface Citation {
   readonly origin?: string;
   readonly createdAt: string;
   readonly updatedAt?: string;
+}
+
+export function isLegacyDerivedCitationOrigin(origin?: string): boolean {
+  return origin === LEGACY_DERIVED_CITATION_ORIGIN || origin === 'LEGACY_DERIVED';
 }
 
 /**
@@ -114,7 +120,7 @@ export function deriveSourcesAndCitationsFromPeople(
           normalizedKey,
           url: src.url || undefined,
           date: src.date || undefined,
-          origin: 'migration',
+          origin: LEGACY_DERIVED_CITATION_ORIGIN,
           createdAt,
         };
       }
@@ -130,7 +136,7 @@ export function deriveSourcesAndCitationsFromPeople(
           targetType: 'PERSON',
           targetId: person.id,
           targetField: 'person.profile.sources',
-          origin: 'migration',
+          origin: LEGACY_DERIVED_CITATION_ORIGIN,
           createdAt,
         };
       }
@@ -149,7 +155,7 @@ export function deriveSourcesAndCitationsFromPeople(
           type,
           title: person.birthSource,
           normalizedKey,
-          origin: 'migration',
+          origin: LEGACY_DERIVED_CITATION_ORIGIN,
           createdAt,
         };
       }
@@ -166,7 +172,7 @@ export function deriveSourcesAndCitationsFromPeople(
           targetId: person.id,
           targetField: 'person.birth.date',
           confidence: 'HIGH',
-          origin: 'migration',
+          origin: LEGACY_DERIVED_CITATION_ORIGIN,
           createdAt,
         };
       }
@@ -185,7 +191,7 @@ export function deriveSourcesAndCitationsFromPeople(
           type,
           title: person.deathSource,
           normalizedKey,
-          origin: 'migration',
+          origin: LEGACY_DERIVED_CITATION_ORIGIN,
           createdAt,
         };
       }
@@ -202,7 +208,7 @@ export function deriveSourcesAndCitationsFromPeople(
           targetId: person.id,
           targetField: 'person.death.date',
           confidence: 'HIGH',
-          origin: 'migration',
+          origin: LEGACY_DERIVED_CITATION_ORIGIN,
           createdAt,
         };
       }
@@ -210,6 +216,31 @@ export function deriveSourcesAndCitationsFromPeople(
   });
 
   return { sources, citations };
+}
+
+export function mergeDerivedSourcesAndCitations(
+  currentSources: Record<string, Source>,
+  currentCitations: Record<string, Citation>,
+  derivedSources: Record<string, Source>,
+  derivedCitations: Record<string, Citation>
+): { sources: Record<string, Source>; citations: Record<string, Citation> } {
+  const preservedSources = Object.fromEntries(
+    Object.entries(currentSources).filter(([, source]) => !isLegacyDerivedCitationOrigin(source.origin))
+  );
+  const preservedCitations = Object.fromEntries(
+    Object.entries(currentCitations).filter(([, citation]) => !isLegacyDerivedCitationOrigin(citation.origin))
+  );
+
+  return {
+    sources: {
+      ...preservedSources,
+      ...derivedSources,
+    },
+    citations: {
+      ...preservedCitations,
+      ...derivedCitations,
+    },
+  };
 }
 
 /**

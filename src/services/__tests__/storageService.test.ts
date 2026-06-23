@@ -24,10 +24,12 @@ const dbMock = vi.hoisted(() => {
   const sources = {
     clear: vi.fn(),
     bulkPut: vi.fn(),
+    bulkDelete: vi.fn(),
     delete: vi.fn(),
     where: vi.fn().mockImplementation(() => ({
       equals: vi.fn().mockImplementation(() => ({
         delete: vi.fn().mockResolvedValue(undefined),
+        toArray: vi.fn().mockResolvedValue([]),
       })),
     })),
   };
@@ -35,10 +37,12 @@ const dbMock = vi.hoisted(() => {
   const citations = {
     clear: vi.fn(),
     bulkPut: vi.fn(),
+    bulkDelete: vi.fn(),
     delete: vi.fn(),
     where: vi.fn().mockImplementation(() => ({
       equals: vi.fn().mockImplementation(() => ({
         delete: vi.fn().mockResolvedValue(undefined),
+        toArray: vi.fn().mockResolvedValue([]),
       })),
     })),
   };
@@ -117,8 +121,10 @@ describe('storageService', () => {
     dbMock.relationships.bulkPut.mockResolvedValue(undefined);
     dbMock.sources.clear.mockResolvedValue(undefined);
     dbMock.sources.bulkPut.mockResolvedValue(undefined);
+    dbMock.sources.bulkDelete.mockResolvedValue(undefined);
     dbMock.citations.clear.mockResolvedValue(undefined);
     dbMock.citations.bulkPut.mockResolvedValue(undefined);
+    dbMock.citations.bulkDelete.mockResolvedValue(undefined);
   });
 
   it('saves the full tree and orphan cleanup in one IndexedDB transaction', async () => {
@@ -142,5 +148,45 @@ describe('storageService', () => {
     expect(dbMock.people.clear).toHaveBeenCalled();
     expect(dbMock.relationships.where).toHaveBeenCalledWith('treeId');
     expect(dbMock.people.bulkPut).not.toHaveBeenCalled();
+  });
+
+  it('preserves non-derived sources and citations during full-tree saves', async () => {
+    const person = { ...makePerson('person-1'), birthSource: 'Birth Register' };
+    const manualSource = {
+      id: 'manual-source',
+      treeId: 'tree-1',
+      type: 'BOOK' as const,
+      title: 'Family Archive',
+      normalizedKey: 'tree-1:BOOK:family archive',
+      origin: 'USER_CREATED',
+      createdAt: '2026-01-01T00:00:00.000Z',
+    };
+    const manualCitation = {
+      id: 'manual-citation',
+      treeId: 'tree-1',
+      sourceId: 'manual-source',
+      targetType: 'PERSON' as const,
+      targetId: 'person-1',
+      targetField: 'person.profile.sources',
+      origin: 'USER_CREATED',
+      createdAt: '2026-01-01T00:00:00.000Z',
+    };
+    dbMock.sources.where.mockImplementation(() => ({
+      equals: vi.fn().mockImplementation(() => ({
+        delete: vi.fn().mockResolvedValue(undefined),
+        toArray: vi.fn().mockResolvedValue([manualSource]),
+      })),
+    }));
+    dbMock.citations.where.mockImplementation(() => ({
+      equals: vi.fn().mockImplementation(() => ({
+        delete: vi.fn().mockResolvedValue(undefined),
+        toArray: vi.fn().mockResolvedValue([manualCitation]),
+      })),
+    }));
+
+    await storageService.saveFullTree({ 'person-1': person }, 'tree-1');
+
+    expect(dbMock.sources.bulkPut).toHaveBeenCalledWith(expect.arrayContaining([manualSource]));
+    expect(dbMock.citations.bulkPut).toHaveBeenCalledWith(expect.arrayContaining([manualCitation]));
   });
 });

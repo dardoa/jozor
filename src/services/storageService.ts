@@ -1,6 +1,6 @@
 import type { SettingValue, PendingOperationRec, PersonTombstoneRec } from '../utils/db';
 import { db } from '../utils/db';
-import { Person, RelationshipEdge, deriveRelationshipsFromPeople, Source, Citation, deriveSourcesAndCitationsFromPeople } from '../types';
+import { Person, RelationshipEdge, deriveRelationshipsFromPeople, Source, Citation, deriveSourcesAndCitationsFromPeople, mergeDerivedSourcesAndCitations } from '../types';
 import { logError, logInfo } from '../utils/errorLogger';
 
 const getLocalDb = async () => {
@@ -46,15 +46,30 @@ export const storageService = {
                     await db.relationships.bulkPut(edgesArray);
                 }
 
-                // Reconstruct and save sources and citations
+                // Reconstruct and save derived sources/citations without deleting user-created ones.
                 const { sources: derivedSources, citations: derivedCitations } = deriveSourcesAndCitationsFromPeople(activeTreeId, people);
-                await db.sources.where('treeId').equals(activeTreeId).delete();
-                await db.citations.where('treeId').equals(activeTreeId).delete();
-                const sourcesArray = Object.values(derivedSources);
+                const existingSources = await db.sources.where('treeId').equals(activeTreeId).toArray();
+                const existingCitations = await db.citations.where('treeId').equals(activeTreeId).toArray();
+                const merged = mergeDerivedSourcesAndCitations(
+                    Object.fromEntries(existingSources.map((source) => [source.id, source])),
+                    Object.fromEntries(existingCitations.map((citation) => [citation.id, citation])),
+                    derivedSources,
+                    derivedCitations
+                );
+                const sourceIdsToDelete = existingSources
+                    .map((source) => source.id)
+                    .filter((id) => !merged.sources[id]);
+                const citationIdsToDelete = existingCitations
+                    .map((citation) => citation.id)
+                    .filter((id) => !merged.citations[id]);
+                if (sourceIdsToDelete.length > 0) await db.sources.bulkDelete(sourceIdsToDelete);
+                if (citationIdsToDelete.length > 0) await db.citations.bulkDelete(citationIdsToDelete);
+
+                const sourcesArray = Object.values(merged.sources);
                 if (sourcesArray.length > 0) {
                     await db.sources.bulkPut(sourcesArray);
                 }
-                const citationsArray = Object.values(derivedCitations);
+                const citationsArray = Object.values(merged.citations);
                 if (citationsArray.length > 0) {
                     await db.citations.bulkPut(citationsArray);
                 }
