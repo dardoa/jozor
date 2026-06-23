@@ -102,7 +102,7 @@ describe('supabaseTreeService.fetchTree', () => {
     const fromMock = vi.fn((table: string) => {
       if (table === 'tree_checkpoints') return createQueryBuilder({ data: null, error: null }); // no checkpoint
       if (table === 'trees') return createQueryBuilder({ data: treeRow, error: null });
-      if (table === 'people') return createQueryBuilder({ data: peopleRows, error: null });
+      if (table === 'people' || table === 'people_secure') return createQueryBuilder({ data: peopleRows, error: null });
       if (table === 'relationships') return createQueryBuilder({ data: relationshipRows, error: null });
       if (table === 'tree_operations') return createQueryBuilder({ data: operationRows, error: null });
       throw new Error(`Unexpected table ${table}`);
@@ -178,7 +178,7 @@ describe('supabaseTreeService.fetchTree', () => {
     const fromMock = vi.fn((table: string) => {
       if (table === 'tree_checkpoints') return createQueryBuilder({ data: null, error: null }); // no checkpoint
       if (table === 'trees') return createQueryBuilder({ data: treeRow, error: null });
-      if (table === 'people') return createQueryBuilder({ data: peopleRows, error: null });
+      if (table === 'people' || table === 'people_secure') return createQueryBuilder({ data: peopleRows, error: null });
       if (table === 'relationships') return createQueryBuilder({ data: [], error: null });
       if (table === 'tree_operations') return createQueryBuilder({ data: null, error: null });
       throw new Error(`Unexpected table ${table}`);

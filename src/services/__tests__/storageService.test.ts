@@ -47,11 +47,17 @@ const dbMock = vi.hoisted(() => {
     })),
   };
 
+  const settings = {
+    put: vi.fn(),
+    delete: vi.fn(),
+  };
+
   return {
     people,
     relationships,
     sources,
     citations,
+    settings,
     transaction: vi.fn(async (_mode: string, _table: unknown, callback: () => Promise<void>) => {
       await callback();
     }),
@@ -110,6 +116,7 @@ const makePerson = (id: string): Person => ({
 describe('storageService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    storageService.setRole(null);
     dbMock.people.clear.mockResolvedValue(undefined);
     dbMock.people.bulkPut.mockResolvedValue(undefined);
     dbMock.people.count.mockResolvedValue(0);
@@ -125,6 +132,8 @@ describe('storageService', () => {
     dbMock.citations.clear.mockResolvedValue(undefined);
     dbMock.citations.bulkPut.mockResolvedValue(undefined);
     dbMock.citations.bulkDelete.mockResolvedValue(undefined);
+    dbMock.settings.put.mockResolvedValue(undefined);
+    dbMock.settings.delete.mockResolvedValue(undefined);
   });
 
   it('saves the full tree and orphan cleanup in one IndexedDB transaction', async () => {
@@ -136,16 +145,18 @@ describe('storageService', () => {
 
     await storageService.saveFullTree({ 'person-1': person });
 
-    expect(dbMock.transaction).toHaveBeenCalledWith('rw', [dbMock.people, dbMock.relationships, dbMock.sources, dbMock.citations], expect.any(Function));
+    expect(dbMock.transaction).toHaveBeenCalledWith('rw', [dbMock.people, dbMock.relationships, dbMock.sources, dbMock.citations, dbMock.settings], expect.any(Function));
     expect(dbMock.people.bulkPut).toHaveBeenCalledWith([person]);
+    expect(dbMock.settings.put).toHaveBeenCalledWith({ key: 'currentTreeId', value: 'default-tree' });
     expect(dbMock.people.bulkDelete).toHaveBeenCalledWith(['deleted-person']);
   });
 
   it('clears local people inside the transaction when the full tree is empty', async () => {
     await storageService.saveFullTree({}, 'tree-1');
 
-    expect(dbMock.transaction).toHaveBeenCalledWith('rw', [dbMock.people, dbMock.relationships, dbMock.sources, dbMock.citations], expect.any(Function));
+    expect(dbMock.transaction).toHaveBeenCalledWith('rw', [dbMock.people, dbMock.relationships, dbMock.sources, dbMock.citations, dbMock.settings], expect.any(Function));
     expect(dbMock.people.clear).toHaveBeenCalled();
+    expect(dbMock.settings.delete).toHaveBeenCalledWith('currentTreeId');
     expect(dbMock.relationships.where).toHaveBeenCalledWith('treeId');
     expect(dbMock.people.bulkPut).not.toHaveBeenCalled();
   });

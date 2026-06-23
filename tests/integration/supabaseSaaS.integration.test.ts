@@ -1,4 +1,4 @@
-﻿import { describe, expect, it, beforeEach, afterEach } from 'vitest';
+import { describe, expect, it, beforeEach, afterEach } from 'vitest';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { readFileSync } from 'fs';
@@ -735,6 +735,9 @@ describe('Supabase SaaS & Security Integration Tests', () => {
       let resStatus = 0;
       let resJson: { success?: boolean } | null = null;
       const mockRes = {
+        setHeader(_name: string, _value: string) {
+          return this;
+        },
         status(code: number) {
           resStatus = code;
           return this;
@@ -827,6 +830,9 @@ describe('Supabase SaaS & Security Integration Tests', () => {
       let resStatus = 0;
       let resJson: { success?: boolean } | null = null;
       const mockRes = {
+        setHeader(_name: string, _value: string) {
+          return this;
+        },
         status(code: number) {
           resStatus = code;
           return this;

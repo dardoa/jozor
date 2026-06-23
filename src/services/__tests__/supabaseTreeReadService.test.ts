@@ -64,7 +64,7 @@ describe('supabaseTreeReadService', () => {
 
     expect(getTreeClientMock).toHaveBeenCalledWith('owner-1', 'owner@example.com', 'token');
     expect(fromMock).toHaveBeenCalledTimes(1);
-    expect(selectMock).toHaveBeenCalledWith('id, people(count)');
+    expect(selectMock).toHaveBeenCalledWith('id, people_secure!people_tree_id_fkey(count)');
     expect(inMock).toHaveBeenCalledWith('id', ['tree-1', 'tree-2']);
     expect(counts).toEqual({ 'tree-1': 2, 'tree-2': 0 });
   });
@@ -92,7 +92,7 @@ describe('supabaseTreeReadService', () => {
         };
       }
 
-      if (table === 'people') {
+      if (table === 'people_secure') {
         return peopleChain;
       }
 
@@ -107,7 +107,7 @@ describe('supabaseTreeReadService', () => {
     );
 
     expect(fromMock).toHaveBeenCalledWith('trees');
-    expect(fromMock).toHaveBeenCalledWith('people');
+    expect(fromMock).toHaveBeenCalledWith('people_secure');
     expect(peopleChain.range).toHaveBeenCalledWith(0, 999);
     expect(counts).toEqual({ 'tree-1': 2, 'tree-2': 1 });
   });
@@ -131,7 +131,7 @@ describe('supabaseTreeReadService', () => {
           })),
         };
       }
-      if (table === 'people') {
+      if (table === 'people_secure') {
         return peopleChain;
       }
       throw new Error(`Unexpected table ${table}`);
@@ -168,7 +168,7 @@ describe('supabaseTreeReadService', () => {
           })),
         };
       }
-      if (table === 'people') {
+      if (table === 'people_secure') {
         return peopleChain;
       }
       throw new Error(`Unexpected table ${table}`);
@@ -206,7 +206,7 @@ describe('supabaseTreeReadService', () => {
           })),
         };
       }
-      if (table === 'people') {
+      if (table === 'people_secure') {
         return peopleChain;
       }
       throw new Error(`Unexpected table ${table}`);

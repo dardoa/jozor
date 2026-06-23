@@ -31,6 +31,7 @@ export const fetchTreesForUser = async (
 type EmbeddedPeopleCountRow = {
   id?: unknown;
   people?: unknown;
+  people_secure?: unknown;
 };
 
 const readEmbeddedPeopleCount = (people: unknown): number => {
@@ -63,7 +64,7 @@ const fetchPeopleCountsPaginated = async (
 
     while (hasMore) {
       const { data, error } = await client
-        .from('people')
+        .from('people_secure')
         .select('id, tree_id')
         .in('tree_id', treeIds)
         .order('tree_id', { ascending: true })
@@ -112,7 +113,7 @@ export const fetchPeopleCountsForTrees = async (
   const client = getTreeClient(ownerId, userEmail, token);
   const { data, error } = await client
     .from('trees')
-    .select('id, people(count)')
+    .select('id, people_secure!people_tree_id_fkey(count)')
     .in('id', uniqueTreeIds);
 
   if (error) {
@@ -122,7 +123,7 @@ export const fetchPeopleCountsForTrees = async (
   return (data ?? []).reduce<Record<string, number>>((counts, row) => {
     const treeRow = row as EmbeddedPeopleCountRow;
     if (typeof treeRow.id === 'string') {
-      counts[treeRow.id] = readEmbeddedPeopleCount(treeRow.people);
+      counts[treeRow.id] = readEmbeddedPeopleCount(treeRow.people_secure || treeRow.people);
     }
     return counts;
   }, {});
@@ -227,7 +228,7 @@ export const fetchTree = async (
     { data: relRows, error: relError },
     { data: operationRows, error: opsError },
   ] = await Promise.all([
-    client.from('people').select('*').eq('tree_id', treeId),
+    client.from('people_secure').select('*').eq('tree_id', treeId),
     client.from('relationships').select('*').eq('tree_id', treeId),
     client
       .from('tree_operations')

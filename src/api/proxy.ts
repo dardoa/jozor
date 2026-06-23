@@ -143,7 +143,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           { data: people, error: peopleError },
           { data: relationships, error: relationshipsError },
         ] = await Promise.all([
-          supabase.from('people').select('*').eq('tree_id', treeId),
+          supabase.from('people_secure').select('*').eq('tree_id', treeId),
           supabase.from('relationships').select('*').eq('tree_id', treeId),
         ]);
 
