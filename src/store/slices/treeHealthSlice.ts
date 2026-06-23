@@ -1,5 +1,6 @@
 import { StateCreator } from 'zustand';
 import { AppStore } from '../storeTypes';
+import { evaluateDataIntegrity } from '../../domain/dataIntegrity';
 
 export interface TreeHealthSlice {
     validationErrors: Record<string, string[]>;
@@ -16,7 +17,9 @@ export const createTreeHealthSlice: StateCreator<AppStore, [["zustand/devtools",
         const people = get().people;
         const total = Object.keys(people || {}).length;
         const invalidCount = Object.keys(errors).length;
-        const healthScore = total > 0 ? Math.max(0, Math.round(((total - invalidCount) / total) * 100)) : 100;
+        const healthScore = invalidCount > 0
+            ? (total > 0 ? Math.max(0, Math.round(((total - invalidCount) / total) * 100)) : 100)
+            : evaluateDataIntegrity(people || {}).healthScore;
         set({ validationErrors: errors, healthScore });
     },
 });

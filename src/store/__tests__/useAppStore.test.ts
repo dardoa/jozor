@@ -228,6 +228,29 @@ describe('loadFullState', () => {
     expect(useAppStore.getState().focusId).toBe('person-2');
   });
 
+  it('derives tree health from local integrity checks when external validation errors are empty', () => {
+    act(() => {
+      useAppStore.setState((state) => ({
+        ...state,
+        people: {
+          parent: {
+            ...buildPerson('parent', 'Parent'),
+            birthDate: '2000-01-01',
+            children: ['child'],
+          },
+          child: {
+            ...buildPerson('child', 'Child'),
+            birthDate: '1990-01-01',
+            parents: ['parent'],
+          },
+        },
+      }));
+      useAppStore.getState().setValidationErrors({});
+    });
+
+    expect(useAppStore.getState().healthScore).toBeLessThan(100);
+  });
+
   it('falls back to a valid focus only when the current focused person disappears', () => {
     act(() => {
       useAppStore.setState((state) => ({

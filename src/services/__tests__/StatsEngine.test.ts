@@ -41,6 +41,23 @@ const makePerson = (id: string, birthPlace: string): Person => ({
 });
 
 describe('StatsEngine', () => {
+  it('derives health score from structural data integrity issues', () => {
+    const stats = StatsEngine.calculate({
+      parent: {
+        ...makePerson('parent', ''),
+        birthDate: '2000-01-01',
+        children: ['child'],
+      },
+      child: {
+        ...makePerson('child', ''),
+        birthDate: '1990-01-01',
+        parents: ['parent'],
+      },
+    });
+
+    expect(stats.kpis.healthScore).toBeLessThan(100);
+  });
+
   it('groups top places by normalized place names and unique city aliases', () => {
     const kafranbelSyria = '\u0643\u0641\u0631\u0646\u0628\u0644\u060C \u0633\u0648\u0631\u064A\u0627';
     const kafranbelSlashSyria = '\u0643\u0641\u0631\u0646\u0628\u0644 /\u0633\u0648\u0631\u064A\u0627';

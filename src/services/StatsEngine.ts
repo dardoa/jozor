@@ -1,5 +1,6 @@
 import { Person } from '../types';
 import { normalizePlaceName } from '../domain/placeUtils';
+import { evaluateDataIntegrity } from '../domain/dataIntegrity';
 import { getDisplayDate } from '../utils/familyLogic';
 
 interface PlaceBucket {
@@ -161,8 +162,10 @@ export class StatsEngine {
         });
 
         // 4. Health Score Calculation (Unified)
-        const invalidCount = Object.keys(validationErrors).length;
-        const healthScore = totalMembers > 0 ? Math.max(0, Math.round(((totalMembers - invalidCount) / totalMembers) * 100)) : 100;
+        const externalInvalidCount = Object.keys(validationErrors).length;
+        const healthScore = externalInvalidCount > 0
+            ? (totalMembers > 0 ? Math.max(0, Math.round(((totalMembers - externalInvalidCount) / totalMembers) * 100)) : 100)
+            : evaluateDataIntegrity(people).healthScore;
 
         // 5. Format outputs
         const demographics = Object.entries(decadeMap)
