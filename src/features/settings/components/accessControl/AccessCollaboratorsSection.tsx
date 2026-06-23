@@ -12,7 +12,8 @@ export const AccessCollaboratorsSection: React.FC<{
   isLoading: boolean;
   onChangeRole: (collaborator: Collaborator, role: AccessRole) => void;
   onRevoke: (collaborator: Collaborator) => void;
-}> = ({ t, sectionText, ownerRow, collaborators, isLoading, onChangeRole, onRevoke }) => (
+  canManage?: boolean;
+}> = ({ t, sectionText, ownerRow, collaborators, isLoading, onChangeRole, onRevoke, canManage = true }) => (
   <section className={accessSectionClassName}>
     <h4 className="mb-2 text-[15px] font-bold tracking-tight text-[var(--text-main)]">
       {t.treeManager.collaboratorsCount.replace('{count}', collaborators.length.toString())}
@@ -61,30 +62,36 @@ export const AccessCollaboratorsSection: React.FC<{
               </div>
 
               {!isOwner ? (
-                <div className="flex flex-wrap items-center gap-2.5 gap-y-3">
-                  <button
-                    type="button"
-                    onClick={() => void onChangeRole(collab, 'viewer')}
-                    className={collab.role === 'viewer' ? activeChipClass : inactiveChipClass}
-                  >
-                    {t.viewer}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => void onChangeRole(collab, 'editor')}
-                    className={collab.role === 'editor' ? activeChipClass : inactiveChipClass}
-                  >
-                    {t.editor}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => onRevoke(collab)}
-                    className="flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-[var(--danger-500)]/20 bg-[var(--danger-500)]/10 text-[var(--danger-600)] transition-all duration-200 ease-in-out hover:bg-[var(--danger-500)]/15"
-                    title={t.delete}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
+                canManage ? (
+                  <div className="flex flex-wrap items-center gap-2.5 gap-y-3">
+                    <button
+                      type="button"
+                      onClick={() => void onChangeRole(collab, 'viewer')}
+                      className={collab.role === 'viewer' ? activeChipClass : inactiveChipClass}
+                    >
+                      {t.viewer}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void onChangeRole(collab, 'editor')}
+                      className={collab.role === 'editor' ? activeChipClass : inactiveChipClass}
+                    >
+                      {t.editor}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onRevoke(collab)}
+                      className="flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-[var(--danger-500)]/20 bg-[var(--danger-500)]/10 text-[var(--danger-600)] transition-all duration-200 ease-in-out hover:bg-[var(--danger-500)]/15"
+                      title={t.delete}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <span className="inline-flex items-center rounded-md bg-[var(--surface-panel)] px-2.5 py-1 text-xs font-semibold text-[var(--text-secondary)]">
+                    {collab.role === 'editor' ? t.editor : t.viewer}
+                  </span>
+                )
               ) : null}
             </div>
           );

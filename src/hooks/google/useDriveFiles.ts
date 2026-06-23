@@ -4,6 +4,7 @@ import type { DriveFile, UserProfile } from '../../types';
 import { storageProvider } from '../../services/storageProvider';
 import { showToast } from '../../utils/showToast';
 import { logError, logWarn } from '../../utils/errorLogger';
+import { useAppStore } from '../../store/useAppStore';
 
 const SESSION_ERROR_TOAST_ID = 'session-error';
 
@@ -107,6 +108,11 @@ export const useDriveFiles = ({
 
   const handleDeleteDriveFile = useCallback(
     async (fileId: string) => {
+      const role = useAppStore.getState().currentUserRole;
+      if (role === 'viewer') {
+        showToast.error('Read-only users cannot delete files from Google Drive.');
+        return;
+      }
       if (fileOwnerUid && user && fileOwnerUid !== user.uid) {
         showToast.error('Only the owner can delete this file.');
         return;

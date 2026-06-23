@@ -102,6 +102,11 @@ export const useDrivePersistence = ({
   );
 
   const onSaveNewCloudFile = useCallback(async () => {
+    const role = useAppStore.getState().currentUserRole;
+    if (role === 'viewer') {
+      showToast.error('Read-only users cannot save files to Google Drive.');
+      return;
+    }
     setDriveSyncUiStatus('syncing');
     try {
       const fullState = buildCurrentDriveFullState();
@@ -130,6 +135,11 @@ export const useDrivePersistence = ({
 
   const handleSaveAsNewDriveFile = useCallback(
     async (fileName: string) => {
+      const role = useAppStore.getState().currentUserRole;
+      if (role === 'viewer') {
+        showToast.error('Read-only users cannot save files to Google Drive.');
+        return;
+      }
       setIsSavingDriveFile(true);
       try {
         const fullState = buildCurrentDriveFullState();
@@ -159,6 +169,11 @@ export const useDrivePersistence = ({
 
   const handleOverwriteExistingDriveFile = useCallback(
     async (fileId: string | null, silent: boolean = false, allowPopup: boolean = false, forceNew: boolean = false) => {
+      const role = useAppStore.getState().currentUserRole;
+      if (role === 'viewer') {
+        if (!silent) showToast.error('Read-only users cannot save files to Google Drive.');
+        return;
+      }
       setIsSavingDriveFile(true);
 
       if (!validateCurrentDriveIntegrity(silent)) {
@@ -266,6 +281,11 @@ export const useDrivePersistence = ({
   }, [currentActiveDriveFileId, debouncedPeople, handleOverwriteExistingDriveFile, isListingDriveFiles, isSavingDriveFile, isSyncing, user]);
 
   const handleClearSyncCache = useCallback(async () => {
+    const role = useAppStore.getState().currentUserRole;
+    if (role === 'viewer') {
+      showToast.error('Read-only users cannot reset sync.');
+      return;
+    }
     if (!user) {
       showToast.error('Cannot reset sync: No active tree or session found.');
       return;

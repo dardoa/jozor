@@ -40,6 +40,7 @@ export const useAccessControlState = ({
   const [pendingRevokeCollaborator, setPendingRevokeCollaborator] = useState<Collaborator | null>(null);
 
   const supabaseToken = useAppStore((state) => state.user?.supabaseToken);
+  const currentUserRole = useAppStore((state) => state.currentUserRole);
   const shareLink = `${window.location.origin}/tree/${treeId}`;
   const shareLinkLabel = formatShareLinkLabel(shareLink);
   const ownerRow = useMemo<CollaboratorRow>(
@@ -127,6 +128,10 @@ export const useAccessControlState = ({
   }, [loadCollaborators, ownerEmail, ownerId, supabaseToken, treeId]);
 
   const handleInvite = async () => {
+    if (currentUserRole !== 'owner') {
+      showToast.error('Only the owner can manage access permissions.');
+      return;
+    }
     if (!inviteEmail.trim()) return;
     const trimmedInviteEmail = inviteEmail.trim();
 
@@ -162,6 +167,10 @@ export const useAccessControlState = ({
   };
 
   const handleRevokeInvitation = async (invitation: TreeInvitation) => {
+    if (currentUserRole !== 'owner') {
+      showToast.error('Only the owner can manage access permissions.');
+      return;
+    }
     try {
       const { activityService } = await import('../../../../features/activity-log');
       await revokeTreeInvitation(invitation.id, ownerId, ownerEmail, supabaseToken);
@@ -180,6 +189,10 @@ export const useAccessControlState = ({
   };
 
   const handleChangeRole = async (collaborator: Collaborator, newRole: AccessRole) => {
+    if (currentUserRole !== 'owner') {
+      showToast.error('Only the owner can manage access permissions.');
+      return;
+    }
     if (collaborator.role === newRole) return;
 
     try {
@@ -209,6 +222,10 @@ export const useAccessControlState = ({
   };
 
   const requestRevoke = (collaborator: Collaborator) => {
+    if (currentUserRole !== 'owner') {
+      showToast.error('Only the owner can manage access permissions.');
+      return;
+    }
     setPendingRevokeCollaborator(collaborator);
     setIsConfirmRevokeOpen(true);
   };
@@ -219,6 +236,10 @@ export const useAccessControlState = ({
   };
 
   const confirmRevoke = async () => {
+    if (currentUserRole !== 'owner') {
+      showToast.error('Only the owner can manage access permissions.');
+      return;
+    }
     if (!pendingRevokeCollaborator) return;
     const collaborator = pendingRevokeCollaborator;
 
@@ -256,6 +277,7 @@ export const useAccessControlState = ({
   };
 
   return {
+    currentUserRole,
     collaborators,
     pendingInvitations,
     ownerRow,

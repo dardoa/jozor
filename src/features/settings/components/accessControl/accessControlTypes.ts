@@ -20,6 +20,7 @@ export type CollaboratorRow = Collaborator | {
 };
 
 export interface AccessControlState {
+  currentUserRole: string | null;
   collaborators: Collaborator[];
   pendingInvitations: TreeInvitation[];
   ownerRow: CollaboratorRow;

@@ -161,4 +161,31 @@ describe('useDrivePersistence', () => {
     expect(showToast.success).not.toHaveBeenCalled();
     expect(useAppStore.getState().driveSyncUiStatus).toBe('idle');
   });
+
+  it('blocks saving/overwriting when user is viewer', async () => {
+    useAppStore.setState({ currentUserRole: 'viewer' });
+    const params = createHookParams();
+    const { result } = renderHook(() => useDrivePersistence(params));
+
+    await act(async () => {
+      await result.current.onSaveNewCloudFile();
+    });
+    expect(showToast.error).toHaveBeenCalledWith('Read-only users cannot save files to Google Drive.');
+
+    await act(async () => {
+      await result.current.handleSaveAsNewDriveFile('test');
+    });
+    expect(showToast.error).toHaveBeenCalledWith('Read-only users cannot save files to Google Drive.');
+
+    await act(async () => {
+      await result.current.handleOverwriteExistingDriveFile('file-1');
+    });
+    expect(showToast.error).toHaveBeenCalledWith('Read-only users cannot save files to Google Drive.');
+
+    await act(async () => {
+      await result.current.handleClearSyncCache();
+    });
+    expect(showToast.error).toHaveBeenCalledWith('Read-only users cannot reset sync.');
+  });
 });
+

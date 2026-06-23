@@ -78,9 +78,15 @@ vi.mock('../../../services/supabaseClient', () => {
   };
 });
 
+const { mockStore } = vi.hoisted(() => ({
+  mockStore: {
+    user: { supabaseToken: 'token-123' },
+    currentUserRole: 'owner',
+  },
+}));
+
 vi.mock('../../../store/useAppStore', () => ({
-  useAppStore: (selector: (state: { user: { supabaseToken: string } }) => unknown) =>
-    selector({ user: { supabaseToken: 'token-123' } }),
+  useAppStore: (selector: (state: typeof mockStore) => unknown) => selector(mockStore),
 }));
 
 vi.mock('../../../utils/showToast', () => ({
@@ -105,7 +111,8 @@ vi.mock('../../../ConfirmationModal', () => ({
 }));
 
 describe('AccessControlTab', () => {
-  it('renders the reorganized access sections with guidance copy', async () => {
+  it('renders all sections when user is the owner', async () => {
+    mockStore.currentUserRole = 'owner';
     render(
       <AccessControlTab
         treeId="tree-1"
@@ -122,5 +129,26 @@ describe('AccessControlTab', () => {
     expect(await screen.findByText('Track invitations that have been sent but not yet accepted.')).toBeInTheDocument();
     expect(await screen.findByText(/Owner access remains fixed and cannot be reassigned from this panel\./)).toBeInTheDocument();
   });
+
+  it('hides invite and pending sections, rendering a read-only collaborators view when user is viewer', async () => {
+    mockStore.currentUserRole = 'viewer';
+    render(
+      <AccessControlTab
+        treeId="tree-1"
+        ownerId="owner-1"
+        ownerEmail="owner@example.com"
+        language="en"
+      />
+    );
+
+    expect(await screen.findByText('Share via Link')).toBeInTheDocument();
+    expect(await screen.findByText('Copy a stable viewer link for quick sharing. Editors should still be invited explicitly.')).toBeInTheDocument();
+    expect(await screen.findByText('Review current access, adjust roles, or revoke collaborators who no longer need the tree.')).toBeInTheDocument();
+    
+    // Invite and pending sections should be hidden
+    expect(screen.queryByText('Invite a specific collaborator when they need editor access or a tracked pending invitation.')).not.toBeInTheDocument();
+    expect(screen.queryByText('Track invitations that have been sent but not yet accepted.')).not.toBeInTheDocument();
+  });
 });
+
 

@@ -4,6 +4,7 @@ import { useTranslation } from '../../../../context/TranslationContext';
 import { createTreeInvitation } from '../../services/treeInvitationService';
 import { getUserFacingErrorInfo, logError } from '../../../../utils/errorLogger';
 import { showToast } from '../../../../utils/showToast';
+import { useAppStore } from '../../../../store/useAppStore';
 
 export type ShareRole = 'editor' | 'viewer';
 
@@ -31,6 +32,11 @@ export const useShareModalState = ({
 
   const handleInvite = async (event: FormEvent) => {
     event.preventDefault();
+    const currentUserRole = useAppStore.getState().currentUserRole;
+    if (currentUserRole !== 'owner') {
+      showToast.error('Only the owner can invite collaborators.');
+      return;
+    }
     if (!email.trim() || isInviting) return;
 
     if (!user || !treeId) {

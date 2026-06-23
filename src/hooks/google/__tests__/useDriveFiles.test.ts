@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { DriveFile, UserProfile } from '../../../types';
 import { storageProvider } from '../../../services/storageProvider';
 import { showToast } from '../../../utils/showToast';
+import { useAppStore } from '../../../store/useAppStore';
 import { useDriveFiles } from '../useDriveFiles';
 
 type UseDriveFilesParams = Parameters<typeof useDriveFiles>[0];
@@ -52,7 +53,9 @@ describe('useDriveFiles', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
+    useAppStore.setState({ currentUserRole: 'owner' });
   });
+
 
   it('refreshes Drive files while mounted', async () => {
     const files = [createDriveFile('file-1')];
@@ -124,5 +127,18 @@ describe('useDriveFiles', () => {
     expect(showToast.success).not.toHaveBeenCalled();
     expect(setCurrentActiveDriveFileId).not.toHaveBeenCalled();
     expect(setFileOwnerUid).not.toHaveBeenCalled();
+  });
+
+  it('blocks deleting a file when user is viewer', async () => {
+    useAppStore.setState({ currentUserRole: 'viewer' });
+    const params = createHookParams();
+    const { result } = renderHook(() => useDriveFiles(params));
+
+    await act(async () => {
+      await result.current.handleDeleteDriveFile('file-1');
+    });
+
+    expect(showToast.error).toHaveBeenCalledWith('Read-only users cannot delete files from Google Drive.');
+    expect(storageProvider.deleteFile).not.toHaveBeenCalled();
   });
 });

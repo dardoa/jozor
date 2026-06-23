@@ -32,14 +32,16 @@ export const ShareInvitePanel = ({
           placeholder={t.emailPlaceholder}
           value={email}
           onChange={(event) => setEmail(event.target.value)}
-          className="ds-input w-full ps-10 pe-3 py-2"
+          disabled={!canInvite}
+          className="ds-input w-full ps-10 pe-3 py-2 disabled:opacity-60 disabled:cursor-not-allowed"
         />
       </div>
       <select
         value={role}
         onChange={(event) => setRole(event.target.value as ShareRole)}
         aria-label={t.role}
-        className="ds-input px-3 py-2 text-sm"
+        disabled={!canInvite}
+        className="ds-input px-3 py-2 text-sm disabled:opacity-60 disabled:cursor-not-allowed"
       >
         <option value="viewer">{t.viewer}</option>
         <option value="editor">{t.editor}</option>

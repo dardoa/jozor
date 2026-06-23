@@ -6,6 +6,7 @@ import { showToast } from '../../utils/showToast';
 import { useAppStore } from '../../store/useAppStore';
 import { logError, logInfo, logWarn } from '../../utils/errorLogger';
 import { PublishingTracker } from '../../features/publishing';
+import { maskPeopleMap } from '../../utils/privacyUtils';
 
 export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGSVGElement | null>) => {
     const buildExportArchive = useCallback(async (): Promise<Blob> => {
@@ -15,12 +16,15 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
             darkMode: currentDarkMode,
             language,
             focusId,
-            locations
+            locations,
+            currentUserRole
         } = useAppStore.getState();
+
+        const activePeople = currentUserRole === 'viewer' ? maskPeopleMap(people) : people;
 
         const { blob } = await buildBlueprintArchive({
             version: 1,
-            people,
+            people: activePeople,
             locations,
             settings: {
                 treeSettings: currentTreeSettings,
@@ -46,13 +50,16 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
                 treeSettings,
                 darkMode,
                 user,
-                supabaseAccessToken
+                supabaseAccessToken,
+                currentUserRole
             } = useAppStore.getState();
+
+            const activePeople = currentUserRole === 'viewer' ? maskPeopleMap(people) : people;
 
             const trackerState = PublishingTracker.startTracking({
                 templateId: type,
                 exportType: 'legacy',
-                people,
+                people: activePeople,
                 totalPages: 1
             });
             let success = false;
@@ -76,19 +83,19 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
                     return;
                 } else if (type === 'json') {
                     outputName = 'tree.json';
-                    const data = { people, ...fullState, metadata: { exportedAt: new Date().toISOString() } };
+                    const data = { ...fullState, people: activePeople, metadata: { exportedAt: new Date().toISOString() } };
                     downloadFile(JSON.stringify(data, null, 2), outputName, 'application/json');
                     success = true;
                     return;
                 } else if (type === 'gedcom') {
                     outputName = 'tree.ged';
                     const { exportToGEDCOM } = await import('../../utils/gedcomLogic');
-                    downloadFile(exportToGEDCOM(people), outputName, 'application/octet-stream');
+                    downloadFile(exportToGEDCOM(activePeople), outputName, 'application/octet-stream');
                     success = true;
                     return;
                 } else if (type === 'ics') {
                     outputName = 'family_calendar.ics';
-                    downloadFile(generateICS(people), outputName, 'text/calendar');
+                    downloadFile(generateICS(activePeople), outputName, 'text/calendar');
                     success = true;
                     return;
                 } else if (type === 'print') {
@@ -212,13 +219,16 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
             const { templateId, format } = options;
             const {
                 setExportStatus,
-                focusId
+                focusId,
+                currentUserRole
             } = useAppStore.getState();
+
+            const activePeople = currentUserRole === 'viewer' ? maskPeopleMap(people) : people;
 
             const trackerState = PublishingTracker.startTracking({
                 templateId,
                 exportType: 'publishing',
-                people,
+                people: activePeople,
                 totalPages: 1
             });
             let success = false;
@@ -236,7 +246,7 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
                 } = await import('../../features/publishing');
 
                 const template = TemplateRegistry.getTemplate(templateId);
-                const rootPersonId = focusId || Object.keys(people)[0];
+                const rootPersonId = focusId || Object.keys(activePeople)[0];
                 if (!rootPersonId) {
                     throw new Error('No root person found for the export.');
                 }
@@ -249,7 +259,7 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
                         generationsDepth: templateId.includes('book') ? 3 : 4,
                     },
                 };
-                const doc = PublishingPipeline.composeDocument(request, people);
+                const doc = PublishingPipeline.composeDocument(request, activePeople);
                 const placedDoc = PublishingPipeline.layoutDocument(doc, template);
 
                 // Update total pages in manifest

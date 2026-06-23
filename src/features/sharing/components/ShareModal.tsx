@@ -2,6 +2,7 @@ import type { Language, UserProfile } from '../../../types';
 import { Settings as SettingsIcon } from 'lucide-react';
 import { OverlayPrimitive } from '../../../context/OverlayContext';
 import { useAppStore } from '../../../store/useAppStore';
+import { useTreePermissions } from '../../../hooks/tree/useTreePermissions';
 import { Button } from '../../../components/ui/Button';
 import { ShareInvitePanel } from './share/ShareInvitePanel';
 import { ShareLinkPanel } from './share/ShareLinkPanel';
@@ -25,6 +26,7 @@ export const ShareModal = ({
   driveFileId,
   treeId,
 }: ShareModalProps) => {
+  const { canManageMembers } = useTreePermissions();
   const state = useShareModalState({ user, driveFileId, treeId });
   const setTreeControlCenterOpen = useAppStore((store) => store.setTreeControlCenterOpen);
   const { t } = state;
@@ -60,7 +62,7 @@ export const ShareModal = ({
             setRole={state.setRole}
             isInviting={state.isInviting}
             handleInvite={state.handleInvite}
-            canInvite={Boolean(treeId)}
+            canInvite={canManageMembers && Boolean(treeId)}
           />
 
           <ShareLinkPanel

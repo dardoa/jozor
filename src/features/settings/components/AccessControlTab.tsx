@@ -30,6 +30,8 @@ export const AccessControlTab: React.FC<AccessControlTabProps> = ({
     '{email}',
     state.pendingRevokeCollaborator?.email || ''
   );
+  
+  const isOwner = state.currentUserRole === 'owner';
 
   return (
     <div className="space-y-4">
@@ -43,18 +45,20 @@ export const AccessControlTab: React.FC<AccessControlTabProps> = ({
         />
       </Suspense>
 
-      <Suspense fallback={null}>
-        <AccessInviteSection
-          t={t}
-          sectionText={sectionText}
-          inviteEmail={state.inviteEmail}
-          inviteRole={state.inviteRole}
-          isInviting={state.isInviting}
-          onEmailChange={state.setInviteEmail}
-          onRoleChange={state.setInviteRole}
-          onInvite={state.handleInvite}
-        />
-      </Suspense>
+      {isOwner && (
+        <Suspense fallback={null}>
+          <AccessInviteSection
+            t={t}
+            sectionText={sectionText}
+            inviteEmail={state.inviteEmail}
+            inviteRole={state.inviteRole}
+            isInviting={state.isInviting}
+            onEmailChange={state.setInviteEmail}
+            onRoleChange={state.setInviteRole}
+            onInvite={state.handleInvite}
+          />
+        </Suspense>
+      )}
 
       <Suspense fallback={null}>
         <AccessCollaboratorsSection
@@ -65,17 +69,20 @@ export const AccessControlTab: React.FC<AccessControlTabProps> = ({
           isLoading={state.isLoading}
           onChangeRole={state.handleChangeRole}
           onRevoke={state.requestRevoke}
+          canManage={isOwner}
         />
       </Suspense>
 
-      <Suspense fallback={null}>
-        <AccessPendingInvitationsSection
-          t={t}
-          sectionText={sectionText}
-          pendingInvitations={state.pendingInvitations}
-          onRevokeInvitation={state.handleRevokeInvitation}
-        />
-      </Suspense>
+      {isOwner && (
+        <Suspense fallback={null}>
+          <AccessPendingInvitationsSection
+            t={t}
+            sectionText={sectionText}
+            pendingInvitations={state.pendingInvitations}
+            onRevokeInvitation={state.handleRevokeInvitation}
+          />
+        </Suspense>
+      )}
 
       {state.isConfirmRevokeOpen ? (
         <ConfirmationModal
