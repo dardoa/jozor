@@ -53,6 +53,7 @@ describe('useCachedImage Hook', () => {
     expect(imageCacheService.releaseObjectUrl).toHaveBeenCalledWith('https://example.com/avatar.jpg', {
       width: 100,
       height: 100,
+      format: undefined,
     });
   });
 
@@ -73,6 +74,7 @@ describe('useCachedImage Hook', () => {
     expect(imageCacheService.releaseObjectUrl).toHaveBeenCalledWith('https://example.com/avatar1.jpg', {
       width: 100,
       height: 100,
+      format: undefined,
     });
 
     await waitFor(() => {
@@ -92,5 +94,27 @@ describe('useCachedImage Hook', () => {
 
     expect(result.current.cachedUrl).toBe('https://example.com/pic.jpg');
     expect(result.current.error?.message).toBe(errorMsg);
+  });
+
+  it('releases Object URL if acquisition resolves after unmount', async () => {
+    let resolveUrl: (url: string) => void = () => undefined;
+    vi.mocked(imageCacheService.getObjectUrl).mockReturnValue(
+      new Promise((resolve) => {
+        resolveUrl = resolve;
+      })
+    );
+
+    const { unmount } = renderHook(() => useCachedImage('https://example.com/slow.jpg', { width: 100, height: 100 }));
+
+    unmount();
+    resolveUrl('blob:late-cached-url');
+
+    await waitFor(() => {
+      expect(imageCacheService.releaseObjectUrl).toHaveBeenCalledWith('https://example.com/slow.jpg', {
+        width: 100,
+        height: 100,
+        format: undefined,
+      });
+    });
   });
 });

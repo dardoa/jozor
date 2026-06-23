@@ -34,11 +34,17 @@ export function useCachedImage(
     }
 
     let isMounted = true;
+    let hasAcquiredObjectUrl = false;
 
     const loadCachedImage = async () => {
       setIsLoading(true);
       try {
         const objectUrl = await imageCacheService.getObjectUrl(url, { width, height, format });
+        if (!isMounted) {
+          imageCacheService.releaseObjectUrl(url, { width, height, format });
+          return;
+        }
+        hasAcquiredObjectUrl = true;
         if (isMounted) {
           setCachedUrl(objectUrl);
           setError(null);
@@ -60,8 +66,11 @@ export function useCachedImage(
 
     return () => {
       isMounted = false;
-      // Release reference when URL or dimensions change, or component unmounts
-      imageCacheService.releaseObjectUrl(url, { width, height });
+      // Release reference when URL/dimensions/format change, or component unmounts.
+      // If the async acquisition resolves after unmount, the load path releases it instead.
+      if (hasAcquiredObjectUrl) {
+        imageCacheService.releaseObjectUrl(url, { width, height, format });
+      }
     };
   }, [url, width, height, format]);
 

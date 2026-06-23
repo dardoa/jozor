@@ -141,6 +141,22 @@ describe('ImageCacheService', () => {
       expect(mockCache.delete).toHaveBeenCalledWith(staleRequest2);
       expect(mockCache.delete).not.toHaveBeenCalledWith(unrelatedRequest);
     });
+
+    it('preserves different dimension buckets for the same image version', async () => {
+      mockCache.match.mockResolvedValue(undefined);
+
+      const sameVersionSmall = { url: 'https://example.com/pic.jpg?v=3&jozor_w=128&jozor_h=128' };
+      const sameVersionLarge = { url: 'https://example.com/pic.jpg?v=3&jozor_w=256&jozor_h=256' };
+      const oldVersion = { url: 'https://example.com/pic.jpg?v=2&jozor_w=128&jozor_h=128' };
+
+      mockCache.keys.mockResolvedValue([sameVersionSmall, sameVersionLarge, oldVersion]);
+
+      await imageCacheService.fetchAndCache('https://example.com/pic.jpg?v=3', 512, 512);
+
+      expect(mockCache.delete).not.toHaveBeenCalledWith(sameVersionSmall);
+      expect(mockCache.delete).not.toHaveBeenCalledWith(sameVersionLarge);
+      expect(mockCache.delete).toHaveBeenCalledWith(oldVersion);
+    });
   });
 
   describe('Object URL Lifecycle (Reference Counting)', () => {

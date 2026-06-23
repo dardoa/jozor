@@ -40,6 +40,39 @@ export function getBaseUrl(url: string): string {
   }
 }
 
+function getVersionedSourceUrl(url: string): string {
+  try {
+    const parsed = new URL(url, typeof window !== 'undefined' ? window.location.href : undefined);
+    parsed.searchParams.delete('jozor_w');
+    parsed.searchParams.delete('jozor_h');
+    parsed.searchParams.delete('jozor_fmt');
+    return `${parsed.origin}${parsed.pathname}${parsed.search}`;
+  } catch {
+    const [base, query = ''] = url.split('?');
+    const params = new URLSearchParams(query);
+    params.delete('jozor_w');
+    params.delete('jozor_h');
+    params.delete('jozor_fmt');
+    const normalizedQuery = params.toString();
+    return normalizedQuery ? `${base}?${normalizedQuery}` : base;
+  }
+}
+
+function buildCacheKey(
+  url: string,
+  width?: number,
+  height?: number,
+  format?: string
+): string {
+  if (width === undefined || height === undefined) return url;
+
+  const wBucket = getStandardDimension(width);
+  const hBucket = getStandardDimension(height);
+  const separator = url.includes('?') ? '&' : '?';
+  const formatParam = format ? `&jozor_fmt=${encodeURIComponent(format)}` : '';
+  return `${url}${separator}jozor_w=${wBucket}&jozor_h=${hBucket}${formatParam}`;
+}
+
 /**
  * Cleans up stale versions of the same image (sharing the same base URL) from the cache.
  */
@@ -48,9 +81,13 @@ async function cleanStaleVersions(cache: Cache, url: string): Promise<void> {
 
   try {
     const targetBase = getBaseUrl(url);
+    const targetVersionedSource = getVersionedSourceUrl(url);
     const keys = await cache.keys();
     for (const request of keys) {
-      if (getBaseUrl(request.url) === targetBase && request.url !== url) {
+      if (
+        getBaseUrl(request.url) === targetBase &&
+        getVersionedSourceUrl(request.url) !== targetVersionedSource
+      ) {
         await cache.delete(request);
       }
     }
@@ -148,14 +185,7 @@ export const imageCacheService = {
 
     const cache = await caches.open(CACHE_NAME);
     
-    // Determine the cache key. If dimensions are provided, append them.
-    let cacheKey = url;
-    if (width !== undefined && height !== undefined) {
-      const wBucket = getStandardDimension(width);
-      const hBucket = getStandardDimension(height);
-      const separator = url.includes('?') ? '&' : '?';
-      cacheKey = `${url}${separator}jozor_w=${wBucket}&jozor_h=${hBucket}`;
-    }
+    const cacheKey = buildCacheKey(url, width, height, format);
 
     // Check if cache matches
     const cachedResponse = await cache.match(cacheKey);
@@ -206,13 +236,7 @@ export const imageCacheService = {
     url: string,
     options?: { width?: number; height?: number; format?: string }
   ): Promise<string> {
-    let cacheKey = url;
-    if (options?.width !== undefined && options?.height !== undefined) {
-      const wBucket = getStandardDimension(options.width);
-      const hBucket = getStandardDimension(options.height);
-      const separator = url.includes('?') ? '&' : '?';
-      cacheKey = `${url}${separator}jozor_w=${wBucket}&jozor_h=${hBucket}`;
-    }
+    const cacheKey = buildCacheKey(url, options?.width, options?.height, options?.format);
 
     const existing = objectUrlMap.get(cacheKey);
     if (existing) {
@@ -238,15 +262,9 @@ export const imageCacheService = {
    */
   releaseObjectUrl(
     url: string,
-    options?: { width?: number; height?: number }
+    options?: { width?: number; height?: number; format?: string }
   ): void {
-    let cacheKey = url;
-    if (options?.width !== undefined && options?.height !== undefined) {
-      const wBucket = getStandardDimension(options.width);
-      const hBucket = getStandardDimension(options.height);
-      const separator = url.includes('?') ? '&' : '?';
-      cacheKey = `${url}${separator}jozor_w=${wBucket}&jozor_h=${hBucket}`;
-    }
+    const cacheKey = buildCacheKey(url, options?.width, options?.height, options?.format);
 
     const existing = objectUrlMap.get(cacheKey);
     if (existing) {
