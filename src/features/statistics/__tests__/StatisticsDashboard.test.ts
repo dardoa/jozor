@@ -10,6 +10,8 @@ const canonicalStats: StatsData = {
     genderRatio: { male: 7, female: 4, other: 1 },
     averageLifespan: 72,
     healthScore: 88,
+    completenessScore: 70,
+    citationCoverage: 60,
   },
   records: {
     oldestPerson: { name: 'Old Root', age: 91 },
@@ -37,6 +39,8 @@ const visibleStats: StatsData = {
     totalMembers: 4,
     maxGeneration: 2,
     genderRatio: { male: 2, female: 2, other: 0 },
+    completenessScore: 50,
+    citationCoverage: 40,
   },
   vitality: [
     { status: 'Living', count: 3, color: '#E1AD01' },

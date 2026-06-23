@@ -26,7 +26,15 @@ export type DataIntegrityIssueCode =
   | 'death_before_birth'
   | 'child_before_parent_birth'
   | 'mother_under_13'
-  | 'possible_duplicate_person';
+  | 'possible_duplicate_person'
+  | 'missing_birth_date'
+  | 'missing_death_date'
+  | 'missing_residence'
+  | 'missing_occupation'
+  | 'missing_parents'
+  | 'missing_birth_citation'
+  | 'missing_death_citation'
+  | 'missing_profile_source';
 
 export interface IntegrityIssue {
   readonly id: string;
@@ -46,7 +54,10 @@ export interface DataIntegrityReport {
   readonly issues: DataIntegrityIssue[];
   readonly issuesByPerson: Record<string, string[]>;
   readonly healthScore: number;
+  readonly completenessScore: number;
+  readonly citationCoverage: number;
   readonly counts: Record<IntegritySeverity, number>;
+  readonly countsByCategory: Record<IntegrityCategory, number>;
 }
 
 const YEAR_ONLY_PATTERN = /^\d{4}$/;
@@ -77,6 +88,20 @@ function getIssueCategory(code: DataIntegrityIssueCode): IntegrityCategory {
 
   if (code === 'possible_duplicate_person') {
     return 'DUPLICATE';
+  }
+
+  if (code === 'missing_birth_citation' || code === 'missing_death_citation' || code === 'missing_profile_source') {
+    return 'CITATION';
+  }
+
+  if (
+    code === 'missing_birth_date' ||
+    code === 'missing_death_date' ||
+    code === 'missing_residence' ||
+    code === 'missing_occupation' ||
+    code === 'missing_parents'
+  ) {
+    return 'COMPLETENESS';
   }
 
   return 'RELATIONSHIP';
@@ -138,10 +163,65 @@ function calculateHealthScore(totalPeople: number, issues: DataIntegrityIssue[])
   const penalty = issues.reduce((sum, issue) => {
     if (issue.severity === 'ERROR') return sum + 3;
     if (issue.severity === 'WARNING') return sum + 1;
-    return sum + 0.25;
+    return sum;
   }, 0);
 
   return Math.max(0, Math.round(100 - (penalty / totalPeople) * 10));
+}
+
+function hasText(value?: string): boolean {
+  return Boolean(value?.trim());
+}
+
+function hasOccupation(person: Person): boolean {
+  return hasText(person.occupation) || hasText(person.profession) || hasText(person.workplace) || hasText(person.company);
+}
+
+function hasResidence(person: Person): boolean {
+  return hasText(person.currentResidence) || hasText(person.residence) || hasText(person.address);
+}
+
+function hasProfileSource(person: Person): boolean {
+  return Array.isArray(person.sources) && person.sources.some((source) => hasText(source.title) || hasText(source.url));
+}
+
+function calculateCompletenessScore(people: Person[]): number {
+  if (people.length === 0) return 100;
+
+  const totalChecks = people.length * 4;
+  const passedChecks = people.reduce((count, person) => {
+    return count +
+      (hasText(person.birthDate) ? 1 : 0) +
+      (hasResidence(person) ? 1 : 0) +
+      (hasOccupation(person) ? 1 : 0) +
+      (person.parents.length > 0 ? 1 : 0);
+  }, 0);
+
+  return Math.round((passedChecks / totalChecks) * 100);
+}
+
+function calculateCitationCoverage(people: Person[]): number {
+  let citableClaims = 0;
+  let citedClaims = 0;
+
+  people.forEach((person) => {
+    if (hasText(person.birthDate) || hasText(person.birthPlace)) {
+      citableClaims += 1;
+      if (hasText(person.birthSource)) citedClaims += 1;
+    }
+
+    if (person.isDeceased && (hasText(person.deathDate) || hasText(person.deathPlace))) {
+      citableClaims += 1;
+      if (hasText(person.deathSource)) citedClaims += 1;
+    }
+
+    if (hasProfileSource(person)) {
+      citableClaims += 1;
+      citedClaims += 1;
+    }
+  });
+
+  return citableClaims === 0 ? 100 : Math.round((citedClaims / citableClaims) * 100);
 }
 
 export function evaluateDataIntegrity(people: Record<string, Person>): DataIntegrityReport {
@@ -278,6 +358,78 @@ export function evaluateDataIntegrity(people: Record<string, Person>): DataInteg
 
     const birthDate = parseLooseDate(person.birthDate);
     const deathDate = parseLooseDate(person.deathDate);
+    if (!hasText(person.birthDate)) {
+      addIssue(issues, {
+        code: 'missing_birth_date',
+        severity: 'INFO',
+        personId: person.id,
+        message: `${personName} is missing a birth date.`,
+      });
+    }
+
+    if (person.isDeceased && !hasText(person.deathDate)) {
+      addIssue(issues, {
+        code: 'missing_death_date',
+        severity: 'INFO',
+        personId: person.id,
+        message: `${personName} is marked deceased but has no death date.`,
+      });
+    }
+
+    if (!hasResidence(person)) {
+      addIssue(issues, {
+        code: 'missing_residence',
+        severity: 'INFO',
+        personId: person.id,
+        message: `${personName} is missing residence information.`,
+      });
+    }
+
+    if (!hasOccupation(person)) {
+      addIssue(issues, {
+        code: 'missing_occupation',
+        severity: 'INFO',
+        personId: person.id,
+        message: `${personName} is missing occupation information.`,
+      });
+    }
+
+    if (person.parents.length === 0) {
+      addIssue(issues, {
+        code: 'missing_parents',
+        severity: 'INFO',
+        personId: person.id,
+        message: `${personName} has no listed parents.`,
+      });
+    }
+
+    if ((hasText(person.birthDate) || hasText(person.birthPlace)) && !hasText(person.birthSource)) {
+      addIssue(issues, {
+        code: 'missing_birth_citation',
+        severity: 'INFO',
+        personId: person.id,
+        message: `${personName} has birth information without a citation.`,
+      });
+    }
+
+    if (person.isDeceased && (hasText(person.deathDate) || hasText(person.deathPlace)) && !hasText(person.deathSource)) {
+      addIssue(issues, {
+        code: 'missing_death_citation',
+        severity: 'INFO',
+        personId: person.id,
+        message: `${personName} has death information without a citation.`,
+      });
+    }
+
+    if (!hasProfileSource(person)) {
+      addIssue(issues, {
+        code: 'missing_profile_source',
+        severity: 'INFO',
+        personId: person.id,
+        message: `${personName} has no profile-level source.`,
+      });
+    }
+
     if (birthDate && deathDate && isBefore(deathDate, birthDate)) {
       addIssue(issues, {
         code: 'death_before_birth',
@@ -349,11 +501,21 @@ export function evaluateDataIntegrity(people: Record<string, Person>): DataInteg
     },
     { ERROR: 0, WARNING: 0, INFO: 0 }
   );
+  const countsByCategory = issues.reduce<Record<IntegrityCategory, number>>(
+    (acc, issue) => {
+      acc[issue.category] += 1;
+      return acc;
+    },
+    { RELATIONSHIP: 0, TIMELINE: 0, DUPLICATE: 0, CITATION: 0, COMPLETENESS: 0 }
+  );
 
   return {
     issues,
     issuesByPerson: buildIssuesByPerson(issues),
     healthScore: calculateHealthScore(peopleList.length, issues),
+    completenessScore: calculateCompletenessScore(peopleList),
+    citationCoverage: calculateCitationCoverage(peopleList),
     counts,
+    countsByCategory,
   };
 }

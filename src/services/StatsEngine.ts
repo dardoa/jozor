@@ -17,6 +17,8 @@ export interface StatsData {
         genderRatio: { male: number; female: number; other: number };
         averageLifespan: number;
         healthScore: number;
+        completenessScore: number;
+        citationCoverage: number;
     };
     records: {
         oldestPerson: { name: string; age: number } | null;
@@ -161,11 +163,12 @@ export class StatsEngine {
             }
         });
 
-        // 4. Health Score Calculation (Unified)
+        // 4. Health & quality score calculation (Unified)
+        const integrityReport = evaluateDataIntegrity(people);
         const externalInvalidCount = Object.keys(validationErrors).length;
         const healthScore = externalInvalidCount > 0
             ? (totalMembers > 0 ? Math.max(0, Math.round(((totalMembers - externalInvalidCount) / totalMembers) * 100)) : 100)
-            : evaluateDataIntegrity(people).healthScore;
+            : integrityReport.healthScore;
 
         // 5. Format outputs
         const demographics = Object.entries(decadeMap)
@@ -188,7 +191,9 @@ export class StatsEngine {
                 maxGeneration,
                 genderRatio: { male, female, other },
                 averageLifespan: deceasedWithAgeCount > 0 ? Math.round(totalLifespan / deceasedWithAgeCount) : 0,
-                healthScore
+                healthScore,
+                completenessScore: integrityReport.completenessScore,
+                citationCoverage: integrityReport.citationCoverage,
             },
             records: {
                 oldestPerson: oldest.age > 0 ? oldest : null,
