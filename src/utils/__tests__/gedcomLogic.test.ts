@@ -1,6 +1,6 @@
 
 import { describe, it, expect } from 'vitest';
-import { exportToGEDCOM, importFromGEDCOM, formatGedcomDate, gedcomDateToIso } from '../gedcomLogic';
+import { exportToGEDCOM, importFromGEDCOM, importFromGEDCOMWithReport, formatGedcomDate, gedcomDateToIso } from '../gedcomLogic';
 import { Person } from '../../types';
 import { evaluateDataIntegrity } from '../../domain/dataIntegrity';
 
@@ -412,6 +412,53 @@ INVALID LINE
             expect(result['p1'].spouses).toContain('s1');
             expect(result['p1'].spouses).toContain('s2');
         });
+    });
+});
+
+describe('GEDCOM Logic - Import Report', () => {
+    it('should summarize people, families, unknown names, and unsupported dates', () => {
+        const gedcom = `
+0 HEAD
+0 @p1@ INDI
+1 SEX M
+1 BIRT
+2 DATE ABT 1900
+0 @fam1@ FAM
+1 HUSB @p1@
+0 TRLR
+      `;
+
+        const result = importFromGEDCOMWithReport(gedcom);
+
+        expect(result.report.peopleCount).toBe(1);
+        expect(result.report.familyCount).toBe(1);
+        expect(result.report.unnamedPeopleCount).toBe(1);
+        expect(result.report.unsupportedDateValues).toEqual(['ABT 1900']);
+        expect(result.report.warnings.some((warning) => warning.includes('Unsupported GEDCOM date values'))).toBe(true);
+    });
+
+    it('should flag unsafe timeline issues after GEDCOM import', () => {
+        const gedcom = `
+0 HEAD
+0 @p1@ INDI
+1 NAME John /Doe/
+1 SEX M
+1 BIRT
+2 DATE 1 JAN 2000
+1 DEAT
+2 DATE 1 JAN 1990
+0 TRLR
+      `;
+
+        const result = importFromGEDCOMWithReport(gedcom);
+
+        expect(result.report.isSafe).toBe(false);
+        expect(result.report.timelineIssueCount).toBe(1);
+        expect(result.report.integrityIssues).toEqual(
+            expect.arrayContaining([
+                expect.objectContaining({ code: 'death_before_birth' }),
+            ])
+        );
     });
 });
 

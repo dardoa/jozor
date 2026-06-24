@@ -1,5 +1,39 @@
 import { Person, RelationshipInfo, RelationshipStatus } from '../types';
 import { createPerson } from './familyLogic';
+import { evaluateDataIntegrity, type DataIntegrityIssue } from '../domain/dataIntegrity';
+
+export interface GedcomImportReport {
+  peopleCount: number;
+  familyCount: number;
+  unsupportedDateValues: string[];
+  unnamedPeopleCount: number;
+  integrityIssues: DataIntegrityIssue[];
+  structuralIssueCount: number;
+  timelineIssueCount: number;
+  duplicateIssueCount: number;
+  isSafe: boolean;
+  warnings: string[];
+}
+
+export interface GedcomImportResult {
+  people: Record<string, Person>;
+  report: GedcomImportReport;
+}
+
+const GEDCOM_MONTHS = new Set([
+  'JAN',
+  'FEB',
+  'MAR',
+  'APR',
+  'MAY',
+  'JUN',
+  'JUL',
+  'AUG',
+  'SEP',
+  'OCT',
+  'NOV',
+  'DEC',
+]);
 
 // Helper to format date for GEDCOM (YYYY-MM-DD -> DD MMM YYYY)
 export const formatGedcomDate = (dateStr: string) => {
@@ -63,6 +97,79 @@ export const gedcomDateToIso = (gedDate: string): string => {
   }
 
   return gedDate; // Fallback
+};
+
+const isSupportedGedcomDate = (gedDate: string): boolean => {
+  const trimmed = gedDate.trim();
+  if (!trimmed) return true;
+  if (/^\d{4}$/.test(trimmed)) return true;
+  const monthYearMatch = /^([A-Z]{3})\s+\d{4}$/i.exec(trimmed);
+  if (monthYearMatch) return GEDCOM_MONTHS.has(monthYearMatch[1].toUpperCase());
+  const fullDateMatch = /^\d{1,2}\s+([A-Z]{3})\s+\d{4}$/i.exec(trimmed);
+  if (fullDateMatch) return GEDCOM_MONTHS.has(fullDateMatch[1].toUpperCase());
+  return false;
+};
+
+const getGedcomRecordCount = (gedcom: string, recordType: 'INDI' | 'FAM'): number => {
+  const pattern = new RegExp(`^0\\s+@[^@]+@\\s+${recordType}\\s*$`, 'i');
+  return gedcom.split(/\r?\n/).filter((line) => pattern.test(line.trim())).length;
+};
+
+const getUnsupportedDateValues = (gedcom: string): string[] => {
+  const unsupported = new Set<string>();
+
+  gedcom.split(/\r?\n/).forEach((line) => {
+    const trimmed = line.trim();
+    const match = /^2\s+DATE\s+(.+)$/i.exec(trimmed);
+    if (!match) return;
+
+    const dateValue = match[1].trim();
+    if (!isSupportedGedcomDate(dateValue)) unsupported.add(dateValue);
+  });
+
+  return [...unsupported];
+};
+
+const buildGedcomImportReport = (gedcom: string, people: Record<string, Person>): GedcomImportReport => {
+  const integrityReport = evaluateDataIntegrity(people);
+  const unsupportedDateValues = getUnsupportedDateValues(gedcom);
+  const unnamedPeopleCount = Object.values(people).filter((person) => {
+    const firstName = person.firstName.trim().toLowerCase();
+    return !firstName || firstName === 'unknown';
+  }).length;
+  const structuralIssueCount = integrityReport.issues.filter((issue) => issue.category === 'RELATIONSHIP').length;
+  const timelineIssueCount = integrityReport.issues.filter((issue) => issue.category === 'TIMELINE').length;
+  const duplicateIssueCount = integrityReport.issues.filter((issue) => issue.category === 'DUPLICATE').length;
+  const warnings: string[] = [];
+
+  if (unsupportedDateValues.length > 0) {
+    warnings.push(`Unsupported GEDCOM date values: ${unsupportedDateValues.join(', ')}`);
+  }
+  if (unnamedPeopleCount > 0) {
+    warnings.push(`${unnamedPeopleCount} imported people have missing or unknown names.`);
+  }
+  if (structuralIssueCount > 0) {
+    warnings.push(`${structuralIssueCount} structural relationship issues detected after GEDCOM import.`);
+  }
+  if (timelineIssueCount > 0) {
+    warnings.push(`${timelineIssueCount} timeline issues detected after GEDCOM import.`);
+  }
+  if (duplicateIssueCount > 0) {
+    warnings.push(`${duplicateIssueCount} possible duplicate people detected after GEDCOM import.`);
+  }
+
+  return {
+    peopleCount: Object.keys(people).length,
+    familyCount: getGedcomRecordCount(gedcom, 'FAM'),
+    unsupportedDateValues,
+    unnamedPeopleCount,
+    integrityIssues: integrityReport.issues,
+    structuralIssueCount,
+    timelineIssueCount,
+    duplicateIssueCount,
+    isSafe: structuralIssueCount === 0 && timelineIssueCount === 0,
+    warnings,
+  };
 };
 
 export const exportToGEDCOM = (people: Record<string, Person>): string => {
@@ -394,4 +501,12 @@ export const importFromGEDCOM = (gedcom: string): Record<string, Person> => {
   });
 
   return people;
+};
+
+export const importFromGEDCOMWithReport = (gedcom: string): GedcomImportResult => {
+  const people = importFromGEDCOM(gedcom);
+  return {
+    people,
+    report: buildGedcomImportReport(gedcom, people),
+  };
 };

@@ -1,8 +1,8 @@
 import { v4 as uuidv4 } from 'uuid';
 import type { Person } from '../../../types';
-import { logError, logInfo } from '../../../utils/errorLogger';
+import { logError, logInfo, logWarn } from '../../../utils/errorLogger';
 import { importJozorArchiveData } from '../../../utils/archiveLogic';
-import { importFromGEDCOM } from '../../../utils/gedcomLogic';
+import { importFromGEDCOMWithReport } from '../../../utils/gedcomLogic';
 import { importTreeContent, createTree } from '../../../services/supabaseTreeMutationService';
 
 /**
@@ -196,7 +196,23 @@ export const importTreeFromFileItem = async (
 
     const text = await file.text();
     if (fileName.endsWith('.ged')) {
-        const people = importFromGEDCOM(text);
+        const { people, report } = importFromGEDCOMWithReport(text);
+        if (report.warnings.length > 0) {
+            logWarn('importTreeFromFileItem gedcomReport', 'GEDCOM import completed with review warnings.', {
+                category: 'VALIDATION',
+                metadata: {
+                    operationType: 'gedcom_import_report',
+                    importSafe: report.isSafe,
+                    peopleCount: report.peopleCount,
+                    familyCount: report.familyCount,
+                    warningCount: report.warnings.length,
+                    structuralIssueCount: report.structuralIssueCount,
+                    timelineIssueCount: report.timelineIssueCount,
+                    duplicateIssueCount: report.duplicateIssueCount,
+                    unsupportedDateCount: report.unsupportedDateValues.length,
+                }
+            });
+        }
         return importTreeFromJSONItem(ownerId, userEmail, JSON.stringify({ people }), token);
     }
 

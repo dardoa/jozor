@@ -66,8 +66,16 @@ export const useUIAndSettingsOrchestrator = (
         } else {
           const text = await file.text();
           if (name.endsWith('.ged')) {
-            const { importFromGEDCOM } = await import('../../utils/gedcomLogic');
-            imported = importFromGEDCOM(text);
+            const { importFromGEDCOMWithReport } = await import('../../utils/gedcomLogic');
+            const { people: gedcomPeople, report } = importFromGEDCOMWithReport(text);
+            imported = gedcomPeople;
+            if (report.warnings.length > 0) {
+              showToast.warning(
+                report.isSafe
+                  ? 'GEDCOM imported with notes. Review the Health Center for details.'
+                  : 'GEDCOM imported with relationship or timeline issues. Review the Health Center before continuing.'
+              );
+            }
           } else {
             const parsed = JSON.parse(text);
             if (parsed && typeof parsed === 'object' && 'people' in parsed) {

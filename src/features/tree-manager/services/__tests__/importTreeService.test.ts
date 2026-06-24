@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const mockUuid = vi.hoisted(() => vi.fn());
 const mockCreateTree = vi.hoisted(() => vi.fn());
 const mockImportTreeContent = vi.hoisted(() => vi.fn());
-const mockImportFromGEDCOM = vi.hoisted(() => vi.fn());
+const mockImportFromGEDCOMWithReport = vi.hoisted(() => vi.fn());
 const mockImportJozorArchiveData = vi.hoisted(() => vi.fn());
 
 vi.mock('uuid', () => ({
@@ -20,12 +20,13 @@ vi.mock('../../../../utils/archiveLogic', () => ({
 }));
 
 vi.mock('../../../../utils/gedcomLogic', () => ({
-  importFromGEDCOM: (...args: unknown[]) => mockImportFromGEDCOM(...args),
+  importFromGEDCOMWithReport: (...args: unknown[]) => mockImportFromGEDCOMWithReport(...args),
 }));
 
 vi.mock('../../../../utils/errorLogger', () => ({
   logError: vi.fn(),
   logInfo: vi.fn(),
+  logWarn: vi.fn(),
 }));
 
 import { importTreeFromFileItem } from '../importTreeService';
@@ -61,7 +62,21 @@ describe('importTreeService', () => {
   });
 
   it('imports GEDCOM files as a new cloud tree with remapped people', async () => {
-    mockImportFromGEDCOM.mockReturnValue(peopleMap);
+    mockImportFromGEDCOMWithReport.mockReturnValue({
+      people: peopleMap,
+      report: {
+        peopleCount: 2,
+        familyCount: 0,
+        unsupportedDateValues: [],
+        unnamedPeopleCount: 0,
+        integrityIssues: [],
+        structuralIssueCount: 0,
+        timelineIssueCount: 0,
+        duplicateIssueCount: 0,
+        isSafe: true,
+        warnings: [],
+      },
+    });
     const file = {
       name: 'family.ged',
       text: vi.fn().mockResolvedValue('0 HEAD'),
@@ -70,7 +85,7 @@ describe('importTreeService', () => {
     const treeId = await importTreeFromFileItem('owner_1', 'owner@example.com', file, 'token_1');
 
     expect(treeId).toBe('tree_new');
-    expect(mockImportFromGEDCOM).toHaveBeenCalledWith('0 HEAD');
+    expect(mockImportFromGEDCOMWithReport).toHaveBeenCalledWith('0 HEAD');
     expect(mockCreateTree).toHaveBeenCalledWith(
       'owner_1',
       'owner@example.com',
