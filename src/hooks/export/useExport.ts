@@ -7,6 +7,7 @@ import { useAppStore } from '../../store/useAppStore';
 import { logError, logInfo, logWarn } from '../../utils/errorLogger';
 import { PublishingTracker } from '../../features/publishing';
 import { maskPeopleMap } from '../../utils/privacyUtils';
+import { imageCacheService } from '../../services/imageCacheService';
 
 export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGSVGElement | null>) => {
     const buildExportArchive = useCallback(async (): Promise<Blob> => {
@@ -131,7 +132,7 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
 
                 // 2. Tainted Canvas Protection: Convert all Images to Base64
                 if (user) {
-                    await convertSupabaseImagesToBase64(svg, {
+                    await convertExportImagesToBase64(svg, {
                         token: user.supabaseToken || supabaseAccessToken || ''
                     });
                 }
@@ -315,7 +316,7 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
  * Converts all <image> tags to Base64 before the capture starts
  * to prevent Supabase images from tainting the canvas.
  */
-async function convertSupabaseImagesToBase64(svg: SVGSVGElement, authHeaders: { token: string }) {
+async function convertExportImagesToBase64(svg: SVGSVGElement, authHeaders: { token: string }) {
     const images = Array.from(svg.querySelectorAll('image'));
     logInfo('EXPORT', 'EXPORT_IMAGE_CONVERSION_STARTED', { imageCount: images.length });
 
@@ -328,28 +329,22 @@ async function convertSupabaseImagesToBase64(svg: SVGSVGElement, authHeaders: { 
             if (!url || url.startsWith('data:')) return;
 
             try {
-                const resp = await fetch(url, {
-                    cache: 'no-cache',
-                    mode: 'cors',
-                    headers: {
-                        ...(authHeaders.token ? { Authorization: `Bearer ${authHeaders.token}` } : {}),
-                    },
-                });
-
-                if (!resp.ok) throw new Error(`Fetch failed: ${resp.status}`);
-
-                const blob = await resp.blob();
-                return new Promise<void>((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onloadend = () => {
-                        img.setAttribute('href', reader.result as string);
-                        // Remove xlink:href to ensure href takes priority in all browsers
-                        img.removeAttribute('xlink:href');
-                        resolve();
-                    };
-                    reader.onerror = reject;
-                    reader.readAsDataURL(blob);
-                });
+                const blob = await imageCacheService.fetchAndCache(
+                    url,
+                    undefined,
+                    undefined,
+                    'image/webp',
+                    {
+                        cache: 'no-cache',
+                        mode: 'cors',
+                        headers: {
+                            ...(authHeaders.token ? { Authorization: `Bearer ${authHeaders.token}` } : {}),
+                        },
+                    }
+                );
+                const dataUrl = await blobToDataUrl(blob);
+                img.setAttribute('href', dataUrl);
+                img.removeAttribute('xlink:href');
             } catch (e) {
                 logWarn('EXPORT', 'EXPORT_IMAGE_CONVERSION_WARNING', {
                     metadata: { url, error: e instanceof Error ? e.message : String(e) }
@@ -359,6 +354,15 @@ async function convertSupabaseImagesToBase64(svg: SVGSVGElement, authHeaders: { 
     }
 
     logInfo('EXPORT', 'EXPORT_IMAGE_CONVERSION_COMPLETED', { imageCount: images.length });
+}
+
+function blobToDataUrl(blob: Blob): Promise<string> {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+    });
 }
 
 async function applyWatermark(dataUrl: string, text: string, format: string): Promise<string> {

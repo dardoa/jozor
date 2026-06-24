@@ -114,6 +114,23 @@ describe('ImageCacheService', () => {
       expect(blob).toBe(dummyBlob);
     });
 
+    it('passes optional request init to fetch when supplied', async () => {
+      mockCache.match.mockResolvedValue(undefined);
+
+      await imageCacheService.fetchAndCache(
+        'https://example.com/private.jpg',
+        undefined,
+        undefined,
+        'image/webp',
+        { headers: { Authorization: 'Bearer token-123' }, mode: 'cors' }
+      );
+
+      expect(global.fetch).toHaveBeenCalledWith('https://example.com/private.jpg', {
+        headers: { Authorization: 'Bearer token-123' },
+        mode: 'cors',
+      });
+    });
+
     it('returns cached image Blob immediately if match exists in Cache API', async () => {
       const cachedBlob = new Blob(['cached-data'], { type: 'image/webp' });
       mockCache.match.mockResolvedValue({

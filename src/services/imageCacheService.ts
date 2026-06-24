@@ -73,6 +73,10 @@ function buildCacheKey(
   return `${url}${separator}jozor_w=${wBucket}&jozor_h=${hBucket}${formatParam}`;
 }
 
+function fetchImage(url: string, init?: RequestInit): Promise<Response> {
+  return init ? fetch(url, init) : fetch(url);
+}
+
 /**
  * Cleans up stale versions of the same image (sharing the same base URL) from the cache.
  */
@@ -175,10 +179,11 @@ export const imageCacheService = {
     url: string,
     width?: number,
     height?: number,
-    format = 'image/webp'
+    format = 'image/webp',
+    requestInit?: RequestInit
   ): Promise<Blob> {
     if (!isCacheSupported()) {
-      const response = await fetch(url);
+      const response = await fetchImage(url, requestInit);
       if (!response.ok) throw new Error(`Failed to fetch image: ${response.statusText}`);
       return response.blob();
     }
@@ -194,7 +199,7 @@ export const imageCacheService = {
     }
 
     // Fetch original image
-    const response = await fetch(url);
+    const response = await fetchImage(url, requestInit);
     if (!response.ok) throw new Error(`Failed to fetch image: ${response.statusText}`);
     const originalBlob = await response.blob();
 
@@ -281,10 +286,10 @@ export const imageCacheService = {
    */
   async preloadImages(
     urls: string[],
-    options?: { width?: number; height?: number; format?: string }
+    options?: { width?: number; height?: number; format?: string; requestInit?: RequestInit }
   ): Promise<void> {
     const promises = urls.map((url) =>
-      this.fetchAndCache(url, options?.width, options?.height, options?.format).catch((err) => {
+      this.fetchAndCache(url, options?.width, options?.height, options?.format, options?.requestInit).catch((err) => {
         logError('IMAGE_PRELOAD_FAILED', err, { showToast: false, metadata: { url } });
       })
     );
