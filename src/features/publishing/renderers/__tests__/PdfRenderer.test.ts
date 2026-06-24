@@ -60,7 +60,7 @@ describe('PdfRenderer Engine (Sprint 8)', () => {
     
     // jsPDF stores page details in internal methods or properties.
     // In jsPDF, the page count can be fetched usinggetNumberOfPages()
-    expect(pdfInstance.getNumberOfPages()).toBe(4);
+    expect(pdfInstance.getNumberOfPages()).toBe(5);
 
     // 3. Render to Data URL
     const dataUrl = PdfRenderer.renderToDataUrl(placedDoc, template.theme);

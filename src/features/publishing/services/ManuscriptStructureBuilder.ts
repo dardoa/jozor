@@ -6,7 +6,6 @@ import type {
   ManuscriptPersonEntry,
   ManuscriptSourceHighlight,
   ManuscriptTimelineEntry,
-  PublicationBlock,
   PublicationSection,
 } from '../types';
 import { PublishingRelationshipAdapter } from './PublishingRelationshipAdapter';
@@ -237,38 +236,43 @@ export class ManuscriptStructureBuilder {
     const peopleChapter = model.chapters.find((chapter) => chapter.type === 'people');
     const entries = peopleChapter?.people ?? [];
     if (entries.length === 0) return [];
+    const entriesPerPage = 4;
+    const chunks: ManuscriptPersonEntry[][] = [];
+    for (let i = 0; i < entries.length; i += entriesPerPage) {
+      chunks.push(entries.slice(i, i + entriesPerPage) as ManuscriptPersonEntry[]);
+    }
 
-    const blocks: PublicationBlock[] = [
-      {
-        id: `block-manuscript-people-header-${crypto.randomUUID()}`,
-        type: 'header',
-        assets: [{
-          id: `asset-manuscript-people-title-${crypto.randomUUID()}`,
-          type: 'text',
-          payload: {
-            text: 'People chapters',
-            subtext: 'Structured family entries with citation coverage.',
-          },
-        }],
-      },
-      ...entries.slice(0, 12).map((entry) => ({
-        id: `block-manuscript-person-${entry.personId}`,
-        type: 'paragraph' as const,
-        assets: [{
-          id: `asset-manuscript-person-${entry.personId}`,
-          type: 'text' as const,
-          payload: {
-            text: entry.displayName,
-            body: formatPersonEntry(entry),
-          },
-        }],
-      })),
-    ];
-
-    return [{
-      id: `section-manuscript-people-${crypto.randomUUID()}`,
+    return chunks.map((chunk, pageIndex) => ({
+      id: `section-manuscript-people-${pageIndex + 1}-${crypto.randomUUID()}`,
       type: 'biography',
-      blocks,
-    }];
+      blocks: [
+        {
+          id: `block-manuscript-people-header-${pageIndex + 1}-${crypto.randomUUID()}`,
+          type: 'header',
+          assets: [{
+            id: `asset-manuscript-people-title-${pageIndex + 1}-${crypto.randomUUID()}`,
+            type: 'text',
+            payload: {
+              text: 'People chapters',
+              subtext: chunks.length > 1
+                ? `Structured family entries with citation coverage. Page ${pageIndex + 1} of ${chunks.length}.`
+                : 'Structured family entries with citation coverage.',
+            },
+          }],
+        },
+        ...chunk.map((entry) => ({
+          id: `block-manuscript-person-${entry.personId}`,
+          type: 'paragraph' as const,
+          assets: [{
+            id: `asset-manuscript-person-${entry.personId}`,
+            type: 'text' as const,
+            payload: {
+              text: entry.displayName,
+              body: formatPersonEntry(entry),
+            },
+          }],
+        })),
+      ],
+    }));
   }
 }

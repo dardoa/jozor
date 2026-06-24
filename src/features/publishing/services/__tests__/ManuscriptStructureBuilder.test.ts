@@ -110,4 +110,41 @@ describe('ManuscriptStructureBuilder', () => {
       text: 'Root Family',
     });
   });
+
+  it('splits person entries across biography sections to avoid overcrowded print pages', () => {
+    const people = Array.from({ length: 5 }).reduce<Record<string, Person>>((acc, _, index) => {
+      const id = `person-${index + 1}`;
+      acc[id] = createMockPerson(id, index % 2 === 0 ? 'male' : 'female', {
+        firstName: `Person ${index + 1}`,
+        lastName: 'Family',
+        birthDate: `19${70 + index}-01-01`,
+      });
+      return acc;
+    }, {});
+    const relationshipEdges = Object.fromEntries(
+      Array.from({ length: 4 }).map((_, index) => {
+        const childId = `person-${index + 2}`;
+        return [`edge-${childId}`, {
+          id: `edge-${childId}`,
+          treeId: 'tree-1',
+          fromPersonId: 'person-1',
+          toPersonId: childId,
+          type: 'BIOLOGICAL_PARENT',
+          status: 'ACTIVE',
+          createdAt: '2026-01-01T00:00:00.000Z',
+        } satisfies RelationshipEdge];
+      })
+    );
+
+    const model = ManuscriptStructureBuilder.buildModel({
+      rootPersonId: 'person-1',
+      people,
+      relationshipEdges,
+    });
+
+    const sections = ManuscriptStructureBuilder.buildPersonSections(model);
+    expect(sections).toHaveLength(2);
+    expect(sections[0].blocks.filter((block) => block.type === 'paragraph')).toHaveLength(4);
+    expect(sections[1].blocks.filter((block) => block.type === 'paragraph')).toHaveLength(1);
+  });
 });

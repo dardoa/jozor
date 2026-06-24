@@ -38,6 +38,14 @@ export class PdfRenderer {
       // 1. Fill page background using theme color
       pdf.setFillColor(theme.colors.background);
       pdf.rect(0, 0, pageWidth, pageHeight, 'F');
+      renderPageChrome(pdf, {
+        pageWidth,
+        pageHeight,
+        pageNumber: section.pageNumber,
+        totalPages: sortedSections.length,
+        sectionType: section.type,
+        theme,
+      });
 
       // 2. Render blocks and assets
       for (const block of section.blocks) {
@@ -66,15 +74,21 @@ export class PdfRenderer {
                   pdf.setFont('helvetica', 'bold');
                   pdf.setFontSize(18);
                   pdf.setTextColor(theme.colors.text);
-                  pdf.text(payload.text, asset.x, asset.y + 15);
+                  writeText(pdf, payload.text, asset.x, asset.y + 15, asset.width, theme, { bold: true, fontSize: 18 });
 
                   if (payload.subtext) {
                     pdf.setFont('helvetica', 'italic');
                     pdf.setFontSize(11);
                     pdf.setTextColor(theme.colors.subtext);
-                    pdf.text(payload.subtext, asset.x, asset.y + 35);
+                    writeText(pdf, payload.subtext, asset.x, asset.y + 35, asset.width, theme, { italic: true, fontSize: 11, subtext: true });
                   }
                 } else if (block.type === 'paragraph') {
+                  if (section.type === 'biography' || section.type === 'bibliography') {
+                    pdf.setFillColor('#fffaf0');
+                    pdf.setDrawColor('#eadcc6');
+                    pdf.roundedRect(asset.x - 8, asset.y - 2, asset.width + 16, asset.height, 6, 6, 'FD');
+                  }
+
                   pdf.setFont('helvetica', 'normal');
                   pdf.setFontSize(11);
                   pdf.setTextColor(theme.colors.text);
@@ -82,7 +96,7 @@ export class PdfRenderer {
                   if (payload.body) {
                     // Wrap text based on asset width
                     const lines = pdf.splitTextToSize(payload.body, asset.width);
-                    pdf.text(lines, asset.x, asset.y + 15);
+                    writeLines(pdf, lines, payload.body, asset.x, asset.y + 15, asset.width, theme);
                   }
                 }
               }
@@ -175,5 +189,98 @@ export class PdfRenderer {
   ): string {
     const pdf = this.renderToPdf(placedDoc, theme);
     return pdf.output('dataurlstring');
+  }
+}
+
+function renderPageChrome(
+  pdf: jsPDF,
+  options: {
+    readonly pageWidth: number;
+    readonly pageHeight: number;
+    readonly pageNumber: number;
+    readonly totalPages: number;
+    readonly sectionType: string;
+    readonly theme: PublicationTheme;
+  }
+): void {
+  if (options.sectionType === 'cover') return;
+
+  const marginX = 40;
+  pdf.setDrawColor('#eadcc6');
+  pdf.setLineWidth(0.5);
+  pdf.line(marginX, 34, options.pageWidth - marginX, 34);
+  pdf.line(marginX, options.pageHeight - 34, options.pageWidth - marginX, options.pageHeight - 34);
+
+  pdf.setFont('helvetica', 'normal');
+  pdf.setFontSize(8);
+  pdf.setTextColor(options.theme.colors.subtext);
+  pdf.text(sectionLabel(options.sectionType), marginX, 24);
+  pdf.text(
+    `${options.pageNumber} / ${options.totalPages}`,
+    options.pageWidth - marginX,
+    options.pageHeight - 18,
+    { align: 'right' }
+  );
+}
+
+function sectionLabel(sectionType: string): string {
+  switch (sectionType) {
+    case 'introduction':
+      return 'Introduction';
+    case 'tree':
+      return 'Family tree';
+    case 'biography':
+      return 'People chapters';
+    case 'timeline':
+      return 'Timeline';
+    case 'bibliography':
+      return 'Bibliography';
+    default:
+      return sectionType;
+  }
+}
+
+function isLikelyRtl(text: string): boolean {
+  return /[\u0600-\u06FF]/.test(text);
+}
+
+function writeText(
+  pdf: jsPDF,
+  text: string,
+  x: number,
+  y: number,
+  width: number,
+  theme: PublicationTheme,
+  options: { readonly bold?: boolean; readonly italic?: boolean; readonly fontSize?: number; readonly subtext?: boolean } = {}
+): void {
+  const style = options.bold ? 'bold' : options.italic ? 'italic' : 'normal';
+  pdf.setFont('helvetica', style);
+  pdf.setFontSize(options.fontSize ?? 11);
+  pdf.setTextColor(options.subtext ? theme.colors.subtext : theme.colors.text);
+
+  if (isLikelyRtl(text)) {
+    pdf.text(text, x + width, y, { align: 'right' });
+  } else {
+    pdf.text(text, x, y);
+  }
+}
+
+function writeLines(
+  pdf: jsPDF,
+  lines: string[],
+  originalText: string,
+  x: number,
+  y: number,
+  width: number,
+  theme: PublicationTheme
+): void {
+  pdf.setFont('helvetica', 'normal');
+  pdf.setFontSize(11);
+  pdf.setTextColor(theme.colors.text);
+
+  if (isLikelyRtl(originalText)) {
+    pdf.text(lines, x + width, y, { align: 'right' });
+  } else {
+    pdf.text(lines, x, y);
   }
 }
