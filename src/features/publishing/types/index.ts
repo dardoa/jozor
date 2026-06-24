@@ -126,10 +126,17 @@ export interface ManuscriptFactEntry {
   readonly citationCount: number;
 }
 
+export interface ManuscriptSourceHighlight {
+  readonly sourceId: string;
+  readonly title: string;
+  readonly citationCount: number;
+}
+
 export interface ManuscriptPersonEntry {
   readonly personId: string;
   readonly displayName: string;
   readonly facts: readonly ManuscriptFactEntry[];
+  readonly sourceHighlights: readonly ManuscriptSourceHighlight[];
   readonly citationCount: number;
   readonly citationCoverage: number;
 }

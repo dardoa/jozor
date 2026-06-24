@@ -76,6 +76,11 @@ describe('ManuscriptStructureBuilder', () => {
     expect(peopleChapter?.people?.map((entry) => entry.personId).sort()).toEqual(['child', 'root']);
     expect(peopleChapter?.people?.some((entry) => entry.personId === 'unrelated')).toBe(false);
     expect(peopleChapter?.people?.find((entry) => entry.personId === 'root')?.citationCount).toBe(1);
+    expect(peopleChapter?.people?.find((entry) => entry.personId === 'root')?.sourceHighlights).toEqual([{
+      sourceId: 'source',
+      title: 'Birth registry',
+      citationCount: 1,
+    }]);
     expect(evidenceChapter?.citations?.[0]).toMatchObject({
       citationId: 'citation',
       sourceTitle: 'Birth registry',

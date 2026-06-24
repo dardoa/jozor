@@ -43,6 +43,8 @@ export function buildBibliographySection(
   people: Record<string, Person>,
   evidence?: PublishingEvidenceContext
 ): PublicationSection | null {
+  const citations = Object.values(evidence?.citations || {});
+  const personIds = new Set(Object.keys(people));
   const sources = Object.values(evidence?.sources || {})
     .filter((source) => source.title.trim())
     .sort((a, b) => a.title.localeCompare(b.title));
@@ -68,7 +70,15 @@ export function buildBibliographySection(
   const body = sources
     .map((source, index) => {
       const meta = [source.author, source.date, source.url].filter(Boolean).join(' - ');
-      return `${index + 1}. ${source.title}${meta ? ` (${meta})` : ''}`;
+      const sourceCitations = citations.filter((citation) => citation.sourceId === source.id);
+      const linkedPeopleCount = new Set(
+        sourceCitations
+          .filter((citation) => citation.targetType === 'PERSON' && personIds.has(citation.targetId))
+          .map((citation) => citation.targetId)
+      ).size;
+      const usage = `${sourceCitations.length} citation${sourceCitations.length === 1 ? '' : 's'}`
+        + (linkedPeopleCount > 0 ? ` across ${linkedPeopleCount} person${linkedPeopleCount === 1 ? '' : 's'}` : '');
+      return `${index + 1}. ${source.title}${meta ? ` (${meta})` : ''}\n   ${usage}`;
     })
     .join('\n');
 

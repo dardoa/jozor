@@ -5,6 +5,7 @@ import { Citation, Person, RelationshipEdge, Source } from '../../../types';
 import { evaluateDataIntegrity } from '../../../domain/dataIntegrity';
 import { summarizePublishingEvidence } from './PublishingEvidenceAdapter';
 import { PublishingRelationshipAdapter } from './PublishingRelationshipAdapter';
+import { ManuscriptStructureBuilder } from './ManuscriptStructureBuilder';
 
 export interface TrackerStartOptions {
     readonly templateId: string;
@@ -55,6 +56,9 @@ export class PublishingTracker {
             console.error('Tracker: Failed to compute families count:', error);
         }
 
+        const evidenceSummary = summarizePublishingEvidence(options.people, { sources, citations });
+        const manuscriptEvidence = getManuscriptEvidenceMetadata(options.templateId, options.people, relationships, sources, citations);
+
         const manifest: PublicationManifest = {
             publicationId,
             templateId: options.templateId,
@@ -73,7 +77,10 @@ export class PublishingTracker {
                 userRole,
                 masked: userRole === 'viewer',
             },
-            evidence: summarizePublishingEvidence(options.people, { sources, citations }),
+            evidence: {
+                ...evidenceSummary,
+                ...manuscriptEvidence,
+            },
             integrity: toIntegritySummary(options.people),
             relationships: {
                 source: Object.keys(relationships).length > 0 ? 'relationship_edges' : 'legacy_person_fields',
@@ -152,4 +159,38 @@ function toIntegritySummary(people: Record<string, Person>) {
         counts: report.counts,
         countsByCategory: report.countsByCategory,
     };
+}
+
+function getManuscriptEvidenceMetadata(
+    templateId: string,
+    people: Record<string, Person>,
+    relationships: Record<string, RelationshipEdge>,
+    sources: Record<string, Source>,
+    citations: Record<string, Citation>
+): { readonly manuscriptPersonCount?: number; readonly manuscriptCitationCoverage?: number } {
+    if (!templateId.includes('book-manuscript')) return {};
+
+    const rootPersonId = Object.keys(people)[0];
+    if (!rootPersonId) return {};
+
+    try {
+        const model = ManuscriptStructureBuilder.buildModel({
+            rootPersonId,
+            people,
+            relationshipEdges: relationships,
+            evidence: { sources, citations },
+        });
+        const peopleChapter = model.chapters.find((chapter) => chapter.type === 'people');
+        const entries = peopleChapter?.people ?? [];
+        if (entries.length === 0) return { manuscriptPersonCount: 0, manuscriptCitationCoverage: 0 };
+        const averageCoverage = Math.round(
+            entries.reduce((sum, entry) => sum + entry.citationCoverage, 0) / entries.length
+        );
+        return {
+            manuscriptPersonCount: entries.length,
+            manuscriptCitationCoverage: averageCoverage,
+        };
+    } catch {
+        return {};
+    }
 }

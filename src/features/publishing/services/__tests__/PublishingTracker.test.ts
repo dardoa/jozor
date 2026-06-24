@@ -132,4 +132,37 @@ describe('PublishingTracker', () => {
             exportType: 'legacy',
         }));
     });
+
+    it('adds manuscript evidence coverage metadata for family manuscript exports', () => {
+        const result = PublishingTracker.startTracking({
+            templateId: 'classic-book-manuscript',
+            exportType: 'publishing',
+            people: mockPeople,
+            totalPages: 3,
+            sources: {
+                'source-1': {
+                    id: 'source-1',
+                    treeId: 'tree-123',
+                    type: 'DOCUMENT',
+                    title: 'Family registry',
+                    normalizedKey: 'tree-123:DOCUMENT:family registry',
+                    createdAt: '2026-01-01T00:00:00.000Z',
+                },
+            },
+            citations: {
+                'citation-1': {
+                    id: 'citation-1',
+                    treeId: 'tree-123',
+                    sourceId: 'source-1',
+                    targetType: 'PERSON',
+                    targetId: 'p-1',
+                    targetField: 'person.profile.sources',
+                    createdAt: '2026-01-01T00:00:00.000Z',
+                },
+            },
+        });
+
+        expect(result.manifest.evidence?.manuscriptPersonCount).toBe(3);
+        expect(result.manifest.evidence?.manuscriptCitationCoverage).toBeGreaterThanOrEqual(0);
+    });
 });

@@ -170,5 +170,15 @@ describe('PublishingPipeline & TemplateRegistry', () => {
     expect(bodyAsset.payload).toMatchObject({
       body: expect.stringContaining('Birth registry'),
     });
+    expect(bodyAsset.payload).toMatchObject({
+      body: expect.stringContaining('1 citation across 1 person'),
+    });
+
+    const biography = doc.sections.find((section) => section.type === 'biography');
+    const biographyText = biography?.blocks
+      .flatMap((block) => block.assets)
+      .map((asset) => (asset.payload as { body?: string }).body || '')
+      .join('\n');
+    expect(biographyText).toContain('Key sources: Birth registry (1)');
   });
 });

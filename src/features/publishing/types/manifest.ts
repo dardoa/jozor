@@ -8,6 +8,8 @@ export interface PublicationEvidenceMetadata {
   readonly citationCount: number;
   readonly citedPersonCount: number;
   readonly citationCoverage: number;
+  readonly manuscriptPersonCount?: number;
+  readonly manuscriptCitationCoverage?: number;
 }
 
 export interface PublicationIntegritySummary {

@@ -4,6 +4,7 @@ import type {
   ManuscriptCitationEntry,
   ManuscriptFactEntry,
   ManuscriptPersonEntry,
+  ManuscriptSourceHighlight,
   ManuscriptTimelineEntry,
   PublicationBlock,
   PublicationSection,
@@ -46,6 +47,29 @@ function countCitationsForPerson(citations: readonly Citation[], personId: strin
   )).length;
 }
 
+function buildSourceHighlightsForPerson(
+  sources: Record<string, Source>,
+  citations: readonly Citation[],
+  personId: string
+): readonly ManuscriptSourceHighlight[] {
+  const counts = new Map<string, number>();
+
+  citations
+    .filter((citation) => citation.targetType === 'PERSON' && citation.targetId === personId)
+    .forEach((citation) => {
+      counts.set(citation.sourceId, (counts.get(citation.sourceId) ?? 0) + 1);
+    });
+
+  return [...counts.entries()]
+    .map(([sourceId, citationCount]) => ({
+      sourceId,
+      title: sources[sourceId]?.title || 'Unknown source',
+      citationCount,
+    }))
+    .sort((a, b) => b.citationCount - a.citationCount || a.title.localeCompare(b.title))
+    .slice(0, 3);
+}
+
 function createFact(label: string, value: string, citationCount: number): ManuscriptFactEntry | null {
   const cleanValue = value.trim();
   if (!cleanValue) return null;
@@ -54,6 +78,7 @@ function createFact(label: string, value: string, citationCount: number): Manusc
 
 function buildPersonEntries(
   people: Record<string, Person>,
+  sources: Record<string, Source>,
   citations: readonly Citation[],
   rootPersonId: string
 ): readonly ManuscriptPersonEntry[] {
@@ -80,6 +105,7 @@ function buildPersonEntries(
         personId: person.id,
         displayName: getDisplayName(person),
         facts,
+        sourceHighlights: buildSourceHighlightsForPerson(sources, citations, person.id),
         citationCount,
         citationCoverage: facts.length > 0 ? Math.round((citedFactsCount / facts.length) * 100) : 0,
       };
@@ -154,6 +180,9 @@ function formatPersonEntry(entry: ManuscriptPersonEntry): string {
   return [
     entry.displayName,
     `Citation coverage: ${entry.citationCoverage}% (${entry.citationCount} citation${entry.citationCount === 1 ? '' : 's'})`,
+    entry.sourceHighlights.length > 0
+      ? `Key sources: ${entry.sourceHighlights.map((source) => `${source.title} (${source.citationCount})`).join('; ')}`
+      : 'Key sources: No linked sources yet.',
     factLines,
   ].join('\n');
 }
@@ -173,7 +202,7 @@ export class ManuscriptStructureBuilder {
     const manuscriptPeople = Object.keys(branchGraph.people).length > 0 ? branchGraph.people : options.people;
     const evidence = getEvidence(options.evidence);
     const citationValues = Object.values(evidence.citations);
-    const peopleEntries = buildPersonEntries(manuscriptPeople, citationValues, options.rootPersonId);
+    const peopleEntries = buildPersonEntries(manuscriptPeople, evidence.sources, citationValues, options.rootPersonId);
     const timelineEntries = buildTimelineEntries(manuscriptPeople);
     const citationEntries = buildCitationEntries(evidence.sources, evidence.citations);
 
