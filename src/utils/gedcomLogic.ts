@@ -1,4 +1,4 @@
-import { Person, RelationshipStatus } from '../types';
+import { Person, RelationshipInfo, RelationshipStatus } from '../types';
 import { createPerson } from './familyLogic';
 
 // Helper to format date for GEDCOM (YYYY-MM-DD -> DD MMM YYYY)
@@ -75,8 +75,63 @@ export const exportToGEDCOM = (people: Record<string, Person>): string => {
   lines.push('1 CHAR UTF-8');
 
   const personIds = Object.keys(people);
-  const processedPairs = new Set<string>();
-  const familyLines: string[] = [];
+  type ExportFamily = {
+    id: string;
+    parents: string[];
+    children: string[];
+    relInfo?: RelationshipInfo;
+  };
+  const families = new Map<string, ExportFamily>();
+
+  const getFamilyKey = (parents: string[]): string => parents.slice().sort().join('_');
+
+  const getOrCreateFamily = (parents: string[], relInfo?: RelationshipInfo): ExportFamily => {
+    const normalizedParents = parents.filter((id, index, ids) => people[id] && ids.indexOf(id) === index).slice(0, 2);
+    const key = getFamilyKey(normalizedParents);
+    const existing = families.get(key);
+    if (existing) {
+      if (!existing.relInfo && relInfo) existing.relInfo = relInfo;
+      return existing;
+    }
+
+    const family = {
+      id: `F_${key}`,
+      parents: normalizedParents,
+      children: [],
+      relInfo,
+    };
+    families.set(key, family);
+    return family;
+  };
+
+  personIds.forEach((id) => {
+    const person = people[id];
+
+    person.spouses.forEach((spouseId) => {
+      if (!people[spouseId]) return;
+      getOrCreateFamily([id, spouseId], person.partnerDetails?.[spouseId]);
+    });
+  });
+
+  personIds.forEach((id) => {
+    const person = people[id];
+    const validParents = person.parents.filter((parentId) => people[parentId]);
+    if (validParents.length === 0) return;
+
+    const family = getOrCreateFamily(validParents);
+    if (!family.children.includes(id)) family.children.push(id);
+  });
+
+  const familiesByParent = new Map<string, string[]>();
+  const familiesByChild = new Map<string, string[]>();
+  [...families.values()].forEach((family) => {
+    family.parents.forEach((parentId) => {
+      familiesByParent.set(parentId, [...(familiesByParent.get(parentId) || []), family.id]);
+    });
+    family.children.forEach((childId) => {
+      familiesByChild.set(childId, [...(familiesByChild.get(childId) || []), family.id]);
+    });
+  });
 
   // 1. Export Individuals
   personIds.forEach((id) => {
@@ -122,75 +177,39 @@ export const exportToGEDCOM = (people: Record<string, Person>): string => {
       lines.push(`1 OCCU ${p.profession}`);
     }
 
-    // Prepare Families logic
-    p.spouses.forEach((spouseId) => {
-      const pair = [id, spouseId].sort().join('_');
-      if (!processedPairs.has(pair)) {
-        processedPairs.add(pair);
-        const famId = `F_${pair}`;
-
-        // Add FAMS link to individual (Self)
-        lines.push(`1 FAMS @${famId}@`);
-
-        // Create Family Record (buffered)
-        const spouse = people[spouseId];
-        let husb = null;
-        let wife = null;
-
-        if (p.gender === 'male') husb = id;
-        else wife = id;
-        if (spouse) {
-          if (spouse.gender === 'male') husb = spouseId;
-          else wife = spouseId;
-        }
-        if (!husb && !wife) {
-          husb = id;
-          wife = spouseId;
-        }
-
-        const children = p.children.filter(
-          (childId) => spouse && people[childId] && people[childId].parents.includes(spouseId)
-        );
-
-        // Get relationship info if exists
-        const relInfo = p.partnerDetails?.[spouseId];
-
-        let famBlock = `0 @${famId}@ FAM\n`;
-        if (husb) famBlock += `1 HUSB @${husb}@\n`;
-        if (wife) famBlock += `1 WIFE @${wife}@\n`;
-        children.forEach((c) => (famBlock += `1 CHIL @${c}@\n`));
-
-        if (relInfo) {
-          if (relInfo.type === 'married' || relInfo.type === 'divorced') {
-            famBlock += `1 MARR\n`;
-            if (relInfo.startDate) famBlock += `2 DATE ${formatGedcomDate(relInfo.startDate)}\n`;
-            if (relInfo.startPlace) famBlock += `2 PLAC ${relInfo.startPlace}\n`;
-          }
-          if (relInfo.type === 'divorced') {
-            famBlock += `1 DIV\n`;
-            if (relInfo.endDate) famBlock += `2 DATE ${formatGedcomDate(relInfo.endDate)}\n`;
-            if (relInfo.endPlace) famBlock += `2 PLAC ${relInfo.endPlace}\n`;
-          }
-        }
-
-        familyLines.push(famBlock);
-      }
-    });
-
-    // Add FAMC (Parents) - assuming first two parents form the primary family
-    if (p.parents.length > 0) {
-      // We need to find the FAM id for the parents.
-      // Simplification: We construct it same way as above or verify.
-      // Since we sort IDs, we can reconstruct the key.
-      if (p.parents.length >= 2) {
-        const pair = [...p.parents].sort().slice(0, 2).join('_');
-        lines.push(`1 FAMC @F_${pair}@`);
-      }
-    }
+    (familiesByParent.get(id) || []).forEach((familyId) => lines.push(`1 FAMS @${familyId}@`));
+    (familiesByChild.get(id) || []).forEach((familyId) => lines.push(`1 FAMC @${familyId}@`));
   });
 
   // Append Family Records
-  lines.push(...familyLines);
+  [...families.values()].forEach((family) => {
+    let husb = family.parents.find((parentId) => people[parentId]?.gender === 'male') || null;
+    let wife = family.parents.find((parentId) => people[parentId]?.gender === 'female') || null;
+
+    if (!husb && family.parents[0]) husb = family.parents[0];
+    if (!wife && family.parents.find((parentId) => parentId !== husb)) {
+      wife = family.parents.find((parentId) => parentId !== husb) || null;
+    }
+
+    lines.push(`0 @${family.id}@ FAM`);
+    if (husb) lines.push(`1 HUSB @${husb}@`);
+    if (wife) lines.push(`1 WIFE @${wife}@`);
+    family.children.forEach((childId) => lines.push(`1 CHIL @${childId}@`));
+
+    const relInfo = family.relInfo;
+    if (relInfo) {
+      if (relInfo.type === 'married' || relInfo.type === 'divorced') {
+        lines.push('1 MARR');
+        if (relInfo.startDate) lines.push(`2 DATE ${formatGedcomDate(relInfo.startDate)}`);
+        if (relInfo.startPlace) lines.push(`2 PLAC ${relInfo.startPlace}`);
+      }
+      if (relInfo.type === 'divorced') {
+        lines.push('1 DIV');
+        if (relInfo.endDate) lines.push(`2 DATE ${formatGedcomDate(relInfo.endDate)}`);
+        if (relInfo.endPlace) lines.push(`2 PLAC ${relInfo.endPlace}`);
+      }
+    }
+  });
 
   lines.push('0 TRLR');
   return lines.join('\n');

@@ -2,6 +2,7 @@
 import { describe, it, expect } from 'vitest';
 import { exportToGEDCOM, importFromGEDCOM, formatGedcomDate, gedcomDateToIso } from '../gedcomLogic';
 import { Person } from '../../types';
+import { evaluateDataIntegrity } from '../../domain/dataIntegrity';
 
 // Mock Data
 const mockPerson = {
@@ -196,6 +197,50 @@ describe('GEDCOM Logic - Export', () => {
             expect(output).toContain('2 DATE 15 MAY 2020');
             expect(output).toContain('2 PLAC London');
         });
+
+        it('should export parent-child family records even when parents are not spouses', () => {
+            const father: Person = {
+                ...mockPerson,
+                id: 'father',
+                firstName: 'Father',
+                spouses: [],
+                children: ['child'],
+            };
+            const mother: Person = {
+                ...mockSpouse,
+                id: 'mother',
+                firstName: 'Mother',
+                spouses: [],
+                children: ['child'],
+            };
+            const child: Person = {
+                ...mockChild,
+                id: 'child',
+                firstName: 'Child',
+                parents: ['father', 'mother'],
+            };
+
+            const output = exportToGEDCOM({ father, mother, child });
+
+            expect(output).toContain('1 FAMC @F_father_mother@');
+            expect(output).toContain('0 @F_father_mother@ FAM');
+            expect(output).toContain('1 HUSB @father@');
+            expect(output).toContain('1 WIFE @mother@');
+            expect(output).toContain('1 CHIL @child@');
+        });
+
+        it('should not export GEDCOM family references to missing parents', () => {
+            const child: Person = {
+                ...mockChild,
+                id: 'child',
+                parents: ['missing-parent'],
+            };
+
+            const output = exportToGEDCOM({ child });
+
+            expect(output).not.toContain('1 FAMC @F_missing-parent@');
+            expect(output).not.toContain('0 @F_missing-parent@ FAM');
+        });
     });
 });
 
@@ -386,6 +431,36 @@ describe('GEDCOM Logic - Round-trip', () => {
         expect(imported['p1'].children).toContain('p3');
         expect(imported['p3'].parents).toContain('p1');
         expect(imported['p3'].parents).toContain('p2');
+    });
+
+    it('should preserve structural integrity for parent-child families without spouse links', () => {
+        const father: Person = {
+            ...mockPerson,
+            id: 'father',
+            firstName: 'Father',
+            spouses: [],
+            children: ['child'],
+        };
+        const mother: Person = {
+            ...mockSpouse,
+            id: 'mother',
+            firstName: 'Mother',
+            spouses: [],
+            children: ['child'],
+        };
+        const child: Person = {
+            ...mockChild,
+            id: 'child',
+            firstName: 'Child',
+            parents: ['father', 'mother'],
+            children: [],
+            spouses: [],
+        };
+
+        const imported = importFromGEDCOM(exportToGEDCOM({ father, mother, child }));
+        const report = evaluateDataIntegrity(imported);
+
+        expect(report.issues.filter((issue) => issue.category === 'RELATIONSHIP')).toHaveLength(0);
     });
 });
 
