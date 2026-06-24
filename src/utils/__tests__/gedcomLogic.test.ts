@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest';
 import { exportToGEDCOM, importFromGEDCOM, importFromGEDCOMWithReport, formatGedcomDate, gedcomDateToIso } from '../gedcomLogic';
 import { Person } from '../../types';
 import { evaluateDataIntegrity } from '../../domain/dataIntegrity';
+import { deriveSourcesAndCitationsFromPeople } from '../../types/citation';
 
 // Mock Data
 const mockPerson = {
@@ -314,6 +315,38 @@ describe('GEDCOM Logic - Import', () => {
             expect(result['p1'].deathDate).toBe('2020-05-15');
             expect(result['p1'].deathPlace).toBe('London');
         });
+
+        it('should map GEDCOM source records to legacy source fields for citation derivation', () => {
+            const gedcom = `
+0 HEAD
+0 @S1@ SOUR
+1 TITL Civil Birth Register
+1 AUTH City Archive
+0 @S2@ SOUR
+1 TITL Family Oral History
+0 @S3@ SOUR
+1 TITL Death Registry
+0 @p1@ INDI
+1 NAME John /Doe/
+1 SEX M
+1 SOUR @S2@
+1 BIRT
+2 DATE 1 JAN 1990
+2 SOUR @S1@
+1 DEAT
+2 DATE 1 JAN 2020
+2 SOUR @S3@
+0 TRLR
+      `;
+
+            const result = importFromGEDCOM(gedcom);
+
+            expect(result.p1.sources).toEqual([
+                expect.objectContaining({ id: 'S2', title: 'Family Oral History', type: 'document' }),
+            ]);
+            expect(result.p1.birthSource).toBe('Civil Birth Register');
+            expect(result.p1.deathSource).toBe('Death Registry');
+        });
     });
 
     describe('importFromGEDCOM - Edge Cases', () => {
@@ -508,6 +541,33 @@ describe('GEDCOM Logic - Round-trip', () => {
         const report = evaluateDataIntegrity(imported);
 
         expect(report.issues.filter((issue) => issue.category === 'RELATIONSHIP')).toHaveLength(0);
+    });
+
+    it('should feed GEDCOM source records into the citation derivation pipeline', () => {
+        const gedcom = `
+0 HEAD
+0 @S1@ SOUR
+1 TITL Civil Birth Register
+0 @p1@ INDI
+1 NAME John /Doe/
+1 SEX M
+1 BIRT
+2 DATE 1 JAN 1990
+2 SOUR @S1@
+0 TRLR
+      `;
+
+        const people = importFromGEDCOM(gedcom);
+        const { sources, citations } = deriveSourcesAndCitationsFromPeople('tree-1', people);
+        const sourceList = Object.values(sources);
+        const citationList = Object.values(citations);
+
+        expect(sourceList).toEqual([
+            expect.objectContaining({ title: 'Civil Birth Register', origin: 'migration' }),
+        ]);
+        expect(citationList).toEqual([
+            expect.objectContaining({ targetId: 'p1', targetField: 'person.birth.date' }),
+        ]);
     });
 });
 

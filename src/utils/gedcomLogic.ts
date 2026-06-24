@@ -5,6 +5,7 @@ import { evaluateDataIntegrity, type DataIntegrityIssue } from '../domain/dataIn
 export interface GedcomImportReport {
   peopleCount: number;
   familyCount: number;
+  sourceCount: number;
   unsupportedDateValues: string[];
   unnamedPeopleCount: number;
   integrityIssues: DataIntegrityIssue[];
@@ -110,7 +111,7 @@ const isSupportedGedcomDate = (gedDate: string): boolean => {
   return false;
 };
 
-const getGedcomRecordCount = (gedcom: string, recordType: 'INDI' | 'FAM'): number => {
+const getGedcomRecordCount = (gedcom: string, recordType: 'INDI' | 'FAM' | 'SOUR'): number => {
   const pattern = new RegExp(`^0\\s+@[^@]+@\\s+${recordType}\\s*$`, 'i');
   return gedcom.split(/\r?\n/).filter((line) => pattern.test(line.trim())).length;
 };
@@ -161,6 +162,7 @@ const buildGedcomImportReport = (gedcom: string, people: Record<string, Person>)
   return {
     peopleCount: Object.keys(people).length,
     familyCount: getGedcomRecordCount(gedcom, 'FAM'),
+    sourceCount: getGedcomRecordCount(gedcom, 'SOUR'),
     unsupportedDateValues,
     unnamedPeopleCount,
     integrityIssues: integrityReport.issues,
@@ -336,11 +338,16 @@ export const importFromGEDCOM = (gedcom: string): Record<string, Person> => {
   }
 
   const families: Record<string, GedcomFamily> = {};
+  const sources: Record<string, { title: string; author?: string; date?: string; notes?: string }> = {};
+  const generalSourceRefs: Record<string, string[]> = {};
+  const birthSourceRefs: Record<string, string[]> = {};
+  const deathSourceRefs: Record<string, string[]> = {};
 
   let currentId = '';
   let currentType = ''; // INDI or FAM
   let currentPerson: Partial<Person> | null = null;
   let currentFam: GedcomFamily | null = null;
+  let currentSource: { title: string; author?: string; date?: string; notes?: string } | null = null;
 
   // Context tracking for sub-tags (BIRT, DEAT, MARR)
   let currentEvent = '';
@@ -360,6 +367,9 @@ export const importFromGEDCOM = (gedcom: string): Record<string, Person> => {
       if (currentType === 'FAM' && currentFam && currentId) {
         families[currentId] = currentFam;
       }
+      if (currentType === 'SOUR' && currentSource && currentId) {
+        sources[currentId] = currentSource;
+      }
 
       // --- START NEW RECORD ---
       currentEvent = ''; // Reset event context
@@ -376,14 +386,23 @@ export const importFromGEDCOM = (gedcom: string): Record<string, Person> => {
           partnerDetails: {},
         };
         currentFam = null;
+        currentSource = null;
       } else if (rest === 'FAM' || parts[2] === 'FAM') {
         currentId = tagOrId.replace(/@/g, '');
         currentType = 'FAM';
         currentFam = { children: [] };
         currentPerson = null;
+        currentSource = null;
+      } else if (rest === 'SOUR' || parts[2] === 'SOUR') {
+        currentId = tagOrId.replace(/@/g, '');
+        currentType = 'SOUR';
+        currentSource = { title: currentId };
+        currentPerson = null;
+        currentFam = null;
       } else {
         currentType = '';
         currentId = '';
+        currentSource = null;
       }
     } else if (currentType === 'INDI' && currentPerson) {
       // Level 1 Tags
@@ -410,6 +429,11 @@ export const importFromGEDCOM = (gedcom: string): Record<string, Person> => {
           currentPerson.profession = rest;
         } else if (tagOrId === 'NOTE') {
           currentPerson.bio = (currentPerson.bio ? currentPerson.bio + '\n' : '') + rest;
+        } else if (tagOrId === 'SOUR') {
+          const sourceRef = rest.replace(/@/g, '').trim();
+          if (sourceRef) {
+            generalSourceRefs[currentId] = [...(generalSourceRefs[currentId] || []), sourceRef];
+          }
         }
       }
 
@@ -422,6 +446,15 @@ export const importFromGEDCOM = (gedcom: string): Record<string, Person> => {
           currentPerson.isDeceased = true;
           if (tagOrId === 'DATE') currentPerson.deathDate = gedcomDateToIso(rest);
           if (tagOrId === 'PLAC') currentPerson.deathPlace = rest;
+        }
+
+        if (tagOrId === 'SOUR') {
+          const sourceRef = rest.replace(/@/g, '').trim();
+          if (sourceRef && currentEvent === 'BIRT') {
+            birthSourceRefs[currentId] = [...(birthSourceRefs[currentId] || []), sourceRef];
+          } else if (sourceRef && currentEvent === 'DEAT') {
+            deathSourceRefs[currentId] = [...(deathSourceRefs[currentId] || []), sourceRef];
+          }
         } else if (currentEvent === 'NAME') {
           if (tagOrId === 'GIVN') {
             // Some GEDCOMs use GIVN, prefer this if available
@@ -445,6 +478,15 @@ export const importFromGEDCOM = (gedcom: string): Record<string, Person> => {
           if (tagOrId === 'PLAC') currentFam.divPlace = rest;
         }
       }
+    } else if (currentType === 'SOUR' && currentSource) {
+      if (level === '1') {
+        if (tagOrId === 'TITL') currentSource.title = rest || currentSource.title;
+        if (tagOrId === 'AUTH') currentSource.author = rest;
+        if (tagOrId === 'DATE') currentSource.date = gedcomDateToIso(rest);
+        if (tagOrId === 'NOTE' || tagOrId === 'PUBL' || tagOrId === 'TEXT') {
+          currentSource.notes = [currentSource.notes, rest].filter(Boolean).join('\n');
+        }
+      }
     }
   });
 
@@ -454,6 +496,9 @@ export const importFromGEDCOM = (gedcom: string): Record<string, Person> => {
   }
   if (currentType === 'FAM' && currentFam && currentId) {
     families[currentId] = currentFam;
+  }
+  if (currentType === 'SOUR' && currentSource && currentId) {
+    sources[currentId] = currentSource;
   }
 
   // --- SECOND PASS: LINK RELATIONSHIPS ---
@@ -498,6 +543,33 @@ export const importFromGEDCOM = (gedcom: string): Record<string, Person> => {
         }
       }
     });
+  });
+
+  Object.entries(people).forEach(([personId, person]) => {
+    const resolveSourceTitle = (sourceRef: string) => sources[sourceRef]?.title || sourceRef;
+    const generalRefs = generalSourceRefs[personId] || [];
+    const birthRefs = birthSourceRefs[personId] || [];
+    const deathRefs = deathSourceRefs[personId] || [];
+
+    if (generalRefs.length > 0) {
+      person.sources = generalRefs.map((sourceRef) => {
+        const source = sources[sourceRef];
+        return {
+          id: sourceRef,
+          title: source?.title || sourceRef,
+          date: source?.date,
+          type: 'document',
+        };
+      });
+    }
+
+    if (!person.birthSource && birthRefs.length > 0) {
+      person.birthSource = birthRefs.map(resolveSourceTitle).join('; ');
+    }
+
+    if (!person.deathSource && deathRefs.length > 0) {
+      person.deathSource = deathRefs.map(resolveSourceTitle).join('; ');
+    }
   });
 
   return people;
