@@ -1,4 +1,4 @@
-import { memo, useEffect, useMemo, useRef } from 'react';
+import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Activity,
   AlertTriangle,
@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 
 import { calculateCanonicalTreeAnalytics } from '../../../services/CanonicalTreeAnalytics';
+import { evaluateDataIntegrity, type DataIntegrityIssue, type IntegrityCategory, type IntegritySeverity } from '../../../domain/dataIntegrity';
 import { useTranslation } from '../../../context/TranslationContext';
 import { OverlayPrimitive } from '../../../context/OverlayContext';
 import { formatDate } from '../../../utils/familyLogic';
@@ -63,6 +64,163 @@ type ChartSegment = {
   label: string;
   value: number;
   color: string;
+};
+
+const HEALTH_CENTER_CATEGORIES: IntegrityCategory[] = [
+  'RELATIONSHIP',
+  'TIMELINE',
+  'DUPLICATE',
+  'COMPLETENESS',
+  'CITATION',
+];
+
+const CATEGORY_LABELS: Record<IntegrityCategory, string> = {
+  RELATIONSHIP: 'Structural',
+  TIMELINE: 'Timeline',
+  DUPLICATE: 'Duplicates',
+  COMPLETENESS: 'Completeness',
+  CITATION: 'Citations',
+};
+
+const SEVERITY_CLASS_NAMES: Record<IntegritySeverity, string> = {
+  ERROR: 'bg-red-50 text-red-700 border-red-100',
+  WARNING: 'bg-amber-50 text-amber-700 border-amber-100',
+  INFO: 'bg-sky-50 text-sky-700 border-sky-100',
+};
+
+const ScoreCard = ({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: number;
+  tone: 'green' | 'amber' | 'blue';
+}) => {
+  const toneClass = {
+    green: 'bg-emerald-50 text-emerald-700',
+    amber: 'bg-amber-50 text-amber-700',
+    blue: 'bg-sky-50 text-sky-700',
+  }[tone];
+
+  return (
+    <div className={`rounded-2xl px-4 py-3 ${toneClass}`}>
+      <p className="text-[11px] font-bold uppercase tracking-[0.08em] opacity-80">{label}</p>
+      <p className="mt-1 text-[20px] font-semibold tabular-nums">{value}%</p>
+    </div>
+  );
+};
+
+const FamilyTreeHealthCenter = ({
+  people,
+  onNavigateToPerson,
+  noIssuesLabel,
+}: {
+  people: Record<string, Person>;
+  onNavigateToPerson?: (id: string) => void;
+  noIssuesLabel: string;
+}) => {
+  const report = useMemo(() => evaluateDataIntegrity(people), [people]);
+  const [selectedCategory, setSelectedCategory] = useState<IntegrityCategory | 'ALL'>('ALL');
+  const visibleIssues = useMemo(
+    () => report.issues.filter((issue) => selectedCategory === 'ALL' || issue.category === selectedCategory),
+    [report.issues, selectedCategory]
+  );
+
+  const renderIssuePersonNames = (issue: DataIntegrityIssue) => {
+    const ids = issue.personIds?.length ? issue.personIds : [issue.personId];
+    return ids
+      .map((id) => {
+        const person = people[id];
+        return person ? `${person.firstName} ${person.lastName}`.trim() || id : id;
+      })
+      .join(' / ');
+  };
+
+  return (
+    <section className="space-y-5 rounded-[24px] border border-[#eadfce] bg-white/70 p-4 shadow-[0_2px_10px_rgba(0,0,0,0.03)] sm:p-5">
+      <div className="grid gap-3 sm:grid-cols-3">
+        <ScoreCard label="Health Score" value={report.healthScore} tone="green" />
+        <ScoreCard label="Completeness" value={report.completenessScore} tone="amber" />
+        <ScoreCard label="Citation Coverage" value={report.citationCoverage} tone="blue" />
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={() => setSelectedCategory('ALL')}
+          className={`rounded-full px-3 py-1.5 text-[12px] font-semibold transition-colors ${
+            selectedCategory === 'ALL' ? 'bg-[#3d1f13] text-white' : 'bg-[#f3efe6] text-slate-700 hover:bg-white'
+          }`}
+        >
+          All {report.issues.length}
+        </button>
+        {HEALTH_CENTER_CATEGORIES.map((category) => (
+          <button
+            key={category}
+            type="button"
+            onClick={() => setSelectedCategory(category)}
+            className={`rounded-full px-3 py-1.5 text-[12px] font-semibold transition-colors ${
+              selectedCategory === category ? 'bg-[#3d1f13] text-white' : 'bg-[#f3efe6] text-slate-700 hover:bg-white'
+            }`}
+          >
+            {CATEGORY_LABELS[category]} {report.countsByCategory[category]}
+          </button>
+        ))}
+      </div>
+
+      {visibleIssues.length === 0 ? (
+        <div className="inline-flex items-center gap-2 rounded-2xl bg-emerald-50 px-4 py-3 text-[13px] font-medium text-emerald-700">
+          <Check className="h-4 w-4" />
+          <span>{noIssuesLabel}</span>
+        </div>
+      ) : (
+        <div className="max-h-[420px] space-y-2 overflow-y-auto pe-1">
+          {visibleIssues.map((issue) => {
+            const canNavigate = Boolean(onNavigateToPerson && issue.personId);
+            const content = (
+              <>
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${SEVERITY_CLASS_NAMES[issue.severity]}`}>
+                      {issue.severity}
+                    </span>
+                    <span className="rounded-full bg-[#f3efe6] px-2 py-0.5 text-[10px] font-bold text-[#7a5b35]">
+                      {CATEGORY_LABELS[issue.category]}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-sm font-semibold text-slate-800">{issue.message}</p>
+                  <p className="mt-1 truncate text-[12px] text-slate-500">{renderIssuePersonNames(issue)}</p>
+                </div>
+                {canNavigate ? (
+                  <ChevronRight className="h-4 w-4 shrink-0 text-slate-400 transition-colors group-hover:text-slate-600 rtl:rotate-180" />
+                ) : null}
+              </>
+            );
+
+            if (!canNavigate) {
+              return (
+                <div key={issue.id} className="flex w-full items-center justify-between gap-3 rounded-2xl bg-[#f3efe6] px-4 py-3 text-start">
+                  {content}
+                </div>
+              );
+            }
+
+            return (
+              <button
+                key={issue.id}
+                type="button"
+                onClick={() => onNavigateToPerson?.(issue.personId)}
+                className="group flex w-full items-center justify-between gap-3 rounded-2xl bg-[#f3efe6] px-4 py-3 text-start transition-all duration-200 ease-in-out hover:bg-white"
+              >
+                {content}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </section>
+  );
 };
 
 const ProgressBarGroup = ({
@@ -229,65 +387,16 @@ export const StatisticsDashboard = memo(({
 
         <div className="flex-1 space-y-7 overflow-y-auto bg-[#FAF7F2] p-4 sm:p-6">
           {isConsistencyView ? (
-            <section ref={healthSectionRef} className="space-y-4 rounded-[24px] border border-red-100 bg-white/70 p-4 shadow-[0_2px_10px_rgba(0,0,0,0.03)] sm:p-5">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div className="space-y-1">
-                  <p className="text-[11px] font-bold uppercase tracking-[0.05em] text-red-400">
-                    {t.consistencyChecker}
-                  </p>
-                  <h3 className="text-[15px] font-semibold tracking-tight text-slate-800 antialiased">
-                    {issuesCount === 0 ? noIssuesLabel : t.issuesFound}
-                  </h3>
-                </div>
-                <div className="flex gap-2">
-                  <div className="rounded-2xl bg-emerald-50 px-3 py-2 text-right text-emerald-700">
-                    <p className="text-[11px] font-bold uppercase tracking-[0.08em] opacity-80">{t.statistics.dataHealth}</p>
-                    <p className="text-[15px] font-medium tabular-nums">{stats.kpis.healthScore}%</p>
-                  </div>
-                  <div className="rounded-2xl bg-red-50 px-3 py-2 text-right text-red-700">
-                    <p className="text-[11px] font-bold uppercase tracking-[0.08em] opacity-80">{t.statistics.issues}</p>
-                    <p className="text-[15px] font-medium tabular-nums">{issuesCount}</p>
-                  </div>
-                </div>
-              </div>
-
-              {issuesCount === 0 ? (
-                <div className="inline-flex items-center gap-2 rounded-2xl bg-emerald-50 px-4 py-3 text-[13px] font-medium text-emerald-700">
-                  <Check className="h-4 w-4" />
-                  <span>{noIssuesLabel}</span>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {issueEntries.map(([id, errors]) => (
-                    <button
-                      key={id}
-                      type="button"
-                      onClick={() => onNavigateToPerson?.(id)}
-                      className="group flex w-full items-center justify-between gap-3 rounded-2xl bg-[#f3efe6] px-4 py-3 text-start transition-all duration-200 ease-in-out hover:bg-white"
-                    >
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-slate-800">
-                          {people[id]?.firstName} {people[id]?.lastName}
-                        </p>
-                        <div className="mt-1 flex flex-wrap gap-1.5">
-                          {errors.map((error, index) => (
-                            <span
-                              key={`${id}-${index}`}
-                              className="rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-medium text-red-600"
-                            >
-                              {error}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                      <ChevronRight className="h-4 w-4 shrink-0 text-slate-400 transition-colors group-hover:text-slate-600 rtl:rotate-180" />
-                    </button>
-                  ))}
-                </div>
-              )}
+            <section ref={healthSectionRef}>
+              <FamilyTreeHealthCenter
+                people={people}
+                onNavigateToPerson={onNavigateToPerson}
+                noIssuesLabel={noIssuesLabel}
+              />
             </section>
           ) : null}
 
+          {!isConsistencyView ? (
           <section className="space-y-5 rounded-[24px] bg-white/60 p-4 shadow-[0_2px_10px_rgba(0,0,0,0.03)] sm:space-y-6 sm:p-5">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="space-y-1">
@@ -345,10 +454,12 @@ export const StatisticsDashboard = memo(({
               </div>
             </div>
           </section>
+          ) : null}
 
-          <div className="h-px bg-black/[0.04]" />
+          {!isConsistencyView ? <div className="h-px bg-black/[0.04]" /> : null}
 
-          <section ref={isConsistencyView ? undefined : healthSectionRef} className="space-y-3">
+          {!isConsistencyView ? (
+          <section ref={healthSectionRef} className="space-y-3">
             <h3 className="mb-[10px] text-[15px] font-semibold tracking-[0.2px] text-slate-800 antialiased">
               {t.statistics.coreRecords}
             </h3>
@@ -369,7 +480,9 @@ export const StatisticsDashboard = memo(({
               </div>
             </div>
           </section>
+          ) : null}
 
+          {!isConsistencyView ? (
           <section className="space-y-3">
             <h3 className="mb-[10px] text-[15px] font-semibold tracking-[0.2px] text-slate-800 antialiased">{topPlacesLabel}</h3>
             {stats.topPlaces.length === 0 ? (
@@ -393,7 +506,9 @@ export const StatisticsDashboard = memo(({
               </div>
             )}
           </section>
+          ) : null}
 
+          {!isConsistencyView ? (
           <section className="space-y-3">
             <h3 className="mb-[10px] text-[15px] font-semibold tracking-[0.2px] text-slate-800 antialiased">{topNamesLabel}</h3>
             {topMaleNames.length === 0 && topFemaleNames.length === 0 ? (
@@ -446,7 +561,9 @@ export const StatisticsDashboard = memo(({
               </div>
             )}
           </section>
+          ) : null}
 
+          {!isConsistencyView ? (
           <section className="space-y-3">
             <h3 className="mb-[10px] text-[15px] font-semibold tracking-[0.2px] text-slate-800 antialiased">{birthdaysLabel}</h3>
             {stats.upcomingBirthdays.length === 0 ? (
@@ -482,7 +599,9 @@ export const StatisticsDashboard = memo(({
               </div>
             )}
           </section>
+          ) : null}
 
+          {!isConsistencyView ? (
           <section className="space-y-3">
             <h3 className="mb-[10px] text-[15px] font-semibold tracking-[0.2px] text-slate-800 antialiased">{healthLabel}</h3>
             {issuesCount === 0 ? (
@@ -520,6 +639,7 @@ export const StatisticsDashboard = memo(({
               </div>
             )}
           </section>
+          ) : null}
 
         </div>
       </div>
