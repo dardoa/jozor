@@ -92,7 +92,7 @@ describe('Template Composition Engine (Sprint 6)', () => {
     const doc = PublishingPipeline.composeDocument(request, mockPeople);
     expect(doc.type).toBe('paginated');
     expect(doc.title).toBe('كتاب عائلة Al-Jamil');
-    expect(doc.sections).toHaveLength(4);
+    expect(doc.sections).toHaveLength(5);
 
     // 1. Page 1: Cover
     const coverSection = doc.sections[0];
@@ -115,8 +115,14 @@ describe('Template Composition Engine (Sprint 6)', () => {
     expect(treeSection.type).toBe('tree');
     expect(treeSection.blocks[0].assets[0].type).toBe('tree-diagram');
 
-    // 4. Page 4: Timeline
-    const timelineSection = doc.sections[3];
+    // 4. Page 4: People chapters
+    const biographySection = doc.sections[3];
+    expect(biographySection.type).toBe('biography');
+    expect(biographySection.blocks[0].type).toBe('header');
+    expect(biographySection.blocks.some((block) => block.type === 'paragraph')).toBe(true);
+
+    // 5. Page 5: Timeline
+    const timelineSection = doc.sections[4];
     expect(timelineSection.type).toBe('timeline');
     expect(timelineSection.blocks[0].type).toBe('timeline');
     // أحمد (1990), ابوه (1960), امه (1965) -> 3 events

@@ -49,19 +49,19 @@ describe('BookLayout Engine (Sprint 7)', () => {
 
     // 1. Compose the document
     const doc = PublishingPipeline.composeDocument(request, mockPeople);
-    expect(doc.sections).toHaveLength(4);
+    expect(doc.sections).toHaveLength(5);
 
     // 2. Layout the document
     const placedDoc = PublishingPipeline.layoutDocument(doc, template);
     
     expect(placedDoc.documentId).toBe(doc.id);
-    expect(placedDoc.totalPages).toBe(4);
+    expect(placedDoc.totalPages).toBe(5);
     expect(placedDoc.pageSize?.width).toBe(595); // A4 width
     expect(placedDoc.pageSize?.height).toBe(842); // A4 height
 
-    // Verify sections have sequential page numbers: 1, 2, 3, 4
+    // Verify sections have sequential page numbers: 1, 2, 3, 4, 5
     const pageNumbers = placedDoc.sections.map((s) => s.pageNumber);
-    expect(pageNumbers).toEqual([1, 2, 3, 4]);
+    expect(pageNumbers).toEqual([1, 2, 3, 4, 5]);
 
     // Verify each section has A4 dimensions
     placedDoc.sections.forEach((section) => {
@@ -106,8 +106,14 @@ describe('BookLayout Engine (Sprint 7)', () => {
     expect(rootNode.width).toBe(120); // Default node width from template theme
     expect(rootNode.height).toBe(60);
 
-    // 6. Page 4: Timeline Layout Verification
-    const timelinePage = placedDoc.sections[3];
+    // 6. Page 4: Biography Layout Verification
+    const biographyPage = placedDoc.sections[3];
+    expect(biographyPage.type).toBe('biography');
+    expect(biographyPage.blocks[0].type).toBe('header');
+    expect(biographyPage.blocks[1].height).toBe(130);
+
+    // 7. Page 5: Timeline Layout Verification
+    const timelinePage = placedDoc.sections[4];
     expect(timelinePage.type).toBe('timeline');
     expect(timelinePage.blocks).toHaveLength(1);
     const timelineBlock = timelinePage.blocks[0];

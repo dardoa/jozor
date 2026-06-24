@@ -1,0 +1,245 @@
+import type { Citation, Person, RelationshipEdge, Source } from '../../../types';
+import type {
+  FamilyManuscriptModel,
+  ManuscriptCitationEntry,
+  ManuscriptFactEntry,
+  ManuscriptPersonEntry,
+  ManuscriptTimelineEntry,
+  PublicationBlock,
+  PublicationSection,
+} from '../types';
+import { PublishingRelationshipAdapter } from './PublishingRelationshipAdapter';
+import type { PublishingEvidenceContext } from './PublishingEvidenceAdapter';
+
+export interface ManuscriptStructureOptions {
+  readonly rootPersonId: string;
+  readonly people: Record<string, Person>;
+  readonly relationshipEdges?: Record<string, RelationshipEdge> | readonly RelationshipEdge[];
+  readonly evidence?: PublishingEvidenceContext | {
+    readonly sources: Record<string, Source>;
+    readonly citations: Record<string, Citation>;
+  };
+}
+
+function getDisplayName(person: Person): string {
+  return [person.title, person.firstName, person.middleName, person.lastName]
+    .filter(Boolean)
+    .join(' ')
+    .trim() || person.nickName || 'Unnamed Person';
+}
+
+function getEvidence(options?: ManuscriptStructureOptions['evidence']): {
+  readonly sources: Record<string, Source>;
+  readonly citations: Record<string, Citation>;
+} {
+  return {
+    sources: options?.sources ?? {},
+    citations: options?.citations ?? {},
+  };
+}
+
+function countCitationsForPerson(citations: readonly Citation[], personId: string, field?: string): number {
+  return citations.filter((citation) => (
+    citation.targetType === 'PERSON' &&
+    citation.targetId === personId &&
+    (!field || citation.targetField === field)
+  )).length;
+}
+
+function createFact(label: string, value: string, citationCount: number): ManuscriptFactEntry | null {
+  const cleanValue = value.trim();
+  if (!cleanValue) return null;
+  return { label, value: cleanValue, citationCount };
+}
+
+function buildPersonEntries(
+  people: Record<string, Person>,
+  citations: readonly Citation[],
+  rootPersonId: string
+): readonly ManuscriptPersonEntry[] {
+  return Object.values(people)
+    .sort((a, b) => {
+      if (a.id === rootPersonId) return -1;
+      if (b.id === rootPersonId) return 1;
+      return getDisplayName(a).localeCompare(getDisplayName(b));
+    })
+    .map((person) => {
+      const facts = [
+        createFact('Birth date', person.birthDate, countCitationsForPerson(citations, person.id, 'person.birth.date')),
+        createFact('Birth place', person.birthPlace, countCitationsForPerson(citations, person.id, 'person.birth.place')),
+        createFact('Death date', person.deathDate, countCitationsForPerson(citations, person.id, 'person.death.date')),
+        createFact('Death place', person.deathPlace, countCitationsForPerson(citations, person.id, 'person.death.place')),
+        createFact('Residence', person.currentResidence || person.residence, countCitationsForPerson(citations, person.id)),
+        createFact('Occupation', person.occupation || person.profession, countCitationsForPerson(citations, person.id)),
+      ].filter((fact): fact is ManuscriptFactEntry => Boolean(fact));
+
+      const citationCount = countCitationsForPerson(citations, person.id);
+      const citedFactsCount = facts.filter((fact) => fact.citationCount > 0).length;
+
+      return {
+        personId: person.id,
+        displayName: getDisplayName(person),
+        facts,
+        citationCount,
+        citationCoverage: facts.length > 0 ? Math.round((citedFactsCount / facts.length) * 100) : 0,
+      };
+    });
+}
+
+function buildTimelineEntries(people: Record<string, Person>): readonly ManuscriptTimelineEntry[] {
+  const entries: ManuscriptTimelineEntry[] = [];
+
+  Object.values(people).forEach((person) => {
+    const personName = getDisplayName(person);
+
+    if (person.birthDate) {
+      entries.push({
+        personId: person.id,
+        personName,
+        date: person.birthDate,
+        title: 'Birth',
+        place: person.birthPlace || undefined,
+      });
+    }
+
+    if (person.deathDate) {
+      entries.push({
+        personId: person.id,
+        personName,
+        date: person.deathDate,
+        title: 'Death',
+        place: person.deathPlace || undefined,
+      });
+    }
+
+    person.events?.forEach((event) => {
+      if (!event.date) return;
+      entries.push({
+        personId: person.id,
+        personName,
+        date: event.date,
+        title: event.title,
+        place: event.place || undefined,
+      });
+    });
+  });
+
+  return entries.sort((a, b) => a.date.localeCompare(b.date));
+}
+
+function buildCitationEntries(
+  sources: Record<string, Source>,
+  citations: Record<string, Citation>
+): readonly ManuscriptCitationEntry[] {
+  return Object.values(citations)
+    .filter((citation) => citation.targetType === 'PERSON')
+    .map((citation) => ({
+      citationId: citation.id,
+      sourceId: citation.sourceId,
+      sourceTitle: sources[citation.sourceId]?.title || 'Unknown source',
+      targetId: citation.targetId,
+      targetField: citation.targetField,
+    }))
+    .sort((a, b) => a.sourceTitle.localeCompare(b.sourceTitle));
+}
+
+function formatPersonEntry(entry: ManuscriptPersonEntry): string {
+  const factLines = entry.facts.length > 0
+    ? entry.facts.map((fact) => {
+      const citationSuffix = fact.citationCount > 0 ? ` (${fact.citationCount} source${fact.citationCount === 1 ? '' : 's'})` : '';
+      return `- ${fact.label}: ${fact.value}${citationSuffix}`;
+    }).join('\n')
+    : '- No structured facts available yet.';
+
+  return [
+    entry.displayName,
+    `Citation coverage: ${entry.citationCoverage}% (${entry.citationCount} citation${entry.citationCount === 1 ? '' : 's'})`,
+    factLines,
+  ].join('\n');
+}
+
+export class ManuscriptStructureBuilder {
+  public static buildModel(options: ManuscriptStructureOptions): FamilyManuscriptModel {
+    const rootPerson = options.people[options.rootPersonId];
+    if (!rootPerson) {
+      throw new Error(`Root person "${options.rootPersonId}" not found for manuscript generation.`);
+    }
+
+    const branchGraph = PublishingRelationshipAdapter.buildBranchGraph(
+      options.people,
+      options.rootPersonId,
+      options.relationshipEdges
+    );
+    const manuscriptPeople = Object.keys(branchGraph.people).length > 0 ? branchGraph.people : options.people;
+    const evidence = getEvidence(options.evidence);
+    const citationValues = Object.values(evidence.citations);
+    const peopleEntries = buildPersonEntries(manuscriptPeople, citationValues, options.rootPersonId);
+    const timelineEntries = buildTimelineEntries(manuscriptPeople);
+    const citationEntries = buildCitationEntries(evidence.sources, evidence.citations);
+
+    return {
+      id: `manuscript-${crypto.randomUUID()}`,
+      title: `Family Manuscript: ${getDisplayName(rootPerson)}`,
+      rootPersonId: options.rootPersonId,
+      chapters: [
+        {
+          id: `chapter-people-${crypto.randomUUID()}`,
+          type: 'people',
+          title: 'People chapters',
+          people: peopleEntries,
+        },
+        {
+          id: `chapter-timeline-${crypto.randomUUID()}`,
+          type: 'timeline',
+          title: 'Family timeline',
+          timeline: timelineEntries,
+        },
+        {
+          id: `chapter-evidence-${crypto.randomUUID()}`,
+          type: 'evidence',
+          title: 'Evidence overview',
+          citations: citationEntries,
+        },
+      ],
+    };
+  }
+
+  public static buildPersonSections(model: FamilyManuscriptModel): readonly PublicationSection[] {
+    const peopleChapter = model.chapters.find((chapter) => chapter.type === 'people');
+    const entries = peopleChapter?.people ?? [];
+    if (entries.length === 0) return [];
+
+    const blocks: PublicationBlock[] = [
+      {
+        id: `block-manuscript-people-header-${crypto.randomUUID()}`,
+        type: 'header',
+        assets: [{
+          id: `asset-manuscript-people-title-${crypto.randomUUID()}`,
+          type: 'text',
+          payload: {
+            text: 'People chapters',
+            subtext: 'Structured family entries with citation coverage.',
+          },
+        }],
+      },
+      ...entries.slice(0, 12).map((entry) => ({
+        id: `block-manuscript-person-${entry.personId}`,
+        type: 'paragraph' as const,
+        assets: [{
+          id: `asset-manuscript-person-${entry.personId}`,
+          type: 'text' as const,
+          payload: {
+            text: entry.displayName,
+            body: formatPersonEntry(entry),
+          },
+        }],
+      })),
+    ];
+
+    return [{
+      id: `section-manuscript-people-${crypto.randomUUID()}`,
+      type: 'biography',
+      blocks,
+    }];
+  }
+}

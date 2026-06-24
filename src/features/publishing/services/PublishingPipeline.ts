@@ -15,6 +15,7 @@ import { AncestorTreeLayout, LayoutOptions } from '../layout/AncestorTreeLayout'
 import { BookLayout } from '../layout/BookLayout';
 import { TemplateRegistry } from './TemplateRegistry';
 import { buildBibliographySection, PublishingEvidenceContext } from './PublishingEvidenceAdapter';
+import { ManuscriptStructureBuilder } from './ManuscriptStructureBuilder';
 
 interface TreeSectionOptions {
   readonly variant?: 'ancestor' | 'branch';
@@ -174,6 +175,20 @@ export class PublishingPipeline {
     const sections: PublicationSection[] = template.sections.map((sectionDef) => {
       return composeSection(sectionDef, rootPerson, people, request.scope.generationsDepth, relationshipEdges);
     });
+
+    if (template.publicationKind === 'book-manuscript') {
+      const manuscriptModel = ManuscriptStructureBuilder.buildModel({
+        rootPersonId: request.rootPersonId,
+        people,
+        relationshipEdges,
+        evidence,
+      });
+      const personSections = ManuscriptStructureBuilder.buildPersonSections(manuscriptModel);
+      const timelineIndex = sections.findIndex((section) => section.type === 'timeline');
+      const insertionIndex = timelineIndex >= 0 ? timelineIndex : sections.length;
+      sections.splice(insertionIndex, 0, ...personSections);
+    }
+
     const bibliographySection = buildBibliographySection(people, evidence);
     if (bibliographySection) {
       sections.push(bibliographySection);

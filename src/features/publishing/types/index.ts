@@ -118,6 +118,54 @@ export interface PublicationPersonSnapshot {
   readonly photoUrl?: string;
 }
 
+export type ManuscriptChapterType = 'overview' | 'people' | 'timeline' | 'evidence';
+
+export interface ManuscriptFactEntry {
+  readonly label: string;
+  readonly value: string;
+  readonly citationCount: number;
+}
+
+export interface ManuscriptPersonEntry {
+  readonly personId: string;
+  readonly displayName: string;
+  readonly facts: readonly ManuscriptFactEntry[];
+  readonly citationCount: number;
+  readonly citationCoverage: number;
+}
+
+export interface ManuscriptTimelineEntry {
+  readonly personId: string;
+  readonly personName: string;
+  readonly date: string;
+  readonly title: string;
+  readonly place?: string;
+}
+
+export interface ManuscriptCitationEntry {
+  readonly citationId: string;
+  readonly sourceId: string;
+  readonly sourceTitle: string;
+  readonly targetId: string;
+  readonly targetField?: string;
+}
+
+export interface ManuscriptChapter {
+  readonly id: string;
+  readonly type: ManuscriptChapterType;
+  readonly title: string;
+  readonly people?: readonly ManuscriptPersonEntry[];
+  readonly timeline?: readonly ManuscriptTimelineEntry[];
+  readonly citations?: readonly ManuscriptCitationEntry[];
+}
+
+export interface FamilyManuscriptModel {
+  readonly id: string;
+  readonly title: string;
+  readonly rootPersonId: string;
+  readonly chapters: readonly ManuscriptChapter[];
+}
+
 // ---------------------------------------------------------------------------
 // Geometrical Placed Document Types (Layout Engine Output)
 // ---------------------------------------------------------------------------
