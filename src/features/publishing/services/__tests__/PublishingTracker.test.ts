@@ -9,6 +9,10 @@ vi.mock('../../../../store/useAppStore', () => {
     const mockState = {
         currentTreeId: 'tree-123',
         user: { uid: 'user-abc', displayName: 'Mahmoud' },
+        currentUserRole: 'owner',
+        relationships: {},
+        sources: {},
+        citations: {},
         addExportEntry: vi.fn(),
     };
     return {
@@ -67,6 +71,23 @@ describe('PublishingTracker', () => {
         expect(result.manifest.totalPages).toBe(1);
         expect(result.manifest.initiatedBy).toBe('user-abc');
         expect(result.manifest.createdAt).toBeDefined();
+        expect(result.manifest.schemaVersions).toEqual({
+            manifest: 2,
+            relationships: 1,
+            citations: 1,
+            privacy: 1,
+        });
+        expect(result.manifest.privacy).toEqual({ userRole: 'owner', masked: false });
+        expect(result.manifest.evidence).toMatchObject({
+            sourceCount: 0,
+            citationCount: 0,
+            citationCoverage: 0,
+        });
+        expect(result.manifest.integrity?.healthScore).toBeGreaterThanOrEqual(0);
+        expect(result.manifest.relationships).toEqual({
+            source: 'legacy_person_fields',
+            driftWarningCount: 0,
+        });
     });
 
     it('should end tracking, compute duration, and save entry to store', async () => {
@@ -97,6 +118,11 @@ describe('PublishingTracker', () => {
         expect(entry.warnings).toEqual(['Some warning message']);
         expect(entry.outputFiles).toEqual([{ name: 'tree.json', format: 'json', size: 1024 }]);
         expect(entry.totalPeople).toBe(3);
+        expect(entry.schemaVersions?.manifest).toBe(2);
+        expect(entry.privacy?.masked).toBe(false);
+        expect(entry.evidence?.sourceCount).toBe(0);
+        expect(entry.integrity?.issueCount).toBeGreaterThanOrEqual(0);
+        expect(entry.relationships?.source).toBe('legacy_person_fields');
 
         expect(mockAddExportEntry).toHaveBeenCalledTimes(1);
         expect(mockAddExportEntry).toHaveBeenCalledWith(expect.objectContaining({

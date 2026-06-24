@@ -1,4 +1,37 @@
-﻿export interface PublicationManifest {
+export interface PublicationPrivacyMetadata {
+  readonly userRole?: string | null;
+  readonly masked: boolean;
+}
+
+export interface PublicationEvidenceMetadata {
+  readonly sourceCount: number;
+  readonly citationCount: number;
+  readonly citedPersonCount: number;
+  readonly citationCoverage: number;
+}
+
+export interface PublicationIntegritySummary {
+  readonly healthScore: number;
+  readonly completenessScore: number;
+  readonly citationCoverage: number;
+  readonly issueCount: number;
+  readonly counts: Record<string, number>;
+  readonly countsByCategory: Record<string, number>;
+}
+
+export interface PublicationRelationshipMetadata {
+  readonly source: 'relationship_edges' | 'legacy_person_fields';
+  readonly driftWarningCount: number;
+}
+
+export interface PublicationSchemaVersions {
+  readonly manifest: 2;
+  readonly relationships: 1;
+  readonly citations: 1;
+  readonly privacy: 1;
+}
+
+export interface PublicationManifest {
   readonly publicationId: string;
   readonly templateId: string; // e.g., 'classic-book-manuscript', 'gedcom', 'json', etc.
   readonly createdAt: string; // ISO string
@@ -6,6 +39,11 @@
   readonly totalFamilies: number;
   readonly totalPages: number;
   readonly initiatedBy: string; // User ID or 'anonymous'
+  readonly schemaVersions?: PublicationSchemaVersions;
+  readonly privacy?: PublicationPrivacyMetadata;
+  readonly evidence?: PublicationEvidenceMetadata;
+  readonly integrity?: PublicationIntegritySummary;
+  readonly relationships?: PublicationRelationshipMetadata;
 }
 
 export interface PublicationResult {
@@ -33,6 +71,11 @@ export interface ExportHistoryEntry {
   readonly success: boolean;
   readonly durationMs: number;
   readonly warnings: readonly string[];
+  readonly schemaVersions?: PublicationSchemaVersions;
+  readonly privacy?: PublicationPrivacyMetadata;
+  readonly evidence?: PublicationEvidenceMetadata;
+  readonly integrity?: PublicationIntegritySummary;
+  readonly relationships?: PublicationRelationshipMetadata;
   readonly outputFiles: readonly {
     readonly name: string;
     readonly format: string;

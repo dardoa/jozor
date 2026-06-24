@@ -2,6 +2,9 @@
 import { useAppStore } from '../../../store/useAppStore';
 import { buildFamilyGraph } from '../../../domain/familyGraph';
 import { Person } from '../../../types';
+import { evaluateDataIntegrity } from '../../../domain/dataIntegrity';
+import { summarizePublishingEvidence } from './PublishingEvidenceAdapter';
+import { PublishingRelationshipAdapter } from './PublishingRelationshipAdapter';
 
 export interface TrackerStartOptions {
     readonly templateId: string;
@@ -20,7 +23,14 @@ export class PublishingTracker {
         readonly startTime: number;
         readonly exportType: 'legacy' | 'publishing';
     } {
-        const { user } = useAppStore.getState();
+        const {
+            user,
+            currentUserRole,
+            currentTreeId,
+            relationships,
+            sources,
+            citations,
+        } = useAppStore.getState();
         const publicationId = typeof crypto !== 'undefined' && crypto.randomUUID 
             ? crypto.randomUUID() 
             : Math.random().toString(36).substring(2, 15);
@@ -43,6 +53,24 @@ export class PublishingTracker {
             totalFamilies,
             totalPages: options.totalPages ?? 1,
             initiatedBy: user?.uid || 'anonymous',
+            schemaVersions: {
+                manifest: 2,
+                relationships: 1,
+                citations: 1,
+                privacy: 1,
+            },
+            privacy: {
+                userRole: currentUserRole ?? null,
+                masked: currentUserRole === 'viewer',
+            },
+            evidence: summarizePublishingEvidence(options.people, { sources: sources || {}, citations: citations || {} }),
+            integrity: toIntegritySummary(options.people),
+            relationships: {
+                source: Object.keys(relationships || {}).length > 0 ? 'relationship_edges' : 'legacy_person_fields',
+                driftWarningCount: PublishingRelationshipAdapter
+                    .createContext(options.people, relationships || {}, currentTreeId || 'publishing')
+                    .warnings.length,
+            },
         };
 
         return {
@@ -86,6 +114,11 @@ export class PublishingTracker {
             success,
             durationMs,
             warnings,
+            schemaVersions: trackerState.manifest.schemaVersions,
+            privacy: trackerState.manifest.privacy,
+            evidence: trackerState.manifest.evidence,
+            integrity: trackerState.manifest.integrity,
+            relationships: trackerState.manifest.relationships,
             outputFiles,
         };
 
@@ -97,4 +130,16 @@ export class PublishingTracker {
 
         return entry;
     }
+}
+
+function toIntegritySummary(people: Record<string, Person>) {
+    const report = evaluateDataIntegrity(people);
+    return {
+        healthScore: report.healthScore,
+        completenessScore: report.completenessScore,
+        citationCoverage: report.citationCoverage,
+        issueCount: report.issues.length,
+        counts: report.counts,
+        countsByCategory: report.countsByCategory,
+    };
 }
