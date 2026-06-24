@@ -74,18 +74,27 @@ const HEALTH_CENTER_CATEGORIES: IntegrityCategory[] = [
   'CITATION',
 ];
 
-const CATEGORY_LABELS: Record<IntegrityCategory, string> = {
-  RELATIONSHIP: 'Structural',
-  TIMELINE: 'Timeline',
-  DUPLICATE: 'Duplicates',
-  COMPLETENESS: 'Completeness',
-  CITATION: 'Citations',
-};
-
 const SEVERITY_CLASS_NAMES: Record<IntegritySeverity, string> = {
   ERROR: 'bg-red-50 text-red-700 border-red-100',
   WARNING: 'bg-amber-50 text-amber-700 border-amber-100',
   INFO: 'bg-sky-50 text-sky-700 border-sky-100',
+};
+
+const SEVERITY_ORDER: Record<IntegritySeverity, number> = {
+  ERROR: 0,
+  WARNING: 1,
+  INFO: 2,
+};
+
+type HealthCenterLabels = {
+  all: string;
+  healthScore: string;
+  completeness: string;
+  citationCoverage: string;
+  allClearTitle: string;
+  allClearDescription: string;
+  categories: Record<IntegrityCategory, string>;
+  severities: Record<IntegritySeverity, string>;
 };
 
 const ScoreCard = ({
@@ -114,16 +123,22 @@ const ScoreCard = ({
 const FamilyTreeHealthCenter = ({
   people,
   onNavigateToPerson,
-  noIssuesLabel,
+  labels,
 }: {
   people: Record<string, Person>;
   onNavigateToPerson?: (id: string) => void;
-  noIssuesLabel: string;
+  labels: HealthCenterLabels;
 }) => {
   const report = useMemo(() => evaluateDataIntegrity(people), [people]);
   const [selectedCategory, setSelectedCategory] = useState<IntegrityCategory | 'ALL'>('ALL');
   const visibleIssues = useMemo(
-    () => report.issues.filter((issue) => selectedCategory === 'ALL' || issue.category === selectedCategory),
+    () => report.issues
+      .filter((issue) => selectedCategory === 'ALL' || issue.category === selectedCategory)
+      .sort((a, b) => {
+        const severityDelta = SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity];
+        if (severityDelta !== 0) return severityDelta;
+        return a.message.localeCompare(b.message);
+      }),
     [report.issues, selectedCategory]
   );
 
@@ -140,9 +155,9 @@ const FamilyTreeHealthCenter = ({
   return (
     <section className="space-y-5 rounded-[24px] border border-[#eadfce] bg-white/70 p-4 shadow-[0_2px_10px_rgba(0,0,0,0.03)] sm:p-5">
       <div className="grid gap-3 sm:grid-cols-3">
-        <ScoreCard label="Health Score" value={report.healthScore} tone="green" />
-        <ScoreCard label="Completeness" value={report.completenessScore} tone="amber" />
-        <ScoreCard label="Citation Coverage" value={report.citationCoverage} tone="blue" />
+        <ScoreCard label={labels.healthScore} value={report.healthScore} tone="green" />
+        <ScoreCard label={labels.completeness} value={report.completenessScore} tone="amber" />
+        <ScoreCard label={labels.citationCoverage} value={report.citationCoverage} tone="blue" />
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -153,7 +168,7 @@ const FamilyTreeHealthCenter = ({
             selectedCategory === 'ALL' ? 'bg-[#3d1f13] text-white' : 'bg-[#f3efe6] text-slate-700 hover:bg-white'
           }`}
         >
-          All {report.issues.length}
+          {labels.all} {report.issues.length}
         </button>
         {HEALTH_CENTER_CATEGORIES.map((category) => (
           <button
@@ -164,15 +179,18 @@ const FamilyTreeHealthCenter = ({
               selectedCategory === category ? 'bg-[#3d1f13] text-white' : 'bg-[#f3efe6] text-slate-700 hover:bg-white'
             }`}
           >
-            {CATEGORY_LABELS[category]} {report.countsByCategory[category]}
+            {labels.categories[category]} {report.countsByCategory[category]}
           </button>
         ))}
       </div>
 
       {visibleIssues.length === 0 ? (
-        <div className="inline-flex items-center gap-2 rounded-2xl bg-emerald-50 px-4 py-3 text-[13px] font-medium text-emerald-700">
-          <Check className="h-4 w-4" />
-          <span>{noIssuesLabel}</span>
+        <div className="rounded-2xl bg-emerald-50 px-4 py-3 text-emerald-700">
+          <div className="inline-flex items-center gap-2 text-[13px] font-semibold">
+            <Check className="h-4 w-4" />
+            <span>{labels.allClearTitle}</span>
+          </div>
+          <p className="mt-1 text-[12px] text-emerald-700/80">{labels.allClearDescription}</p>
         </div>
       ) : (
         <div className="max-h-[420px] space-y-2 overflow-y-auto pe-1">
@@ -183,10 +201,10 @@ const FamilyTreeHealthCenter = ({
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${SEVERITY_CLASS_NAMES[issue.severity]}`}>
-                      {issue.severity}
+                      {labels.severities[issue.severity]}
                     </span>
                     <span className="rounded-full bg-[#f3efe6] px-2 py-0.5 text-[10px] font-bold text-[#7a5b35]">
-                      {CATEGORY_LABELS[issue.category]}
+                      {labels.categories[issue.category]}
                     </span>
                   </div>
                   <p className="mt-2 text-sm font-semibold text-slate-800">{issue.message}</p>
@@ -334,6 +352,26 @@ export const StatisticsDashboard = memo(({
   const noDataLabel = t.statistics.noDataAvailable;
   const noBirthdaysLabel = t.statistics.noUpcomingBirthdays;
   const noIssuesLabel = t.noIssuesFound;
+  const healthCenterLabels: HealthCenterLabels = {
+    all: t.statistics.healthCenter.all,
+    healthScore: t.statistics.healthCenter.healthScore,
+    completeness: t.statistics.healthCenter.completeness,
+    citationCoverage: t.statistics.healthCenter.citationCoverage,
+    allClearTitle: t.statistics.healthCenter.allClearTitle,
+    allClearDescription: t.statistics.healthCenter.allClearDescription,
+    categories: {
+      RELATIONSHIP: t.statistics.healthCenter.structural,
+      TIMELINE: t.statistics.healthCenter.timeline,
+      DUPLICATE: t.statistics.healthCenter.duplicates,
+      COMPLETENESS: t.statistics.healthCenter.completeness,
+      CITATION: t.statistics.healthCenter.citations,
+    },
+    severities: {
+      ERROR: t.statistics.healthCenter.error,
+      WARNING: t.statistics.healthCenter.warning,
+      INFO: t.statistics.healthCenter.info,
+    },
+  };
   const visualSummaryLabel = t.statistics.visualSummary;
   const genderLabel = t.statistics.genderDistribution;
   const statusLabel = t.statistics.status;
@@ -391,7 +429,7 @@ export const StatisticsDashboard = memo(({
               <FamilyTreeHealthCenter
                 people={people}
                 onNavigateToPerson={onNavigateToPerson}
-                noIssuesLabel={noIssuesLabel}
+                labels={healthCenterLabels}
               />
             </section>
           ) : null}

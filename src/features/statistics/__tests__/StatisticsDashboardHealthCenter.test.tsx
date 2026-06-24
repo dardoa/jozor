@@ -44,6 +44,21 @@ vi.mock('../../../context/TranslationContext', () => ({
         turnsAgeOn: 'Turns {age} on {date}',
         today: 'Today',
         days: 'days',
+        healthCenter: {
+          all: 'All',
+          healthScore: 'Health Score',
+          completeness: 'Completeness',
+          citationCoverage: 'Citation Coverage',
+          structural: 'Structural',
+          timeline: 'Timeline',
+          duplicates: 'Duplicates',
+          citations: 'Citations',
+          error: 'Error',
+          warning: 'Warning',
+          info: 'Info',
+          allClearTitle: 'Tree health looks good',
+          allClearDescription: 'No issues match the current filter.',
+        },
       },
     },
   }),
@@ -79,6 +94,7 @@ describe('StatisticsDashboard health center consistency view', () => {
     const onNavigateToPerson = vi.fn();
     const people = {
       p1: buildPerson('p1'),
+      p2: buildPerson('p2', { parents: ['missing-parent'] }),
     };
 
     render(
@@ -95,6 +111,10 @@ describe('StatisticsDashboard health center consistency view', () => {
     expect(screen.getAllByText('Completeness').length).toBeGreaterThan(0);
     expect(screen.getByText('Citation Coverage')).toBeInTheDocument();
     expect(screen.getByText(/Completeness \d+/)).toBeInTheDocument();
+    expect(screen.getByText('Structural 1')).toBeInTheDocument();
+    expect(screen.getAllByText('Error').length).toBeGreaterThan(0);
+    const issueButtons = screen.getAllByRole('button').filter((button) => button.textContent?.includes('Family'));
+    expect(issueButtons[0]).toHaveTextContent('p2 Family references a missing parent.');
 
     fireEvent.click(screen.getByText('p1 Family is missing a birth date.'));
 

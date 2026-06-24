@@ -255,6 +255,21 @@ export const modals = {
     totalAccuracy: 'الدقة الإجمالية',
     inconsistenciesFound: 'بناءً على {count} من التناقضات المكتشفة في شجرة عائلتك.',
     na: 'غير متوفر',
+    healthCenter: {
+      all: 'الكل',
+      healthScore: 'مؤشر السلامة',
+      completeness: 'اكتمال البيانات',
+      citationCoverage: 'تغطية المصادر',
+      structural: 'البنية',
+      timeline: 'التسلسل الزمني',
+      duplicates: 'التكرارات',
+      citations: 'المصادر',
+      error: 'خطأ',
+      warning: 'تنبيه',
+      info: 'معلومة',
+      allClearTitle: 'صحة الشجرة جيدة',
+      allClearDescription: 'لا توجد مشاكل ضمن الفلتر الحالي.',
+    },
   },
   messages: {
     success: {

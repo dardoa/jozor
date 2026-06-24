@@ -256,6 +256,21 @@ export const modals = {
     totalAccuracy: 'Total Accuracy',
     inconsistenciesFound: 'Based on {count} detected inconsistencies in your family tree.',
     na: 'N/A',
+    healthCenter: {
+      all: 'All',
+      healthScore: 'Health Score',
+      completeness: 'Completeness',
+      citationCoverage: 'Citation Coverage',
+      structural: 'Structural',
+      timeline: 'Timeline',
+      duplicates: 'Duplicates',
+      citations: 'Citations',
+      error: 'Error',
+      warning: 'Warning',
+      info: 'Info',
+      allClearTitle: 'Tree health looks good',
+      allClearDescription: 'No issues match the current filter.',
+    },
   },
   messages: {
     success: {
