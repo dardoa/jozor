@@ -1,5 +1,6 @@
-﻿import type { Person } from '../../../types';
+import type { Person, RelationshipEdge } from '../../../types';
 import type { PublicationDocument, PublicationSection, PublicationBlock } from '../types';
+import { PublishingRelationshipAdapter } from '../services/PublishingRelationshipAdapter';
 
 export class BranchBuilder {
   /**
@@ -7,60 +8,19 @@ export class BranchBuilder {
    */
   public static build(
     people: Record<string, Person>,
-    rootPersonId: string
+    rootPersonId: string,
+    relationshipEdges?: Record<string, RelationshipEdge> | readonly RelationshipEdge[]
   ): PublicationDocument {
     const rootPerson = people[rootPersonId];
     if (!rootPerson) {
       throw new Error(`Root person ${rootPersonId} not found in the family tree.`);
     }
 
-    const collectedPersonIds = new Set<string>();
-    const relationships: { parentId: string; childId: string; type: 'parent' }[] = [];
-    const spouses: { personId: string; spouseId: string }[] = [];
-    const visited = new Set<string>();
-
-    const traverseDescendants = (currentId: string) => {
-      if (visited.has(currentId)) return;
-      visited.add(currentId);
-
-      const person = people[currentId];
-      if (!person) return;
-
-      collectedPersonIds.add(currentId);
-
-      // Collect spouses of the current person
-      if (person.spouses) {
-        person.spouses.forEach((spouseId) => {
-          if (people[spouseId]) {
-            collectedPersonIds.add(spouseId);
-            // Record spouse relation (prevent duplicate pairs)
-            const pairKey = [currentId, spouseId].sort().join('-');
-            if (!visited.has(pairKey)) {
-              spouses.push({ personId: currentId, spouseId });
-              visited.add(pairKey);
-            }
-          }
-        });
-      }
-
-      // Collect children and recurse
-      if (person.children) {
-        person.children.forEach((childId) => {
-          if (people[childId]) {
-            relationships.push({ parentId: currentId, childId, type: 'parent' });
-            traverseDescendants(childId);
-          }
-        });
-      }
-    };
-
-    traverseDescendants(rootPersonId);
-
-    // Build a single tree-diagram asset containing all branch nodes and edges
-    const treePeople = Array.from(collectedPersonIds).reduce((acc, id) => {
-      acc[id] = people[id];
-      return acc;
-    }, {} as Record<string, Person>);
+    const graph = PublishingRelationshipAdapter.buildBranchGraph(
+      people,
+      rootPersonId,
+      relationshipEdges
+    );
 
     const treeBlock: PublicationBlock = {
       id: `block-tree-${crypto.randomUUID()}`,
@@ -71,11 +31,9 @@ export class BranchBuilder {
           type: 'tree-diagram',
           payload: {
             rootPersonId,
-            people: treePeople,
-            relationships: [
-              ...relationships.map((rel) => ({ ...rel, type: 'parent' as const })),
-              ...spouses.map((sp) => ({ ...sp, type: 'spouse' as const })),
-            ],
+            people: graph.people,
+            relationships: graph.relationships,
+            warnings: graph.warnings,
           },
         },
       ],
@@ -87,7 +45,6 @@ export class BranchBuilder {
       blocks: [treeBlock],
     };
 
-    // Cover Section
     const coverBlock: PublicationBlock = {
       id: `block-cover-${crypto.randomUUID()}`,
       type: 'header',

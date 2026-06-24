@@ -3,6 +3,10 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { useExport } from '../useExport';
 import { downloadFile } from '../../../utils/fileUtils';
 import type { Person } from '../../../types';
+import { generateICS } from '../../../utils/calendarLogic';
+import { exportToGEDCOM } from '../../../utils/gedcomLogic';
+import { buildBlueprintArchive } from '../../../services/archiveService';
+import { PdfRenderer, PublishingPipeline } from '../../../features/publishing';
 
 vi.mock('../../../utils/fileUtils', () => ({
   downloadFile: vi.fn(),
@@ -16,10 +20,76 @@ vi.mock('../../../utils/gedcomLogic', () => ({
   exportToGEDCOM: vi.fn(() => 'mock-gedcom-data'),
 }));
 
+vi.mock('../../../services/archiveService', () => ({
+  buildBlueprintArchive: vi.fn(async (payload: unknown) => ({
+    blob: new Blob([JSON.stringify(payload)], { type: 'application/octet-stream' }),
+    manifest: {},
+  })),
+}));
+
 vi.mock('../../../features/publishing', () => ({
   PublishingTracker: {
     startTracking: vi.fn(() => ({ id: 'track-1', manifest: {} })),
     endTracking: vi.fn(),
+  },
+  TemplateRegistry: {
+    getTemplate: vi.fn(() => ({
+      id: 'classic-book-manuscript',
+      name: 'كتاب العائلة الكلاسيكي المصغر',
+      publicationKind: 'book-manuscript',
+      documentType: 'paginated',
+      theme: {
+        colors: { background: '#fff', text: '#111', subtext: '#666' },
+        node: {
+          male: { background: '#eef' },
+          female: { background: '#fee' },
+          borderColor: '#ccc',
+          width: 120,
+          height: 60,
+        },
+        edge: {
+          father: { color: '#88f' },
+          mother: { color: '#f88' },
+          width: 2,
+        },
+        fonts: {
+          fontFamily: 'system-ui',
+          titleSize: '24px',
+          nameSize: '13px',
+          dateSize: '11px',
+        },
+      },
+      sections: [{ type: 'cover' }],
+      defaultLayoutOptions: {
+        pageWidth: 595,
+        pageHeight: 842,
+        margins: { top: 50, bottom: 50, left: 50, right: 50 },
+      },
+    })),
+  },
+  PublishingPipeline: {
+    composeDocument: vi.fn(() => ({
+      id: 'doc-1',
+      title: 'mock publication',
+      theme: 'classic',
+      type: 'paginated',
+      sections: [],
+    })),
+    layoutDocument: vi.fn(() => ({
+      documentId: 'doc-1',
+      totalPages: 1,
+      sections: [],
+    })),
+  },
+  PosterRenderer: {
+    renderToCanvas: vi.fn(() => ({
+      toDataURL: () => 'data:image/png;base64,mock',
+    })),
+  },
+  PdfRenderer: {
+    renderToPdf: vi.fn(() => ({
+      save: vi.fn(),
+    })),
   },
 }));
 
@@ -31,6 +101,10 @@ const { mockStore } = vi.hoisted(() => ({
     currentUserRole: 'owner',
     setExportStatus: vi.fn(),
     people: {},
+    focusId: '',
+    relationships: {},
+    sources: {},
+    citations: {},
   },
 }));
 
@@ -93,6 +167,10 @@ describe('useExport', () => {
     vi.clearAllMocks();
     mockStore.currentUserRole = 'owner';
     mockStore.people = mockPeople;
+    mockStore.focusId = '';
+    mockStore.relationships = {};
+    mockStore.sources = {};
+    mockStore.citations = {};
   });
 
   it('exports raw names for owner role', async () => {
@@ -124,5 +202,85 @@ describe('useExport', () => {
     // John Doe should be masked to 'Private'
     expect(parsed.people['person-1'].firstName).toBe('Private');
     expect(parsed.people['person-1'].birthDate).toBe('');
+  });
+
+  it('passes masked people to GEDCOM and ICS exports for viewer role', async () => {
+    mockStore.currentUserRole = 'viewer';
+    const svgRef = { current: null };
+    const { result } = renderHook(() => useExport(mockPeople, svgRef));
+
+    await act(async () => {
+      await result.current.handleExport('gedcom');
+      await result.current.handleExport('ics');
+    });
+
+    const gedcomPeople = vi.mocked(exportToGEDCOM).mock.calls[0][0];
+    const icsPeople = vi.mocked(generateICS).mock.calls[0][0];
+    expect(gedcomPeople['person-1'].firstName).toBe('Private');
+    expect(icsPeople['person-1'].firstName).toBe('Private');
+  });
+
+  it('passes masked people to JOZOR archive exports for viewer role', async () => {
+    mockStore.currentUserRole = 'viewer';
+    const svgRef = { current: null };
+    const { result } = renderHook(() => useExport(mockPeople, svgRef));
+
+    await act(async () => {
+      await result.current.handleExport('jozor');
+    });
+
+    const archivePayload = vi.mocked(buildBlueprintArchive).mock.calls[0][0] as {
+      people: Record<string, Person>;
+    };
+    expect(archivePayload.people['person-1'].firstName).toBe('Private');
+    expect(archivePayload.people['person-1'].birthDate).toBe('');
+  });
+
+  it('passes masked people and current relationships to publishing exports for viewer role', async () => {
+    mockStore.currentUserRole = 'viewer';
+    mockStore.relationships = {
+      'edge-1': {
+        id: 'edge-1',
+        treeId: 'tree-1',
+        fromPersonId: 'person-parent',
+        toPersonId: 'person-1',
+        type: 'BIOLOGICAL_PARENT',
+        status: 'ACTIVE',
+        createdAt: '2026-01-01T00:00:00.000Z',
+      },
+    };
+    mockStore.sources = {
+      'source-1': {
+        id: 'source-1',
+        treeId: 'tree-1',
+        type: 'DOCUMENT',
+        title: 'Birth registry',
+        normalizedKey: 'tree-1:DOCUMENT:birth registry',
+        createdAt: '2026-01-01T00:00:00.000Z',
+      },
+    };
+    mockStore.citations = {
+      'citation-1': {
+        id: 'citation-1',
+        treeId: 'tree-1',
+        sourceId: 'source-1',
+        targetType: 'PERSON',
+        targetId: 'person-1',
+        targetField: 'person.birth.date',
+        createdAt: '2026-01-01T00:00:00.000Z',
+      },
+    };
+    const svgRef = { current: null };
+    const { result } = renderHook(() => useExport(mockPeople, svgRef));
+
+    await act(async () => {
+      await result.current.handlePublishingExport({ templateId: 'classic-book-manuscript', format: 'pdf' });
+    });
+
+    const [, peopleArg, relationshipsArg, evidenceArg] = vi.mocked(PublishingPipeline.composeDocument).mock.calls[0];
+    expect(peopleArg['person-1'].firstName).toBe('Private');
+    expect(relationshipsArg).toBe(mockStore.relationships);
+    expect(evidenceArg).toEqual({ sources: mockStore.sources, citations: mockStore.citations });
+    expect(PdfRenderer.renderToPdf).toHaveBeenCalled();
   });
 });

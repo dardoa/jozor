@@ -1,6 +1,6 @@
 ﻿export type DocumentType = 'single-page' | 'paginated';
 
-export type SectionType = 'cover' | 'introduction' | 'tree' | 'biography' | 'timeline' | 'gallery';
+export type SectionType = 'cover' | 'introduction' | 'tree' | 'biography' | 'timeline' | 'gallery' | 'bibliography';
 
 export type BlockType = 'header' | 'paragraph' | 'tree' | 'map' | 'timeline' | 'gallery' | 'statistics';
 

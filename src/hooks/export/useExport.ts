@@ -220,7 +220,10 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
             const {
                 setExportStatus,
                 focusId,
-                currentUserRole
+                currentUserRole,
+                relationships,
+                sources,
+                citations
             } = useAppStore.getState();
 
             const activePeople = currentUserRole === 'viewer' ? maskPeopleMap(people) : people;
@@ -259,7 +262,7 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
                         generationsDepth: templateId.includes('book') ? 3 : 4,
                     },
                 };
-                const doc = PublishingPipeline.composeDocument(request, activePeople);
+                const doc = PublishingPipeline.composeDocument(request, activePeople, relationships, { sources, citations });
                 const placedDoc = PublishingPipeline.layoutDocument(doc, template);
 
                 // Update total pages in manifest

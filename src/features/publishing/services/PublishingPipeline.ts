@@ -1,12 +1,12 @@
-﻿import type { Person } from '../../../types';
-import type { 
-  PublicationDocument, 
-  PlacedDocument, 
-  PublicationRequest, 
+import type { Citation, Person, RelationshipEdge, Source } from '../../../types';
+import type {
+  PublicationDocument,
+  PlacedDocument,
+  PublicationRequest,
   PublicationTemplate,
   PublicationSection,
   PublicationBlock,
-  PublicationSectionDefinition
+  PublicationSectionDefinition,
 } from '../types';
 import { AncestorBuilder } from '../builders/AncestorBuilder';
 import { BranchBuilder } from '../builders/BranchBuilder';
@@ -14,6 +14,7 @@ import { TimelineBuilder } from '../builders/TimelineBuilder';
 import { AncestorTreeLayout, LayoutOptions } from '../layout/AncestorTreeLayout';
 import { BookLayout } from '../layout/BookLayout';
 import { TemplateRegistry } from './TemplateRegistry';
+import { buildBibliographySection, PublishingEvidenceContext } from './PublishingEvidenceAdapter';
 
 interface TreeSectionOptions {
   readonly variant?: 'ancestor' | 'branch';
@@ -25,15 +26,15 @@ function isTreeSectionOptions(options: unknown): options is TreeSectionOptions {
     return false;
   }
   const opt = options as Record<string, unknown>;
-  
+
   if ('variant' in opt && typeof opt.variant !== 'undefined' && opt.variant !== 'ancestor' && opt.variant !== 'branch') {
     return false;
   }
-  
+
   if ('depth' in opt && typeof opt.depth !== 'undefined' && typeof opt.depth !== 'number') {
     return false;
   }
-  
+
   return true;
 }
 
@@ -41,7 +42,8 @@ function composeSection(
   definition: PublicationSectionDefinition,
   rootPerson: Person,
   people: Record<string, Person>,
-  requestDepth?: number
+  requestDepth?: number,
+  relationshipEdges?: Record<string, RelationshipEdge> | readonly RelationshipEdge[]
 ): PublicationSection {
   switch (definition.type) {
     case 'cover': {
@@ -119,17 +121,13 @@ function composeSection(
         }
       }
 
-      // Prioritize explicit request override if passed
       if (typeof requestDepth === 'number') {
         depth = requestDepth;
       }
 
-      let treeDoc: PublicationDocument;
-      if (variant === 'ancestor') {
-        treeDoc = AncestorBuilder.build(people, rootPerson.id, depth);
-      } else {
-        treeDoc = BranchBuilder.build(people, rootPerson.id);
-      }
+      const treeDoc = variant === 'ancestor'
+        ? AncestorBuilder.build(people, rootPerson.id, depth, relationshipEdges)
+        : BranchBuilder.build(people, rootPerson.id, relationshipEdges);
 
       const treeSection = treeDoc.sections.find((s) => s.type === 'tree');
       if (!treeSection) {
@@ -139,7 +137,7 @@ function composeSection(
     }
 
     case 'timeline': {
-      const timelineDoc = TimelineBuilder.build(people);
+      const timelineDoc = TimelineBuilder.build(people, undefined, relationshipEdges);
       const timelineSection = timelineDoc.sections.find((s) => s.type === 'timeline');
       if (!timelineSection) {
         throw new Error('Timeline section could not be composed by the builder.');
@@ -160,7 +158,12 @@ export class PublishingPipeline {
    */
   public static composeDocument(
     request: PublicationRequest,
-    people: Record<string, Person>
+    people: Record<string, Person>,
+    relationshipEdges?: Record<string, RelationshipEdge> | readonly RelationshipEdge[],
+    evidence?: PublishingEvidenceContext | {
+      readonly sources: Record<string, Source>;
+      readonly citations: Record<string, Citation>;
+    }
   ): PublicationDocument {
     const template = TemplateRegistry.getTemplate(request.templateId);
     const rootPerson = people[request.rootPersonId];
@@ -169,13 +172,17 @@ export class PublishingPipeline {
     }
 
     const sections: PublicationSection[] = template.sections.map((sectionDef) => {
-      return composeSection(sectionDef, rootPerson, people, request.scope.generationsDepth);
+      return composeSection(sectionDef, rootPerson, people, request.scope.generationsDepth, relationshipEdges);
     });
+    const bibliographySection = buildBibliographySection(people, evidence);
+    if (bibliographySection) {
+      sections.push(bibliographySection);
+    }
 
     return {
       id: `doc-${crypto.randomUUID()}`,
-      title: template.name.includes('كتاب') 
-        ? `كتاب عائلة ${rootPerson.lastName}` 
+      title: template.name.includes('كتاب')
+        ? `كتاب عائلة ${rootPerson.lastName}`
         : `شجرة أسلاف ${rootPerson.firstName} ${rootPerson.lastName}`.trim(),
       theme: request.theme || (template.id.includes('classic') ? 'classic' : 'modern'),
       type: template.documentType,
@@ -196,7 +203,6 @@ export class PublishingPipeline {
 
     switch (kind) {
       case 'ancestor-poster': {
-        // Construct consolidated LayoutOptions from template defaults and theme configuration
         const layoutOptions: LayoutOptions = {
           pageWidth: template.defaultLayoutOptions.pageWidth,
           pageHeight: template.defaultLayoutOptions.pageHeight,

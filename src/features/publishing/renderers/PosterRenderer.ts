@@ -156,7 +156,7 @@ export class PosterRenderer {
             }
           } else if (asset.type === 'text') {
             // Draw title text
-            const textPayload = asset.payload as { text: string; subtext?: string };
+            const textPayload = asset.payload as { text: string; subtext?: string; body?: string };
             ctx.fillStyle = theme.colors.text;
             ctx.font = `bold ${theme.fonts.titleSize} ${theme.fonts.fontFamily}`;
             ctx.textAlign = 'center';
@@ -170,6 +170,14 @@ export class PosterRenderer {
               ctx.fillStyle = theme.colors.subtext;
               ctx.font = `italic ${theme.fonts.dateSize} ${theme.fonts.fontFamily}`;
               ctx.fillText(textPayload.subtext, xCenter, yCenter + 30);
+            }
+
+            if (textPayload.body) {
+              ctx.fillStyle = theme.colors.text;
+              ctx.font = `${theme.fonts.dateSize} ${theme.fonts.fontFamily}`;
+              ctx.textAlign = 'left';
+              ctx.textBaseline = 'top';
+              drawMultilineText(ctx, textPayload.body, asset.x, asset.y + 58, asset.width, 18);
             }
           }
         }
@@ -190,6 +198,39 @@ export class PosterRenderer {
     const canvas = this.renderToCanvas(placedDoc, factory, theme);
     return canvas.toDataURL('image/png');
   }
+}
+
+function drawMultilineText(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  x: number,
+  y: number,
+  maxWidth: number,
+  lineHeight: number
+): void {
+  const lines = text.split('\n');
+  let cursorY = y;
+
+  lines.forEach((line) => {
+    const words = line.split(/\s+/);
+    let currentLine = '';
+
+    words.forEach((word) => {
+      const testLine = currentLine ? `${currentLine} ${word}` : word;
+      if (ctx.measureText(testLine).width > maxWidth && currentLine) {
+        ctx.fillText(currentLine, x, cursorY);
+        currentLine = word;
+        cursorY += lineHeight;
+      } else {
+        currentLine = testLine;
+      }
+    });
+
+    if (currentLine) {
+      ctx.fillText(currentLine, x, cursorY);
+      cursorY += lineHeight;
+    }
+  });
 }
 
 function drawRoundedRect(

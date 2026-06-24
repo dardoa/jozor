@@ -127,4 +127,48 @@ describe('PublishingPipeline & TemplateRegistry', () => {
     // Verify edge stroke colors match edge colors
     expect(ctx.stroke).toHaveBeenCalled();
   });
+
+  it('appends a bibliography section when evidence sources are provided', () => {
+    const template = TemplateRegistry.getTemplate('classic-book-manuscript');
+    const request: PublicationRequest = {
+      rootPersonId: 'p-root',
+      templateId: template.id,
+      scope: {
+        type: 'all',
+        generationsDepth: 2,
+      },
+    };
+
+    const doc = PublishingPipeline.composeDocument(request, mockPeople, undefined, {
+      sources: {
+        'source-1': {
+          id: 'source-1',
+          treeId: 'tree-1',
+          type: 'DOCUMENT',
+          title: 'Birth registry',
+          normalizedKey: 'tree-1:DOCUMENT:birth registry',
+          author: 'Civil Archive',
+          createdAt: '2026-01-01T00:00:00.000Z',
+        },
+      },
+      citations: {
+        'citation-1': {
+          id: 'citation-1',
+          treeId: 'tree-1',
+          sourceId: 'source-1',
+          targetType: 'PERSON',
+          targetId: 'p-root',
+          targetField: 'person.birth.date',
+          createdAt: '2026-01-01T00:00:00.000Z',
+        },
+      },
+    });
+
+    const bibliography = doc.sections.find((section) => section.type === 'bibliography');
+    expect(bibliography).toBeDefined();
+    const bodyAsset = bibliography!.blocks[1].assets[0];
+    expect(bodyAsset.payload).toMatchObject({
+      body: expect.stringContaining('Birth registry'),
+    });
+  });
 });

@@ -145,6 +145,38 @@ export class BookLayout {
           break;
         }
 
+        case 'bibliography': {
+          let currentY = topMargin;
+
+          placedBlocks = section.blocks.map((block) => {
+            const isHeader = block.type === 'header';
+            const blockHeight = isHeader ? 60 : Math.max(180, availableHeight - 90);
+            const blockY = currentY;
+            currentY += blockHeight + 20;
+
+            const placedAssets: PlacedAsset[] = block.assets.map((asset) => ({
+              assetId: asset.id,
+              type: asset.type,
+              x: leftMargin,
+              y: blockY,
+              width: availableWidth,
+              height: blockHeight,
+              payload: asset.payload,
+            }));
+
+            return {
+              blockId: block.id,
+              type: block.type,
+              x: leftMargin,
+              y: blockY,
+              width: availableWidth,
+              height: blockHeight,
+              assets: placedAssets,
+            };
+          });
+          break;
+        }
+
         default: {
           // Fallback: simple vertical stack layout
           let currentY = topMargin;

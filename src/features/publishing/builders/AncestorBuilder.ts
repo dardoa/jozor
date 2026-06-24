@@ -1,5 +1,6 @@
-﻿import type { Person } from '../../../types';
+import type { Person, RelationshipEdge } from '../../../types';
 import type { PublicationDocument, PublicationSection, PublicationBlock } from '../types';
+import { PublishingRelationshipAdapter } from '../services/PublishingRelationshipAdapter';
 
 export class AncestorBuilder {
   /**
@@ -8,56 +9,20 @@ export class AncestorBuilder {
   public static build(
     people: Record<string, Person>,
     rootPersonId: string,
-    generationsDepth: number = 4
+    generationsDepth: number = 4,
+    relationshipEdges?: Record<string, RelationshipEdge> | readonly RelationshipEdge[]
   ): PublicationDocument {
     const rootPerson = people[rootPersonId];
     if (!rootPerson) {
       throw new Error(`Root person ${rootPersonId} not found in the family tree.`);
     }
 
-    const collectedPersonIds = new Set<string>();
-    const relationships: { childId: string; parentId: string; type: 'father' | 'mother' }[] = [];
-    const recordedRelationships = new Set<string>();
-
-    const addRelationship = (childId: string, parentId: string, type: 'father' | 'mother') => {
-      const relationshipKey = `${childId}:${parentId}:${type}`;
-      if (recordedRelationships.has(relationshipKey)) {
-        return;
-      }
-      recordedRelationships.add(relationshipKey);
-      relationships.push({ childId, parentId, type });
-    };
-
-    const traverse = (currentId: string, currentDepth: number) => {
-      if (currentDepth > generationsDepth) return;
-
-      const person = people[currentId];
-      if (!person) return;
-
-      collectedPersonIds.add(currentId);
-
-      // In Jozor, parents can be explicitly linked via person.parents array
-      const personWithExtra = person as Person & { fatherId?: string; motherId?: string };
-      const fatherId = personWithExtra.fatherId || person.parents?.[0];
-      const motherId = personWithExtra.motherId || person.parents?.[1];
-
-      if (fatherId && people[fatherId]) {
-        addRelationship(currentId, fatherId, 'father');
-        traverse(fatherId, currentDepth + 1);
-      }
-      if (motherId && people[motherId]) {
-        addRelationship(currentId, motherId, 'mother');
-        traverse(motherId, currentDepth + 1);
-      }
-    };
-
-    traverse(rootPersonId, 1);
-
-    // Build a single tree-diagram asset containing all nodes and edges
-    const treePeople = Array.from(collectedPersonIds).reduce((acc, id) => {
-      acc[id] = people[id];
-      return acc;
-    }, {} as Record<string, Person>);
+    const graph = PublishingRelationshipAdapter.buildAncestorGraph(
+      people,
+      rootPersonId,
+      generationsDepth,
+      relationshipEdges
+    );
 
     const treeBlock: PublicationBlock = {
       id: `block-tree-${crypto.randomUUID()}`,
@@ -68,8 +33,9 @@ export class AncestorBuilder {
           type: 'tree-diagram',
           payload: {
             rootPersonId,
-            people: treePeople,
-            relationships,
+            people: graph.people,
+            relationships: graph.relationships,
+            warnings: graph.warnings,
           },
         },
       ],
@@ -81,7 +47,6 @@ export class AncestorBuilder {
       blocks: [treeBlock],
     };
 
-    // Cover Section
     const coverBlock: PublicationBlock = {
       id: `block-cover-${crypto.randomUUID()}`,
       type: 'header',

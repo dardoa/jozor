@@ -2,7 +2,7 @@
 import { AncestorBuilder } from '../AncestorBuilder';
 import { BranchBuilder } from '../BranchBuilder';
 import { TimelineBuilder } from '../TimelineBuilder';
-import type { Person } from '../../../../types';
+import type { Person, RelationshipEdge } from '../../../../types';
 import { createPerson } from '../../../../utils/familyLogic';
 
 // Construct clean mock people without using banned `any` casts
@@ -120,6 +120,46 @@ describe('Publishing Builders', () => {
       expect(() => AncestorBuilder.build(mockPeople, 'non-existent')).toThrow();
     });
 
+    it('prefers RelationshipEdge data over denormalized parent arrays and reports drift', () => {
+      const peopleWithDrift: Record<string, Person> = {
+        'p-root': createMockPerson('p-root', 'male', {
+          firstName: 'Root',
+          parents: ['p-legacy-father'],
+        }),
+        'p-legacy-father': createMockPerson('p-legacy-father', 'male', {
+          firstName: 'Legacy Father',
+        }),
+        'p-edge-father': createMockPerson('p-edge-father', 'male', {
+          firstName: 'Edge Father',
+        }),
+      };
+      const relationshipEdges: Record<string, RelationshipEdge> = {
+        'edge-1': {
+          id: 'edge-1',
+          treeId: 'tree-1',
+          fromPersonId: 'p-edge-father',
+          toPersonId: 'p-root',
+          type: 'BIOLOGICAL_PARENT',
+          status: 'ACTIVE',
+          createdAt: '2026-01-01T00:00:00.000Z',
+        },
+      };
+
+      const doc = AncestorBuilder.build(peopleWithDrift, 'p-root', 2, relationshipEdges);
+      const payload = doc.sections[1].blocks[0].assets[0].payload as {
+        people: Record<string, Person>;
+        relationships: { childId: string; parentId: string; type: 'father' | 'mother' }[];
+        warnings: { code: string }[];
+      };
+
+      expect(Object.keys(payload.people)).toContain('p-edge-father');
+      expect(Object.keys(payload.people)).not.toContain('p-legacy-father');
+      expect(payload.relationships).toEqual([
+        { childId: 'p-root', parentId: 'p-edge-father', type: 'father' },
+      ]);
+      expect(payload.warnings).toEqual([{ code: 'RELATIONSHIP_DRIFT', message: expect.any(String), personIds: expect.any(Array) }]);
+    });
+
     it('deduplicates parent relationships in case of pedigree collapse (common ancestor)', () => {
       const collapsePeople: Record<string, Person> = {
         'p-root': createMockPerson('p-root', 'male', {
@@ -194,6 +234,54 @@ describe('Publishing Builders', () => {
 
       // Spouse links and parent links
       expect(payload.relationships.length).toBeGreaterThan(0);
+    });
+
+    it('extracts descendants and spouses from RelationshipEdge data when legacy arrays are empty', () => {
+      const edgePeople: Record<string, Person> = {
+        'p-root': createMockPerson('p-root', 'male', {
+          firstName: 'Root',
+          spouses: [],
+          children: [],
+        }),
+        'p-spouse': createMockPerson('p-spouse', 'female', {
+          firstName: 'Spouse',
+          spouses: [],
+          children: [],
+        }),
+        'p-child': createMockPerson('p-child', 'male', {
+          firstName: 'Child',
+          parents: [],
+        }),
+      };
+      const relationshipEdges: Record<string, RelationshipEdge> = {
+        'edge-parent': {
+          id: 'edge-parent',
+          treeId: 'tree-1',
+          fromPersonId: 'p-root',
+          toPersonId: 'p-child',
+          type: 'BIOLOGICAL_PARENT',
+          status: 'ACTIVE',
+          createdAt: '2026-01-01T00:00:00.000Z',
+        },
+        'edge-spouse': {
+          id: 'edge-spouse',
+          treeId: 'tree-1',
+          fromPersonId: 'p-root',
+          toPersonId: 'p-spouse',
+          type: 'SPOUSE',
+          status: 'ACTIVE',
+          createdAt: '2026-01-01T00:00:00.000Z',
+        },
+      };
+
+      const doc = BranchBuilder.build(edgePeople, 'p-root', relationshipEdges);
+      const payload = doc.sections[1].blocks[0].assets[0].payload as {
+        people: Record<string, Person>;
+        relationships: { type: 'parent' | 'spouse' }[];
+      };
+
+      expect(Object.keys(payload.people).sort()).toEqual(['p-child', 'p-root', 'p-spouse']);
+      expect(payload.relationships.map((relationship) => relationship.type).sort()).toEqual(['parent', 'spouse']);
     });
   });
 
