@@ -52,7 +52,11 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
                 darkMode,
                 user,
                 supabaseAccessToken,
-                currentUserRole
+                currentUserRole,
+                relationships,
+                sources,
+                citations,
+                currentTreeId
             } = useAppStore.getState();
 
             const activePeople = currentUserRole === 'viewer' ? maskPeopleMap(people) : people;
@@ -61,7 +65,12 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
                 templateId: type,
                 exportType: 'legacy',
                 people: activePeople,
-                totalPages: 1
+                totalPages: 1,
+                relationships,
+                sources,
+                citations,
+                userRole: currentUserRole,
+                treeId: currentTreeId,
             });
             let success = false;
             const warnings: string[] = [];
@@ -224,7 +233,8 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
                 currentUserRole,
                 relationships,
                 sources,
-                citations
+                citations,
+                currentTreeId
             } = useAppStore.getState();
 
             const activePeople = currentUserRole === 'viewer' ? maskPeopleMap(people) : people;
@@ -233,7 +243,12 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
                 templateId,
                 exportType: 'publishing',
                 people: activePeople,
-                totalPages: 1
+                totalPages: 1,
+                relationships,
+                sources,
+                citations,
+                userRole: currentUserRole,
+                treeId: currentTreeId,
             });
             let success = false;
             const warnings: string[] = [];

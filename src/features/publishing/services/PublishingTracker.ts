@@ -1,7 +1,7 @@
 ﻿import { PublicationManifest, ExportHistoryEntry } from '../types/manifest';
 import { useAppStore } from '../../../store/useAppStore';
 import { buildFamilyGraph } from '../../../domain/familyGraph';
-import { Person } from '../../../types';
+import { Citation, Person, RelationshipEdge, Source } from '../../../types';
 import { evaluateDataIntegrity } from '../../../domain/dataIntegrity';
 import { summarizePublishingEvidence } from './PublishingEvidenceAdapter';
 import { PublishingRelationshipAdapter } from './PublishingRelationshipAdapter';
@@ -11,6 +11,11 @@ export interface TrackerStartOptions {
     readonly exportType: 'legacy' | 'publishing';
     readonly people: Record<string, Person>;
     readonly totalPages?: number;
+    readonly relationships?: Record<string, RelationshipEdge>;
+    readonly sources?: Record<string, Source>;
+    readonly citations?: Record<string, Citation>;
+    readonly userRole?: string | null;
+    readonly treeId?: string | null;
 }
 
 export class PublishingTracker {
@@ -27,10 +32,15 @@ export class PublishingTracker {
             user,
             currentUserRole,
             currentTreeId,
-            relationships,
-            sources,
-            citations,
+            relationships: storeRelationships,
+            sources: storeSources,
+            citations: storeCitations,
         } = useAppStore.getState();
+        const relationships = options.relationships ?? storeRelationships ?? {};
+        const sources = options.sources ?? storeSources ?? {};
+        const citations = options.citations ?? storeCitations ?? {};
+        const userRole = options.userRole ?? currentUserRole ?? null;
+        const treeId = options.treeId ?? currentTreeId ?? 'publishing';
         const publicationId = typeof crypto !== 'undefined' && crypto.randomUUID 
             ? crypto.randomUUID() 
             : Math.random().toString(36).substring(2, 15);
@@ -60,15 +70,15 @@ export class PublishingTracker {
                 privacy: 1,
             },
             privacy: {
-                userRole: currentUserRole ?? null,
-                masked: currentUserRole === 'viewer',
+                userRole,
+                masked: userRole === 'viewer',
             },
-            evidence: summarizePublishingEvidence(options.people, { sources: sources || {}, citations: citations || {} }),
+            evidence: summarizePublishingEvidence(options.people, { sources, citations }),
             integrity: toIntegritySummary(options.people),
             relationships: {
-                source: Object.keys(relationships || {}).length > 0 ? 'relationship_edges' : 'legacy_person_fields',
+                source: Object.keys(relationships).length > 0 ? 'relationship_edges' : 'legacy_person_fields',
                 driftWarningCount: PublishingRelationshipAdapter
-                    .createContext(options.people, relationships || {}, currentTreeId || 'publishing')
+                    .createContext(options.people, relationships, treeId)
                     .warnings.length,
             },
         };

@@ -6,7 +6,7 @@ import type { Person } from '../../../types';
 import { generateICS } from '../../../utils/calendarLogic';
 import { exportToGEDCOM } from '../../../utils/gedcomLogic';
 import { buildBlueprintArchive } from '../../../services/archiveService';
-import { PdfRenderer, PublishingPipeline } from '../../../features/publishing';
+import { PdfRenderer, PublishingPipeline, PublishingTracker } from '../../../features/publishing';
 
 vi.mock('../../../utils/fileUtils', () => ({
   downloadFile: vi.fn(),
@@ -105,6 +105,7 @@ const { mockStore } = vi.hoisted(() => ({
     relationships: {},
     sources: {},
     citations: {},
+    currentTreeId: 'tree-1',
   },
 }));
 
@@ -281,6 +282,18 @@ describe('useExport', () => {
     expect(peopleArg['person-1'].firstName).toBe('Private');
     expect(relationshipsArg).toBe(mockStore.relationships);
     expect(evidenceArg).toEqual({ sources: mockStore.sources, citations: mockStore.citations });
+    expect(PublishingTracker.startTracking).toHaveBeenCalledWith(expect.objectContaining({
+      templateId: 'classic-book-manuscript',
+      exportType: 'publishing',
+      people: expect.objectContaining({
+        'person-1': expect.objectContaining({ firstName: 'Private' }),
+      }),
+      relationships: mockStore.relationships,
+      sources: mockStore.sources,
+      citations: mockStore.citations,
+      userRole: 'viewer',
+      treeId: 'tree-1',
+    }));
     expect(PdfRenderer.renderToPdf).toHaveBeenCalled();
   });
 });
