@@ -37,7 +37,7 @@ interface ExportCloudPanelProps {
   onDeleteDriveFile: (fileId: string) => Promise<void> | void;
   onRunExport: (type: ExportType) => Promise<void>;
   onRunPublishingExport?: (options: PublishingExportOptions) => Promise<void>;
-  onRunPublishingPreview?: (options: Pick<PublishingExportOptions, 'templateId' | 'renderer'>) => Promise<PublishingPreviewResult>;
+  onRunPublishingPreview?: (options: Pick<PublishingExportOptions, 'templateId' | 'renderer' | 'manuscriptOptions'>) => Promise<PublishingPreviewResult>;
   hasSessionError: boolean;
   isAuthorized: boolean;
   onGoogleLogin: () => void;
@@ -109,7 +109,17 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [preview, setPreview] = useState<PublishingPreviewResult | null>(null);
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
-  const language = useAppStore((state) => state.language);
+  const [includeTimeline, setIncludeTimeline] = useState(true);
+  const [includeEvidence, setIncludeEvidence] = useState(true);
+  const language = useAppStore((state) => state.language);
+
+  const manuscriptOptions = useMemo(
+    () => ({
+      includeTimeline,
+      includeEvidence,
+    }),
+    [includeEvidence, includeTimeline]
+  );
 
   const handleExport = useCallback(
     async (type: ExportType) => {
@@ -145,6 +155,7 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
         const result = await onRunPublishingPreview({
           templateId: 'classic-book-manuscript',
           renderer: 'html-print',
+          manuscriptOptions,
         });
         setPreview(result);
       } catch (error) {
@@ -153,7 +164,7 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
         setIsPreviewLoading(false);
       }
     },
-    [language, onRunPublishingPreview]
+    [language, manuscriptOptions, onRunPublishingPreview]
   );
 
   const sortedFiles = useMemo(
@@ -205,7 +216,7 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => void handlePublishingExport({ templateId: 'classic-book-manuscript', format: 'pdf', renderer: 'html-print' })}
+                  onClick={() => void handlePublishingExport({ templateId: 'classic-book-manuscript', format: 'pdf', renderer: 'html-print', manuscriptOptions })}
                   className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-emerald-700 px-3 py-2 text-xs font-bold text-white transition-all hover:brightness-105 active:scale-[0.98]"
                 >
                   <Printer className="h-3.5 w-3.5" />
@@ -348,6 +359,27 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                 </p>
               </div>
             </div>
+            <div className="grid gap-2 rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] p-3 sm:grid-cols-2">
+              <label className="flex min-h-10 cursor-pointer items-center justify-between gap-3 rounded-lg bg-[var(--surface-subtle)] px-3 py-2 text-xs font-semibold text-[var(--text-secondary)]">
+                <span>{language === 'ar' ? 'تضمين الخط الزمني' : 'Include timeline'}</span>
+                <input
+                  type="checkbox"
+                  checked={includeTimeline}
+                  onChange={(event) => setIncludeTimeline(event.target.checked)}
+                  className="h-4 w-4 accent-[var(--primary-600)]"
+                />
+              </label>
+              <label className="flex min-h-10 cursor-pointer items-center justify-between gap-3 rounded-lg bg-[var(--surface-subtle)] px-3 py-2 text-xs font-semibold text-[var(--text-secondary)]">
+                <span>{language === 'ar' ? 'تضمين المراجع' : 'Include bibliography'}</span>
+                <input
+                  type="checkbox"
+                  checked={includeEvidence}
+                  onChange={(event) => setIncludeEvidence(event.target.checked)}
+                  className="h-4 w-4 accent-[var(--primary-600)]"
+                />
+              </label>
+            </div>
+
             <div className="flex flex-col justify-end gap-2 border-t border-[var(--border-soft)] pt-3 sm:flex-row">
               <button
 
@@ -371,7 +403,7 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
 
                 type="button"
 
-                onClick={() => void handlePublishingExport({ templateId: 'classic-book-manuscript', format: 'pdf', renderer: 'html-print' })}
+                onClick={() => void handlePublishingExport({ templateId: 'classic-book-manuscript', format: 'pdf', renderer: 'html-print', manuscriptOptions })}
 
                 className="flex items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 py-2 text-xs font-bold text-white shadow-sm shadow-emerald-700/10 transition-all hover:brightness-105 active:scale-[0.98]"
 

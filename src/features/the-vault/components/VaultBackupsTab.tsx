@@ -18,7 +18,7 @@ interface VaultBackupsTabProps {
   onDeleteDriveFile: (fileId: string) => Promise<void> | void;
   onRunExport: (type: ExportType) => Promise<void>;
   onRunPublishingExport?: (options: PublishingExportOptions) => Promise<void>;
-  onRunPublishingPreview?: (options: Pick<PublishingExportOptions, 'templateId' | 'renderer'>) => Promise<PublishingPreviewResult>;
+  onRunPublishingPreview?: (options: Pick<PublishingExportOptions, 'templateId' | 'renderer' | 'manuscriptOptions'>) => Promise<PublishingPreviewResult>;
   hasSessionError: boolean;
   isAuthorized: boolean;
   onGoogleLogin: () => void;

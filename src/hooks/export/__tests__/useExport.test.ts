@@ -109,6 +109,18 @@ vi.mock('../../../features/publishing', () => ({
           title: 'People',
           people: [],
         },
+        {
+          id: 'timeline',
+          type: 'timeline',
+          title: 'Timeline',
+          timeline: [],
+        },
+        {
+          id: 'evidence',
+          type: 'evidence',
+          title: 'Evidence',
+          citations: [],
+        },
       ],
     })),
   },
@@ -388,5 +400,24 @@ describe('useExport', () => {
       }),
     }));
     expect(HtmlManuscriptRenderer.renderToHtml).toHaveBeenCalled();
+  });
+
+  it('filters HTML manuscript preview chapters with manuscript options', async () => {
+    const svgRef = { current: null };
+    const { result } = renderHook(() => useExport(mockPeople, svgRef));
+
+    await act(async () => {
+      await result.current.handlePublishingPreview({
+        templateId: 'classic-book-manuscript',
+        renderer: 'html-print',
+        manuscriptOptions: {
+          includeTimeline: false,
+          includeEvidence: false,
+        },
+      });
+    });
+
+    const lastRenderCall = vi.mocked(HtmlManuscriptRenderer.renderToHtml).mock.calls.at(-1);
+    expect(lastRenderCall?.[0].chapters.map((chapter) => chapter.type)).toEqual(['people']);
   });
 });

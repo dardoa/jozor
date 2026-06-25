@@ -225,7 +225,10 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
         [buildExportArchive, people, svgRef]
     );
 
-    const buildHtmlManuscriptPreview = useCallback(async (templateId: string): Promise<PublishingPreviewResult & { pageEstimate: number }> => {
+    const buildHtmlManuscriptPreview = useCallback(async (
+        templateId: string,
+        manuscriptOptions: PublishingExportOptions['manuscriptOptions'] = {}
+    ): Promise<PublishingPreviewResult & { pageEstimate: number }> => {
         const {
             focusId,
             currentUserRole,
@@ -250,12 +253,12 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
             throw new Error('No root person found for the manuscript preview.');
         }
 
-        const manuscriptModel = ManuscriptStructureBuilder.buildModel({
+        const manuscriptModel = applyManuscriptOptions(ManuscriptStructureBuilder.buildModel({
             rootPersonId,
             people: activePeople,
             relationshipEdges: relationships,
             evidence: { sources, citations },
-        });
+        }), manuscriptOptions);
         const html = HtmlManuscriptRenderer.renderToHtml(manuscriptModel, {
             language: language === 'ar' ? 'ar' : 'en',
             title: manuscriptModel.title,
@@ -269,11 +272,11 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
     }, [people]);
 
     const handlePublishingPreview = useCallback(
-        async (options: Pick<PublishingExportOptions, 'templateId' | 'renderer'>): Promise<PublishingPreviewResult> => {
+        async (options: Pick<PublishingExportOptions, 'templateId' | 'renderer' | 'manuscriptOptions'>): Promise<PublishingPreviewResult> => {
             if (options.renderer && options.renderer !== 'html-print') {
                 throw new Error('Preview is only available for the enhanced HTML manuscript renderer.');
             }
-            const preview = await buildHtmlManuscriptPreview(options.templateId);
+            const preview = await buildHtmlManuscriptPreview(options.templateId, options.manuscriptOptions);
             return { title: preview.title, html: preview.html };
         },
         [buildHtmlManuscriptPreview]
@@ -347,7 +350,7 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
                         throw new Error('Enhanced Arabic PDF is only available for family manuscript templates.');
                     }
 
-                    const preview = await buildHtmlManuscriptPreview(templateId);
+                    const preview = await buildHtmlManuscriptPreview(templateId, options.manuscriptOptions);
                     outputName = `${preview.title}.pdf`;
 
                     await openHtmlPrintWindow(preview.html, preview.title);
@@ -492,6 +495,23 @@ function estimateHtmlManuscriptPages(model: FamilyManuscriptModel): number {
         }
         return total + 1;
     }, 1);
+}
+
+function applyManuscriptOptions(
+    model: FamilyManuscriptModel,
+    options: PublishingExportOptions['manuscriptOptions'] = {}
+): FamilyManuscriptModel {
+    const includeTimeline = options.includeTimeline ?? true;
+    const includeEvidence = options.includeEvidence ?? true;
+
+    return {
+        ...model,
+        chapters: model.chapters.filter((chapter) => {
+            if (chapter.type === 'timeline') return includeTimeline;
+            if (chapter.type === 'evidence') return includeEvidence;
+            return true;
+        }),
+    };
 }
 
 async function openHtmlPrintWindow(html: string, title: string): Promise<void> {

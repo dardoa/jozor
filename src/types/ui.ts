@@ -108,6 +108,10 @@ export interface PublishingExportOptions {
     templateId: string;
     format: 'png' | 'pdf';
     renderer?: PublishingExportRenderer;
+    manuscriptOptions?: {
+        includeTimeline?: boolean;
+        includeEvidence?: boolean;
+    };
 }
 
 export interface PublishingPreviewResult {
@@ -118,7 +122,7 @@ export interface PublishingPreviewResult {
 export interface ExportActionsProps {
     handleExport: (type: ExportType) => Promise<void>;
     handlePublishingExport?: (options: PublishingExportOptions) => Promise<void>;
-    handlePublishingPreview?: (options: Pick<PublishingExportOptions, 'templateId' | 'renderer'>) => Promise<PublishingPreviewResult>;
+    handlePublishingPreview?: (options: Pick<PublishingExportOptions, 'templateId' | 'renderer' | 'manuscriptOptions'>) => Promise<PublishingPreviewResult>;
 }
 
 export interface SearchProps {
