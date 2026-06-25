@@ -1,5 +1,5 @@
 import { useCallback, RefObject } from 'react';
-import { Person, ExportType, PublishingExportOptions } from '../../types';
+import { Person, ExportType, PublishingExportOptions, PublishingPreviewResult } from '../../types';
 import { generateICS } from '../../utils/calendarLogic';
 import { downloadFile } from '../../utils/fileUtils';
 import { showToast } from '../../utils/showToast';
@@ -225,6 +225,60 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
         [buildExportArchive, people, svgRef]
     );
 
+    const buildHtmlManuscriptPreview = useCallback(async (templateId: string): Promise<PublishingPreviewResult & { pageEstimate: number }> => {
+        const {
+            focusId,
+            currentUserRole,
+            relationships,
+            sources,
+            citations,
+            language,
+        } = useAppStore.getState();
+        const activePeople = currentUserRole === 'viewer' ? maskPeopleMap(people) : people;
+        const {
+            TemplateRegistry,
+            HtmlManuscriptRenderer,
+            ManuscriptStructureBuilder,
+        } = await import('../../features/publishing');
+        const template = TemplateRegistry.getTemplate(templateId);
+        if (template.publicationKind !== 'book-manuscript') {
+            throw new Error('HTML manuscript preview is only available for family manuscript templates.');
+        }
+
+        const rootPersonId = focusId || Object.keys(activePeople)[0];
+        if (!rootPersonId) {
+            throw new Error('No root person found for the manuscript preview.');
+        }
+
+        const manuscriptModel = ManuscriptStructureBuilder.buildModel({
+            rootPersonId,
+            people: activePeople,
+            relationshipEdges: relationships,
+            evidence: { sources, citations },
+        });
+        const html = HtmlManuscriptRenderer.renderToHtml(manuscriptModel, {
+            language: language === 'ar' ? 'ar' : 'en',
+            title: manuscriptModel.title,
+        });
+
+        return {
+            title: manuscriptModel.title,
+            html,
+            pageEstimate: estimateHtmlManuscriptPages(manuscriptModel),
+        };
+    }, [people]);
+
+    const handlePublishingPreview = useCallback(
+        async (options: Pick<PublishingExportOptions, 'templateId' | 'renderer'>): Promise<PublishingPreviewResult> => {
+            if (options.renderer && options.renderer !== 'html-print') {
+                throw new Error('Preview is only available for the enhanced HTML manuscript renderer.');
+            }
+            const preview = await buildHtmlManuscriptPreview(options.templateId);
+            return { title: preview.title, html: preview.html };
+        },
+        [buildHtmlManuscriptPreview]
+    );
+
     const handlePublishingExport = useCallback(
         async (options: PublishingExportOptions) => {
             const { templateId, format, renderer = 'vector-pdf' } = options;
@@ -263,8 +317,6 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
                     TemplateRegistry, 
                     PosterRenderer, 
                     PdfRenderer,
-                    HtmlManuscriptRenderer,
-                    ManuscriptStructureBuilder,
                 } = await import('../../features/publishing');
 
                 const template = TemplateRegistry.getTemplate(templateId);
@@ -295,20 +347,11 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
                         throw new Error('Enhanced Arabic PDF is only available for family manuscript templates.');
                     }
 
-                    const manuscriptModel = ManuscriptStructureBuilder.buildModel({
-                        rootPersonId,
-                        people: activePeople,
-                        relationshipEdges: relationships,
-                        evidence: { sources, citations },
-                    });
-                    outputName = `${manuscriptModel.title}.pdf`;
-                    const html = HtmlManuscriptRenderer.renderToHtml(manuscriptModel, {
-                        language: useAppStore.getState().language === 'ar' ? 'ar' : 'en',
-                        title: manuscriptModel.title,
-                    });
+                    const preview = await buildHtmlManuscriptPreview(templateId);
+                    outputName = `${preview.title}.pdf`;
 
-                    await openHtmlPrintWindow(html, manuscriptModel.title);
-                    (trackerState.manifest as { totalPages: number }).totalPages = estimateHtmlManuscriptPages(manuscriptModel);
+                    await openHtmlPrintWindow(preview.html, preview.title);
+                    (trackerState.manifest as { totalPages: number }).totalPages = preview.pageEstimate;
                 } else if (format === 'png') {
                     outputName = `${doc.title}.png`;
                     const browserCanvasFactory = {
@@ -345,10 +388,10 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
                 setExportStatus({ isExporting: false });
             }
         },
-        [people]
+        [buildHtmlManuscriptPreview, people]
     );
 
-    return { handleExport, handlePublishingExport };
+    return { handleExport, handlePublishingExport, handlePublishingPreview };
 };
 
 /**

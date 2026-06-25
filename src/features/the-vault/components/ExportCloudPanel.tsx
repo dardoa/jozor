@@ -12,11 +12,13 @@ import {
   Save,
   Trash2,
   BookOpen,
-  Download,
-  Sparkles,
+  Download,
+  Eye,
+  Sparkles,
+  X,
 } from 'lucide-react';
 
-import type { DriveFile, ExportType, PublishingExportOptions } from '../../../types';
+import type { DriveFile, ExportType, PublishingExportOptions, PublishingPreviewResult } from '../../../types';
 import type { TranslationSchema } from '../../../utils/translationLoader';
 import { showToast } from '../../../utils/showToast';
 import { useAppStore } from '../../../store/useAppStore';
@@ -35,7 +37,8 @@ interface ExportCloudPanelProps {
   onDeleteDriveFile: (fileId: string) => Promise<void> | void;
   onRunExport: (type: ExportType) => Promise<void>;
   onRunPublishingExport?: (options: PublishingExportOptions) => Promise<void>;
-  hasSessionError: boolean;
+  onRunPublishingPreview?: (options: Pick<PublishingExportOptions, 'templateId' | 'renderer'>) => Promise<PublishingPreviewResult>;
+  hasSessionError: boolean;
   isAuthorized: boolean;
   onGoogleLogin: () => void;
   currentActiveDriveFileId: string | null;
@@ -90,7 +93,8 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
   onOverwriteDriveFile,
   onDeleteDriveFile,
   onRunExport,
-  onRunPublishingExport,
+  onRunPublishingExport,
+  onRunPublishingPreview,
   hasSessionError,
   isAuthorized,
   onGoogleLogin,
@@ -102,7 +106,9 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
 }) => {
   const [newFileName, setNewFileName] = useState('');
   const [confirmOverwriteId, setConfirmOverwriteId] = useState<string | null>(null);
-  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [preview, setPreview] = useState<PublishingPreviewResult | null>(null);
+  const [isPreviewLoading, setIsPreviewLoading] = useState(false);
   const language = useAppStore((state) => state.language);
 
   const handleExport = useCallback(
@@ -127,7 +133,30 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
     [onCloseVault, onRunPublishingExport]
   );
 
-  const sortedFiles = useMemo(
+  const handlePublishingPreview = useCallback(
+    async () => {
+      if (!onRunPublishingPreview) {
+        showToast.error(language === 'ar' ? 'معاينة المخطوط غير متاحة حالياً.' : 'Manuscript preview is not available.');
+        return;
+      }
+
+      setIsPreviewLoading(true);
+      try {
+        const result = await onRunPublishingPreview({
+          templateId: 'classic-book-manuscript',
+          renderer: 'html-print',
+        });
+        setPreview(result);
+      } catch (error) {
+        showToast.error(error instanceof Error ? error.message : 'Failed to build manuscript preview.');
+      } finally {
+        setIsPreviewLoading(false);
+      }
+    },
+    [language, onRunPublishingPreview]
+  );
+
+  const sortedFiles = useMemo(
     () => [...files].sort((a, b) => String(b.modifiedTime || '').localeCompare(String(a.modifiedTime || ''))),
     [files]
   );
@@ -162,7 +191,44 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
   }, [onGoogleLogin]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6">
+      {preview && (
+        <div className="fixed inset-0 z-[var(--z-index-modal)] flex items-center justify-center bg-black/45 p-4 backdrop-blur-sm">
+          <div className="flex h-[88vh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-panel)] shadow-2xl">
+            <div className="flex flex-col gap-3 border-b border-[var(--border-soft)] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0">
+                <h4 className="truncate text-sm font-bold text-[var(--text-main)]">
+                  {language === 'ar' ? 'معاينة المخطوط' : 'Manuscript Preview'}
+                </h4>
+                <p className="truncate text-xs text-[var(--text-muted)]">{preview.title}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => void handlePublishingExport({ templateId: 'classic-book-manuscript', format: 'pdf', renderer: 'html-print' })}
+                  className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-emerald-700 px-3 py-2 text-xs font-bold text-white transition-all hover:brightness-105 active:scale-[0.98]"
+                >
+                  <Printer className="h-3.5 w-3.5" />
+                  {language === 'ar' ? 'تصدير PDF' : 'Export PDF'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreview(null)}
+                  className="inline-flex min-h-10 min-w-10 items-center justify-center rounded-xl border border-[var(--border-soft)] bg-[var(--surface-subtle)] text-[var(--text-secondary)] transition-all hover:bg-[var(--surface-hover)]"
+                  aria-label={language === 'ar' ? 'إغلاق المعاينة' : 'Close preview'}
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+            <iframe
+              title={language === 'ar' ? 'معاينة مخطوط العائلة' : 'Family manuscript preview'}
+              srcDoc={preview.html}
+              className="h-full w-full flex-1 border-0 bg-white"
+            />
+          </div>
+        </div>
+      )}
       <section className="rounded-[14px] border border-[var(--border-soft)] bg-[var(--surface-panel)] p-4 shadow-none">
         {hasSessionError && (
           <div className="mb-4 flex flex-col gap-4 rounded-xl border border-[var(--danger-500)]/20 bg-[var(--danger-500)]/10 p-4 animate-in fade-in slide-in-from-top-2 duration-300">
@@ -283,6 +349,24 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
               </div>
             </div>
             <div className="flex flex-col justify-end gap-2 border-t border-[var(--border-soft)] pt-3 sm:flex-row">
+              <button
+
+                type="button"
+
+                onClick={() => void handlePublishingPreview()}
+
+                disabled={isPreviewLoading}
+
+                className="flex items-center justify-center gap-2 rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] px-4 py-2 text-xs font-bold text-[var(--text-main)] transition-all hover:bg-[var(--surface-hover)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+
+              >
+
+                {isPreviewLoading ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Eye className="h-3.5 w-3.5" />}
+
+                {language === 'ar' ? 'معاينة المخطوط' : 'Preview Manuscript'}
+
+              </button>
+
               <button
 
                 type="button"

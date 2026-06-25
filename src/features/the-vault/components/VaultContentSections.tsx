@@ -88,6 +88,7 @@ export const VaultBackupsContent = ({ context }: { context: VaultRenderContext }
         onDeleteDriveFile={(fileId) => context.auth.handleDeleteDriveFile(fileId)}
         onRunExport={(type) => context.exportActions.handleExport(type)}
         onRunPublishingExport={(options) => context.exportActions.handlePublishingExport ? context.exportActions.handlePublishingExport(options) : Promise.resolve()}
+        onRunPublishingPreview={(options) => context.exportActions.handlePublishingPreview ? context.exportActions.handlePublishingPreview(options) : Promise.reject(new Error('Publishing preview is not available.'))}
         hasSessionError={context.auth.hasSessionError}
         isAuthorized={context.auth.isAuthorized}
         onGoogleLogin={() => context.auth.onLogin()}

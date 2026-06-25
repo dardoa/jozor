@@ -13,6 +13,7 @@ interface UseUIOverlayCoordinatorParams {
   currentUserRole: 'owner' | 'editor' | 'viewer' | null;
   handleExport: ExportActionsProps['handleExport'];
   handlePublishingExport?: ExportActionsProps['handlePublishingExport'];
+  handlePublishingPreview?: ExportActionsProps['handlePublishingPreview'];
 }
 
 export const useUIOverlayCoordinator = ({
@@ -23,6 +24,7 @@ export const useUIOverlayCoordinator = ({
   currentUserRole,
   handleExport,
   handlePublishingExport,
+  handlePublishingPreview,
 }: UseUIOverlayCoordinatorParams) => {
   const [isPresentMode, setIsPresentMode] = useState(false);
   const [detailsPanelOpen, setDetailsPanelOpen] = useState(() => (
@@ -65,6 +67,7 @@ export const useUIOverlayCoordinator = ({
     handleOpenModal,
     handleExport,
     handlePublishingExport,
+    handlePublishingPreview,
   });
 
   return {

@@ -29,7 +29,7 @@ export const useAppOrchestration = (
   const setCurrentTreeId = useAppStore((state) => state.setCurrentTreeId);
   const currentUserRole = useAppStore((state) => state.currentUserRole);
 
-  const { svgRef, handleExport, handlePublishingExport } = useAppExportBindings(people);
+  const { svgRef, handleExport, handlePublishingExport, handlePublishingPreview } = useAppExportBindings(people);
 
   // 1. Coordinates Modals, UI & Welcome Settings
   const ui = useUIOverlayCoordinator({
@@ -40,6 +40,7 @@ export const useAppOrchestration = (
     currentUserRole,
     handleExport,
     handlePublishingExport,
+    handlePublishingPreview,
   });
 
   // 2. Coordinates Google/Supabase Live Sync

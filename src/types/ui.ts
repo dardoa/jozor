@@ -110,9 +110,15 @@ export interface PublishingExportOptions {
     renderer?: PublishingExportRenderer;
 }
 
+export interface PublishingPreviewResult {
+    title: string;
+    html: string;
+}
+
 export interface ExportActionsProps {
     handleExport: (type: ExportType) => Promise<void>;
     handlePublishingExport?: (options: PublishingExportOptions) => Promise<void>;
+    handlePublishingPreview?: (options: Pick<PublishingExportOptions, 'templateId' | 'renderer'>) => Promise<PublishingPreviewResult>;
 }
 
 export interface SearchProps {

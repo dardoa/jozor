@@ -366,4 +366,27 @@ describe('useExport', () => {
 
     openSpy.mockRestore();
   });
+
+  it('builds an HTML manuscript preview with masked viewer data', async () => {
+    mockStore.currentUserRole = 'viewer';
+    const svgRef = { current: null };
+    const { result } = renderHook(() => useExport(mockPeople, svgRef));
+
+    let preview: Awaited<ReturnType<typeof result.current.handlePublishingPreview>>;
+    await act(async () => {
+      preview = await result.current.handlePublishingPreview({
+        templateId: 'classic-book-manuscript',
+        renderer: 'html-print',
+      });
+    });
+
+    expect(preview!.title).toBe('Family Manuscript');
+    expect(preview!.html).toContain('Arabic manuscript');
+    expect(ManuscriptStructureBuilder.buildModel).toHaveBeenCalledWith(expect.objectContaining({
+      people: expect.objectContaining({
+        'person-1': expect.objectContaining({ firstName: 'Private' }),
+      }),
+    }));
+    expect(HtmlManuscriptRenderer.renderToHtml).toHaveBeenCalled();
+  });
 });
