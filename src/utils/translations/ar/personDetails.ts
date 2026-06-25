@@ -117,6 +117,7 @@ export const personDetails = {
   vaultExportJson: 'تصفية JSON',
   vaultExportGedcom: 'تصدير GEDCOM',
   vaultExportCalendar: 'تصدير التقويم',
+  vaultExportMarkdown: 'مخطوط Markdown',
   vaultExportPng: 'لقطة PNG',
   vaultExportPdf: 'تصدير PDF',
   vaultExportPrint: 'عرض الطباعة',

@@ -109,6 +109,29 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
                     downloadFile(generateICS(activePeople), outputName, 'text/calendar');
                     success = true;
                     return;
+                } else if (type === 'markdown') {
+                    const {
+                        MarkdownManuscriptRenderer,
+                        ManuscriptStructureBuilder,
+                    } = await import('../../features/publishing');
+                    const rootPersonId = useAppStore.getState().focusId || Object.keys(activePeople)[0];
+                    if (!rootPersonId) {
+                        throw new Error('No root person found for the Markdown manuscript export.');
+                    }
+                    const manuscriptModel = ManuscriptStructureBuilder.buildModel({
+                        rootPersonId,
+                        people: activePeople,
+                        relationshipEdges: relationships,
+                        evidence: { sources, citations },
+                    });
+                    outputName = `${manuscriptModel.title}.md`;
+                    downloadFile(
+                        MarkdownManuscriptRenderer.renderToMarkdown(manuscriptModel, { includeMetadata: false }),
+                        outputName,
+                        'text/markdown;charset=utf-8'
+                    );
+                    success = true;
+                    return;
                 } else if (type === 'print') {
                     outputName = 'print';
                     window.print();

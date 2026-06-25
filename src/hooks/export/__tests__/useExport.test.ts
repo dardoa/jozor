@@ -8,6 +8,7 @@ import { exportToGEDCOM } from '../../../utils/gedcomLogic';
 import { buildBlueprintArchive } from '../../../services/archiveService';
 import {
   HtmlManuscriptRenderer,
+  MarkdownManuscriptRenderer,
   ManuscriptStructureBuilder,
   PdfRenderer,
   PublishingPipeline,
@@ -127,6 +128,9 @@ vi.mock('../../../features/publishing', () => ({
   },
   HtmlManuscriptRenderer: {
     renderToHtml: vi.fn(() => '<!doctype html><html><body>Arabic manuscript</body></html>'),
+  },
+  MarkdownManuscriptRenderer: {
+    renderToMarkdown: vi.fn(() => '# Family Manuscript\n'),
   },
 }));
 
@@ -256,6 +260,33 @@ describe('useExport', () => {
     const icsPeople = vi.mocked(generateICS).mock.calls[0][0];
     expect(gedcomPeople['person-1'].firstName).toBe('Private');
     expect(icsPeople['person-1'].firstName).toBe('Private');
+  });
+
+  it('exports Markdown manuscripts from the manuscript model without technical metadata', async () => {
+    mockStore.currentUserRole = 'viewer';
+    const svgRef = { current: null };
+    const { result } = renderHook(() => useExport(mockPeople, svgRef));
+
+    await act(async () => {
+      await result.current.handleExport('markdown');
+    });
+
+    expect(ManuscriptStructureBuilder.buildModel).toHaveBeenCalledWith(expect.objectContaining({
+      people: expect.objectContaining({
+        'person-1': expect.objectContaining({ firstName: 'Private' }),
+      }),
+      relationshipEdges: mockStore.relationships,
+      evidence: { sources: mockStore.sources, citations: mockStore.citations },
+    }));
+    expect(MarkdownManuscriptRenderer.renderToMarkdown).toHaveBeenCalledWith(
+      expect.objectContaining({ title: 'Family Manuscript' }),
+      { includeMetadata: false }
+    );
+    expect(downloadFile).toHaveBeenCalledWith(
+      '# Family Manuscript\n',
+      'Family Manuscript.md',
+      'text/markdown;charset=utf-8'
+    );
   });
 
   it('passes masked people to JOZOR archive exports for viewer role', async () => {

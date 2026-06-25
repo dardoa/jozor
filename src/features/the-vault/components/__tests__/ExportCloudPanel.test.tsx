@@ -40,6 +40,7 @@ const t = {
   vaultExportJson: 'JSON',
   vaultExportGedcom: 'GEDCOM',
   vaultExportCalendar: 'Calendar',
+  vaultExportMarkdown: 'Markdown',
   vaultExportPng: 'PNG',
   vaultExportPdf: 'PDF',
   vaultExportPrint: 'Print',

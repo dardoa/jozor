@@ -785,3 +785,10 @@ Deferred geography improvements:
 - Kept Markdown independent from the HTML/CSS print renderer and did not replace the active manuscript PDF/preview flow.
 - Rendered person chapters, timeline entries, bibliography summaries, citation coverage, and optional technical metadata.
 - Added tests for Markdown output, metadata omission, and Markdown control-character escaping.
+
+# 2026-06-25 - Markdown manuscript export path
+
+- Added a legacy export route for `markdown` that builds a `FamilyManuscriptModel` and downloads a `.md` manuscript.
+- Reused viewer masking, relationship edges, sources, and citations so Markdown follows the same privacy and evidence boundaries as publishing.
+- Added the Markdown export action to The Vault export list with English and Arabic labels.
+- Added test coverage proving viewer Markdown exports use masked people and omit technical metadata.

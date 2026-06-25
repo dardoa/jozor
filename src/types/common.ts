@@ -129,6 +129,6 @@ export interface ModalOpenContext {
 
 export type SmartPersonaTabId = 'about' | 'links' | 'media';
 
-export type ExportType = 'jozor' | 'json' | 'gedcom' | 'ics' | 'print' | 'png' | 'pdf' | 'svg' | 'jpeg';
+export type ExportType = 'jozor' | 'json' | 'gedcom' | 'ics' | 'markdown' | 'print' | 'png' | 'pdf' | 'svg' | 'jpeg';
 
 export type GeographicJourneyMode = 'events' | 'migration';

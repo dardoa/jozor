@@ -52,7 +52,8 @@ type ExportLabelKey =
   | 'vaultExportArchive'
   | 'vaultExportJson'
   | 'vaultExportGedcom'
-  | 'vaultExportCalendar'
+  | 'vaultExportCalendar'
+  | 'vaultExportMarkdown'
   | 'vaultExportPng'
   | 'vaultExportPdf'
   | 'vaultExportPrint';
@@ -65,7 +66,8 @@ const EXPORT_ACTIONS: Array<{
   { id: 'jozor', labelKey: 'vaultExportArchive', icon: Archive },
   { id: 'json', labelKey: 'vaultExportJson', icon: FileText },
   { id: 'gedcom', labelKey: 'vaultExportGedcom', icon: FileText },
-  { id: 'ics', labelKey: 'vaultExportCalendar', icon: Calendar },
+  { id: 'ics', labelKey: 'vaultExportCalendar', icon: Calendar },
+  { id: 'markdown', labelKey: 'vaultExportMarkdown', icon: FileText },
   { id: 'png', labelKey: 'vaultExportPng', icon: ImageIcon },
   { id: 'pdf', labelKey: 'vaultExportPdf', icon: FileText },
   { id: 'print', labelKey: 'vaultExportPrint', icon: Printer },
