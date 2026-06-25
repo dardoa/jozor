@@ -757,3 +757,10 @@ Deferred geography improvements:
 - Posters, charts, certificates, and compact graphic exports remain under the vector/canvas/jsPDF-oriented renderer family.
 - Current technical identifiers such as `html-print` and `vector-pdf` remain transitional until a contained naming cleanup is worthwhile.
 - Deferred Markdown as a future manuscript content/interchange layer, not a substitute for the output renderer strategy.
+
+# 2026-06-25 - Attached entities privacy audit
+
+- Audited Sprint 14/15 privacy side channels around photos, gallery items, voice notes, discussions, storage object metadata, media tables, and exports.
+- Confirmed `people_secure` masks attached person media fields for viewer access and viewer exports use masked people across JSON/GEDCOM/ICS/JOZOR/publishing paths.
+- Added a Supabase migration to prevent viewer collaborators from listing tree-scoped avatar object metadata through `storage.objects`.
+- Documented the remaining legacy public-bucket URL risk and deferred full private media/signed-URL migration to a separate package.

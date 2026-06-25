@@ -142,9 +142,13 @@ describe('Database Privacy Integration Tests (Sprint 14B Phase 1)', () => {
         gender: 'female',
         birth_date: '1990-05-15',
         birth_place: 'New York',
+        photo_url: 'https://example.com/living-avatar.webp',
+        photo_path: `${testTreeId}/${livingPersonId}/avatar.webp`,
+        photo_version: 7,
         custom_fields: {
           title: 'Dr.',
           gallery: [{ url: 'https://example.com/pic.jpg' }],
+          voiceNotes: ['https://example.com/living-voice-note.webm'],
           partnerDetails: {
             spouse1: { type: 'spouse', startDate: '2015-06-20', startPlace: 'Paris' }
           }
@@ -294,7 +298,11 @@ describe('Database Privacy Integration Tests (Sprint 14B Phase 1)', () => {
     expect(living.birth_date).toBe('1990-05-15');
     expect(living.custom_fields.title).toBe('Dr.');
     expect(living.custom_fields.gallery).toHaveLength(1);
+    expect(living.custom_fields.voiceNotes).toHaveLength(1);
     expect(living.custom_fields.partnerDetails.spouse1.startDate).toBe('2015-06-20');
+    expect(living.photo_url).toBe('https://example.com/living-avatar.webp');
+    expect(living.photo_path).toBe(`${testTreeId}/${livingPersonId}/avatar.webp`);
+    expect(living.photo_version).toBe(7);
     expect(living.metadata.email).toBe('living-secret@example.com');
   });
 
@@ -317,8 +325,12 @@ describe('Database Privacy Integration Tests (Sprint 14B Phase 1)', () => {
     expect(living.birth_date).toBeNull();
     expect(living.custom_fields.title).toBe('');
     expect(living.custom_fields.gallery).toHaveLength(0);
+    expect(living.custom_fields.voiceNotes).toHaveLength(0);
     expect(living.custom_fields.partnerDetails.spouse1.startDate).toBe('');
     expect(living.custom_fields.partnerDetails.spouse1.type).toBe('spouse'); // retains type
+    expect(living.photo_url).toBeNull();
+    expect(living.photo_path).toBeNull();
+    expect(living.photo_version).toBe(0);
     expect(living.metadata).toEqual({});
 
     const deceased = data.find((p) => p.id === deceasedPersonId);
