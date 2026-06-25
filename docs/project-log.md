@@ -764,3 +764,9 @@ Deferred geography improvements:
 - Confirmed `people_secure` masks attached person media fields for viewer access and viewer exports use masked people across JSON/GEDCOM/ICS/JOZOR/publishing paths.
 - Added a Supabase migration to prevent viewer collaborators from listing tree-scoped avatar object metadata through `storage.objects`.
 - Documented the remaining legacy public-bucket URL risk and deferred full private media/signed-URL migration to a separate package.
+
+# 2026-06-25 - Supabase migration drift documented
+
+- Detected linked Supabase migration-history drift while preparing to apply the attached-entities privacy migration.
+- Kept the database unchanged and did not run `db push` or migration repair while remote-only migration versions are unresolved.
+- Documented the safe reconciliation plan in `docs/supabase-migration-drift-2026-06-25.md`.
