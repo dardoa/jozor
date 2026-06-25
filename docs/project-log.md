@@ -806,3 +806,10 @@ Deferred geography improvements:
 - Kept `FamilyManuscriptModel` as the content source of truth and renderers as output projections.
 - Added a small `HtmlManuscriptTheme` token object so current manuscript styling can change later without scattering design literals through renderer logic.
 - Corrected mojibake Arabic strings in the HTML manuscript renderer test fixture and static labels.
+
+# 2026-06-26 - Manuscript preview configuration
+
+- Extended the HTML manuscript preview flow with root-person selection and branch-depth configuration.
+- Passed manuscript configuration through The Vault, the export hook, and `ManuscriptStructureBuilder`.
+- Added generation-depth limiting for branch manuscript models while preserving the full-branch option.
+- Added coverage for configured preview options and depth-limited manuscript generation.

@@ -444,6 +444,8 @@ describe('useExport', () => {
         templateId: 'classic-book-manuscript',
         renderer: 'html-print',
         manuscriptOptions: {
+          rootPersonId: 'person-1',
+          generationsDepth: 2,
           includeTimeline: false,
           includeEvidence: false,
         },
@@ -451,6 +453,10 @@ describe('useExport', () => {
     });
 
     const lastRenderCall = vi.mocked(HtmlManuscriptRenderer.renderToHtml).mock.calls.at(-1);
+    expect(ManuscriptStructureBuilder.buildModel).toHaveBeenLastCalledWith(expect.objectContaining({
+      rootPersonId: 'person-1',
+      generationsDepth: 2,
+    }));
     expect(lastRenderCall?.[0].chapters.map((chapter) => chapter.type)).toEqual(['people']);
   });
 });

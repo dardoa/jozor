@@ -272,15 +272,17 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
         }
 
         const rootPersonId = focusId || Object.keys(activePeople)[0];
-        if (!rootPersonId) {
+        const selectedRootPersonId = manuscriptOptions.rootPersonId || rootPersonId;
+        if (!selectedRootPersonId) {
             throw new Error('No root person found for the manuscript preview.');
         }
 
         const manuscriptModel = applyManuscriptOptions(ManuscriptStructureBuilder.buildModel({
-            rootPersonId,
+            rootPersonId: selectedRootPersonId,
             people: activePeople,
             relationshipEdges: relationships,
             evidence: { sources, citations },
+            generationsDepth: manuscriptOptions.generationsDepth,
         }), manuscriptOptions);
         const html = HtmlManuscriptRenderer.renderToHtml(manuscriptModel, {
             language: language === 'ar' ? 'ar' : 'en',

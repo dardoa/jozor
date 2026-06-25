@@ -109,6 +109,8 @@ export interface PublishingExportOptions {
     format: 'png' | 'pdf';
     renderer?: PublishingExportRenderer;
     manuscriptOptions?: {
+        rootPersonId?: string;
+        generationsDepth?: number | 'all';
         includeTimeline?: boolean;
         includeEvidence?: boolean;
     };

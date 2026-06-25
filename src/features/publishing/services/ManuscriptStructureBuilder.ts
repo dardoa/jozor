@@ -19,6 +19,7 @@ export interface ManuscriptStructureOptions {
     readonly sources: Record<string, Source>;
     readonly citations: Record<string, Citation>;
   };
+  readonly generationsDepth?: number | 'all';
 }
 
 function getDisplayName(person: Person): string {
@@ -196,7 +197,9 @@ export class ManuscriptStructureBuilder {
     const branchGraph = PublishingRelationshipAdapter.buildBranchGraph(
       options.people,
       options.rootPersonId,
-      options.relationshipEdges
+      options.relationshipEdges,
+      undefined,
+      options.generationsDepth === 'all' ? undefined : options.generationsDepth
     );
     const manuscriptPeople = Object.keys(branchGraph.people).length > 0 ? branchGraph.people : options.people;
     const evidence = getEvidence(options.evidence);

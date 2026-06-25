@@ -6,7 +6,18 @@ import type { TranslationSchema } from '../../../../utils/translationLoader';
 import { ExportCloudPanel } from '../ExportCloudPanel';
 
 vi.mock('../../../../store/useAppStore', () => ({
-  useAppStore: (selector: (state: { language: 'en' }) => unknown) => selector({ language: 'en' }),
+  useAppStore: (selector: (state: {
+    language: 'en';
+    focusId: string;
+    people: Record<string, { id: string; firstName?: string; middleName?: string; lastName?: string; title?: string; nickName?: string }>;
+  }) => unknown) => selector({
+    language: 'en',
+    focusId: 'person-1',
+    people: {
+      'person-1': { id: 'person-1', firstName: 'Root', lastName: 'Person' },
+      'person-2': { id: 'person-2', firstName: 'Branch', lastName: 'Person' },
+    },
+  }),
 }));
 
 vi.mock('../../../../utils/showToast', () => ({
@@ -84,6 +95,41 @@ describe('ExportCloudPanel manuscript preview', () => {
     fireEvent.click(screen.getByRole('button', { name: /Preview Manuscript/i }));
 
     await waitFor(() => expect(onRunPublishingPreview).toHaveBeenCalled());
+    expect(onRunPublishingPreview).toHaveBeenCalledWith(expect.objectContaining({
+      manuscriptOptions: expect.objectContaining({
+        rootPersonId: 'person-1',
+        generationsDepth: 3,
+        includeTimeline: true,
+        includeEvidence: true,
+      }),
+    }));
     expect(await screen.findByText('Estimated pages: 9')).toBeInTheDocument();
+  });
+
+  it('passes configured manuscript root and depth to preview', async () => {
+    const onRunPublishingPreview = vi.fn().mockResolvedValue({
+      title: 'Family Manuscript',
+      html: '<!doctype html><html><body>Preview</body></html>',
+      pageEstimate: 4,
+    });
+
+    render(
+      <ExportCloudPanel
+        {...baseProps}
+        onRunPublishingPreview={onRunPublishingPreview}
+      />
+    );
+
+    fireEvent.change(screen.getByLabelText(/Manuscript root/i), { target: { value: 'person-2' } });
+    fireEvent.change(screen.getByLabelText(/Branch depth/i), { target: { value: 'all' } });
+    fireEvent.click(screen.getByRole('button', { name: /Preview Manuscript/i }));
+
+    await waitFor(() => expect(onRunPublishingPreview).toHaveBeenCalled());
+    expect(onRunPublishingPreview).toHaveBeenCalledWith(expect.objectContaining({
+      manuscriptOptions: expect.objectContaining({
+        rootPersonId: 'person-2',
+        generationsDepth: 'all',
+      }),
+    }));
   });
 });

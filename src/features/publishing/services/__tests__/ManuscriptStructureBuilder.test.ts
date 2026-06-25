@@ -111,6 +111,61 @@ describe('ManuscriptStructureBuilder', () => {
     });
   });
 
+  it('limits branch manuscript people by configured generation depth', () => {
+    const people: Record<string, Person> = {
+      root: createMockPerson('root', 'male', {
+        firstName: 'Root',
+        lastName: 'Family',
+      }),
+      child: createMockPerson('child', 'female', {
+        firstName: 'Child',
+        lastName: 'Family',
+      }),
+      grandchild: createMockPerson('grandchild', 'male', {
+        firstName: 'Grandchild',
+        lastName: 'Family',
+      }),
+    };
+    const relationshipEdges: Record<string, RelationshipEdge> = {
+      child: {
+        id: 'edge-child',
+        treeId: 'tree-1',
+        fromPersonId: 'root',
+        toPersonId: 'child',
+        type: 'BIOLOGICAL_PARENT',
+        status: 'ACTIVE',
+        createdAt: '2026-01-01T00:00:00.000Z',
+      },
+      grandchild: {
+        id: 'edge-grandchild',
+        treeId: 'tree-1',
+        fromPersonId: 'child',
+        toPersonId: 'grandchild',
+        type: 'BIOLOGICAL_PARENT',
+        status: 'ACTIVE',
+        createdAt: '2026-01-01T00:00:00.000Z',
+      },
+    };
+
+    const limited = ManuscriptStructureBuilder.buildModel({
+      rootPersonId: 'root',
+      people,
+      relationshipEdges,
+      generationsDepth: 2,
+    });
+    const full = ManuscriptStructureBuilder.buildModel({
+      rootPersonId: 'root',
+      people,
+      relationshipEdges,
+      generationsDepth: 'all',
+    });
+
+    const limitedIds = limited.chapters.find((chapter) => chapter.type === 'people')?.people?.map((entry) => entry.personId).sort();
+    const fullIds = full.chapters.find((chapter) => chapter.type === 'people')?.people?.map((entry) => entry.personId).sort();
+    expect(limitedIds).toEqual(['child', 'root']);
+    expect(fullIds).toEqual(['child', 'grandchild', 'root']);
+  });
+
   it('splits person entries across biography sections to avoid overcrowded print pages', () => {
     const people = Array.from({ length: 5 }).reduce<Record<string, Person>>((acc, _, index) => {
       const id = `person-${index + 1}`;

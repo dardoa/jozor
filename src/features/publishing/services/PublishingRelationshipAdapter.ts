@@ -192,7 +192,8 @@ function buildBranchGraph(
   people: Record<string, Person>,
   rootPersonId: string,
   relationshipEdges?: Record<string, RelationshipEdge> | readonly RelationshipEdge[],
-  treeId?: string
+  treeId?: string,
+  generationsDepth?: number
 ): PublishingGraphResult<PublishingBranchRelationship> {
   const context = createContext(people, relationshipEdges, treeId);
   const collectedPersonIds = new Set<string>();
@@ -209,7 +210,8 @@ function buildBranchGraph(
     relationships.push(relationship);
   };
 
-  const traverseDescendants = (currentId: string) => {
+  const traverseDescendants = (currentId: string, currentDepth: number) => {
+    if (typeof generationsDepth === 'number' && currentDepth > generationsDepth) return;
     if (visitedPeople.has(currentId)) return;
     visitedPeople.add(currentId);
 
@@ -231,11 +233,11 @@ function buildBranchGraph(
       .forEach((edge) => {
         if (!people[edge.toPersonId]) return;
         addRelationship({ parentId: currentId, childId: edge.toPersonId, type: 'parent' });
-        traverseDescendants(edge.toPersonId);
+        traverseDescendants(edge.toPersonId, currentDepth + 1);
       });
   };
 
-  traverseDescendants(rootPersonId);
+  traverseDescendants(rootPersonId, 1);
 
   return {
     people: pickPeople(people, collectedPersonIds),

@@ -114,13 +114,31 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
   const [includeTimeline, setIncludeTimeline] = useState(true);
   const [includeEvidence, setIncludeEvidence] = useState(true);
   const language = useAppStore((state) => state.language);
+  const people = useAppStore((state) => state.people);
+  const focusId = useAppStore((state) => state.focusId);
+  const [selectedRootPersonId, setSelectedRootPersonId] = useState(() => focusId || Object.keys(people)[0] || '');
+  const [generationsDepth, setGenerationsDepth] = useState<number | 'all'>(3);
+
+  const personOptions = useMemo(
+    () => Object.values(people)
+      .map((person) => ({
+        id: person.id,
+        name: [person.title, person.firstName, person.middleName, person.lastName].filter(Boolean).join(' ').trim() || person.nickName || person.id,
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name)),
+    [people]
+  );
+
+  const effectiveRootPersonId = selectedRootPersonId || focusId || personOptions[0]?.id || '';
 
   const manuscriptOptions = useMemo(
     () => ({
+      rootPersonId: effectiveRootPersonId,
+      generationsDepth,
       includeTimeline,
       includeEvidence,
     }),
-    [includeEvidence, includeTimeline]
+    [effectiveRootPersonId, generationsDepth, includeEvidence, includeTimeline]
   );
 
   const handleExport = useCallback(
@@ -369,6 +387,31 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
               </div>
             </div>
             <div className="grid gap-2 rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] p-3 sm:grid-cols-2">
+              <label className="flex flex-col gap-1 rounded-lg bg-[var(--surface-subtle)] px-3 py-2 text-xs font-semibold text-[var(--text-secondary)]">
+                <span>{language === 'ar' ? 'جذر المخطوط' : 'Manuscript root'}</span>
+                <select
+                  value={effectiveRootPersonId}
+                  onChange={(event) => setSelectedRootPersonId(event.target.value)}
+                  className="min-h-9 rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] px-2 text-xs text-[var(--text-main)] outline-none focus:border-[var(--primary-600)]"
+                >
+                  {personOptions.map((person) => (
+                    <option key={person.id} value={person.id}>{person.name}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="flex flex-col gap-1 rounded-lg bg-[var(--surface-subtle)] px-3 py-2 text-xs font-semibold text-[var(--text-secondary)]">
+                <span>{language === 'ar' ? 'عمق الفرع' : 'Branch depth'}</span>
+                <select
+                  value={String(generationsDepth)}
+                  onChange={(event) => setGenerationsDepth(event.target.value === 'all' ? 'all' : Number(event.target.value))}
+                  className="min-h-9 rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] px-2 text-xs text-[var(--text-main)] outline-none focus:border-[var(--primary-600)]"
+                >
+                  <option value="2">{language === 'ar' ? 'جيلان' : '2 generations'}</option>
+                  <option value="3">{language === 'ar' ? '3 أجيال' : '3 generations'}</option>
+                  <option value="4">{language === 'ar' ? '4 أجيال' : '4 generations'}</option>
+                  <option value="all">{language === 'ar' ? 'كل الفرع' : 'Full branch'}</option>
+                </select>
+              </label>
               <label className="flex min-h-10 cursor-pointer items-center justify-between gap-3 rounded-lg bg-[var(--surface-subtle)] px-3 py-2 text-xs font-semibold text-[var(--text-secondary)]">
                 <span>{language === 'ar' ? 'تضمين الخط الزمني' : 'Include timeline'}</span>
                 <input
