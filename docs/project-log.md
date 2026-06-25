@@ -749,3 +749,11 @@ Deferred geography improvements:
 - Add person and branch filters later; branch filtering is intentionally deferred to avoid complicating the first route-map package.
 - Consider route clustering or edge bundling if large trees produce too many overlapping paths.
 - Consider route hover popups only if the side-panel details are not enough in real use.
+
+# 2026-06-25 - Publishing renderer taxonomy direction
+
+- Accepted ADR-006 to classify publishing renderers by output purpose rather than language or implementation detail.
+- Family manuscripts and long-form book-like outputs should use the HTML/CSS document renderer, regardless of Arabic or English language.
+- Posters, charts, certificates, and compact graphic exports remain under the vector/canvas/jsPDF-oriented renderer family.
+- Current technical identifiers such as `html-print` and `vector-pdf` remain transitional until a contained naming cleanup is worthwhile.
+- Deferred Markdown as a future manuscript content/interchange layer, not a substitute for the output renderer strategy.
