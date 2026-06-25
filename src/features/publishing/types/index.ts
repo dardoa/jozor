@@ -138,6 +138,7 @@ export interface ManuscriptSourceHighlight {
 export interface ManuscriptPersonEntry {
   readonly personId: string;
   readonly displayName: string;
+  readonly photoUrl?: string;
   readonly facts: readonly ManuscriptFactEntry[];
   readonly sourceHighlights: readonly ManuscriptSourceHighlight[];
   readonly citationCount: number;

@@ -446,6 +446,7 @@ describe('useExport', () => {
         manuscriptOptions: {
           rootPersonId: 'person-1',
           generationsDepth: 2,
+          includeImages: true,
           includeTimeline: false,
           includeEvidence: false,
         },
@@ -456,6 +457,7 @@ describe('useExport', () => {
     expect(ManuscriptStructureBuilder.buildModel).toHaveBeenLastCalledWith(expect.objectContaining({
       rootPersonId: 'person-1',
       generationsDepth: 2,
+      includeImages: true,
     }));
     expect(lastRenderCall?.[0].chapters.map((chapter) => chapter.type)).toEqual(['people']);
   });

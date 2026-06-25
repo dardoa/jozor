@@ -111,6 +111,7 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [preview, setPreview] = useState<PublishingPreviewResult | null>(null);
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
+  const [includeImages, setIncludeImages] = useState(false);
   const [includeTimeline, setIncludeTimeline] = useState(true);
   const [includeEvidence, setIncludeEvidence] = useState(true);
   const language = useAppStore((state) => state.language);
@@ -135,10 +136,11 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
     () => ({
       rootPersonId: effectiveRootPersonId,
       generationsDepth,
+      includeImages,
       includeTimeline,
       includeEvidence,
     }),
-    [effectiveRootPersonId, generationsDepth, includeEvidence, includeTimeline]
+    [effectiveRootPersonId, generationsDepth, includeEvidence, includeImages, includeTimeline]
   );
 
   const handleExport = useCallback(
@@ -411,6 +413,15 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                   <option value="4">{language === 'ar' ? '4 أجيال' : '4 generations'}</option>
                   <option value="all">{language === 'ar' ? 'كل الفرع' : 'Full branch'}</option>
                 </select>
+              </label>
+              <label className="flex min-h-10 cursor-pointer items-center justify-between gap-3 rounded-lg bg-[var(--surface-subtle)] px-3 py-2 text-xs font-semibold text-[var(--text-secondary)]">
+                <span>{language === 'ar' ? 'تضمين الصور' : 'Include photos'}</span>
+                <input
+                  type="checkbox"
+                  checked={includeImages}
+                  onChange={(event) => setIncludeImages(event.target.checked)}
+                  className="h-4 w-4 accent-[var(--primary-600)]"
+                />
               </label>
               <label className="flex min-h-10 cursor-pointer items-center justify-between gap-3 rounded-lg bg-[var(--surface-subtle)] px-3 py-2 text-xs font-semibold text-[var(--text-secondary)]">
                 <span>{language === 'ar' ? 'تضمين الخط الزمني' : 'Include timeline'}</span>

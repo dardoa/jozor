@@ -20,6 +20,7 @@ export interface ManuscriptStructureOptions {
     readonly citations: Record<string, Citation>;
   };
   readonly generationsDepth?: number | 'all';
+  readonly includeImages?: boolean;
 }
 
 function getDisplayName(person: Person): string {
@@ -80,7 +81,8 @@ function buildPersonEntries(
   people: Record<string, Person>,
   sources: Record<string, Source>,
   citations: readonly Citation[],
-  rootPersonId: string
+  rootPersonId: string,
+  includeImages: boolean
 ): readonly ManuscriptPersonEntry[] {
   return Object.values(people)
     .sort((a, b) => {
@@ -104,6 +106,7 @@ function buildPersonEntries(
       return {
         personId: person.id,
         displayName: getDisplayName(person),
+        photoUrl: includeImages ? person.photoUrl : undefined,
         facts,
         sourceHighlights: buildSourceHighlightsForPerson(sources, citations, person.id),
         citationCount,
@@ -204,7 +207,7 @@ export class ManuscriptStructureBuilder {
     const manuscriptPeople = Object.keys(branchGraph.people).length > 0 ? branchGraph.people : options.people;
     const evidence = getEvidence(options.evidence);
     const citationValues = Object.values(evidence.citations);
-    const peopleEntries = buildPersonEntries(manuscriptPeople, evidence.sources, citationValues, options.rootPersonId);
+    const peopleEntries = buildPersonEntries(manuscriptPeople, evidence.sources, citationValues, options.rootPersonId, Boolean(options.includeImages));
     const timelineEntries = buildTimelineEntries(manuscriptPeople);
     const citationEntries = buildCitationEntries(evidence.sources, evidence.citations);
 

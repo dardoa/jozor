@@ -283,6 +283,7 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
             relationshipEdges: relationships,
             evidence: { sources, citations },
             generationsDepth: manuscriptOptions.generationsDepth,
+            includeImages: manuscriptOptions.includeImages,
         }), manuscriptOptions);
         const html = HtmlManuscriptRenderer.renderToHtml(manuscriptModel, {
             language: language === 'ar' ? 'ar' : 'en',

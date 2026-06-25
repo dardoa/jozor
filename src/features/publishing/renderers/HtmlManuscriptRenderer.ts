@@ -124,6 +124,7 @@ function renderPeopleChapter(title: string, people: readonly ManuscriptPersonEnt
   const cards = people.map((person) => [
     '<article class="person-card">',
     '<header class="person-card__header">',
+    person.photoUrl ? `<img class="person-card__photo" src="${escapeHtml(person.photoUrl)}" alt="">` : '',
     `<h2>${escapeHtml(person.displayName)}</h2>`,
     `<span>${person.citationCoverage}% توثيق</span>`,
     '</header>',
@@ -287,10 +288,20 @@ h2 {
 }
 .person-card__header {
   display: flex;
+  align-items: center;
   justify-content: space-between;
   gap: ${theme.layout.gridGap};
   border-bottom: 1px solid ${theme.colors.border};
   padding-bottom: 8px;
+}
+.person-card__photo {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  border: 1px solid ${theme.colors.border};
+  object-fit: cover;
+  background: ${theme.colors.paperBackground};
 }
 .person-card__header span,
 small {

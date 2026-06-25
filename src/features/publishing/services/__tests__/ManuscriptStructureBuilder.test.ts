@@ -18,6 +18,7 @@ describe('ManuscriptStructureBuilder', () => {
         lastName: 'Family',
         birthDate: '1950-01-01',
         birthPlace: 'Kafranbel',
+        photoUrl: 'https://example.com/root.jpg',
         children: [],
       }),
       child: createMockPerson('child', 'female', {
@@ -86,6 +87,31 @@ describe('ManuscriptStructureBuilder', () => {
       sourceTitle: 'Birth registry',
       targetId: 'root',
     });
+    expect(peopleChapter?.people?.find((entry) => entry.personId === 'root')?.photoUrl).toBeUndefined();
+  });
+
+  it('includes person photos only when manuscript image output is enabled', () => {
+    const people: Record<string, Person> = {
+      root: createMockPerson('root', 'male', {
+        firstName: 'Root',
+        lastName: 'Family',
+        photoUrl: 'https://example.com/root.jpg',
+      }),
+    };
+
+    const withoutImages = ManuscriptStructureBuilder.buildModel({
+      rootPersonId: 'root',
+      people,
+      includeImages: false,
+    });
+    const withImages = ManuscriptStructureBuilder.buildModel({
+      rootPersonId: 'root',
+      people,
+      includeImages: true,
+    });
+
+    expect(withoutImages.chapters.find((chapter) => chapter.type === 'people')?.people?.[0]?.photoUrl).toBeUndefined();
+    expect(withImages.chapters.find((chapter) => chapter.type === 'people')?.people?.[0]?.photoUrl).toBe('https://example.com/root.jpg');
   });
 
   it('creates a biography section consumable by the existing book layout', () => {

@@ -111,6 +111,7 @@ export interface PublishingExportOptions {
     manuscriptOptions?: {
         rootPersonId?: string;
         generationsDepth?: number | 'all';
+        includeImages?: boolean;
         includeTimeline?: boolean;
         includeEvidence?: boolean;
     };

@@ -15,6 +15,7 @@ const model: FamilyManuscriptModel = {
         {
           personId: 'p1',
           displayName: 'رمضان القربي',
+          photoUrl: 'https://example.com/ramadan.jpg',
           citationCoverage: 50,
           citationCount: 2,
           facts: [
@@ -54,6 +55,7 @@ describe('HtmlManuscriptRenderer', () => {
     expect(html).toContain('dir="rtl"');
     expect(html).toContain('/fonts/Amiri-Regular.ttf');
     expect(html).toContain('رمضان القربي');
+    expect(html).toContain('https://example.com/ramadan.jpg');
     expect(html).toContain('كفرنبل، سوريا');
     expect(html).toContain('سجل النفوس');
     expect(html).toContain('page-break-inside: avoid');
