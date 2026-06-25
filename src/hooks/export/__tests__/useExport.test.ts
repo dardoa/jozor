@@ -43,6 +43,7 @@ vi.mock('../../../features/publishing', () => ({
       id: 'classic-book-manuscript',
       name: 'كتاب العائلة الكلاسيكي المصغر',
       publicationKind: 'book-manuscript',
+      outputFamily: 'document',
       documentType: 'paginated',
       theme: {
         colors: { background: '#fff', text: '#111', subtext: '#666' },

@@ -39,6 +39,7 @@ describe('Template Composition Engine (Sprint 6)', () => {
     const template = TemplateRegistry.getTemplate('classic-book-manuscript');
     expect(template.id).toBe('classic-book-manuscript');
     expect(template.publicationKind).toBe('book-manuscript');
+    expect(template.outputFamily).toBe('document');
     expect(template.documentType).toBe('paginated');
     expect(template.sections).toHaveLength(4);
     expect(template.sections[0].type).toBe('cover');
@@ -49,6 +50,7 @@ describe('Template Composition Engine (Sprint 6)', () => {
 
   it('composes a single-page poster document dynamically from template sections', () => {
     const template = TemplateRegistry.getTemplate('classic-ancestor-poster');
+    expect(template.outputFamily).toBe('graphic');
     
     const request: PublicationRequest = {
       rootPersonId: 'p-root',

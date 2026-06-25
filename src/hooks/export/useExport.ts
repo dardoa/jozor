@@ -244,8 +244,8 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
             ManuscriptStructureBuilder,
         } = await import('../../features/publishing');
         const template = TemplateRegistry.getTemplate(templateId);
-        if (template.publicationKind !== 'book-manuscript') {
-            throw new Error('HTML manuscript preview is only available for family manuscript templates.');
+        if (template.outputFamily !== 'document') {
+            throw new Error('HTML manuscript preview is only available for document templates.');
         }
 
         const rootPersonId = focusId || Object.keys(activePeople)[0];
@@ -346,8 +346,8 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
                     if (format !== 'pdf') {
                         throw new Error('HTML manuscript renderer only supports PDF print output.');
                     }
-                    if (template.publicationKind !== 'book-manuscript') {
-                        throw new Error('Enhanced Arabic PDF is only available for family manuscript templates.');
+                    if (template.outputFamily !== 'document') {
+                        throw new Error('Enhanced manuscript PDF is only available for document templates.');
                     }
 
                     const preview = await buildHtmlManuscriptPreview(templateId, options.manuscriptOptions);

@@ -5,6 +5,7 @@ export const CLASSIC_ANCESTOR_POSTER_TEMPLATE: PublicationTemplate = {
   id: 'classic-ancestor-poster',
   name: 'شجرة الأسلاف الكلاسيكية الدافئة',
   publicationKind: 'ancestor-poster',
+  outputFamily: 'graphic',
   documentType: 'single-page',
   theme: CLASSIC_THEME,
   sections: [
@@ -27,6 +28,7 @@ export const MODERN_ANCESTOR_POSTER_TEMPLATE: PublicationTemplate = {
   id: 'modern-ancestor-poster',
   name: 'شجرة الأسلاف العصرية الداكنة',
   publicationKind: 'ancestor-poster',
+  outputFamily: 'graphic',
   documentType: 'single-page',
   theme: MODERN_THEME,
   sections: [
@@ -49,6 +51,7 @@ export const CLASSIC_BOOK_MANUSCRIPT_TEMPLATE: PublicationTemplate = {
   id: 'classic-book-manuscript',
   name: 'كتاب العائلة الكلاسيكي المصغر',
   publicationKind: 'book-manuscript',
+  outputFamily: 'document',
   documentType: 'paginated',
   theme: CLASSIC_THEME,
   sections: [

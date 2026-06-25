@@ -1,5 +1,7 @@
 ﻿export type DocumentType = 'single-page' | 'paginated';
 
+export type PublicationOutputFamily = 'document' | 'graphic';
+
 export type SectionType = 'cover' | 'introduction' | 'tree' | 'biography' | 'timeline' | 'gallery' | 'bibliography';
 
 export type BlockType = 'header' | 'paragraph' | 'tree' | 'map' | 'timeline' | 'gallery' | 'statistics';
@@ -67,6 +69,7 @@ export interface PublicationTemplate {
   readonly id: string;
   readonly name: string;
   readonly publicationKind: 'ancestor-poster' | 'branch-poster' | 'timeline' | 'book-manuscript' | 'all';
+  readonly outputFamily: PublicationOutputFamily;
   readonly documentType: DocumentType;
   readonly theme: PublicationTheme;
   readonly sections: readonly PublicationSectionDefinition[];
