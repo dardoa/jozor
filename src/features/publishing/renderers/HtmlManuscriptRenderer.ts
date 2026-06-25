@@ -10,9 +10,64 @@ export interface HtmlManuscriptRenderOptions {
   readonly language?: 'ar' | 'en';
   readonly title?: string;
   readonly fontUrl?: string;
+  readonly theme?: HtmlManuscriptTheme;
+}
+
+export interface HtmlManuscriptTheme {
+  readonly colors: {
+    readonly pageBackground: string;
+    readonly paperBackground: string;
+    readonly cardBackground: string;
+    readonly text: string;
+    readonly mutedText: string;
+    readonly accent: string;
+    readonly border: string;
+  };
+  readonly typography: {
+    readonly fontFamily: string;
+    readonly titleSize: string;
+    readonly headingSize: string;
+    readonly bodySize: string;
+    readonly lineHeight: string;
+    readonly kickerLetterSpacing: string;
+  };
+  readonly layout: {
+    readonly pageMargin: string;
+    readonly pagePadding: string;
+    readonly cardPadding: string;
+    readonly cardRadius: string;
+    readonly gridGap: string;
+  };
 }
 
 const DEFAULT_TITLE = 'Jozor Family Manuscript';
+
+export const DEFAULT_HTML_MANUSCRIPT_THEME: HtmlManuscriptTheme = {
+  colors: {
+    pageBackground: '#f7f3ea',
+    paperBackground: '#fffaf0',
+    cardBackground: '#fffdf7',
+    text: '#1f2937',
+    mutedText: '#667085',
+    accent: '#9a6b1f',
+    border: '#eadcc6',
+  },
+  typography: {
+    fontFamily: '"JozorArabic", "Noto Naskh Arabic", "Segoe UI", serif',
+    titleSize: '30px',
+    headingSize: '18px',
+    bodySize: '13px',
+    lineHeight: '1.35',
+    kickerLetterSpacing: '0.08em',
+  },
+  layout: {
+    pageMargin: '16mm',
+    pagePadding: '28mm 20mm',
+    cardPadding: '14px',
+    cardRadius: '10px',
+    gridGap: '12px',
+  },
+};
 
 export class HtmlManuscriptRenderer {
   public static renderToHtml(
@@ -22,6 +77,7 @@ export class HtmlManuscriptRenderer {
     const language = options.language ?? 'ar';
     const direction = language === 'ar' ? 'rtl' : 'ltr';
     const title = options.title ?? model.title ?? DEFAULT_TITLE;
+    const theme = options.theme ?? DEFAULT_HTML_MANUSCRIPT_THEME;
 
     return [
       '<!doctype html>',
@@ -30,7 +86,7 @@ export class HtmlManuscriptRenderer {
       '<meta charset="utf-8">',
       '<meta name="viewport" content="width=device-width, initial-scale=1">',
       `<title>${escapeHtml(title)}</title>`,
-      `<style>${buildPrintCss(direction, options.fontUrl ?? '/fonts/Amiri-Regular.ttf')}</style>`,
+      `<style>${buildPrintCss(direction, options.fontUrl ?? '/fonts/Amiri-Regular.ttf', theme)}</style>`,
       '</head>',
       '<body>',
       renderCover(model, title),
@@ -158,7 +214,7 @@ function renderEvidenceChapter(title: string, citations: readonly ManuscriptCita
   ].join('\n');
 }
 
-function buildPrintCss(direction: 'rtl' | 'ltr', fontUrl: string): string {
+function buildPrintCss(direction: 'rtl' | 'ltr', fontUrl: string, theme: HtmlManuscriptTheme): string {
   return `
 @font-face {
   font-family: "JozorArabic";
@@ -168,26 +224,26 @@ function buildPrintCss(direction: 'rtl' | 'ltr', fontUrl: string): string {
 }
 @page {
   size: A4;
-  margin: 16mm;
+  margin: ${theme.layout.pageMargin};
 }
 * {
   box-sizing: border-box;
 }
 html {
   direction: ${direction};
-  font-family: "JozorArabic", "Noto Naskh Arabic", "Segoe UI", serif;
-  color: #1f2937;
-  background: #f7f3ea;
+  font-family: ${theme.typography.fontFamily};
+  color: ${theme.colors.text};
+  background: ${theme.colors.pageBackground};
 }
 body {
   margin: 0;
-  background: #f7f3ea;
+  background: ${theme.colors.pageBackground};
 }
 .page {
   min-height: 100vh;
-  padding: 28mm 20mm;
+  padding: ${theme.layout.pagePadding};
   page-break-after: always;
-  background: #fffaf0;
+  background: ${theme.colors.paperBackground};
 }
 .cover-page {
   display: grid;
@@ -195,50 +251,50 @@ body {
   text-align: center;
 }
 .cover-kicker {
-  color: #9a6b1f;
-  letter-spacing: 0.08em;
+  color: ${theme.colors.accent};
+  letter-spacing: ${theme.typography.kickerLetterSpacing};
   text-transform: uppercase;
 }
 h1 {
   margin: 0 0 12px;
-  font-size: 30px;
-  line-height: 1.35;
+  font-size: ${theme.typography.titleSize};
+  line-height: ${theme.typography.lineHeight};
 }
 h2 {
   margin: 0;
-  font-size: 18px;
-  line-height: 1.35;
+  font-size: ${theme.typography.headingSize};
+  line-height: ${theme.typography.lineHeight};
 }
 .chapter-lead,
 .cover-subtitle,
 .sources-empty {
-  color: #667085;
-  font-size: 13px;
+  color: ${theme.colors.mutedText};
+  font-size: ${theme.typography.bodySize};
 }
 .person-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: ${theme.layout.gridGap};
 }
 .person-card {
   break-inside: avoid;
   page-break-inside: avoid;
   min-height: 150px;
-  border: 1px solid #eadcc6;
-  border-radius: 10px;
-  padding: 14px;
-  background: #fffdf7;
+  border: 1px solid ${theme.colors.border};
+  border-radius: ${theme.layout.cardRadius};
+  padding: ${theme.layout.cardPadding};
+  background: ${theme.colors.cardBackground};
 }
 .person-card__header {
   display: flex;
   justify-content: space-between;
-  gap: 12px;
-  border-bottom: 1px solid #eadcc6;
+  gap: ${theme.layout.gridGap};
+  border-bottom: 1px solid ${theme.colors.border};
   padding-bottom: 8px;
 }
 .person-card__header span,
 small {
-  color: #9a6b1f;
+  color: ${theme.colors.accent};
 }
 .fact-list {
   margin: 10px 0 0;
@@ -250,7 +306,7 @@ small {
   margin: 5px 0;
 }
 dt {
-  color: #667085;
+  color: ${theme.colors.mutedText};
 }
 dd {
   margin: 0;
@@ -267,17 +323,17 @@ dd {
   margin: 8px 0;
 }
 .timeline-list time {
-  color: #9a6b1f;
+  color: ${theme.colors.accent};
   margin-inline-end: 8px;
 }
 .bibliography-table {
   width: 100%;
   border-collapse: collapse;
-  background: #fffdf7;
+  background: ${theme.colors.cardBackground};
 }
 .bibliography-table th,
 .bibliography-table td {
-  border-bottom: 1px solid #eadcc6;
+  border-bottom: 1px solid ${theme.colors.border};
   padding: 8px;
   text-align: start;
   vertical-align: top;

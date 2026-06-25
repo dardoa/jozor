@@ -799,3 +799,10 @@ Deferred geography improvements:
 - Kept HTML/CSS as the preferred print and preview renderer for long-form family manuscripts.
 - Documented that Markdown must respect the same privacy, relationship-edge, source, and citation boundaries as the rest of publishing.
 - Clarified that Markdown is not a Markdown-to-PDF replacement path, not a layout engine, and not a separate renderer family.
+
+# 2026-06-26 - Renderer independence ADR
+
+- Accepted ADR-008 to document that presentation is not publishing business logic.
+- Kept `FamilyManuscriptModel` as the content source of truth and renderers as output projections.
+- Added a small `HtmlManuscriptTheme` token object so current manuscript styling can change later without scattering design literals through renderer logic.
+- Corrected mojibake Arabic strings in the HTML manuscript renderer test fixture and static labels.

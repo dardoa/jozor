@@ -111,7 +111,7 @@ function normalizeInline(value: string): string {
   return value
     .replace(/\r?\n/g, ' ')
     .replace(/\s+/g, ' ')
-    .replace(/([\\`*_{}\[\]()#+\-.!|>])/g, '\\$1')
+    .replace(/([\\`*_{}[\]()#+\-.!|>])/g, '\\$1')
     .trim();
 }
 

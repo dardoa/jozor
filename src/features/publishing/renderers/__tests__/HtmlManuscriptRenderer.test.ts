@@ -58,4 +58,40 @@ describe('HtmlManuscriptRenderer', () => {
     expect(html).toContain('سجل النفوس');
     expect(html).toContain('page-break-inside: avoid');
   });
+
+  it('accepts a manuscript theme without changing manuscript content', () => {
+    const html = HtmlManuscriptRenderer.renderToHtml(model, {
+      language: 'ar',
+      theme: {
+        colors: {
+          pageBackground: '#ffffff',
+          paperBackground: '#fefefe',
+          cardBackground: '#ffffff',
+          text: '#111111',
+          mutedText: '#555555',
+          accent: '#123456',
+          border: '#dddddd',
+        },
+        typography: {
+          fontFamily: '"JozorArabic", serif',
+          titleSize: '28px',
+          headingSize: '17px',
+          bodySize: '12px',
+          lineHeight: '1.4',
+          kickerLetterSpacing: '0.04em',
+        },
+        layout: {
+          pageMargin: '18mm',
+          pagePadding: '24mm 18mm',
+          cardPadding: '12px',
+          cardRadius: '8px',
+          gridGap: '10px',
+        },
+      },
+    });
+
+    expect(html).toContain('رمضان القربي');
+    expect(html).toContain('color: #123456');
+    expect(html).toContain('padding: 24mm 18mm');
+  });
 });
