@@ -117,6 +117,7 @@ export interface PublishingExportOptions {
 export interface PublishingPreviewResult {
     title: string;
     html: string;
+    pageEstimate?: number;
 }
 
 export interface ExportActionsProps {

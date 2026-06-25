@@ -395,6 +395,7 @@ describe('useExport', () => {
 
     expect(preview!.title).toBe('Family Manuscript');
     expect(preview!.html).toContain('Arabic manuscript');
+    expect(preview!.pageEstimate).toBeGreaterThan(0);
     expect(ManuscriptStructureBuilder.buildModel).toHaveBeenCalledWith(expect.objectContaining({
       people: expect.objectContaining({
         'person-1': expect.objectContaining({ firstName: 'Private' }),

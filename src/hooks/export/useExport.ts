@@ -277,7 +277,7 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
                 throw new Error('Preview is only available for the enhanced HTML manuscript renderer.');
             }
             const preview = await buildHtmlManuscriptPreview(options.templateId, options.manuscriptOptions);
-            return { title: preview.title, html: preview.html };
+            return { title: preview.title, html: preview.html, pageEstimate: preview.pageEstimate };
         },
         [buildHtmlManuscriptPreview]
     );

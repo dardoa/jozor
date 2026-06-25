@@ -212,6 +212,13 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                   {language === 'ar' ? 'معاينة المخطوط' : 'Manuscript Preview'}
                 </h4>
                 <p className="truncate text-xs text-[var(--text-muted)]">{preview.title}</p>
+                {typeof preview.pageEstimate === 'number' && (
+                  <p className="mt-1 text-[11px] font-semibold text-[var(--text-dim)]">
+                    {language === 'ar'
+                      ? `تقدير الصفحات: ${preview.pageEstimate}`
+                      : `Estimated pages: ${preview.pageEstimate}`}
+                  </p>
+                )}
               </div>
               <div className="flex items-center gap-2">
                 <button
@@ -354,8 +361,8 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                 </div>
                 <p className="mt-1 text-[11px] leading-relaxed text-[var(--text-muted)]">
                   {language === 'ar' 
-                    ? 'كتاب عائلي أنيق من 4 صفحات: غلاف ملكي، مقدمة توثيقية، شجرة الأسلاف (3 أجيال)، والخط الزمني للأحداث.'
-                    : 'An elegant 4-page family book: royal cover, documentation intro, ancestor tree (3 generations), and events timeline.'}
+                    ? 'مخطوط عائلي قابل للمعاينة قبل الطباعة، مع فصول الأشخاص والخط الزمني والمراجع حسب اختيارك.'
+                    : 'A previewable family manuscript with people chapters, timeline, and bibliography based on your options.'}
                 </p>
               </div>
             </div>
