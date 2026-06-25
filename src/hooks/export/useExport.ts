@@ -1,11 +1,12 @@
 import { useCallback, RefObject } from 'react';
-import { Person, ExportType } from '../../types';
+import { Person, ExportType, PublishingExportOptions } from '../../types';
 import { generateICS } from '../../utils/calendarLogic';
 import { downloadFile } from '../../utils/fileUtils';
 import { showToast } from '../../utils/showToast';
 import { useAppStore } from '../../store/useAppStore';
 import { logError, logInfo, logWarn } from '../../utils/errorLogger';
 import { PublishingTracker } from '../../features/publishing';
+import type { FamilyManuscriptModel } from '../../features/publishing';
 import { maskPeopleMap } from '../../utils/privacyUtils';
 import { imageCacheService } from '../../services/imageCacheService';
 
@@ -225,8 +226,8 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
     );
 
     const handlePublishingExport = useCallback(
-        async (options: { templateId: string; format: 'png' | 'pdf' }) => {
-            const { templateId, format } = options;
+        async (options: PublishingExportOptions) => {
+            const { templateId, format, renderer = 'vector-pdf' } = options;
             const {
                 setExportStatus,
                 focusId,
@@ -261,7 +262,9 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
                     PublishingPipeline, 
                     TemplateRegistry, 
                     PosterRenderer, 
-                    PdfRenderer 
+                    PdfRenderer,
+                    HtmlManuscriptRenderer,
+                    ManuscriptStructureBuilder,
                 } = await import('../../features/publishing');
 
                 const template = TemplateRegistry.getTemplate(templateId);
@@ -284,7 +287,29 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
                 // Update total pages in manifest
                 (trackerState.manifest as { totalPages: number }).totalPages = placedDoc.totalPages || 1;
 
-                if (format === 'png') {
+                if (renderer === 'html-print') {
+                    if (format !== 'pdf') {
+                        throw new Error('HTML manuscript renderer only supports PDF print output.');
+                    }
+                    if (template.publicationKind !== 'book-manuscript') {
+                        throw new Error('Enhanced Arabic PDF is only available for family manuscript templates.');
+                    }
+
+                    const manuscriptModel = ManuscriptStructureBuilder.buildModel({
+                        rootPersonId,
+                        people: activePeople,
+                        relationshipEdges: relationships,
+                        evidence: { sources, citations },
+                    });
+                    outputName = `${manuscriptModel.title}.pdf`;
+                    const html = HtmlManuscriptRenderer.renderToHtml(manuscriptModel, {
+                        language: useAppStore.getState().language === 'ar' ? 'ar' : 'en',
+                        title: manuscriptModel.title,
+                    });
+
+                    await openHtmlPrintWindow(html, manuscriptModel.title);
+                    (trackerState.manifest as { totalPages: number }).totalPages = estimateHtmlManuscriptPages(manuscriptModel);
+                } else if (format === 'png') {
                     outputName = `${doc.title}.png`;
                     const browserCanvasFactory = {
                         createCanvas(w: number, h: number) {
@@ -409,4 +434,46 @@ async function applyWatermark(dataUrl: string, text: string, format: string): Pr
         img.onerror = () => resolve(dataUrl);
         img.src = dataUrl;
     });
+}
+
+function estimateHtmlManuscriptPages(model: FamilyManuscriptModel): number {
+    return model.chapters.reduce((total, chapter) => {
+        if (chapter.type === 'people') {
+            return total + Math.max(1, Math.ceil((chapter.people?.length ?? 0) / 4));
+        }
+        if (chapter.type === 'timeline') {
+            return total + Math.max(1, Math.ceil((chapter.timeline?.length ?? 0) / 45));
+        }
+        if (chapter.type === 'evidence') {
+            return total + Math.max(1, Math.ceil((chapter.citations?.length ?? 0) / 35));
+        }
+        return total + 1;
+    }, 1);
+}
+
+async function openHtmlPrintWindow(html: string, title: string): Promise<void> {
+    const printWindow = window.open('', '_blank', 'width=1100,height=900');
+    if (!printWindow) {
+        throw new Error('The browser blocked the print window. Please allow popups and try again.');
+    }
+
+    printWindow.document.open();
+    printWindow.document.write(html);
+    printWindow.document.close();
+    printWindow.document.title = title;
+
+    await waitForPrintWindowReady(printWindow);
+    printWindow.focus();
+    printWindow.print();
+}
+
+async function waitForPrintWindowReady(printWindow: Window): Promise<void> {
+    await new Promise<void>((resolve) => printWindow.setTimeout(resolve, 150));
+    const fonts = printWindow.document.fonts;
+    if (!fonts?.ready) return;
+
+    await Promise.race([
+        fonts.ready.then(() => undefined),
+        new Promise<void>((resolve) => printWindow.setTimeout(resolve, 1800)),
+    ]);
 }

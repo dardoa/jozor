@@ -102,9 +102,17 @@ export interface HeaderGlobalActionsProps {
     onOpenActivityLog: () => void;
 }
 
+export type PublishingExportRenderer = 'vector-pdf' | 'html-print';
+
+export interface PublishingExportOptions {
+    templateId: string;
+    format: 'png' | 'pdf';
+    renderer?: PublishingExportRenderer;
+}
+
 export interface ExportActionsProps {
     handleExport: (type: ExportType) => Promise<void>;
-    handlePublishingExport?: (options: { templateId: string; format: 'png' | 'pdf' }) => Promise<void>;
+    handlePublishingExport?: (options: PublishingExportOptions) => Promise<void>;
 }
 
 export interface SearchProps {

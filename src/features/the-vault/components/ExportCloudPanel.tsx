@@ -16,7 +16,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 
-import type { DriveFile, ExportType } from '../../../types';
+import type { DriveFile, ExportType, PublishingExportOptions } from '../../../types';
 import type { TranslationSchema } from '../../../utils/translationLoader';
 import { showToast } from '../../../utils/showToast';
 import { useAppStore } from '../../../store/useAppStore';
@@ -34,7 +34,7 @@ interface ExportCloudPanelProps {
   onOverwriteDriveFile: (fileId: string) => Promise<void> | void;
   onDeleteDriveFile: (fileId: string) => Promise<void> | void;
   onRunExport: (type: ExportType) => Promise<void>;
-  onRunPublishingExport?: (options: { templateId: string; format: 'png' | 'pdf' }) => Promise<void>;
+  onRunPublishingExport?: (options: PublishingExportOptions) => Promise<void>;
   hasSessionError: boolean;
   isAuthorized: boolean;
   onGoogleLogin: () => void;
@@ -117,9 +117,11 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
   );
 
   const handlePublishingExport = useCallback(
-    async (options: { templateId: string; format: 'png' | 'pdf' }) => {
-      onCloseVault();
-      await waitForDrawerDismissal();
+    async (options: PublishingExportOptions) => {
+      if (options.renderer !== 'html-print') {
+        onCloseVault();
+        await waitForDrawerDismissal();
+      }
       await onRunPublishingExport?.(options);
     },
     [onCloseVault, onRunPublishingExport]
@@ -280,8 +282,24 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                 </p>
               </div>
             </div>
-            <div className="flex justify-end border-t border-[var(--border-soft)] pt-3">
-              <button
+            <div className="flex flex-col justify-end gap-2 border-t border-[var(--border-soft)] pt-3 sm:flex-row">
+              <button
+
+                type="button"
+
+                onClick={() => void handlePublishingExport({ templateId: 'classic-book-manuscript', format: 'pdf', renderer: 'html-print' })}
+
+                className="flex items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 py-2 text-xs font-bold text-white shadow-sm shadow-emerald-700/10 transition-all hover:brightness-105 active:scale-[0.98]"
+
+              >
+
+                <Printer className="h-3.5 w-3.5" />
+
+                {language === 'ar' ? 'PDF عربي محسّن' : 'Enhanced Arabic PDF'}
+
+              </button>
+
+              <button
                 type="button"
                 onClick={() => void handlePublishingExport({ templateId: 'classic-book-manuscript', format: 'pdf' })}
                 className="flex items-center gap-2 rounded-xl bg-[var(--primary-600)] hover:bg-[var(--primary-700)] text-white px-4 py-2 text-xs font-bold transition-all hover:brightness-105 active:scale-[0.98] shadow-sm shadow-[var(--primary-600)]/10"

@@ -6,7 +6,13 @@ import type { Person } from '../../../types';
 import { generateICS } from '../../../utils/calendarLogic';
 import { exportToGEDCOM } from '../../../utils/gedcomLogic';
 import { buildBlueprintArchive } from '../../../services/archiveService';
-import { PdfRenderer, PublishingPipeline, PublishingTracker } from '../../../features/publishing';
+import {
+  HtmlManuscriptRenderer,
+  ManuscriptStructureBuilder,
+  PdfRenderer,
+  PublishingPipeline,
+  PublishingTracker,
+} from '../../../features/publishing';
 
 vi.mock('../../../utils/fileUtils', () => ({
   downloadFile: vi.fn(),
@@ -90,6 +96,24 @@ vi.mock('../../../features/publishing', () => ({
     renderToPdf: vi.fn(() => ({
       save: vi.fn(),
     })),
+  },
+  ManuscriptStructureBuilder: {
+    buildModel: vi.fn(() => ({
+      id: 'manuscript-1',
+      title: 'Family Manuscript',
+      rootPersonId: 'person-1',
+      chapters: [
+        {
+          id: 'people',
+          type: 'people',
+          title: 'People',
+          people: [],
+        },
+      ],
+    })),
+  },
+  HtmlManuscriptRenderer: {
+    renderToHtml: vi.fn(() => '<!doctype html><html><body>Arabic manuscript</body></html>'),
   },
 }));
 
@@ -295,5 +319,51 @@ describe('useExport', () => {
       treeId: 'tree-1',
     }));
     expect(PdfRenderer.renderToPdf).toHaveBeenCalled();
+  });
+
+  it('opens the enhanced HTML manuscript print pipeline with masked viewer data', async () => {
+    mockStore.currentUserRole = 'viewer';
+    const printDocument = document.implementation.createHTMLDocument('print');
+    const printWindow = {
+      document: printDocument,
+      focus: vi.fn(),
+      print: vi.fn(),
+      setTimeout: window.setTimeout.bind(window),
+    } as unknown as Window;
+    const openSpy = vi.spyOn(window, 'open').mockReturnValue(printWindow);
+    const svgRef = { current: null };
+    const { result } = renderHook(() => useExport(mockPeople, svgRef));
+
+    await act(async () => {
+      await result.current.handlePublishingExport({
+        templateId: 'classic-book-manuscript',
+        format: 'pdf',
+        renderer: 'html-print',
+      });
+    });
+
+    expect(openSpy).toHaveBeenCalled();
+    expect(ManuscriptStructureBuilder.buildModel).toHaveBeenCalledWith(expect.objectContaining({
+      rootPersonId: 'person-1',
+      people: expect.objectContaining({
+        'person-1': expect.objectContaining({ firstName: 'Private' }),
+      }),
+      relationshipEdges: mockStore.relationships,
+      evidence: { sources: mockStore.sources, citations: mockStore.citations },
+    }));
+    expect(HtmlManuscriptRenderer.renderToHtml).toHaveBeenCalledWith(
+      expect.objectContaining({ title: 'Family Manuscript' }),
+      expect.objectContaining({ language: 'en', title: 'Family Manuscript' })
+    );
+    expect(PdfRenderer.renderToPdf).not.toHaveBeenCalled();
+    expect(printWindow.print).toHaveBeenCalled();
+    expect(PublishingTracker.endTracking).toHaveBeenCalledWith(
+      expect.anything(),
+      true,
+      [],
+      [expect.objectContaining({ name: 'Family Manuscript.pdf', format: 'pdf' })]
+    );
+
+    openSpy.mockRestore();
   });
 });

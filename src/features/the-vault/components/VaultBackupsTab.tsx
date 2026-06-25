@@ -1,6 +1,6 @@
 import React from 'react';
 
-import type { DriveFile, ExportType } from '../../../types';
+import type { DriveFile, ExportType, PublishingExportOptions } from '../../../types';
 import type { TranslationSchema } from '../../../utils/translationLoader';
 import { ExportCloudPanel } from './ExportCloudPanel';
 
@@ -17,7 +17,7 @@ interface VaultBackupsTabProps {
   onOverwriteDriveFile: (fileId: string) => Promise<void> | void;
   onDeleteDriveFile: (fileId: string) => Promise<void> | void;
   onRunExport: (type: ExportType) => Promise<void>;
-  onRunPublishingExport?: (options: { templateId: string; format: 'png' | 'pdf' }) => Promise<void>;
+  onRunPublishingExport?: (options: PublishingExportOptions) => Promise<void>;
   hasSessionError: boolean;
   isAuthorized: boolean;
   onGoogleLogin: () => void;
