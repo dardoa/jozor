@@ -778,3 +778,10 @@ Deferred geography improvements:
 - Applied the reviewed idempotent local reconciliation migrations and the attached-entities avatar metadata policy migration with `supabase db push --linked --include-all --yes`.
 - Verified `supabase migration list --linked` is aligned through `20260625161646`.
 - Verified linked privacy behavior with `npx vitest run --config vitest.integration.config.ts tests/integration/privacyDatabase.integration.test.ts`.
+
+# 2026-06-25 - Markdown manuscript renderer kernel
+
+- Added a Markdown renderer for `FamilyManuscriptModel` as Sprint 19A's content/interchange layer.
+- Kept Markdown independent from the HTML/CSS print renderer and did not replace the active manuscript PDF/preview flow.
+- Rendered person chapters, timeline entries, bibliography summaries, citation coverage, and optional technical metadata.
+- Added tests for Markdown output, metadata omission, and Markdown control-character escaping.

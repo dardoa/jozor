@@ -7,6 +7,7 @@ export * from './layout/BookLayout';
 export * from './renderers/PosterRenderer';
 export * from './renderers/PdfRenderer';
 export * from './renderers/HtmlManuscriptRenderer';
+export * from './renderers/MarkdownManuscriptRenderer';
 export * from './services/TemplateRegistry';
 export * from './services/PublishingPipeline';
 export * from './services/PublishingTracker';
