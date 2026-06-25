@@ -63,12 +63,12 @@ Any future rename should be done as a contained cleanup package after the curren
 - HTML/CSS print becomes the preferred path for all family manuscripts, regardless of language.
 - jsPDF remains valid for posters, charts, certificates, and compact vector reports.
 - Preview UX should build on the document/manuscript renderer, not on the vector PDF renderer.
-- Markdown can be introduced later as a content/interchange layer under the manuscript/document family, but it is not a replacement for solving the output renderer.
+- Markdown is governed by ADR-007 as a content/interchange layer under the manuscript/document family, not as a replacement for the HTML/CSS output renderer.
 - Publishing tests should assert renderer selection by template/output kind, not by UI language.
 - Future documentation should avoid describing the HTML renderer as an "Arabic PDF workaround"; it is the long-form document renderer.
 
 ## Deferred Work
 - Add purpose-oriented metadata to publishing templates, for example `outputFamily: 'document' | 'graphic'`.
 - Rename internal renderer identifiers only after current feature work is stable.
-- Consider a Markdown manuscript layer after Preview UX and narrative generation are stable.
+- Keep expanding the Markdown manuscript layer only as a content/interchange projection of `FamilyManuscriptModel`.
 - Keep jsPDF/vector renderers focused on graphic outputs unless a specific document use case proves otherwise.

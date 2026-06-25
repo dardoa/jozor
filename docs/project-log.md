@@ -792,3 +792,10 @@ Deferred geography improvements:
 - Reused viewer masking, relationship edges, sources, and citations so Markdown follows the same privacy and evidence boundaries as publishing.
 - Added the Markdown export action to The Vault export list with English and Arabic labels.
 - Added test coverage proving viewer Markdown exports use masked people and omit technical metadata.
+
+# 2026-06-26 - Markdown manuscript layer ADR
+
+- Accepted ADR-007 to define Markdown as a content/interchange projection generated from `FamilyManuscriptModel`.
+- Kept HTML/CSS as the preferred print and preview renderer for long-form family manuscripts.
+- Documented that Markdown must respect the same privacy, relationship-edge, source, and citation boundaries as the rest of publishing.
+- Clarified that Markdown is not a Markdown-to-PDF replacement path, not a layout engine, and not a separate renderer family.
