@@ -770,3 +770,11 @@ Deferred geography improvements:
 - Detected linked Supabase migration-history drift while preparing to apply the attached-entities privacy migration.
 - Kept the database unchanged and did not run `db push` or migration repair while remote-only migration versions are unresolved.
 - Documented the safe reconciliation plan in `docs/supabase-migration-drift-2026-06-25.md`.
+
+# 2026-06-25 - Supabase migration drift reconciled
+
+- Fetched remote-only Sprint 14 privacy migrations into the repository so future clones match the linked migration history.
+- Removed duplicate-version fetch artifacts that conflicted with existing local migration filenames.
+- Applied the reviewed idempotent local reconciliation migrations and the attached-entities avatar metadata policy migration with `supabase db push --linked --include-all --yes`.
+- Verified `supabase migration list --linked` is aligned through `20260625161646`.
+- Verified linked privacy behavior with `npx vitest run --config vitest.integration.config.ts tests/integration/privacyDatabase.integration.test.ts`.
