@@ -814,3 +814,4 @@ Deferred geography improvements:
 - Added generation-depth limiting for branch manuscript models while preserving the full-branch option.
 - Added coverage for configured preview options and depth-limited manuscript generation.
 - Added an opt-in photo inclusion toggle for manuscript previews and HTML print output without making photos part of the default manuscript export.
+- Added `docs/publishing-manuscript-manual-review.md` as the manual review gate before narrative generation or final publishing design polish.
