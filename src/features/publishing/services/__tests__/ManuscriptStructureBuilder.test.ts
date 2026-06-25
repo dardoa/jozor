@@ -114,6 +114,31 @@ describe('ManuscriptStructureBuilder', () => {
     expect(withImages.chapters.find((chapter) => chapter.type === 'people')?.people?.[0]?.photoUrl).toBe('https://example.com/root.jpg');
   });
 
+  it('adds deterministic narrative drafts only when enabled', () => {
+    const people: Record<string, Person> = {
+      root: createMockPerson('root', 'male', {
+        firstName: 'Root',
+        lastName: 'Family',
+        birthDate: '1950-01-01',
+        birthPlace: 'Kafranbel',
+      }),
+    };
+
+    const withoutNarrative = ManuscriptStructureBuilder.buildModel({
+      rootPersonId: 'root',
+      people,
+      includeNarrative: false,
+    });
+    const withNarrative = ManuscriptStructureBuilder.buildModel({
+      rootPersonId: 'root',
+      people,
+      includeNarrative: true,
+    });
+
+    expect(withoutNarrative.chapters.find((chapter) => chapter.type === 'people')?.people?.[0]?.narrative).toBeUndefined();
+    expect(withNarrative.chapters.find((chapter) => chapter.type === 'people')?.people?.[0]?.narrative).toContain('Root Family was born');
+  });
+
   it('creates a biography section consumable by the existing book layout', () => {
     const people: Record<string, Person> = {
       root: createMockPerson('root', 'male', {

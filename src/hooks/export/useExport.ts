@@ -284,6 +284,7 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
             evidence: { sources, citations },
             generationsDepth: manuscriptOptions.generationsDepth,
             includeImages: manuscriptOptions.includeImages,
+            includeNarrative: manuscriptOptions.includeNarrative,
         }), manuscriptOptions);
         const html = HtmlManuscriptRenderer.renderToHtml(manuscriptModel, {
             language: language === 'ar' ? 'ar' : 'en',

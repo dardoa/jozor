@@ -100,6 +100,7 @@ describe('ExportCloudPanel manuscript preview', () => {
         rootPersonId: 'person-1',
         generationsDepth: 3,
         includeImages: false,
+        includeNarrative: false,
         includeTimeline: true,
         includeEvidence: true,
       }),
@@ -124,6 +125,7 @@ describe('ExportCloudPanel manuscript preview', () => {
     fireEvent.change(screen.getByLabelText(/Manuscript root/i), { target: { value: 'person-2' } });
     fireEvent.change(screen.getByLabelText(/Branch depth/i), { target: { value: 'all' } });
     fireEvent.click(screen.getByLabelText(/Include photos/i));
+    fireEvent.click(screen.getByLabelText(/Narrative draft/i));
     fireEvent.click(screen.getByRole('button', { name: /Preview Manuscript/i }));
 
     await waitFor(() => expect(onRunPublishingPreview).toHaveBeenCalled());
@@ -132,6 +134,7 @@ describe('ExportCloudPanel manuscript preview', () => {
         rootPersonId: 'person-2',
         generationsDepth: 'all',
         includeImages: true,
+        includeNarrative: true,
       }),
     }));
   });

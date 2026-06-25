@@ -60,6 +60,10 @@ function renderPeople(people: readonly ManuscriptPersonEntry[]): string[] {
       `- Citations: ${person.citationCount}`,
     ];
 
+    if (person.narrative) {
+      lines.push('', normalizeInline(person.narrative));
+    }
+
     if (person.facts.length > 0) {
       lines.push('', '#### Facts', '');
       person.facts.forEach((fact) => {

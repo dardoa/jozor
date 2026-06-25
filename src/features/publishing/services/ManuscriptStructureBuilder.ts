@@ -10,6 +10,7 @@ import type {
 } from '../types';
 import { PublishingRelationshipAdapter } from './PublishingRelationshipAdapter';
 import type { PublishingEvidenceContext } from './PublishingEvidenceAdapter';
+import { NarrativeDraftBuilder } from './NarrativeDraftBuilder';
 
 export interface ManuscriptStructureOptions {
   readonly rootPersonId: string;
@@ -21,6 +22,7 @@ export interface ManuscriptStructureOptions {
   };
   readonly generationsDepth?: number | 'all';
   readonly includeImages?: boolean;
+  readonly includeNarrative?: boolean;
 }
 
 function getDisplayName(person: Person): string {
@@ -207,7 +209,8 @@ export class ManuscriptStructureBuilder {
     const manuscriptPeople = Object.keys(branchGraph.people).length > 0 ? branchGraph.people : options.people;
     const evidence = getEvidence(options.evidence);
     const citationValues = Object.values(evidence.citations);
-    const peopleEntries = buildPersonEntries(manuscriptPeople, evidence.sources, citationValues, options.rootPersonId, Boolean(options.includeImages));
+    const rawPeopleEntries = buildPersonEntries(manuscriptPeople, evidence.sources, citationValues, options.rootPersonId, Boolean(options.includeImages));
+    const peopleEntries = options.includeNarrative ? NarrativeDraftBuilder.applyToPeople(rawPeopleEntries) : rawPeopleEntries;
     const timelineEntries = buildTimelineEntries(manuscriptPeople);
     const citationEntries = buildCitationEntries(evidence.sources, evidence.citations);
 

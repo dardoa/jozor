@@ -128,6 +128,7 @@ function renderPeopleChapter(title: string, people: readonly ManuscriptPersonEnt
     `<h2>${escapeHtml(person.displayName)}</h2>`,
     `<span>${person.citationCoverage}% توثيق</span>`,
     '</header>',
+    person.narrative ? `<p class="person-card__narrative">${escapeHtml(person.narrative)}</p>` : '',
     '<dl class="fact-list">',
     ...person.facts.map((fact) => [
       '<div class="fact-row">',
@@ -309,6 +310,12 @@ small {
 }
 .fact-list {
   margin: 10px 0 0;
+}
+.person-card__narrative {
+  margin: 10px 0 0;
+  color: ${theme.colors.text};
+  font-size: ${theme.typography.bodySize};
+  line-height: 1.65;
 }
 .fact-row {
   display: grid;

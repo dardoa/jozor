@@ -112,6 +112,7 @@ export interface PublishingExportOptions {
         rootPersonId?: string;
         generationsDepth?: number | 'all';
         includeImages?: boolean;
+        includeNarrative?: boolean;
         includeTimeline?: boolean;
         includeEvidence?: boolean;
     };

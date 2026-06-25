@@ -139,6 +139,7 @@ export interface ManuscriptPersonEntry {
   readonly personId: string;
   readonly displayName: string;
   readonly photoUrl?: string;
+  readonly narrative?: string;
   readonly facts: readonly ManuscriptFactEntry[];
   readonly sourceHighlights: readonly ManuscriptSourceHighlight[];
   readonly citationCount: number;

@@ -815,3 +815,10 @@ Deferred geography improvements:
 - Added coverage for configured preview options and depth-limited manuscript generation.
 - Added an opt-in photo inclusion toggle for manuscript previews and HTML print output without making photos part of the default manuscript export.
 - Added `docs/publishing-manuscript-manual-review.md` as the manual review gate before narrative generation or final publishing design polish.
+
+# 2026-06-26 - Narrative generation kernel
+
+- Added a deterministic `NarrativeDraftBuilder` for Sprint 18B as a conservative narrative kernel with no AI dependency.
+- Added opt-in manuscript narrative drafts to the preview/export options.
+- Rendered narrative drafts in HTML and Markdown manuscript outputs only when enabled.
+- Kept narrative generation downstream of `FamilyManuscriptModel` so renderers remain presentation layers.

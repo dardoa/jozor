@@ -447,6 +447,7 @@ describe('useExport', () => {
           rootPersonId: 'person-1',
           generationsDepth: 2,
           includeImages: true,
+          includeNarrative: true,
           includeTimeline: false,
           includeEvidence: false,
         },
@@ -458,6 +459,7 @@ describe('useExport', () => {
       rootPersonId: 'person-1',
       generationsDepth: 2,
       includeImages: true,
+      includeNarrative: true,
     }));
     expect(lastRenderCall?.[0].chapters.map((chapter) => chapter.type)).toEqual(['people']);
   });
