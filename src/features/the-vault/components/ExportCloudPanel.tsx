@@ -20,8 +20,8 @@ import {
 } from 'lucide-react';
 
 import { PUBLISHING_EXPORT_RENDERERS } from '../../../types';
-import type { DriveFile, ExportType, PublishingExportOptions, PublishingPreviewResult } from '../../../types';
-import type { TranslationSchema } from '../../../utils/translationLoader';
+import type { DriveFile, ExportType, Person, PublishingExportOptions, PublishingPreviewResult } from '../../../types';
+import type { TranslationSchema } from '../../../utils/translationLoader';
 import { showToast } from '../../../utils/showToast';
 import { useAppStore } from '../../../store/useAppStore';
 
@@ -75,14 +75,43 @@ const EXPORT_ACTIONS: Array<{
   { id: 'print', labelKey: 'vaultExportPrint', icon: Printer },
 ];
 
-const waitForDrawerDismissal = () =>
+const waitForDrawerDismissal = () =>
   new Promise<void>((resolve) => {
     if (typeof window === 'undefined') {
       resolve();
       return;
     }
     window.setTimeout(resolve, 140);
-  });
+  });
+
+function countBranchPeopleInScope(
+  people: Record<string, Pick<Person, 'id' | 'children' | 'spouses'>>,
+  rootPersonId: string,
+  generationsDepth: number | 'all'
+): number {
+  if (!rootPersonId || !people[rootPersonId]) return 0;
+
+  const collected = new Set<string>();
+  const visited = new Set<string>();
+
+  const traverse = (personId: string, depth: number) => {
+    if (typeof generationsDepth === 'number' && depth > generationsDepth) return;
+    if (visited.has(personId)) return;
+    visited.add(personId);
+
+    const person = people[personId];
+    if (!person) return;
+
+    collected.add(personId);
+    person.spouses?.forEach((spouseId) => {
+      if (people[spouseId]) collected.add(spouseId);
+    });
+    person.children?.forEach((childId) => traverse(childId, depth + 1));
+  };
+
+  traverse(rootPersonId, 1);
+  return collected.size;
+}
 
 export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
   canManageCloud,
@@ -153,6 +182,10 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
   const manuscriptScopeLabel = generationsDepth === 'all'
     ? (language === 'ar' ? 'كل الفرع' : 'Full branch')
     : (language === 'ar' ? `${generationsDepth} أجيال` : `${generationsDepth} generations`);
+  const manuscriptScopePersonCount = useMemo(
+    () => countBranchPeopleInScope(people, effectiveRootPersonId, generationsDepth),
+    [effectiveRootPersonId, generationsDepth, people]
+  );
   const includedManuscriptSections = useMemo(
     () => [
       includeImages ? (language === 'ar' ? 'الصور' : 'photos') : null,
@@ -485,6 +518,11 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                     {language === 'ar' ? 'النطاق:' : 'Scope:'}
                   </span>{' '}
                   {selectedRootName} · {manuscriptScopeLabel}
+                  <br />
+                  <span className="font-bold text-[var(--text-secondary)]">
+                    {language === 'ar' ? 'الأشخاص:' : 'People in scope:'}
+                  </span>{' '}
+                  {manuscriptScopePersonCount}
                   <br />
                   <span className="font-bold text-[var(--text-secondary)]">
                     {language === 'ar' ? 'المحتوى:' : 'Includes:'}

@@ -11,6 +11,7 @@ import type {
 import { PublishingRelationshipAdapter } from './PublishingRelationshipAdapter';
 import type { PublishingEvidenceContext } from './PublishingEvidenceAdapter';
 import { NarrativeDraftBuilder } from './NarrativeDraftBuilder';
+import { NarrativeOrderingEngine } from './NarrativeOrderingEngine';
 
 export interface ManuscriptStructureOptions {
   readonly rootPersonId: string;
@@ -123,14 +124,18 @@ function buildPersonEntries(
   citations: readonly Citation[],
   rootPersonId: string,
   includeImages: boolean,
-  labels: ReturnType<typeof getManuscriptLabels>
+  labels: ReturnType<typeof getManuscriptLabels>,
+  narrativeOrder?: readonly string[]
 ): readonly ManuscriptPersonEntry[] {
-  return Object.values(people)
-    .sort((a, b) => {
+  const orderedPeople = (narrativeOrder && narrativeOrder.length > 0
+    ? narrativeOrder.map((personId) => people[personId]).filter((person): person is Person => Boolean(person))
+    : Object.values(people).sort((a, b) => {
       if (a.id === rootPersonId) return -1;
       if (b.id === rootPersonId) return 1;
       return getDisplayName(a).localeCompare(getDisplayName(b));
-    })
+    }));
+
+  return orderedPeople
     .map((person) => {
       const facts = [
         createFact(labels.birthDate, person.birthDate, countCitationsForPerson(citations, person.id, 'person.birth.date')),
@@ -251,7 +256,12 @@ export class ManuscriptStructureBuilder {
     const language = options.language ?? 'en';
     const labels = getManuscriptLabels(language);
     const citationValues = Object.values(evidence.citations);
-    const rawPeopleEntries = buildPersonEntries(manuscriptPeople, evidence.sources, citationValues, options.rootPersonId, Boolean(options.includeImages), labels);
+    const narrativeOrder = NarrativeOrderingEngine.orderPeople({
+      rootPersonId: options.rootPersonId,
+      people: manuscriptPeople,
+      relationships: branchGraph.relationships,
+    });
+    const rawPeopleEntries = buildPersonEntries(manuscriptPeople, evidence.sources, citationValues, options.rootPersonId, Boolean(options.includeImages), labels, narrativeOrder);
     const peopleEntries = options.includeNarrative
       ? NarrativeDraftBuilder.applyToPeople(rawPeopleEntries, { language })
       : rawPeopleEntries;

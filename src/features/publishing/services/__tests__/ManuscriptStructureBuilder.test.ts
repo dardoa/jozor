@@ -223,6 +223,105 @@ describe('ManuscriptStructureBuilder', () => {
     expect(fullIds).toEqual(['child', 'grandchild', 'root']);
   });
 
+  it('orders people chapters as a family reading path instead of alphabetical entries', () => {
+    const people: Record<string, Person> = {
+      root: createMockPerson('root', 'male', {
+        firstName: 'Founder',
+        lastName: 'Family',
+        birthDate: '1930-01-01',
+      }),
+      spouse: createMockPerson('spouse', 'female', {
+        firstName: 'Founder Spouse',
+        lastName: 'Family',
+        birthDate: '1935-01-01',
+      }),
+      childA: createMockPerson('childA', 'male', {
+        firstName: 'Ahmad',
+        lastName: 'Family',
+        birthDate: '1960-01-01',
+      }),
+      childASpouse: createMockPerson('childASpouse', 'female', {
+        firstName: 'Ahmad Spouse',
+        lastName: 'Family',
+        birthDate: '1962-01-01',
+      }),
+      grandchildA: createMockPerson('grandchildA', 'female', {
+        firstName: 'Grandchild',
+        lastName: 'Family',
+        birthDate: '1990-01-01',
+      }),
+      childB: createMockPerson('childB', 'male', {
+        firstName: 'Bilal',
+        lastName: 'Family',
+        birthDate: '1965-01-01',
+      }),
+    };
+    const relationshipEdges: Record<string, RelationshipEdge> = {
+      spouse: {
+        id: 'edge-spouse',
+        treeId: 'tree-1',
+        fromPersonId: 'root',
+        toPersonId: 'spouse',
+        type: 'SPOUSE',
+        status: 'ACTIVE',
+        createdAt: '2026-01-01T00:00:00.000Z',
+      },
+      childA: {
+        id: 'edge-child-a',
+        treeId: 'tree-1',
+        fromPersonId: 'root',
+        toPersonId: 'childA',
+        type: 'BIOLOGICAL_PARENT',
+        status: 'ACTIVE',
+        createdAt: '2026-01-01T00:00:00.000Z',
+      },
+      childB: {
+        id: 'edge-child-b',
+        treeId: 'tree-1',
+        fromPersonId: 'root',
+        toPersonId: 'childB',
+        type: 'BIOLOGICAL_PARENT',
+        status: 'ACTIVE',
+        createdAt: '2026-01-01T00:00:00.000Z',
+      },
+      childASpouse: {
+        id: 'edge-child-a-spouse',
+        treeId: 'tree-1',
+        fromPersonId: 'childA',
+        toPersonId: 'childASpouse',
+        type: 'SPOUSE',
+        status: 'ACTIVE',
+        createdAt: '2026-01-01T00:00:00.000Z',
+      },
+      grandchildA: {
+        id: 'edge-grandchild-a',
+        treeId: 'tree-1',
+        fromPersonId: 'childA',
+        toPersonId: 'grandchildA',
+        type: 'BIOLOGICAL_PARENT',
+        status: 'ACTIVE',
+        createdAt: '2026-01-01T00:00:00.000Z',
+      },
+    };
+
+    const model = ManuscriptStructureBuilder.buildModel({
+      rootPersonId: 'root',
+      people,
+      relationshipEdges,
+      generationsDepth: 'all',
+    });
+
+    const orderedIds = model.chapters.find((chapter) => chapter.type === 'people')?.people?.map((entry) => entry.personId);
+    expect(orderedIds).toEqual([
+      'root',
+      'spouse',
+      'childA',
+      'childASpouse',
+      'grandchildA',
+      'childB',
+    ]);
+  });
+
   it('splits person entries across biography sections to avoid overcrowded print pages', () => {
     const people = Array.from({ length: 5 }).reduce<Record<string, Person>>((acc, _, index) => {
       const id = `person-${index + 1}`;

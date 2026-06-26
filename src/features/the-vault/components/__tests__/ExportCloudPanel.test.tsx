@@ -9,13 +9,22 @@ vi.mock('../../../../store/useAppStore', () => ({
   useAppStore: (selector: (state: {
     language: 'en';
     focusId: string;
-    people: Record<string, { id: string; firstName?: string; middleName?: string; lastName?: string; title?: string; nickName?: string }>;
+    people: Record<string, {
+      id: string;
+      firstName?: string;
+      middleName?: string;
+      lastName?: string;
+      title?: string;
+      nickName?: string;
+      children?: string[];
+      spouses?: string[];
+    }>;
   }) => unknown) => selector({
     language: 'en',
     focusId: 'person-1',
     people: {
-      'person-1': { id: 'person-1', firstName: 'Root', lastName: 'Person' },
-      'person-2': { id: 'person-2', firstName: 'Branch', lastName: 'Person' },
+      'person-1': { id: 'person-1', firstName: 'Root', lastName: 'Person', children: ['person-2'], spouses: [] },
+      'person-2': { id: 'person-2', firstName: 'Branch', lastName: 'Person', children: [], spouses: [] },
     },
   }),
 }));
@@ -137,6 +146,8 @@ describe('ExportCloudPanel manuscript preview', () => {
 
     expect(screen.getByText('Manuscript Control Panel')).toBeInTheDocument();
     expect(screen.getByText(/Preview and PDF use the same manuscript model and settings/i)).toBeInTheDocument();
+    expect(screen.getByText(/People in scope:/i)).toBeInTheDocument();
+    expect(screen.getAllByText((_, element) => element?.textContent?.includes('People in scope: 2') ?? false).length).toBeGreaterThan(0);
 
     fireEvent.change(screen.getByLabelText(/Manuscript root/i), { target: { value: 'Branch Person' } });
     fireEvent.change(screen.getByLabelText(/Branch depth/i), { target: { value: 'all' } });
@@ -145,6 +156,7 @@ describe('ExportCloudPanel manuscript preview', () => {
     fireEvent.click(screen.getByRole('button', { name: /Preview Manuscript/i }));
 
     expect(screen.getByText(/Branch Person · Full branch/i)).toBeInTheDocument();
+    expect(screen.getAllByText((_, element) => element?.textContent?.includes('People in scope: 1') ?? false).length).toBeGreaterThan(0);
     expect(screen.getByText(/photos, timeline, bibliography, narrative/i)).toBeInTheDocument();
 
     await waitFor(() => expect(onRunPublishingPreview).toHaveBeenCalled());
