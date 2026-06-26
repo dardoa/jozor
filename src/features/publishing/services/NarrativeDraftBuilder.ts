@@ -6,8 +6,9 @@ export interface NarrativeDraftOptions {
   readonly language?: 'ar' | 'en';
 }
 
-function findFact(facts: readonly ManuscriptFactEntry[], label: string): ManuscriptFactEntry | undefined {
-  return facts.find((fact) => fact.label.toLowerCase() === label.toLowerCase());
+function findFact(facts: readonly ManuscriptFactEntry[], labels: readonly string[]): ManuscriptFactEntry | undefined {
+  const normalizedLabels = labels.map((label) => label.toLowerCase());
+  return facts.find((fact) => normalizedLabels.includes(fact.label.toLowerCase()));
 }
 
 function formatEvidenceSuffix(entry: ManuscriptPersonEntry, language: 'ar' | 'en'): string {
@@ -52,12 +53,12 @@ export class NarrativeDraftBuilder {
       return '';
     }
 
-    const birthDate = findFact(entry.facts, 'Birth date')?.value;
-    const birthPlace = findFact(entry.facts, 'Birth place')?.value;
-    const deathDate = findFact(entry.facts, 'Death date')?.value;
-    const deathPlace = findFact(entry.facts, 'Death place')?.value;
-    const residence = findFact(entry.facts, 'Residence')?.value;
-    const occupation = findFact(entry.facts, 'Occupation')?.value;
+    const birthDate = findFact(entry.facts, ['Birth date', 'تاريخ الميلاد'])?.value;
+    const birthPlace = findFact(entry.facts, ['Birth place', 'مكان الميلاد'])?.value;
+    const deathDate = findFact(entry.facts, ['Death date', 'تاريخ الوفاة'])?.value;
+    const deathPlace = findFact(entry.facts, ['Death place', 'مكان الوفاة'])?.value;
+    const residence = findFact(entry.facts, ['Residence', 'الإقامة'])?.value;
+    const occupation = findFact(entry.facts, ['Occupation', 'المهنة'])?.value;
     const language = options.language ?? 'en';
 
     const sentences: string[] = [];
@@ -98,7 +99,20 @@ export class NarrativeDraftBuilder {
     }
 
     const extraFacts = entry.facts
-      .filter((fact) => !['Birth date', 'Birth place', 'Death date', 'Death place', 'Residence', 'Occupation'].includes(fact.label))
+      .filter((fact) => ![
+        'Birth date',
+        'Birth place',
+        'Death date',
+        'Death place',
+        'Residence',
+        'Occupation',
+        'تاريخ الميلاد',
+        'مكان الميلاد',
+        'تاريخ الوفاة',
+        'مكان الوفاة',
+        'الإقامة',
+        'المهنة',
+      ].includes(fact.label))
       .slice(0, options.maxFacts ?? 3)
       .map((fact) => `${fact.label}: ${fact.value}`);
     if (extraFacts.length > 0) {

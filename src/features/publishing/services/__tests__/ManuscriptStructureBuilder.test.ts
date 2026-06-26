@@ -138,6 +138,11 @@ describe('ManuscriptStructureBuilder', () => {
 
     expect(withoutNarrative.chapters.find((chapter) => chapter.type === 'people')?.people?.[0]?.narrative).toBeUndefined();
     expect(withNarrative.chapters.find((chapter) => chapter.type === 'people')?.people?.[0]?.narrative).toContain('Root Family وُلد');
+    expect(withNarrative.title).toBe('مخطوط عائلة Root Family');
+    expect(withNarrative.chapters.find((chapter) => chapter.type === 'people')?.title).toBe('أفراد العائلة');
+    expect(withNarrative.chapters.find((chapter) => chapter.type === 'timeline')?.title).toBe('الخط الزمني للعائلة');
+    expect(withNarrative.chapters.find((chapter) => chapter.type === 'people')?.people?.[0]?.facts[0]?.label).toBe('تاريخ الميلاد');
+    expect(withNarrative.chapters.find((chapter) => chapter.type === 'timeline')?.timeline?.[0]?.title).toBe('ميلاد');
   });
 
   it('creates a biography section consumable by the existing book layout', () => {

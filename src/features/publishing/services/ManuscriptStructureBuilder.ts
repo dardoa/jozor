@@ -43,6 +43,42 @@ function getEvidence(options?: ManuscriptStructureOptions['evidence']): {
   };
 }
 
+function getManuscriptLabels(language: 'ar' | 'en') {
+  if (language === 'ar') {
+    return {
+      titlePrefix: 'مخطوط عائلة',
+      peopleChapter: 'أفراد العائلة',
+      timelineChapter: 'الخط الزمني للعائلة',
+      evidenceChapter: 'نظرة عامة على المراجع',
+      birthDate: 'تاريخ الميلاد',
+      birthPlace: 'مكان الميلاد',
+      deathDate: 'تاريخ الوفاة',
+      deathPlace: 'مكان الوفاة',
+      residence: 'الإقامة',
+      occupation: 'المهنة',
+      birthEvent: 'ميلاد',
+      deathEvent: 'وفاة',
+      unknownSource: 'مصدر غير معروف',
+    };
+  }
+
+  return {
+    titlePrefix: 'Family Manuscript',
+    peopleChapter: 'People chapters',
+    timelineChapter: 'Family timeline',
+    evidenceChapter: 'Evidence overview',
+    birthDate: 'Birth date',
+    birthPlace: 'Birth place',
+    deathDate: 'Death date',
+    deathPlace: 'Death place',
+    residence: 'Residence',
+    occupation: 'Occupation',
+    birthEvent: 'Birth',
+    deathEvent: 'Death',
+    unknownSource: 'Unknown source',
+  };
+}
+
 function countCitationsForPerson(citations: readonly Citation[], personId: string, field?: string): number {
   return citations.filter((citation) => (
     citation.targetType === 'PERSON' &&
@@ -54,7 +90,8 @@ function countCitationsForPerson(citations: readonly Citation[], personId: strin
 function buildSourceHighlightsForPerson(
   sources: Record<string, Source>,
   citations: readonly Citation[],
-  personId: string
+  personId: string,
+  unknownSourceLabel: string
 ): readonly ManuscriptSourceHighlight[] {
   const counts = new Map<string, number>();
 
@@ -67,7 +104,7 @@ function buildSourceHighlightsForPerson(
   return [...counts.entries()]
     .map(([sourceId, citationCount]) => ({
       sourceId,
-      title: sources[sourceId]?.title || 'Unknown source',
+      title: sources[sourceId]?.title || unknownSourceLabel,
       citationCount,
     }))
     .sort((a, b) => b.citationCount - a.citationCount || a.title.localeCompare(b.title))
@@ -85,7 +122,8 @@ function buildPersonEntries(
   sources: Record<string, Source>,
   citations: readonly Citation[],
   rootPersonId: string,
-  includeImages: boolean
+  includeImages: boolean,
+  labels: ReturnType<typeof getManuscriptLabels>
 ): readonly ManuscriptPersonEntry[] {
   return Object.values(people)
     .sort((a, b) => {
@@ -95,12 +133,12 @@ function buildPersonEntries(
     })
     .map((person) => {
       const facts = [
-        createFact('Birth date', person.birthDate, countCitationsForPerson(citations, person.id, 'person.birth.date')),
-        createFact('Birth place', person.birthPlace, countCitationsForPerson(citations, person.id, 'person.birth.place')),
-        createFact('Death date', person.deathDate, countCitationsForPerson(citations, person.id, 'person.death.date')),
-        createFact('Death place', person.deathPlace, countCitationsForPerson(citations, person.id, 'person.death.place')),
-        createFact('Residence', person.currentResidence || person.residence, countCitationsForPerson(citations, person.id)),
-        createFact('Occupation', person.occupation || person.profession, countCitationsForPerson(citations, person.id)),
+        createFact(labels.birthDate, person.birthDate, countCitationsForPerson(citations, person.id, 'person.birth.date')),
+        createFact(labels.birthPlace, person.birthPlace, countCitationsForPerson(citations, person.id, 'person.birth.place')),
+        createFact(labels.deathDate, person.deathDate, countCitationsForPerson(citations, person.id, 'person.death.date')),
+        createFact(labels.deathPlace, person.deathPlace, countCitationsForPerson(citations, person.id, 'person.death.place')),
+        createFact(labels.residence, person.currentResidence || person.residence, countCitationsForPerson(citations, person.id)),
+        createFact(labels.occupation, person.occupation || person.profession, countCitationsForPerson(citations, person.id)),
       ].filter((fact): fact is ManuscriptFactEntry => Boolean(fact));
 
       const citationCount = countCitationsForPerson(citations, person.id);
@@ -111,14 +149,14 @@ function buildPersonEntries(
         displayName: getDisplayName(person),
         photoUrl: includeImages ? person.photoUrl : undefined,
         facts,
-        sourceHighlights: buildSourceHighlightsForPerson(sources, citations, person.id),
+        sourceHighlights: buildSourceHighlightsForPerson(sources, citations, person.id, labels.unknownSource),
         citationCount,
         citationCoverage: facts.length > 0 ? Math.round((citedFactsCount / facts.length) * 100) : 0,
       };
     });
 }
 
-function buildTimelineEntries(people: Record<string, Person>): readonly ManuscriptTimelineEntry[] {
+function buildTimelineEntries(people: Record<string, Person>, labels: ReturnType<typeof getManuscriptLabels>): readonly ManuscriptTimelineEntry[] {
   const entries: ManuscriptTimelineEntry[] = [];
 
   Object.values(people).forEach((person) => {
@@ -129,7 +167,7 @@ function buildTimelineEntries(people: Record<string, Person>): readonly Manuscri
         personId: person.id,
         personName,
         date: person.birthDate,
-        title: 'Birth',
+        title: labels.birthEvent,
         place: person.birthPlace || undefined,
       });
     }
@@ -139,7 +177,7 @@ function buildTimelineEntries(people: Record<string, Person>): readonly Manuscri
         personId: person.id,
         personName,
         date: person.deathDate,
-        title: 'Death',
+        title: labels.deathEvent,
         place: person.deathPlace || undefined,
       });
     }
@@ -161,14 +199,15 @@ function buildTimelineEntries(people: Record<string, Person>): readonly Manuscri
 
 function buildCitationEntries(
   sources: Record<string, Source>,
-  citations: Record<string, Citation>
+  citations: Record<string, Citation>,
+  unknownSourceLabel: string
 ): readonly ManuscriptCitationEntry[] {
   return Object.values(citations)
     .filter((citation) => citation.targetType === 'PERSON')
     .map((citation) => ({
       citationId: citation.id,
       sourceId: citation.sourceId,
-      sourceTitle: sources[citation.sourceId]?.title || 'Unknown source',
+      sourceTitle: sources[citation.sourceId]?.title || unknownSourceLabel,
       targetId: citation.targetId,
       targetField: citation.targetField,
     }))
@@ -209,35 +248,37 @@ export class ManuscriptStructureBuilder {
     );
     const manuscriptPeople = Object.keys(branchGraph.people).length > 0 ? branchGraph.people : options.people;
     const evidence = getEvidence(options.evidence);
+    const language = options.language ?? 'en';
+    const labels = getManuscriptLabels(language);
     const citationValues = Object.values(evidence.citations);
-    const rawPeopleEntries = buildPersonEntries(manuscriptPeople, evidence.sources, citationValues, options.rootPersonId, Boolean(options.includeImages));
+    const rawPeopleEntries = buildPersonEntries(manuscriptPeople, evidence.sources, citationValues, options.rootPersonId, Boolean(options.includeImages), labels);
     const peopleEntries = options.includeNarrative
-      ? NarrativeDraftBuilder.applyToPeople(rawPeopleEntries, { language: options.language ?? 'en' })
+      ? NarrativeDraftBuilder.applyToPeople(rawPeopleEntries, { language })
       : rawPeopleEntries;
-    const timelineEntries = buildTimelineEntries(manuscriptPeople);
-    const citationEntries = buildCitationEntries(evidence.sources, evidence.citations);
+    const timelineEntries = buildTimelineEntries(manuscriptPeople, labels);
+    const citationEntries = buildCitationEntries(evidence.sources, evidence.citations, labels.unknownSource);
 
     return {
       id: `manuscript-${crypto.randomUUID()}`,
-      title: `Family Manuscript: ${getDisplayName(rootPerson)}`,
+      title: `${labels.titlePrefix} ${getDisplayName(rootPerson)}`,
       rootPersonId: options.rootPersonId,
       chapters: [
         {
           id: `chapter-people-${crypto.randomUUID()}`,
           type: 'people',
-          title: 'People chapters',
+          title: labels.peopleChapter,
           people: peopleEntries,
         },
         {
           id: `chapter-timeline-${crypto.randomUUID()}`,
           type: 'timeline',
-          title: 'Family timeline',
+          title: labels.timelineChapter,
           timeline: timelineEntries,
         },
         {
           id: `chapter-evidence-${crypto.randomUUID()}`,
           type: 'evidence',
-          title: 'Evidence overview',
+          title: labels.evidenceChapter,
           citations: citationEntries,
         },
       ],
