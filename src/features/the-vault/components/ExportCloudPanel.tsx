@@ -121,6 +121,7 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
   const people = useAppStore((state) => state.people);
   const focusId = useAppStore((state) => state.focusId);
   const [selectedRootPersonId, setSelectedRootPersonId] = useState(() => focusId || Object.keys(people)[0] || '');
+  const [rootSearchText, setRootSearchText] = useState('');
   const [generationsDepth, setGenerationsDepth] = useState<number | 'all'>(3);
 
   const personOptions = useMemo(
@@ -135,6 +136,19 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
 
   const effectiveRootPersonId = selectedRootPersonId || focusId || personOptions[0]?.id || '';
   const selectedRootName = personOptions.find((person) => person.id === effectiveRootPersonId)?.name || effectiveRootPersonId;
+  const handleRootSearchChange = useCallback((value: string) => {
+    setRootSearchText(value);
+    const normalizedValue = value.trim().toLocaleLowerCase();
+    const matchedPerson = personOptions.find((person) =>
+      person.id.toLocaleLowerCase() === normalizedValue ||
+      person.name.toLocaleLowerCase() === normalizedValue
+    );
+
+    if (matchedPerson) {
+      setSelectedRootPersonId(matchedPerson.id);
+      setRootSearchText('');
+    }
+  }, [personOptions]);
   const manuscriptScopeLabel = generationsDepth === 'all'
     ? (language === 'ar' ? 'كل الفرع' : 'Full branch')
     : (language === 'ar' ? `${generationsDepth} أجيال` : `${generationsDepth} generations`);
@@ -459,15 +473,23 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
               <div className="grid gap-2 sm:grid-cols-2">
               <label className="flex flex-col gap-1 rounded-lg bg-[var(--surface-subtle)] px-3 py-2 text-xs font-semibold text-[var(--text-secondary)]">
                 <span>{language === 'ar' ? 'جذر المخطوط' : 'Manuscript root'}</span>
-                <select
-                  value={effectiveRootPersonId}
-                  onChange={(event) => setSelectedRootPersonId(event.target.value)}
+                <input
+                  list="manuscript-root-options"
+                  value={rootSearchText || selectedRootName}
+                  onChange={(event) => handleRootSearchChange(event.target.value)}
+                  onFocus={() => setRootSearchText('')}
+                  onBlur={() => setRootSearchText('')}
+                  placeholder={language === 'ar' ? 'ابحث باسم الشخص...' : 'Search by person name...'}
                   className="min-h-9 rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] px-2 text-xs text-[var(--text-main)] outline-none focus:border-[var(--primary-600)]"
-                >
+                />
+                <datalist id="manuscript-root-options">
                   {personOptions.map((person) => (
                     <option key={person.id} value={person.id}>{person.name}</option>
                   ))}
-                </select>
+                  {personOptions.map((person) => (
+                    <option key={`${person.id}-name`} value={person.name}>{person.id}</option>
+                  ))}
+                </datalist>
               </label>
               <label className="flex flex-col gap-1 rounded-lg bg-[var(--surface-subtle)] px-3 py-2 text-xs font-semibold text-[var(--text-secondary)]">
                 <span>{language === 'ar' ? 'عمق الفرع' : 'Branch depth'}</span>

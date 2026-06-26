@@ -138,7 +138,7 @@ describe('ExportCloudPanel manuscript preview', () => {
     expect(screen.getByText('Manuscript Control Panel')).toBeInTheDocument();
     expect(screen.getByText(/Preview and PDF use the same manuscript model and settings/i)).toBeInTheDocument();
 
-    fireEvent.change(screen.getByLabelText(/Manuscript root/i), { target: { value: 'person-2' } });
+    fireEvent.change(screen.getByLabelText(/Manuscript root/i), { target: { value: 'Branch Person' } });
     fireEvent.change(screen.getByLabelText(/Branch depth/i), { target: { value: 'all' } });
     fireEvent.click(screen.getByLabelText(/Include photos/i));
     fireEvent.click(screen.getByLabelText(/Narrative draft/i));
