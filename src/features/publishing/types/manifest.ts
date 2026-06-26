@@ -37,6 +37,7 @@ export interface PublicationManuscriptMetadata {
   readonly includeEvidence: boolean;
   readonly includeNarrative: boolean;
   readonly orderedPersonCount?: number;
+  readonly customOrderCount?: number;
 }
 
 export interface PublicationSchemaVersions {

@@ -379,6 +379,50 @@ describe('ManuscriptStructureBuilder', () => {
     expect(orderedIds).toEqual(['childA', 'childB', 'root']);
   });
 
+  it('supports custom manuscript ordering and appends remaining family entries', () => {
+    const people: Record<string, Person> = {
+      root: createMockPerson('root', 'male', { firstName: 'Root', birthDate: '1930-01-01' }),
+      childA: createMockPerson('childA', 'male', { firstName: 'Ahmad', birthDate: '1960-01-01' }),
+      childB: createMockPerson('childB', 'female', { firstName: 'Mona', birthDate: '1955-01-01' }),
+    };
+    const relationshipEdges: Record<string, RelationshipEdge> = {
+      childA: {
+        id: 'edge-child-a',
+        treeId: 'tree-1',
+        fromPersonId: 'root',
+        toPersonId: 'childA',
+        type: 'BIOLOGICAL_PARENT',
+        status: 'ACTIVE',
+        createdAt: '2026-01-01T00:00:00.000Z',
+      },
+      childB: {
+        id: 'edge-child-b',
+        treeId: 'tree-1',
+        fromPersonId: 'root',
+        toPersonId: 'childB',
+        type: 'BIOLOGICAL_PARENT',
+        status: 'ACTIVE',
+        createdAt: '2026-01-01T00:00:00.000Z',
+      },
+    };
+
+    const model = ManuscriptStructureBuilder.buildModel({
+      rootPersonId: 'root',
+      people,
+      relationshipEdges,
+      orderingStrategy: 'custom',
+      customPersonOrder: ['childB'],
+    });
+
+    const orderedIds = model.chapters.find((chapter) => chapter.type === 'people')?.people?.map((entry) => entry.personId);
+    expect(model.readingOrder).toEqual({
+      strategy: 'custom',
+      rootPersonId: 'root',
+      personIds: ['childB', 'root', 'childA'],
+    });
+    expect(orderedIds).toEqual(['childB', 'root', 'childA']);
+  });
+
   it('supports chronological manuscript ordering for historical reading', () => {
     const people: Record<string, Person> = {
       root: createMockPerson('root', 'male', {

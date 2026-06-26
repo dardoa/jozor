@@ -6,6 +6,7 @@ export interface NarrativeOrderingInput {
   readonly people: Record<string, Person>;
   readonly relationships: readonly PublishingBranchRelationship[];
   readonly strategy?: ManuscriptOrderingStrategy;
+  readonly customPersonOrder?: readonly string[];
 }
 
 function getDisplayName(person: Person): string {
@@ -99,6 +100,14 @@ export class NarrativeOrderingEngine {
     };
 
     traverseFamily(rootPersonId);
+
+    const narrativeIds = [...orderedIds];
+    if (strategy === 'custom') {
+      orderedIds.length = 0;
+      visited.clear();
+      (input.customPersonOrder ?? []).forEach(addPerson);
+      narrativeIds.forEach(addPerson);
+    }
 
     sortIdsByPerson(people, Object.keys(people)).forEach(addPerson);
     return orderedIds;

@@ -292,6 +292,7 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
             evidence: { sources, citations },
             generationsDepth: manuscriptOptions.generationsDepth,
             orderingStrategy: manuscriptOptions.orderingStrategy,
+            customPersonOrder: manuscriptOptions.customPersonOrder,
             includeImages: manuscriptOptions.includeImages,
             includeNarrative: manuscriptOptions.includeNarrative,
             language: language === 'ar' ? 'ar' : 'en',

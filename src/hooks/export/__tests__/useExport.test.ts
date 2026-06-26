@@ -382,6 +382,7 @@ describe('useExport', () => {
         manuscriptOptions: {
           rootPersonId: 'person-1',
           orderingStrategy: 'chronological',
+          customPersonOrder: ['person-1'],
           generationsDepth: 2,
           includeTimeline: false,
         },
@@ -406,6 +407,7 @@ describe('useExport', () => {
       manuscriptOptions: expect.objectContaining({
         rootPersonId: 'person-1',
         orderingStrategy: 'chronological',
+        customPersonOrder: ['person-1'],
         generationsDepth: 2,
         includeTimeline: false,
       }),
@@ -459,6 +461,7 @@ describe('useExport', () => {
           rootPersonId: 'person-1',
           generationsDepth: 2,
           orderingStrategy: 'alphabetical',
+          customPersonOrder: ['person-1'],
           includeImages: true,
           includeNarrative: true,
           includeTimeline: false,
@@ -472,6 +475,7 @@ describe('useExport', () => {
       rootPersonId: 'person-1',
       generationsDepth: 2,
       orderingStrategy: 'alphabetical',
+      customPersonOrder: ['person-1'],
       includeImages: true,
       includeNarrative: true,
     }));

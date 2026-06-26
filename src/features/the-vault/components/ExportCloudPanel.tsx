@@ -188,6 +188,7 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
       narrative: language === 'ar' ? 'مسار العائلة' : 'Family path',
       chronological: language === 'ar' ? 'زمني' : 'Chronological',
       alphabetical: language === 'ar' ? 'أبجدي' : 'Alphabetical',
+      custom: language === 'ar' ? 'مخصص' : 'Custom',
     };
     return labels[orderingStrategy];
   }, [language, orderingStrategy]);

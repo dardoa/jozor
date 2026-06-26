@@ -25,6 +25,7 @@ export interface ManuscriptStructureOptions {
   readonly includeImages?: boolean;
   readonly includeNarrative?: boolean;
   readonly orderingStrategy?: ManuscriptOrderingStrategy;
+  readonly customPersonOrder?: readonly string[];
   readonly language?: 'ar' | 'en';
 }
 
@@ -263,6 +264,7 @@ export class ManuscriptStructureBuilder {
       people: manuscriptPeople,
       relationships: branchGraph.relationships,
       strategy: orderingStrategy,
+      customPersonOrder: options.customPersonOrder,
     });
     const rawPeopleEntries = buildPersonEntries(manuscriptPeople, evidence.sources, citationValues, options.rootPersonId, Boolean(options.includeImages), labels, narrativeOrder);
     const peopleEntries = options.includeNarrative

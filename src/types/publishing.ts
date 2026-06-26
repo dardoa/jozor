@@ -1,1 +1,1 @@
-export type ManuscriptOrderingStrategy = 'narrative' | 'alphabetical' | 'chronological';
+export type ManuscriptOrderingStrategy = 'narrative' | 'alphabetical' | 'chronological' | 'custom';

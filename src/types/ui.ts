@@ -119,6 +119,7 @@ export interface PublishingExportOptions {
         rootPersonId?: string;
         generationsDepth?: number | 'all';
         orderingStrategy?: ManuscriptOrderingStrategy;
+        customPersonOrder?: readonly string[];
         includeImages?: boolean;
         includeNarrative?: boolean;
         includeTimeline?: boolean;

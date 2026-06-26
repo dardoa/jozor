@@ -163,7 +163,8 @@ describe('PublishingTracker', () => {
             manuscriptOptions: {
                 rootPersonId: 'p-1',
                 generationsDepth: 2,
-                orderingStrategy: 'chronological',
+                orderingStrategy: 'custom',
+                customPersonOrder: ['p-3', 'p-1'],
                 includeImages: false,
                 includeNarrative: true,
                 includeTimeline: false,
@@ -176,13 +177,15 @@ describe('PublishingTracker', () => {
         expect(result.manifest.manuscript).toEqual({
             rootPersonId: 'p-1',
             generationsDepth: 2,
-            orderingStrategy: 'chronological',
+            orderingStrategy: 'custom',
             includeImages: false,
             includeNarrative: true,
             includeTimeline: false,
             includeEvidence: true,
             orderedPersonCount: 3,
+            customOrderCount: 2,
         });
+        expect(result.manifest.manuscript).not.toHaveProperty('customPersonOrder');
 
         const entry = await PublishingTracker.endTracking(
             result,

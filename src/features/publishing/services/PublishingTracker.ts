@@ -28,6 +28,7 @@ interface NormalizedManuscriptOptions {
     readonly includeNarrative: boolean;
     readonly includeTimeline: boolean;
     readonly includeEvidence: boolean;
+    readonly customPersonOrder?: readonly string[];
 }
 
 export class PublishingTracker {
@@ -70,10 +71,13 @@ export class PublishingTracker {
 
         const evidenceSummary = summarizePublishingEvidence(options.people, { sources, citations });
         const manuscriptEvidence = getManuscriptEvidenceMetadata(options.templateId, options.people, relationships, sources, citations, manuscriptOptions);
+        const { customPersonOrder, ...manifestManuscriptOptions } = manuscriptOptions;
+        const customOrderCount = customPersonOrder?.length;
         const manuscriptMetadata = options.templateId.includes('book-manuscript')
             ? {
-                ...manuscriptOptions,
+                ...manifestManuscriptOptions,
                 orderedPersonCount: manuscriptEvidence.manuscriptPersonCount,
+                ...(customOrderCount !== undefined ? { customOrderCount } : {}),
             }
             : undefined;
 
@@ -202,6 +206,7 @@ function getManuscriptEvidenceMetadata(
             evidence: { sources, citations },
             generationsDepth: manuscriptOptions.generationsDepth,
             orderingStrategy: manuscriptOptions.orderingStrategy,
+            customPersonOrder: manuscriptOptions.customPersonOrder,
             includeImages: manuscriptOptions.includeImages,
             includeNarrative: manuscriptOptions.includeNarrative,
         });
@@ -227,6 +232,7 @@ function normalizeManuscriptOptions(
         rootPersonId: options.rootPersonId,
         generationsDepth: options.generationsDepth ?? 'all',
         orderingStrategy: options.orderingStrategy ?? 'narrative',
+        customPersonOrder: options.customPersonOrder,
         includeImages: options.includeImages ?? true,
         includeNarrative: options.includeNarrative ?? false,
         includeTimeline: options.includeTimeline ?? true,
