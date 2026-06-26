@@ -18,6 +18,15 @@ const entry: ManuscriptPersonEntry = {
   citationCoverage: 50,
 };
 
+const maskedEntry: ManuscriptPersonEntry = {
+  personId: 'p-private',
+  displayName: 'Private',
+  facts: [],
+  sourceHighlights: [],
+  citationCount: 0,
+  citationCoverage: 0,
+};
+
 describe('NarrativeDraftBuilder', () => {
   it('builds a deterministic person narrative from structured manuscript facts', () => {
     const narrative = NarrativeDraftBuilder.buildPersonNarrative(entry);
@@ -33,5 +42,20 @@ describe('NarrativeDraftBuilder', () => {
 
     expect(entry.narrative).toBeUndefined();
     expect(withNarrative.narrative).toContain('Root Person was born');
+  });
+
+  it('does not create repetitive empty narratives for fully masked private entries by default', () => {
+    const [withNarrative] = NarrativeDraftBuilder.applyToPeople([maskedEntry]);
+
+    expect(withNarrative.narrative).toBeUndefined();
+    expect(NarrativeDraftBuilder.buildPersonNarrative(maskedEntry)).toBe('');
+  });
+
+  it('can explicitly keep fallback private narratives for internal review modes', () => {
+    const narrative = NarrativeDraftBuilder.buildPersonNarrative(maskedEntry, {
+      suppressEmptyPrivateNarratives: false,
+    });
+
+    expect(narrative).toContain('Private is documented in this family manuscript.');
   });
 });

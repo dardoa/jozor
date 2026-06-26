@@ -2,6 +2,7 @@ import type { ManuscriptFactEntry, ManuscriptPersonEntry } from '../types';
 
 export interface NarrativeDraftOptions {
   readonly maxFacts?: number;
+  readonly suppressEmptyPrivateNarratives?: boolean;
 }
 
 function findFact(facts: readonly ManuscriptFactEntry[], label: string): ManuscriptFactEntry | undefined {
@@ -19,11 +20,27 @@ function formatEvidenceSuffix(entry: ManuscriptPersonEntry): string {
   return `This profile has ${entry.citationCount} linked citation${entry.citationCount === 1 ? '' : 's'} and ${entry.citationCoverage}% fact coverage.${sourceText}`;
 }
 
+function shouldSuppressNarrative(entry: ManuscriptPersonEntry, options: NarrativeDraftOptions): boolean {
+  const suppressEmptyPrivateNarratives = options.suppressEmptyPrivateNarratives ?? true;
+  if (!suppressEmptyPrivateNarratives) {
+    return false;
+  }
+
+  return entry.displayName.trim().toLowerCase() === 'private' &&
+    entry.facts.length === 0 &&
+    entry.sourceHighlights.length === 0 &&
+    entry.citationCount === 0;
+}
+
 export class NarrativeDraftBuilder {
   public static buildPersonNarrative(
     entry: ManuscriptPersonEntry,
     options: NarrativeDraftOptions = {}
   ): string {
+    if (shouldSuppressNarrative(entry, options)) {
+      return '';
+    }
+
     const birthDate = findFact(entry.facts, 'Birth date')?.value;
     const birthPlace = findFact(entry.facts, 'Birth place')?.value;
     const deathDate = findFact(entry.facts, 'Death date')?.value;
@@ -65,9 +82,9 @@ export class NarrativeDraftBuilder {
     entries: readonly ManuscriptPersonEntry[],
     options: NarrativeDraftOptions = {}
   ): readonly ManuscriptPersonEntry[] {
-    return entries.map((entry) => ({
-      ...entry,
-      narrative: NarrativeDraftBuilder.buildPersonNarrative(entry, options),
-    }));
+    return entries.map((entry) => {
+      const narrative = NarrativeDraftBuilder.buildPersonNarrative(entry, options);
+      return narrative ? { ...entry, narrative } : entry;
+    });
   }
 }

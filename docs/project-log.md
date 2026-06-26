@@ -823,3 +823,4 @@ Deferred geography improvements:
 - Added opt-in manuscript narrative drafts to the preview/export options.
 - Rendered narrative drafts in HTML and Markdown manuscript outputs only when enabled.
 - Kept narrative generation downstream of `FamilyManuscriptModel` so renderers remain presentation layers.
+- Suppressed repetitive empty narrative drafts for fully masked private entries by default.
