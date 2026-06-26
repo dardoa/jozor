@@ -807,6 +807,13 @@ Deferred geography improvements:
 - Added a small `HtmlManuscriptTheme` token object so current manuscript styling can change later without scattering design literals through renderer logic.
 - Corrected mojibake Arabic strings in the HTML manuscript renderer test fixture and static labels.
 
+# 2026-06-26 - Manuscript PDF output strategy ADR
+
+- Accepted ADR-009 to treat manual browser printing as a transitional manuscript PDF path.
+- Kept HTML/CSS as the canonical preview and print-layout renderer for long-form manuscripts.
+- Documented Headless Chromium PDF generation as the preferred future professional export path.
+- Added PDF technical checks to the manuscript manual review gate.
+
 # 2026-06-26 - Manuscript preview configuration
 
 - Extended the HTML manuscript preview flow with root-person selection and branch-depth configuration.

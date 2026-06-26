@@ -26,7 +26,8 @@ Expected result:
 - Use a tree with roughly 200 to 500 people.
 - Preview with branch depth `3`.
 - Preview with `Full branch`.
-- Export the enhanced HTML manuscript PDF from the preview window.
+- Open the manuscript in the standalone preview window.
+- Export the current transitional PDF from the preview window only as a visual baseline.
 
 Expected result:
 - The preview remains responsive enough to inspect.
@@ -34,6 +35,7 @@ Expected result:
 - Person cards do not overlap.
 - Long names wrap instead of escaping the card.
 - Timeline and bibliography remain readable.
+- Any PDF produced through manual browser print is treated as beta output, not the final professional export path.
 
 ### Case 3: Real Large Tree
 - Use the main real-world test tree.
@@ -74,6 +76,18 @@ Expected result:
 - Page breaks do not split cards in a visibly broken way.
 - Browser print dialog produces a reasonable PDF when using standard A4 settings.
 
+## PDF Technical Checks
+
+Manual browser print output is transitional. When reviewing exported PDF files, record whether:
+
+- Arabic text is searchable and selectable.
+- Fonts are embedded in a stable way.
+- PDF tools report Type 3 glyph or font bounding-box warnings.
+- Headers, footers, page numbers, and page size are controlled by the app rather than by user printer settings.
+- The output is reproducible across machines.
+
+If these checks fail, prefer a future controlled Headless Chromium PDF path instead of polishing manual browser printing.
+
 ## Known Deferred Polish
 
 - Final cover design.
@@ -84,6 +98,7 @@ Expected result:
 - Narrative prose generation.
 - Markdown-driven editing workflow.
 - EPUB/DOCX outputs.
+- Controlled Headless Chromium PDF export for manuscripts.
 
 ## Decision Gate
 
