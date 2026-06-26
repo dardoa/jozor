@@ -813,6 +813,7 @@ Deferred geography improvements:
 - Kept HTML/CSS as the canonical preview and print-layout renderer for long-form manuscripts.
 - Documented Headless Chromium PDF generation as the preferred future professional export path.
 - Added PDF technical checks to the manuscript manual review gate.
+- Extracted the browser-print fallback behind `ManuscriptPdfExportService` so a controlled PDF renderer can replace it later without changing export orchestration.
 
 # 2026-06-26 - Manuscript preview configuration
 

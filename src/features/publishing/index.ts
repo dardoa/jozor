@@ -14,6 +14,7 @@ export * from './services/PublishingTracker';
 export * from './services/PublishingRelationshipAdapter';
 export * from './services/PublishingEvidenceAdapter';
 export * from './services/ManuscriptStructureBuilder';
+export * from './services/ManuscriptPdfExportService';
 export * from './services/NarrativeDraftBuilder';
 export * from './templates';
 

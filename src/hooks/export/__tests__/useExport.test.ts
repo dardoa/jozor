@@ -9,6 +9,7 @@ import { buildBlueprintArchive } from '../../../services/archiveService';
 import {
   HtmlManuscriptRenderer,
   MarkdownManuscriptRenderer,
+  ManuscriptPdfExportService,
   ManuscriptStructureBuilder,
   PdfRenderer,
   PublishingPipeline,
@@ -131,6 +132,9 @@ vi.mock('../../../features/publishing', () => ({
   },
   MarkdownManuscriptRenderer: {
     renderToMarkdown: vi.fn(() => '# Family Manuscript\n'),
+  },
+  ManuscriptPdfExportService: {
+    exportViaBrowserPrintFallback: vi.fn(async () => ({ mode: 'browser-print-fallback' })),
   },
 }));
 
@@ -367,14 +371,6 @@ describe('useExport', () => {
 
   it('opens the enhanced HTML manuscript print pipeline with masked viewer data', async () => {
     mockStore.currentUserRole = 'viewer';
-    const printDocument = document.implementation.createHTMLDocument('print');
-    const printWindow = {
-      document: printDocument,
-      focus: vi.fn(),
-      print: vi.fn(),
-      setTimeout: window.setTimeout.bind(window),
-    } as unknown as Window;
-    const openSpy = vi.spyOn(window, 'open').mockReturnValue(printWindow);
     const svgRef = { current: null };
     const { result } = renderHook(() => useExport(mockPeople, svgRef));
 
@@ -386,7 +382,10 @@ describe('useExport', () => {
       });
     });
 
-    expect(openSpy).toHaveBeenCalled();
+    expect(ManuscriptPdfExportService.exportViaBrowserPrintFallback).toHaveBeenCalledWith({
+      html: '<!doctype html><html><body>Arabic manuscript</body></html>',
+      title: 'Family Manuscript',
+    });
     expect(ManuscriptStructureBuilder.buildModel).toHaveBeenCalledWith(expect.objectContaining({
       rootPersonId: 'person-1',
       people: expect.objectContaining({
@@ -400,15 +399,12 @@ describe('useExport', () => {
       expect.objectContaining({ language: 'en', title: 'Family Manuscript' })
     );
     expect(PdfRenderer.renderToPdf).not.toHaveBeenCalled();
-    expect(printWindow.print).toHaveBeenCalled();
     expect(PublishingTracker.endTracking).toHaveBeenCalledWith(
       expect.anything(),
       true,
       [],
       [expect.objectContaining({ name: 'Family Manuscript.pdf', format: 'pdf' })]
     );
-
-    openSpy.mockRestore();
   });
 
   it('builds an HTML manuscript preview with masked viewer data', async () => {

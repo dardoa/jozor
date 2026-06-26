@@ -350,6 +350,7 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
                     TemplateRegistry, 
                     PosterRenderer, 
                     PdfRenderer,
+                    ManuscriptPdfExportService,
                 } = await import('../../features/publishing');
 
                 const template = TemplateRegistry.getTemplate(templateId);
@@ -383,7 +384,10 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
                     const preview = await buildHtmlManuscriptPreview(templateId, options.manuscriptOptions);
                     outputName = `${preview.title}.pdf`;
 
-                    await openHtmlPrintWindow(preview.html, preview.title);
+                    await ManuscriptPdfExportService.exportViaBrowserPrintFallback({
+                        html: preview.html,
+                        title: preview.title,
+                    });
                     (trackerState.manifest as { totalPages: number }).totalPages = preview.pageEstimate;
                 } else if (format === 'png') {
                     outputName = `${doc.title}.png`;
@@ -542,31 +546,4 @@ function applyManuscriptOptions(
             return true;
         }),
     };
-}
-
-async function openHtmlPrintWindow(html: string, title: string): Promise<void> {
-    const printWindow = window.open('', '_blank', 'width=1100,height=900');
-    if (!printWindow) {
-        throw new Error('The browser blocked the print window. Please allow popups and try again.');
-    }
-
-    printWindow.document.open();
-    printWindow.document.write(html);
-    printWindow.document.close();
-    printWindow.document.title = title;
-
-    await waitForPrintWindowReady(printWindow);
-    printWindow.focus();
-    printWindow.print();
-}
-
-async function waitForPrintWindowReady(printWindow: Window): Promise<void> {
-    await new Promise<void>((resolve) => printWindow.setTimeout(resolve, 150));
-    const fonts = printWindow.document.fonts;
-    if (!fonts?.ready) return;
-
-    await Promise.race([
-        fonts.ready.then(() => undefined),
-        new Promise<void>((resolve) => printWindow.setTimeout(resolve, 1800)),
-    ]);
 }
