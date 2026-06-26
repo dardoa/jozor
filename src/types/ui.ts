@@ -102,7 +102,13 @@ export interface HeaderGlobalActionsProps {
     onOpenActivityLog: () => void;
 }
 
-export type PublishingExportRenderer = 'vector-pdf' | 'html-print';
+export const PUBLISHING_EXPORT_RENDERERS = {
+    graphic: 'vector-pdf',
+    manuscript: 'html-print',
+} as const;
+
+export type PublishingExportRenderer =
+    typeof PUBLISHING_EXPORT_RENDERERS[keyof typeof PUBLISHING_EXPORT_RENDERERS];
 
 export interface PublishingExportOptions {
     templateId: string;

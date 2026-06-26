@@ -19,6 +19,7 @@ import {
   X,
 } from 'lucide-react';
 
+import { PUBLISHING_EXPORT_RENDERERS } from '../../../types';
 import type { DriveFile, ExportType, PublishingExportOptions, PublishingPreviewResult } from '../../../types';
 import type { TranslationSchema } from '../../../utils/translationLoader';
 import { showToast } from '../../../utils/showToast';
@@ -159,7 +160,7 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
 
   const handlePublishingExport = useCallback(
     async (options: PublishingExportOptions) => {
-      if (options.renderer !== 'html-print') {
+      if (options.renderer !== PUBLISHING_EXPORT_RENDERERS.manuscript) {
         onCloseVault();
         await waitForDrawerDismissal();
       }
@@ -179,7 +180,7 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
       try {
         const result = await onRunPublishingPreview({
           templateId: 'classic-book-manuscript',
-          renderer: 'html-print',
+          renderer: PUBLISHING_EXPORT_RENDERERS.manuscript,
           manuscriptOptions,
         });
         setPreview(result);
@@ -274,7 +275,7 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                 </button>
                 <button
                   type="button"
-                  onClick={() => void handlePublishingExport({ templateId: 'classic-book-manuscript', format: 'pdf', renderer: 'html-print', manuscriptOptions })}
+                  onClick={() => void handlePublishingExport({ templateId: 'classic-book-manuscript', format: 'pdf', renderer: PUBLISHING_EXPORT_RENDERERS.manuscript, manuscriptOptions })}
                   className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-emerald-700 px-3 py-2 text-xs font-bold text-white transition-all hover:brightness-105 active:scale-[0.98]"
                 >
                   <Printer className="h-3.5 w-3.5" />
@@ -504,7 +505,7 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
 
                 type="button"
 
-                onClick={() => void handlePublishingExport({ templateId: 'classic-book-manuscript', format: 'pdf', renderer: 'html-print', manuscriptOptions })}
+                onClick={() => void handlePublishingExport({ templateId: 'classic-book-manuscript', format: 'pdf', renderer: PUBLISHING_EXPORT_RENDERERS.manuscript, manuscriptOptions })}
 
                 className="flex items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 py-2 text-xs font-bold text-white shadow-sm shadow-emerald-700/10 transition-all hover:brightness-105 active:scale-[0.98]"
 

@@ -1,5 +1,11 @@
 import { useCallback, RefObject } from 'react';
-import { Person, ExportType, PublishingExportOptions, PublishingPreviewResult } from '../../types';
+import {
+    PUBLISHING_EXPORT_RENDERERS,
+    Person,
+    ExportType,
+    PublishingExportOptions,
+    PublishingPreviewResult,
+} from '../../types';
 import { generateICS } from '../../utils/calendarLogic';
 import { downloadFile } from '../../utils/fileUtils';
 import { showToast } from '../../utils/showToast';
@@ -303,7 +309,7 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
 
     const handlePublishingPreview = useCallback(
         async (options: Pick<PublishingExportOptions, 'templateId' | 'renderer' | 'manuscriptOptions'>): Promise<PublishingPreviewResult> => {
-            if (options.renderer && options.renderer !== 'html-print') {
+            if (options.renderer && options.renderer !== PUBLISHING_EXPORT_RENDERERS.manuscript) {
                 throw new Error('Preview is only available for the enhanced HTML manuscript renderer.');
             }
             const preview = await buildHtmlManuscriptPreview(options.templateId, options.manuscriptOptions);
@@ -314,7 +320,7 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
 
     const handlePublishingExport = useCallback(
         async (options: PublishingExportOptions) => {
-            const { templateId, format, renderer = 'vector-pdf' } = options;
+            const { templateId, format, renderer = PUBLISHING_EXPORT_RENDERERS.graphic } = options;
             const {
                 setExportStatus,
                 focusId,
@@ -373,7 +379,7 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
                 // Update total pages in manifest
                 (trackerState.manifest as { totalPages: number }).totalPages = placedDoc.totalPages || 1;
 
-                if (renderer === 'html-print') {
+                if (renderer === PUBLISHING_EXPORT_RENDERERS.manuscript) {
                     if (format !== 'pdf') {
                         throw new Error('HTML manuscript renderer only supports PDF print output.');
                     }
