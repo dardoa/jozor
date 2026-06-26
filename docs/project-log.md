@@ -824,3 +824,4 @@ Deferred geography improvements:
 - Rendered narrative drafts in HTML and Markdown manuscript outputs only when enabled.
 - Kept narrative generation downstream of `FamilyManuscriptModel` so renderers remain presentation layers.
 - Suppressed repetitive empty narrative drafts for fully masked private entries by default.
+- Localized deterministic narrative drafts for Arabic manuscripts and removed mojibake strings from the HTML manuscript renderer.

@@ -16,7 +16,7 @@ const model: FamilyManuscriptModel = {
           personId: 'p1',
           displayName: 'رمضان القربي',
           photoUrl: 'https://example.com/ramadan.jpg',
-          narrative: 'رمضان القربي ولد في كفرنبل وتظهر هذه المسودة عند تفعيل السرد.',
+          narrative: 'رمضان القربي وُلد في كفرنبل وتظهر هذه المسودة عند تفعيل السرد.',
           citationCoverage: 50,
           citationCount: 2,
           facts: [
@@ -60,7 +60,18 @@ describe('HtmlManuscriptRenderer', () => {
     expect(html).toContain('هذه المسودة');
     expect(html).toContain('كفرنبل، سوريا');
     expect(html).toContain('سجل النفوس');
+    expect(html).toContain('50% توثيق');
+    expect(html).toContain('المصدر');
     expect(html).toContain('page-break-inside: avoid');
+  });
+
+  it('renders English labels for LTR manuscripts', () => {
+    const html = HtmlManuscriptRenderer.renderToHtml(model, { language: 'en' });
+
+    expect(html).toContain('dir="ltr"');
+    expect(html).toContain('50% documented');
+    expect(html).toContain('Person entries with key facts and citation coverage.');
+    expect(html).toContain('<th>Source</th>');
   });
 
   it('accepts a manuscript theme without changing manuscript content', () => {

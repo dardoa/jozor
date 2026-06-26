@@ -23,6 +23,7 @@ export interface ManuscriptStructureOptions {
   readonly generationsDepth?: number | 'all';
   readonly includeImages?: boolean;
   readonly includeNarrative?: boolean;
+  readonly language?: 'ar' | 'en';
 }
 
 function getDisplayName(person: Person): string {
@@ -210,7 +211,9 @@ export class ManuscriptStructureBuilder {
     const evidence = getEvidence(options.evidence);
     const citationValues = Object.values(evidence.citations);
     const rawPeopleEntries = buildPersonEntries(manuscriptPeople, evidence.sources, citationValues, options.rootPersonId, Boolean(options.includeImages));
-    const peopleEntries = options.includeNarrative ? NarrativeDraftBuilder.applyToPeople(rawPeopleEntries) : rawPeopleEntries;
+    const peopleEntries = options.includeNarrative
+      ? NarrativeDraftBuilder.applyToPeople(rawPeopleEntries, { language: options.language ?? 'en' })
+      : rawPeopleEntries;
     const timelineEntries = buildTimelineEntries(manuscriptPeople);
     const citationEntries = buildCitationEntries(evidence.sources, evidence.citations);
 

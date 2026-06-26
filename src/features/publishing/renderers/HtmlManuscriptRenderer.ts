@@ -90,7 +90,7 @@ export class HtmlManuscriptRenderer {
       '</head>',
       '<body>',
       renderCover(model, title),
-      model.chapters.map((chapter) => renderChapter(chapter)).join('\n'),
+      model.chapters.map((chapter) => renderChapter(chapter, language)).join('\n'),
       '</body>',
       '</html>',
     ].join('\n');
@@ -107,44 +107,56 @@ function renderCover(model: FamilyManuscriptModel, title: string): string {
   ].join('\n');
 }
 
-function renderChapter(chapter: ManuscriptChapter): string {
+function renderChapter(chapter: ManuscriptChapter, language: 'ar' | 'en'): string {
   switch (chapter.type) {
     case 'people':
-      return renderPeopleChapter(chapter.title, chapter.people ?? []);
+      return renderPeopleChapter(chapter.title, chapter.people ?? [], language);
     case 'timeline':
       return renderTimelineChapter(chapter.title, chapter.timeline ?? []);
     case 'evidence':
-      return renderEvidenceChapter(chapter.title, chapter.citations ?? []);
+      return renderEvidenceChapter(chapter.title, chapter.citations ?? [], language);
     default:
       return '';
   }
 }
 
-function renderPeopleChapter(title: string, people: readonly ManuscriptPersonEntry[]): string {
+function renderPeopleChapter(title: string, people: readonly ManuscriptPersonEntry[], language: 'ar' | 'en'): string {
+  const labels = language === 'ar'
+    ? {
+      coverage: 'توثيق',
+      sourceSingular: 'مصدر',
+      lead: 'ملفات الأشخاص مع أبرز الوقائع ونسبة التوثيق.',
+    }
+    : {
+      coverage: 'documented',
+      sourceSingular: 'source',
+      lead: 'Person entries with key facts and citation coverage.',
+    };
+
   const cards = people.map((person) => [
     '<article class="person-card">',
     '<header class="person-card__header">',
     person.photoUrl ? `<img class="person-card__photo" src="${escapeHtml(person.photoUrl)}" alt="">` : '',
     `<h2>${escapeHtml(person.displayName)}</h2>`,
-    `<span>${person.citationCoverage}% توثيق</span>`,
+    `<span>${person.citationCoverage}% ${escapeHtml(labels.coverage)}</span>`,
     '</header>',
     person.narrative ? `<p class="person-card__narrative">${escapeHtml(person.narrative)}</p>` : '',
     '<dl class="fact-list">',
     ...person.facts.map((fact) => [
       '<div class="fact-row">',
       `<dt>${escapeHtml(fact.label)}</dt>`,
-      `<dd>${escapeHtml(fact.value)}${fact.citationCount > 0 ? ` <small>${fact.citationCount} مصدر</small>` : ''}</dd>`,
+      `<dd>${escapeHtml(fact.value)}${fact.citationCount > 0 ? ` <small>${fact.citationCount} ${escapeHtml(labels.sourceSingular)}</small>` : ''}</dd>`,
       '</div>',
     ].join('\n')),
     '</dl>',
-    renderSourceHighlights(person),
+    renderSourceHighlights(person, language),
     '</article>',
   ].join('\n')).join('\n');
 
   return [
     '<section class="page chapter-page people-chapter">',
     `<h1>${escapeHtml(title)}</h1>`,
-    '<p class="chapter-lead">ملفات الأشخاص مع أبرز الوقائع ونسبة التوثيق.</p>',
+    `<p class="chapter-lead">${escapeHtml(labels.lead)}</p>`,
     '<div class="person-grid">',
     cards,
     '</div>',
@@ -152,9 +164,9 @@ function renderPeopleChapter(title: string, people: readonly ManuscriptPersonEnt
   ].join('\n');
 }
 
-function renderSourceHighlights(person: ManuscriptPersonEntry): string {
+function renderSourceHighlights(person: ManuscriptPersonEntry, language: 'ar' | 'en'): string {
   if (person.sourceHighlights.length === 0) {
-    return '<p class="sources-empty">لا توجد مصادر مرتبطة بعد.</p>';
+    return `<p class="sources-empty">${language === 'ar' ? 'لا توجد مصادر مرتبطة بعد.' : 'No linked sources yet.'}</p>`;
   }
 
   return [
@@ -185,7 +197,10 @@ function renderTimelineChapter(title: string, entries: readonly ManuscriptTimeli
   ].join('\n');
 }
 
-function renderEvidenceChapter(title: string, citations: readonly ManuscriptCitationEntry[]): string {
+function renderEvidenceChapter(title: string, citations: readonly ManuscriptCitationEntry[], language: 'ar' | 'en'): string {
+  const labels = language === 'ar'
+    ? { source: 'المصدر', citations: 'الاستشهادات', fields: 'الحقول', empty: 'لا توجد مصادر مرتبطة بعد.' }
+    : { source: 'Source', citations: 'Citations', fields: 'Fields', empty: 'No linked sources yet.' };
   const bySource = new Map<string, { count: number; fields: Set<string> }>();
   citations.forEach((citation) => {
     const current = bySource.get(citation.sourceTitle) ?? { count: 0, fields: new Set<string>() };
@@ -207,9 +222,9 @@ function renderEvidenceChapter(title: string, citations: readonly ManuscriptCita
     '<section class="page chapter-page evidence-chapter">',
     `<h1>${escapeHtml(title)}</h1>`,
     '<table class="bibliography-table">',
-    '<thead><tr><th>#</th><th>المصدر</th><th>الاستشهادات</th><th>الحقول</th></tr></thead>',
+    `<thead><tr><th>#</th><th>${escapeHtml(labels.source)}</th><th>${escapeHtml(labels.citations)}</th><th>${escapeHtml(labels.fields)}</th></tr></thead>`,
     '<tbody>',
-    rows || '<tr><td colspan="4">لا توجد مصادر مرتبطة بعد.</td></tr>',
+    rows || `<tr><td colspan="4">${escapeHtml(labels.empty)}</td></tr>`,
     '</tbody>',
     '</table>',
     '</section>',

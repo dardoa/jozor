@@ -58,4 +58,12 @@ describe('NarrativeDraftBuilder', () => {
 
     expect(narrative).toContain('Private is documented in this family manuscript.');
   });
+
+  it('builds Arabic narrative drafts when requested', () => {
+    const narrative = NarrativeDraftBuilder.buildPersonNarrative(entry, { language: 'ar' });
+
+    expect(narrative).toContain('Root Person وُلد بتاريخ 1950-01-01 في Kafranbel, Syria.');
+    expect(narrative).toContain('يرتبط هذا الملف بـ 2 استشهاد');
+    expect(narrative).toContain('من أبرز المصادر: Birth registry.');
+  });
 });

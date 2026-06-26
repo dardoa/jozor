@@ -3,15 +3,26 @@ import type { ManuscriptFactEntry, ManuscriptPersonEntry } from '../types';
 export interface NarrativeDraftOptions {
   readonly maxFacts?: number;
   readonly suppressEmptyPrivateNarratives?: boolean;
+  readonly language?: 'ar' | 'en';
 }
 
 function findFact(facts: readonly ManuscriptFactEntry[], label: string): ManuscriptFactEntry | undefined {
   return facts.find((fact) => fact.label.toLowerCase() === label.toLowerCase());
 }
 
-function formatEvidenceSuffix(entry: ManuscriptPersonEntry): string {
+function formatEvidenceSuffix(entry: ManuscriptPersonEntry, language: 'ar' | 'en'): string {
   if (entry.citationCount <= 0) {
+    if (language === 'ar') {
+      return 'لا توجد استشهادات مرتبطة بهذا الملف الشخصي حتى الآن.';
+    }
     return 'No linked citations are recorded yet for this profile.';
+  }
+
+  if (language === 'ar') {
+    const sourceText = entry.sourceHighlights.length > 0
+      ? ` من أبرز المصادر: ${entry.sourceHighlights.map((source) => source.title).join('، ')}.`
+      : '';
+    return `يرتبط هذا الملف بـ ${entry.citationCount} استشهاد وبنسبة تغطية ${entry.citationCoverage}% للوقائع.${sourceText}`;
   }
 
   const sourceText = entry.sourceHighlights.length > 0
@@ -47,23 +58,43 @@ export class NarrativeDraftBuilder {
     const deathPlace = findFact(entry.facts, 'Death place')?.value;
     const residence = findFact(entry.facts, 'Residence')?.value;
     const occupation = findFact(entry.facts, 'Occupation')?.value;
+    const language = options.language ?? 'en';
 
     const sentences: string[] = [];
-    if (birthDate || birthPlace) {
-      sentences.push(`${entry.displayName} was born${birthDate ? ` on ${birthDate}` : ''}${birthPlace ? ` in ${birthPlace}` : ''}.`);
+    if (language === 'ar') {
+      if (birthDate || birthPlace) {
+        sentences.push(`${entry.displayName} وُلد${birthDate ? ` بتاريخ ${birthDate}` : ''}${birthPlace ? ` في ${birthPlace}` : ''}.`);
+      } else {
+        sentences.push(`يرد ${entry.displayName} في هذا المخطوط العائلي.`);
+      }
+
+      if (residence || occupation) {
+        sentences.push([
+          residence ? `يرتبط بـ ${residence}` : '',
+          occupation ? `وتذكر السجلات مهنته/عمله: ${occupation}` : '',
+        ].filter(Boolean).join(' ') + '.');
+      }
+
+      if (deathDate || deathPlace) {
+        sentences.push(`${entry.displayName} توفي${deathDate ? ` بتاريخ ${deathDate}` : ''}${deathPlace ? ` في ${deathPlace}` : ''}.`);
+      }
     } else {
-      sentences.push(`${entry.displayName} is documented in this family manuscript.`);
-    }
+      if (birthDate || birthPlace) {
+        sentences.push(`${entry.displayName} was born${birthDate ? ` on ${birthDate}` : ''}${birthPlace ? ` in ${birthPlace}` : ''}.`);
+      } else {
+        sentences.push(`${entry.displayName} is documented in this family manuscript.`);
+      }
 
-    if (residence || occupation) {
-      sentences.push([
-        residence ? `They are associated with ${residence}` : '',
-        occupation ? `and are recorded with the occupation ${occupation}` : '',
-      ].filter(Boolean).join(' ') + '.');
-    }
+      if (residence || occupation) {
+        sentences.push([
+          residence ? `They are associated with ${residence}` : '',
+          occupation ? `and are recorded with the occupation ${occupation}` : '',
+        ].filter(Boolean).join(' ') + '.');
+      }
 
-    if (deathDate || deathPlace) {
-      sentences.push(`${entry.displayName} died${deathDate ? ` on ${deathDate}` : ''}${deathPlace ? ` in ${deathPlace}` : ''}.`);
+      if (deathDate || deathPlace) {
+        sentences.push(`${entry.displayName} died${deathDate ? ` on ${deathDate}` : ''}${deathPlace ? ` in ${deathPlace}` : ''}.`);
+      }
     }
 
     const extraFacts = entry.facts
@@ -71,10 +102,12 @@ export class NarrativeDraftBuilder {
       .slice(0, options.maxFacts ?? 3)
       .map((fact) => `${fact.label}: ${fact.value}`);
     if (extraFacts.length > 0) {
-      sentences.push(`Additional recorded facts include ${extraFacts.join('; ')}.`);
+      sentences.push(language === 'ar'
+        ? `تتضمن الوقائع الإضافية المسجلة: ${extraFacts.join('؛ ')}.`
+        : `Additional recorded facts include ${extraFacts.join('; ')}.`);
     }
 
-    sentences.push(formatEvidenceSuffix(entry));
+    sentences.push(formatEvidenceSuffix(entry, language));
     return sentences.join(' ');
   }
 

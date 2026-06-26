@@ -57,7 +57,8 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
                 relationships,
                 sources,
                 citations,
-                currentTreeId
+                currentTreeId,
+                language
             } = useAppStore.getState();
 
             const activePeople = currentUserRole === 'viewer' ? maskPeopleMap(people) : people;
@@ -123,6 +124,7 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
                         people: activePeople,
                         relationshipEdges: relationships,
                         evidence: { sources, citations },
+                        language: language === 'ar' ? 'ar' : 'en',
                     });
                     outputName = `${manuscriptModel.title}.md`;
                     downloadFile(
@@ -285,6 +287,7 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
             generationsDepth: manuscriptOptions.generationsDepth,
             includeImages: manuscriptOptions.includeImages,
             includeNarrative: manuscriptOptions.includeNarrative,
+            language: language === 'ar' ? 'ar' : 'en',
         }), manuscriptOptions);
         const html = HtmlManuscriptRenderer.renderToHtml(manuscriptModel, {
             language: language === 'ar' ? 'ar' : 'en',

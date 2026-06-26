@@ -133,10 +133,11 @@ describe('ManuscriptStructureBuilder', () => {
       rootPersonId: 'root',
       people,
       includeNarrative: true,
+      language: 'ar',
     });
 
     expect(withoutNarrative.chapters.find((chapter) => chapter.type === 'people')?.people?.[0]?.narrative).toBeUndefined();
-    expect(withNarrative.chapters.find((chapter) => chapter.type === 'people')?.people?.[0]?.narrative).toContain('Root Family was born');
+    expect(withNarrative.chapters.find((chapter) => chapter.type === 'people')?.people?.[0]?.narrative).toContain('Root Family وُلد');
   });
 
   it('creates a biography section consumable by the existing book layout', () => {
