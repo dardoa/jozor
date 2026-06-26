@@ -135,11 +135,17 @@ describe('ExportCloudPanel manuscript preview', () => {
       />
     );
 
+    expect(screen.getByText('Manuscript Control Panel')).toBeInTheDocument();
+    expect(screen.getByText(/Preview and PDF use the same manuscript model and settings/i)).toBeInTheDocument();
+
     fireEvent.change(screen.getByLabelText(/Manuscript root/i), { target: { value: 'person-2' } });
     fireEvent.change(screen.getByLabelText(/Branch depth/i), { target: { value: 'all' } });
     fireEvent.click(screen.getByLabelText(/Include photos/i));
     fireEvent.click(screen.getByLabelText(/Narrative draft/i));
     fireEvent.click(screen.getByRole('button', { name: /Preview Manuscript/i }));
+
+    expect(screen.getByText(/Branch Person · Full branch/i)).toBeInTheDocument();
+    expect(screen.getByText(/photos, timeline, bibliography, narrative/i)).toBeInTheDocument();
 
     await waitFor(() => expect(onRunPublishingPreview).toHaveBeenCalled());
     expect(onRunPublishingPreview).toHaveBeenCalledWith(expect.objectContaining({

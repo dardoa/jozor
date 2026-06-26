@@ -134,6 +134,19 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
   );
 
   const effectiveRootPersonId = selectedRootPersonId || focusId || personOptions[0]?.id || '';
+  const selectedRootName = personOptions.find((person) => person.id === effectiveRootPersonId)?.name || effectiveRootPersonId;
+  const manuscriptScopeLabel = generationsDepth === 'all'
+    ? (language === 'ar' ? 'كل الفرع' : 'Full branch')
+    : (language === 'ar' ? `${generationsDepth} أجيال` : `${generationsDepth} generations`);
+  const includedManuscriptSections = useMemo(
+    () => [
+      includeImages ? (language === 'ar' ? 'الصور' : 'photos') : null,
+      includeTimeline ? (language === 'ar' ? 'الخط الزمني' : 'timeline') : null,
+      includeEvidence ? (language === 'ar' ? 'المراجع' : 'bibliography') : null,
+      includeNarrative ? (language === 'ar' ? 'السرد' : 'narrative') : null,
+    ].filter(Boolean).join(language === 'ar' ? '، ' : ', ') || (language === 'ar' ? 'فصول الأشخاص فقط' : 'people chapters only'),
+    [includeEvidence, includeImages, includeNarrative, includeTimeline, language]
+  );
 
   const manuscriptOptions = useMemo(
     () => ({
@@ -418,7 +431,32 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                 </p>
               </div>
             </div>
-            <div className="grid gap-2 rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] p-3 sm:grid-cols-2">
+            <div className="rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] p-3">
+              <div className="mb-3 flex flex-col gap-2 border-b border-[var(--border-soft)] pb-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <h6 className="text-xs font-bold uppercase tracking-[0.08em] text-[var(--text-secondary)]">
+                    {language === 'ar' ? 'لوحة تحكم المخطوط' : 'Manuscript Control Panel'}
+                  </h6>
+                  <p className="mt-1 text-[11px] leading-relaxed text-[var(--text-muted)]">
+                    {language === 'ar'
+                      ? 'المعاينة وملف PDF يستخدمان نفس نموذج المخطوط والإعدادات.'
+                      : 'Preview and PDF use the same manuscript model and settings.'}
+                  </p>
+                </div>
+                <div className="rounded-lg bg-[var(--surface-subtle)] px-3 py-2 text-[11px] leading-relaxed text-[var(--text-muted)] sm:max-w-xs">
+                  <span className="font-bold text-[var(--text-secondary)]">
+                    {language === 'ar' ? 'النطاق:' : 'Scope:'}
+                  </span>{' '}
+                  {selectedRootName} · {manuscriptScopeLabel}
+                  <br />
+                  <span className="font-bold text-[var(--text-secondary)]">
+                    {language === 'ar' ? 'المحتوى:' : 'Includes:'}
+                  </span>{' '}
+                  {includedManuscriptSections}
+                </div>
+              </div>
+
+              <div className="grid gap-2 sm:grid-cols-2">
               <label className="flex flex-col gap-1 rounded-lg bg-[var(--surface-subtle)] px-3 py-2 text-xs font-semibold text-[var(--text-secondary)]">
                 <span>{language === 'ar' ? 'جذر المخطوط' : 'Manuscript root'}</span>
                 <select
@@ -480,6 +518,7 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                   className="h-4 w-4 accent-[var(--primary-600)]"
                 />
               </label>
+              </div>
             </div>
 
             <div className="flex flex-col justify-end gap-2 border-t border-[var(--border-soft)] pt-3 sm:flex-row">
