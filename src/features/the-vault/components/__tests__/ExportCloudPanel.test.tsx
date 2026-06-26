@@ -138,4 +138,46 @@ describe('ExportCloudPanel manuscript preview', () => {
       }),
     }));
   });
+
+  it('opens the manuscript preview in a separate browser window', async () => {
+    const write = vi.fn();
+    const open = vi.fn();
+    const close = vi.fn();
+    const focus = vi.fn();
+    const previewWindow = {
+      document: {
+        open,
+        write,
+        close,
+        title: '',
+      },
+      focus,
+    } as unknown as Window;
+    const openSpy = vi.spyOn(window, 'open').mockReturnValue(previewWindow);
+    const onRunPublishingPreview = vi.fn().mockResolvedValue({
+      title: 'Family Manuscript',
+      html: '<!doctype html><html><body>Full Preview</body></html>',
+      pageEstimate: 4,
+    });
+
+    render(
+      <ExportCloudPanel
+        {...baseProps}
+        onRunPublishingPreview={onRunPublishingPreview}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /Preview Manuscript/i }));
+
+    await screen.findByText('Estimated pages: 4');
+    fireEvent.click(screen.getByRole('button', { name: /Open Full/i }));
+
+    expect(openSpy).toHaveBeenCalledWith('', '_blank', 'width=1100,height=900');
+    expect(open).toHaveBeenCalled();
+    expect(write).toHaveBeenCalledWith('<!doctype html><html><body>Full Preview</body></html>');
+    expect(close).toHaveBeenCalled();
+    expect(focus).toHaveBeenCalled();
+
+    openSpy.mockRestore();
+  });
 });

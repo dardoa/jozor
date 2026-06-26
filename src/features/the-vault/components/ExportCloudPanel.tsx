@@ -13,6 +13,7 @@ import {
   Trash2,
   BookOpen,
   Download,
+  ExternalLink,
   Eye,
   Sparkles,
   X,
@@ -191,6 +192,24 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
     [language, manuscriptOptions, onRunPublishingPreview]
   );
 
+  const handleOpenPreviewWindow = useCallback(() => {
+    if (!preview) {
+      return;
+    }
+
+    const previewWindow = window.open('', '_blank', 'width=1100,height=900');
+    if (!previewWindow) {
+      showToast.error(language === 'ar' ? 'تعذر فتح نافذة المعاينة.' : 'Unable to open the preview window.');
+      return;
+    }
+
+    previewWindow.document.open();
+    previewWindow.document.write(preview.html);
+    previewWindow.document.close();
+    previewWindow.document.title = preview.title;
+    previewWindow.focus();
+  }, [language, preview]);
+
   const sortedFiles = useMemo(
     () => [...files].sort((a, b) => String(b.modifiedTime || '').localeCompare(String(a.modifiedTime || ''))),
     [files]
@@ -245,6 +264,14 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                 )}
               </div>
               <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleOpenPreviewWindow}
+                  className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-[var(--border-soft)] bg-[var(--surface-subtle)] px-3 py-2 text-xs font-bold text-[var(--text-secondary)] transition-all hover:bg-[var(--surface-hover)] active:scale-[0.98]"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  {language === 'ar' ? 'فتح منفصل' : 'Open Full'}
+                </button>
                 <button
                   type="button"
                   onClick={() => void handlePublishingExport({ templateId: 'classic-book-manuscript', format: 'pdf', renderer: 'html-print', manuscriptOptions })}
