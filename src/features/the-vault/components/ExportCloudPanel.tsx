@@ -512,7 +512,7 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
 
                 <Printer className="h-3.5 w-3.5" />
 
-                {language === 'ar' ? 'PDF عربي محسّن' : 'Enhanced Arabic PDF'}
+                {language === 'ar' ? 'PDF مخطوط العائلة' : 'Family Book PDF'}
 
               </button>
 
@@ -522,7 +522,7 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                 className="flex items-center gap-2 rounded-xl bg-[var(--primary-600)] hover:bg-[var(--primary-700)] text-white px-4 py-2 text-xs font-bold transition-all hover:brightness-105 active:scale-[0.98] shadow-sm shadow-[var(--primary-600)]/10"
               >
                 <Download className="h-3.5 w-3.5" />
-                {language === 'ar' ? 'تحميل ملف PDF المتجهة' : 'Download Vector PDF'}
+                {language === 'ar' ? 'PDF متجه تقليدي' : 'Legacy Vector PDF'}
               </button>
             </div>
           </div>

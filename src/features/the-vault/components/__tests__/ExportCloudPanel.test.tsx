@@ -78,6 +78,19 @@ const baseProps = {
 };
 
 describe('ExportCloudPanel manuscript preview', () => {
+  it('labels manuscript PDF export by document type instead of language', () => {
+    render(
+      <ExportCloudPanel
+        {...baseProps}
+        onRunPublishingPreview={vi.fn()}
+      />
+    );
+
+    expect(screen.getByRole('button', { name: /Family Book PDF/i })).toBeInTheDocument();
+    expect(screen.queryByText(/Enhanced Arabic PDF/i)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Legacy Vector PDF/i })).toBeInTheDocument();
+  });
+
   it('shows the estimated page count returned by the HTML manuscript preview', async () => {
     const onRunPublishingPreview = vi.fn().mockResolvedValue({
       title: 'Family Manuscript',
