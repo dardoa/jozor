@@ -384,7 +384,7 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
                     const preview = await buildHtmlManuscriptPreview(templateId, options.manuscriptOptions);
                     outputName = `${preview.title}.pdf`;
 
-                    await ManuscriptPdfExportService.exportViaBrowserPrintFallback({
+                    await ManuscriptPdfExportService.exportManuscriptPdf({
                         html: preview.html,
                         title: preview.title,
                     });

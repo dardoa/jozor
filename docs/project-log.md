@@ -814,6 +814,7 @@ Deferred geography improvements:
 - Documented Headless Chromium PDF generation as the preferred future professional export path.
 - Added PDF technical checks to the manuscript manual review gate.
 - Extracted the browser-print fallback behind `ManuscriptPdfExportService` so a controlled PDF renderer can replace it later without changing export orchestration.
+- Switched export orchestration to the neutral `exportManuscriptPdf` entrypoint so the current browser-print mode remains replaceable.
 
 # 2026-06-26 - Manuscript preview configuration
 

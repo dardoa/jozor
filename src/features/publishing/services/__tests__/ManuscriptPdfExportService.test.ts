@@ -49,6 +49,24 @@ describe('ManuscriptPdfExportService', () => {
     expect(print).toHaveBeenCalledOnce();
   });
 
+  it('uses the browser print fallback as the current manuscript PDF export mode', async () => {
+    const exportSpy = vi
+      .spyOn(ManuscriptPdfExportService, 'exportViaBrowserPrintFallback')
+      .mockResolvedValue({ mode: 'browser-print-fallback' });
+
+    await expect(
+      ManuscriptPdfExportService.exportManuscriptPdf({
+        html: '<html><body>Portable manuscript</body></html>',
+        title: 'Portable manuscript',
+      })
+    ).resolves.toEqual({ mode: 'browser-print-fallback' });
+
+    expect(exportSpy).toHaveBeenCalledWith({
+      html: '<html><body>Portable manuscript</body></html>',
+      title: 'Portable manuscript',
+    });
+  });
+
   it('fails clearly when the browser blocks the print window', async () => {
     vi.spyOn(window, 'open').mockReturnValue(null);
 

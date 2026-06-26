@@ -134,7 +134,7 @@ vi.mock('../../../features/publishing', () => ({
     renderToMarkdown: vi.fn(() => '# Family Manuscript\n'),
   },
   ManuscriptPdfExportService: {
-    exportViaBrowserPrintFallback: vi.fn(async () => ({ mode: 'browser-print-fallback' })),
+    exportManuscriptPdf: vi.fn(async () => ({ mode: 'browser-print-fallback' })),
   },
 }));
 
@@ -382,7 +382,7 @@ describe('useExport', () => {
       });
     });
 
-    expect(ManuscriptPdfExportService.exportViaBrowserPrintFallback).toHaveBeenCalledWith({
+    expect(ManuscriptPdfExportService.exportManuscriptPdf).toHaveBeenCalledWith({
       html: '<!doctype html><html><body>Arabic manuscript</body></html>',
       title: 'Family Manuscript',
     });

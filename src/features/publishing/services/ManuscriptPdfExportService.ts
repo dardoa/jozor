@@ -3,11 +3,30 @@ export interface ManuscriptPdfExportRequest {
   readonly title: string;
 }
 
+export type ManuscriptPdfExportMode = 'browser-print-fallback';
+
 export interface ManuscriptPdfExportResult {
-  readonly mode: 'browser-print-fallback';
+  readonly mode: ManuscriptPdfExportMode;
+}
+
+export interface ManuscriptPdfExportOptions {
+  readonly mode?: ManuscriptPdfExportMode;
 }
 
 export class ManuscriptPdfExportService {
+  public static async exportManuscriptPdf(
+    request: ManuscriptPdfExportRequest,
+    options: ManuscriptPdfExportOptions = {}
+  ): Promise<ManuscriptPdfExportResult> {
+    const mode = options.mode ?? 'browser-print-fallback';
+
+    if (mode === 'browser-print-fallback') {
+      return this.exportViaBrowserPrintFallback(request);
+    }
+
+    return assertNever(mode);
+  }
+
   /**
    * Transitional manuscript PDF path.
    *
@@ -33,6 +52,10 @@ export class ManuscriptPdfExportService {
 
     return { mode: 'browser-print-fallback' };
   }
+}
+
+function assertNever(value: never): never {
+  throw new Error(`Unsupported manuscript PDF export mode: ${String(value)}`);
 }
 
 async function waitForPrintWindowReady(printWindow: Window): Promise<void> {
