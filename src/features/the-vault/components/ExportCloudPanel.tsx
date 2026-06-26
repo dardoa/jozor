@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 
 import { PUBLISHING_EXPORT_RENDERERS } from '../../../types';
-import type { DriveFile, ExportType, Person, PublishingExportOptions, PublishingPreviewResult } from '../../../types';
+import type { DriveFile, ExportType, ManuscriptOrderingStrategy, Person, PublishingExportOptions, PublishingPreviewResult } from '../../../types';
 import type { TranslationSchema } from '../../../utils/translationLoader';
 import { showToast } from '../../../utils/showToast';
 import { useAppStore } from '../../../store/useAppStore';
@@ -147,6 +147,7 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
   const [includeNarrative, setIncludeNarrative] = useState(false);
   const [includeTimeline, setIncludeTimeline] = useState(true);
   const [includeEvidence, setIncludeEvidence] = useState(true);
+  const [orderingStrategy, setOrderingStrategy] = useState<ManuscriptOrderingStrategy>('narrative');
   const language = useAppStore((state) => state.language);
   const people = useAppStore((state) => state.people);
   const focusId = useAppStore((state) => state.focusId);
@@ -182,6 +183,14 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
   const manuscriptScopeLabel = generationsDepth === 'all'
     ? (language === 'ar' ? 'كل الفرع' : 'Full branch')
     : (language === 'ar' ? `${generationsDepth} أجيال` : `${generationsDepth} generations`);
+  const manuscriptOrderingLabel = useMemo(() => {
+    const labels: Record<ManuscriptOrderingStrategy, string> = {
+      narrative: language === 'ar' ? 'مسار العائلة' : 'Family path',
+      chronological: language === 'ar' ? 'زمني' : 'Chronological',
+      alphabetical: language === 'ar' ? 'أبجدي' : 'Alphabetical',
+    };
+    return labels[orderingStrategy];
+  }, [language, orderingStrategy]);
   const manuscriptScopePersonCount = useMemo(
     () => countBranchPeopleInScope(people, effectiveRootPersonId, generationsDepth),
     [effectiveRootPersonId, generationsDepth, people]
@@ -200,12 +209,13 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
     () => ({
       rootPersonId: effectiveRootPersonId,
       generationsDepth,
+      orderingStrategy,
       includeImages,
       includeNarrative,
       includeTimeline,
       includeEvidence,
     }),
-    [effectiveRootPersonId, generationsDepth, includeEvidence, includeImages, includeNarrative, includeTimeline]
+    [effectiveRootPersonId, generationsDepth, includeEvidence, includeImages, includeNarrative, includeTimeline, orderingStrategy]
   );
   const manuscriptSettingsSignature = useMemo(
     () => JSON.stringify(manuscriptOptions),
@@ -520,6 +530,11 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                   {selectedRootName} · {manuscriptScopeLabel}
                   <br />
                   <span className="font-bold text-[var(--text-secondary)]">
+                    {language === 'ar' ? 'الترتيب:' : 'Order:'}
+                  </span>{' '}
+                  {manuscriptOrderingLabel}
+                  <br />
+                  <span className="font-bold text-[var(--text-secondary)]">
                     {language === 'ar' ? 'الأشخاص:' : 'People in scope:'}
                   </span>{' '}
                   {manuscriptScopePersonCount}
@@ -563,6 +578,18 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                   <option value="3">{language === 'ar' ? '3 أجيال' : '3 generations'}</option>
                   <option value="4">{language === 'ar' ? '4 أجيال' : '4 generations'}</option>
                   <option value="all">{language === 'ar' ? 'كل الفرع' : 'Full branch'}</option>
+                </select>
+              </label>
+              <label className="flex flex-col gap-1 rounded-lg bg-[var(--surface-subtle)] px-3 py-2 text-xs font-semibold text-[var(--text-secondary)]">
+                <span>{language === 'ar' ? 'ترتيب القراءة' : 'Reading order'}</span>
+                <select
+                  value={orderingStrategy}
+                  onChange={(event) => setOrderingStrategy(event.target.value as ManuscriptOrderingStrategy)}
+                  className="min-h-9 rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] px-2 text-xs text-[var(--text-main)] outline-none focus:border-[var(--primary-600)]"
+                >
+                  <option value="narrative">{language === 'ar' ? 'مسار العائلة' : 'Family path'}</option>
+                  <option value="chronological">{language === 'ar' ? 'زمني' : 'Chronological'}</option>
+                  <option value="alphabetical">{language === 'ar' ? 'أبجدي' : 'Alphabetical'}</option>
                 </select>
               </label>
               <label className="flex min-h-10 cursor-pointer items-center justify-between gap-3 rounded-lg bg-[var(--surface-subtle)] px-3 py-2 text-xs font-semibold text-[var(--text-secondary)]">

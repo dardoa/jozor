@@ -442,6 +442,7 @@ describe('useExport', () => {
         manuscriptOptions: {
           rootPersonId: 'person-1',
           generationsDepth: 2,
+          orderingStrategy: 'alphabetical',
           includeImages: true,
           includeNarrative: true,
           includeTimeline: false,
@@ -454,6 +455,7 @@ describe('useExport', () => {
     expect(ManuscriptStructureBuilder.buildModel).toHaveBeenLastCalledWith(expect.objectContaining({
       rootPersonId: 'person-1',
       generationsDepth: 2,
+      orderingStrategy: 'alphabetical',
       includeImages: true,
       includeNarrative: true,
     }));

@@ -125,6 +125,7 @@ describe('ExportCloudPanel manuscript preview', () => {
         includeNarrative: false,
         includeTimeline: true,
         includeEvidence: true,
+        orderingStrategy: 'narrative',
       }),
     }));
     expect(await screen.findByText('Estimated pages: 9')).toBeInTheDocument();
@@ -148,9 +149,12 @@ describe('ExportCloudPanel manuscript preview', () => {
     expect(screen.getByText(/Preview and PDF use the same manuscript model and settings/i)).toBeInTheDocument();
     expect(screen.getByText(/People in scope:/i)).toBeInTheDocument();
     expect(screen.getAllByText((_, element) => element?.textContent?.includes('People in scope: 2') ?? false).length).toBeGreaterThan(0);
+    expect(screen.getByText(/Order:/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Family path/i).length).toBeGreaterThan(0);
 
     fireEvent.change(screen.getByLabelText(/Manuscript root/i), { target: { value: 'Branch Person' } });
     fireEvent.change(screen.getByLabelText(/Branch depth/i), { target: { value: 'all' } });
+    fireEvent.change(screen.getByLabelText(/Reading order/i), { target: { value: 'alphabetical' } });
     fireEvent.click(screen.getByLabelText(/Include photos/i));
     fireEvent.click(screen.getByLabelText(/Narrative draft/i));
     fireEvent.click(screen.getByRole('button', { name: /Preview Manuscript/i }));
@@ -164,6 +168,7 @@ describe('ExportCloudPanel manuscript preview', () => {
       manuscriptOptions: expect.objectContaining({
         rootPersonId: 'person-2',
         generationsDepth: 'all',
+        orderingStrategy: 'alphabetical',
         includeImages: true,
         includeNarrative: true,
       }),

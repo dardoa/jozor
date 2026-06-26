@@ -1,10 +1,11 @@
-import type { Person } from '../../../types';
+import type { ManuscriptOrderingStrategy, Person } from '../../../types';
 import type { PublishingBranchRelationship } from './PublishingRelationshipAdapter';
 
 export interface NarrativeOrderingInput {
   readonly rootPersonId: string;
   readonly people: Record<string, Person>;
   readonly relationships: readonly PublishingBranchRelationship[];
+  readonly strategy?: ManuscriptOrderingStrategy;
 }
 
 function getDisplayName(person: Person): string {
@@ -14,24 +15,43 @@ function getDisplayName(person: Person): string {
     .trim() || person.nickName || person.id;
 }
 
-function comparePeople(a: Person, b: Person): number {
+function comparePeopleAlphabetically(a: Person, b: Person): number {
+  return getDisplayName(a).localeCompare(getDisplayName(b));
+}
+
+function comparePeopleChronologically(a: Person, b: Person): number {
   const aDate = a.birthDate?.trim() || '';
   const bDate = b.birthDate?.trim() || '';
   if (aDate && bDate && aDate !== bDate) return aDate.localeCompare(bDate);
   if (aDate && !bDate) return -1;
   if (!aDate && bDate) return 1;
-  return getDisplayName(a).localeCompare(getDisplayName(b));
+  return comparePeopleAlphabetically(a, b);
 }
 
-function sortIdsByPerson(people: Record<string, Person>, ids: Iterable<string>): string[] {
+function sortIdsByPerson(
+  people: Record<string, Person>,
+  ids: Iterable<string>,
+  strategy: 'alphabetical' | 'chronological' = 'chronological'
+): string[] {
   return [...new Set(ids)]
     .filter((id) => Boolean(people[id]))
-    .sort((a, b) => comparePeople(people[a], people[b]));
+    .sort((a, b) => (
+      strategy === 'alphabetical'
+        ? comparePeopleAlphabetically(people[a], people[b])
+        : comparePeopleChronologically(people[a], people[b])
+    ));
 }
 
 export class NarrativeOrderingEngine {
   public static orderPeople(input: NarrativeOrderingInput): readonly string[] {
-    const { rootPersonId, people, relationships } = input;
+    const { rootPersonId, people, relationships, strategy = 'narrative' } = input;
+    if (strategy === 'alphabetical') {
+      return sortIdsByPerson(people, Object.keys(people), 'alphabetical');
+    }
+    if (strategy === 'chronological') {
+      return sortIdsByPerson(people, Object.keys(people), 'chronological');
+    }
+
     if (!people[rootPersonId]) {
       return sortIdsByPerson(people, Object.keys(people));
     }

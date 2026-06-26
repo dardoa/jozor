@@ -1,4 +1,4 @@
-import type { Citation, Person, RelationshipEdge, Source } from '../../../types';
+import type { Citation, ManuscriptOrderingStrategy, Person, RelationshipEdge, Source } from '../../../types';
 import type {
   FamilyManuscriptModel,
   ManuscriptCitationEntry,
@@ -24,6 +24,7 @@ export interface ManuscriptStructureOptions {
   readonly generationsDepth?: number | 'all';
   readonly includeImages?: boolean;
   readonly includeNarrative?: boolean;
+  readonly orderingStrategy?: ManuscriptOrderingStrategy;
   readonly language?: 'ar' | 'en';
 }
 
@@ -260,6 +261,7 @@ export class ManuscriptStructureBuilder {
       rootPersonId: options.rootPersonId,
       people: manuscriptPeople,
       relationships: branchGraph.relationships,
+      strategy: options.orderingStrategy,
     });
     const rawPeopleEntries = buildPersonEntries(manuscriptPeople, evidence.sources, citationValues, options.rootPersonId, Boolean(options.includeImages), labels, narrativeOrder);
     const peopleEntries = options.includeNarrative

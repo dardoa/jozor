@@ -322,6 +322,106 @@ describe('ManuscriptStructureBuilder', () => {
     ]);
   });
 
+  it('supports alphabetical manuscript ordering for name-directory output', () => {
+    const people: Record<string, Person> = {
+      root: createMockPerson('root', 'male', {
+        firstName: 'Ziad',
+        lastName: 'Family',
+        birthDate: '1930-01-01',
+      }),
+      childA: createMockPerson('childA', 'male', {
+        firstName: 'Ahmad',
+        lastName: 'Family',
+        birthDate: '1960-01-01',
+      }),
+      childB: createMockPerson('childB', 'male', {
+        firstName: 'Bilal',
+        lastName: 'Family',
+        birthDate: '1955-01-01',
+      }),
+    };
+    const relationshipEdges: Record<string, RelationshipEdge> = {
+      childA: {
+        id: 'edge-child-a',
+        treeId: 'tree-1',
+        fromPersonId: 'root',
+        toPersonId: 'childA',
+        type: 'BIOLOGICAL_PARENT',
+        status: 'ACTIVE',
+        createdAt: '2026-01-01T00:00:00.000Z',
+      },
+      childB: {
+        id: 'edge-child-b',
+        treeId: 'tree-1',
+        fromPersonId: 'root',
+        toPersonId: 'childB',
+        type: 'BIOLOGICAL_PARENT',
+        status: 'ACTIVE',
+        createdAt: '2026-01-01T00:00:00.000Z',
+      },
+    };
+
+    const model = ManuscriptStructureBuilder.buildModel({
+      rootPersonId: 'root',
+      people,
+      relationshipEdges,
+      orderingStrategy: 'alphabetical',
+    });
+
+    const orderedIds = model.chapters.find((chapter) => chapter.type === 'people')?.people?.map((entry) => entry.personId);
+    expect(orderedIds).toEqual(['childA', 'childB', 'root']);
+  });
+
+  it('supports chronological manuscript ordering for historical reading', () => {
+    const people: Record<string, Person> = {
+      root: createMockPerson('root', 'male', {
+        firstName: 'Ziad',
+        lastName: 'Family',
+        birthDate: '1930-01-01',
+      }),
+      childA: createMockPerson('childA', 'male', {
+        firstName: 'Ahmad',
+        lastName: 'Family',
+        birthDate: '1960-01-01',
+      }),
+      childB: createMockPerson('childB', 'male', {
+        firstName: 'Bilal',
+        lastName: 'Family',
+        birthDate: '1955-01-01',
+      }),
+    };
+    const relationshipEdges: Record<string, RelationshipEdge> = {
+      childA: {
+        id: 'edge-child-a',
+        treeId: 'tree-1',
+        fromPersonId: 'root',
+        toPersonId: 'childA',
+        type: 'BIOLOGICAL_PARENT',
+        status: 'ACTIVE',
+        createdAt: '2026-01-01T00:00:00.000Z',
+      },
+      childB: {
+        id: 'edge-child-b',
+        treeId: 'tree-1',
+        fromPersonId: 'root',
+        toPersonId: 'childB',
+        type: 'BIOLOGICAL_PARENT',
+        status: 'ACTIVE',
+        createdAt: '2026-01-01T00:00:00.000Z',
+      },
+    };
+
+    const model = ManuscriptStructureBuilder.buildModel({
+      rootPersonId: 'root',
+      people,
+      relationshipEdges,
+      orderingStrategy: 'chronological',
+    });
+
+    const orderedIds = model.chapters.find((chapter) => chapter.type === 'people')?.people?.map((entry) => entry.personId);
+    expect(orderedIds).toEqual(['root', 'childB', 'childA']);
+  });
+
   it('splits person entries across biography sections to avoid overcrowded print pages', () => {
     const people = Array.from({ length: 5 }).reduce<Record<string, Person>>((acc, _, index) => {
       const id = `person-${index + 1}`;

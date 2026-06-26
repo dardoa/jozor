@@ -9,5 +9,5 @@ export * from './state';
 export * from './ai';
 export * from './relationship';
 export * from './citation';
-
+export * from './publishing';
 

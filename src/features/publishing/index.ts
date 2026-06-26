@@ -16,5 +16,6 @@ export * from './services/PublishingEvidenceAdapter';
 export * from './services/ManuscriptStructureBuilder';
 export * from './services/ManuscriptPdfExportService';
 export * from './services/NarrativeDraftBuilder';
+export * from './services/NarrativeOrderingEngine';
 export * from './templates';
 

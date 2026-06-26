@@ -9,6 +9,7 @@ import type {
     UserProfile,
 } from './common';
 import type { Person } from './person';
+import type { ManuscriptOrderingStrategy } from './publishing';
 import type { DriveFile, TreeSettings } from './tree';
 
 export interface HelpTranslations {
@@ -117,6 +118,7 @@ export interface PublishingExportOptions {
     manuscriptOptions?: {
         rootPersonId?: string;
         generationsDepth?: number | 'all';
+        orderingStrategy?: ManuscriptOrderingStrategy;
         includeImages?: boolean;
         includeNarrative?: boolean;
         includeTimeline?: boolean;
