@@ -823,6 +823,7 @@ Deferred geography improvements:
 - Passed manuscript configuration through The Vault, the export hook, and `ManuscriptStructureBuilder`.
 - Added a Manuscript Control Panel summary in The Vault so users can see the selected root, scope, and included sections before preview/export.
 - Replaced the manuscript root dropdown with searchable root selection to keep large-family manuscript setup usable.
+- Marked open manuscript previews as stale when settings change, prompting a refresh before exporting from the preview modal.
 - Added generation-depth limiting for branch manuscript models while preserving the full-branch option.
 - Added coverage for configured preview options and depth-limited manuscript generation.
 - Added an opt-in photo inclusion toggle for manuscript previews and HTML print output without making photos part of the default manuscript export.

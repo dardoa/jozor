@@ -200,4 +200,29 @@ describe('ExportCloudPanel manuscript preview', () => {
 
     openSpy.mockRestore();
   });
+
+  it('marks an open preview as stale when manuscript settings change', async () => {
+    const onRunPublishingPreview = vi.fn().mockResolvedValue({
+      title: 'Family Manuscript',
+      html: '<!doctype html><html><body>Preview</body></html>',
+      pageEstimate: 4,
+    });
+
+    render(
+      <ExportCloudPanel
+        {...baseProps}
+        onRunPublishingPreview={onRunPublishingPreview}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /Preview Manuscript/i }));
+    await screen.findByText('Estimated pages: 4');
+
+    fireEvent.change(screen.getByLabelText(/Branch depth/i), { target: { value: '4' } });
+
+    expect(screen.getByText(/Settings changed after this preview/i)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Refresh Preview/i }));
+
+    await waitFor(() => expect(onRunPublishingPreview).toHaveBeenCalledTimes(2));
+  });
 });

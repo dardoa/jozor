@@ -112,6 +112,7 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
   const [confirmOverwriteId, setConfirmOverwriteId] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [preview, setPreview] = useState<PublishingPreviewResult | null>(null);
+  const [previewSettingsSignature, setPreviewSettingsSignature] = useState<string | null>(null);
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
   const [includeImages, setIncludeImages] = useState(false);
   const [includeNarrative, setIncludeNarrative] = useState(false);
@@ -173,6 +174,11 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
     }),
     [effectiveRootPersonId, generationsDepth, includeEvidence, includeImages, includeNarrative, includeTimeline]
   );
+  const manuscriptSettingsSignature = useMemo(
+    () => JSON.stringify(manuscriptOptions),
+    [manuscriptOptions]
+  );
+  const isPreviewOutdated = Boolean(preview && previewSettingsSignature !== manuscriptSettingsSignature);
 
   const handleExport = useCallback(
     async (type: ExportType) => {
@@ -211,13 +217,14 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
           manuscriptOptions,
         });
         setPreview(result);
+        setPreviewSettingsSignature(manuscriptSettingsSignature);
       } catch (error) {
         showToast.error(error instanceof Error ? error.message : 'Failed to build manuscript preview.');
       } finally {
         setIsPreviewLoading(false);
       }
     },
-    [language, manuscriptOptions, onRunPublishingPreview]
+    [language, manuscriptOptions, manuscriptSettingsSignature, onRunPublishingPreview]
   );
 
   const handleOpenPreviewWindow = useCallback(() => {
@@ -290,6 +297,13 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                       : `Estimated pages: ${preview.pageEstimate}`}
                   </p>
                 )}
+                {isPreviewOutdated && (
+                  <p className="mt-1 rounded-lg bg-amber-500/10 px-2 py-1 text-[11px] font-semibold text-amber-700">
+                    {language === 'ar'
+                      ? 'تغيرت الإعدادات بعد هذه المعاينة. حدّث المعاينة قبل التصدير.'
+                      : 'Settings changed after this preview. Refresh the preview before exporting.'}
+                  </p>
+                )}
               </div>
               <div className="flex items-center gap-2">
                 <button
@@ -302,11 +316,20 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                 </button>
                 <button
                   type="button"
-                  onClick={() => void handlePublishingExport({ templateId: 'classic-book-manuscript', format: 'pdf', renderer: PUBLISHING_EXPORT_RENDERERS.manuscript, manuscriptOptions })}
-                  className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-emerald-700 px-3 py-2 text-xs font-bold text-white transition-all hover:brightness-105 active:scale-[0.98]"
+                  onClick={() => {
+                    if (isPreviewOutdated) {
+                      void handlePublishingPreview();
+                      return;
+                    }
+                    void handlePublishingExport({ templateId: 'classic-book-manuscript', format: 'pdf', renderer: PUBLISHING_EXPORT_RENDERERS.manuscript, manuscriptOptions });
+                  }}
+                  disabled={isPreviewLoading}
+                  className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-emerald-700 px-3 py-2 text-xs font-bold text-white transition-all hover:brightness-105 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  <Printer className="h-3.5 w-3.5" />
-                  {language === 'ar' ? 'PDF مخطوط العائلة' : 'Family Book PDF'}
+                  {isPreviewLoading ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Printer className="h-3.5 w-3.5" />}
+                  {isPreviewOutdated
+                    ? (language === 'ar' ? 'تحديث المعاينة' : 'Refresh Preview')
+                    : (language === 'ar' ? 'PDF مخطوط العائلة' : 'Family Book PDF')}
                 </button>
                 <button
                   type="button"
