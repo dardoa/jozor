@@ -284,7 +284,7 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                   className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-[var(--border-soft)] bg-[var(--surface-subtle)] px-3 py-2 text-xs font-bold text-[var(--text-secondary)] transition-all hover:bg-[var(--surface-hover)] active:scale-[0.98]"
                 >
                   <ExternalLink className="h-3.5 w-3.5" />
-                  {language === 'ar' ? 'فتح منفصل' : 'Open Full'}
+                  {language === 'ar' ? 'فتح المعاينة' : 'Open Preview'}
                 </button>
                 <button
                   type="button"
@@ -292,7 +292,7 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                   className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-emerald-700 px-3 py-2 text-xs font-bold text-white transition-all hover:brightness-105 active:scale-[0.98]"
                 >
                   <Printer className="h-3.5 w-3.5" />
-                  {language === 'ar' ? 'تصدير PDF' : 'Export PDF'}
+                  {language === 'ar' ? 'PDF مخطوط العائلة' : 'Family Book PDF'}
                 </button>
                 <button
                   type="button"

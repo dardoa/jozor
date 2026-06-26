@@ -189,7 +189,8 @@ describe('ExportCloudPanel manuscript preview', () => {
     fireEvent.click(screen.getByRole('button', { name: /Preview Manuscript/i }));
 
     await screen.findByText('Estimated pages: 4');
-    fireEvent.click(screen.getByRole('button', { name: /Open Full/i }));
+    expect(screen.getAllByRole('button', { name: /Family Book PDF/i })).toHaveLength(2);
+    fireEvent.click(screen.getByRole('button', { name: /Open Preview/i }));
 
     expect(openSpy).toHaveBeenCalledWith('', '_blank', 'width=1100,height=900');
     expect(open).toHaveBeenCalled();
