@@ -1,7 +1,7 @@
 ﻿import { PublicationManifest, ExportHistoryEntry } from '../types/manifest';
 import { useAppStore } from '../../../store/useAppStore';
 import { buildFamilyGraph } from '../../../domain/familyGraph';
-import { Citation, Person, RelationshipEdge, Source } from '../../../types';
+import type { Citation, Person, PublishingExportOptions, RelationshipEdge, Source } from '../../../types';
 import { evaluateDataIntegrity } from '../../../domain/dataIntegrity';
 import { summarizePublishingEvidence } from './PublishingEvidenceAdapter';
 import { PublishingRelationshipAdapter } from './PublishingRelationshipAdapter';
@@ -17,6 +17,17 @@ export interface TrackerStartOptions {
     readonly citations?: Record<string, Citation>;
     readonly userRole?: string | null;
     readonly treeId?: string | null;
+    readonly manuscriptOptions?: PublishingExportOptions['manuscriptOptions'];
+}
+
+interface NormalizedManuscriptOptions {
+    readonly rootPersonId?: string;
+    readonly generationsDepth: number | 'all';
+    readonly orderingStrategy: NonNullable<NonNullable<PublishingExportOptions['manuscriptOptions']>['orderingStrategy']>;
+    readonly includeImages: boolean;
+    readonly includeNarrative: boolean;
+    readonly includeTimeline: boolean;
+    readonly includeEvidence: boolean;
 }
 
 export class PublishingTracker {
@@ -42,6 +53,7 @@ export class PublishingTracker {
         const citations = options.citations ?? storeCitations ?? {};
         const userRole = options.userRole ?? currentUserRole ?? null;
         const treeId = options.treeId ?? currentTreeId ?? 'publishing';
+        const manuscriptOptions = normalizeManuscriptOptions(options.manuscriptOptions);
         const publicationId = typeof crypto !== 'undefined' && crypto.randomUUID 
             ? crypto.randomUUID() 
             : Math.random().toString(36).substring(2, 15);
@@ -57,7 +69,13 @@ export class PublishingTracker {
         }
 
         const evidenceSummary = summarizePublishingEvidence(options.people, { sources, citations });
-        const manuscriptEvidence = getManuscriptEvidenceMetadata(options.templateId, options.people, relationships, sources, citations);
+        const manuscriptEvidence = getManuscriptEvidenceMetadata(options.templateId, options.people, relationships, sources, citations, manuscriptOptions);
+        const manuscriptMetadata = options.templateId.includes('book-manuscript')
+            ? {
+                ...manuscriptOptions,
+                orderedPersonCount: manuscriptEvidence.manuscriptPersonCount,
+            }
+            : undefined;
 
         const manifest: PublicationManifest = {
             publicationId,
@@ -88,6 +106,7 @@ export class PublishingTracker {
                     .createContext(options.people, relationships, treeId)
                     .warnings.length,
             },
+            manuscript: manuscriptMetadata,
         };
 
         return {
@@ -136,6 +155,7 @@ export class PublishingTracker {
             evidence: trackerState.manifest.evidence,
             integrity: trackerState.manifest.integrity,
             relationships: trackerState.manifest.relationships,
+            manuscript: trackerState.manifest.manuscript,
             outputFiles,
         };
 
@@ -166,11 +186,12 @@ function getManuscriptEvidenceMetadata(
     people: Record<string, Person>,
     relationships: Record<string, RelationshipEdge>,
     sources: Record<string, Source>,
-    citations: Record<string, Citation>
+    citations: Record<string, Citation>,
+    manuscriptOptions: NormalizedManuscriptOptions
 ): { readonly manuscriptPersonCount?: number; readonly manuscriptCitationCoverage?: number } {
     if (!templateId.includes('book-manuscript')) return {};
 
-    const rootPersonId = Object.keys(people)[0];
+    const rootPersonId = manuscriptOptions.rootPersonId || Object.keys(people)[0];
     if (!rootPersonId) return {};
 
     try {
@@ -179,6 +200,10 @@ function getManuscriptEvidenceMetadata(
             people,
             relationshipEdges: relationships,
             evidence: { sources, citations },
+            generationsDepth: manuscriptOptions.generationsDepth,
+            orderingStrategy: manuscriptOptions.orderingStrategy,
+            includeImages: manuscriptOptions.includeImages,
+            includeNarrative: manuscriptOptions.includeNarrative,
         });
         const peopleChapter = model.chapters.find((chapter) => chapter.type === 'people');
         const entries = peopleChapter?.people ?? [];
@@ -193,4 +218,18 @@ function getManuscriptEvidenceMetadata(
     } catch {
         return {};
     }
+}
+
+function normalizeManuscriptOptions(
+    options: PublishingExportOptions['manuscriptOptions'] = {}
+): NormalizedManuscriptOptions {
+    return {
+        rootPersonId: options.rootPersonId,
+        generationsDepth: options.generationsDepth ?? 'all',
+        orderingStrategy: options.orderingStrategy ?? 'narrative',
+        includeImages: options.includeImages ?? true,
+        includeNarrative: options.includeNarrative ?? false,
+        includeTimeline: options.includeTimeline ?? true,
+        includeEvidence: options.includeEvidence ?? true,
+    };
 }

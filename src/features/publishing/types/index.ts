@@ -1,4 +1,6 @@
-﻿export type DocumentType = 'single-page' | 'paginated';
+import type { ManuscriptOrderingStrategy } from '../../../types/publishing';
+
+export type DocumentType = 'single-page' | 'paginated';
 
 export type PublicationOutputFamily = 'document' | 'graphic';
 
@@ -171,10 +173,17 @@ export interface ManuscriptChapter {
   readonly citations?: readonly ManuscriptCitationEntry[];
 }
 
+export interface ManuscriptReadingOrder {
+  readonly strategy: ManuscriptOrderingStrategy;
+  readonly rootPersonId: string;
+  readonly personIds: readonly string[];
+}
+
 export interface FamilyManuscriptModel {
   readonly id: string;
   readonly title: string;
   readonly rootPersonId: string;
+  readonly readingOrder?: ManuscriptReadingOrder;
   readonly chapters: readonly ManuscriptChapter[];
 }
 

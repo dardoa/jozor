@@ -333,6 +333,7 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
             } = useAppStore.getState();
 
             const activePeople = currentUserRole === 'viewer' ? maskPeopleMap(people) : people;
+            const manuscriptRootPersonId = options.manuscriptOptions?.rootPersonId || focusId || Object.keys(activePeople)[0];
 
             const trackerState = PublishingTracker.startTracking({
                 templateId,
@@ -344,6 +345,10 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
                 citations,
                 userRole: currentUserRole,
                 treeId: currentTreeId,
+                manuscriptOptions: {
+                    ...options.manuscriptOptions,
+                    rootPersonId: manuscriptRootPersonId,
+                },
             });
             let success = false;
             const warnings: string[] = [];

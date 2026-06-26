@@ -379,6 +379,12 @@ describe('useExport', () => {
         templateId: 'classic-book-manuscript',
         format: 'pdf',
         renderer: 'html-print',
+        manuscriptOptions: {
+          rootPersonId: 'person-1',
+          orderingStrategy: 'chronological',
+          generationsDepth: 2,
+          includeTimeline: false,
+        },
       });
     });
 
@@ -393,6 +399,16 @@ describe('useExport', () => {
       }),
       relationshipEdges: mockStore.relationships,
       evidence: { sources: mockStore.sources, citations: mockStore.citations },
+      generationsDepth: 2,
+      orderingStrategy: 'chronological',
+    }));
+    expect(PublishingTracker.startTracking).toHaveBeenCalledWith(expect.objectContaining({
+      manuscriptOptions: expect.objectContaining({
+        rootPersonId: 'person-1',
+        orderingStrategy: 'chronological',
+        generationsDepth: 2,
+        includeTimeline: false,
+      }),
     }));
     expect(HtmlManuscriptRenderer.renderToHtml).toHaveBeenCalledWith(
       expect.objectContaining({ title: 'Family Manuscript' }),

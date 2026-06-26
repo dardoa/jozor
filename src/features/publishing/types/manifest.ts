@@ -1,3 +1,5 @@
+import type { ManuscriptOrderingStrategy } from '../../../types/publishing';
+
 export interface PublicationPrivacyMetadata {
   readonly userRole?: string | null;
   readonly masked: boolean;
@@ -26,6 +28,17 @@ export interface PublicationRelationshipMetadata {
   readonly driftWarningCount: number;
 }
 
+export interface PublicationManuscriptMetadata {
+  readonly rootPersonId?: string;
+  readonly orderingStrategy: ManuscriptOrderingStrategy;
+  readonly generationsDepth?: number | 'all';
+  readonly includeImages: boolean;
+  readonly includeTimeline: boolean;
+  readonly includeEvidence: boolean;
+  readonly includeNarrative: boolean;
+  readonly orderedPersonCount?: number;
+}
+
 export interface PublicationSchemaVersions {
   readonly manifest: 2;
   readonly relationships: 1;
@@ -46,6 +59,7 @@ export interface PublicationManifest {
   readonly evidence?: PublicationEvidenceMetadata;
   readonly integrity?: PublicationIntegritySummary;
   readonly relationships?: PublicationRelationshipMetadata;
+  readonly manuscript?: PublicationManuscriptMetadata;
 }
 
 export interface PublicationResult {
@@ -78,6 +92,7 @@ export interface ExportHistoryEntry {
   readonly evidence?: PublicationEvidenceMetadata;
   readonly integrity?: PublicationIntegritySummary;
   readonly relationships?: PublicationRelationshipMetadata;
+  readonly manuscript?: PublicationManuscriptMetadata;
   readonly outputFiles: readonly {
     readonly name: string;
     readonly format: string;

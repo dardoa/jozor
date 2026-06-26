@@ -133,7 +133,7 @@ describe('PublishingTracker', () => {
         }));
     });
 
-    it('adds manuscript evidence coverage metadata for family manuscript exports', () => {
+    it('adds manuscript evidence coverage metadata for family manuscript exports', async () => {
         const result = PublishingTracker.startTracking({
             templateId: 'classic-book-manuscript',
             exportType: 'publishing',
@@ -160,9 +160,36 @@ describe('PublishingTracker', () => {
                     createdAt: '2026-01-01T00:00:00.000Z',
                 },
             },
+            manuscriptOptions: {
+                rootPersonId: 'p-1',
+                generationsDepth: 2,
+                orderingStrategy: 'chronological',
+                includeImages: false,
+                includeNarrative: true,
+                includeTimeline: false,
+                includeEvidence: true,
+            },
         });
 
         expect(result.manifest.evidence?.manuscriptPersonCount).toBe(3);
         expect(result.manifest.evidence?.manuscriptCitationCoverage).toBeGreaterThanOrEqual(0);
+        expect(result.manifest.manuscript).toEqual({
+            rootPersonId: 'p-1',
+            generationsDepth: 2,
+            orderingStrategy: 'chronological',
+            includeImages: false,
+            includeNarrative: true,
+            includeTimeline: false,
+            includeEvidence: true,
+            orderedPersonCount: 3,
+        });
+
+        const entry = await PublishingTracker.endTracking(
+            result,
+            true,
+            [],
+            [{ name: 'Family Manuscript.pdf', format: 'pdf' }]
+        );
+        expect(entry.manuscript).toEqual(result.manifest.manuscript);
     });
 });

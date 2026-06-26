@@ -312,6 +312,11 @@ describe('ManuscriptStructureBuilder', () => {
     });
 
     const orderedIds = model.chapters.find((chapter) => chapter.type === 'people')?.people?.map((entry) => entry.personId);
+    expect(model.readingOrder).toEqual({
+      strategy: 'narrative',
+      rootPersonId: 'root',
+      personIds: ['root', 'spouse', 'childA', 'childASpouse', 'grandchildA', 'childB'],
+    });
     expect(orderedIds).toEqual([
       'root',
       'spouse',
@@ -369,6 +374,8 @@ describe('ManuscriptStructureBuilder', () => {
     });
 
     const orderedIds = model.chapters.find((chapter) => chapter.type === 'people')?.people?.map((entry) => entry.personId);
+    expect(model.readingOrder?.strategy).toBe('alphabetical');
+    expect(model.readingOrder?.personIds).toEqual(['childA', 'childB', 'root']);
     expect(orderedIds).toEqual(['childA', 'childB', 'root']);
   });
 

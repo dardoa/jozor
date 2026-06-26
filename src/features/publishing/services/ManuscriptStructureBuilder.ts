@@ -257,11 +257,12 @@ export class ManuscriptStructureBuilder {
     const language = options.language ?? 'en';
     const labels = getManuscriptLabels(language);
     const citationValues = Object.values(evidence.citations);
+    const orderingStrategy = options.orderingStrategy ?? 'narrative';
     const narrativeOrder = NarrativeOrderingEngine.orderPeople({
       rootPersonId: options.rootPersonId,
       people: manuscriptPeople,
       relationships: branchGraph.relationships,
-      strategy: options.orderingStrategy,
+      strategy: orderingStrategy,
     });
     const rawPeopleEntries = buildPersonEntries(manuscriptPeople, evidence.sources, citationValues, options.rootPersonId, Boolean(options.includeImages), labels, narrativeOrder);
     const peopleEntries = options.includeNarrative
@@ -274,6 +275,11 @@ export class ManuscriptStructureBuilder {
       id: `manuscript-${crypto.randomUUID()}`,
       title: `${labels.titlePrefix} ${getDisplayName(rootPerson)}`,
       rootPersonId: options.rootPersonId,
+      readingOrder: {
+        strategy: orderingStrategy,
+        rootPersonId: options.rootPersonId,
+        personIds: narrativeOrder,
+      },
       chapters: [
         {
           id: `chapter-people-${crypto.randomUUID()}`,

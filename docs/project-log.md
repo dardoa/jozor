@@ -827,6 +827,7 @@ Deferred geography improvements:
 - Added a people-in-scope estimate to the Manuscript Control Panel summary so branch exports are easier to review before previewing.
 - Added a narrative ordering engine for family manuscripts so people chapters follow the family reading path instead of alphabetical data order.
 - Added manuscript ordering strategies for family path, chronological, and alphabetical reading modes, with The Vault passing the same strategy to preview and PDF export.
+- Recorded manuscript reading-order metadata in `FamilyManuscriptModel`, export manifests, and export history entries for auditability.
 - Added generation-depth limiting for branch manuscript models while preserving the full-branch option.
 - Added coverage for configured preview options and depth-limited manuscript generation.
 - Added an opt-in photo inclusion toggle for manuscript previews and HTML print output without making photos part of the default manuscript export.
