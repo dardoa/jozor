@@ -330,7 +330,8 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
                 relationships,
                 sources,
                 citations,
-                currentTreeId
+                currentTreeId,
+                language
             } = useAppStore.getState();
 
             const activePeople = currentUserRole === 'viewer' ? maskPeopleMap(people) : people;
@@ -400,6 +401,17 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
                     await ManuscriptPdfExportService.exportManuscriptPdf({
                         html: preview.html,
                         title: preview.title,
+                        language: language === 'ar' ? 'ar' : 'en',
+                        metadata: {
+                            templateId,
+                            treeId: currentTreeId,
+                            rootPersonId: manuscriptRootPersonId,
+                            userRole: currentUserRole,
+                            masked: currentUserRole === 'viewer',
+                            scopePersonCount: Object.keys(activePeople).length,
+                            pageEstimate: preview.pageEstimate,
+                            generatedAt: new Date().toISOString(),
+                        },
                     });
                     (trackerState.manifest as { totalPages: number }).totalPages = preview.pageEstimate;
                 } else if (format === 'png') {

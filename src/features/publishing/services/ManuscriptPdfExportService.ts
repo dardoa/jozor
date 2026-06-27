@@ -1,17 +1,26 @@
 export interface ManuscriptPdfExportRequest {
   readonly html: string;
   readonly title: string;
+  readonly language?: 'ar' | 'en' | string;
+  readonly metadata?: Readonly<Record<string, unknown>>;
 }
 
-export type ManuscriptPdfExportMode = 'browser-print-fallback';
+export type ManuscriptPdfExportMode = 'browser-print-fallback' | 'controlled-pdf';
 
 export interface ManuscriptPdfExportResult {
   readonly mode: ManuscriptPdfExportMode;
+  readonly blob?: Blob;
+  readonly fileName?: string;
 }
 
 export interface ManuscriptPdfExportOptions {
   readonly mode?: ManuscriptPdfExportMode;
+  readonly controlledPdfAdapter?: ManuscriptControlledPdfAdapter;
 }
+
+export type ManuscriptControlledPdfAdapter = (
+  request: ManuscriptPdfExportRequest
+) => Promise<ManuscriptPdfExportResult>;
 
 export class ManuscriptPdfExportService {
   public static async exportManuscriptPdf(
@@ -24,7 +33,22 @@ export class ManuscriptPdfExportService {
       return this.exportViaBrowserPrintFallback(request);
     }
 
+    if (mode === 'controlled-pdf') {
+      return this.exportViaControlledPdf(request, options.controlledPdfAdapter);
+    }
+
     return assertNever(mode);
+  }
+
+  public static async exportViaControlledPdf(
+    request: ManuscriptPdfExportRequest,
+    adapter?: ManuscriptControlledPdfAdapter
+  ): Promise<ManuscriptPdfExportResult> {
+    if (!adapter) {
+      return this.exportViaBrowserPrintFallback(request);
+    }
+
+    return adapter(request);
   }
 
   /**

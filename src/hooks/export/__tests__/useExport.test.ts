@@ -389,10 +389,20 @@ describe('useExport', () => {
       });
     });
 
-    expect(ManuscriptPdfExportService.exportManuscriptPdf).toHaveBeenCalledWith({
+    expect(ManuscriptPdfExportService.exportManuscriptPdf).toHaveBeenCalledWith(expect.objectContaining({
       html: '<!doctype html><html><body>Arabic manuscript</body></html>',
       title: 'Family Manuscript',
-    });
+      language: 'en',
+      metadata: expect.objectContaining({
+        templateId: 'classic-book-manuscript',
+        treeId: 'tree-1',
+        rootPersonId: 'person-1',
+        userRole: 'viewer',
+        masked: true,
+        scopePersonCount: 1,
+        pageEstimate: expect.any(Number),
+      }),
+    }));
     expect(ManuscriptStructureBuilder.buildModel).toHaveBeenCalledWith(expect.objectContaining({
       rootPersonId: 'person-1',
       people: expect.objectContaining({

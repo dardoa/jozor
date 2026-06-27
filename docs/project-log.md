@@ -815,6 +815,7 @@ Deferred geography improvements:
 - Added PDF technical checks to the manuscript manual review gate.
 - Extracted the browser-print fallback behind `ManuscriptPdfExportService` so a controlled PDF renderer can replace it later without changing export orchestration.
 - Switched export orchestration to the neutral `exportManuscriptPdf` entrypoint so the current browser-print mode remains replaceable.
+- Added the Phase 1 controlled PDF export contract with an adapter hook while preserving browser print as the default fallback.
 - Centralized publishing renderer identifiers behind `PUBLISHING_EXPORT_RENDERERS` to keep technical route names out of export orchestration and UI code.
 
 # 2026-06-26 - Manuscript preview configuration

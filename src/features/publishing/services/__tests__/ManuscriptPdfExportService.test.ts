@@ -67,6 +67,56 @@ describe('ManuscriptPdfExportService', () => {
     });
   });
 
+  it('routes controlled PDF requests through the provided adapter contract', async () => {
+    const adapter = vi.fn().mockResolvedValue({
+      mode: 'controlled-pdf',
+      blob: new Blob(['pdf'], { type: 'application/pdf' }),
+      fileName: 'Portable manuscript.pdf',
+    });
+
+    const request = {
+      html: '<html lang="ar"><body>Portable manuscript</body></html>',
+      title: 'Portable manuscript',
+      language: 'ar',
+      metadata: {
+        userRole: 'viewer',
+        masked: true,
+        scopePersonCount: 25,
+      },
+    };
+
+    await expect(
+      ManuscriptPdfExportService.exportManuscriptPdf(request, {
+        mode: 'controlled-pdf',
+        controlledPdfAdapter: adapter,
+      })
+    ).resolves.toMatchObject({
+      mode: 'controlled-pdf',
+      fileName: 'Portable manuscript.pdf',
+    });
+
+    expect(adapter).toHaveBeenCalledWith(request);
+  });
+
+  it('falls back to browser print when controlled PDF mode has no adapter yet', async () => {
+    const exportSpy = vi
+      .spyOn(ManuscriptPdfExportService, 'exportViaBrowserPrintFallback')
+      .mockResolvedValue({ mode: 'browser-print-fallback' });
+
+    const request = {
+      html: '<html><body>Portable manuscript</body></html>',
+      title: 'Portable manuscript',
+      language: 'en',
+      metadata: { masked: false },
+    };
+
+    await expect(
+      ManuscriptPdfExportService.exportManuscriptPdf(request, { mode: 'controlled-pdf' })
+    ).resolves.toEqual({ mode: 'browser-print-fallback' });
+
+    expect(exportSpy).toHaveBeenCalledWith(request);
+  });
+
   it('fails clearly when the browser blocks the print window', async () => {
     vi.spyOn(window, 'open').mockReturnValue(null);
 
