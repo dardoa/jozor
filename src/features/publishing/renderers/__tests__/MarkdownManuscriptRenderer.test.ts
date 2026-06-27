@@ -9,6 +9,14 @@ const model: FamilyManuscriptModel = {
   rootPersonId: 'person-1',
   chapters: [
     {
+      id: 'overview',
+      type: 'overview',
+      title: 'Branch overview',
+      branchSummaries: [
+        { branchRootPersonId: 'person-branch-1', label: 'Saleh branch', personCount: 2 },
+      ],
+    },
+    {
       id: 'people',
       type: 'people',
       title: 'People',
@@ -80,6 +88,8 @@ describe('MarkdownManuscriptRenderer', () => {
 
     expect(markdown).toContain('# Family Manuscript: Example');
     expect(markdown).toContain('- Manuscript ID: manuscript\\-1');
+    expect(markdown).toContain('## Branch overview');
+    expect(markdown).toContain('- Saleh branch - 2 people');
     expect(markdown).toContain('## People');
     expect(markdown).toContain('#### Branch: Saleh branch');
     expect(markdown).toContain('### Amina Saleh');

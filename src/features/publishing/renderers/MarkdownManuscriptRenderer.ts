@@ -1,5 +1,6 @@
 import type {
   FamilyManuscriptModel,
+  ManuscriptBranchSummary,
   ManuscriptChapter,
   ManuscriptCitationEntry,
   ManuscriptPersonEntry,
@@ -38,6 +39,8 @@ function renderChapter(chapter: ManuscriptChapter): string[] {
   const lines = [`## ${normalizeInline(chapter.title)}`, ''];
 
   switch (chapter.type) {
+    case 'overview':
+      return [...lines, ...renderOverview(chapter.branchSummaries ?? [])];
     case 'people':
       return [...lines, ...renderPeople(chapter.people ?? [])];
     case 'timeline':
@@ -47,6 +50,14 @@ function renderChapter(chapter: ManuscriptChapter): string[] {
     default:
       return lines;
   }
+}
+
+function renderOverview(branchSummaries: readonly ManuscriptBranchSummary[]): string[] {
+  if (branchSummaries.length === 0) return ['No branch summaries.'];
+
+  return branchSummaries.map((summary) => (
+    `- ${normalizeInline(summary.label)} - ${summary.personCount} ${summary.personCount === 1 ? 'person' : 'people'}`
+  ));
 }
 
 function renderPeople(people: readonly ManuscriptPersonEntry[]): string[] {

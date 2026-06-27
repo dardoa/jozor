@@ -73,7 +73,13 @@ describe('ManuscriptStructureBuilder', () => {
     });
 
     const peopleChapter = model.chapters.find((chapter) => chapter.type === 'people');
+    const overviewChapter = model.chapters.find((chapter) => chapter.type === 'overview');
     const evidenceChapter = model.chapters.find((chapter) => chapter.type === 'evidence');
+    expect(overviewChapter?.branchSummaries).toEqual([{
+      branchRootPersonId: 'child',
+      label: 'Child Family',
+      personCount: 1,
+    }]);
     expect(peopleChapter?.people?.map((entry) => entry.personId).sort()).toEqual(['child', 'root']);
     expect(peopleChapter?.people?.some((entry) => entry.personId === 'unrelated')).toBe(false);
     expect(peopleChapter?.people?.find((entry) => entry.personId === 'root')?.familyContext).toMatchObject({

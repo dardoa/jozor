@@ -161,6 +161,12 @@ export interface ManuscriptPersonEntry {
   readonly citationCoverage: number;
 }
 
+export interface ManuscriptBranchSummary {
+  readonly branchRootPersonId: string;
+  readonly label: string;
+  readonly personCount: number;
+}
+
 export interface ManuscriptTimelineEntry {
   readonly personId: string;
   readonly personName: string;
@@ -181,6 +187,7 @@ export interface ManuscriptChapter {
   readonly id: string;
   readonly type: ManuscriptChapterType;
   readonly title: string;
+  readonly branchSummaries?: readonly ManuscriptBranchSummary[];
   readonly people?: readonly ManuscriptPersonEntry[];
   readonly timeline?: readonly ManuscriptTimelineEntry[];
   readonly citations?: readonly ManuscriptCitationEntry[];

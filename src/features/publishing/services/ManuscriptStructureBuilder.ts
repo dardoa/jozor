@@ -1,6 +1,7 @@
 import type { Citation, ManuscriptOrderingStrategy, Person, RelationshipEdge, Source } from '../../../types';
 import type {
   FamilyManuscriptModel,
+  ManuscriptBranchSummary,
   ManuscriptFamilyContext,
   ManuscriptCitationEntry,
   ManuscriptFactEntry,
@@ -137,6 +138,10 @@ function formatSpouseLabel(anchorName: string, language: 'ar' | 'en'): string {
 
 function formatRelatedLabel(language: 'ar' | 'en'): string {
   return language === 'ar' ? 'قرابة أخرى' : 'Related entry';
+}
+
+function getBranchOverviewChapterTitle(language: 'ar' | 'en'): string {
+  return language === 'ar' ? 'نظرة على الفروع' : 'Branch overview';
 }
 
 function buildFamilyContexts(
@@ -315,6 +320,28 @@ function buildPersonEntries(
     });
 }
 
+function buildBranchSummaries(people: readonly ManuscriptPersonEntry[]): readonly ManuscriptBranchSummary[] {
+  const byBranch = new Map<string, { label: string; personCount: number }>();
+
+  people.forEach((person) => {
+    const branchRootPersonId = person.familyContext?.branchRootPersonId;
+    const label = person.familyContext?.branchLabel;
+    if (!branchRootPersonId || !label) return;
+
+    const current = byBranch.get(branchRootPersonId) ?? { label, personCount: 0 };
+    byBranch.set(branchRootPersonId, {
+      label: current.label,
+      personCount: current.personCount + 1,
+    });
+  });
+
+  return [...byBranch.entries()].map(([branchRootPersonId, info]) => ({
+    branchRootPersonId,
+    label: info.label,
+    personCount: info.personCount,
+  }));
+}
+
 function buildTimelineEntries(people: Record<string, Person>, labels: ReturnType<typeof getManuscriptLabels>): readonly ManuscriptTimelineEntry[] {
   const entries: ManuscriptTimelineEntry[] = [];
 
@@ -434,6 +461,15 @@ export class ManuscriptStructureBuilder {
       : rawPeopleEntries;
     const timelineEntries = buildTimelineEntries(manuscriptPeople, labels);
     const citationEntries = buildCitationEntries(evidence.sources, evidence.citations, labels.unknownSource);
+    const branchSummaries = buildBranchSummaries(peopleEntries);
+    const overviewChapters = branchSummaries.length > 0
+      ? [{
+        id: `chapter-overview-${crypto.randomUUID()}`,
+        type: 'overview' as const,
+        title: getBranchOverviewChapterTitle(language),
+        branchSummaries,
+      }]
+      : [];
 
     return {
       id: `manuscript-${crypto.randomUUID()}`,
@@ -445,6 +481,7 @@ export class ManuscriptStructureBuilder {
         personIds: narrativeOrder,
       },
       chapters: [
+        ...overviewChapters,
         {
           id: `chapter-people-${crypto.randomUUID()}`,
           type: 'people',

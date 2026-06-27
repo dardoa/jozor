@@ -1,5 +1,6 @@
 import type {
   FamilyManuscriptModel,
+  ManuscriptBranchSummary,
   ManuscriptChapter,
   ManuscriptCitationEntry,
   ManuscriptPersonEntry,
@@ -109,6 +110,8 @@ function renderCover(model: FamilyManuscriptModel, title: string): string {
 
 function renderChapter(chapter: ManuscriptChapter, language: 'ar' | 'en'): string {
   switch (chapter.type) {
+    case 'overview':
+      return renderOverviewChapter(chapter.title, chapter.branchSummaries ?? [], language);
     case 'people':
       return renderPeopleChapter(chapter.title, chapter.people ?? [], language);
     case 'timeline':
@@ -118,6 +121,40 @@ function renderChapter(chapter: ManuscriptChapter, language: 'ar' | 'en'): strin
     default:
       return '';
   }
+}
+
+function renderOverviewChapter(
+  title: string,
+  branchSummaries: readonly ManuscriptBranchSummary[],
+  language: 'ar' | 'en'
+): string {
+  const labels = language === 'ar'
+    ? {
+      lead: 'خريطة قراءة مختصرة للفروع التي يتضمنها هذا المخطوط.',
+      people: 'أشخاص',
+      empty: 'لا توجد فروع منفصلة في هذا المخطوط.',
+    }
+    : {
+      lead: 'A compact reading map for the branches included in this manuscript.',
+      people: 'people',
+      empty: 'No separate branches are included in this manuscript.',
+    };
+  const items = branchSummaries.map((summary) => [
+    '<li class="branch-overview__item">',
+    `<strong>${escapeHtml(summary.label)}</strong>`,
+    `<span>${summary.personCount} ${escapeHtml(labels.people)}</span>`,
+    '</li>',
+  ].join('\n')).join('\n');
+
+  return [
+    '<section class="page chapter-page overview-chapter">',
+    `<h1>${escapeHtml(title)}</h1>`,
+    `<p class="chapter-lead">${escapeHtml(labels.lead)}</p>`,
+    '<ul class="branch-overview">',
+    items || `<li class="branch-overview__item">${escapeHtml(labels.empty)}</li>`,
+    '</ul>',
+    '</section>',
+  ].join('\n');
 }
 
 function renderPeopleChapter(title: string, people: readonly ManuscriptPersonEntry[], language: 'ar' | 'en'): string {
@@ -351,6 +388,33 @@ h2 {
 }
 .branch-divider span {
   display: inline-block;
+}
+.branch-overview {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: ${theme.layout.gridGap};
+  margin: 22px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.branch-overview__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: ${theme.layout.gridGap};
+  border: 1px solid ${theme.colors.border};
+  border-radius: ${theme.layout.cardRadius};
+  padding: ${theme.layout.cardPadding};
+  background: ${theme.colors.cardBackground};
+  break-inside: avoid;
+}
+.branch-overview__item strong {
+  overflow-wrap: anywhere;
+}
+.branch-overview__item span {
+  flex: 0 0 auto;
+  color: ${theme.colors.accent};
+  font-size: 12px;
 }
 .person-card {
   break-inside: avoid;

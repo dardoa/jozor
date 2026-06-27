@@ -832,6 +832,7 @@ Deferred geography improvements:
 - Added relationship-aware family context labels to manuscript person entries so renderers can show root, spouse, generation, and related-entry cues.
 - Added family-path breadcrumbs to manuscript person entries so readers can see each person’s route from the selected root.
 - Added branch-divider markers for manuscript person chapters so family branches are visually separated during reading.
+- Added a branch overview chapter to manuscript output so readers see branch names and counts before person entries.
 - Added generation-depth limiting for branch manuscript models while preserving the full-branch option.
 - Added coverage for configured preview options and depth-limited manuscript generation.
 - Added an opt-in photo inclusion toggle for manuscript previews and HTML print output without making photos part of the default manuscript export.

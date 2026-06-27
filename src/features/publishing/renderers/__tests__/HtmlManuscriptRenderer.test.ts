@@ -8,6 +8,14 @@ const model: FamilyManuscriptModel = {
   rootPersonId: 'p1',
   chapters: [
     {
+      id: 'overview',
+      type: 'overview',
+      title: 'Branch overview',
+      branchSummaries: [
+        { branchRootPersonId: 'branch-1', label: 'Saleh branch', personCount: 2 },
+      ],
+    },
+    {
       id: 'people',
       type: 'people',
       title: 'أفراد العائلة',
@@ -55,6 +63,9 @@ describe('HtmlManuscriptRenderer', () => {
 
     expect(html).toContain('dir="rtl"');
     expect(html).toContain('/fonts/Amiri-Regular.ttf');
+    expect(html).toContain('Branch overview');
+    expect(html).toContain('Saleh branch');
+    expect(html).toContain('branch-overview');
     expect(html).toContain('رمضان القربي');
     expect(html).toContain('https://example.com/ramadan.jpg');
     expect(html).toContain('هذه المسودة');
@@ -69,6 +80,7 @@ describe('HtmlManuscriptRenderer', () => {
     const html = HtmlManuscriptRenderer.renderToHtml(model, { language: 'en' });
 
     expect(html).toContain('dir="ltr"');
+    expect(html).toContain('2 people');
     expect(html).toContain('50% documented');
     expect(html).toContain('Person entries with key facts and citation coverage.');
     expect(html).toContain('<th>Source</th>');
