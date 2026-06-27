@@ -57,6 +57,9 @@ function renderPeople(people: readonly ManuscriptPersonEntry[]): string[] {
       `### ${normalizeInline(person.displayName)}`,
       '',
       ...(person.familyContext ? [`- Family context: ${normalizeInline(person.familyContext.label)}`] : []),
+      ...(person.familyContext?.breadcrumb && person.familyContext.breadcrumb.length > 1
+        ? [`- Family path: ${person.familyContext.breadcrumb.map(normalizeInline).join(' > ')}`]
+        : []),
       `- Citation coverage: ${person.citationCoverage}%`,
       `- Citations: ${person.citationCount}`,
     ];

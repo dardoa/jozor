@@ -147,12 +147,16 @@ function buildFamilyContexts(
 ): ReadonlyMap<string, ManuscriptFamilyContext> {
   const childrenByParent = new Map<string, string[]>();
   const spousesByPerson = new Map<string, string[]>();
+  const parentByChild = new Map<string, string>();
 
   relationships.forEach((relationship) => {
     if (relationship.type === 'parent' && relationship.parentId && relationship.childId) {
       const children = childrenByParent.get(relationship.parentId) ?? [];
       children.push(relationship.childId);
       childrenByParent.set(relationship.parentId, children);
+      if (!parentByChild.has(relationship.childId)) {
+        parentByChild.set(relationship.childId, relationship.parentId);
+      }
       return;
     }
 
@@ -178,6 +182,22 @@ function buildFamilyContexts(
     });
   }
 
+  const buildBreadcrumb = (personId: string): readonly string[] => {
+    const ids: string[] = [];
+    const visited = new Set<string>();
+    let cursor: string | undefined = personId;
+    while (cursor && people[cursor] && !visited.has(cursor)) {
+      visited.add(cursor);
+      ids.unshift(cursor);
+      if (cursor === rootPersonId) break;
+      cursor = parentByChild.get(cursor);
+    }
+    if (ids[0] !== rootPersonId && people[rootPersonId]) {
+      ids.unshift(rootPersonId);
+    }
+    return ids.map((id) => getDisplayName(people[id]));
+  };
+
   const contexts = new Map<string, ManuscriptFamilyContext>();
   Object.keys(people).forEach((personId) => {
     if (personId === rootPersonId) {
@@ -185,6 +205,7 @@ function buildFamilyContexts(
         kind: 'root',
         generationDepth: 0,
         label: formatRootLabel(language),
+        breadcrumb: [getDisplayName(people[personId])],
       });
       return;
     }
@@ -195,6 +216,7 @@ function buildFamilyContexts(
         kind: 'descendant',
         generationDepth: depth,
         label: formatGenerationLabel(depth + 1, language),
+        breadcrumb: buildBreadcrumb(personId),
       });
       return;
     }
@@ -207,6 +229,7 @@ function buildFamilyContexts(
         kind: 'spouse',
         generationDepth: spouseDepth,
         label: formatSpouseLabel(getDisplayName(people[spouseAnchorId]), language),
+        breadcrumb: [...buildBreadcrumb(spouseAnchorId), getDisplayName(people[personId])],
         anchorPersonId: spouseAnchorId,
       });
       return;
@@ -216,6 +239,7 @@ function buildFamilyContexts(
       kind: 'relative',
       generationDepth: Number.MAX_SAFE_INTEGER,
       label: formatRelatedLabel(language),
+      breadcrumb: [getDisplayName(people[personId])],
     });
   });
 

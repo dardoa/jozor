@@ -85,6 +85,7 @@ describe('ManuscriptStructureBuilder', () => {
       kind: 'descendant',
       generationDepth: 1,
       label: 'Generation 2',
+      breadcrumb: ['Root Family', 'Child Family'],
     });
     expect(peopleChapter?.people?.find((entry) => entry.personId === 'root')?.citationCount).toBe(1);
     expect(peopleChapter?.people?.find((entry) => entry.personId === 'root')?.sourceHighlights).toEqual([{

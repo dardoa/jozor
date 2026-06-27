@@ -830,6 +830,7 @@ Deferred geography improvements:
 - Recorded manuscript reading-order metadata in `FamilyManuscriptModel`, export manifests, and export history entries for auditability.
 - Added a custom manuscript ordering foundation so future manual ordering can pin selected people first while preserving the remaining family-path entries.
 - Added relationship-aware family context labels to manuscript person entries so renderers can show root, spouse, generation, and related-entry cues.
+- Added family-path breadcrumbs to manuscript person entries so readers can see each person’s route from the selected root.
 - Added generation-depth limiting for branch manuscript models while preserving the full-branch option.
 - Added coverage for configured preview options and depth-limited manuscript generation.
 - Added an opt-in photo inclusion toggle for manuscript previews and HTML print output without making photos part of the default manuscript export.

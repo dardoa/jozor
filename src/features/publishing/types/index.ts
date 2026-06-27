@@ -143,6 +143,7 @@ export interface ManuscriptFamilyContext {
   readonly kind: ManuscriptFamilyContextKind;
   readonly generationDepth: number;
   readonly label: string;
+  readonly breadcrumb?: readonly string[];
   readonly anchorPersonId?: string;
 }
 

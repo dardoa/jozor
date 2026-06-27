@@ -90,6 +90,7 @@ describe('HtmlManuscriptRenderer', () => {
             kind: 'descendant',
             generationDepth: 1,
             label: 'Generation 2',
+            breadcrumb: ['Root Family', 'Amina Saleh'],
           },
           citationCoverage: 0,
           citationCount: 0,
@@ -100,6 +101,8 @@ describe('HtmlManuscriptRenderer', () => {
     }, { language: 'en' });
 
     expect(html).toContain('Generation 2');
+    expect(html).toContain('Root Family › Amina Saleh');
+    expect(html).toContain('person-card__breadcrumb');
     expect(html).toContain('person-card__context');
   });
 

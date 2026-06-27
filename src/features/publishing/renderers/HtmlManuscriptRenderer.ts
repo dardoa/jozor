@@ -143,6 +143,7 @@ function renderPeopleChapter(title: string, people: readonly ManuscriptPersonEnt
     '</div>',
     `<span>${person.citationCoverage}% ${escapeHtml(labels.coverage)}</span>`,
     '</header>',
+    renderFamilyBreadcrumb(person),
     person.narrative ? `<p class="person-card__narrative">${escapeHtml(person.narrative)}</p>` : '',
     '<dl class="fact-list">',
     ...person.facts.map((fact) => [
@@ -165,6 +166,12 @@ function renderPeopleChapter(title: string, people: readonly ManuscriptPersonEnt
     '</div>',
     '</section>',
   ].join('\n');
+}
+
+function renderFamilyBreadcrumb(person: ManuscriptPersonEntry): string {
+  const breadcrumb = person.familyContext?.breadcrumb;
+  if (!breadcrumb || breadcrumb.length <= 1) return '';
+  return `<p class="person-card__breadcrumb">${breadcrumb.map(escapeHtml).join(' › ')}</p>`;
 }
 
 function renderSourceHighlights(person: ManuscriptPersonEntry, language: 'ar' | 'en'): string {
@@ -294,6 +301,13 @@ h2 {
   color: ${theme.colors.mutedText};
   font-size: 11px;
   line-height: 1.25;
+}
+.person-card__breadcrumb {
+  margin: 8px 0 0;
+  color: ${theme.colors.mutedText};
+  font-size: 11px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
 }
 .chapter-lead,
 .cover-subtitle,
