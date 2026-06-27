@@ -1,4 +1,4 @@
-﻿export * from './types';
+export * from './types';
 export * from './builders/AncestorBuilder';
 export * from './builders/BranchBuilder';
 export * from './builders/TimelineBuilder';
@@ -15,6 +15,7 @@ export * from './services/PublishingRelationshipAdapter';
 export * from './services/PublishingEvidenceAdapter';
 export * from './services/ManuscriptStructureBuilder';
 export * from './services/ManuscriptPdfExportService';
+export * from './services/ControlledManuscriptPdfAdapter';
 export * from './services/NarrativeDraftBuilder';
 export * from './services/NarrativeOrderingEngine';
 export * from './templates';

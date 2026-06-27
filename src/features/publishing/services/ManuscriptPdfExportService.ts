@@ -1,3 +1,5 @@
+import { ControlledManuscriptPdfAdapter } from './ControlledManuscriptPdfAdapter';
+
 export interface ManuscriptPdfExportRequest {
   readonly html: string;
   readonly title: string;
@@ -11,6 +13,12 @@ export interface ManuscriptPdfExportResult {
   readonly mode: ManuscriptPdfExportMode;
   readonly blob?: Blob;
   readonly fileName?: string;
+  readonly available?: boolean;
+  readonly fallbackRecommended?: boolean;
+  readonly reason?: string;
+  readonly requestMetadata?: Readonly<Record<string, unknown>>;
+  readonly controlledAttempted?: boolean;
+  readonly controlledReason?: string;
 }
 
 export interface ManuscriptPdfExportOptions {
@@ -44,11 +52,19 @@ export class ManuscriptPdfExportService {
     request: ManuscriptPdfExportRequest,
     adapter?: ManuscriptControlledPdfAdapter
   ): Promise<ManuscriptPdfExportResult> {
-    if (!adapter) {
-      return this.exportViaBrowserPrintFallback(request);
+    const activeAdapter = adapter ?? ControlledManuscriptPdfAdapter.exportPdf;
+    const result = await activeAdapter(request);
+
+    if (!result.available && result.fallbackRecommended) {
+      const fallbackResult = await this.exportViaBrowserPrintFallback(request);
+      return {
+        ...fallbackResult,
+        controlledAttempted: true,
+        controlledReason: result.reason ?? 'Controlled PDF export is not configured yet.',
+      };
     }
 
-    return adapter(request);
+    return result;
   }
 
   /**

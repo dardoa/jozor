@@ -402,7 +402,7 @@ describe('useExport', () => {
         scopePersonCount: 1,
         pageEstimate: expect.any(Number),
       }),
-    }));
+    }), { mode: 'browser-print-fallback' });
     expect(ManuscriptStructureBuilder.buildModel).toHaveBeenCalledWith(expect.objectContaining({
       rootPersonId: 'person-1',
       people: expect.objectContaining({

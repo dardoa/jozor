@@ -412,7 +412,7 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
                             pageEstimate: preview.pageEstimate,
                             generatedAt: new Date().toISOString(),
                         },
-                    });
+                    }, { mode: 'browser-print-fallback' });
                     (trackerState.manifest as { totalPages: number }).totalPages = preview.pageEstimate;
                 } else if (format === 'png') {
                     outputName = `${doc.title}.png`;

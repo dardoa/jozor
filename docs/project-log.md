@@ -841,6 +841,7 @@ Deferred geography improvements:
 - Added `docs/publishing-manuscript-manual-review.md` as the manual review gate before narrative generation or final publishing design polish.
 - Added a structured manuscript review report template with pass, conditional-pass, and blocked decisions for real export review runs.
 - Added a standalone preview-window action for long manuscript review without changing the export renderer.
+- Added a controlled manuscript PDF adapter boundary with an unavailable-by-default stub and safe fallback routing to browser print.
 
 # 2026-06-26 - Narrative generation kernel
 
