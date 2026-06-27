@@ -144,6 +144,8 @@ export interface ManuscriptFamilyContext {
   readonly generationDepth: number;
   readonly label: string;
   readonly breadcrumb?: readonly string[];
+  readonly branchLabel?: string;
+  readonly branchRootPersonId?: string;
   readonly anchorPersonId?: string;
 }
 

@@ -52,7 +52,15 @@ function renderChapter(chapter: ManuscriptChapter): string[] {
 function renderPeople(people: readonly ManuscriptPersonEntry[]): string[] {
   if (people.length === 0) return ['No people entries.'];
 
+  let activeBranchLabel = '';
   return people.flatMap((person) => {
+    const branchLines: string[] = [];
+    const branchLabel = person.familyContext?.branchLabel;
+    if (branchLabel && branchLabel !== activeBranchLabel) {
+      activeBranchLabel = branchLabel;
+      branchLines.push(`#### Branch: ${normalizeInline(branchLabel)}`, '');
+    }
+
     const lines = [
       `### ${normalizeInline(person.displayName)}`,
       '',
@@ -83,7 +91,7 @@ function renderPeople(people: readonly ManuscriptPersonEntry[]): string[] {
       });
     }
 
-    return [...lines, ''];
+    return [...branchLines, ...lines, ''];
   });
 }
 

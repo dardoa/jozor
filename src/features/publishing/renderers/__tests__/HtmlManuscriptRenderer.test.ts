@@ -91,6 +91,8 @@ describe('HtmlManuscriptRenderer', () => {
             generationDepth: 1,
             label: 'Generation 2',
             breadcrumb: ['Root Family', 'Amina Saleh'],
+            branchRootPersonId: 'person-branch-1',
+            branchLabel: 'Saleh branch',
           },
           citationCoverage: 0,
           citationCount: 0,
@@ -104,6 +106,8 @@ describe('HtmlManuscriptRenderer', () => {
     expect(html).toContain('Root Family › Amina Saleh');
     expect(html).toContain('person-card__breadcrumb');
     expect(html).toContain('person-card__context');
+    expect(html).toContain('Saleh branch');
+    expect(html).toContain('branch-divider');
   });
 
   it('accepts a manuscript theme without changing manuscript content', () => {

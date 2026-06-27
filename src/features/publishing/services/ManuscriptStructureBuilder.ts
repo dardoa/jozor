@@ -198,6 +198,28 @@ function buildFamilyContexts(
     return ids.map((id) => getDisplayName(people[id]));
   };
 
+  const getBranchRootId = (personId: string): string | undefined => {
+    let cursor: string | undefined = personId;
+    let branchRootId: string | undefined;
+    const visited = new Set<string>();
+    while (cursor && people[cursor] && !visited.has(cursor)) {
+      visited.add(cursor);
+      if (cursor === rootPersonId) return branchRootId;
+      branchRootId = cursor;
+      cursor = parentByChild.get(cursor);
+    }
+    return undefined;
+  };
+
+  const getBranchInfo = (personId: string): Pick<ManuscriptFamilyContext, 'branchLabel' | 'branchRootPersonId'> => {
+    const branchRootPersonId = getBranchRootId(personId);
+    if (!branchRootPersonId) return {};
+    return {
+      branchRootPersonId,
+      branchLabel: getDisplayName(people[branchRootPersonId]),
+    };
+  };
+
   const contexts = new Map<string, ManuscriptFamilyContext>();
   Object.keys(people).forEach((personId) => {
     if (personId === rootPersonId) {
@@ -217,6 +239,7 @@ function buildFamilyContexts(
         generationDepth: depth,
         label: formatGenerationLabel(depth + 1, language),
         breadcrumb: buildBreadcrumb(personId),
+        ...getBranchInfo(personId),
       });
       return;
     }
@@ -230,6 +253,7 @@ function buildFamilyContexts(
         generationDepth: spouseDepth,
         label: formatSpouseLabel(getDisplayName(people[spouseAnchorId]), language),
         breadcrumb: [...buildBreadcrumb(spouseAnchorId), getDisplayName(people[personId])],
+        ...getBranchInfo(spouseAnchorId),
         anchorPersonId: spouseAnchorId,
       });
       return;

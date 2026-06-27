@@ -21,6 +21,8 @@ const model: FamilyManuscriptModel = {
             generationDepth: 1,
             label: 'Generation 2',
             breadcrumb: ['Root Family', 'Amina Saleh'],
+            branchRootPersonId: 'person-branch-1',
+            branchLabel: 'Saleh branch',
           },
           citationCoverage: 50,
           citationCount: 2,
@@ -79,6 +81,7 @@ describe('MarkdownManuscriptRenderer', () => {
     expect(markdown).toContain('# Family Manuscript: Example');
     expect(markdown).toContain('- Manuscript ID: manuscript\\-1');
     expect(markdown).toContain('## People');
+    expect(markdown).toContain('#### Branch: Saleh branch');
     expect(markdown).toContain('### Amina Saleh');
     expect(markdown).toContain('- Family context: Generation 2');
     expect(markdown).toContain('- Family path: Root Family > Amina Saleh');

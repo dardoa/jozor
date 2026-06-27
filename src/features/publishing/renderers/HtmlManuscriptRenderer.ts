@@ -133,7 +133,37 @@ function renderPeopleChapter(title: string, people: readonly ManuscriptPersonEnt
       lead: 'Person entries with key facts and citation coverage.',
     };
 
-  const cards = people.map((person) => [
+  let activeBranchLabel = '';
+  const cards = people.flatMap((person) => {
+    const branchLabel = person.familyContext?.branchLabel;
+    const branchDivider = branchLabel && branchLabel !== activeBranchLabel
+      ? [`<div class="branch-divider"><span>${escapeHtml(branchLabel)}</span></div>`]
+      : [];
+    if (branchLabel) activeBranchLabel = branchLabel;
+
+    return [
+      ...branchDivider,
+      renderPersonCard(person, labels, language),
+    ];
+  }).join('\n');
+
+  return [
+    '<section class="page chapter-page people-chapter">',
+    `<h1>${escapeHtml(title)}</h1>`,
+    `<p class="chapter-lead">${escapeHtml(labels.lead)}</p>`,
+    '<div class="person-grid">',
+    cards,
+    '</div>',
+    '</section>',
+  ].join('\n');
+}
+
+function renderPersonCard(
+  person: ManuscriptPersonEntry,
+  labels: { readonly coverage: string; readonly sourceSingular: string },
+  language: 'ar' | 'en'
+): string {
+  return [
     '<article class="person-card">',
     '<header class="person-card__header">',
     person.photoUrl ? `<img class="person-card__photo" src="${escapeHtml(person.photoUrl)}" alt="">` : '',
@@ -155,16 +185,6 @@ function renderPeopleChapter(title: string, people: readonly ManuscriptPersonEnt
     '</dl>',
     renderSourceHighlights(person, language),
     '</article>',
-  ].join('\n')).join('\n');
-
-  return [
-    '<section class="page chapter-page people-chapter">',
-    `<h1>${escapeHtml(title)}</h1>`,
-    `<p class="chapter-lead">${escapeHtml(labels.lead)}</p>`,
-    '<div class="person-grid">',
-    cards,
-    '</div>',
-    '</section>',
   ].join('\n');
 }
 
@@ -319,6 +339,18 @@ h2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: ${theme.layout.gridGap};
+}
+.branch-divider {
+  grid-column: 1 / -1;
+  margin: 4px 0 0;
+  color: ${theme.colors.accent};
+  font-size: 12px;
+  font-weight: 700;
+  border-bottom: 1px solid ${theme.colors.border};
+  padding-bottom: 6px;
+}
+.branch-divider span {
+  display: inline-block;
 }
 .person-card {
   break-inside: avoid;
