@@ -1,6 +1,7 @@
 import type { Citation, ManuscriptOrderingStrategy, Person, RelationshipEdge, Source } from '../../../types';
 import type {
   FamilyManuscriptModel,
+  ManuscriptFamilyContext,
   ManuscriptCitationEntry,
   ManuscriptFactEntry,
   ManuscriptPersonEntry,
@@ -9,6 +10,7 @@ import type {
   PublicationSection,
 } from '../types';
 import { PublishingRelationshipAdapter } from './PublishingRelationshipAdapter';
+import type { PublishingBranchRelationship } from './PublishingRelationshipAdapter';
 import type { PublishingEvidenceContext } from './PublishingEvidenceAdapter';
 import { NarrativeDraftBuilder } from './NarrativeDraftBuilder';
 import { NarrativeOrderingEngine } from './NarrativeOrderingEngine';
@@ -120,6 +122,106 @@ function createFact(label: string, value: string, citationCount: number): Manusc
   return { label, value: cleanValue, citationCount };
 }
 
+function formatGenerationLabel(depth: number, language: 'ar' | 'en'): string {
+  if (language === 'ar') return `الجيل ${depth}`;
+  return `Generation ${depth}`;
+}
+
+function formatRootLabel(language: 'ar' | 'en'): string {
+  return language === 'ar' ? 'الجذر المختار' : 'Selected root';
+}
+
+function formatSpouseLabel(anchorName: string, language: 'ar' | 'en'): string {
+  return language === 'ar' ? `زوج/زوجة ${anchorName}` : `Spouse of ${anchorName}`;
+}
+
+function formatRelatedLabel(language: 'ar' | 'en'): string {
+  return language === 'ar' ? 'قرابة أخرى' : 'Related entry';
+}
+
+function buildFamilyContexts(
+  people: Record<string, Person>,
+  rootPersonId: string,
+  relationships: readonly PublishingBranchRelationship[],
+  language: 'ar' | 'en'
+): ReadonlyMap<string, ManuscriptFamilyContext> {
+  const childrenByParent = new Map<string, string[]>();
+  const spousesByPerson = new Map<string, string[]>();
+
+  relationships.forEach((relationship) => {
+    if (relationship.type === 'parent' && relationship.parentId && relationship.childId) {
+      const children = childrenByParent.get(relationship.parentId) ?? [];
+      children.push(relationship.childId);
+      childrenByParent.set(relationship.parentId, children);
+      return;
+    }
+
+    if (relationship.type === 'spouse' && relationship.personId && relationship.spouseId) {
+      const first = spousesByPerson.get(relationship.personId) ?? [];
+      first.push(relationship.spouseId);
+      spousesByPerson.set(relationship.personId, first);
+
+      const second = spousesByPerson.get(relationship.spouseId) ?? [];
+      second.push(relationship.personId);
+      spousesByPerson.set(relationship.spouseId, second);
+    }
+  });
+
+  const descendantDepth = new Map<string, number>();
+  const queue: Array<{ personId: string; depth: number }> = [{ personId: rootPersonId, depth: 0 }];
+  while (queue.length > 0) {
+    const current = queue.shift();
+    if (!current || descendantDepth.has(current.personId) || !people[current.personId]) continue;
+    descendantDepth.set(current.personId, current.depth);
+    (childrenByParent.get(current.personId) ?? []).forEach((childId) => {
+      queue.push({ personId: childId, depth: current.depth + 1 });
+    });
+  }
+
+  const contexts = new Map<string, ManuscriptFamilyContext>();
+  Object.keys(people).forEach((personId) => {
+    if (personId === rootPersonId) {
+      contexts.set(personId, {
+        kind: 'root',
+        generationDepth: 0,
+        label: formatRootLabel(language),
+      });
+      return;
+    }
+
+    const depth = descendantDepth.get(personId);
+    if (depth !== undefined) {
+      contexts.set(personId, {
+        kind: 'descendant',
+        generationDepth: depth,
+        label: formatGenerationLabel(depth + 1, language),
+      });
+      return;
+    }
+
+    const spouseAnchorId = (spousesByPerson.get(personId) ?? [])
+      .find((spouseId) => descendantDepth.has(spouseId));
+    if (spouseAnchorId) {
+      const spouseDepth = descendantDepth.get(spouseAnchorId) ?? 0;
+      contexts.set(personId, {
+        kind: 'spouse',
+        generationDepth: spouseDepth,
+        label: formatSpouseLabel(getDisplayName(people[spouseAnchorId]), language),
+        anchorPersonId: spouseAnchorId,
+      });
+      return;
+    }
+
+    contexts.set(personId, {
+      kind: 'relative',
+      generationDepth: Number.MAX_SAFE_INTEGER,
+      label: formatRelatedLabel(language),
+    });
+  });
+
+  return contexts;
+}
+
 function buildPersonEntries(
   people: Record<string, Person>,
   sources: Record<string, Source>,
@@ -127,7 +229,8 @@ function buildPersonEntries(
   rootPersonId: string,
   includeImages: boolean,
   labels: ReturnType<typeof getManuscriptLabels>,
-  narrativeOrder?: readonly string[]
+  narrativeOrder?: readonly string[],
+  familyContexts?: ReadonlyMap<string, ManuscriptFamilyContext>
 ): readonly ManuscriptPersonEntry[] {
   const orderedPeople = (narrativeOrder && narrativeOrder.length > 0
     ? narrativeOrder.map((personId) => people[personId]).filter((person): person is Person => Boolean(person))
@@ -155,6 +258,7 @@ function buildPersonEntries(
         personId: person.id,
         displayName: getDisplayName(person),
         photoUrl: includeImages ? person.photoUrl : undefined,
+        familyContext: familyContexts?.get(person.id),
         facts,
         sourceHighlights: buildSourceHighlightsForPerson(sources, citations, person.id, labels.unknownSource),
         citationCount,
@@ -266,7 +370,17 @@ export class ManuscriptStructureBuilder {
       strategy: orderingStrategy,
       customPersonOrder: options.customPersonOrder,
     });
-    const rawPeopleEntries = buildPersonEntries(manuscriptPeople, evidence.sources, citationValues, options.rootPersonId, Boolean(options.includeImages), labels, narrativeOrder);
+    const familyContexts = buildFamilyContexts(manuscriptPeople, options.rootPersonId, branchGraph.relationships, language);
+    const rawPeopleEntries = buildPersonEntries(
+      manuscriptPeople,
+      evidence.sources,
+      citationValues,
+      options.rootPersonId,
+      Boolean(options.includeImages),
+      labels,
+      narrativeOrder,
+      familyContexts
+    );
     const peopleEntries = options.includeNarrative
       ? NarrativeDraftBuilder.applyToPeople(rawPeopleEntries, { language })
       : rawPeopleEntries;

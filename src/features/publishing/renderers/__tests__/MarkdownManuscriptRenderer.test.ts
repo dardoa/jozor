@@ -16,6 +16,11 @@ const model: FamilyManuscriptModel = {
         {
           personId: 'person-1',
           displayName: 'Amina Saleh',
+          familyContext: {
+            kind: 'descendant',
+            generationDepth: 1,
+            label: 'Generation 2',
+          },
           citationCoverage: 50,
           citationCount: 2,
           facts: [
@@ -74,6 +79,7 @@ describe('MarkdownManuscriptRenderer', () => {
     expect(markdown).toContain('- Manuscript ID: manuscript\\-1');
     expect(markdown).toContain('## People');
     expect(markdown).toContain('### Amina Saleh');
+    expect(markdown).toContain('- Family context: Generation 2');
     expect(markdown).toContain('- Citation coverage: 50%');
     expect(markdown).toContain('- **Birth place:** Kafranbel, Syria (1 citation)');
     expect(markdown).toContain('- Civil registry (2)');

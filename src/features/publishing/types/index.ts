@@ -137,11 +137,21 @@ export interface ManuscriptSourceHighlight {
   readonly citationCount: number;
 }
 
+export type ManuscriptFamilyContextKind = 'root' | 'spouse' | 'descendant' | 'relative';
+
+export interface ManuscriptFamilyContext {
+  readonly kind: ManuscriptFamilyContextKind;
+  readonly generationDepth: number;
+  readonly label: string;
+  readonly anchorPersonId?: string;
+}
+
 export interface ManuscriptPersonEntry {
   readonly personId: string;
   readonly displayName: string;
   readonly photoUrl?: string;
   readonly narrative?: string;
+  readonly familyContext?: ManuscriptFamilyContext;
   readonly facts: readonly ManuscriptFactEntry[];
   readonly sourceHighlights: readonly ManuscriptSourceHighlight[];
   readonly citationCount: number;

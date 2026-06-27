@@ -76,6 +76,16 @@ describe('ManuscriptStructureBuilder', () => {
     const evidenceChapter = model.chapters.find((chapter) => chapter.type === 'evidence');
     expect(peopleChapter?.people?.map((entry) => entry.personId).sort()).toEqual(['child', 'root']);
     expect(peopleChapter?.people?.some((entry) => entry.personId === 'unrelated')).toBe(false);
+    expect(peopleChapter?.people?.find((entry) => entry.personId === 'root')?.familyContext).toMatchObject({
+      kind: 'root',
+      generationDepth: 0,
+      label: 'Selected root',
+    });
+    expect(peopleChapter?.people?.find((entry) => entry.personId === 'child')?.familyContext).toMatchObject({
+      kind: 'descendant',
+      generationDepth: 1,
+      label: 'Generation 2',
+    });
     expect(peopleChapter?.people?.find((entry) => entry.personId === 'root')?.citationCount).toBe(1);
     expect(peopleChapter?.people?.find((entry) => entry.personId === 'root')?.sourceHighlights).toEqual([{
       sourceId: 'source',

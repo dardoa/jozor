@@ -74,6 +74,35 @@ describe('HtmlManuscriptRenderer', () => {
     expect(html).toContain('<th>Source</th>');
   });
 
+  it('renders family context labels for person entries', () => {
+    const html = HtmlManuscriptRenderer.renderToHtml({
+      id: 'context-test',
+      title: 'Family Context Test',
+      rootPersonId: 'p1',
+      chapters: [{
+        id: 'people',
+        type: 'people',
+        title: 'People',
+        people: [{
+          personId: 'p1',
+          displayName: 'Amina Saleh',
+          familyContext: {
+            kind: 'descendant',
+            generationDepth: 1,
+            label: 'Generation 2',
+          },
+          citationCoverage: 0,
+          citationCount: 0,
+          facts: [],
+          sourceHighlights: [],
+        }],
+      }],
+    }, { language: 'en' });
+
+    expect(html).toContain('Generation 2');
+    expect(html).toContain('person-card__context');
+  });
+
   it('accepts a manuscript theme without changing manuscript content', () => {
     const html = HtmlManuscriptRenderer.renderToHtml(model, {
       language: 'ar',

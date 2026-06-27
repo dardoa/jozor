@@ -137,7 +137,10 @@ function renderPeopleChapter(title: string, people: readonly ManuscriptPersonEnt
     '<article class="person-card">',
     '<header class="person-card__header">',
     person.photoUrl ? `<img class="person-card__photo" src="${escapeHtml(person.photoUrl)}" alt="">` : '',
+    '<div class="person-card__identity">',
     `<h2>${escapeHtml(person.displayName)}</h2>`,
+    person.familyContext ? `<p class="person-card__context">${escapeHtml(person.familyContext.label)}</p>` : '',
+    '</div>',
     `<span>${person.citationCoverage}% ${escapeHtml(labels.coverage)}</span>`,
     '</header>',
     person.narrative ? `<p class="person-card__narrative">${escapeHtml(person.narrative)}</p>` : '',
@@ -281,6 +284,16 @@ h2 {
   margin: 0;
   font-size: ${theme.typography.headingSize};
   line-height: ${theme.typography.lineHeight};
+}
+.person-card__identity {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.person-card__context {
+  margin: 3px 0 0;
+  color: ${theme.colors.mutedText};
+  font-size: 11px;
+  line-height: 1.25;
 }
 .chapter-lead,
 .cover-subtitle,

@@ -56,6 +56,7 @@ function renderPeople(people: readonly ManuscriptPersonEntry[]): string[] {
     const lines = [
       `### ${normalizeInline(person.displayName)}`,
       '',
+      ...(person.familyContext ? [`- Family context: ${normalizeInline(person.familyContext.label)}`] : []),
       `- Citation coverage: ${person.citationCoverage}%`,
       `- Citations: ${person.citationCount}`,
     ];
