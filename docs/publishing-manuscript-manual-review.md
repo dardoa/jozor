@@ -5,6 +5,12 @@ Use this checklist before starting major manuscript features such as narrative g
 
 This review is intentionally about correctness and usability, not final visual polish.
 
+Record each run with [`publishing-manuscript-review-report-template.md`](./publishing-manuscript-review-report-template.md). A review should end with one of three decisions:
+
+- Pass: continue to the next publishing sprint.
+- Conditional pass: continue, but create follow-up tasks for non-blocking issues.
+- Blocked: fix the listed blockers before moving forward.
+
 ## Test Cases
 
 ### Case 1: Small Tree
@@ -108,3 +114,9 @@ Move to narrative generation only after:
 - Viewer privacy is verified in preview and export.
 - Arabic/RTL output is readable enough for internal use.
 - No blocker-level pagination or image issue appears in the real large tree.
+
+Move to controlled PDF export only after:
+
+- The HTML preview is accepted as the source layout for the tested scenarios.
+- Browser print limitations are documented as output-engine issues rather than model/content issues.
+- The reviewer can identify which failures must be fixed by a controlled print engine.

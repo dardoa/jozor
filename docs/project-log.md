@@ -838,6 +838,7 @@ Deferred geography improvements:
 - Added coverage for configured preview options and depth-limited manuscript generation.
 - Added an opt-in photo inclusion toggle for manuscript previews and HTML print output without making photos part of the default manuscript export.
 - Added `docs/publishing-manuscript-manual-review.md` as the manual review gate before narrative generation or final publishing design polish.
+- Added a structured manuscript review report template with pass, conditional-pass, and blocked decisions for real export review runs.
 - Added a standalone preview-window action for long manuscript review without changing the export renderer.
 
 # 2026-06-26 - Narrative generation kernel
