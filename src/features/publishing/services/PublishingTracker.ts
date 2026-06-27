@@ -70,13 +70,14 @@ export class PublishingTracker {
         }
 
         const evidenceSummary = summarizePublishingEvidence(options.people, { sources, citations });
-        const manuscriptEvidence = getManuscriptEvidenceMetadata(options.templateId, options.people, relationships, sources, citations, manuscriptOptions);
+        const manuscriptDerivedMetadata = getManuscriptDerivedMetadata(options.templateId, options.people, relationships, sources, citations, manuscriptOptions);
         const { customPersonOrder, ...manifestManuscriptOptions } = manuscriptOptions;
         const customOrderCount = customPersonOrder?.length;
         const manuscriptMetadata = options.templateId.includes('book-manuscript')
             ? {
                 ...manifestManuscriptOptions,
-                orderedPersonCount: manuscriptEvidence.manuscriptPersonCount,
+                orderedPersonCount: manuscriptDerivedMetadata.manuscriptPersonCount,
+                ...(manuscriptDerivedMetadata.branchSummaries ? { branchSummaries: manuscriptDerivedMetadata.branchSummaries } : {}),
                 ...(customOrderCount !== undefined ? { customOrderCount } : {}),
             }
             : undefined;
@@ -101,7 +102,8 @@ export class PublishingTracker {
             },
             evidence: {
                 ...evidenceSummary,
-                ...manuscriptEvidence,
+                manuscriptPersonCount: manuscriptDerivedMetadata.manuscriptPersonCount,
+                manuscriptCitationCoverage: manuscriptDerivedMetadata.manuscriptCitationCoverage,
             },
             integrity: toIntegritySummary(options.people),
             relationships: {
@@ -185,14 +187,18 @@ function toIntegritySummary(people: Record<string, Person>) {
     };
 }
 
-function getManuscriptEvidenceMetadata(
+function getManuscriptDerivedMetadata(
     templateId: string,
     people: Record<string, Person>,
     relationships: Record<string, RelationshipEdge>,
     sources: Record<string, Source>,
     citations: Record<string, Citation>,
     manuscriptOptions: NormalizedManuscriptOptions
-): { readonly manuscriptPersonCount?: number; readonly manuscriptCitationCoverage?: number } {
+): {
+    readonly manuscriptPersonCount?: number;
+    readonly manuscriptCitationCoverage?: number;
+    readonly branchSummaries?: NonNullable<PublicationManifest['manuscript']>['branchSummaries'];
+} {
     if (!templateId.includes('book-manuscript')) return {};
 
     const rootPersonId = manuscriptOptions.rootPersonId || Object.keys(people)[0];
@@ -211,14 +217,25 @@ function getManuscriptEvidenceMetadata(
             includeNarrative: manuscriptOptions.includeNarrative,
         });
         const peopleChapter = model.chapters.find((chapter) => chapter.type === 'people');
+        const overviewChapter = model.chapters.find((chapter) => chapter.type === 'overview');
         const entries = peopleChapter?.people ?? [];
-        if (entries.length === 0) return { manuscriptPersonCount: 0, manuscriptCitationCoverage: 0 };
+        const branchSummaries = overviewChapter?.branchSummaries?.map((summary) => ({
+            branchRootPersonId: summary.branchRootPersonId,
+            label: summary.label,
+            personCount: summary.personCount,
+        }));
+        if (entries.length === 0) return {
+            manuscriptPersonCount: 0,
+            manuscriptCitationCoverage: 0,
+            ...(branchSummaries && branchSummaries.length > 0 ? { branchSummaries } : {}),
+        };
         const averageCoverage = Math.round(
             entries.reduce((sum, entry) => sum + entry.citationCoverage, 0) / entries.length
         );
         return {
             manuscriptPersonCount: entries.length,
             manuscriptCitationCoverage: averageCoverage,
+            ...(branchSummaries && branchSummaries.length > 0 ? { branchSummaries } : {}),
         };
     } catch {
         return {};

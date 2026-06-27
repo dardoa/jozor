@@ -38,6 +38,13 @@ export interface PublicationManuscriptMetadata {
   readonly includeNarrative: boolean;
   readonly orderedPersonCount?: number;
   readonly customOrderCount?: number;
+  readonly branchSummaries?: readonly PublicationManuscriptBranchSummary[];
+}
+
+export interface PublicationManuscriptBranchSummary {
+  readonly branchRootPersonId: string;
+  readonly label: string;
+  readonly personCount: number;
 }
 
 export interface PublicationSchemaVersions {

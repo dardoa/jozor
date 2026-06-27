@@ -183,6 +183,11 @@ describe('PublishingTracker', () => {
             includeTimeline: false,
             includeEvidence: true,
             orderedPersonCount: 3,
+            branchSummaries: [{
+                branchRootPersonId: 'p-3',
+                label: 'Father Doe',
+                personCount: 1,
+            }],
             customOrderCount: 2,
         });
         expect(result.manifest.manuscript).not.toHaveProperty('customPersonOrder');
