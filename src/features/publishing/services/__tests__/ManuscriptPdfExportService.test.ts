@@ -181,6 +181,37 @@ describe('ManuscriptPdfExportService', () => {
     }));
   });
 
+  it('controlled-pdf integrates successfully with LocalControlledPdfRenderer when passed as custom adapter', async () => {
+    const fallbackSpy = vi.spyOn(ManuscriptPdfExportService, 'exportViaBrowserPrintFallback');
+    const { LocalControlledPdfRenderer } = await import('../LocalControlledPdfRenderer');
+
+    const request = {
+      html: '<html><body>Rendered Prototype Document</body></html>',
+      title: 'Prototype Report',
+      language: 'en',
+      metadata: {
+        templateId: 'modern-book',
+        scopePersonCount: 12,
+      },
+    };
+
+    const result = await ManuscriptPdfExportService.exportManuscriptPdf(request, {
+      mode: 'controlled-pdf',
+      controlledPdfAdapter: LocalControlledPdfRenderer.renderPdf,
+    });
+
+    expect(result.mode).toBe('controlled-pdf');
+    expect(result.available).toBe(true);
+    expect(result.blob).toBeInstanceOf(Blob);
+    expect(result.fileName).toBe('prototype_report_manuscript.pdf');
+    expect(result.requestMetadata).toEqual({
+      templateId: 'modern-book',
+      scopePersonCount: 12,
+    });
+
+    expect(fallbackSpy).not.toHaveBeenCalled();
+  });
+
   it('fails clearly when the browser blocks the print window', async () => {
     vi.spyOn(window, 'open').mockReturnValue(null);
 

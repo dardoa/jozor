@@ -1,5 +1,12 @@
 # Project Log
 
+## 2026-06-27 - Controlled PDF Export Phase 3
+
+- Summary:
+  - Built a local controlled PDF renderer prototype (`LocalControlledPdfRenderer`) using dynamic imports for `jspdf`.
+  - Kept the default UI path set to browser fallback print without premature runtime changes.
+  - Verified the integration via isolated custom adapter test suites.
+
 ## 2026-06-15 - Production Readiness Audit
 
 - Summary:
