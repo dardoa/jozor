@@ -17,6 +17,7 @@ export * from './services/ManuscriptStructureBuilder';
 export * from './services/ManuscriptPdfExportService';
 export * from './services/ControlledManuscriptPdfAdapter';
 export * from './services/LocalControlledPdfRenderer';
+export * from './services/ControlledPdfReadinessService';
 export * from './services/NarrativeDraftBuilder';
 export * from './services/NarrativeOrderingEngine';
 export * from './templates';

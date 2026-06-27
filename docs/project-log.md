@@ -1,5 +1,11 @@
 # Project Log
 
+## 2026-06-27 - Controlled PDF Export Phase 4
+
+- Summary:
+  - Created `ControlledPdfReadinessService` to implement a programmatic readiness decision gate for controlled PDF validation checks.
+  - Enforced metadata allowlist and privacy sanitization across probe diagnostics.
+
 ## 2026-06-27 - Controlled PDF Export Phase 3
 
 - Summary:
