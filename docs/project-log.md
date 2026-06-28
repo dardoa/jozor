@@ -1,5 +1,10 @@
 # Project Log
 
+## 2026-06-28 - Controlled PDF Export Phase 6
+
+- Summary:
+  - Added a preliminary manual verification checklist and validation evidence report under docs/reviews to capture pipeline integrity checkpoints.
+
 ## 2026-06-28 - Controlled PDF Export Phase 5
 
 - Summary:
