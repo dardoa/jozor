@@ -42,22 +42,24 @@
 - [x] No raw diagnostics, HTML, stack trace, or person names are exposed by the readiness hook.
 - [x] Automated fallback invocation evidence confirms existing export buttons continue to use standard browser print (documented in [browser_fallback_print_flow_note.md](evidence/controlled-pdf-2026-06-28/browser_fallback_print_flow_note.md)).
 - [x] Documented native browser print dialog validation limits and verification alternatives (documented in [browser_print_dialog_capture_limit.md](evidence/controlled-pdf-2026-06-28/browser_print_dialog_capture_limit.md)).
-- [ ] Live UI screenshot of the indicator in The Vault publishing panel (Pending visual capture).
-- [ ] Live browser console capture showing no new runtime errors (Pending visual capture).
+- [ ] Live UI screenshot of the indicator in The Vault publishing panel (Pending visual capture of `readiness_indicator_live.png`).
+- [ ] Live browser console capture showing no new runtime errors (Pending visual capture of `browser_console_clean_live.png`).
+- [ ] Live UI confirmation that no extra export triggers exist (Pending visual capture of `no_controlled_export_button_live.png`).
 
 ---
 
 ## Pending Visual Evidence
 
-- Screenshot of The Vault publishing panel with the readiness indicator visible.
-- Screenshot of browser print dialog invocation.
-- Browser console capture during Vault open and manuscript preview/export interaction.
-- Final browser, OS, URL, and exact commit hash used during visual validation.
+The following visual files are required for final verification but are **not yet attached** in this headless environment:
+- `readiness_indicator_live.png`: To visually verify the dashboard readiness status layout.
+- `no_controlled_export_button_live.png`: To visually confirm that no user-facing controlled export triggers were added.
+- `browser_console_clean_live.png`: To visually confirm that no new runtime warnings appear in browser console.
+- Native browser print dialog invocation visual capture.
 
 ---
 
 ## Decision
 
-**Conditional Pass - pending remaining visual screenshots.**
+**Conditional Pass - pending live screenshots.**
 
-Automated tests and contract-level boundaries confirm Phase 8A is correct and secure. Visual confirmation of the dashboard indicator layout is pending live visual captures.
+Automated tests and code-level verification confirm Phase 8B boundaries are correct and type-safe. Final resolution is pending live visual confirmation of the listed visual assets.

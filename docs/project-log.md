@@ -1,5 +1,10 @@
 # Project Log
 
+## 2026-06-28 - Controlled PDF Export Phase 8B
+
+- Summary:
+  - Declared pending visual evidence requirements for the readiness surface and maintained conditional pass verification status.
+
 ## 2026-06-28 - Controlled PDF Export Phase 8A
 
 - Summary:
