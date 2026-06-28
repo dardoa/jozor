@@ -2,6 +2,15 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { describe, expect, it, vi } from 'vitest';
 
+import { useControlledPdfReadiness } from '../../../publishing/hooks';
+
+vi.mock('../../../publishing/hooks', () => ({
+  useControlledPdfReadiness: vi.fn().mockReturnValue({
+    status: 'ready',
+    refresh: vi.fn().mockResolvedValue(undefined),
+  }),
+}));
+
 import type { TranslationSchema } from '../../../../utils/translationLoader';
 import { ExportCloudPanel } from '../ExportCloudPanel';
 
@@ -241,5 +250,32 @@ describe('ExportCloudPanel manuscript preview', () => {
     fireEvent.click(screen.getByRole('button', { name: /Refresh Preview/i }));
 
     await waitFor(() => expect(onRunPublishingPreview).toHaveBeenCalledTimes(2));
+  });
+
+  it('renders the Controlled PDF readiness diagnostic indicator based on status hook', async () => {
+    vi.mocked(useControlledPdfReadiness).mockReturnValue({
+      status: 'ready',
+      refresh: vi.fn().mockResolvedValue(undefined),
+    });
+
+    const onRunPublishingPreview = vi.fn().mockResolvedValue({
+      title: 'Family Manuscript',
+      html: '<!doctype html><html><body>Preview</body></html>',
+      pageEstimate: 4,
+    });
+
+    render(
+      <ExportCloudPanel
+        {...baseProps}
+        onRunPublishingPreview={onRunPublishingPreview}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /Preview Manuscript/i }));
+    await screen.findByText('Estimated pages: 4');
+
+    const indicator = await screen.findByTestId('controlled-pdf-readiness-indicator');
+    expect(indicator).toBeInTheDocument();
+    expect(indicator).toHaveTextContent('Controlled PDF: Ready');
   });
 });

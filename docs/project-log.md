@@ -1,5 +1,12 @@
 # Project Log
 
+## 2026-06-28 - Controlled PDF Export Phase 5
+
+- Summary:
+  - Built diagnostic React hook `useControlledPdfReadiness` to check and manage PDF pipeline status lazy states.
+  - Wired a subtle read-only status indicator tag inside the Vault manuscript settings layout panel.
+  - Confirmed UI print triggers remain unchanged and continue to fallback on browser prints.
+
 ## 2026-06-27 - Controlled PDF Export Phase 4
 
 - Summary:

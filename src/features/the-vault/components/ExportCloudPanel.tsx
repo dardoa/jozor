@@ -22,8 +22,9 @@ import {
 import { PUBLISHING_EXPORT_RENDERERS } from '../../../types';
 import type { DriveFile, ExportType, ManuscriptOrderingStrategy, Person, PublishingExportOptions, PublishingPreviewResult } from '../../../types';
 import type { TranslationSchema } from '../../../utils/translationLoader';
-import { showToast } from '../../../utils/showToast';
-import { useAppStore } from '../../../store/useAppStore';
+import { showToast } from '../../../utils/showToast';
+import { useControlledPdfReadiness } from '../../publishing/hooks';
+import { useAppStore } from '../../../store/useAppStore';
 
 interface ExportCloudPanelProps {
   canManageCloud: boolean;
@@ -154,6 +155,11 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
   const [selectedRootPersonId, setSelectedRootPersonId] = useState(() => focusId || Object.keys(people)[0] || '');
   const [rootSearchText, setRootSearchText] = useState('');
   const [generationsDepth, setGenerationsDepth] = useState<number | 'all'>(3);
+  const { status: controlledPdfStatus, refresh: checkControlledPdfReadiness } = useControlledPdfReadiness();
+
+  React.useEffect(() => {
+    void checkControlledPdfReadiness();
+  }, [checkControlledPdfReadiness]);
 
   const personOptions = useMemo(
     () => Object.values(people)
@@ -674,11 +680,21 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
               >
                 <Download className="h-3.5 w-3.5" />
                 {language === 'ar' ? 'PDF متجه تقليدي' : 'Legacy Vector PDF'}
-              </button>
-            </div>
-          </div>
-
-          {/* Template 2: Classic Ancestor Poster */}
+              </button>
+            </div>
+            <div
+              className="mt-2 flex justify-end text-[10px] font-mono text-[var(--text-dim)]"
+              data-testid="controlled-pdf-readiness-indicator"
+            >
+              <span>
+                {controlledPdfStatus === 'ready' && 'Controlled PDF: Ready'}
+                {controlledPdfStatus === 'fallback' && 'Controlled PDF: Browser print fallback'}
+                {controlledPdfStatus === 'checking' && 'Controlled PDF: Checking'}
+              </span>
+            </div>
+          </div>
+
+          {/* Template 2: Classic Ancestor Poster */}
           <div className="flex flex-col gap-4 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-subtle)] p-4 transition-all hover:border-[var(--primary-500)]/30 hover:shadow-sm">
             <div className="flex items-start gap-3">
               <div className="mt-0.5 rounded-xl bg-[var(--surface-panel)] p-2 text-[var(--primary-600)]">
