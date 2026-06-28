@@ -1,5 +1,10 @@
 # Project Log
 
+## 2026-06-28 - Controlled PDF Export Phase 7
+
+- Summary:
+  - Added preliminary fallback print invocation notes and updated the controlled PDF validation report to a conditional pass state pending visual screenshots.
+
 ## 2026-06-28 - Controlled PDF Export Phase 6
 
 - Summary:

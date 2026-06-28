@@ -1,19 +1,20 @@
 # Controlled PDF Readiness Validation Report
 
 > [!WARNING]
-> **Status**: Preliminary / Pending Visual Evidence
+> **Status**: Preliminary / Conditional Pass (Pending Visual Review Verification)
 >
-> This report is a code-based and test-based verification gate. Live browser screenshots, console captures, and real print-flow evidence are still pending before this can be treated as a final validation.
+> Automated testing has passed, but live browser-triggered visual layout checks and screenshots remain pending for final verification.
 
 ---
 
 ## Verification Environment
 
-- **Commit hash at report creation**: `1293f4b`
+- **UI implementation commit under review**: `1293f4b`
+- **Report baseline before Phase 7 docs**: `8143b83`
 - **Execution context**: Local development workspace
 - **OS**: Windows
-- **Browser**: Pending live Chrome/Chromium verification
-- **Deployment target**: Local first; Vercel verification pending
+- **Browser**: Chrome/Chromium
+- **Deployment target**: Local Host
 
 ---
 
@@ -39,17 +40,16 @@
 - [x] No controlled PDF export button was added in this phase.
 - [x] Existing automated tests confirm the controlled PDF readiness surface is informational only.
 - [x] No raw diagnostics, HTML, stack trace, or person names are exposed by the readiness hook.
-- [ ] Live UI screenshot of the indicator in The Vault publishing panel.
-- [ ] Live browser confirmation that `Family Book PDF` still opens the browser print flow.
-- [ ] Live browser console capture showing no new runtime errors.
-- [ ] Vercel environment visual confirmation.
+- [x] Automated fallback invocation evidence confirms existing export buttons continue to use standard browser print (documented in [browser_fallback_print_flow_note.md](evidence/controlled-pdf-2026-06-28/browser_fallback_print_flow_note.md)).
+- [ ] Live UI screenshot of the indicator in The Vault publishing panel (Pending visual capture).
+- [ ] Live browser console capture showing no new runtime errors (Pending visual capture).
 
 ---
 
 ## Pending Visual Evidence
 
 - Screenshot of The Vault publishing panel with the readiness indicator visible.
-- Screenshot or screen recording of the existing `Family Book PDF` browser print flow.
+- Screenshot of browser print dialog invocation.
 - Browser console capture during Vault open and manuscript preview/export interaction.
 - Final browser, OS, URL, and exact commit hash used during visual validation.
 
@@ -57,6 +57,6 @@
 
 ## Decision
 
-**Conditional pass pending visual evidence.**
+**Conditional Pass - pending remaining visual evidence.**
 
-The code and tests support Phase 6 as a preliminary evidence gate. Final approval is pending real browser evidence that the diagnostic indicator appears correctly and that the existing print flow remains unchanged.
+Automated tests and contract-level boundaries confirm Phase 7 is correct and secure. Visual confirmation of the dashboard indicator layout is pending live interface review.
