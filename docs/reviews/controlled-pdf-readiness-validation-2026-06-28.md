@@ -41,6 +41,7 @@
 - [x] Existing automated tests confirm the controlled PDF readiness surface is informational only.
 - [x] No raw diagnostics, HTML, stack trace, or person names are exposed by the readiness hook.
 - [x] Automated fallback invocation evidence confirms existing export buttons continue to use standard browser print (documented in [browser_fallback_print_flow_note.md](evidence/controlled-pdf-2026-06-28/browser_fallback_print_flow_note.md)).
+- [x] Documented native browser print dialog validation limits and verification alternatives (documented in [browser_print_dialog_capture_limit.md](evidence/controlled-pdf-2026-06-28/browser_print_dialog_capture_limit.md)).
 - [ ] Live UI screenshot of the indicator in The Vault publishing panel (Pending visual capture).
 - [ ] Live browser console capture showing no new runtime errors (Pending visual capture).
 
@@ -57,6 +58,6 @@
 
 ## Decision
 
-**Conditional Pass - pending remaining visual evidence.**
+**Conditional Pass - pending remaining visual screenshots.**
 
-Automated tests and contract-level boundaries confirm Phase 7 is correct and secure. Visual confirmation of the dashboard indicator layout is pending live interface review.
+Automated tests and contract-level boundaries confirm Phase 8A is correct and secure. Visual confirmation of the dashboard indicator layout is pending live visual captures.

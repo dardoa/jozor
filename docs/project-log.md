@@ -1,5 +1,10 @@
 # Project Log
 
+## 2026-06-28 - Controlled PDF Export Phase 8A
+
+- Summary:
+  - Documented native browser print dialog capture limitations, resolved verification alternatives, and maintained conditional pass status for the validation report.
+
 ## 2026-06-28 - Controlled PDF Export Phase 7
 
 - Summary:
