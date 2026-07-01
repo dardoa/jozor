@@ -156,9 +156,9 @@ describe('ExportCloudPanel manuscript preview', () => {
 
     expect(screen.getByText('Manuscript Control Panel')).toBeInTheDocument();
     expect(screen.getByText(/Preview and PDF use the same manuscript model and settings/i)).toBeInTheDocument();
-    expect(screen.getByText(/People in scope:/i)).toBeInTheDocument();
-    expect(screen.getAllByText((_, element) => element?.textContent?.includes('People in scope: 2') ?? false).length).toBeGreaterThan(0);
-    expect(screen.getByText(/Order:/i)).toBeInTheDocument();
+    expect(screen.getByText(/Estimated people count:/i)).toBeInTheDocument();
+    expect(screen.getAllByText((_, element) => element?.textContent?.includes('Estimated people count: 2') ?? false).length).toBeGreaterThan(0);
+    expect(screen.getByText(/Ordering strategy:/i)).toBeInTheDocument();
     expect(screen.getAllByText(/Family path/i).length).toBeGreaterThan(0);
 
     fireEvent.change(screen.getByLabelText(/Manuscript root/i), { target: { value: 'Branch Person' } });
@@ -168,8 +168,9 @@ describe('ExportCloudPanel manuscript preview', () => {
     fireEvent.click(screen.getByLabelText(/Narrative draft/i));
     fireEvent.click(screen.getByRole('button', { name: /Preview Manuscript/i }));
 
-    expect(screen.getByText(/Branch Person · Full branch/i)).toBeInTheDocument();
-    expect(screen.getAllByText((_, element) => element?.textContent?.includes('People in scope: 1') ?? false).length).toBeGreaterThan(0);
+    expect(screen.getByText(/Root person:/i)).toBeInTheDocument();
+    expect(screen.getByText(/Depth:/i)).toBeInTheDocument();
+    expect(screen.getAllByText((_, element) => element?.textContent?.includes('Estimated people count: 1') ?? false).length).toBeGreaterThan(0);
     expect(screen.getByText(/photos, timeline, bibliography, narrative/i)).toBeInTheDocument();
 
     await waitFor(() => expect(onRunPublishingPreview).toHaveBeenCalled());
@@ -277,5 +278,103 @@ describe('ExportCloudPanel manuscript preview', () => {
     const indicator = await screen.findByTestId('controlled-pdf-readiness-indicator');
     expect(indicator).toBeInTheDocument();
     expect(indicator).toHaveTextContent('Controlled PDF: Ready');
+  });
+
+  it('renders manuscript summary panel with root, depth, strategy, and citation coverage stats', async () => {
+    const onRunPublishingPreview = vi.fn().mockResolvedValue({
+      title: 'Family Manuscript',
+      html: '<html><body>Preview</body></html>',
+      pageEstimate: 4,
+      citationCoverage: 75,
+    });
+
+    render(
+      <ExportCloudPanel
+        {...baseProps}
+        onRunPublishingPreview={onRunPublishingPreview}
+      />
+    );
+
+    // Initial state check - citation coverage defaults to "Not calculated"
+    const citation = screen.getByTestId('manuscript-citation-coverage-indicator');
+    expect(citation).toHaveTextContent('Citation coverage: Not calculated');
+
+    // Run preview to get calculated stats
+    fireEvent.click(screen.getByRole('button', { name: /Preview Manuscript/i }));
+    await screen.findByText('Estimated pages: 4');
+
+    // Check summary parameters and updated citation metrics
+    const summary = screen.getByTestId('manuscript-export-summary');
+    expect(summary).toBeInTheDocument();
+    expect(summary).toHaveTextContent(/Root person:/i);
+    expect(summary).toHaveTextContent(/Depth:/i);
+    expect(summary).toHaveTextContent(/Ordering strategy:/i);
+    expect(summary).toHaveTextContent(/Included content:/i);
+
+    expect(screen.getByTestId('manuscript-citation-coverage-indicator')).toHaveTextContent('Citation coverage: 75%');
+    expect(screen.queryByTestId('manuscript-low-citation-warning')).not.toBeInTheDocument();
+  });
+
+  it('renders warning banner if citation coverage is low', async () => {
+    const onRunPublishingPreview = vi.fn().mockResolvedValue({
+      title: 'Family Manuscript',
+      html: '<html><body>Preview</body></html>',
+      pageEstimate: 4,
+      citationCoverage: 20,
+    });
+
+    render(
+      <ExportCloudPanel
+        {...baseProps}
+        onRunPublishingPreview={onRunPublishingPreview}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /Preview Manuscript/i }));
+    await screen.findByText('Estimated pages: 4');
+
+    expect(screen.getByTestId('manuscript-citation-coverage-indicator')).toHaveTextContent('Citation coverage: 20%');
+    expect(screen.getByTestId('manuscript-low-citation-warning')).toHaveTextContent(/Low citation coverage/i);
+  });
+
+  it('verifies preview status changes when options are modified', async () => {
+    const onRunPublishingPreview = vi.fn().mockResolvedValue({
+      title: 'Family Manuscript',
+      html: '<html><body>Preview</body></html>',
+      pageEstimate: 4,
+    });
+
+    render(
+      <ExportCloudPanel
+        {...baseProps}
+        onRunPublishingPreview={onRunPublishingPreview}
+      />
+    );
+
+    // Initial state: not generated
+    expect(screen.getByTestId('manuscript-preview-status-indicator')).toHaveTextContent('Preview not generated');
+
+    // Generate preview
+    fireEvent.click(screen.getByRole('button', { name: /Preview Manuscript/i }));
+    await screen.findByText('Estimated pages: 4');
+    expect(screen.getByTestId('manuscript-preview-status-indicator')).toHaveTextContent('Preview ready');
+
+    // Change setting to make it stale
+    fireEvent.change(screen.getByLabelText(/Branch depth/i), { target: { value: '4' } });
+    expect(screen.getByTestId('manuscript-preview-status-indicator')).toHaveTextContent('Preview stale - refresh recommended');
+  });
+
+  it('retains controlled PDF readiness indicator as purely informational with no active button', () => {
+    render(
+      <ExportCloudPanel
+        {...baseProps}
+      />
+    );
+
+    const pdfButton = screen.queryByRole('button', { name: /Export controlled PDF/i });
+    expect(pdfButton).not.toBeInTheDocument();
+
+    const indicator = screen.getByTestId('controlled-pdf-readiness-indicator');
+    expect(indicator).toBeInTheDocument();
   });
 });

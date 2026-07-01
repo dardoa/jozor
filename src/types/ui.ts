@@ -131,6 +131,7 @@ export interface PublishingPreviewResult {
     title: string;
     html: string;
     pageEstimate?: number;
+    citationCoverage?: number;
 }
 
 export interface ExportActionsProps {
