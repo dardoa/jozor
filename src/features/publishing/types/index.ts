@@ -159,6 +159,9 @@ export interface ManuscriptPersonEntry {
   readonly sourceHighlights: readonly ManuscriptSourceHighlight[];
   readonly citationCount: number;
   readonly citationCoverage: number;
+  readonly generation?: number;
+  readonly branchPath?: readonly string[];
+  readonly relationshipToRoot?: string;
 }
 
 export interface ManuscriptBranchSummary {

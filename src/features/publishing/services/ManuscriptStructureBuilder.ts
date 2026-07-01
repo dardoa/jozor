@@ -283,7 +283,12 @@ function buildPersonEntries(
   includeImages: boolean,
   labels: ReturnType<typeof getManuscriptLabels>,
   narrativeOrder?: readonly string[],
-  familyContexts?: ReadonlyMap<string, ManuscriptFamilyContext>
+  familyContexts?: ReadonlyMap<string, ManuscriptFamilyContext>,
+  narrativeMetadata?: Record<string, {
+    readonly generation: number;
+    readonly branchPath: readonly string[];
+    readonly relationshipToRoot: string;
+  }>
 ): readonly ManuscriptPersonEntry[] {
   const orderedPeople = (narrativeOrder && narrativeOrder.length > 0
     ? narrativeOrder.map((personId) => people[personId]).filter((person): person is Person => Boolean(person))
@@ -307,6 +312,8 @@ function buildPersonEntries(
       const citationCount = countCitationsForPerson(citations, person.id);
       const citedFactsCount = facts.filter((fact) => fact.citationCount > 0).length;
 
+      const meta = narrativeMetadata?.[person.id];
+
       return {
         personId: person.id,
         displayName: getDisplayName(person),
@@ -316,6 +323,9 @@ function buildPersonEntries(
         sourceHighlights: buildSourceHighlightsForPerson(sources, citations, person.id, labels.unknownSource),
         citationCount,
         citationCoverage: facts.length > 0 ? Math.round((citedFactsCount / facts.length) * 100) : 0,
+        generation: meta?.generation,
+        branchPath: meta?.branchPath,
+        relationshipToRoot: meta?.relationshipToRoot,
       };
     });
 }
@@ -438,7 +448,7 @@ export class ManuscriptStructureBuilder {
     const labels = getManuscriptLabels(language);
     const citationValues = Object.values(evidence.citations);
     const orderingStrategy = options.orderingStrategy ?? 'narrative';
-    const narrativeOrder = NarrativeOrderingEngine.orderPeople({
+    const { orderedIds: narrativeOrder, metadata: narrativeMetadata } = NarrativeOrderingEngine.orderPeopleWithMetadata({
       rootPersonId: options.rootPersonId,
       people: manuscriptPeople,
       relationships: branchGraph.relationships,
@@ -454,7 +464,8 @@ export class ManuscriptStructureBuilder {
       Boolean(options.includeImages),
       labels,
       narrativeOrder,
-      familyContexts
+      familyContexts,
+      narrativeMetadata
     );
     const peopleEntries = options.includeNarrative
       ? NarrativeDraftBuilder.applyToPeople(rawPeopleEntries, { language })

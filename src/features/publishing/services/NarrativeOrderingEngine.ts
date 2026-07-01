@@ -45,16 +45,62 @@ function sortIdsByPerson(
 
 export class NarrativeOrderingEngine {
   public static orderPeople(input: NarrativeOrderingInput): readonly string[] {
+    return this.orderPeopleWithMetadata(input).orderedIds;
+  }
+
+  public static orderPeopleWithMetadata(input: NarrativeOrderingInput): NarrativeOrderingResult {
     const { rootPersonId, people, relationships, strategy = 'narrative' } = input;
+    const orderedIds: string[] = [];
+    const visited = new Set<string>();
+    const metadata: Record<string, NarrativePersonMetadata> = {};
+
+    const addPerson = (
+      personId: string,
+      meta?: { generation: number; branchPath: readonly string[]; relationshipToRoot: string }
+    ) => {
+      if (!people[personId] || visited.has(personId)) return;
+      visited.add(personId);
+      orderedIds.push(personId);
+      if (meta) {
+        metadata[personId] = meta;
+      } else {
+        // Fallback default metadata for items added outside tree traversal
+        metadata[personId] = {
+          generation: 0,
+          branchPath: [],
+          relationshipToRoot: 'relative',
+        };
+      }
+    };
+
     if (strategy === 'alphabetical') {
-      return sortIdsByPerson(people, Object.keys(people), 'alphabetical');
+      const sorted = sortIdsByPerson(people, Object.keys(people), 'alphabetical');
+      sorted.forEach((id) => {
+        addPerson(id, id === rootPersonId ? {
+          generation: 0,
+          branchPath: [rootPersonId],
+          relationshipToRoot: 'root',
+        } : undefined);
+      });
+      return { orderedIds, metadata };
     }
+
     if (strategy === 'chronological') {
-      return sortIdsByPerson(people, Object.keys(people), 'chronological');
+      const sorted = sortIdsByPerson(people, Object.keys(people), 'chronological');
+      sorted.forEach((id) => {
+        addPerson(id, id === rootPersonId ? {
+          generation: 0,
+          branchPath: [rootPersonId],
+          relationshipToRoot: 'root',
+        } : undefined);
+      });
+      return { orderedIds, metadata };
     }
 
     if (!people[rootPersonId]) {
-      return sortIdsByPerson(people, Object.keys(people));
+      const sorted = sortIdsByPerson(people, Object.keys(people));
+      sorted.forEach((id) => addPerson(id));
+      return { orderedIds, metadata };
     }
 
     const childrenByParent = new Map<string, string[]>();
@@ -79,37 +125,84 @@ export class NarrativeOrderingEngine {
       }
     });
 
-    const orderedIds: string[] = [];
-    const visited = new Set<string>();
-
-    const addPerson = (personId: string) => {
+    const traverseFamily = (
+      personId: string,
+      currentGen: number,
+      parentPath: readonly string[],
+      isSpouse: boolean = false
+    ) => {
       if (!people[personId] || visited.has(personId)) return;
-      visited.add(personId);
-      orderedIds.push(personId);
-    };
 
-    const traverseFamily = (personId: string) => {
-      if (!people[personId]) return;
+      let relationship = 'relative';
+      if (personId === rootPersonId) {
+        relationship = 'root';
+      } else if (isSpouse) {
+        relationship = 'spouse';
+      } else if (currentGen === 1) {
+        relationship = 'child';
+      } else if (currentGen === 2) {
+        relationship = 'grandchild';
+      } else if (currentGen > 2) {
+        relationship = 'descendant';
+      }
 
-      addPerson(personId);
+      const currentPath = [...parentPath, personId];
 
-      sortIdsByPerson(people, spousesByPerson.get(personId) ?? []).forEach(addPerson);
-      sortIdsByPerson(people, childrenByParent.get(personId) ?? []).forEach((childId) => {
-        traverseFamily(childId);
+      addPerson(personId, {
+        generation: currentGen,
+        branchPath: currentPath,
+        relationshipToRoot: relationship,
+      });
+
+      // Spouses of the current person (keep the same generation)
+      const personSpouses = sortIdsByPerson(people, spousesByPerson.get(personId) ?? []);
+      personSpouses.forEach((spouseId) => {
+        if (!visited.has(spouseId)) {
+          traverseFamily(spouseId, currentGen, currentPath, true);
+        }
+      });
+
+      // Children of the current person (generation increments)
+      const children = sortIdsByPerson(people, childrenByParent.get(personId) ?? []);
+      children.forEach((childId) => {
+        if (!visited.has(childId)) {
+          traverseFamily(childId, currentGen + 1, currentPath, false);
+        }
       });
     };
 
-    traverseFamily(rootPersonId);
+    traverseFamily(rootPersonId, 0, []);
 
     const narrativeIds = [...orderedIds];
     if (strategy === 'custom') {
       orderedIds.length = 0;
       visited.clear();
-      (input.customPersonOrder ?? []).forEach(addPerson);
-      narrativeIds.forEach(addPerson);
+      // Reset metadata map for custom order
+      Object.keys(metadata).forEach((key) => delete metadata[key]);
+
+      (input.customPersonOrder ?? []).forEach((id) => {
+        addPerson(id);
+      });
+      narrativeIds.forEach((id) => {
+        addPerson(id);
+      });
     }
 
-    sortIdsByPerson(people, Object.keys(people)).forEach(addPerson);
-    return orderedIds;
+    sortIdsByPerson(people, Object.keys(people)).forEach((id) => {
+      addPerson(id);
+    });
+
+    return { orderedIds, metadata };
   }
+}
+
+export interface NarrativePersonMetadata {
+  readonly generation: number;
+  readonly branchPath: readonly string[];
+  readonly relationshipToRoot: string;
+}
+
+export interface NarrativeOrderingResult {
+  readonly orderedIds: readonly string[];
+  readonly metadata: Record<string, NarrativePersonMetadata>;
 }
