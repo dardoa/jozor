@@ -528,4 +528,99 @@ describe('ManuscriptStructureBuilder', () => {
     expect(sections[0].blocks.filter((block) => block.type === 'paragraph')).toHaveLength(4);
     expect(sections[1].blocks.filter((block) => block.type === 'paragraph')).toHaveLength(1);
   });
+
+  it('verifies genealogical narrative flow ordering matches depth-first traversal and populates metadata correctly', () => {
+    // Z Root, A Spouse, Y First Child, B Child Spouse, X Grandchild, C Second Child
+    const people: Record<string, Person> = {
+      root: createMockPerson('root', 'male', { firstName: 'Z Root', lastName: 'Family', birthDate: '1950-01-01' }),
+      spouse: createMockPerson('spouse', 'female', { firstName: 'A Spouse', lastName: 'Family', birthDate: '1952-01-01' }),
+      child1: createMockPerson('child1', 'male', { firstName: 'Y First Child', lastName: 'Family', birthDate: '1980-01-01' }),
+      spouseChild1: createMockPerson('spouseChild1', 'female', { firstName: 'B Child Spouse', lastName: 'Family', birthDate: '1982-01-01' }),
+      grandchild: createMockPerson('grandchild', 'male', { firstName: 'X Grandchild', lastName: 'Family', birthDate: '2010-01-01' }),
+      child2: createMockPerson('child2', 'male', { firstName: 'C Second Child', lastName: 'Family', birthDate: '1985-01-01' }),
+    };
+
+    const relationshipEdges: Record<string, RelationshipEdge> = {
+      edgeSpouse: {
+        id: 'edgeSpouse',
+        treeId: 'tree-1',
+        fromPersonId: 'root',
+        toPersonId: 'spouse',
+        type: 'SPOUSE',
+        status: 'ACTIVE',
+        createdAt: '2026-01-01T00:00:00.000Z',
+      },
+      edgeChild1: {
+        id: 'edgeChild1',
+        treeId: 'tree-1',
+        fromPersonId: 'root',
+        toPersonId: 'child1',
+        type: 'BIOLOGICAL_PARENT',
+        status: 'ACTIVE',
+        createdAt: '2026-01-01T00:00:00.000Z',
+      },
+      edgeChild2: {
+        id: 'edgeChild2',
+        treeId: 'tree-1',
+        fromPersonId: 'root',
+        toPersonId: 'child2',
+        type: 'BIOLOGICAL_PARENT',
+        status: 'ACTIVE',
+        createdAt: '2026-01-01T00:00:00.000Z',
+      },
+      edgeChild1Spouse: {
+        id: 'edgeChild1Spouse',
+        treeId: 'tree-1',
+        fromPersonId: 'child1',
+        toPersonId: 'spouseChild1',
+        type: 'SPOUSE',
+        status: 'ACTIVE',
+        createdAt: '2026-01-01T00:00:00.000Z',
+      },
+      edgeGrandchild: {
+        id: 'edgeGrandchild',
+        treeId: 'tree-1',
+        fromPersonId: 'child1',
+        toPersonId: 'grandchild',
+        type: 'BIOLOGICAL_PARENT',
+        status: 'ACTIVE',
+        createdAt: '2026-01-01T00:00:00.000Z',
+      },
+    };
+
+    const model = ManuscriptStructureBuilder.buildModel({
+      rootPersonId: 'root',
+      people,
+      relationshipEdges,
+    });
+
+    const peopleChapter = model.chapters.find((c) => c.type === 'people');
+    expect(peopleChapter).toBeDefined();
+
+    const orderedIds = peopleChapter?.people?.map((p) => p.personId);
+    // Root -> Spouse -> Child1 -> Child1Spouse -> Grandchild -> Child2
+    expect(orderedIds).toEqual(['root', 'spouse', 'child1', 'spouseChild1', 'grandchild', 'child2']);
+
+    const rootEntry = peopleChapter?.people?.find((p) => p.personId === 'root');
+    expect(rootEntry?.relationshipToRoot).toBe('root');
+    expect(rootEntry?.generation).toBe(0);
+
+    const spouseEntry = peopleChapter?.people?.find((p) => p.personId === 'spouse');
+    expect(spouseEntry?.relationshipToRoot).toBe('spouse');
+    expect(spouseEntry?.generation).toBe(0);
+    expect(spouseEntry?.branchPath).toEqual(['root', 'spouse']);
+
+    const child1Entry = peopleChapter?.people?.find((p) => p.personId === 'child1');
+    expect(child1Entry?.relationshipToRoot).toBe('child');
+    expect(child1Entry?.generation).toBe(1);
+
+    const spouseChild1Entry = peopleChapter?.people?.find((p) => p.personId === 'spouseChild1');
+    expect(spouseChild1Entry?.relationshipToRoot).toBe('spouse');
+    expect(spouseChild1Entry?.generation).toBe(1); // Spouse inherits generation of their node (child1 is gen 1)
+    expect(spouseChild1Entry?.branchPath).toEqual(['root', 'child1', 'spouseChild1']);
+
+    const grandchildEntry = peopleChapter?.people?.find((p) => p.personId === 'grandchild');
+    expect(grandchildEntry?.relationshipToRoot).toBe('grandchild');
+    expect(grandchildEntry?.generation).toBe(2);
+  });
 });

@@ -207,4 +207,100 @@ describe('HtmlManuscriptRenderer', () => {
     expect(html).toContain('Spouse');
     expect(html).toContain('Generation 1');
   });
+
+  it('renders people in the exact pre-ordered narrative sequence and maintains labels', () => {
+    const html = HtmlManuscriptRenderer.renderToHtml({
+      id: 'flow-test',
+      title: 'Narrative Flow Test',
+      rootPersonId: 'root',
+      chapters: [{
+        id: 'people',
+        type: 'people',
+        title: 'أفراد العائلة',
+        people: [
+          {
+            personId: 'root',
+            displayName: 'Z Root',
+            relationshipToRoot: 'root',
+            generation: 0,
+            citationCoverage: 0,
+            citationCount: 0,
+            facts: [],
+            sourceHighlights: [],
+          },
+          {
+            personId: 'spouse',
+            displayName: 'A Spouse',
+            relationshipToRoot: 'spouse',
+            generation: 0,
+            citationCoverage: 0,
+            citationCount: 0,
+            facts: [],
+            sourceHighlights: [],
+          },
+          {
+            personId: 'child1',
+            displayName: 'Y First Child',
+            relationshipToRoot: 'child',
+            generation: 1,
+            citationCoverage: 0,
+            citationCount: 0,
+            facts: [],
+            sourceHighlights: [],
+          },
+          {
+            personId: 'spouseChild1',
+            displayName: 'B Child Spouse',
+            relationshipToRoot: 'spouse',
+            generation: 0,
+            citationCoverage: 0,
+            citationCount: 0,
+            facts: [],
+            sourceHighlights: [],
+          },
+          {
+            personId: 'grandchild',
+            displayName: 'X Grandchild',
+            relationshipToRoot: 'grandchild',
+            generation: 2,
+            citationCoverage: 0,
+            citationCount: 0,
+            facts: [],
+            sourceHighlights: [],
+          },
+          {
+            personId: 'child2',
+            displayName: 'C Second Child',
+            relationshipToRoot: 'child',
+            generation: 1,
+            citationCoverage: 0,
+            citationCount: 0,
+            facts: [],
+            sourceHighlights: [],
+          }
+        ],
+      }],
+    }, { language: 'en' });
+
+    // Assert absolute relative order of appearances
+    const idxRoot = html.indexOf('Z Root');
+    const idxSpouse = html.indexOf('A Spouse');
+    const idxChild1 = html.indexOf('Y First Child');
+    const idxSpouseChild1 = html.indexOf('B Child Spouse');
+    const idxGrandchild = html.indexOf('X Grandchild');
+    const idxChild2 = html.indexOf('C Second Child');
+
+    expect(idxRoot).toBeGreaterThan(-1);
+    expect(idxSpouse).toBeGreaterThan(idxRoot);
+    expect(idxChild1).toBeGreaterThan(idxSpouse);
+    expect(idxSpouseChild1).toBeGreaterThan(idxChild1);
+    expect(idxGrandchild).toBeGreaterThan(idxSpouseChild1);
+    expect(idxChild2).toBeGreaterThan(idxGrandchild);
+
+    // Assert relationship labels presence
+    expect(html).toContain('Root');
+    expect(html).toContain('Spouse');
+    expect(html).toContain('Generation 1');
+    expect(html).toContain('Generation 2');
+  });
 });

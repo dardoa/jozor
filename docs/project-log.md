@@ -1,5 +1,11 @@
 # Project Log
 
+## 2026-07-01 - Manuscript Narrative Flow Verification
+
+- Summary:
+  - Added end-to-end integration and renderer unit tests verifying narrative manuscript ordering.
+  - Confirmed the manuscript layout hierarchy reads root, spouse, and descendants depth-first across model, HTML, and Markdown outputs.
+
 ## 2026-06-28 - Controlled PDF Export Phase 8B
 
 - Summary:
