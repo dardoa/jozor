@@ -1,5 +1,10 @@
 # Project Log
 
+## 2026-07-02 - Manual Manuscript Review Pack
+
+- Summary:
+  - Added preliminary manual manuscript narrative review checklist and evidence folder.
+
 ## 2026-07-01 - Manuscript Narrative Flow Verification
 
 - Summary:
