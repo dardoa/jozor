@@ -31,8 +31,6 @@
 - [ ] **Browser Print Fallback**: Clicking the standard PDF button triggers the default browser print dialog dynamically.
 - [ ] **PDF Output Layout**: Visual boundaries, margins, and paper backgrounds are correctly applied for printing.
 
----
-
 ## Required Evidence Checkpoints
 
 | Checkpoint | Target Artifact | Path / Location | Status |
@@ -41,18 +39,18 @@
 | Bibliography | HTML preview bibliography screenshot | `docs/reviews/evidence/manuscript-narrative-2026-07-02/html-preview-bibliography.png` | `Pending` |
 | Print Dialog | Browser print dialog flow screenshot | `docs/reviews/evidence/manuscript-narrative-2026-07-02/browser-print-flow.png` | `Pending` |
 | Output PDF | Generated family book PDF file | `docs/reviews/evidence/manuscript-narrative-2026-07-02/generated-family-book.pdf` | `Pending` |
-| Execution Logs | Developer console cleanliness review logs | `docs/reviews/evidence/manuscript-narrative-2026-07-02/review-notes.md` | `Pending` |
+| Execution Logs | Developer console cleanliness review logs | `docs/reviews/evidence/manuscript-narrative-2026-07-02/review-notes.md` | `Captured (Environment Limitation Note)` |
 
 ---
 
 ## Environment & Execution Parameters
 
-- **Browser**: Pending live run details
-- **OS**: Windows (Local staging environment)
-- **Tree Size**: Pending target tree info
-- **Root Person Used**: Pending target root person info
+- **Browser**: None (Headless Staging / Sandbox environment)
+- **OS**: Windows (Local terminal sandbox)
+- **Tree Size**: N/A (Tested programmatically on synthetic mock trees)
+- **Root Person Used**: N/A (Tested programmatically on synthetic mock roots)
 
 ---
 
 ## Preliminary Execution Summary
-This report is initialized in a **Preliminary** state. Visual checklists remain unchecked until actual screenshots and PDFs are generated and attached in the evidence directory.
+This report remains in a **Preliminary - pending visual evidence** state. Visual checkpoints are kept unchecked and pending capture because the current execution sandbox is headless. Programmatic unit tests run successfully, but visual screenshots and PDF files must be captured in a live browser session to promote status.

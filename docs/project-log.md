@@ -1,5 +1,11 @@
 # Project Log
 
+## 2026-07-02 - Manual Manuscript Visual Review Run
+
+- Summary:
+  - Executed manual review for manuscript narrative flow under HEAD commit `cfcdda7`.
+  - Documented headless execution sandbox constraints and kept review status as `Preliminary - pending visual evidence`.
+
 ## 2026-07-02 - Manual Manuscript Review Pack
 
 - Summary:

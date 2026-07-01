@@ -12,3 +12,6 @@ The following files are required before the review state can be updated from **P
 5. `review-notes.md`: Developer review console log checking and general visual stability annotations.
 
 *Note: Visual and PDF files must be real captures and are kept untracked until actual visual validation runs.*
+
+## Captured Evidence
+- [review-notes.md](review-notes.md): Documented constraints of headless staging environment and alternative unit test confirmations.
