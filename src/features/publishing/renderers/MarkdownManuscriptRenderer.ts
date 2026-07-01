@@ -10,6 +10,7 @@ import type {
 export interface MarkdownManuscriptRenderOptions {
   readonly title?: string;
   readonly includeMetadata?: boolean;
+  readonly language?: 'ar' | 'en';
 }
 
 export class MarkdownManuscriptRenderer {
@@ -17,6 +18,8 @@ export class MarkdownManuscriptRenderer {
     model: FamilyManuscriptModel,
     options: MarkdownManuscriptRenderOptions = {}
   ): string {
+    const isArabic = /[\u0600-\u06FF]/.test(model.title || '');
+    const language = options.language ?? (isArabic ? 'ar' : 'en');
     const title = normalizeInline(options.title ?? model.title);
     const lines: string[] = [`# ${title}`, ''];
 
@@ -27,7 +30,7 @@ export class MarkdownManuscriptRenderer {
     }
 
     model.chapters.forEach((chapter) => {
-      lines.push(...renderChapter(chapter));
+      lines.push(...renderChapter(chapter, language));
       lines.push('');
     });
 
@@ -35,14 +38,14 @@ export class MarkdownManuscriptRenderer {
   }
 }
 
-function renderChapter(chapter: ManuscriptChapter): string[] {
+function renderChapter(chapter: ManuscriptChapter, language: 'ar' | 'en'): string[] {
   const lines = [`## ${normalizeInline(chapter.title)}`, ''];
 
   switch (chapter.type) {
     case 'overview':
       return [...lines, ...renderOverview(chapter.branchSummaries ?? [])];
     case 'people':
-      return [...lines, ...renderPeople(chapter.people ?? [])];
+      return [...lines, ...renderPeople(chapter.people ?? [], language)];
     case 'timeline':
       return [...lines, ...renderTimeline(chapter.timeline ?? [])];
     case 'evidence':
@@ -60,7 +63,7 @@ function renderOverview(branchSummaries: readonly ManuscriptBranchSummary[]): st
   ));
 }
 
-function renderPeople(people: readonly ManuscriptPersonEntry[]): string[] {
+function renderPeople(people: readonly ManuscriptPersonEntry[], language: 'ar' | 'en'): string[] {
   if (people.length === 0) return ['No people entries.'];
 
   let activeBranchLabel = '';
@@ -72,9 +75,14 @@ function renderPeople(people: readonly ManuscriptPersonEntry[]): string[] {
       branchLines.push(`#### Branch: ${normalizeInline(branchLabel)}`, '');
     }
 
+    const relationshipPrefix = language === 'ar' ? 'العلاقة' : 'Relationship';
+
     const lines = [
       `### ${normalizeInline(person.displayName)}`,
       '',
+      ...(person.relationshipToRoot
+        ? [`- ${relationshipPrefix}: ${normalizeInline(getMetadataLabel(person.relationshipToRoot, person.generation, language))}`]
+        : []),
       ...(person.familyContext ? [`- Family context: ${normalizeInline(person.familyContext.label)}`] : []),
       ...(person.familyContext?.breadcrumb && person.familyContext.breadcrumb.length > 1
         ? [`- Family path: ${person.familyContext.breadcrumb.map(normalizeInline).join(' > ')}`]
@@ -147,4 +155,27 @@ function trimBlankLines(lines: readonly string[]): string[] {
   while (next.length > 0 && next[0] === '') next.shift();
   while (next.length > 0 && next[next.length - 1] === '') next.pop();
   return next;
+}
+
+function getMetadataLabel(relationship: string, generation: number | undefined, language: 'ar' | 'en'): string {
+  const genNum = generation ?? 0;
+  if (language === 'ar') {
+    const labels: Record<string, string> = {
+      root: 'الجذر',
+      spouse: 'زوج/زوجة',
+      child: 'الجيل 1',
+      grandchild: 'الجيل 2',
+      relative: 'قريب',
+    };
+    return labels[relationship] ?? `الجيل ${genNum}`;
+  } else {
+    const labels: Record<string, string> = {
+      root: 'Root',
+      spouse: 'Spouse',
+      child: 'Generation 1',
+      grandchild: 'Generation 2',
+      relative: 'Relative',
+    };
+    return labels[relationship] ?? `Generation ${genNum}`;
+  }
 }

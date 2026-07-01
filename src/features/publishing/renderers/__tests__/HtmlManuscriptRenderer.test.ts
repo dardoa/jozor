@@ -157,4 +157,54 @@ describe('HtmlManuscriptRenderer', () => {
     expect(html).toContain('color: #123456');
     expect(html).toContain('padding: 24mm 18mm');
   });
+
+  it('renders relationship metadata when provided', () => {
+    const html = HtmlManuscriptRenderer.renderToHtml({
+      id: 'metadata-test',
+      title: 'Relationship Metadata Test',
+      rootPersonId: 'p1',
+      chapters: [{
+        id: 'people',
+        type: 'people',
+        title: 'People',
+        people: [
+          {
+            personId: 'p1',
+            displayName: 'John Root',
+            relationshipToRoot: 'root',
+            generation: 0,
+            citationCoverage: 0,
+            citationCount: 0,
+            facts: [],
+            sourceHighlights: [],
+          },
+          {
+            personId: 'p2',
+            displayName: 'Jane Spouse',
+            relationshipToRoot: 'spouse',
+            generation: 0,
+            citationCoverage: 0,
+            citationCount: 0,
+            facts: [],
+            sourceHighlights: [],
+          },
+          {
+            personId: 'p3',
+            displayName: 'Jack Child',
+            relationshipToRoot: 'child',
+            generation: 1,
+            citationCoverage: 0,
+            citationCount: 0,
+            facts: [],
+            sourceHighlights: [],
+          }
+        ],
+      }],
+    }, { language: 'en' });
+
+    expect(html).toContain('person-card__relationship');
+    expect(html).toContain('Root');
+    expect(html).toContain('Spouse');
+    expect(html).toContain('Generation 1');
+  });
 });

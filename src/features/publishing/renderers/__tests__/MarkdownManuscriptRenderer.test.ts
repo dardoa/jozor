@@ -138,4 +138,53 @@ describe('MarkdownManuscriptRenderer', () => {
     expect(markdown).toContain('# Family \\[Draft\\] \\#1');
     expect(markdown).toContain('### Omar \\*Test\\*');
   });
+
+  it('renders relationship metadata when provided', () => {
+    const markdown = MarkdownManuscriptRenderer.renderToMarkdown({
+      id: 'metadata-test',
+      title: 'Relationship Metadata Test',
+      rootPersonId: 'p1',
+      chapters: [{
+        id: 'people',
+        type: 'people',
+        title: 'People',
+        people: [
+          {
+            personId: 'p1',
+            displayName: 'John Root',
+            relationshipToRoot: 'root',
+            generation: 0,
+            citationCoverage: 0,
+            citationCount: 0,
+            facts: [],
+            sourceHighlights: [],
+          },
+          {
+            personId: 'p2',
+            displayName: 'Jane Spouse',
+            relationshipToRoot: 'spouse',
+            generation: 0,
+            citationCoverage: 0,
+            citationCount: 0,
+            facts: [],
+            sourceHighlights: [],
+          },
+          {
+            personId: 'p3',
+            displayName: 'Jack Child',
+            relationshipToRoot: 'child',
+            generation: 1,
+            citationCoverage: 0,
+            citationCount: 0,
+            facts: [],
+            sourceHighlights: [],
+          }
+        ],
+      }],
+    }, { language: 'en' });
+
+    expect(markdown).toContain('- Relationship: Root');
+    expect(markdown).toContain('- Relationship: Spouse');
+    expect(markdown).toContain('- Relationship: Generation 1');
+  });
 });

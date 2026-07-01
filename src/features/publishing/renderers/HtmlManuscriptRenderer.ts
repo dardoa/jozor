@@ -207,6 +207,7 @@ function renderPersonCard(
     '<div class="person-card__identity">',
     `<h2>${escapeHtml(person.displayName)}</h2>`,
     person.familyContext ? `<p class="person-card__context">${escapeHtml(person.familyContext.label)}</p>` : '',
+    person.relationshipToRoot ? `<div class="person-card__relationship">${escapeHtml(getMetadataLabel(person.relationshipToRoot, person.generation, language))}</div>` : '',
     '</div>',
     `<span>${person.citationCoverage}% ${escapeHtml(labels.coverage)}</span>`,
     '</header>',
@@ -358,6 +359,14 @@ h2 {
   color: ${theme.colors.mutedText};
   font-size: 11px;
   line-height: 1.25;
+}
+.person-card__relationship {
+  display: inline-block;
+  margin: 3px 0 0;
+  color: ${theme.colors.accent};
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
 }
 .person-card__breadcrumb {
   margin: 8px 0 0;
@@ -516,4 +525,27 @@ function escapeHtml(value: string): string {
 
 function escapeCssUrl(value: string): string {
   return value.replace(/["\\\n\r]/g, '');
+}
+
+export function getMetadataLabel(relationship: string, generation: number | undefined, language: 'ar' | 'en'): string {
+  const genNum = generation ?? 0;
+  if (language === 'ar') {
+    const labels: Record<string, string> = {
+      root: 'الجذر',
+      spouse: 'زوج/زوجة',
+      child: 'الجيل 1',
+      grandchild: 'الجيل 2',
+      relative: 'قريب',
+    };
+    return labels[relationship] ?? `الجيل ${genNum}`;
+  } else {
+    const labels: Record<string, string> = {
+      root: 'Root',
+      spouse: 'Spouse',
+      child: 'Generation 1',
+      grandchild: 'Generation 2',
+      relative: 'Relative',
+    };
+    return labels[relationship] ?? `Generation ${genNum}`;
+  }
 }
