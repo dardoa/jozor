@@ -41,7 +41,7 @@ export class ControlledPdfFeatureFlag {
   }
 
   public static setTestOverrideForTests(value: boolean | null): void {
-    if (!isTestMode()) return;
+    if (value !== null && !isTestMode()) return;
     testOverride = value;
   }
 }

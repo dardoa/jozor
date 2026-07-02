@@ -1,5 +1,13 @@
 # Project Log
 
+## 2026-07-02 - Publishing Export Privacy Regression Pack
+
+- Summary:
+  - Added focused regression coverage proving that all publishing/export egress paths (JSON, JOZOR, GEDCOM, Markdown, ICS, PDF fallback) respect privacy masking for viewer role.
+  - Asserted that raw original names and sensitive fields (e.g. birth dates and birth places) do not leak to files.
+  - Centralized metadata diagnostics filtration in `ManuscriptPdfExportService` using `sanitizeDiagnosticsMetadata` to protect all custom and default adapters.
+  - No UI changes, no features activated, and Controlled PDF remains inactive.
+
 ## 2026-07-02 - Controlled PDF Phase 4
 
 - Summary:

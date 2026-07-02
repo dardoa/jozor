@@ -55,4 +55,14 @@ describe('ControlledPdfFeatureFlag', () => {
     expect(state.enabled).toBe(false);
     expect(state.reason).toContain('disabled by default');
   });
+
+  it('allows resetting a test override even if mode changes afterward', () => {
+    ControlledPdfFeatureFlag.setTestOverrideForTests(true);
+    expect(ControlledPdfFeatureFlag.getState().enabled).toBe(true);
+
+    vi.stubEnv('MODE', 'production');
+    ControlledPdfFeatureFlag.setTestOverrideForTests(null);
+
+    expect(ControlledPdfFeatureFlag.getState().enabled).toBe(false);
+  });
 });

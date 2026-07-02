@@ -61,7 +61,7 @@ const SAFE_DIAGNOSTIC_METADATA_KEYS = new Set([
   'generatedAt',
 ]);
 
-function sanitizeDiagnosticsMetadata(
+export function sanitizeDiagnosticsMetadata(
   metadata: Readonly<Record<string, unknown>> | undefined
 ): Readonly<Record<string, unknown>> {
   if (!metadata) return {};

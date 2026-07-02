@@ -233,7 +233,7 @@ describe('useExport', () => {
     expect(parsed.people['person-1'].firstName).toBe('John');
   });
 
-  it('exports masked names for viewer role', async () => {
+  it('exports masked names for viewer role and blocks raw sensitive values', async () => {
     mockStore.currentUserRole = 'viewer';
     const svgRef = { current: null };
     const { result } = renderHook(() => useExport(mockPeople, svgRef));
@@ -244,13 +244,19 @@ describe('useExport', () => {
 
     expect(downloadFile).toHaveBeenCalled();
     const [data] = vi.mocked(downloadFile).mock.calls[0];
-    const parsed = JSON.parse(data as string);
-    // John Doe should be masked to 'Private'
+    const rawString = data as string;
+
+    // Original details must not be in the exported payload string
+    expect(rawString).not.toContain('John');
+    expect(rawString).not.toContain('1990-01-01');
+    expect(rawString).not.toContain('New York');
+
+    const parsed = JSON.parse(rawString);
     expect(parsed.people['person-1'].firstName).toBe('Private');
     expect(parsed.people['person-1'].birthDate).toBe('');
   });
 
-  it('passes masked people to GEDCOM and ICS exports for viewer role', async () => {
+  it('passes masked people to GEDCOM and ICS exports for viewer role without raw names', async () => {
     mockStore.currentUserRole = 'viewer';
     const svgRef = { current: null };
     const { result } = renderHook(() => useExport(mockPeople, svgRef));
@@ -262,11 +268,17 @@ describe('useExport', () => {
 
     const gedcomPeople = vi.mocked(exportToGEDCOM).mock.calls[0][0];
     const icsPeople = vi.mocked(generateICS).mock.calls[0][0];
+
     expect(gedcomPeople['person-1'].firstName).toBe('Private');
+    expect(gedcomPeople['person-1'].firstName).not.toContain('John');
+    expect(gedcomPeople['person-1'].birthDate).toBe('');
+
     expect(icsPeople['person-1'].firstName).toBe('Private');
+    expect(icsPeople['person-1'].firstName).not.toContain('John');
+    expect(icsPeople['person-1'].birthDate).toBe('');
   });
 
-  it('exports Markdown manuscripts from the manuscript model without technical metadata', async () => {
+  it('exports Markdown manuscripts from the manuscript model without technical metadata and blocks raw names', async () => {
     mockStore.currentUserRole = 'viewer';
     const svgRef = { current: null };
     const { result } = renderHook(() => useExport(mockPeople, svgRef));
@@ -274,6 +286,13 @@ describe('useExport', () => {
     await act(async () => {
       await result.current.handleExport('markdown');
     });
+
+    const buildModelArg = vi.mocked(ManuscriptStructureBuilder.buildModel).mock.calls[0][0] as {
+      people: Record<string, Person>;
+    };
+    expect(buildModelArg.people['person-1'].firstName).toBe('Private');
+    expect(buildModelArg.people['person-1'].firstName).not.toContain('John');
+    expect(buildModelArg.people['person-1'].birthDate).toBe('');
 
     expect(ManuscriptStructureBuilder.buildModel).toHaveBeenCalledWith(expect.objectContaining({
       people: expect.objectContaining({
@@ -293,7 +312,7 @@ describe('useExport', () => {
     );
   });
 
-  it('passes masked people to JOZOR archive exports for viewer role', async () => {
+  it('passes masked people to JOZOR archive exports for viewer role and blocks raw data', async () => {
     mockStore.currentUserRole = 'viewer';
     const svgRef = { current: null };
     const { result } = renderHook(() => useExport(mockPeople, svgRef));
@@ -306,6 +325,7 @@ describe('useExport', () => {
       people: Record<string, Person>;
     };
     expect(archivePayload.people['person-1'].firstName).toBe('Private');
+    expect(archivePayload.people['person-1'].firstName).not.toContain('John');
     expect(archivePayload.people['person-1'].birthDate).toBe('');
   });
 
@@ -388,6 +408,13 @@ describe('useExport', () => {
         },
       });
     });
+
+    const exportArgs = vi.mocked(ManuscriptPdfExportService.exportManuscriptPdf).mock.calls[0][0];
+
+    // Enforce that the exported HTML/Title payload does not leak sensitive information
+    expect(exportArgs.html).not.toContain('John');
+    expect(exportArgs.html).not.toContain('1990-01-01');
+    expect(exportArgs.title).not.toContain('John');
 
     expect(ManuscriptPdfExportService.exportManuscriptPdf).toHaveBeenCalledWith(expect.objectContaining({
       html: '<!doctype html><html><body>Arabic manuscript</body></html>',

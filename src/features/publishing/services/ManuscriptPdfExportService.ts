@@ -1,4 +1,4 @@
-import { ControlledManuscriptPdfAdapter } from './ControlledManuscriptPdfAdapter';
+import { ControlledManuscriptPdfAdapter, sanitizeDiagnosticsMetadata } from './ControlledManuscriptPdfAdapter';
 
 export interface ManuscriptPdfExportRequest {
   readonly html: string;
@@ -53,10 +53,15 @@ export class ManuscriptPdfExportService {
     adapter?: ManuscriptControlledPdfAdapter
   ): Promise<ManuscriptPdfExportResult> {
     const activeAdapter = adapter ?? ControlledManuscriptPdfAdapter.exportPdf;
-    const result = await activeAdapter(request);
+    const sanitizedMetadata = sanitizeDiagnosticsMetadata(request.metadata);
+    const sanitizedRequest = {
+      ...request,
+      metadata: sanitizedMetadata,
+    };
+    const result = await activeAdapter(sanitizedRequest);
 
     if (!result.available && result.fallbackRecommended) {
-      const fallbackResult = await this.exportViaBrowserPrintFallback(request);
+      const fallbackResult = await this.exportViaBrowserPrintFallback(sanitizedRequest);
       return {
         ...fallbackResult,
         controlledAttempted: true,

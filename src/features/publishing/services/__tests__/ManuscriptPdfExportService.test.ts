@@ -115,6 +115,51 @@ describe('ManuscriptPdfExportService', () => {
     expect(adapter).toHaveBeenCalledWith(request);
   });
 
+  it('guarantees that controlled-pdf request metadata and diagnostics strictly exclude raw HTML, person names, and unallowlisted keys under viewer role', async () => {
+    const adapter = vi.fn().mockResolvedValue({
+      mode: 'controlled-pdf',
+      available: true,
+      blob: new Blob(['pdf'], { type: 'application/pdf' }),
+    });
+
+    const request = {
+      html: '<html><body>Sensitive Data</body></html>',
+      title: 'Private Family Document',
+      metadata: {
+        templateId: 'classic-book',
+        rootPersonId: 'p1',
+        userRole: 'viewer',
+        masked: true,
+        personName: 'Living Raw Name',
+        html: '<body>Sensitive Raw</body>',
+        unallowlisted: 'leak',
+      },
+    };
+
+    await ManuscriptPdfExportService.exportManuscriptPdf(request, {
+      mode: 'controlled-pdf',
+      controlledPdfAdapter: adapter,
+    });
+
+    expect(adapter).toHaveBeenCalled();
+    const passedRequest = adapter.mock.calls[0][0];
+
+    // Check request root properties
+    expect(passedRequest.html).toBe(request.html);
+    expect(passedRequest.title).toBe(request.title);
+
+    // Enforce that metadata diagnostics are strictly allowlisted and sanitized
+    expect(passedRequest.metadata).toEqual({
+      templateId: 'classic-book',
+      rootPersonId: 'p1',
+      userRole: 'viewer',
+      masked: true,
+    });
+    expect(passedRequest.metadata).not.toHaveProperty('personName');
+    expect(passedRequest.metadata).not.toHaveProperty('html');
+    expect(passedRequest.metadata).not.toHaveProperty('unallowlisted');
+  });
+
   it('controlled-pdf defaults to browser-print-fallback mode and reports feature flag disabled when flag is disabled', async () => {
     vi.stubEnv('VITE_ENABLE_CONTROLLED_PDF', 'false');
     const fallbackSpy = vi
