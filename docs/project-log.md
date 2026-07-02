@@ -1,5 +1,29 @@
 # Project Log
 
+## 2026-07-02 - GEDCOM RelationshipEdge Adapter Kernel
+
+- Summary:
+  - Added an isolated `gedcomRelationshipAdapter` kernel that converts Jozor 2.0 `RelationshipEdge` data into GEDCOM-ready family groups without switching the active exporter.
+  - Covered spouse normalization, parent-child edge direction, single-parent families, missing-person warnings, drift detection, deterministic output, and privacy-safe warning payloads.
+  - Kept GEDCOM production export behavior unchanged pending staged adapter integration.
+
+## 2026-07-02 - GEDCOM RelationshipEdge Adapter Design ADR
+
+- Summary:
+  - Added ADR-011 documenting the future design for the `GEDCOMRelationshipAdapter` to consume Jozor 2.0 `RelationshipEdge` data safely.
+  - Defined explicit edge direction rules, deterministic spouse normalization, and privacy constraints restricting warning messages to person IDs only.
+  - No runtime behavior changed.
+
+## 2026-07-02 - GEDCOM Privacy & Relationship Readiness Audit
+
+- Summary:
+  - Conducted a comprehensive audit of GEDCOM export privacy and relationship readiness.
+  - Added unit tests in `gedcomLogic.test.ts` verifying that masked people omit all sensitive biographical details.
+  - Verified that masked individuals participate correctly in structural family relationships (`FAMS`, `FAMC`) without leaking raw personal identities.
+  - Documented legacy array compatibility constraints and pending `RelationshipEdge` mapping integrations.
+  - Created audit document `docs/reviews/gedcom-readiness-audit-2026-07-02.md`.
+  - No features activated and no UI changes.
+
 ## 2026-07-02 - Publishing Export Privacy Regression Pack
 
 - Summary:

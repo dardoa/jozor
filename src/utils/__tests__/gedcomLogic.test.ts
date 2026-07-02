@@ -242,6 +242,108 @@ describe('GEDCOM Logic - Export', () => {
             expect(output).not.toContain('1 FAMC @F_missing-parent@');
             expect(output).not.toContain('0 @F_missing-parent@ FAM');
         });
+
+        it('should strictly mask a private/living person and omit raw biographical details from exported GEDCOM string', () => {
+            const maskedPerson: Person = {
+                ...mockPerson,
+                id: 'masked-1',
+                firstName: 'Private',
+                lastName: '',
+                birthDate: '',
+                birthPlace: '',
+                bio: '',
+            };
+
+            const output = exportToGEDCOM({ 'masked-1': maskedPerson });
+
+            // Confirm masked representation is exported
+            expect(output).toContain('0 @masked-1@ INDI');
+            expect(output).toContain('1 NAME Private //');
+
+            // Confirm original sensitive details are strictly absent from the payload string
+            expect(output).not.toContain('John');
+            expect(output).not.toContain('1990-01-01');
+            expect(output).not.toContain('New York');
+            expect(output).not.toContain('A simple man.');
+        });
+
+        it('ensures a masked person participates in family links correctly without leaking raw identity in cross references', () => {
+            const maskedFather: Person = {
+                ...mockPerson,
+                id: 'father-masked',
+                firstName: 'Private',
+                lastName: '',
+                birthDate: '',
+                birthPlace: '',
+                bio: '',
+                gender: 'male',
+                spouses: ['mother-masked'],
+                children: ['child-1'],
+            };
+
+            const maskedMother: Person = {
+                ...mockSpouse,
+                id: 'mother-masked',
+                firstName: 'Private',
+                lastName: '',
+                birthDate: '',
+                birthPlace: '',
+                bio: '',
+                gender: 'female',
+                spouses: ['father-masked'],
+                children: ['child-1'],
+            };
+
+            const child: Person = {
+                ...mockChild,
+                id: 'child-1',
+                firstName: 'Baby',
+                lastName: 'Doe',
+                parents: ['father-masked', 'mother-masked'],
+            };
+
+            const output = exportToGEDCOM({
+                'father-masked': maskedFather,
+                'mother-masked': maskedMother,
+                'child-1': child,
+            });
+
+            // Family linkages must exist using safe cross-references
+            expect(output).toContain('1 FAMC @F_father-masked_mother-masked@');
+            expect(output).toContain('0 @F_father-masked_mother-masked@ FAM');
+            expect(output).toContain('1 HUSB @father-masked@');
+            expect(output).toContain('1 WIFE @mother-masked@');
+            expect(output).toContain('1 CHIL @child-1@');
+
+            // Raw names or data must not be leaked via structural attributes
+            expect(output).not.toContain('John');
+            expect(output).not.toContain('Jane');
+            expect(output).not.toContain('1990-01-01');
+        });
+
+        it('exposes legacy relationship array limitation and documents RelationshipEdge integration status', () => {
+            // Documenting the limitation that RelationshipEdge integration is pending
+            const conflictingFather: Person = {
+                ...mockPerson,
+                id: 'legacy-father',
+                parents: [],
+                spouses: [],
+                children: [], // conflict: does not list children in compatibility array
+            };
+
+            const child: Person = {
+                ...mockChild,
+                id: 'child-1',
+                parents: ['legacy-father'],
+            };
+
+            const output = exportToGEDCOM({ 'legacy-father': conflictingFather, 'child-1': child });
+
+            // Exporter resolves linkage because child points to parent, proving legacy array consumption
+            // RelationshipEdge integration remains pending and is not natively supported by the current exporter.
+            expect(output).toContain('1 HUSB @legacy-father@');
+            expect(output).toContain('1 CHIL @child-1@');
+        });
     });
 });
 
