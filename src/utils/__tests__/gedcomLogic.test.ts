@@ -905,6 +905,138 @@ describe('GEDCOM Logic - Round-trip', () => {
 
             expect(outputDefault).toBe(outputExplicitLegacy);
         });
+
+        describe('GEDCOM Import Hardening Pack', () => {
+            it('Self-parent GEDCOM family is reported and not linked', () => {
+                const gedcom = `0 HEAD
+1 CHAR UTF-8
+0 @I1@ INDI
+1 NAME Father /Doe/
+1 SEX M
+0 @F1@ FAM
+1 HUSB @I1@
+1 CHIL @I1@
+0 TRLR`;
+                const result = importFromGEDCOMWithReport(gedcom);
+                expect(result.report.warnings).toContain('Self-parent relationship omitted in family: F1');
+                // The relationship is not linked
+                expect(result.people['I1'].parents).not.toContain('I1');
+                expect(result.people['I1'].children).not.toContain('I1');
+            });
+
+            it('Parent-child cycle is reported', () => {
+                const gedcom = `0 HEAD
+1 CHAR UTF-8
+0 @I1@ INDI
+1 NAME Person A /Doe/
+1 SEX M
+0 @I2@ INDI
+1 NAME Person B /Doe/
+1 SEX F
+0 @F1@ FAM
+1 HUSB @I1@
+1 CHIL @I2@
+0 @F2@ FAM
+1 HUSB @I2@
+1 CHIL @I1@
+0 TRLR`;
+                const result = importFromGEDCOMWithReport(gedcom);
+                const hasCycleWarning = result.report.warnings.some(w => w.startsWith('Parent-child cycle omitted:'));
+                expect(hasCycleWarning).toBe(true);
+                const firstHasSecondAsParent = result.people['I1'].parents.includes('I2');
+                const secondHasFirstAsParent = result.people['I2'].parents.includes('I1');
+                expect(firstHasSecondAsParent && secondHasFirstAsParent).toBe(false);
+            });
+
+            it('Duplicate INDI ID produces warning', () => {
+                const gedcom = `0 HEAD
+1 CHAR UTF-8
+0 @I1@ INDI
+1 NAME First /Doe/
+0 @I1@ INDI
+1 NAME Duplicate /Doe/
+0 TRLR`;
+                const result = importFromGEDCOMWithReport(gedcom);
+                expect(result.report.warnings).toContain('Duplicate INDI record detected: I1');
+            });
+
+            it('Duplicate FAM ID produces warning', () => {
+                const gedcom = `0 HEAD
+1 CHAR UTF-8
+0 @I1@ INDI
+1 NAME Person /Doe/
+0 @F1@ FAM
+1 HUSB @I1@
+0 @F1@ FAM
+1 WIFE @I1@
+0 TRLR`;
+                const result = importFromGEDCOMWithReport(gedcom);
+                expect(result.report.warnings).toContain('Duplicate FAM record detected: F1');
+            });
+
+            it('Missing FAMC/FAMS family reference produces warning', () => {
+                const gedcom = `0 HEAD
+1 CHAR UTF-8
+0 @I1@ INDI
+1 NAME Orphan /Doe/
+1 FAMC @F999@
+0 TRLR`;
+                const result = importFromGEDCOMWithReport(gedcom);
+                expect(result.report.warnings).toContain('Missing FAM reference from FAMC: F999');
+            });
+
+            it('Missing HUSB/WIFE/CHIL person reference produces warning', () => {
+                const gedcom = `0 HEAD
+1 CHAR UTF-8
+0 @F1@ FAM
+1 HUSB @I999@
+1 WIFE @I998@
+1 CHIL @I997@
+0 TRLR`;
+                const result = importFromGEDCOMWithReport(gedcom);
+                expect(result.report.warnings).toContain('Missing INDI reference from HUSB: I999');
+                expect(result.report.warnings).toContain('Missing INDI reference from WIFE: I998');
+                expect(result.report.warnings).toContain('Missing INDI reference from CHIL: I997');
+            });
+
+            it('Large file warning for > 5000 people', () => {
+                const parts = [`0 HEAD`, `1 CHAR UTF-8`];
+                for (let i = 1; i <= 5001; i++) {
+                    parts.push(`0 @I${i}@ INDI`, `1 NAME Person ${i} /Doe/`);
+                }
+                parts.push(`0 TRLR`);
+                const result = importFromGEDCOMWithReport(parts.join('\n'));
+                expect(result.report.warnings).toContain('Large GEDCOM import warning: 5001 individuals');
+            });
+
+            it('Valid GEDCOM import remains unchanged and produces no new structural warnings', () => {
+                const gedcom = `0 HEAD
+1 CHAR UTF-8
+0 @I1@ INDI
+1 NAME John /Doe/
+1 SEX M
+0 @I2@ INDI
+1 NAME Jane /Doe/
+1 SEX F
+0 @I3@ INDI
+1 NAME Baby /Doe/
+1 SEX M
+0 @F1@ FAM
+1 HUSB @I1@
+1 WIFE @I2@
+1 CHIL @I3@
+0 TRLR`;
+                const result = importFromGEDCOMWithReport(gedcom);
+                // Warnings should not contain duplicate/missing/cycle notes
+                const hasNewWarning = result.report.warnings.some(w =>
+                    w.includes('Duplicate') ||
+                    w.includes('Missing') ||
+                    w.includes('Self-parent') ||
+                    w.includes('cycle')
+                );
+                expect(hasNewWarning).toBe(false);
+            });
+        });
     });
 });
 

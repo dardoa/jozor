@@ -145,6 +145,9 @@ const buildGedcomImportReport = (gedcom: string, people: Record<string, Person>)
   const duplicateIssueCount = integrityReport.issues.filter((issue) => issue.category === 'DUPLICATE').length;
   const warnings: string[] = [];
 
+  const importWarnings = (people as Record<string, unknown> & { _importWarnings?: string[] })._importWarnings || [];
+  warnings.push(...importWarnings);
+
   if (unsupportedDateValues.length > 0) {
     warnings.push(`Unsupported GEDCOM date values: ${unsupportedDateValues.join(', ')}`);
   }
@@ -434,6 +437,11 @@ export const importFromGEDCOM = (gedcom: string): Record<string, Person> => {
   const birthSourceRefs: Record<string, string[]> = {};
   const deathSourceRefs: Record<string, string[]> = {};
 
+  const warnings: string[] = [];
+  const seenIndis = new Set<string>();
+  const seenFams = new Set<string>();
+  const personFamRefs: { personId: string; tag: string; famId: string }[] = [];
+
   let currentId = '';
   let currentType = ''; // INDI or FAM
   let currentPerson: Partial<Person> | null = null;
@@ -466,6 +474,11 @@ export const importFromGEDCOM = (gedcom: string): Record<string, Person> => {
       currentEvent = ''; // Reset event context
       if (rest === 'INDI' || parts[2] === 'INDI') {
         currentId = tagOrId.replace(/@/g, '');
+        if (seenIndis.has(currentId)) {
+          warnings.push(`Duplicate INDI record detected: ${currentId}`);
+        } else {
+          seenIndis.add(currentId);
+        }
         currentType = 'INDI';
         currentPerson = {
           firstName: 'Unknown',
@@ -480,6 +493,11 @@ export const importFromGEDCOM = (gedcom: string): Record<string, Person> => {
         currentSource = null;
       } else if (rest === 'FAM' || parts[2] === 'FAM') {
         currentId = tagOrId.replace(/@/g, '');
+        if (seenFams.has(currentId)) {
+          warnings.push(`Duplicate FAM record detected: ${currentId}`);
+        } else {
+          seenFams.add(currentId);
+        }
         currentType = 'FAM';
         currentFam = { children: [] };
         currentPerson = null;
@@ -524,6 +542,11 @@ export const importFromGEDCOM = (gedcom: string): Record<string, Person> => {
           const sourceRef = rest.replace(/@/g, '').trim();
           if (sourceRef) {
             generalSourceRefs[currentId] = [...(generalSourceRefs[currentId] || []), sourceRef];
+          }
+        } else if (tagOrId === 'FAMS' || tagOrId === 'FAMC') {
+          const famRef = rest.replace(/@/g, '').trim();
+          if (famRef) {
+            personFamRefs.push({ personId: currentId, tag: tagOrId, famId: famRef });
           }
         }
       }
@@ -592,17 +615,104 @@ export const importFromGEDCOM = (gedcom: string): Record<string, Person> => {
     sources[currentId] = currentSource;
   }
 
-  // --- SECOND PASS: LINK RELATIONSHIPS ---
+  // --- SECOND PASS: VALIDATE AND LINK RELATIONSHIPS ---
+  const totalIndis = Object.keys(people).length;
+  if (totalIndis > 5000) {
+    warnings.push(`Large GEDCOM import warning: ${totalIndis} individuals`);
+  }
+
+  // 1. Check person-to-family missing references
+  personFamRefs.forEach(({ tag, famId }) => {
+    if (!families[famId]) {
+      warnings.push(`Missing FAM reference from ${tag}: ${famId}`);
+    }
+  });
+
+  // 2. Check family-to-person missing references and self-parenting
+  Object.entries(families).forEach(([famId, fam]) => {
+    if (fam.husb && !people[fam.husb]) {
+      warnings.push(`Missing INDI reference from HUSB: ${fam.husb}`);
+      fam.husb = undefined;
+    }
+    if (fam.wife && !people[fam.wife]) {
+      warnings.push(`Missing INDI reference from WIFE: ${fam.wife}`);
+      fam.wife = undefined;
+    }
+
+    const validChildren: string[] = [];
+    fam.children.forEach((childId) => {
+      if (!people[childId]) {
+        warnings.push(`Missing INDI reference from CHIL: ${childId}`);
+        return;
+      }
+
+      if (childId === fam.husb || childId === fam.wife) {
+        warnings.push(`Self-parent relationship omitted in family: ${famId}`);
+        return;
+      }
+
+      validChildren.push(childId);
+    });
+    fam.children = validChildren;
+  });
+
+  // 3. Cycle Detection
+  const parentsMap = new Map<string, Set<string>>();
+  Object.keys(people).forEach((id) => {
+    parentsMap.set(id, new Set<string>());
+  });
+
+  Object.values(families).forEach((fam) => {
+    const { husb, wife, children } = fam;
+    children.forEach((childId) => {
+      const pSet = parentsMap.get(childId);
+      if (pSet) {
+        if (husb) pSet.add(husb);
+        if (wife) pSet.add(wife);
+      }
+    });
+  });
+
+  const visited = new Set<string>();
+  const stack = new Set<string>();
+  const removedEdges = new Set<string>();
+
+  const detectCycle = (curr: string) => {
+    visited.add(curr);
+    stack.add(curr);
+
+    const parents = parentsMap.get(curr) || new Set<string>();
+    for (const parentId of parents) {
+      if (removedEdges.has(`${curr}:${parentId}`)) {
+        continue;
+      }
+
+      if (stack.has(parentId)) {
+        warnings.push(`Parent-child cycle omitted: ${curr} -> ${parentId}`);
+        removedEdges.add(`${curr}:${parentId}`);
+      } else if (!visited.has(parentId)) {
+        detectCycle(parentId);
+      }
+    }
+
+    stack.delete(curr);
+  };
+
+  Object.keys(people).forEach((id) => {
+    if (!visited.has(id)) {
+      detectCycle(id);
+    }
+  });
+
+  // 4. Link relationships
   Object.values(families).forEach((fam) => {
     const { husb, wife, children, marrDate, marrPlace, divDate, divPlace } = fam;
 
     // Link Spouses
     if (husb && wife && people[husb] && people[wife]) {
-      // Add to spouse arrays
       if (!people[husb].spouses.includes(wife)) people[husb].spouses.push(wife);
       if (!people[wife].spouses.includes(husb)) people[wife].spouses.push(husb);
 
-      // Add Partner Details (Marriage Date/Place)
       const relType = divDate ? 'divorced' : 'married';
       const relInfo = {
         type: relType as RelationshipStatus,
@@ -612,7 +722,6 @@ export const importFromGEDCOM = (gedcom: string): Record<string, Person> => {
         endPlace: divPlace || '',
       };
 
-      // Initialize partnerDetails object if missing
       if (!people[husb].partnerDetails) people[husb].partnerDetails = {};
       if (!people[wife].partnerDetails) people[wife].partnerDetails = {};
 
@@ -624,16 +733,23 @@ export const importFromGEDCOM = (gedcom: string): Record<string, Person> => {
     children.forEach((childId) => {
       if (people[childId]) {
         const childParents = people[childId].parents;
-        if (husb && people[husb]) {
+        if (husb && people[husb] && !removedEdges.has(`${childId}:${husb}`)) {
           if (!childParents.includes(husb)) childParents.push(husb);
           if (!people[husb].children.includes(childId)) people[husb].children.push(childId);
         }
-        if (wife && people[wife]) {
+        if (wife && people[wife] && !removedEdges.has(`${childId}:${wife}`)) {
           if (!childParents.includes(wife)) childParents.push(wife);
           if (!people[wife].children.includes(childId)) people[wife].children.push(childId);
         }
       }
     });
+  });
+
+  // Define hidden warnings property
+  Object.defineProperty(people, '_importWarnings', {
+    value: warnings,
+    enumerable: false,
+    writable: true,
   });
 
   Object.entries(people).forEach(([personId, person]) => {

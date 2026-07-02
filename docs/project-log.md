@@ -1,5 +1,13 @@
 # Project Log
 
+## 2026-07-03 - GEDCOM Import Hardening
+
+- Summary:
+  - Hardened the GEDCOM import engine by introducing validation layers on the parser.
+  - Implemented reference checking to identify duplicate records, missing references, self-parenting links, and cyclic parental relationships.
+  - Omitted only unsafe relationship links while preserving person records to prevent tree corruption.
+  - Formatted standardized testable warnings and verified that valid imports remain warning-free.
+
 ## 2026-07-03 - Publishing Visual Review
 
 - Summary:
