@@ -1,16 +1,49 @@
 # Manual Manuscript Review Execution Notes - 2026-07-02
 
-## 🖥️ Execution & Environment Constraints
-This manual verification run was performed in a **headless sandbox development environment**:
-- Direct visual rendering, interactive Chrome browser views, and local PDF downloads are unavailable.
-- Visual elements (layout overflows, dynamic margins, CSS styles) cannot be captured as screenshots or PDF files.
-- Visual checklist items remain unchecked in the main report to preserve validation accuracy and prevent fake data accumulation.
+## Execution Environment
 
-## 🧪 Alternative Programmatic Verification
-We verified the structural correctness, ordering depth, and metadata preservation through comprehensive automated test suites:
-- **Zustand & DFS Ordering**: Verified via [ManuscriptStructureBuilder.test.ts](../../../../src/features/publishing/services/__tests__/ManuscriptStructureBuilder.test.ts) that family hierarchies correctly traverse in depth-first order.
-- **HTML Sequence**: Verified via [HtmlManuscriptRenderer.test.ts](../../../../src/features/publishing/renderers/__tests__/HtmlManuscriptRenderer.test.ts) that the HTML output matches the narrative ordered index and outputs metadata labels.
-- **Markdown Sequence**: Verified via [MarkdownManuscriptRenderer.test.ts](../../../../src/features/publishing/renderers/__tests__/MarkdownManuscriptRenderer.test.ts) that markdown text correctly represents relationship metadata and ordering.
-- **All tests pass**: Total of 22 unit test cases pass successfully.
+This visual verification run was performed with Playwright Chromium in headless mode on the local Windows development environment.
 
-*Note: Visual confirmation is deferred until a live, browser-equipped execution environment is available.*
+- **Source artifact**: `generated-family-book.html`
+- **Renderer path**: `HtmlManuscriptRenderer`
+- **Viewport**: 1440 x 1100
+- **Data source**: Synthetic six-person manuscript model
+- **Privacy stance**: No live user tree data, personal names, or database records were captured.
+
+## Captured Artifacts
+
+- `html-preview-people-chapter.png`
+- `html-preview-bibliography.png`
+- `browser-print-flow.png`
+- `generated-family-book.pdf`
+- `visual-review-result.json`
+
+## Narrative Order Verified
+
+The Playwright run read the following DOM order from `.people-chapter .person-card h2`:
+
+1. `الجذر التجريبي`
+2. `الزوجة التجريبية`
+3. `الابن الأول التجريبي`
+4. `زوجة الابن الأول`
+5. `الحفيد التجريبي`
+6. `الابن الثاني التجريبي`
+
+This confirms that the rendered manuscript follows the genealogical narrative path:
+
+`root -> spouse -> first child branch -> child spouse -> grandchild -> second child branch`
+
+## Visual Findings
+
+- Arabic shaping and RTL alignment are readable in the HTML preview screenshot.
+- Person relationship labels render correctly in Arabic.
+- Long Arabic fact text wraps within the card boundaries.
+- Bibliography rows render clearly and remain readable.
+- The generated PDF was produced successfully through Chromium print-to-PDF.
+- The generated PDF was additionally rendered back to PNG for internal inspection of the cover and people chapter pages; Arabic text remained readable and card boundaries held.
+- No console errors were recorded during the capture run.
+
+## Follow-up Notes
+
+- The two-column person card layout can show visible vertical whitespace when card heights differ. This is acceptable for the current infrastructure milestone and should be tracked as future print design polish.
+- Native OS print dialog screenshots are not part of this evidence pack because the review validates the renderer and Chromium print-to-PDF output, not the operating-system dialog chrome.

@@ -909,3 +909,10 @@ Deferred geography improvements:
 - Suppressed repetitive empty narrative drafts for fully masked private entries by default.
 - Localized deterministic narrative drafts for Arabic manuscripts and removed mojibake strings from the HTML manuscript renderer.
 - Localized manuscript titles, chapter titles, fact labels, and birth/death timeline event labels at the model layer.
+
+# 2026-07-02 - Manuscript narrative visual review evidence
+
+- Captured Playwright Chromium visual evidence for the synthetic manuscript narrative review pack.
+- Generated `html-preview-people-chapter.png`, `html-preview-bibliography.png`, `browser-print-flow.png`, and `generated-family-book.pdf` under `docs/reviews/evidence/manuscript-narrative-2026-07-02/`.
+- Verified the rendered people chapter follows the genealogical narrative order instead of a flat alphabetical list.
+- Promoted `manuscript-narrative-review-2026-07-02.md` to `Final Pass - visual renderer evidence captured`.

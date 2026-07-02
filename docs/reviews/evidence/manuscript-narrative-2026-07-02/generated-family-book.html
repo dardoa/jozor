@@ -1,0 +1,428 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>مخطوط مراجعة سردية اصطناعي</title>
+<style>
+@font-face {
+  font-family: "JozorArabic";
+  src: url("/fonts/Amiri-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+}
+@page {
+  size: A4;
+  margin: 16mm;
+}
+* {
+  box-sizing: border-box;
+}
+html {
+  direction: rtl;
+  font-family: "JozorArabic", "Noto Naskh Arabic", "Segoe UI", serif;
+  color: #1f2937;
+  background: #f7f3ea;
+}
+body {
+  margin: 0;
+  background: #f7f3ea;
+}
+.page {
+  min-height: 100vh;
+  padding: 28mm 20mm;
+  page-break-after: always;
+  background: #fffaf0;
+}
+.cover-page {
+  display: grid;
+  align-content: center;
+  text-align: center;
+}
+.cover-kicker {
+  color: #9a6b1f;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+h1 {
+  margin: 0 0 12px;
+  font-size: 30px;
+  line-height: 1.35;
+}
+h2 {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.35;
+}
+.person-card__identity {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.person-card__context {
+  margin: 3px 0 0;
+  color: #667085;
+  font-size: 11px;
+  line-height: 1.25;
+}
+.person-card__relationship {
+  display: inline-block;
+  margin: 3px 0 0;
+  color: #9a6b1f;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+.person-card__breadcrumb {
+  margin: 8px 0 0;
+  color: #667085;
+  font-size: 11px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.chapter-lead,
+.cover-subtitle,
+.sources-empty {
+  color: #667085;
+  font-size: 13px;
+}
+.person-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.branch-divider {
+  grid-column: 1 / -1;
+  margin: 4px 0 0;
+  color: #9a6b1f;
+  font-size: 12px;
+  font-weight: 700;
+  border-bottom: 1px solid #eadcc6;
+  padding-bottom: 6px;
+}
+.branch-divider span {
+  display: inline-block;
+}
+.branch-overview {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 22px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.branch-overview__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid #eadcc6;
+  border-radius: 10px;
+  padding: 14px;
+  background: #fffdf7;
+  break-inside: avoid;
+}
+.branch-overview__item strong {
+  overflow-wrap: anywhere;
+}
+.branch-overview__item span {
+  flex: 0 0 auto;
+  color: #9a6b1f;
+  font-size: 12px;
+}
+.person-card {
+  break-inside: avoid;
+  page-break-inside: avoid;
+  min-height: 150px;
+  border: 1px solid #eadcc6;
+  border-radius: 10px;
+  padding: 14px;
+  background: #fffdf7;
+}
+.person-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid #eadcc6;
+  padding-bottom: 8px;
+}
+.person-card__photo {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  border: 1px solid #eadcc6;
+  object-fit: cover;
+  background: #fffaf0;
+}
+.person-card__header span,
+small {
+  color: #9a6b1f;
+}
+.fact-list {
+  margin: 10px 0 0;
+}
+.person-card__narrative {
+  margin: 10px 0 0;
+  color: #1f2937;
+  font-size: 13px;
+  line-height: 1.65;
+}
+.fact-row {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 8px;
+  margin: 5px 0;
+}
+dt {
+  color: #667085;
+}
+dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.source-highlights {
+  margin: 10px 0 0;
+  padding-inline-start: 18px;
+}
+.timeline-list {
+  padding-inline-start: 22px;
+}
+.timeline-list li {
+  margin: 8px 0;
+}
+.timeline-list time {
+  color: #9a6b1f;
+  margin-inline-end: 8px;
+}
+.bibliography-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fffdf7;
+}
+.bibliography-table th,
+.bibliography-table td {
+  border-bottom: 1px solid #eadcc6;
+  padding: 8px;
+  text-align: start;
+  vertical-align: top;
+}
+@media print {
+  body {
+    background: white;
+  }
+  .page {
+    min-height: auto;
+  }
+}
+</style>
+</head>
+<body>
+<section class="page cover-page">
+<div class="cover-kicker">Jozor Family Manuscript</div>
+<h1>مخطوط مراجعة سردية اصطناعي</h1>
+<p class="cover-subtitle">synthetic-narrative-review</p>
+</section>
+<section class="page chapter-page overview-chapter">
+<h1>خريطة القراءة</h1>
+<p class="chapter-lead">خريطة قراءة مختصرة للفروع التي يتضمنها هذا المخطوط.</p>
+<ul class="branch-overview">
+<li class="branch-overview__item">
+<strong>فرع الابن الأول</strong>
+<span>3 أشخاص</span>
+</li>
+<li class="branch-overview__item">
+<strong>فرع الابن الثاني</strong>
+<span>1 أشخاص</span>
+</li>
+</ul>
+</section>
+<section class="page chapter-page people-chapter">
+<h1>أفراد العائلة</h1>
+<p class="chapter-lead">ملفات الأشخاص مع أبرز الوقائع ونسبة التوثيق.</p>
+<div class="person-grid">
+<div class="branch-divider"><span>الفرع الرئيسي</span></div>
+<article class="person-card">
+<header class="person-card__header">
+
+<div class="person-card__identity">
+<h2>الجذر التجريبي</h2>
+<p class="person-card__context">الجذر</p>
+<div class="person-card__relationship">الجذر</div>
+</div>
+<span>75% توثيق</span>
+</header>
+
+<p class="person-card__narrative">هذه بطاقة اصطناعية مخصصة لمراجعة مسار القراءة فقط. تبدأ القراءة من الجذر قبل الانتقال إلى الزوجة ثم فرع الابن الأول كاملاً.</p>
+<dl class="fact-list">
+<div class="fact-row">
+<dt>الميلاد</dt>
+<dd>1920 - مدينة اختبارية <small>1 مصدر</small></dd>
+</div>
+<div class="fact-row">
+<dt>الإقامة</dt>
+<dd>حي اصطناعي، بلد افتراضي <small>1 مصدر</small></dd>
+</div>
+</dl>
+<ul class="source-highlights">
+<li>سجل اصطناعي للعائلة <small>2</small></li>
+</ul>
+</article>
+<article class="person-card">
+<header class="person-card__header">
+
+<div class="person-card__identity">
+<h2>الزوجة التجريبية</h2>
+<p class="person-card__context">زوج/زوجة الجذر</p>
+<div class="person-card__relationship">زوج/زوجة</div>
+</div>
+<span>50% توثيق</span>
+</header>
+<p class="person-card__breadcrumb">الجذر التجريبي › الزوجة التجريبية</p>
+<p class="person-card__narrative">تظهر الزوجة قرب الجذر لتثبيت سياق الأسرة قبل الدخول في فروع الأبناء.</p>
+<dl class="fact-list">
+<div class="fact-row">
+<dt>الزواج</dt>
+<dd>1942 - مكان اختبار <small>1 مصدر</small></dd>
+</div>
+</dl>
+<ul class="source-highlights">
+<li>وثيقة زواج اصطناعية <small>1</small></li>
+</ul>
+</article>
+<div class="branch-divider"><span>فرع الابن الأول</span></div>
+<article class="person-card">
+<header class="person-card__header">
+
+<div class="person-card__identity">
+<h2>الابن الأول التجريبي</h2>
+<p class="person-card__context">الجيل 1</p>
+<div class="person-card__relationship">الجيل 1</div>
+</div>
+<span>40% توثيق</span>
+</header>
+<p class="person-card__breadcrumb">الجذر التجريبي › الابن الأول التجريبي</p>
+<p class="person-card__narrative">يبدأ المحرك بفرع الابن الأول ويكمله قبل الانتقال إلى الأخ التالي.</p>
+<dl class="fact-list">
+<div class="fact-row">
+<dt>الميلاد</dt>
+<dd>1945 - مدينة اختبارية <small>1 مصدر</small></dd>
+</div>
+</dl>
+<ul class="source-highlights">
+<li>سجل اصطناعي للعائلة <small>1</small></li>
+</ul>
+</article>
+<article class="person-card">
+<header class="person-card__header">
+
+<div class="person-card__identity">
+<h2>زوجة الابن الأول</h2>
+<p class="person-card__context">زوج/زوجة ضمن الفرع</p>
+<div class="person-card__relationship">زوج/زوجة</div>
+</div>
+<span>25% توثيق</span>
+</header>
+<p class="person-card__breadcrumb">الجذر التجريبي › الابن الأول التجريبي › زوجة الابن الأول</p>
+<p class="person-card__narrative">تظهر داخل فرع الابن الأول قبل الأحفاد لتوضيح تكوين الأسرة الفرعية.</p>
+<dl class="fact-list">
+<div class="fact-row">
+<dt>الإقامة</dt>
+<dd>مكان افتراضي طويل لاختبار الالتفاف داخل البطاقة دون خروج النص عن حدودها</dd>
+</div>
+</dl>
+<p class="sources-empty">لا توجد مصادر مرتبطة بعد.</p>
+</article>
+<article class="person-card">
+<header class="person-card__header">
+
+<div class="person-card__identity">
+<h2>الحفيد التجريبي</h2>
+<p class="person-card__context">الجيل 2</p>
+<div class="person-card__relationship">الجيل 2</div>
+</div>
+<span>0% توثيق</span>
+</header>
+<p class="person-card__breadcrumb">الجذر التجريبي › الابن الأول التجريبي › الحفيد التجريبي</p>
+<p class="person-card__narrative">يمثل الجيل الثاني داخل الفرع الأول، وبذلك يكتمل الفرع قبل الانتقال إلى الابن الثاني.</p>
+<dl class="fact-list">
+<div class="fact-row">
+<dt>الميلاد</dt>
+<dd>1970 - مدينة اختبارية</dd>
+</div>
+</dl>
+<p class="sources-empty">لا توجد مصادر مرتبطة بعد.</p>
+</article>
+<div class="branch-divider"><span>فرع الابن الثاني</span></div>
+<article class="person-card">
+<header class="person-card__header">
+
+<div class="person-card__identity">
+<h2>الابن الثاني التجريبي</h2>
+<p class="person-card__context">الجيل 1</p>
+<div class="person-card__relationship">الجيل 1</div>
+</div>
+<span>20% توثيق</span>
+</header>
+<p class="person-card__breadcrumb">الجذر التجريبي › الابن الثاني التجريبي</p>
+<p class="person-card__narrative">يأتي بعد اكتمال فرع الابن الأول، وهذا يثبت أن الترتيب ليس أبجدياً مسطحاً.</p>
+<dl class="fact-list">
+<div class="fact-row">
+<dt>المهنة</dt>
+<dd>مهنة اصطناعية</dd>
+</div>
+</dl>
+<ul class="source-highlights">
+<li>رواية شفوية اصطناعية <small>1</small></li>
+</ul>
+</article>
+</div>
+</section>
+<section class="page chapter-page timeline-chapter">
+<h1>الخط الزمني</h1>
+<ol class="timeline-list">
+<li>
+<time>1920</time>
+<strong>الجذر التجريبي</strong>
+<span>ميلاد - مدينة اختبارية</span>
+</li>
+<li>
+<time>1945</time>
+<strong>الابن الأول التجريبي</strong>
+<span>ميلاد - مدينة اختبارية</span>
+</li>
+<li>
+<time>1970</time>
+<strong>الحفيد التجريبي</strong>
+<span>ميلاد - مدينة اختبارية</span>
+</li>
+</ol>
+</section>
+<section class="page chapter-page evidence-chapter">
+<h1>المراجع</h1>
+<table class="bibliography-table">
+<thead><tr><th>#</th><th>المصدر</th><th>الاستشهادات</th><th>الحقول</th></tr></thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>رواية شفوية اصطناعية</td>
+<td>1</td>
+<td>person.occupation</td>
+</tr>
+<tr>
+<td>2</td>
+<td>سجل اصطناعي للعائلة</td>
+<td>1</td>
+<td>person.birth.date</td>
+</tr>
+<tr>
+<td>3</td>
+<td>وثيقة زواج اصطناعية</td>
+<td>1</td>
+<td>person.marriage.date</td>
+</tr>
+</tbody>
+</table>
+</section>
+</body>
+</html>

@@ -1,0 +1,29 @@
+{
+  "capturedAt": "2026-07-02T13:47:56.961Z",
+  "browser": "Playwright Chromium headless",
+  "viewport": "1440x1100",
+  "source": "generated-family-book.html (synthetic renderer output)",
+  "order": [
+    "الجذر التجريبي",
+    "الزوجة التجريبية",
+    "الابن الأول التجريبي",
+    "زوجة الابن الأول",
+    "الحفيد التجريبي",
+    "الابن الثاني التجريبي"
+  ],
+  "labels": [
+    "الجذر",
+    "زوج/زوجة",
+    "الجيل 1",
+    "زوج/زوجة",
+    "الجيل 2",
+    "الجيل 1"
+  ],
+  "consoleErrors": [],
+  "artifacts": [
+    "html-preview-people-chapter.png",
+    "html-preview-bibliography.png",
+    "browser-print-flow.png",
+    "generated-family-book.pdf"
+  ]
+}
