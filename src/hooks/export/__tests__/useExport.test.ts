@@ -315,6 +315,36 @@ describe('useExport', () => {
     }));
   });
 
+  it('GEDCOM export passes relationship-edge mode when test override is activated and preserves viewer privacy', async () => {
+    const { setGedcomExportModeOverrideForTests } = await import('../../../utils/gedcomExportMode');
+    setGedcomExportModeOverrideForTests('relationship-edge');
+
+    try {
+      mockStore.currentUserRole = 'viewer';
+      const svgRef = { current: null };
+      const { result } = renderHook(() => useExport(mockPeople, svgRef));
+
+      await act(async () => {
+        await result.current.handleExport('gedcom');
+      });
+
+      const gedcomCall = vi.mocked(exportToGEDCOM).mock.calls[0];
+      const gedcomPeople = gedcomCall[0];
+      const gedcomOptions = gedcomCall[1];
+
+      // Privacy must still be masked
+      expect(gedcomPeople['person-1'].firstName).toBe('Private');
+      expect(gedcomPeople['person-1'].birthDate).toBe('');
+
+      expect(gedcomOptions).toEqual(expect.objectContaining({
+        relationshipEdges: mockStore.relationships,
+        relationshipMode: 'relationship-edge',
+      }));
+    } finally {
+      setGedcomExportModeOverrideForTests(null);
+    }
+  });
+
   it('exports Markdown manuscripts from the manuscript model without technical metadata and blocks raw names', async () => {
     mockStore.currentUserRole = 'viewer';
     const svgRef = { current: null };

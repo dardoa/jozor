@@ -1,5 +1,12 @@
 # Project Log
 
+## 2026-07-03 - GEDCOM Phase C2 Internal Export Mode Helper
+
+- Summary:
+  - Added `gedcomExportMode` helper with a disabled-by-default legacy GEDCOM relationship mode.
+  - Added test-only override support for exercising the hook-level `relationship-edge` path without activating it for users.
+  - Updated GEDCOM export hook tests to verify viewer masking remains upstream under both legacy and test-only edge modes.
+
 ## 2026-07-02 - GEDCOM Phase C1 Hook Wiring In Legacy Mode
 
 - Summary:

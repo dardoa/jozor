@@ -108,10 +108,11 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
                 } else if (type === 'gedcom') {
                     outputName = 'tree.ged';
                     const { exportToGEDCOM } = await import('../../utils/gedcomLogic');
+                    const { getGedcomExportMode } = await import('../../utils/gedcomExportMode');
                     downloadFile(
                         exportToGEDCOM(activePeople, {
                             relationshipEdges: relationships,
-                            relationshipMode: 'legacy-array',
+                            relationshipMode: getGedcomExportMode().relationshipMode,
                         }),
                         outputName,
                         'application/octet-stream'
