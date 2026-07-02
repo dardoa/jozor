@@ -19,5 +19,6 @@ export * from './services/ControlledManuscriptPdfAdapter';
 export * from './hooks/useControlledPdfReadiness';
 export * from './services/NarrativeDraftBuilder';
 export * from './services/NarrativeOrderingEngine';
+export * from './services/ControlledPdfFeatureFlag';
 export * from './templates';
 

@@ -80,4 +80,25 @@ describe('useControlledPdfReadiness', () => {
     expect(result.current.result?.recommendedMode).toBe('browser-print-fallback');
     expect(result.current.error).toBeUndefined();
   });
+
+  it('transitions to fallback and provides safe reasons when readiness reports feature flag is disabled', async () => {
+    vi.mocked(ControlledPdfReadinessService.evaluateReadiness).mockResolvedValue({
+      available: false,
+      recommendedMode: 'browser-print-fallback',
+      reasons: ['Controlled PDF feature flag disabled'],
+      diagnostics: { featureFlagEnabled: false },
+    });
+
+    const { result } = renderHook(() => useControlledPdfReadiness());
+
+    await act(async () => {
+      await result.current.refresh();
+    });
+
+    expect(result.current.status).toBe('fallback');
+    expect(result.current.result?.available).toBe(false);
+    expect(result.current.result?.reasons).toContain('Controlled PDF feature flag disabled');
+    expect(result.current.result?.reasons.join(', ')).not.toContain('VITE_ENABLE_CONTROLLED_PDF');
+    expect(result.current.error).toBeUndefined();
+  });
 });

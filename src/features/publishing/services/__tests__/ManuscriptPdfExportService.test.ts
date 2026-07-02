@@ -1,10 +1,25 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ManuscriptPdfExportService } from '../ManuscriptPdfExportService';
+import { ControlledPdfFeatureFlag } from '../ControlledPdfFeatureFlag';
 
 describe('ManuscriptPdfExportService', () => {
+  let originalEnv: string | undefined;
+
+  beforeEach(() => {
+    if (typeof import.meta !== 'undefined' && import.meta.env) {
+      originalEnv = import.meta.env.VITE_ENABLE_CONTROLLED_PDF as string;
+    }
+  });
+
   afterEach(() => {
+    ControlledPdfFeatureFlag.setTestOverrideForTests(null);
     vi.restoreAllMocks();
+    if (typeof import.meta !== 'undefined' && import.meta.env && originalEnv !== undefined) {
+      vi.stubEnv('VITE_ENABLE_CONTROLLED_PDF', originalEnv);
+    } else {
+      vi.unstubAllEnvs();
+    }
   });
 
   it('opens the browser print fallback with the provided manuscript HTML', async () => {
@@ -100,7 +115,34 @@ describe('ManuscriptPdfExportService', () => {
     expect(adapter).toHaveBeenCalledWith(request);
   });
 
-  it('controlled-pdf uses default controlled adapter when no custom adapter is provided', async () => {
+  it('controlled-pdf defaults to browser-print-fallback mode and reports feature flag disabled when flag is disabled', async () => {
+    vi.stubEnv('VITE_ENABLE_CONTROLLED_PDF', 'false');
+    const fallbackSpy = vi
+      .spyOn(ManuscriptPdfExportService, 'exportViaBrowserPrintFallback')
+      .mockResolvedValue({ mode: 'browser-print-fallback' });
+
+    const request = {
+      html: '<html><body>Mock content</body></html>',
+      title: 'Default controlled test',
+      language: 'en',
+      metadata: { masked: true, scopePersonCount: 44 },
+    };
+
+    const result = await ManuscriptPdfExportService.exportManuscriptPdf(request, {
+      mode: 'controlled-pdf',
+    });
+
+    expect(result).toEqual({
+      mode: 'browser-print-fallback',
+      controlledAttempted: true,
+      controlledReason: 'Controlled PDF feature flag disabled',
+    });
+
+    expect(fallbackSpy).toHaveBeenCalledWith(request);
+  });
+
+  it('controlled-pdf still falls back to browser-print and reports stub unconfigured state when flag is enabled but default adapter remains a stub', async () => {
+    vi.stubEnv('VITE_ENABLE_CONTROLLED_PDF', 'true');
     const fallbackSpy = vi
       .spyOn(ManuscriptPdfExportService, 'exportViaBrowserPrintFallback')
       .mockResolvedValue({ mode: 'browser-print-fallback' });
@@ -210,6 +252,43 @@ describe('ManuscriptPdfExportService', () => {
     });
 
     expect(fallbackSpy).not.toHaveBeenCalled();
+  });
+
+  it('uses injected controlled adapter for test-only opt-in smoke path when feature flag override is enabled', async () => {
+    ControlledPdfFeatureFlag.setTestOverrideForTests(true);
+    const mockBlob = new Blob(['controlled content'], { type: 'application/pdf' });
+    const customAdapter = vi.fn().mockResolvedValue({
+      mode: 'controlled-pdf',
+      available: true,
+      blob: mockBlob,
+      fileName: 'custom_output.pdf',
+    });
+
+    const result = await ManuscriptPdfExportService.exportManuscriptPdf({
+      html: '<html></html>',
+      title: 'Opt-in Smoke Test',
+    }, {
+      mode: 'controlled-pdf',
+      controlledPdfAdapter: customAdapter,
+    });
+
+    expect(result.mode).toBe('controlled-pdf');
+    expect(result.available).toBe(true);
+    expect(result.blob).toBe(mockBlob);
+  });
+
+  it('defaults to browser-print-fallback mode when mode option is omitted completely', async () => {
+    const fallbackSpy = vi
+      .spyOn(ManuscriptPdfExportService, 'exportViaBrowserPrintFallback')
+      .mockResolvedValue({ mode: 'browser-print-fallback' });
+
+    const result = await ManuscriptPdfExportService.exportManuscriptPdf({
+      html: '<html></html>',
+      title: 'Omitted Mode Test',
+    });
+
+    expect(result.mode).toBe('browser-print-fallback');
+    expect(fallbackSpy).toHaveBeenCalled();
   });
 
   it('fails clearly when the browser blocks the print window', async () => {

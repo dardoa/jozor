@@ -1,5 +1,33 @@
 # Project Log
 
+## 2026-07-02 - Controlled PDF Phase 4
+
+- Summary:
+  - Added ADR-010 documenting the production adapter direction and requirements (headless Chromium HTML/CSS render).
+  - Enforced rules that the production adapter must consume only FamilyManuscriptModel or generated HTML, and that export history must manifest privacy details.
+  - No runtime behavior changed.
+
+## 2026-07-02 - Controlled PDF Activation Readiness Phase 3
+
+- Summary:
+  - Added test-only override API `setTestOverrideForTests` functioning only inside test suites.
+  - Verified default adapter stub status with flag enabled (remains an unavailable stub honestly).
+  - Verified test-injected custom adapter behavior with flag enabled.
+  - Controlled PDF remains disabled by default, and the default adapter remains an intentional unavailable stub. Phase 3 proves the gate can open only through test-injected renderer paths.
+
+## 2026-07-02 - Controlled PDF Activation Readiness Phase 2
+
+- Summary:
+  - Verified end-to-end fallback contract when controlled-pdf is requested while flag is disabled.
+  - Confirmed browser fallback routing, omission defaults, and safe unrevealing diagnostic metadata formatting.
+
+## 2026-07-02 - Controlled PDF Activation Readiness Phase 1
+
+- Summary:
+  - Gated the Controlled PDF export path behind a disabled-by-default feature flag helper.
+  - Hardened readiness evaluation and adapter status queries to enforce browser fallback when flag is inactive.
+  - Added comprehensive test suites confirming flag defaults and safe diagnostics.
+
 ## 2026-07-02 - Manuscript Preview & Configuration Polish Phase 2
 
 - Summary:

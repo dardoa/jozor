@@ -1,5 +1,6 @@
 import { LocalControlledPdfRenderer } from './LocalControlledPdfRenderer';
 import type { ManuscriptPdfExportRequest, ManuscriptPdfExportResult } from './ManuscriptPdfExportService';
+import { ControlledPdfFeatureFlag } from './ControlledPdfFeatureFlag';
 
 export interface ControlledPdfReadinessResult {
   readonly available: boolean;
@@ -22,6 +23,13 @@ export class ControlledPdfReadinessService {
       renderer: 'local-controlled',
       probe: true,
     };
+
+    const flagState = ControlledPdfFeatureFlag.getState();
+    diagnostics.featureFlagEnabled = flagState.enabled;
+
+    if (!flagState.enabled) {
+      reasons.push('Controlled PDF feature flag disabled');
+    }
 
     try {
       // Execute with a small synthetic probe request completely free of raw personal data
@@ -56,11 +64,14 @@ export class ControlledPdfReadinessService {
       reasons.push(error instanceof Error ? error.message : 'Readiness probe crashed during render execution.');
     }
 
-    const available = reasons.length === 0;
+    // Explicitly enforce fallback mode if the flag is disabled
+    const recommendedMode = flagState.enabled && reasons.length === 0
+      ? 'controlled-pdf'
+      : 'browser-print-fallback';
 
     return {
-      available,
-      recommendedMode: available ? 'controlled-pdf' : 'browser-print-fallback',
+      available: flagState.enabled && reasons.length === 0,
+      recommendedMode,
       reasons,
       diagnostics,
     };

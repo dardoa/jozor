@@ -1,8 +1,46 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ControlledPdfReadinessService } from '../ControlledPdfReadinessService';
+import { ControlledPdfFeatureFlag } from '../ControlledPdfFeatureFlag';
 
 describe('ControlledPdfReadinessService', () => {
-  it('reports controlled-pdf as recommended when local renderer prototype succeeds', async () => {
+  let originalEnv: string | undefined;
+
+  beforeEach(() => {
+    if (typeof import.meta !== 'undefined' && import.meta.env) {
+      originalEnv = import.meta.env.VITE_ENABLE_CONTROLLED_PDF as string;
+    }
+  });
+
+  afterEach(() => {
+    ControlledPdfFeatureFlag.setTestOverrideForTests(null);
+    if (typeof import.meta !== 'undefined' && import.meta.env && originalEnv !== undefined) {
+      vi.stubEnv('VITE_ENABLE_CONTROLLED_PDF', originalEnv);
+    } else {
+      vi.unstubAllEnvs();
+    }
+  });
+
+  it('reports fallback and available false when flag is disabled even if renderer works', async () => {
+    vi.stubEnv('VITE_ENABLE_CONTROLLED_PDF', 'false');
+    const result = await ControlledPdfReadinessService.evaluateReadiness();
+
+    expect(result.available).toBe(false);
+    expect(result.recommendedMode).toBe('browser-print-fallback');
+    expect(result.reasons).toContain('Controlled PDF feature flag disabled');
+  });
+
+  it('reports controlled-pdf as recommended when feature flag override is enabled and local renderer succeeds', async () => {
+    ControlledPdfFeatureFlag.setTestOverrideForTests(true);
+    const result = await ControlledPdfReadinessService.evaluateReadiness();
+
+    expect(result.available).toBe(true);
+    expect(result.recommendedMode).toBe('controlled-pdf');
+    expect(result.reasons).toHaveLength(0);
+    expect(result.diagnostics.featureFlagEnabled).toBe(true);
+  });
+
+  it('reports controlled-pdf as recommended when flag is enabled and local renderer prototype succeeds', async () => {
+    vi.stubEnv('VITE_ENABLE_CONTROLLED_PDF', 'true');
     const result = await ControlledPdfReadinessService.evaluateReadiness();
 
     expect(result.available).toBe(true);
@@ -17,6 +55,7 @@ describe('ControlledPdfReadinessService', () => {
       availableResult: true,
       outputType: 'application/pdf',
       outputSize: expect.any(Number),
+      featureFlagEnabled: true,
     });
 
     expect(result.diagnostics.outputSize).toBeGreaterThan(0);
@@ -29,6 +68,7 @@ describe('ControlledPdfReadinessService', () => {
   });
 
   it('executes readiness probes with synthetic non-personal request payloads', async () => {
+    vi.stubEnv('VITE_ENABLE_CONTROLLED_PDF', 'true');
     const renderer = vi.fn().mockResolvedValue({
       mode: 'controlled-pdf',
       available: true,
@@ -48,7 +88,8 @@ describe('ControlledPdfReadinessService', () => {
     });
   });
 
-  it('recommends browser-print-fallback when renderer fails', async () => {
+  it('recommends browser-print-fallback when renderer fails even if flag is enabled', async () => {
+    vi.stubEnv('VITE_ENABLE_CONTROLLED_PDF', 'true');
     const errorRenderer = vi.fn().mockRejectedValue(new Error('Low memory crash simulation'));
     const result = await ControlledPdfReadinessService.evaluateReadiness({ renderer: errorRenderer });
 
@@ -58,6 +99,7 @@ describe('ControlledPdfReadinessService', () => {
   });
 
   it('recommends browser-print-fallback when renderer outputs invalid MIME type or empty Blob', async () => {
+    vi.stubEnv('VITE_ENABLE_CONTROLLED_PDF', 'true');
     // 1. Invalid MIME type mock
     const badMimeRenderer = vi.fn().mockResolvedValue({
       mode: 'controlled-pdf',
