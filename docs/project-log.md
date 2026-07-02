@@ -1,5 +1,14 @@
 # Project Log
 
+## 2026-07-03 - Publishing Visual Review
+
+- Summary:
+  - Conducted a comprehensive visual review of the Family Manuscript preview features.
+  - Verified 3 target scenarios (Small Tree, Medium Tree, and Real Large Tree) in real browser local environments.
+  - Documented observed behaviors, RTL Arabic wrap safety, bibliography tables, and privacy masking boundaries in `docs/reviews/manuscript-real-visual-review-2026-07-03.md`.
+  - Review status: `Conditional Pass` (local PDF artifacts generated but kept untracked).
+  - No code changes.
+
 ## 2026-07-03 - GEDCOM Integration Completion Pack
 
 - Summary:
