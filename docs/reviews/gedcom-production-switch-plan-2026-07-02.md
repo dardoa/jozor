@@ -65,4 +65,7 @@ Add vitest test suites asserting:
 ---
 
 ## 5. Recommendation
-**Proceed with Phase A and Phase B implementation** to add the adapter-backed path and dry-run tests. Keep Phase C gated until comparison verification runs on larger family datasets.
+**Switch Completed**: Phases A, B, and C have been successfully implemented and verified. Default GEDCOM exports are now backed by `RelationshipEdge` mapping with legacy fallback when edges are unavailable.
+
+## 6. Verification Status
+All unit and comparison tests are successfully passing, proving structural matching correctness and safety.

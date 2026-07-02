@@ -1,7 +1,7 @@
 # ADR 011: GEDCOM RelationshipEdge Adapter Design
 
 ## Status
-Proposed
+Accepted
 
 ## Context
 1. **Source of Truth**: Sprint 11 introduced `RelationshipEdge` as the Jozor 2.0 relationship source of truth.

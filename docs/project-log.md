@@ -1,5 +1,13 @@
 # Project Log
 
+## 2026-07-03 - GEDCOM Integration Completion Pack
+
+- Summary:
+  - Switched GEDCOM export defaults to `RelationshipEdge` when relationship edges are available.
+  - Preserved byte-for-byte legacy fallback when relationship edges are missing or empty.
+  - Accepted ADR-011 and marked the production switch phases complete.
+  - Verified viewer masking remains upstream and GEDCOM privacy protections continue to pass.
+
 ## 2026-07-03 - GEDCOM Phase C2 Internal Export Mode Helper
 
 - Summary:

@@ -699,10 +699,11 @@ describe('GEDCOM Logic - Round-trip', () => {
             expect(outputDefault).toBe(outputLegacyMode);
         });
 
-        it('Default remains legacy: relationshipEdges alone does not switch mode', () => {
+        it('Default is edge mode when edges are present: relationshipEdges alone switches mode', () => {
             const people = {
                 p1: testMockPerson('p1', { spouses: ['p2'] }),
                 p2: testMockPerson('p2', { spouses: ['p1'] }),
+                p3: testMockPerson('p3'),
             };
 
             const activeEdge: RelationshipEdge = {
@@ -714,10 +715,10 @@ describe('GEDCOM Logic - Round-trip', () => {
                 createdAt: '2026-01-01',
             };
 
-            // Without relationshipMode: 'relationship-edge', it must ignore edges and build F_p1_p2
+            // Without relationshipMode option, passing activeEdge should switch to edge mode
             const output = exportToGEDCOM(people, { relationshipEdges: [activeEdge] });
-            expect(output).toContain('0 @F_p1_p2@ FAM');
-            expect(output).not.toContain('F_p1_p3');
+            expect(output).toContain('0 @F_p1_p3@ FAM');
+            expect(output).not.toContain('F_p1_p2');
         });
 
         it('Empty edge mode fallback: relationshipEdges empty yields legacy arrays fallback', () => {
@@ -864,6 +865,45 @@ describe('GEDCOM Logic - Round-trip', () => {
             expect(output).not.toContain('1990-01-01');
             expect(output).not.toContain('Sensitive Place');
             expect(output).not.toContain('Secret Bio');
+        });
+
+        it('exportToGEDCOM(people, { relationshipEdges: [edge] }) uses edge mode by default', () => {
+            const people = {
+                p1: testMockPerson('p1', { spouses: ['p2'] }),
+                p2: testMockPerson('p2', { spouses: ['p1'] }),
+                p3: testMockPerson('p3'),
+            };
+
+            const activeEdge: RelationshipEdge = {
+                id: 'e1',
+                treeId: 'tree-1',
+                fromPersonId: 'p1',
+                toPersonId: 'p3', // edge points to p3, conflicting with legacy array p2
+                type: 'SPOUSE',
+                createdAt: '2026-01-01',
+            };
+
+            // Call exportToGEDCOM with relationshipEdges but without relationshipMode option
+            const output = exportToGEDCOM(people, { relationshipEdges: [activeEdge] });
+
+            // Must produce F_p1_p3 because edges are present and edge mode is default
+            expect(output).toContain('0 @F_p1_p3@ FAM');
+            expect(output).not.toContain('F_p1_p2');
+        });
+
+        it('exportToGEDCOM(people) with no edges still matches legacy fallback output', () => {
+            const people = {
+                p1: testMockPerson('p1', { spouses: ['p2'] }),
+                p2: testMockPerson('p2', { spouses: ['p1'] }),
+            };
+
+            // Call exportToGEDCOM with no options
+            const outputDefault = exportToGEDCOM(people);
+
+            // Call explicitly with legacy-array mode
+            const outputExplicitLegacy = exportToGEDCOM(people, { relationshipMode: 'legacy-array' });
+
+            expect(outputDefault).toBe(outputExplicitLegacy);
         });
     });
 });

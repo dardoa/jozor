@@ -275,10 +275,10 @@ describe('useExport', () => {
     expect(gedcomPeople['person-1'].firstName).not.toContain('John');
     expect(gedcomPeople['person-1'].birthDate).toBe('');
 
-    // Assert that options contain relationshipEdges and relationshipMode: 'legacy-array'
+    // Assert that options contain relationshipEdges and relationshipMode: 'relationship-edge' (new default)
     expect(gedcomOptions).toEqual(expect.objectContaining({
       relationshipEdges: mockStore.relationships,
-      relationshipMode: 'legacy-array',
+      relationshipMode: 'relationship-edge',
     }));
 
     expect(icsPeople['person-1'].firstName).toBe('Private');
@@ -286,38 +286,9 @@ describe('useExport', () => {
     expect(icsPeople['person-1'].birthDate).toBe('');
   });
 
-  it('GEDCOM export passes exactly legacy-array mode even when store relationships contain conflicting edge', async () => {
-    // Add conflicting relationships to the store
-    mockStore.relationships = {
-      'edge-conflict': {
-        id: 'edge-conflict',
-        treeId: 'tree-1',
-        fromPersonId: 'person-1',
-        toPersonId: 'person-3',
-        type: 'SPOUSE',
-        createdAt: '2026-01-01',
-      },
-    };
-
-    const svgRef = { current: null };
-    const { result } = renderHook(() => useExport(mockPeople, svgRef));
-
-    await act(async () => {
-      await result.current.handleExport('gedcom');
-    });
-
-    const gedcomCall = vi.mocked(exportToGEDCOM).mock.calls[0];
-    const gedcomOptions = gedcomCall[1];
-
-    expect(gedcomOptions).toEqual(expect.objectContaining({
-      relationshipEdges: mockStore.relationships,
-      relationshipMode: 'legacy-array',
-    }));
-  });
-
-  it('GEDCOM export passes relationship-edge mode when test override is activated and preserves viewer privacy', async () => {
+  it('GEDCOM export passes legacy-array mode when test override is activated and preserves viewer privacy', async () => {
     const { setGedcomExportModeOverrideForTests } = await import('../../../utils/gedcomExportMode');
-    setGedcomExportModeOverrideForTests('relationship-edge');
+    setGedcomExportModeOverrideForTests('legacy-array');
 
     try {
       mockStore.currentUserRole = 'viewer';
@@ -338,7 +309,7 @@ describe('useExport', () => {
 
       expect(gedcomOptions).toEqual(expect.objectContaining({
         relationshipEdges: mockStore.relationships,
-        relationshipMode: 'relationship-edge',
+        relationshipMode: 'legacy-array',
       }));
     } finally {
       setGedcomExportModeOverrideForTests(null);

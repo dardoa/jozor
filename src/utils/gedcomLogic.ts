@@ -1,6 +1,8 @@
 import { Person, RelationshipInfo, RelationshipStatus } from '../types';
 import { createPerson } from './familyLogic';
 import { evaluateDataIntegrity, type DataIntegrityIssue } from '../domain/dataIntegrity';
+import type { RelationshipEdge } from '../types/relationship';
+import { buildGedcomFamilyGroups } from './gedcomRelationshipAdapter';
 
 export interface GedcomImportReport {
   peopleCount: number;
@@ -174,9 +176,6 @@ const buildGedcomImportReport = (gedcom: string, people: Record<string, Person>)
   };
 };
 
-import { RelationshipEdge } from '../types/relationship';
-import { buildGedcomFamilyGroups } from './gedcomRelationshipAdapter';
-
 export interface GedcomExportOptions {
   readonly relationshipEdges?: Record<string, RelationshipEdge> | readonly RelationshipEdge[];
   readonly relationshipMode?: 'legacy-array' | 'relationship-edge';
@@ -224,7 +223,15 @@ export const exportToGEDCOM = (
     return family;
   };
 
-  const isEdgeMode = options.relationshipMode === 'relationship-edge';
+  const hasEdges = !!options.relationshipEdges && (
+    Array.isArray(options.relationshipEdges)
+      ? options.relationshipEdges.length > 0
+      : Object.keys(options.relationshipEdges).length > 0
+  );
+
+  const isEdgeMode = options.relationshipMode !== 'legacy-array' && (
+    options.relationshipMode === 'relationship-edge' || hasEdges
+  );
 
   if (!isEdgeMode) {
     // Standard legacy generation

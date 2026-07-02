@@ -20,8 +20,8 @@ export const getGedcomExportMode = (): GedcomExportModeState => {
   }
 
   return {
-    relationshipMode: 'legacy-array',
-    reason: 'GEDCOM relationship-edge mode is not enabled for production exports.',
+    relationshipMode: 'relationship-edge',
+    reason: 'GEDCOM exports use RelationshipEdge by default with legacy fallback when edges are unavailable.',
   };
 };
 
