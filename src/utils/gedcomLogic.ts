@@ -174,7 +174,18 @@ const buildGedcomImportReport = (gedcom: string, people: Record<string, Person>)
   };
 };
 
-export const exportToGEDCOM = (people: Record<string, Person>): string => {
+import { RelationshipEdge } from '../types/relationship';
+import { buildGedcomFamilyGroups } from './gedcomRelationshipAdapter';
+
+export interface GedcomExportOptions {
+  readonly relationshipEdges?: Record<string, RelationshipEdge> | readonly RelationshipEdge[];
+  readonly relationshipMode?: 'legacy-array' | 'relationship-edge';
+}
+
+export const exportToGEDCOM = (
+  people: Record<string, Person>,
+  options: GedcomExportOptions = {}
+): string => {
   const lines: string[] = [];
   lines.push('0 HEAD');
   lines.push('1 SOUR JOZOR_APP');
@@ -213,23 +224,96 @@ export const exportToGEDCOM = (people: Record<string, Person>): string => {
     return family;
   };
 
-  personIds.forEach((id) => {
-    const person = people[id];
+  const isEdgeMode = options.relationshipMode === 'relationship-edge';
 
-    person.spouses.forEach((spouseId) => {
-      if (!people[spouseId]) return;
-      getOrCreateFamily([id, spouseId], person.partnerDetails?.[spouseId]);
+  if (!isEdgeMode) {
+    // Standard legacy generation
+    personIds.forEach((id) => {
+      const person = people[id];
+      person.spouses.forEach((spouseId) => {
+        if (!people[spouseId]) return;
+        getOrCreateFamily([id, spouseId], person.partnerDetails?.[spouseId]);
+      });
     });
-  });
 
-  personIds.forEach((id) => {
-    const person = people[id];
-    const validParents = person.parents.filter((parentId) => people[parentId]);
-    if (validParents.length === 0) return;
+    personIds.forEach((id) => {
+      const person = people[id];
+      const validParents = person.parents.filter((parentId) => people[parentId]);
+      if (validParents.length === 0) return;
 
-    const family = getOrCreateFamily(validParents);
-    if (!family.children.includes(id)) family.children.push(id);
-  });
+      const family = getOrCreateFamily(validParents);
+      if (!family.children.includes(id)) family.children.push(id);
+    });
+  } else {
+    // RelationshipEdge grouping logic
+    const edgeList = Array.isArray(options.relationshipEdges)
+      ? options.relationshipEdges
+      : Object.values(options.relationshipEdges ?? {});
+
+    const useLegacyFallback = edgeList.length === 0;
+
+    const { groups } = buildGedcomFamilyGroups({
+      people,
+      relationshipEdges: options.relationshipEdges,
+      useLegacyFallback,
+    });
+
+    // Populate families map from adapter groups
+    groups.forEach((group) => {
+      const parents = group.spouseIds.filter((id) => people[id]);
+      const children = group.childIds.filter((id) => people[id]);
+
+      // Resolve relInfo details if spouse edges have metadata
+      let relInfo: RelationshipInfo | undefined;
+      if (parents.length >= 2) {
+        const [p1, p2] = parents;
+        // Search in relationshipEdges
+        const edge = edgeList.find((e) => {
+          const isSpouse = e.type === 'SPOUSE' || e.type === 'PARTNER';
+          if (!isSpouse) return false;
+          const matchNormal = e.fromPersonId === p1 && e.toPersonId === p2;
+          const matchReverse = e.fromPersonId === p2 && e.toPersonId === p1;
+          return matchNormal || matchReverse;
+        });
+
+        if (edge?.metadata) {
+          relInfo = {
+            type: 'married',
+            startDate: edge.metadata.startDate,
+            startPlace: edge.metadata.startPlace,
+            endDate: edge.metadata.endDate,
+            endPlace: edge.metadata.endPlace,
+          };
+        } else {
+          // Fallback to legacy partnerDetails if metadata is absent
+          const p1Person = people[p1];
+          const p2Person = people[p2];
+          if (p1Person?.partnerDetails?.[p2]) {
+            relInfo = p1Person.partnerDetails[p2];
+          } else if (p2Person?.partnerDetails?.[p1]) {
+            relInfo = p2Person.partnerDetails[p1];
+          }
+        }
+      }
+
+      // Format unique custom family key using F_ prefix
+      let familyIdKey = group.familyId;
+      if (familyIdKey.startsWith('fam:')) {
+        // Strip prefix and match naming conventions
+        familyIdKey = familyIdKey.replace(/^fam:/, '');
+      }
+      if (group.source === 'legacy-array' && familyIdKey.endsWith(':single')) {
+        familyIdKey = familyIdKey.replace(/:single$/, '');
+      }
+
+      families.set(familyIdKey, {
+        id: `F_${familyIdKey.replace(/:/g, '_')}`,
+        parents,
+        children,
+        relInfo,
+      });
+    });
+  }
 
   const familiesByParent = new Map<string, string[]>();
   const familiesByChild = new Map<string, string[]>();

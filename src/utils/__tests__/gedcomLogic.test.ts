@@ -2,6 +2,7 @@
 import { describe, it, expect } from 'vitest';
 import { exportToGEDCOM, importFromGEDCOM, importFromGEDCOMWithReport, formatGedcomDate, gedcomDateToIso } from '../gedcomLogic';
 import { Person } from '../../types';
+import { RelationshipEdge } from '../../types/relationship';
 import { evaluateDataIntegrity } from '../../domain/dataIntegrity';
 import { deriveSourcesAndCitationsFromPeople } from '../../types/citation';
 
@@ -670,6 +671,200 @@ describe('GEDCOM Logic - Round-trip', () => {
         expect(citationList).toEqual([
             expect.objectContaining({ targetId: 'p1', targetField: 'person.birth.date' }),
         ]);
+    });
+
+    describe('GEDCOMRelationshipAdapter Phase A/B Integration', () => {
+        const testMockPerson = (id: string, overrides: Partial<Person> = {}): Person => ({
+            id,
+            firstName: `Person-${id}`,
+            lastName: 'Doe',
+            gender: 'male',
+            parents: [],
+            spouses: [],
+            children: [],
+            birthDate: '',
+            birthPlace: '',
+            isDeceased: false,
+            ...overrides,
+        } as unknown as Person);
+
+        it('Default compatibility: matches legacy output format byte-for-byte', () => {
+            const people = {
+                p1: testMockPerson('p1', { spouses: ['p2'] }),
+                p2: testMockPerson('p2', { spouses: ['p1'] }),
+            };
+
+            const outputDefault = exportToGEDCOM(people);
+            const outputLegacyMode = exportToGEDCOM(people, { relationshipMode: 'legacy-array' });
+            expect(outputDefault).toBe(outputLegacyMode);
+        });
+
+        it('Default remains legacy: relationshipEdges alone does not switch mode', () => {
+            const people = {
+                p1: testMockPerson('p1', { spouses: ['p2'] }),
+                p2: testMockPerson('p2', { spouses: ['p1'] }),
+            };
+
+            const activeEdge: RelationshipEdge = {
+                id: 'e1',
+                treeId: 'tree-1',
+                fromPersonId: 'p1',
+                toPersonId: 'p3', // conflicting edge
+                type: 'SPOUSE',
+                createdAt: '2026-01-01',
+            };
+
+            // Without relationshipMode: 'relationship-edge', it must ignore edges and build F_p1_p2
+            const output = exportToGEDCOM(people, { relationshipEdges: [activeEdge] });
+            expect(output).toContain('0 @F_p1_p2@ FAM');
+            expect(output).not.toContain('F_p1_p3');
+        });
+
+        it('Empty edge mode fallback: relationshipEdges empty yields legacy arrays fallback', () => {
+            const people = {
+                p1: testMockPerson('p1', { spouses: ['p2'] }),
+                p2: testMockPerson('p2', { spouses: ['p1'] }),
+            };
+
+            const outputEdgeModeEmpty = exportToGEDCOM(people, {
+                relationshipMode: 'relationship-edge',
+                relationshipEdges: [],
+            });
+
+            const outputLegacy = exportToGEDCOM(people);
+            expect(outputEdgeModeEmpty).toBe(outputLegacy);
+        });
+
+        it('Empty edge mode fallback preserves legacy single-parent family IDs byte-for-byte', () => {
+            const people = {
+                p1: testMockPerson('p1', { children: ['c1'] }),
+                c1: testMockPerson('c1', { parents: ['p1'] }),
+            };
+
+            const outputEdgeModeEmpty = exportToGEDCOM(people, {
+                relationshipMode: 'relationship-edge',
+                relationshipEdges: [],
+            });
+
+            const outputLegacy = exportToGEDCOM(people);
+            expect(outputEdgeModeEmpty).toBe(outputLegacy);
+            expect(outputEdgeModeEmpty).toContain('0 @F_p1@ FAM');
+            expect(outputEdgeModeEmpty).not.toContain('F_p1_single');
+        });
+
+        it('Edge mode equivalent family: matching edges and legacy yield same structures', () => {
+            const people = {
+                p1: testMockPerson('p1', { spouses: ['p2'] }),
+                p2: testMockPerson('p2', { spouses: ['p1'] }),
+            };
+
+            const activeEdge: RelationshipEdge = {
+                id: 'e1',
+                treeId: 'tree-1',
+                fromPersonId: 'p1',
+                toPersonId: 'p2',
+                type: 'SPOUSE',
+                createdAt: '2026-01-01',
+            };
+
+            const outputEdgeMode = exportToGEDCOM(people, {
+                relationshipMode: 'relationship-edge',
+                relationshipEdges: [activeEdge],
+            });
+
+            expect(outputEdgeMode).toContain('0 @F_p1_p2@ FAM');
+            expect(outputEdgeMode).toContain('1 HUSB @p1@');
+            expect(outputEdgeMode).toContain('1 WIFE @p2@');
+        });
+
+        it('Edge mode authoritative drift: edges win and legacy arrays are ignored when edges exist', () => {
+            const people = {
+                p1: testMockPerson('p1', { spouses: ['p2'] }),
+                p2: testMockPerson('p2', { spouses: ['p1'] }),
+                p3: testMockPerson('p3'),
+            };
+
+            const activeEdge: RelationshipEdge = {
+                id: 'e1',
+                treeId: 'tree-1',
+                fromPersonId: 'p1',
+                toPersonId: 'p3', // edge says spouse is p3
+                type: 'SPOUSE',
+                createdAt: '2026-01-01',
+            };
+
+            const outputEdgeMode = exportToGEDCOM(people, {
+                relationshipMode: 'relationship-edge',
+                relationshipEdges: [activeEdge],
+            });
+
+            // Must produce F_p1_p3 and MUST NOT produce F_p1_p2
+            expect(outputEdgeMode).toContain('0 @F_p1_p3@ FAM');
+            expect(outputEdgeMode).not.toContain('F_p1_p2');
+        });
+
+        it('edge mode with one parent edge must not create spouse family from conflicting legacy spouses', () => {
+            const people = {
+                p1: testMockPerson('p1', { spouses: ['p2'] }),
+                p2: testMockPerson('p2', { spouses: ['p1'] }),
+                c1: testMockPerson('c1'),
+            };
+
+            const parentEdge: RelationshipEdge = {
+                id: 'e1',
+                treeId: 'tree-1',
+                fromPersonId: 'p1',
+                toPersonId: 'c1',
+                type: 'BIOLOGICAL_PARENT',
+                createdAt: '2026-01-01',
+            };
+
+            const outputEdgeMode = exportToGEDCOM(people, {
+                relationshipMode: 'relationship-edge',
+                relationshipEdges: [parentEdge],
+            });
+
+            // Since edge exists (length > 0) it is authoritative, and fallback must be bypassed.
+            // It must only output the single parent fam:p1:single (F_p1_single) and MUST NOT output F_p1_p2.
+            expect(outputEdgeMode).toContain('0 @F_p1_single@ FAM');
+            expect(outputEdgeMode).not.toContain('F_p1_p2');
+        });
+
+        it('Viewer privacy preserved in edge mode: anonymized details', () => {
+            const maskedPerson: Person = {
+                id: 'p1-masked',
+                firstName: 'Living Person',
+                lastName: 'Masked',
+                gender: 'male',
+                parents: [],
+                spouses: [],
+                children: [],
+                birthDate: '1990-01-01',
+                birthPlace: 'Sensitive Place',
+                isDeceased: false,
+                bio: 'Secret Bio',
+            } as unknown as Person;
+
+            const viewerMaskedPeople = {
+                'p1-masked': {
+                    ...maskedPerson,
+                    firstName: '👨 Living Person', // Simulation of masked state
+                    birthDate: '',
+                    birthPlace: '',
+                    bio: '',
+                } as unknown as Person,
+            };
+
+            const output = exportToGEDCOM(viewerMaskedPeople, {
+                relationshipMode: 'relationship-edge',
+                relationshipEdges: [],
+            });
+
+            expect(output).toContain('👨 Living Person');
+            expect(output).not.toContain('1990-01-01');
+            expect(output).not.toContain('Sensitive Place');
+            expect(output).not.toContain('Secret Bio');
+        });
     });
 });
 

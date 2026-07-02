@@ -1,5 +1,12 @@
 # Project Log
 
+## 2026-07-02 - GEDCOMRelationshipAdapter Phase A/B
+
+- Summary:
+  - Added an optional adapter-backed GEDCOM relationship mode behind explicit `relationshipMode: 'relationship-edge'` options.
+  - Preserved default GEDCOM export behavior as legacy arrays and kept `useExport.ts` unchanged.
+  - Added regression tests proving default byte-for-byte compatibility, empty-edge legacy fallback, edge authoritative drift behavior, and viewer privacy preservation.
+
 ## 2026-07-02 - GEDCOMRelationshipAdapter Production Switch Plan
 
 - Summary:
