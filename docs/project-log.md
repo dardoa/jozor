@@ -1,5 +1,12 @@
 # Project Log
 
+## 2026-07-02 - GEDCOMRelationshipAdapter Integration Dry Run
+
+- Summary:
+  - Implemented `compareGedcomRelationships` comparison helper that directly contrasts legacy array groupings with edge-derived groups.
+  - Added unit tests in `gedcomRelationshipComparison.test.ts` verifying fallback equivalence for undefined or empty edges, missing spouse/child mismatches, and privacy boundaries.
+  - No runtime export changes and no UI alterations.
+
 ## 2026-07-02 - GEDCOM RelationshipEdge Adapter Kernel
 
 - Summary:
