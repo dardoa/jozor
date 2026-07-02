@@ -1,5 +1,12 @@
 # Project Log
 
+## 2026-07-02 - GEDCOMRelationshipAdapter Production Switch Plan
+
+- Summary:
+  - Created switch plan document `docs/reviews/gedcom-production-switch-plan-2026-07-02.md` outlining the integration strategy.
+  - Recommended adapter-backed optional parameter integration with deterministic fallbacks to legacy arrays when edges are absent.
+  - No runtime changes and no UI alterations.
+
 ## 2026-07-02 - GEDCOMRelationshipAdapter Integration Dry Run
 
 - Summary:
