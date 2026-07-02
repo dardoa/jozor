@@ -13,6 +13,7 @@ vi.mock('../../../publishing/hooks', () => ({
 
 import type { TranslationSchema } from '../../../../utils/translationLoader';
 import { ExportCloudPanel } from '../ExportCloudPanel';
+import { ManuscriptExportSummary } from '../ManuscriptExportSummary';
 
 vi.mock('../../../../store/useAppStore', () => ({
   useAppStore: (selector: (state: {
@@ -96,6 +97,25 @@ const baseProps = {
 };
 
 describe('ExportCloudPanel manuscript preview', () => {
+  it('renders neutral manuscript summary fallbacks when values are missing', () => {
+    render(
+      <ManuscriptExportSummary
+        language="en"
+        rootPersonName=""
+        generationsDepth="all"
+        manuscriptScopePersonCount={0}
+        manuscriptOrderingLabel="Family path"
+        includedManuscriptSections="timeline, bibliography"
+        previewStatus="idle"
+      />
+    );
+
+    expect(screen.getByText(/Root person:/i)).toBeInTheDocument();
+    expect(screen.getByText(/Not selected/i)).toBeInTheDocument();
+    expect(screen.getByText(/All branch/i)).toBeInTheDocument();
+    expect(screen.getByText(/Citation coverage: Not calculated/i)).toBeInTheDocument();
+  });
+
   it('labels manuscript PDF export by document type instead of language', () => {
     render(
       <ExportCloudPanel
@@ -170,8 +190,10 @@ describe('ExportCloudPanel manuscript preview', () => {
 
     expect(screen.getByText(/Root person:/i)).toBeInTheDocument();
     expect(screen.getByText(/Depth:/i)).toBeInTheDocument();
+    expect(screen.getByText(/All branch/i)).toBeInTheDocument();
     expect(screen.getAllByText((_, element) => element?.textContent?.includes('Estimated people count: 1') ?? false).length).toBeGreaterThan(0);
     expect(screen.getByText(/photos, timeline, bibliography, narrative/i)).toBeInTheDocument();
+    expect(screen.getByTestId('manuscript-visual-review-hint')).toHaveTextContent(/Manuscript renderer visual review/i);
 
     await waitFor(() => expect(onRunPublishingPreview).toHaveBeenCalled());
     expect(onRunPublishingPreview).toHaveBeenCalledWith(expect.objectContaining({

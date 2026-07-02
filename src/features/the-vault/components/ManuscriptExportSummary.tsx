@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 
 interface ManuscriptExportSummaryProps {
   language: 'ar' | 'en';
@@ -24,7 +24,7 @@ export const ManuscriptExportSummary: React.FC<ManuscriptExportSummaryProps> = (
   const isAr = language === 'ar';
 
   const depthLabel = generationsDepth === 'all'
-    ? (isAr ? 'كل الفرع' : 'Full branch')
+    ? (isAr ? 'كل الفرع' : 'All branch')
     : (isAr ? `${generationsDepth} أجيال` : `${generationsDepth} generations`);
 
   const previewStatusText = {
@@ -50,7 +50,7 @@ export const ManuscriptExportSummary: React.FC<ManuscriptExportSummaryProps> = (
           <span className="font-bold text-[var(--text-secondary)]">
             {isAr ? 'جذر المخطوط:' : 'Root person:'}
           </span>{' '}
-          {rootPersonName || (isAr ? 'جذر الشجرة الحالي' : 'Current tree root')}
+          {rootPersonName || (isAr ? 'غير محدد' : 'Not selected')}
         </div>
         <div>
           <span className="font-bold text-[var(--text-secondary)]">

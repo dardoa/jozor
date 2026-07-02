@@ -1,5 +1,12 @@
 # Project Log
 
+## 2026-07-02 - Manuscript Preview & Configuration Polish Phase 2
+
+- Summary:
+  - Polished neutral fallbacks for generations depth (All branch) and root person (Not selected).
+  - Added visual review informational hint inside the export panel.
+  - Updated unit tests verifying configuration fallbacks and preview status changes.
+
 ## 2026-07-02 - Manual Manuscript Visual Review Run
 
 - Summary:

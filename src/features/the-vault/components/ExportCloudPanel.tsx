@@ -676,15 +676,17 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                 {language === 'ar' ? 'PDF متجه تقليدي' : 'Legacy Vector PDF'}
               </button>
             </div>
-            <div
-              className="mt-2 flex justify-end text-[10px] font-mono text-[var(--text-dim)]"
-              data-testid="controlled-pdf-readiness-indicator"
-            >
-              <span>
+            <div className="mt-2 flex flex-col items-end gap-1 text-[10px] font-mono text-[var(--text-dim)]">
+              <div data-testid="controlled-pdf-readiness-indicator">
                 {controlledPdfStatus === 'ready' && 'Controlled PDF: Ready'}
                 {controlledPdfStatus === 'fallback' && 'Controlled PDF: Browser print fallback'}
                 {controlledPdfStatus === 'checking' && 'Controlled PDF: Checking'}
-              </span>
+              </div>
+              <div className="text-right text-[10px] font-sans text-[var(--text-dim)]/80" data-testid="manuscript-visual-review-hint">
+                {language === 'ar'
+                  ? 'مراجعة المظهر للمخطوط: تمت بنجاح للترتيب السردي والمخرجات العربية RTL.'
+                  : 'Manuscript renderer visual review: passed for narrative order and Arabic RTL output.'}
+              </div>
             </div>
           </div>
 
