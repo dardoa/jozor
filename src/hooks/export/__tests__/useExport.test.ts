@@ -266,16 +266,53 @@ describe('useExport', () => {
       await result.current.handleExport('ics');
     });
 
-    const gedcomPeople = vi.mocked(exportToGEDCOM).mock.calls[0][0];
+    const gedcomCall = vi.mocked(exportToGEDCOM).mock.calls[0];
+    const gedcomPeople = gedcomCall[0];
+    const gedcomOptions = gedcomCall[1];
     const icsPeople = vi.mocked(generateICS).mock.calls[0][0];
 
     expect(gedcomPeople['person-1'].firstName).toBe('Private');
     expect(gedcomPeople['person-1'].firstName).not.toContain('John');
     expect(gedcomPeople['person-1'].birthDate).toBe('');
 
+    // Assert that options contain relationshipEdges and relationshipMode: 'legacy-array'
+    expect(gedcomOptions).toEqual(expect.objectContaining({
+      relationshipEdges: mockStore.relationships,
+      relationshipMode: 'legacy-array',
+    }));
+
     expect(icsPeople['person-1'].firstName).toBe('Private');
     expect(icsPeople['person-1'].firstName).not.toContain('John');
     expect(icsPeople['person-1'].birthDate).toBe('');
+  });
+
+  it('GEDCOM export passes exactly legacy-array mode even when store relationships contain conflicting edge', async () => {
+    // Add conflicting relationships to the store
+    mockStore.relationships = {
+      'edge-conflict': {
+        id: 'edge-conflict',
+        treeId: 'tree-1',
+        fromPersonId: 'person-1',
+        toPersonId: 'person-3',
+        type: 'SPOUSE',
+        createdAt: '2026-01-01',
+      },
+    };
+
+    const svgRef = { current: null };
+    const { result } = renderHook(() => useExport(mockPeople, svgRef));
+
+    await act(async () => {
+      await result.current.handleExport('gedcom');
+    });
+
+    const gedcomCall = vi.mocked(exportToGEDCOM).mock.calls[0];
+    const gedcomOptions = gedcomCall[1];
+
+    expect(gedcomOptions).toEqual(expect.objectContaining({
+      relationshipEdges: mockStore.relationships,
+      relationshipMode: 'legacy-array',
+    }));
   });
 
   it('exports Markdown manuscripts from the manuscript model without technical metadata and blocks raw names', async () => {

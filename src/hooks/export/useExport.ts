@@ -108,7 +108,14 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
                 } else if (type === 'gedcom') {
                     outputName = 'tree.ged';
                     const { exportToGEDCOM } = await import('../../utils/gedcomLogic');
-                    downloadFile(exportToGEDCOM(activePeople), outputName, 'application/octet-stream');
+                    downloadFile(
+                        exportToGEDCOM(activePeople, {
+                            relationshipEdges: relationships,
+                            relationshipMode: 'legacy-array',
+                        }),
+                        outputName,
+                        'application/octet-stream'
+                    );
                     success = true;
                     return;
                 } else if (type === 'ics') {

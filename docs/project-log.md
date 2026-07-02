@@ -1,5 +1,12 @@
 # Project Log
 
+## 2026-07-02 - GEDCOM Phase C1 Hook Wiring In Legacy Mode
+
+- Summary:
+  - Wired GEDCOM export calls in `useExport.ts` to pass current relationship edges into `exportToGEDCOM`.
+  - Kept `relationshipMode` explicitly set to `legacy-array`, preserving current GEDCOM output behavior.
+  - Added hook tests verifying viewer masking remains upstream and relationship edges do not activate edge-backed GEDCOM mode.
+
 ## 2026-07-02 - GEDCOMRelationshipAdapter Phase A/B
 
 - Summary:
