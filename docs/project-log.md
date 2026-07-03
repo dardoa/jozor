@@ -1,5 +1,13 @@
 # Project Log
 
+## 2026-07-03 - Supabase Baseline Squash Decision & Dry Run
+
+- Summary:
+  - Conducted a non-destructive audit and dry-run connection for all 70 Supabase SQL migrations.
+  - Confirmed perfect synchronization between local files and remote database (no drifts).
+  - Recommended the decision **Proceed after live migration history backup** to prevent remote deployment conflicts.
+  - Documented complete inventory, options, and future baseline commands in `docs/reviews/supabase-baseline-squash-decision-2026-07-03.md`.
+
 ## 2026-07-03 - Dexie Baseline Compression
 
 - Summary:
