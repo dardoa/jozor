@@ -1,5 +1,14 @@
 # Project Log
 
+## 2026-07-03 - GEDCOM Import RelationshipEdge Bridge
+
+- Summary:
+  - Audited and verified the GEDCOM import integration with Jozor 2.0 `RelationshipEdge` architecture.
+  - No changes were made to export code or import UI.
+  - Bridge correctness has been verified directly via automated tests using `deriveRelationshipsFromPeople` on the imported structures.
+  - Confirmed that self-parenting, cycles, and missing reference links already cleaned by the hardening pack do not produce relationship edges.
+  - Verified legacy compatibility arrays remain safely populated.
+
 ## 2026-07-03 - GEDCOM Import Hardening
 
 - Summary:

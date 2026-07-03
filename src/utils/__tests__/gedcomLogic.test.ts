@@ -2,7 +2,7 @@
 import { describe, it, expect } from 'vitest';
 import { exportToGEDCOM, importFromGEDCOM, importFromGEDCOMWithReport, formatGedcomDate, gedcomDateToIso } from '../gedcomLogic';
 import { Person } from '../../types';
-import { RelationshipEdge } from '../../types/relationship';
+import { RelationshipEdge, deriveRelationshipsFromPeople } from '../../types/relationship';
 import { evaluateDataIntegrity } from '../../domain/dataIntegrity';
 import { deriveSourcesAndCitationsFromPeople } from '../../types/citation';
 
@@ -1035,6 +1035,115 @@ describe('GEDCOM Logic - Round-trip', () => {
                     w.includes('cycle')
                 );
                 expect(hasNewWarning).toBe(false);
+            });
+        });
+
+        describe('GEDCOM Import RelationshipEdge Bridge', () => {
+            it('Valid GEDCOM import creates people arrays and derives RelationshipEdge records correctly', () => {
+                const gedcom = `0 HEAD
+1 CHAR UTF-8
+0 @I1@ INDI
+1 NAME Father /Doe/
+1 SEX M
+0 @I2@ INDI
+1 NAME Mother /Doe/
+1 SEX F
+0 @I3@ INDI
+1 NAME Child /Doe/
+1 SEX M
+0 @F1@ FAM
+1 HUSB @I1@
+1 WIFE @I2@
+1 CHIL @I3@
+0 TRLR`;
+                const importedPeople = importFromGEDCOM(gedcom);
+                const edges = deriveRelationshipsFromPeople('tree-import', importedPeople);
+                const edgeList = Object.values(edges);
+
+                // Should derive exactly 1 spouse edge and 2 biological parent edges
+                expect(edgeList.length).toBe(3);
+
+                const spouseEdge = edgeList.find(e => e.type === 'SPOUSE');
+                expect(spouseEdge).toBeDefined();
+                expect([spouseEdge?.fromPersonId, spouseEdge?.toPersonId].sort()).toEqual(['I1', 'I2'].sort());
+
+                const childEdges = edgeList.filter(e => e.type === 'BIOLOGICAL_PARENT');
+                expect(childEdges.length).toBe(2);
+                expect(childEdges.some(e => e.fromPersonId === 'I1' && e.toPersonId === 'I3')).toBe(true);
+                expect(childEdges.some(e => e.fromPersonId === 'I2' && e.toPersonId === 'I3')).toBe(true);
+
+                // Legacy arrays must also remain intact for compatibility
+                expect(importedPeople['I3'].parents).toContain('I1');
+                expect(importedPeople['I3'].parents).toContain('I2');
+                expect(importedPeople['I1'].children).toContain('I3');
+                expect(importedPeople['I1'].spouses).toContain('I2');
+            });
+
+            it('Self-parent GEDCOM import does not produce self RelationshipEdge', () => {
+                const gedcom = `0 HEAD
+1 CHAR UTF-8
+0 @I1@ INDI
+1 NAME Self /Doe/
+1 SEX M
+0 @F1@ FAM
+1 HUSB @I1@
+1 CHIL @I1@
+0 TRLR`;
+                const importedPeople = importFromGEDCOM(gedcom);
+                const edges = deriveRelationshipsFromPeople('tree-import', importedPeople);
+                const edgeList = Object.values(edges);
+
+                // Self parenting should be omitted completely from edges
+                expect(edgeList.some(e => e.fromPersonId === 'I1' && e.toPersonId === 'I1')).toBe(false);
+                expect(importedPeople['I1'].parents).not.toContain('I1');
+                expect(importedPeople['I1'].children).not.toContain('I1');
+            });
+
+            it('Cycle-omitted link does not produce RelationshipEdge', () => {
+                const gedcom = `0 HEAD
+1 CHAR UTF-8
+0 @I1@ INDI
+1 NAME Person A /Doe/
+1 SEX M
+0 @I2@ INDI
+1 NAME Person B /Doe/
+1 SEX F
+0 @F1@ FAM
+1 HUSB @I1@
+1 CHIL @I2@
+0 @F2@ FAM
+1 HUSB @I2@
+1 CHIL @I1@
+0 TRLR`;
+                const importedPeople = importFromGEDCOM(gedcom);
+                const edges = deriveRelationshipsFromPeople('tree-import', importedPeople);
+                const edgeList = Object.values(edges);
+
+                // One of the parent links must have been cut to break cycle.
+                // Verify no cycle remains in derived edges.
+                const childOfFirst = edgeList.some(e => e.fromPersonId === 'I1' && e.toPersonId === 'I2');
+                const childOfSecond = edgeList.some(e => e.fromPersonId === 'I2' && e.toPersonId === 'I1');
+                expect(childOfFirst && childOfSecond).toBe(false);
+
+                // Verify compatibility arrays also have only one link
+                const firstHasSecondAsParent = importedPeople['I1'].parents.includes('I2');
+                const secondHasFirstAsParent = importedPeople['I2'].parents.includes('I1');
+                expect(firstHasSecondAsParent && secondHasFirstAsParent).toBe(false);
+            });
+
+            it('Missing-reference relationships do not produce edges', () => {
+                const gedcom = `0 HEAD
+1 CHAR UTF-8
+0 @F1@ FAM
+1 HUSB @I999@
+1 CHIL @I997@
+0 TRLR`;
+                const importedPeople = importFromGEDCOM(gedcom);
+                const edges = deriveRelationshipsFromPeople('tree-import', importedPeople);
+                const edgeList = Object.values(edges);
+
+                // Both nodes must exist to produce relationship edges
+                expect(edgeList.length).toBe(0);
             });
         });
     });
