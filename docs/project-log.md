@@ -1,5 +1,13 @@
 # Project Log
 
+## 2026-07-03 - Dexie Baseline Compression
+
+- Summary:
+  - Collapsed historical IndexedDB (Dexie) versions (V1 to V6) into a single baseline version 1 structure.
+  - Copied all tables and index definitions literally from the final state to preserve existing logic.
+  - Removed all obsolete `.upgrade(...)` methods and references.
+  - Added [db.test.ts](file:///d:/AppDEV/Jozor1.1/src/utils/__tests__/db.test.ts) verifying all table names, primary keys, and schema indexes.
+
 ## 2026-07-03 - Pre-Launch RLS & Security Final Validation
 
 - Summary:
