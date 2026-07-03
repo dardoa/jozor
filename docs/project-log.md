@@ -1,5 +1,15 @@
 # Project Log
 
+## 2026-07-03 - Private Beta Deployment Smoke Test
+
+- Summary:
+  - Ran full smoke test on commit `15cb3cd`.
+  - All automated checks passed: typecheck, lint, build (3865 modules), targeted (80 tests), full suite (604 tests), Supabase migration check (70/70 matched, no drift).
+  - Browser smoke marked Pending — requires live session.
+  - No P0/P1 blockers found.
+  - Final recommendation: **Go for private beta**.
+  - Evidence notes: `docs/reviews/evidence/private-beta-smoke-2026-07-03/evidence_notes.md`.
+
 ## 2026-07-03 - Private Beta Release Checklist
 
 - Summary:
