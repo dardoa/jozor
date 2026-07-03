@@ -1,4 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
+import { hasE2EAuthEnv, ensureAuthState } from './helpers/authState';
+import * as collabHelpers from './helpers/collabHelpers';
+
 
 type DebugUser = {
   uid: string;
@@ -500,76 +503,98 @@ test('invitation diagnostics surface telemetry errors', async ({ page }) => {
   await expect(diagnosticsPanel.getByText(/Hydration failed after login\./i)).toBeVisible();
 });
 
-test('shared tree access changes from owner to viewer to editor and editor changes persist after reload', async ({ page }) => {
-  test.slow();
-  const sharedTreeName = 'Collaborative Cedar';
-  const ownerUser = {
-    uid: 'owner-user',
-    displayName: 'Owner User',
-    email: 'owner@example.com',
-    photoURL: '',
-  };
-  const collaboratorUser = {
-    uid: 'collab-user',
-    displayName: 'Collaborator User',
-    email: 'collab@example.com',
-    photoURL: '',
-  };
+test.describe('authenticated shared tree access smoke', () => {
+  if (!hasE2EAuthEnv()) {
+    test.skip('shared tree access changes from owner to viewer to editor and editor changes persist after reload', () => undefined);
+    return;
+  }
 
-  await seedScenario(page, 'owner', ownerUser, sharedTreeName);
-  await page.evaluate(() => {
-    (window as DebugWindow).jozorDebug?.persistCurrentScenario?.();
-  });
+  test('shared tree access changes from owner to viewer to editor and editor changes persist after reload', async ({ browser }) => {
+    test.slow();
 
-  await page.evaluate((user) => {
-    (window as DebugWindow).jozorDebug?.setScenarioAccess({ role: 'viewer', user });
-  }, collaboratorUser);
+    // 1. Prepare owner and collaborator contexts
+    const tempContext = await browser.newContext();
+    const tempPage = await tempContext.newPage();
 
-  await waitForDebugRole(page, 'viewer');
-  await expect(page.getByText(`Tree: ${sharedTreeName}`)).toBeVisible();
-  
-  const node = page.getByTestId('tree-node').first();
-  await expect(node).toBeVisible({ timeout: 10000 });
-  await node.dispatchEvent('contextmenu', {
-    bubbles: true,
-    cancelable: true,
-    button: 2,
-    buttons: 2,
-    clientX: 20,
-    clientY: 20,
-  });
-  await expect(page.getByRole('menuitem', { name: /Add Father/i })).toHaveCount(0);
-  await closeContextMenu(page);
+    // Ensure storage state files are generated/validated
+    const ownerState = await ensureAuthState(tempPage, 'owner');
+    const collabState = await ensureAuthState(tempPage, 'collab');
+    await tempContext.close();
 
-  await page.evaluate((user) => {
-    (window as DebugWindow).jozorDebug?.setScenarioAccess({ role: 'editor', user });
-  }, collaboratorUser);
+    // Create real authenticated contexts
+    const ownerContext = await browser.newContext({ storageState: ownerState });
+    const collabContext = await browser.newContext({ storageState: collabState });
 
-  await waitForDebugRole(page, 'editor');
-  await expect(page.getByText(`Tree: ${sharedTreeName}`)).toBeVisible();
-  
-  const editDetailsBtn = page.getByLabel('Edit Details').first();
-  await expect(editDetailsBtn).toBeVisible({ timeout: 10000 });
-  await editDetailsBtn.click();
+    const ownerPage = await ownerContext.newPage();
+    const collabPage = await collabContext.newPage();
 
-  const firstNameInput = page.getByText('First Name', { exact: true }).locator('xpath=..').getByRole('textbox');
-  await expect(firstNameInput).toBeVisible();
-  await firstNameInput.fill('Collaborative Root');
-  await firstNameInput.blur();
+    const updatedRootName = `Collaborative Root ${Date.now()}`;
 
-  await page.getByLabel('Done (Finish Editing)').click();
-  await expect(page.getByRole('heading', { name: /Collaborative Root Person|Collaborative RootPerson/i }).first()).toBeVisible();
-  
-  await page.evaluate(() => {
-    (window as DebugWindow).jozorDebug?.persistCurrentScenario?.();
-  });
+    try {
+      // 2. Owner logs in, creates a fresh tree
+      await collabHelpers.prepareFreshSession(ownerPage);
+      await ownerPage.goto('/', { waitUntil: 'domcontentloaded' });
+      await collabHelpers.createFreshTree(ownerPage);
 
-  await page.goto('/', { waitUntil: 'domcontentloaded' });
-  await expect(page.getByRole('heading', { name: /Collaborative Root Person|Collaborative RootPerson/i }).first()).toBeVisible();
-  await expect(page.getByText(`Tree: ${sharedTreeName}`)).toBeVisible();
+      const ownerSnapshot = await collabHelpers.getStateSnapshot(ownerPage);
+      if (!ownerSnapshot.treeId || !ownerSnapshot.user?.uid) {
+        throw new Error('Owner tree setup failed: treeId or owner uid is missing.');
+      }
 
-  await page.evaluate(() => {
-    (window as DebugWindow).jozorDebug?.clearPersistedScenario?.();
+      const sharedPath = `/tree/db/${ownerSnapshot.user.uid}/${ownerSnapshot.treeId}`;
+
+      // 3. Owner invites collaborator as viewer
+      await collabHelpers.inviteCollaborator(ownerPage, {
+        treeId: ownerSnapshot.treeId,
+        ownerUid: ownerSnapshot.user.uid,
+        email: process.env.E2E_COLLAB_EMAIL!,
+        role: 'viewer',
+      });
+
+      // 4. Collaborator visits tree, verifies viewer write block
+      await collabHelpers.prepareFreshSession(collabPage);
+      await collabPage.goto(sharedPath, { waitUntil: 'domcontentloaded' });
+
+      await expect(collabPage.getByText(`Tree: ${ownerSnapshot.treeName}`)).toBeVisible();
+      await expect(collabPage.getByText(/Role:\s*Viewer/i)).toBeVisible();
+
+      await collabHelpers.openAddRelativeMenu(collabPage);
+      await expect(collabPage.getByRole('menuitem', { name: 'Add Father' })).toBeDisabled();
+      await collabHelpers.closeContextMenu(collabPage);
+
+      // 5. Owner promotes collaborator to editor
+      await collabHelpers.updateCollaboratorRole(ownerPage, {
+        treeId: ownerSnapshot.treeId,
+        ownerUid: ownerSnapshot.user.uid,
+        email: process.env.E2E_COLLAB_EMAIL!,
+        role: 'editor',
+      });
+
+      // 6. Collaborator reloads tree, verifies editor role and write permission
+      await collabPage.goto(sharedPath, { waitUntil: 'domcontentloaded' });
+      await expect(collabPage.getByText(`Tree: ${ownerSnapshot.treeName}`)).toBeVisible();
+      await expect(collabPage.getByText(/Role:\s*Editor/i)).toBeVisible();
+
+      await collabPage.getByLabel('Edit Details').click();
+      const firstNameInput = collabPage.locator('aside input[type="text"]').first();
+      await expect(firstNameInput).toBeVisible();
+      await firstNameInput.fill(updatedRootName);
+      await firstNameInput.blur();
+      await collabPage.getByLabel('Done (Finish Editing)').click();
+
+      // 7. Collaborator reloads again, verifies changes persist
+      await collabPage.goto(sharedPath, { waitUntil: 'domcontentloaded' });
+      await expect(
+        collabPage.getByRole('heading', {
+          name: new RegExp(`${collabHelpers.escapeRegExp(updatedRootName)}\\s*Person|${collabHelpers.escapeRegExp(updatedRootName)}Person`, 'i'),
+        }).first()
+      ).toBeVisible();
+      await expect(collabPage.getByText(`Tree: ${ownerSnapshot.treeName}`)).toBeVisible();
+      await expect(collabPage.getByText(/Role:\s*Editor/i)).toBeVisible();
+    } finally {
+      await ownerContext.close().catch(() => {});
+      await collabContext.close().catch(() => {});
+    }
   });
 });
 

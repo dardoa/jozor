@@ -38,6 +38,7 @@ lerna-debug.log*
 *.sw?
 
 # Testing and Automation (Playwright, etc.)
+.auth/
 output/
 legacy_archive/
 scratch/

@@ -1,28 +1,19 @@
 import { expect, test, type Page } from '@playwright/test';
+import {
+  prepareFreshSession,
+  getStateSnapshot,
+  inviteCollaborator,
+  updateCollaboratorRole,
+  openAddRelativeMenu,
+  closeContextMenu,
+  createFreshTree,
+  escapeRegExp,
+  type DebugWindow,
+} from './helpers/collabHelpers';
 
 type E2EUser = {
   email: string;
   password: string;
-};
-
-type LiveDebug = {
-  getStateSnapshot: () => AppSnapshot;
-};
-
-type DebugWindow = Window & { jozorDebug?: LiveDebug };
-
-type AppSnapshot = {
-  treeId: string | null;
-  treeName?: string;
-  role: 'owner' | 'editor' | 'viewer' | null;
-  focusId?: string | null;
-  user?: {
-    uid: string;
-    email: string;
-    displayName: string;
-    photoURL: string;
-    supabaseToken?: string;
-  } | null;
 };
 
 const ownerUser: E2EUser = {
@@ -123,13 +114,6 @@ test.describe('live collaboration (Supabase test environment)', () => {
   });
 });
 
-async function prepareFreshSession(page: Page) {
-  await page.addInitScript(() => {
-    localStorage.removeItem('lastActiveTreeId');
-    sessionStorage.removeItem('jozor:e2e-scenario');
-  });
-}
-
 async function loginWithEmail(page: Page, user: E2EUser) {
   await page.goto('/', { waitUntil: 'domcontentloaded' });
 
@@ -152,7 +136,7 @@ async function loginWithEmail(page: Page, user: E2EUser) {
     .first();
   if (await authError.isVisible().catch(() => false)) {
     const message = (await authError.textContent())?.trim() || 'Authentication failed.';
-    throw new Error(`Live collaboration login failed for ${user.email}: ${message}`);
+    throw new Error(`Live collaboration login failed: ${message}`);
   }
 
   await page.waitForFunction((expectedEmail) => {
@@ -160,89 +144,4 @@ async function loginWithEmail(page: Page, user: E2EUser) {
     return snapshot?.user?.email?.toLowerCase() === String(expectedEmail).toLowerCase();
   }, user.email);
   await expect(page.getByText(/Manage Trees/i)).toBeVisible();
-}
-
-async function createFreshTree(page: Page) {
-  await expect(page.getByText(/Manage Trees/i)).toBeVisible();
-
-  const createButton = page.getByRole('button', { name: /^Add$/i }).first();
-  await expect(createButton).toBeVisible();
-  await createButton.click();
-
-  await page.waitForFunction(() => {
-    const debug = (window as DebugWindow).jozorDebug;
-    return typeof debug?.getStateSnapshot === 'function' && !!debug.getStateSnapshot()?.treeId;
-  });
-}
-
-async function getStateSnapshot(page: Page): Promise<AppSnapshot> {
-  await page.waitForFunction(
-    () => typeof (window as DebugWindow).jozorDebug?.getStateSnapshot === 'function'
-  );
-  return page.evaluate(() => (window as DebugWindow).jozorDebug.getStateSnapshot());
-}
-
-async function openHeaderSettingsMenu(page: Page) {
-  const trigger = page.locator('header button:has(svg.lucide-settings)').first();
-  await expect(trigger).toBeVisible();
-  await trigger.click();
-}
-
-async function inviteCollaborator(
-  page: Page,
-  params: { treeId: string; ownerUid: string; email: string; role: 'viewer' | 'editor' }
-) {
-  await openHeaderSettingsMenu(page);
-  await page.getByRole('menuitem').filter({ hasText: /share/i }).first().click();
-
-  const shareDialog = page.locator('[data-overlay-id="share-modal"], #share-modal').first();
-  await expect(shareDialog).toBeVisible();
-
-  await shareDialog.locator('input[type="email"]').fill(params.email);
-  await shareDialog.locator('select').selectOption(params.role);
-  await shareDialog.locator('button[type="submit"]').click();
-
-  await expect(shareDialog.locator('input[type="email"]')).toHaveValue('');
-  await page.keyboard.press('Escape');
-}
-
-async function updateCollaboratorRole(
-  page: Page,
-  params: { treeId: string; ownerUid: string; email: string; role: 'viewer' | 'editor' }
-) {
-  await openHeaderSettingsMenu(page);
-  await page.getByRole('menuitem').filter({ hasText: /tree control|control center/i }).first().click();
-
-  const treeControlCenter = page.locator('[data-overlay-id="tree-control-center"], #tree-control-center').first();
-  await expect(treeControlCenter).toBeVisible();
-  await treeControlCenter.getByRole('button', { name: /access/i }).click();
-
-  const emailRow = treeControlCenter.locator('div').filter({ hasText: params.email }).first();
-  await expect(emailRow).toBeVisible();
-  await emailRow.locator('select').selectOption(params.role);
-
-  await page.keyboard.press('Escape');
-}
-
-async function openAddRelativeMenu(page: Page) {
-  const node = page.locator('svg g.cursor-pointer').first();
-  await expect(node).toBeVisible();
-  await node.dispatchEvent('contextmenu', {
-    bubbles: true,
-    cancelable: true,
-    button: 2,
-    buttons: 2,
-    clientX: 20,
-    clientY: 20,
-  });
-  await page.getByRole('menuitem', { name: 'Add Relative' }).click();
-}
-
-async function closeContextMenu(page: Page) {
-  await page.keyboard.press('Escape');
-  await expect(page.getByRole('menuitem', { name: 'Add Relative' })).toHaveCount(0);
-}
-
-function escapeRegExp(value: string) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }

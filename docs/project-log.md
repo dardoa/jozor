@@ -1,5 +1,14 @@
 # Project Log
 
+## 2026-07-03 - E2E Authenticated Role Harness Fix
+
+- Summary:
+  - Created [authState.ts](file:///d:/AppDEV/Jozor1.1/tests/e2e/helpers/authState.ts) to manage Playwright authenticated storage states, including session expiration validation and refresh flow.
+  - Created [collabHelpers.ts](file:///d:/AppDEV/Jozor1.1/tests/e2e/helpers/collabHelpers.ts) to share collaboration E2E UI actions.
+  - Refactored [collaboration-live.spec.ts](file:///d:/AppDEV/Jozor1.1/tests/e2e/collaboration-live.spec.ts) and [app-smoke.spec.ts](file:///d:/AppDEV/Jozor1.1/tests/e2e/app-smoke.spec.ts) to use the shared helpers.
+  - Enforced clear skip behavior (`test.skip`) on the role transition smoke test when environment variables are missing, resolving E2E pipeline flakiness.
+  - Documented setup and requirements in [e2e-auth-role-harness-2026-07-03.md](file:///d:/AppDEV/Jozor1.1/docs/reviews/e2e-auth-role-harness-2026-07-03.md).
+
 ## 2026-07-03 - Private Beta Browser Smoke Live Run
 
 - Summary:
