@@ -1,5 +1,22 @@
 # Project Log
 
+## 2026-07-03 - Pre-Launch RLS & Security Final Validation
+
+- Summary:
+  - Conducted a comprehensive security audit on Row Level Security (RLS) tables, view rules (`people_secure`), and storage buckets on Supabase.
+  - Verified viewer privacy restrictions, write restrictions, and data isolation.
+  - Documented RLS matrices and verification status in `docs/reviews/prelaunch-rls-security-validation-2026-07-03.md`.
+  - Found no P0/P1 security gaps in the audited migration/policy definitions.
+  - Clarified that relationships, sources, and citations are not standalone Supabase tables in the audited migrations and currently rely on local storage and/or the `people`/`people_secure` payload boundary.
+
+## 2026-07-03 - Pre-Launch Schema & Migration Cleanup Audit
+
+- Summary:
+  - Audited local IndexedDB (Dexie) schema configurations and Supabase migration chains (70 SQL files).
+  - Evaluated compatibility layers, deprecation strategies, and RLS structures.
+  - Documented findings, cleanups, and squashing recommendations in `docs/reviews/prelaunch-schema-migration-cleanup-audit-2026-07-03.md`.
+  - Identified no P0 launch blockers but highlighted P1 database drift risks and P2 Dexie upgrade chain simplification opportunities.
+
 ## 2026-07-03 - GEDCOM Import RelationshipEdge Bridge
 
 - Summary:
