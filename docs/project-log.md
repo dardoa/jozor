@@ -1,5 +1,13 @@
 # Project Log
 
+## 2026-07-03 - Private Beta Browser Smoke Live Run
+
+- Summary:
+  - Run full E2E browser smoke tests using Playwright against `http://localhost:3000`.
+  - 14/15 E2E tests passed successfully, verifying app boot, navigation, viewer write guards, and telemetry diagnostics.
+  - Confirmed successful integration of geography and Kindi lazy-loading optimization: no chunk size warnings, dynamic loading of KindiOverlayWrapper (61.55 kB) and MapViewImpl (8.02 kB) verified.
+  - Final decision: **Conditional Pass** (No P0/P1 blockers, ready for private beta release).
+
 ## 2026-07-03 - Kindi Chunk Split Optimization
 
 - Summary:
