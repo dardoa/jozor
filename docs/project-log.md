@@ -1,5 +1,13 @@
 # Project Log
 
+## 2026-07-03 - Pre-Launch Role QA End-to-End
+
+- Summary:
+  - Conducted a pre-launch role QA audit for roles (`owner`, `editor`, `viewer`, `guest`), combining local browser observations with code-audited checks.
+  - Verified local write blockages for viewer roles and RLS data masking on the view boundary.
+  - Documented flow results, untested scenarios (such as remote SMTP triggers), and matrix checklists in `docs/reviews/prelaunch-role-qa-e2e-2026-07-03.md`.
+  - Found no P0/P1 blockers.
+
 ## 2026-07-03 - Supabase Baseline Squash Decision & Dry Run
 
 - Summary:
