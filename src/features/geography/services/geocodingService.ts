@@ -1,4 +1,4 @@
-import { LocationData } from '../../../types';
+import type { LocationData } from '../../../types/tree';
 import { locationCacheService } from './locationCacheService';
 import { localLocationCacheService } from './localLocationCacheService';
 import { normalizePlaceName } from '../../../domain/placeUtils';

@@ -73,10 +73,6 @@ export default defineConfig(({ mode }) => {
               return 'feature-vault';
             }
 
-            if (normalizedId.includes('/src/features/geography/')) {
-              return 'feature-geography';
-            }
-
             if (!id.includes('node_modules')) return undefined;
 
             if (

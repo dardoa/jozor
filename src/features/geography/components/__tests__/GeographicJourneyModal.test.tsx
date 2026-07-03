@@ -2,7 +2,9 @@ import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { GeographicJourneyModal } from '../GeographicJourneyModal';
-import type { LocationData, Person } from '../../../../types';
+import type { Person } from '../../../../types/person';
+import type { LocationData } from '../../../../types/tree';
+import type { MapViewProps } from '../geography/MapView';
 
 const mockMap = {
   fitBounds: vi.fn(),
@@ -25,31 +27,43 @@ vi.mock('leaflet', () => ({
   },
 }));
 
-vi.mock('react-leaflet', () => ({
-  MapContainer: ({ children, ref }: { children: React.ReactNode; ref?: (map: typeof mockMap) => void }) => {
+vi.mock('../geography/MapView', () => ({
+  MapView: ({
+    mode,
+    showPlaceLabels,
+    migrationJourney,
+    onMapReady,
+    onTogglePersonSelection,
+    onSelectRoute,
+  }: MapViewProps) => {
     React.useEffect(() => {
-      ref?.(mockMap);
-    }, [ref]);
+      onMapReady(mockMap as unknown as L.Map);
+    }, [onMapReady]);
 
-    return <div data-testid="map-container">{children}</div>;
+    return (
+      <div data-testid="map-container">
+        <div data-testid="tile-layer" data-url="https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png" />
+        {showPlaceLabels ? (
+          <div className="journey-label-tiles" data-testid="tile-layer" data-url="https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png" />
+        ) : null}
+        {mode === 'events' ? <div data-testid="cluster-markers" /> : null}
+        {mode === 'migration' ? (
+          <>
+            {migrationJourney.nodes.map((node) => (
+              <div
+                key={`${node.personId}-${node.locationName}`}
+                data-testid="map-marker"
+                onClick={() => onTogglePersonSelection(node.personId)}
+              >
+                {node.name}
+              </div>
+            ))}
+            <div data-testid="migration-paths" onClick={() => onSelectRoute('some-route')} />
+          </>
+        ) : null}
+      </div>
+    );
   },
-  Marker: ({ children }: { children?: React.ReactNode }) => <div data-testid="map-marker">{children}</div>,
-  Popup: ({ children }: { children?: React.ReactNode }) => <div data-testid="map-popup">{children}</div>,
-  TileLayer: ({ className, url }: { className?: string; url: string }) => (
-    <div className={className} data-testid="tile-layer" data-url={url} />
-  ),
-}));
-
-vi.mock('../geography/ClusterMarkers', () => ({
-  ClusterMarkers: () => <div data-testid="cluster-markers" />,
-}));
-
-vi.mock('../geography/MapLabelPane', () => ({
-  MapLabelPane: () => <div data-testid="map-label-pane" />,
-}));
-
-vi.mock('../geography/MigrationPathsOverlay', () => ({
-  MigrationPathsOverlay: () => <div data-testid="migration-paths" />,
 }));
 
 vi.mock('../geography/MapBranding', () => ({

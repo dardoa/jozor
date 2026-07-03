@@ -1,5 +1,5 @@
 import { getSupabaseWithAuth } from '../../../services/supabaseClient';
-import { LocationData, LocationStatus } from '../../../types';
+import type { LocationData, LocationStatus } from '../../../types/tree';
 import { logError } from '../../../utils/errorLogger';
 import { authTokenService } from '../../../services/authTokenService';
 

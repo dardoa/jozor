@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { LocationData } from '../../../../types';
+import type { LocationData } from '../../../../types/tree';
 import { localLocationCacheService } from '../localLocationCacheService';
 import { normalizePlaceName } from '../../../../domain/placeUtils';
 

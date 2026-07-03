@@ -1,4 +1,5 @@
-import type { LocationData, Person } from '../types';
+import type { Person } from '../types/person';
+import type { LocationData } from '../types/tree';
 import { resolvePlace } from './placeUtils';
 import { collectPersonPlaceEntries, type PersonPlaceKind } from './personPlaceUtils';
 

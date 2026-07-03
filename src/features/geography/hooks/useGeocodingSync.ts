@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useAppStore } from '../../../store/useAppStore';
 import { geocodingService } from '../services/geocodingService';
-import { Person } from '../../../types';
+import type { Person } from '../../../types/person';
 import { normalizePlaceName } from '../../../domain/placeUtils';
 import { collectPersonPlaceNames } from '../../../domain/personPlaceUtils';
 

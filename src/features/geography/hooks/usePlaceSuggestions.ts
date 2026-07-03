@@ -3,7 +3,7 @@ import { useAppStore } from '../../../store/useAppStore';
 import { normalizePlaceName, shortenDisplayName } from '../services/geocodingService';
 import { getSupabaseWithAuth } from '../../../services/supabaseClient';
 import { authTokenService } from '../../../services/authTokenService';
-import { LocationData } from '../../../types';
+import type { LocationData } from '../../../types/tree';
 
 export interface PlaceSuggestion {
   displayName: string;

@@ -1,4 +1,4 @@
-import type { LocationData } from '../../../types';
+import type { LocationData } from '../../../types/tree';
 import { normalizePlaceName } from '../../../domain/placeUtils';
 
 const STORAGE_PREFIX = 'jozor.locationCache.v1.';

@@ -1,5 +1,14 @@
 # Project Log
 
+## 2026-07-03 - Geography Chunk Split Optimization
+
+- Summary:
+  - Extracted Leaflet rendering layer from `GeographicJourneyModal.tsx` into a lazy component `MapView.tsx`/`MapViewImpl.tsx`.
+  - Removed barrel file (`types/index.ts`) imports inside the geography feature to eliminate side-effect bundling of `crypto-js`.
+  - Removed the explicit `feature-geography` manual chunking rule in `vite.config.ts` to allow automatic optimization.
+  - Successfully reduced geography chunk size from 598 kB to a 7.93 kB dynamic map chunk (Leaflet vendor chunk stable at 158 kB).
+  - Validated build, typecheck, lint, and unit tests (all passed).
+
 ## 2026-07-03 - Private Beta Deployment Smoke Test
 
 - Summary:

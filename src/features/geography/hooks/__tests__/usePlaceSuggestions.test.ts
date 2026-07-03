@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppStore } from '../../../../store/useAppStore';
-import type { LocationData } from '../../../../types';
+import type { LocationData } from '../../../../types/tree';
 import { getSupabaseWithAuth } from '../../../../services/supabaseClient';
 import { usePlaceSuggestions } from '../usePlaceSuggestions';
 
