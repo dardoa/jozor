@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 
-import type { Person } from '../../../types';
+import type { Person } from '../../../types/person';
 import {
   createKindiExecutivePlan,
   extractKindiSubjectText,

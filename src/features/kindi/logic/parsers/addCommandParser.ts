@@ -1,4 +1,4 @@
-import type { Person } from '../../../../types';
+import type { Person } from '../../../../types/person';
 import type { KindiAddPlan, KindiParsedCommand } from '../../types';
 import {
   ADD_VERBS,

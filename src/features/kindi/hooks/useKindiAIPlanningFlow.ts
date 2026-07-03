@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 
-import type { Person } from '../../../types';
+import type { Person } from '../../../types/person';
 import { redactKindiPrompt, restoreKindiDraft, type KindiPromptRedaction } from '../logic/kindiPrivacy';
 import { routeKindiIntent } from '../logic/intentRouter';
 import { createKindiLearningTrace } from '../logic/kindiLearningTrace';

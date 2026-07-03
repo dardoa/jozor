@@ -53,10 +53,6 @@ export default defineConfig(({ mode }) => {
           manualChunks(id) {
             const normalizedId = id.replace(/\\/g, '/');
 
-            if (normalizedId.includes('/src/features/kindi/')) {
-              return 'feature-kindi';
-            }
-
             if (normalizedId.includes('/src/features/smart-persona/')) {
               return 'feature-smart-persona';
             }

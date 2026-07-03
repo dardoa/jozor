@@ -1,5 +1,15 @@
 # Project Log
 
+## 2026-07-03 - Kindi Chunk Split Optimization
+
+- Summary:
+  - Created [KindiOverlayWrapper.tsx](file:///d:/AppDEV/Jozor1.1/src/features/kindi/components/KindiOverlayWrapper.tsx) to lazy-load the assistant UI, controllers, and hooks.
+  - Refactored [KindiSearchTrigger.tsx](file:///d:/AppDEV/Jozor1.1/src/features/kindi/components/KindiSearchTrigger.tsx) to dynamically import the wrapper upon first click, preserving chat history when closed.
+  - Replaced barrel type imports with direct type imports to break unwanted bundling of `crypto-js` and `dexie`.
+  - Removed Kindi manual chunk configuration from [vite.config.ts](file:///d:/AppDEV/Jozor1.1/vite.config.ts) to enable natural Vite bundling.
+  - Successfully eliminated `feature-kindi` chunk (~722 kB) and replaced it with a dynamic 61.55 kB wrapper chunk, with no remaining Vite chunk size warnings on features.
+  - Validated with typecheck, lint, build, and 117 unit tests (all passed).
+
 ## 2026-07-03 - Geography Chunk Split Optimization
 
 - Summary:

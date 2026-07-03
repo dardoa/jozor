@@ -1,4 +1,4 @@
-import type { Person } from '../../../types';
+import type { Person } from '../../../types/person';
 import { getFullName } from '../../../utils/familyLogic';
 
 const relatedName = (people: Record<string, Person>, id: string | undefined): string | undefined => {

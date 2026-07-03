@@ -1,39 +1,18 @@
-import React, { memo } from 'react';
+import React, { memo, useState, Suspense } from 'react';
 import { Search, Sparkles } from 'lucide-react';
 
 import { KindiIcon } from '../../../components/icons/KindiIcon';
-import { useTranslation } from '../../../context/TranslationContext';
-import { useSpeechToText } from '../../../hooks/utils/useSpeechToText';
-import type { SearchProps } from '../../../types';
-import { KindiOverlay } from './KindiOverlay';
-import { useKindiController } from '../hooks/useKindiController';
+import type { SearchProps } from '../../../types/ui';
+
+const LazyKindiOverlayWrapper = React.lazy(() => import('./KindiOverlayWrapper'));
 
 export const KindiSearchTrigger: React.FC<SearchProps> = memo(({ people, onFocusPerson }) => {
-  const controller = useKindiController({ people, onFocusPerson });
-  const { language } = useTranslation();
-  const {
-    isListening,
-    startListening,
-    stopListening,
-    isSupported: isVoiceSupported,
-  } = useSpeechToText({
-    language: language === 'ar' ? 'ar-SA' : 'en-US',
-    onResult: (text) => {
-      controller.setDraft(text);
-      void controller.submit(text);
-    },
-    onError: (error) => {
-      console.error('Kindi voice input error:', error);
-    },
-  });
+  const [hasOpened, setHasOpened] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
-  const toggleVoice = () => {
-    if (isListening) {
-      stopListening();
-      return;
-    }
-
-    startListening();
+  const handleOpen = () => {
+    setHasOpened(true);
+    setIsOpen(true);
   };
 
   return (
@@ -41,7 +20,7 @@ export const KindiSearchTrigger: React.FC<SearchProps> = memo(({ people, onFocus
       <button
         id="tree-search-input"
         type="button"
-        onClick={() => controller.setIsOpen(true)}
+        onClick={handleOpen}
         className="group flex w-full items-center gap-2.5 rounded-full border border-[var(--border-soft)] bg-[var(--surface-panel)] px-4 py-2 text-start shadow-sm transition hover:bg-[var(--surface-hover)] hover:shadow-md lg:w-56 xl:w-64"
         aria-label="Open Kindi intelligent assistant"
       >
@@ -60,26 +39,18 @@ export const KindiSearchTrigger: React.FC<SearchProps> = memo(({ people, onFocus
         </span>
       </button>
 
-      <KindiOverlay
-        isOpen={controller.isOpen}
-        draft={controller.draft}
-        messages={controller.messages}
-        peopleById={people}
-        isThinking={controller.isThinking}
-        onDraftChange={controller.setDraft}
-        onSubmit={() => controller.submit()}
-        onClose={() => controller.setIsOpen(false)}
-        onFocusPerson={controller.focusPerson}
-        onConfirm={controller.confirm}
-        onCancel={controller.cancel}
-        onCancelDisambiguation={controller.cancelDisambiguation}
-        onShowMorePeople={controller.showMorePeople}
-        onChooseDisambiguation={controller.chooseDisambiguation}
-        hasPendingDecision={controller.hasPendingDecision}
-        isListening={isListening}
-        isVoiceSupported={isVoiceSupported}
-        onToggleVoice={toggleVoice}
-      />
+      {hasOpened ? (
+        <Suspense fallback={null}>
+          <LazyKindiOverlayWrapper
+            isOpen={isOpen}
+            onClose={() => setIsOpen(false)}
+            people={people}
+            onFocusPerson={onFocusPerson}
+          />
+        </Suspense>
+      ) : null}
     </>
   );
 });
+
+KindiSearchTrigger.displayName = 'KindiSearchTrigger';

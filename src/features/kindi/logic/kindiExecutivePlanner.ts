@@ -1,4 +1,4 @@
-import type { Person } from '../../../types';
+import type { Person } from '../../../types/person';
 import { getFullName } from '../../../utils/familyLogic';
 import { normalizeKindiText, cleanNameText } from './parsers/nameParser';
 import { parseKindiCommand, extractKindiTargetText } from './parsers/addCommandParser';

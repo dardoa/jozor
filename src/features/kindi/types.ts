@@ -1,4 +1,4 @@
-import type { Person } from '../../types';
+import type { Person } from '../../types/person';
 import type { ParsedIntent } from '../../services/search/queryParser';
 import type { RelativeType } from '../../commands/AddRelativeCommand';
 

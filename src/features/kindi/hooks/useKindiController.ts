@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { searchService } from '../../../services/searchService';
 import { useAppStore } from '../../../store/useAppStore';
-import type { Person } from '../../../types';
+import type { Person } from '../../../types/person';
 import { getFullName } from '../../../utils/familyLogic';
 import { getConversationFlowIntent, hasKindiAIFallbackIntentSignal } from '../logic/kindiCommandLexicon';
 import { getKindiGuideAnswer } from '../logic/guideMatcher';

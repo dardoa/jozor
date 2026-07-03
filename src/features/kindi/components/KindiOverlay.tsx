@@ -4,7 +4,7 @@ import { Check, CornerDownLeft, Mic, MicOff, Send, ShieldCheck, Sparkles, X } fr
 
 import { KindiIcon } from '../../../components/icons/KindiIcon';
 import { SmartAvatar } from '../../../components/ui/SmartAvatar';
-import type { Person } from '../../../types';
+import type { Person } from '../../../types/person';
 import { ConfidenceBadge } from './ConfidenceBadge';
 import { getKindiPersonContextLabel } from '../logic/kindiPersonContext';
 import type { KindiConfirmation, KindiMessage, KindiPersonResult } from '../types';

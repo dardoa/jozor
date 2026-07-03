@@ -1,4 +1,4 @@
-import type { UserProfile } from '../../../types';
+import type { UserProfile } from '../../../types/common';
 import { getSupabaseFull } from '../../../services/supabaseClient';
 
 export type KindiLearningEventType =
