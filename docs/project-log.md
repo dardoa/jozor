@@ -1,5 +1,14 @@
 # Project Log
 
+## 2026-07-03 - Import/Export End-to-End Validation
+
+- Summary:
+  - Added [importExportLifecycle.test.ts](file:///d:/AppDEV/Jozor1.1/src/utils/__tests__/importExportLifecycle.test.ts) covering the full lifecycle (import -> edge derivation -> export -> manuscript building -> rendering -> privacy masking).
+  - Assured display names are used instead of IDs in Markdown and HTML rendering.
+  - Verified viewer privacy masking prevents raw sensitive details from appearing in exported formats.
+  - Verified GEDCOM `SOUR` records survive import into legacy source fields without breaking manuscript rendering.
+  - Documented results and synthetic test fixtures in `docs/reviews/import-export-e2e-validation-2026-07-03.md`.
+
 ## 2026-07-03 - Pre-Launch Role QA End-to-End
 
 - Summary:
