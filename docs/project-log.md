@@ -1,5 +1,14 @@
 # Project Log
 
+## 2026-07-04 - First Beta Tester Onboarding Pack
+
+- Summary:
+  - Created a comprehensive operational onboarding guide for the first cohort of closed private beta testers.
+  - Specified cohort gating conditions, cohort sizing (3-5 testers), and data guidelines requiring copied test trees/GEDCOMs instead of primary family records.
+  - Outlined detailed manual and automated E2E test scenarios to guide testers across authentication, editing, role privacy, manuscripts, Kindi AI, Maps, and Paddle Sandbox billing.
+  - Documented feedback collection workflows, bug classification (P0/P1/P2), and the rollback/revocation procedures.
+  - Documented findings in [first-beta-tester-onboarding-2026-07-04.md](file:///d:/AppDEV/Jozor1.1/docs/reviews/first-beta-tester-onboarding-2026-07-04.md) and [evidence_notes.md](file:///d:/AppDEV/Jozor1.1/docs/reviews/evidence/first-beta-tester-onboarding-2026-07-04/evidence_notes.md).
+
 ## 2026-07-04 - Live Deployed Smoke Harness Dry Run
 
 - Summary:
