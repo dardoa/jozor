@@ -1,5 +1,14 @@
 # Project Log
 
+## 2026-07-04 - Private Beta Access Enablement Pack
+
+- Summary:
+  - Formulated and documented a secure path to transition the Live Deployed Smoke gate from Pending to executable.
+  - Recommended using Vercel Automation Bypass cookies/tokens to securely bypass Deployment Protection during E2E/manual smoke testing.
+  - Outlined detailed step-by-step instructions to configure bypass credentials safely on local testing/CI machines without exposing secrets in git.
+  - Defined a post-smoke pre-invitation verification checklist and an access revocation/rollback plan.
+  - Documented findings in [private-beta-access-enablement-2026-07-04.md](file:///d:/AppDEV/Jozor1.1/docs/reviews/private-beta-access-enablement-2026-07-04.md).
+
 ## 2026-07-04 - Live Deployed Smoke Run / Vercel Protection Bypass Gate
 
 - Summary:
