@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { db } from '../db';
+import { db, JOZOR_DB_SCHEMA_VERSION } from '../db';
 
 describe('Dexie Database Schema Verification', () => {
-  it('Dexie database instance has version 1 baseline configured', () => {
-    expect(db.verno).toBe(1);
+  it('Dexie database instance has launch baseline configured', () => {
+    expect(db.verno).toBe(JOZOR_DB_SCHEMA_VERSION);
   });
 
   it('All tables exist and have correct schemas', () => {

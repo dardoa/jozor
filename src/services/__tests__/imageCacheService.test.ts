@@ -114,6 +114,15 @@ describe('ImageCacheService', () => {
       expect(blob).toBe(dummyBlob);
     });
 
+    it('does not write non-http URLs to Cache API', async () => {
+      const blob = await imageCacheService.fetchAndCache('data:image/png;base64,AAAA');
+
+      expect(global.fetch).toHaveBeenCalledWith('data:image/png;base64,AAAA');
+      expect(mockCaches.open).not.toHaveBeenCalled();
+      expect(mockCache.put).not.toHaveBeenCalled();
+      expect(blob).toBe(dummyBlob);
+    });
+
     it('passes optional request init to fetch when supplied', async () => {
       mockCache.match.mockResolvedValue(undefined);
 

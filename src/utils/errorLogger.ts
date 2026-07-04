@@ -157,6 +157,10 @@ function withStoreMetadata(metadata: Record<string, unknown>) {
 
 function emitLog(level: LogLevel, message: string, payload: unknown) {
   if (level === 'INFO') {
+    const shouldEmitInfo =
+      import.meta.env.DEV || import.meta.env.VITE_ENABLE_CLIENT_INFO_LOGS === 'true';
+    if (!shouldEmitInfo) return;
+
     console.info(message, payload);
     return;
   }

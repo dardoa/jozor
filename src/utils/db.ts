@@ -25,6 +25,8 @@ export interface PersonTombstoneRec {
     deleted_at: string;
 }
 
+export const JOZOR_DB_SCHEMA_VERSION = 7;
+
 export class JozorDatabase extends Dexie {
     people!: Table<Person, string>;
     settings!: Table<LocalSetting, string>;
@@ -37,8 +39,9 @@ export class JozorDatabase extends Dexie {
 
     constructor() {
         super('JozorDB');
-        // Compacting historical upgrades to baseline version 1 before final release.
-        this.version(1).stores({
+        // Pre-launch baseline schema. Keep this version above historical local DBs
+        // so existing staging/beta browsers upgrade instead of attempting a downgrade.
+        this.version(JOZOR_DB_SCHEMA_VERSION).stores({
             people: 'id',
             settings: 'key',
             pending_operations: '++id, tree_id',

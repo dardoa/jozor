@@ -16,6 +16,10 @@ export function isCacheSupported(): boolean {
   return typeof window !== 'undefined' && typeof window.caches !== 'undefined';
 }
 
+function isCacheableRequestUrl(url: string): boolean {
+  return /^(https?:)?\/\//i.test(url) || url.startsWith('/');
+}
+
 /**
  * Rounds a dimension to the nearest standard step to maximize cache hits.
  * Standard buckets: 64, 128, 256, 512.
@@ -182,7 +186,7 @@ export const imageCacheService = {
     format = 'image/webp',
     requestInit?: RequestInit
   ): Promise<Blob> {
-    if (!isCacheSupported()) {
+    if (!isCacheSupported() || !isCacheableRequestUrl(url)) {
       const response = await fetchImage(url, requestInit);
       if (!response.ok) throw new Error(`Failed to fetch image: ${response.statusText}`);
       return response.blob();
