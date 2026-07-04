@@ -1,4 +1,4 @@
-﻿import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   AlertTriangle,
   Archive,
@@ -665,15 +665,6 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
 
                 {language === 'ar' ? 'PDF مخطوط العائلة' : 'Family Book PDF'}
 
-              </button>
-
-              <button
-                type="button"
-                onClick={() => void handlePublishingExport({ templateId: 'classic-book-manuscript', format: 'pdf' })}
-                className="flex items-center gap-2 rounded-xl bg-[var(--primary-600)] hover:bg-[var(--primary-700)] text-white px-4 py-2 text-xs font-bold transition-all hover:brightness-105 active:scale-[0.98] shadow-sm shadow-[var(--primary-600)]/10"
-              >
-                <Download className="h-3.5 w-3.5" />
-                {language === 'ar' ? 'PDF متجه تقليدي' : 'Legacy Vector PDF'}
               </button>
             </div>
             <div className="mt-2 flex flex-col items-end gap-1 text-[10px] font-mono text-[var(--text-dim)]">

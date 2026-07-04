@@ -119,7 +119,7 @@ export const personDetails = {
   vaultExportCalendar: 'تصدير التقويم',
   vaultExportMarkdown: 'مخطوط Markdown',
   vaultExportPng: 'لقطة PNG',
-  vaultExportPdf: 'تصدير PDF',
+  vaultExportPdf: 'لقطة PDF للشجرة',
   vaultExportPrint: 'عرض الطباعة',
   vaultRefreshCloudFiles: 'تحديث ملفات السحابة',
   vaultOpenCloudFile: 'فتح',

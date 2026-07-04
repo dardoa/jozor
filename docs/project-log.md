@@ -1,5 +1,12 @@
 # Project Log
 
+## 2026-07-04 - Publishing Cleanup & Legacy Separation
+
+- Summary:
+  - Removed the `Legacy Vector PDF` button from the Classic Family Book Manuscript card in [`ExportCloudPanel.tsx`](file:///d:/AppDEV/Jozor1.1/src/features/the-vault/components/ExportCloudPanel.tsx). The manuscript section now exposes only `Preview Manuscript` and `Family Book PDF` (html-print renderer). The legacy jsPDF path is preserved in the codebase but no longer reachable from the manuscript card UI.
+  - Clarified the generic tree PDF label in the data export grid: `vaultExportPdf` → `'Tree PDF Snapshot'` (EN) / `'لقطة PDF للشجرة'` (AR).
+  - Updated [`ExportCloudPanel.test.tsx`](file:///d:/AppDEV/Jozor1.1/src/features/the-vault/components/__tests__/ExportCloudPanel.test.tsx): asserts Legacy Vector PDF is absent and verifies Family Book PDF calls the handler with `renderer: 'html-print'`.
+
 ## 2026-07-04 - Private Beta Communications Pack
 
 - Summary:

@@ -119,7 +119,7 @@ export const personDetails = {
   vaultExportCalendar: 'Calendar Export',
   vaultExportMarkdown: 'Markdown Manuscript',
   vaultExportPng: 'PNG Snapshot',
-  vaultExportPdf: 'PDF Export',
+  vaultExportPdf: 'Tree PDF Snapshot',
   vaultExportPrint: 'Print View',
   vaultRefreshCloudFiles: 'Refresh cloud files',
   vaultOpenCloudFile: 'Open',

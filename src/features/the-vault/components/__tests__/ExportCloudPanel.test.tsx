@@ -116,17 +116,34 @@ describe('ExportCloudPanel manuscript preview', () => {
     expect(screen.getByText(/Citation coverage: Not calculated/i)).toBeInTheDocument();
   });
 
-  it('labels manuscript PDF export by document type instead of language', () => {
+  it('shows Family Book PDF button and hides Legacy Vector PDF button', async () => {
+    const onRunPublishingExport = vi.fn().mockResolvedValue(undefined);
     render(
       <ExportCloudPanel
         {...baseProps}
+        onRunPublishingExport={onRunPublishingExport}
         onRunPublishingPreview={vi.fn()}
       />
     );
 
+    // Family Book PDF must remain visible
     expect(screen.getByRole('button', { name: /Family Book PDF/i })).toBeInTheDocument();
+
+    // Legacy Vector PDF must no longer be visible
+    expect(screen.queryByRole('button', { name: /Legacy Vector PDF/i })).not.toBeInTheDocument();
+
+    // Enhanced Arabic PDF path was never shown either
     expect(screen.queryByText(/Enhanced Arabic PDF/i)).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Legacy Vector PDF/i })).toBeInTheDocument();
+
+    // Family Book PDF calls the handler with the manuscript renderer
+    fireEvent.click(screen.getByRole('button', { name: /Family Book PDF/i }));
+    await waitFor(() => expect(onRunPublishingExport).toHaveBeenCalledWith(
+      expect.objectContaining({
+        templateId: 'classic-book-manuscript',
+        format: 'pdf',
+        renderer: 'html-print',
+      })
+    ));
   });
 
   it('shows the estimated page count returned by the HTML manuscript preview', async () => {

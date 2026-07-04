@@ -64,8 +64,8 @@ test.describe('Live Deployed Smoke Test', () => {
       log.includes('[AppStateManager] Session UID became available') ||
       log.includes('[AppStateManager] Bootstrap gate released')
     );
-    console.log('[E2E Live Smoke] Captured console errors:', consoleErrors);
-    console.log('[E2E Live Smoke] Captured console logs:', consoleLogs);
+    console.info('[E2E Live Smoke] Captured console errors:', consoleErrors);
+    console.info('[E2E Live Smoke] Captured console logs:', consoleLogs);
     expect(prohibitedLogs.length).toBe(0);
 
     const criticalErrors = consoleErrors.filter(err => 
