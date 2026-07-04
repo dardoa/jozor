@@ -1,5 +1,14 @@
 # Project Log
 
+## 2026-07-04 - Live Deployed Smoke Execution Harness
+
+- Summary:
+  - Implemented a secure, clean-skipping E2E test harness for verifying live staging/preview deployments.
+  - Created [deployedAccess.ts](file:///d:/AppDEV/Jozor1.1/tests/e2e/helpers/deployedAccess.ts) to handle Vercel deployment protection bypass securely via contextual cookies.
+  - Created E2E test [live-deployed-smoke.spec.ts](file:///d:/AppDEV/Jozor1.1/tests/e2e/live-deployed-smoke.spec.ts) covering app shell loading, login triggers, Kindi assistant triggers, and browser console sanitation checks.
+  - Confirmed that the test skips cleanly when required access keys are not set.
+  - Documented findings in [live-deployed-smoke-harness-2026-07-04.md](file:///d:/AppDEV/Jozor1.1/docs/reviews/live-deployed-smoke-harness-2026-07-04.md).
+
 ## 2026-07-04 - Private Beta Access Enablement Pack
 
 - Summary:
