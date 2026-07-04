@@ -1,5 +1,14 @@
 # Project Log
 
+## 2026-07-04 - Paddle Sandbox Checkout Smoke
+
+- Summary:
+  - Audited the presence of all required Paddle and billing environment variables (`PADDLE_API_KEY`, `PADDLE_ENVIRONMENT`, `PADDLE_WEBHOOK_SECRET`, `PADDLE_PRO_PRICE_ID`, `PADDLE_FAMILY_PRICE_ID`, `VITE_PADDLE_CLIENT_TOKEN`, `VITE_PADDLE_ENVIRONMENT`) in `.env.local` without printing values.
+  - Performed a code audit on the serverless API endpoints (`api/billing/create-checkout-session.ts`, `api/billing/customer-portal.ts`, `api/billing/paddle-webhook.ts`) and client component (`PaywallModal.tsx`), verifying correct payload limits, token auth verification, rate limiting, and event handling.
+  - Discovered and ran all 36 targeted unit tests across 9 billing test files, with all tests passing successfully.
+  - Created a dedicated E2E browser test (`tests/e2e/paddle-paywall-smoke.spec.ts`) that triggers the paywall modal, clicks "Upgrade Now", intercepts the API checkout request, and confirms the UI handles checkout API responses correctly.
+  - Documented findings in [paddle-sandbox-checkout-smoke-2026-07-04.md](file:///d:/AppDEV/Jozor1.1/docs/reviews/paddle-sandbox-checkout-smoke-2026-07-04.md) and [evidence_notes.md](file:///d:/AppDEV/Jozor1.1/docs/reviews/evidence/paddle-sandbox-checkout-2026-07-04/evidence_notes.md).
+
 ## 2026-07-03 - E2E Authenticated Role Harness Fix
 
 - Summary:
