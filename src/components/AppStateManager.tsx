@@ -8,6 +8,7 @@ import { useNotifications } from '../hooks/sync/useNotifications';
 import { useRealtimeNotifications } from '../hooks/sync/useRealtimeNotifications';
 import { useWebPush } from '../hooks/sync/useWebPush';
 import { AppUIManager } from './AppUIManager';
+import { logInfo } from '../utils/errorLogger';
 
 const BootstrapSplash: React.FC = () => (
   <div className="flex h-screen items-center justify-center bg-[var(--theme-bg)]">
@@ -42,7 +43,7 @@ export const AppStateManager: React.FC = () => {
   useEffect(() => {
     if (user?.uid && !hasLoggedUidAvailabilityRef.current) {
       hasLoggedUidAvailabilityRef.current = true;
-      console.info('[AppStateManager] Session UID became available.', {
+      logInfo('AppStateManager', 'Session UID became available.', {
         uid: user.uid,
         authLoading,
         syncState,
@@ -53,7 +54,7 @@ export const AppStateManager: React.FC = () => {
   useEffect(() => {
     if (!shouldShowBootstrapSplash && !hasLoggedGateReleaseRef.current) {
       hasLoggedGateReleaseRef.current = true;
-      console.info('[AppStateManager] Bootstrap gate released. Rendering AppUIManager.', {
+      logInfo('AppStateManager', 'Bootstrap gate released. Rendering AppUIManager.', {
         hasUserUid: Boolean(user?.uid),
         authLoading,
         syncState,
