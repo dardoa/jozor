@@ -22,9 +22,13 @@ test.describe('Live Deployed Smoke Test', () => {
 
   test('production app shell and layout loads', async ({ page }) => {
     const consoleErrors: string[] = [];
+    const consoleLogs: string[] = [];
     page.on('console', (msg) => {
+      const text = msg.text();
       if (msg.type() === 'error') {
-        consoleErrors.push(msg.text());
+        consoleErrors.push(text);
+      } else {
+        consoleLogs.push(text);
       }
     });
 
@@ -43,14 +47,27 @@ test.describe('Live Deployed Smoke Test', () => {
 
     // 3. Verify landing layout or sign-in buttons exist
     const hasGoogleLogin = await page.getByRole('button', { name: /Google/i }).count() > 0;
-    const hasLoginButton = await page.getByRole('button', { name: /Sign In|Login/i }).count() > 0;
+    const hasLoginButton = await page.getByRole('button', { name: /Sign In|Login|تسجيل الدخول/i }).count() > 0;
 
     // 4. Verify Kindi trigger exists (lazy loaded search trigger)
-    const kindiTrigger = page.locator('[data-testid="kindi-search-trigger"], #kindi-search-trigger, text=Kindi').first();
-    const hasKindiTrigger = await kindiTrigger.count() > 0;
+    const hasKindiTrigger = (await page.locator('[data-testid="kindi-search-trigger"]').count() > 0) ||
+                            (await page.locator('#kindi-search-trigger').count() > 0) ||
+                            (await page.locator('text=Kindi').count() > 0);
     expect(hasGoogleLogin || hasLoginButton || hasKindiTrigger).toBe(true);
 
-    // 5. Assert no P0/P1 console errors were logged
+    // 5. Assert no P0/P1 console errors or prohibited production logs were logged
+    const allLogs = [...consoleErrors, ...consoleLogs];
+    const prohibitedLogs = allLogs.filter(log =>
+      (log.includes('Cannot access') && log.includes('before initialization')) ||
+      log.includes('Dexie SchemaDiff') ||
+      log.includes("Cache: Request scheme 'data' is unsupported") ||
+      log.includes('[AppStateManager] Session UID became available') ||
+      log.includes('[AppStateManager] Bootstrap gate released')
+    );
+    console.log('[E2E Live Smoke] Captured console errors:', consoleErrors);
+    console.log('[E2E Live Smoke] Captured console logs:', consoleLogs);
+    expect(prohibitedLogs.length).toBe(0);
+
     const criticalErrors = consoleErrors.filter(err => 
       err.includes('Cannot read properties') || 
       err.includes('Failed to load resource') || 

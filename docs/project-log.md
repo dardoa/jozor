@@ -1,5 +1,13 @@
 # Project Log
 
+## 2026-07-04 - Public Production Smoke Execution
+
+- Summary:
+  - Executed the E2E live smoke test suite against the public production deployment URL (`https://jozor.vercel.app/`).
+  - Confirmed the application shell, sign-in components, and Kindi AI triggers load correctly under both English and Arabic locales.
+  - Verified that all high-severity console exceptions and debug logging statements are completely silenced in production.
+  - Documented findings in [live-deployed-smoke-run-2026-07-04.md](file:///d:/AppDEV/Jozor1.1/docs/reviews/live-deployed-smoke-run-2026-07-04.md) and [evidence_notes.md](file:///d:/AppDEV/Jozor1.1/docs/reviews/evidence/live-deployed-smoke-run-2026-07-04/evidence_notes.md).
+
 ## 2026-07-04 - Public Deployed URL Smoke Support
 
 - Summary:
