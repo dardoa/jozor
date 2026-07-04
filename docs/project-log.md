@@ -1,5 +1,13 @@
 # Project Log
 
+## 2026-07-04 - Live Deployed Smoke Harness Dry Run
+
+- Summary:
+  - Executed the newly implemented Playwright E2E live smoke harness dry-run with the local test configuration.
+  - Confirmed that the test runs and skips cleanly when required staging environment variables are not supplied.
+  - Verified security validation rules to prevent the bypass secret from leaking in URLs or console logs.
+  - Documented findings in [live-deployed-smoke-execution-2026-07-04.md](file:///d:/AppDEV/Jozor1.1/docs/reviews/live-deployed-smoke-execution-2026-07-04.md) and [evidence_notes.md](file:///d:/AppDEV/Jozor1.1/docs/reviews/evidence/live-deployed-smoke-execution-2026-07-04/evidence_notes.md).
+
 ## 2026-07-04 - Live Deployed Smoke Execution Harness
 
 - Summary:
