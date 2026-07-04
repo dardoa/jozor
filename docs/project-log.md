@@ -1,5 +1,12 @@
 # Project Log
 
+## 2026-07-04 - Private Beta Communications Pack
+
+- Summary:
+  - Formulated the official communications templates and tester documentation guides for the private beta cohort.
+  - Created [private-beta-communications-2026-07-04.md](file:///d:/AppDEV/Jozor1.1/docs/reviews/private-beta-communications-2026-07-04.md) including English/Arabic invitation message templates, structured feedback questions, bug severity rules, and owner pre-dispatch checklists.
+  - Created [private-beta-tester-guide-2026-07-04.md](file:///d:/AppDEV/Jozor1.1/docs/reviews/private-beta-tester-guide-2026-07-04.md) outlining safety rules, copied GEDCOM guidelines, prohibited documents/media, and step-by-step user flow testing walkthroughs.
+
 ## 2026-07-04 - Rollback Tag & Private Beta Invitation Gate
 
 - Summary:
