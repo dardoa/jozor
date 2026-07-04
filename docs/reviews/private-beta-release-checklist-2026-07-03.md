@@ -6,9 +6,9 @@ This checklist serves as the operational guide for conducting the first controll
 
 ## 1. Release Decision
 
-- **Current Decision**: `Ready for private beta`
-- **Source Report**: `docs/reviews/launch-readiness-audit-2026-07-03.md`
-- **Latest Commit Hash**: `15cb3cd`
+- **Current Decision**: `Ready for private beta setup`
+- **Source Report**: `docs/reviews/private-beta-go-no-go-2026-07-04.md`
+- **Latest Evidence Commit Hash**: `69d23e5`
 - **Target Environment**: Staging / Private Beta
 
 ---
@@ -22,21 +22,21 @@ Checklist:
 - [x] Confirm `npm run typecheck`, `npm run lint`, `npm run build`.
 - [x] Confirm full test suite passes.
 - [x] Confirm environment variables presence only, no values printed.
-- [ ] Run one smoke test for:
+- [x] Run browser smoke tests and document conditional gates for:
   - login
   - owner opens tree
   - viewer masking
   - export masked GEDCOM/Markdown
   - manuscript preview
   - cloud backup write guard for viewer
-  - Paddle sandbox checkout/cancel if beta includes payments
+  - Paddle sandbox checkout/cancel UI smoke
 
 ---
 
 ## 3. Known P2/P3 Issues Accepted Into Private Beta
 
-- Rollup geography chunk warning > 500 kB (P2).
-- Final Paddle checkout/cancel smoke required before public launch (P2).
+- E2E auth harness requires `E2E_AUTH_ROLE_HARNESS=true` and staging credentials (P2).
+- Final Paddle checkout transaction requires live sandbox browser session (P2).
 - Supabase migration squash deferred until launch candidate freeze (P3).
 - Full live multi-user conflict simulation pending (P3).
 - Visual polish deferred from manuscript review (P3).
@@ -74,51 +74,56 @@ Checklist:
 
 | Item | Status | Owner | Notes |
 |---|---|---|---|
-| Main branch clean | **Passed** | Owner | `15cb3cd` matches `origin/main` |
-| Database sync check | **Passed** | Owner | 70/70 migrations matched, no drift |
-| Verification tests (604) | **Passed** | Editor | 125 test files, 604 tests, 0 failures |
-| Environment variables check | **Passed** | Owner | Required groups present, values not printed |
-| Basic E2E Smoke | **Pending** | Editor | Browser smoke requires live session |
+| Main branch clean | **Pass** | Owner | Local branch clean at the time of review; final Go/No-Go commit to be pushed |
+| Build | **Pass** | Owner | 0 compilation errors |
+| Typecheck | **Pass** | Owner | 0 type errors |
+| Lint | **Pass** | Owner | 0 warnings, 0 errors |
+| Full tests | **Pass** | Editor | 125 test files, 604 tests, all passed |
+| Supabase migration drift | **Pass** | Owner | 70/70 migrations matched, no drift |
+| IndexedDB baseline | **Pass** | Owner | V1 baseline verified with tests |
+| Viewer privacy | **Pass** | Editor | Masking and RLS verified |
+| Export privacy | **Pass** | Editor | Sanitation on export paths verified |
+| GEDCOM import/export | **Pass** | Editor | Hardened validation and adapter verified |
+| Publishing/manuscript smoke | **Conditional Pass** | Editor | Deployed preview works; PDF uses browser print fallback |
+| Browser smoke | **Conditional Pass** | Editor | Local browser smoke documented; live deployed login pending |
+| E2E authenticated role harness | **Conditional Pass** | Editor | Harness ready; requires `E2E_AUTH_ROLE_HARNESS=true` and staging credentials for full collaborative test |
+| Paddle sandbox checkout | **Conditional Pass** | Editor | Paywall modal opens and calls session API; sandbox portal pending live browser |
+| Vercel production env check | **Pending** | Owner | Required before invite |
+| Live Paddle transaction | **Pending** | Owner | Required before paid beta |
+| First tester invite | **Pending** | Owner | Gated by pending live ops |
 
 ---
 
-## 8. Smoke Test Run - 2026-07-03
+## 8. Smoke Test Run - 2026-07-04
 
-**Commit Tested**: `15cb3cd docs(beta): add private beta release checklist`
+**Commit Tested**: `69d23e5 docs(beta): add paddle sandbox checkout smoke audit`
 
 ### Commands Run & Results
 
 | Command | Result | Notes |
 |---|---|---|
 | `git status --short` | Passed | Working tree clean |
-| `git log -1 --oneline` | Passed (`15cb3cd`) | Matches expected commit |
+| `git log -1 --oneline` | Passed (`69d23e5`) | Matches expected commit |
 | `npm run typecheck` | Passed | 0 type errors |
 | `npm run lint` | Passed | 0 warnings, 0 errors |
-| `npm run build` | Passed | 3865 modules, 20.94s |
-| Targeted tests (80) | Passed | GEDCOM, lifecycle, export, DB, storage |
-| `npm run test` (604) | Passed | 125 files, 604 tests, 0 failures |
+| `npm run build` | Passed | 0 build errors |
+| Targeted billing tests (36) | Passed | Vitest suites for billing endpoints and controller |
+| Playwright paywall smoke | Conditional Pass | Paywall/request path documented; complete sandbox portal pending live browser |
 | `supabase migration list` | Passed | 70/70 local = remote |
 | `supabase db push --dry-run` | Passed | Remote database is up to date |
-| Browser smoke | Pending | Requires live session; not automated |
 
 ### Pending Items
 
-- **Browser Smoke Test**: Cannot be automated in this context. Requires a live authenticated session to verify login, owner tree access, viewer masking, GEDCOM/Markdown export, manuscript preview, and write guard for viewer role.
+- **Vercel Env Verification**: Double check server role keys are set in the Vercel dashboard.
+- **Live Deployed Smoke**: Access staging URL, log in, and verify the checkout flow initialization.
 
 ### Blockers
 
-- **None found.** No P0 or P1 blockers discovered during this smoke run.
+- **None found.**
 
 ### Final Recommendation
 
 ```text
-Go for private beta
+Decision: Go for controlled private beta setup.
+External tester invitations remain gated by Vercel env verification, live deployed smoke, and live Paddle sandbox checkout confirmation.
 ```
-
-This recommendation assumes the short manual browser smoke is completed before sending the first beta invitation.
-
----
-
-## 9. Recommended Next Pack
-
-- **Recommended Pack**: `Geography Chunk Split Optimization` (P2 - reduces initial load for maps-heavy features before public launch).
