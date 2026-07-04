@@ -1,5 +1,13 @@
 # Project Log
 
+## 2026-07-04 - Public Deployed URL Smoke Support
+
+- Summary:
+  - Modified the Playwright E2E live smoke harness to optionally support testing public deployment URLs without requiring a Vercel bypass token.
+  - Updated [live-deployed-smoke.spec.ts](file:///d:/AppDEV/Jozor1.1/tests/e2e/live-deployed-smoke.spec.ts) to skip only when `DEPLOYED_SMOKE_URL` is missing.
+  - Added an assertion that fails the test with a descriptive error message if a protected URL redirects to the Vercel SSO login page.
+  - Documented findings in [live-deployed-smoke-harness-2026-07-04.md](file:///d:/AppDEV/Jozor1.1/docs/reviews/live-deployed-smoke-harness-2026-07-04.md).
+
 ## 2026-07-04 - Private Beta Release Handoff Pack
 
 - Summary:

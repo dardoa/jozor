@@ -13,9 +13,9 @@ test.describe('Live Deployed Smoke Test', () => {
     }
   });
 
-  if (!config?.bypassToken) {
+  if (!config?.url) {
     test.skip('production app shell and layout loads', async () => {
-      // Skipped unless both DEPLOYED_SMOKE_URL and VERCEL_BYPASS_TOKEN are configured.
+      // Skipped unless DEPLOYED_SMOKE_URL is configured.
     });
     return;
   }
@@ -33,8 +33,9 @@ test.describe('Live Deployed Smoke Test', () => {
 
     // 1. Verify we did not get redirected to vercel.com/login page
     const currentUrl = page.url();
-    expect(currentUrl).not.toContain('vercel.com/login');
-    expect(currentUrl).not.toContain('signup?next=');
+    if (currentUrl.includes('vercel.com/login') || currentUrl.includes('signup?next=')) {
+      throw new Error('Deployment is protected; provide VERCEL_BYPASS_TOKEN or use public staging URL.');
+    }
 
     // 2. Verify root element exists
     const root = page.locator('#root');

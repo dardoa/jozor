@@ -1,38 +1,37 @@
 # Live Deployed Smoke Harness Report - 2026-07-04
 
 **Status**: Harness Ready  
-**Live execution**: Pending DEPLOYED_SMOKE_URL and VERCEL_BYPASS_TOKEN  
+**Live execution**: Pending DEPLOYED_SMOKE_URL
 **Date**: 2026-07-04  
-**Latest Reference Commit**: `20e099a docs(beta): add private beta access enablement plan`
+**Latest Reference Commit**: `56d31e7 docs(beta): add first beta tester onboarding plan`
 
 ---
 
-## 1. Harness Design & Security Setup
+## 1. Harness Execution Modes
 
-We designed and implemented a secure E2E execution harness to verify the application shell and key paths on live staging/preview deployments once protection bypass configurations are provided.
+The E2E smoke test supports two execution paths based on environment variable configuration:
+
+### Mode A: Public URL Mode
+* **Variables**: `DEPLOYED_SMOKE_URL` only.
+* **Behavior**: Opens the public staging URL. Skipped if Vercel Deployment Protection is active and redirects to the Vercel login screen.
+* **Bypass Secret**: Not required.
+
+### Mode B: Protected URL Mode
+* **Variables**: `DEPLOYED_SMOKE_URL` + `VERCEL_BYPASS_TOKEN`.
+* **Behavior**: Accesses a protected Vercel preview branch. Injects the `_vercel_jwt` cookie securely into Playwright BrowserContext to bypass SSO gates.
+
+---
+
+## 2. Harness Design & Security Setup
 
 * **Helper File**: [deployedAccess.ts](file:///d:/AppDEV/Jozor1.1/tests/e2e/helpers/deployedAccess.ts)
-  * Safely reads `DEPLOYED_SMOKE_URL` and `VERCEL_BYPASS_TOKEN` from the environment.
-  * Injects the `_vercel_jwt` cookie securely inside the Playwright BrowserContext for the target domain.
-  * Rejects tokenized deployment URLs that include bypass secrets in query parameters.
-  * Ensures zero credentials or URL identifiers are printed in execution logs or committed to git.
+  * Reads configuration. Throws an error if `x-vercel-protection-bypass` is present in the URL query parameters to prevent credential exposure.
+  * Injects Vercel bypass cookies securely. No secrets or domains are logged or hardcoded.
 * **Test File**: [live-deployed-smoke.spec.ts](file:///d:/AppDEV/Jozor1.1/tests/e2e/live-deployed-smoke.spec.ts)
-  * Runs check only when both environment variables are present.
-  * Skips cleanly without failures when access parameters are not configured.
+  * Skips cleanly only when `DEPLOYED_SMOKE_URL` is absent.
+  * Fails with a clear message: `"Deployment is protected; provide VERCEL_BYPASS_TOKEN or use public staging URL."` if redirection to `vercel.com/login` is detected.
 * **Playwright Config**: [live-deployed.playwright.config.ts](file:///d:/AppDEV/Jozor1.1/tests/e2e/live-deployed.playwright.config.ts)
-  * Runs the live deployment smoke without starting the local `localhost:3000` web server.
-
----
-
-## 2. Deployed Verification Capabilities
-
-Once the environment variables are configured, the test harness checks the following target behaviors:
-
-1. **Vercel Protection Bypass**: Asserts that navigation does not redirect to the Vercel SSO login page.
-2. **App Shell Load**: Asserts that the `#root` container is visible on the DOM.
-3. **Landing UI Signposts**: Verifies landing/welcome layouts are visible.
-4. **Intelligent Assistant Trigger**: Confirms the Kindi assistant trigger is present.
-5. **Console Sanity**: Captures and asserts zero high-severity console exceptions during initialization.
+  * Runs E2E tests against live endpoints without spinning up local web servers.
 
 ---
 
@@ -51,5 +50,5 @@ Running 1 test using 1 worker
 
 ```text
 Status: Harness Ready
-Live execution: Pending DEPLOYED_SMOKE_URL and VERCEL_BYPASS_TOKEN
+Live execution: Pending DEPLOYED_SMOKE_URL
 ```
