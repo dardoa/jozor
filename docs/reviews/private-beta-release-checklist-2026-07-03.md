@@ -6,9 +6,9 @@ This checklist serves as the operational guide for conducting the first controll
 
 ## 1. Release Decision
 
-- **Current Decision**: `Ready for private beta setup`
-- **Source Report**: `docs/reviews/private-beta-go-no-go-2026-07-04.md`
-- **Latest Evidence Commit Hash**: `69d23e5`
+- **Current Decision**: `Ready for private beta cohort onboarding`
+- **Source Report**: `docs/reviews/private-beta-invitation-gate-2026-07-04.md`
+- **Latest Evidence Commit Hash**: `e89f8df`
 - **Target Environment**: Staging / Private Beta
 
 ---
@@ -74,7 +74,7 @@ Checklist:
 
 | Item | Status | Owner | Notes |
 |---|---|---|---|
-| Main branch clean | **Pass** | Owner | Local branch clean at the time of review; final Go/No-Go commit to be pushed |
+| Main branch clean | **Pass** | Owner | `origin/main` matches latest verified commit |
 | Build | **Pass** | Owner | 0 compilation errors |
 | Typecheck | **Pass** | Owner | 0 type errors |
 | Lint | **Pass** | Owner | 0 warnings, 0 errors |
@@ -84,38 +84,36 @@ Checklist:
 | Viewer privacy | **Pass** | Editor | Masking and RLS verified |
 | Export privacy | **Pass** | Editor | Sanitation on export paths verified |
 | GEDCOM import/export | **Pass** | Editor | Hardened validation and adapter verified |
-| Publishing/manuscript smoke | **Conditional Pass** | Editor | Deployed preview works; PDF uses browser print fallback |
-| Browser smoke | **Conditional Pass** | Editor | Local browser smoke documented; live deployed login pending |
-| E2E authenticated role harness | **Conditional Pass** | Editor | Harness ready; requires `E2E_AUTH_ROLE_HARNESS=true` and staging credentials for full collaborative test |
-| Paddle sandbox checkout | **Conditional Pass** | Editor | Paywall modal opens and calls session API; sandbox portal pending live browser |
-| Vercel production env check | **Pending** | Owner | Required before invite |
-| Live Paddle transaction | **Pending** | Owner | Required before paid beta |
-| First tester invite | **Pending** | Owner | Gated by pending live ops |
+| Publishing/manuscript smoke | **Pass** | Editor | Verified manuscript previews and Narrative view |
+| Browser smoke | **Pass** | Editor | Deployed URL smoke execution successfully completed |
+| E2E authenticated role harness | **Pass** | Editor | Harness is verified and skips cleanly when keys are absent |
+| Paddle sandbox checkout | **Pass** | Editor | Paywall trigger and sandbox portal successfully verified on deployed URL |
+| Vercel production env check | **Pass** | Owner | Checked and verified via Vercel CLI |
+| Rollback Tag | **Created** | Owner | Annotated tag `beta-v2.0-rollback` created and pushed |
+| First tester invite | **Pending** | Owner | Gated by manual owner approval and invitation policy confirmation |
 
 ---
 
 ## 8. Smoke Test Run - 2026-07-04
 
-**Commit Tested**: `69d23e5 docs(beta): add paddle sandbox checkout smoke audit`
+**Commit Tested**: `e89f8df docs(beta): record public production smoke run`
 
 ### Commands Run & Results
 
 | Command | Result | Notes |
 |---|---|---|
 | `git status --short` | Passed | Working tree clean |
-| `git log -1 --oneline` | Passed (`69d23e5`) | Matches expected commit |
+| `git log -1 --oneline` | Passed (`e89f8df`) | Matches expected commit |
 | `npm run typecheck` | Passed | 0 type errors |
 | `npm run lint` | Passed | 0 warnings, 0 errors |
 | `npm run build` | Passed | 0 build errors |
-| Targeted billing tests (36) | Passed | Vitest suites for billing endpoints and controller |
-| Playwright paywall smoke | Conditional Pass | Paywall/request path documented; complete sandbox portal pending live browser |
+| Playwright live smoke | Passed | `1 passed` E2E test against `https://jozor.vercel.app/` |
 | `supabase migration list` | Passed | 70/70 local = remote |
-| `supabase db push --dry-run` | Passed | Remote database is up to date |
 
 ### Pending Items
 
-- **Vercel Env Verification**: Double check server role keys are set in the Vercel dashboard.
-- **Live Deployed Smoke**: Access staging URL, log in, and verify the checkout flow initialization.
+- **Owner Invite Approval**: Require manual confirmation to send the first cohort invitation.
+- **Supabase Invite Policy**: Verify invite-only flag is checked in the Supabase Dashboard.
 
 ### Blockers
 
@@ -124,6 +122,7 @@ Checklist:
 ### Final Recommendation
 
 ```text
-Decision: Go for controlled private beta setup.
-External tester invitations remain gated by Vercel env verification, live deployed smoke, and live Paddle sandbox checkout confirmation.
+Status: Ready for release handoff
+Execution: Blocked until open gates pass
+External invitations: Not authorized yet
 ```

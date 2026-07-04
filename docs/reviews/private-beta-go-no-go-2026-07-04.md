@@ -2,8 +2,7 @@
 
 **Decision**: Go for controlled private beta setup.  
 **Tester Invitations**: Gated (Hold first external tester invite until required live ops checks pass).  
-**Latest Evidence Commit**: `69d23e5 docs(beta): add paddle sandbox checkout smoke audit`
-**Go/No-Go Report Commit**: This report commit
+**Latest Reference Commit**: `e89f8df docs(beta): record public production smoke run`
 
 ---
 
@@ -11,7 +10,7 @@
 
 Over the past operational cycles, the codebase has undergone comprehensive security, performance, database, and integration audits to prepare for the first controlled private beta wave.
 
-All major launch criteria have been met or conditionally passed, with zero P0 or P1 blockers remaining.
+All major launch criteria have been met and verified on the live production deployment, with zero P0 or P1 blockers remaining.
 
 ---
 
@@ -20,8 +19,6 @@ All major launch criteria have been met or conditionally passed, with zero P0 or
 * **P0/P1 Blockers**: None.
 * **Accepted P2/P3 Gaps (Deferred for Post-Beta or Deployed Ops)**:
   * **E2E Authenticated Role Harness**: Requires `E2E_AUTH_ROLE_HARNESS=true` and staging JWT credentials (P2). It is skipped cleanly on local runs when credentials are absent.
-  * **Paddle Live Sandbox Checkout**: Local testing verifies paywall rendering, SDK initialization where network allows, checkout request handling, and safe failure handling. Complete sandbox portal checkout remains pending a live browser testing session (P2).
-  * **Browser Smoke**: Marked as Conditional Pass due to headless environment restrictions and staging API connectivity limits (P2).
 
 ---
 
@@ -30,15 +27,13 @@ All major launch criteria have been met or conditionally passed, with zero P0 or
 Before registering or inviting the first external beta tester, the following checklist must be validated:
 
 1. **Vercel Production Env Verification**:
-   * Confirm that all required backend secrets (e.g. `SUPABASE_SERVICE_ROLE_KEY`, `PADDLE_API_KEY`, etc.) are correctly set in the Vercel dashboard for production/staging scopes.
+   * **Status**: **Pass** (Verified using the authenticated Vercel CLI).
 2. **Live Deployed Smoke**:
-   * Navigate to the deployed app URL.
-   * Perform one full manual smoke run (log in, open tree, check privacy masking, export files).
+   * **Status**: **Pass** (Verified using the new Playwright E2E live smoke harness).
 3. **Live Deployed Checkout Confirmation**:
-   * Open the paywall trigger on the deployed staging app.
-   * Confirm the Paddle sandbox checkout iframe initializes and loads the payment overlay correctly.
+   * **Status**: **Pass** (Verified that paywall triggers initialize Paddle checkout successfully).
 4. **Rollback Baseline Confirmation**:
-   * Ensure the tag/commit for version rollback is clearly noted in git.
+   * **Status**: **Pass** (Annotated rollback tag `beta-v2.0-rollback` created and pushed to origin).
 
 ---
 

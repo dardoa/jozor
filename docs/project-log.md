@@ -1,5 +1,12 @@
 # Project Log
 
+## 2026-07-04 - Rollback Tag & Private Beta Invitation Gate
+
+- Summary:
+  - Finalized the final release gates by establishing the E2E verification reports and Go/No-Go checklists.
+  - Updated release handoff reports, go/no-go decisions, and checklists to reflect the successful execution of the live production smoke run.
+  - Created [private-beta-invitation-gate-2026-07-04.md](file:///d:/AppDEV/Jozor1.1/docs/reviews/private-beta-invitation-gate-2026-07-04.md) setting the cohort guidelines, strict tester data safety rules, freeze triggers (stop conditions), and rollback protocols.
+
 ## 2026-07-04 - Public Production Smoke Execution
 
 - Summary:
