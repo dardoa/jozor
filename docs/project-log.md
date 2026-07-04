@@ -1,5 +1,14 @@
 # Project Log
 
+## 2026-07-04 - Live Deployed Smoke Run / Vercel Protection Bypass Gate
+
+- Summary:
+  - Audited access paths to perform the live deployed browser smoke test.
+  - Checked for Vercel bypass variables (`VERCEL_AUTOMATION_BYPASS_SECRET`, `VERCEL_PROTECTION_BYPASS`, `VERCEL_BYPASS_TOKEN`) and confirmed they are missing from local environments.
+  - Marked the Live Deployed Smoke Gate status as Pending due to active Vercel Deployment Protection on the staging/preview branch.
+  - Created a comprehensive manual and E2E test verification guide for live deployments.
+  - Documented findings in [live-deployed-smoke-gate-2026-07-04.md](file:///d:/AppDEV/Jozor1.1/docs/reviews/live-deployed-smoke-gate-2026-07-04.md) and [evidence_notes.md](file:///d:/AppDEV/Jozor1.1/docs/reviews/evidence/live-deployed-smoke-gate-2026-07-04/evidence_notes.md).
+
 ## 2026-07-04 - Vercel Environment & Deployment Smoke
 
 - Summary:
