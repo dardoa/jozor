@@ -2,7 +2,7 @@ import { useEffect, useCallback, useState } from 'react';
 import { useAppStore } from '../../../store/useAppStore';
 import { treeDiscussionService } from '../services/treeDiscussionService';
 import { getTreeCollaborators } from '../../../services/supabaseTreeCollaboratorService';
-import { activityService } from '../../activity-log';
+import { activityService } from '../../activity-log/service';
 import { logError } from '../../../utils/errorLogger';
 import type { TreeDiscussionMessage } from '../../../types/tree';
 

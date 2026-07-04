@@ -19,12 +19,12 @@ export type AppSnapshot = {
 export type DebugWindow = Window & {
   jozorDebug?: {
     getStateSnapshot: () => AppSnapshot;
-    seedTreeScenario: (payload: any) => void;
-    setRole: (role: any) => void;
+    seedTreeScenario: (payload: Record<string, unknown>) => void;
+    setRole: (role: DebugRole) => void;
     clearPersistedScenario: () => void;
-    setScenarioAccess: (payload: any) => void;
-    setSyncStatus: (payload: any) => void;
-    setInvitationTelemetry: (payload: any) => void;
+    setScenarioAccess: (payload: Record<string, unknown>) => void;
+    setSyncStatus: (payload: Record<string, unknown>) => void;
+    setInvitationTelemetry: (payload: Record<string, unknown>) => void;
     openDiagnostics: () => void;
   };
 };

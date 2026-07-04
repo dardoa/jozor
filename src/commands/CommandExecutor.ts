@@ -1,6 +1,6 @@
 import { useAppStore } from '../store/useAppStore';
 import { deltaSyncService } from '../services/deltaSyncService';
-import { activityService } from '../features/activity-log';
+import { activityService } from '../features/activity-log/service';
 import { storageService } from '../services/storageService';
 import { searchService } from '../services/searchService';
 import { localTreePersistenceService } from '../services/localTreePersistenceService';

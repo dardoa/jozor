@@ -8,7 +8,7 @@ import {
   User,
   UserPlus,
 } from 'lucide-react';
-import type { ActivityActionType, ActivityLog } from '../../../../features/activity-log';
+import type { ActivityActionType, ActivityLog } from '../../../../features/activity-log/service';
 
 type ActivityTranslations = {
   rename: string;

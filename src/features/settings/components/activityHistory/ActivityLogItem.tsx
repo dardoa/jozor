@@ -1,6 +1,6 @@
 import { formatDistanceToNow } from 'date-fns';
 import type { Locale } from 'date-fns';
-import type { ActivityLog } from '../../../../features/activity-log';
+import type { ActivityLog } from '../../../../features/activity-log/service';
 import {
   formatActivityActionDescription,
   getActivityActionColor,

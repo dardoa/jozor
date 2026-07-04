@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { activityService, type ActivityLog } from '../../../../features/activity-log';
+import { activityService, type ActivityLog } from '../../../../features/activity-log/service';
 
 const PAGE_SIZE = 20;
 

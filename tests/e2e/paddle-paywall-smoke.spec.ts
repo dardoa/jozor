@@ -21,7 +21,10 @@ type JozorDebug = {
   }) => void;
 };
 
-type DebugWindow = Window & { jozorDebug?: JozorDebug };
+type PaddleWindow = Window & {
+  jozorDebug?: JozorDebug;
+  Paddle?: unknown;
+};
 
 test.describe('Paddle Paywall and Checkout Smoke Test', () => {
   test.beforeEach(async ({ page }) => {
@@ -47,7 +50,7 @@ test.describe('Paddle Paywall and Checkout Smoke Test', () => {
         .update(`${header}.${payload}`)
         .digest('base64url');
       supabaseToken = `${header}.${payload}.${signature}`;
-      console.log('[E2E Check] Signed valid internal JWT token for free-user-123');
+      console.info('[E2E Check] Signed valid internal JWT token for free-user-123');
     } else {
       console.warn('[E2E Check] SUPABASE_JWT_SECRET is not available in environment. Token verification might fail with 401.');
     }
@@ -56,11 +59,11 @@ test.describe('Paddle Paywall and Checkout Smoke Test', () => {
     await page.goto('/', { waitUntil: 'domcontentloaded' });
 
     // 2. Wait for jozorDebug to load
-    await page.waitForFunction(() => typeof (window as any).jozorDebug?.seedTreeScenario === 'function');
+    await page.waitForFunction(() => typeof (window as PaddleWindow).jozorDebug?.seedTreeScenario === 'function');
 
     // 3. Seed scenario as owner with free tier user
     await page.evaluate(({ token }) => {
-      (window as any).jozorDebug?.seedTreeScenario({
+      (window as PaddleWindow).jozorDebug?.seedTreeScenario({
         people: {
           root: {
             id: 'root',
@@ -104,7 +107,7 @@ test.describe('Paddle Paywall and Checkout Smoke Test', () => {
         let attempts = 0;
         const interval = setInterval(() => {
           attempts++;
-          if ((window as any).Paddle) {
+          if ((window as PaddleWindow).Paddle) {
             clearInterval(interval);
             resolve(true);
           } else if (attempts >= 20) {
@@ -115,7 +118,7 @@ test.describe('Paddle Paywall and Checkout Smoke Test', () => {
       });
     });
 
-    console.log(`[E2E Check] window.Paddle initialized status: ${isPaddleInitialized}`);
+    console.info(`[E2E Check] window.Paddle initialized status: ${isPaddleInitialized}`);
 
     if (!isPaddleInitialized) {
       console.warn('[E2E Check] Paddle SDK did not initialize in this environment. Checkout request smoke skipped.');
@@ -138,13 +141,13 @@ test.describe('Paddle Paywall and Checkout Smoke Test', () => {
     // 10. Wait for the API response and verify either sandbox session creation or safe failure handling.
     const response = await request.response();
     if (response) {
-      console.log(`[E2E Check] Checkout session API response status: ${response.status()}`);
+      console.info(`[E2E Check] Checkout session API response status: ${response.status()}`);
       expect([200, 500, 401]).toContain(response.status());
     }
 
     // 11. Confirm either checkout opened successfully or the UI displayed a graceful failure state.
     if (response?.ok()) {
-      await page.waitForFunction(() => Boolean((window as any).Paddle), undefined, { timeout: 5000 });
+      await page.waitForFunction(() => Boolean((window as PaddleWindow).Paddle), undefined, { timeout: 5000 });
       return;
     }
 

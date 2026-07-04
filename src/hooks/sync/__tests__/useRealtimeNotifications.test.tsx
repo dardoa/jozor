@@ -62,7 +62,7 @@ vi.mock('../../../features/sharing', () => ({
   subscribeToOwnedInvitations: (...args: unknown[]) => subscribeToOwnedInvitationsMock(...args),
 }));
 
-vi.mock('../../../features/activity-log', () => ({
+vi.mock('../../../features/activity-log/service', () => ({
   activityService: {
     subscribeToLogs: (...args: unknown[]) => subscribeToLogsMock(...args),
   },

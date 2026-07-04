@@ -4,6 +4,18 @@ import * as path from 'path';
 
 const AUTH_DIR = path.resolve(process.cwd(), '.auth');
 
+type DebugSnapshot = {
+  user?: {
+    email?: string;
+  } | null;
+};
+
+type DebugWindow = Window & {
+  jozorDebug?: {
+    getStateSnapshot?: () => DebugSnapshot;
+  };
+};
+
 export const hasE2EAuthEnv = (): boolean => {
   return (
     process.env.E2E_AUTH_ROLE_HARNESS === 'true' &&
@@ -40,11 +52,11 @@ export async function ensureAuthState(page: Page, role: 'owner' | 'collab'): Pro
       // Give a moment for store hydration and session restoration
       await checkPage.waitForTimeout(2000);
 
-      const snapshot = await checkPage.evaluate(() => (window as any).jozorDebug?.getStateSnapshot?.());
+      const snapshot = await checkPage.evaluate(() => (window as DebugWindow).jozorDebug?.getStateSnapshot?.());
       if (snapshot?.user?.email?.toLowerCase() === email.toLowerCase()) {
         isSessionValid = true;
       }
-    } catch (err) {
+    } catch {
       console.warn(`[E2E Auth] Failed to validate existing auth state for ${role}, will re-login.`);
     } finally {
       await checkContext?.close().catch(() => {});
@@ -87,7 +99,7 @@ export async function ensureAuthState(page: Page, role: 'owner' | 'collab'): Pro
 
     // Wait for login success
     await page.waitForFunction((expectedEmail) => {
-      const snapshot = (window as any).jozorDebug?.getStateSnapshot?.();
+      const snapshot = (window as DebugWindow).jozorDebug?.getStateSnapshot?.();
       return snapshot?.user?.email?.toLowerCase() === String(expectedEmail).toLowerCase();
     }, email);
 

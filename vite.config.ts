@@ -51,24 +51,6 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         output: {
           manualChunks(id) {
-            const normalizedId = id.replace(/\\/g, '/');
-
-            if (normalizedId.includes('/src/features/smart-persona/')) {
-              return 'feature-smart-persona';
-            }
-
-            if (normalizedId.includes('/src/features/settings/')) {
-              return 'feature-settings';
-            }
-
-            if (normalizedId.includes('/src/features/tree-control/')) {
-              return 'feature-tree-control';
-            }
-
-            if (normalizedId.includes('/src/features/the-vault/')) {
-              return 'feature-vault';
-            }
-
             if (!id.includes('node_modules')) return undefined;
 
             if (
@@ -82,7 +64,8 @@ export default defineConfig(({ mode }) => {
               id.includes('\\react-leaflet\\') ||
               id.includes('/@react-leaflet/') ||
               id.includes('\\@react-leaflet\\') ||
-              id.includes('lucide-react')
+              id.includes('lucide-react') ||
+              id.includes('sonner')
             ) {
               return 'vendor-react';
             }

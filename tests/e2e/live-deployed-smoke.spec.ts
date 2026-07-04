@@ -28,7 +28,7 @@ test.describe('Live Deployed Smoke Test', () => {
       }
     });
 
-    console.log('[E2E Live Smoke] Accessing configured deployment target.');
+    console.info('[E2E Live Smoke] Accessing configured deployment target.');
     await page.goto(config.url, { waitUntil: 'domcontentloaded' });
 
     // 1. Verify we did not get redirected to vercel.com/login page

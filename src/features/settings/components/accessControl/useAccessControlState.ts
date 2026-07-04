@@ -137,7 +137,7 @@ export const useAccessControlState = ({
 
     try {
       setIsInviting(true);
-      const { activityService } = await import('../../../../features/activity-log');
+      const { activityService } = await import('../../../../features/activity-log/service');
       const { inviteToken } = await createTreeInvitation(
         treeId,
         trimmedInviteEmail,
@@ -172,7 +172,7 @@ export const useAccessControlState = ({
       return;
     }
     try {
-      const { activityService } = await import('../../../../features/activity-log');
+      const { activityService } = await import('../../../../features/activity-log/service');
       await revokeTreeInvitation(invitation.id, ownerId, ownerEmail, supabaseToken);
       showToast.success('messages.success.revoke');
       await activityService.logAction(treeId, 'SHARE_REVOKE', {
@@ -196,7 +196,7 @@ export const useAccessControlState = ({
     if (collaborator.role === newRole) return;
 
     try {
-      const { activityService } = await import('../../../../features/activity-log');
+      const { activityService } = await import('../../../../features/activity-log/service');
       await updateCollaboratorRole(
         treeId,
         collaborator.email,
@@ -244,7 +244,7 @@ export const useAccessControlState = ({
     const collaborator = pendingRevokeCollaborator;
 
     try {
-      const { activityService } = await import('../../../../features/activity-log');
+      const { activityService } = await import('../../../../features/activity-log/service');
       await revokeCollaboratorAccess(
         treeId,
         collaborator.email,

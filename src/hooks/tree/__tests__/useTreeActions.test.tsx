@@ -50,7 +50,7 @@ vi.mock('../../../services/deltaSyncService', () => ({
   },
 }));
 
-vi.mock('../../../features/activity-log', () => ({
+vi.mock('../../../features/activity-log/service', () => ({
   activityService: {
     logAction: vi.fn(),
   },

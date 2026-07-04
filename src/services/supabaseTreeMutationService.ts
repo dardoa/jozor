@@ -1,7 +1,7 @@
 import type { Person, TreeSettings } from '../types';
 import { logError } from '../utils/errorLogger';
 import { getTreeClient } from './supabaseTreeClient';
-import { activityService } from '../features/activity-log';
+import { activityService } from '../features/activity-log/service';
 
 type ImportablePerson = Person & {
   customFields?: Record<string, unknown>;

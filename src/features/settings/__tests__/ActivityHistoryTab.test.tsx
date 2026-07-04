@@ -55,7 +55,7 @@ vi.mock('../../../context/TranslationContext', () => ({
   }),
 }));
 
-vi.mock('../../../features/activity-log', () => ({
+vi.mock('../../../features/activity-log/service', () => ({
   activityService: {
     fetchLogs: (...args: unknown[]) => fetchLogsMock(...args),
     subscribeToLogs: (...args: unknown[]) => subscribeToLogsMock(...args),

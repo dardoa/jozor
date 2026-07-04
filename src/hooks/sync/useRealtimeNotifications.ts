@@ -6,7 +6,7 @@ import {
   subscribeToMyInvitations,
   subscribeToOwnedInvitations,
 } from '../../features/sharing';
-import { activityService } from '../../features/activity-log';
+import { activityService } from '../../features/activity-log/service';
 import { RealtimeSubscriber } from '../../services/sync/RealtimeSubscriber';
 import type { DeltaOperation } from '../../services/sync/SyncTypes';
 import { logError, logInfo, logWarn } from '../../utils/errorLogger';
