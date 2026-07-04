@@ -1,5 +1,14 @@
 # Project Log
 
+## 2026-07-04 - Vercel Environment & Deployment Smoke
+
+- Summary:
+  - Audited the presence of required Vercel environment variables (Supabase, Paddle, Gemini, Google Drive, App Origin) using the authenticated Vercel CLI session.
+  - Verified that all required keys are successfully configured/encrypted under the Production environment.
+  - Validated local build compilation and typechecks, confirming successful chunk split mapping and zero warnings/errors.
+  - Performed a deployed URL smoke check on a protected Vercel preview deployment, observing that access is secured behind Vercel SSO deployment protection.
+  - Documented findings in [vercel-env-deployment-smoke-2026-07-04.md](file:///d:/AppDEV/Jozor1.1/docs/reviews/vercel-env-deployment-smoke-2026-07-04.md) and [evidence_notes.md](file:///d:/AppDEV/Jozor1.1/docs/reviews/evidence/vercel-env-deployment-smoke-2026-07-04/evidence_notes.md).
+
 ## 2026-07-04 - Private Beta Final Go/No-Go Checklist Update
 
 - Summary:
