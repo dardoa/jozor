@@ -1,5 +1,13 @@
 # Project Log
 
+## 2026-07-05 - Manuscript Options Honesty Pass
+
+- Summary:
+  - Manuscript configuration controls were clarified so visible options represent currently functional behavior. Custom ordering remains supported internally but is hidden until a dedicated ordering UI exists.
+  - Renamed option "Include photos" to "Include available profile photos" / "تضمين الصور الشخصية المتاحة".
+  - Renamed option "Narrative draft" to "Draft biography text" / "نصوص تعريفية مبدئية".
+  - Updated tests in [`ExportCloudPanel.test.tsx`](file:///d:/AppDEV/Jozor1.1/src/features/the-vault/components/__tests__/ExportCloudPanel.test.tsx) to match the new labels and verify that the custom ordering option is not present in the select dropdown.
+
 ## 2026-07-04 - Publishing Cleanup & Legacy Separation
 
 - Summary:

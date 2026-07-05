@@ -201,8 +201,8 @@ describe('ExportCloudPanel manuscript preview', () => {
     fireEvent.change(screen.getByLabelText(/Manuscript root/i), { target: { value: 'Branch Person' } });
     fireEvent.change(screen.getByLabelText(/Branch depth/i), { target: { value: 'all' } });
     fireEvent.change(screen.getByLabelText(/Reading order/i), { target: { value: 'alphabetical' } });
-    fireEvent.click(screen.getByLabelText(/Include photos/i));
-    fireEvent.click(screen.getByLabelText(/Narrative draft/i));
+    fireEvent.click(screen.getByLabelText(/Include available profile photos/i));
+    fireEvent.click(screen.getByLabelText(/Draft biography text/i));
     fireEvent.click(screen.getByRole('button', { name: /Preview Manuscript/i }));
 
     expect(screen.getByText(/Root person:/i)).toBeInTheDocument();
@@ -415,5 +415,25 @@ describe('ExportCloudPanel manuscript preview', () => {
 
     const indicator = screen.getByTestId('controlled-pdf-readiness-indicator');
     expect(indicator).toBeInTheDocument();
+  });
+
+  it('keeps visible options honest by renaming photos/drafts and hiding custom reading order from select element', () => {
+    render(
+      <ExportCloudPanel
+        {...baseProps}
+      />
+    );
+
+    // Honest labels must be visible
+    expect(screen.getByText(/Include available profile photos/i)).toBeInTheDocument();
+    expect(screen.getByText(/Draft biography text/i)).toBeInTheDocument();
+
+    // Check custom option is not present in select dropdown
+    const select = screen.getByLabelText(/Reading order/i) as HTMLSelectElement;
+    const options = Array.from(select.options).map(opt => opt.value);
+    expect(options).not.toContain('custom');
+    expect(options).toContain('narrative');
+    expect(options).toContain('chronological');
+    expect(options).toContain('alphabetical');
   });
 });

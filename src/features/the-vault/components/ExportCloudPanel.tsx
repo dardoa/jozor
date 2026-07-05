@@ -210,6 +210,7 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
     [includeEvidence, includeImages, includeNarrative, includeTimeline, language]
   );
 
+  // Visual inserts are template-level options and are intentionally not exposed in the Vault UI yet.
   const manuscriptOptions = useMemo(
     () => ({
       rootPersonId: effectiveRootPersonId,
@@ -594,7 +595,7 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                 </select>
               </label>
               <label className="flex min-h-10 cursor-pointer items-center justify-between gap-3 rounded-lg bg-[var(--surface-subtle)] px-3 py-2 text-xs font-semibold text-[var(--text-secondary)]">
-                <span>{language === 'ar' ? 'تضمين الصور' : 'Include photos'}</span>
+                <span>{language === 'ar' ? 'تضمين الصور الشخصية المتاحة' : 'Include available profile photos'}</span>
                 <input
                   type="checkbox"
                   checked={includeImages}
@@ -603,7 +604,7 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                 />
               </label>
               <label className="flex min-h-10 cursor-pointer items-center justify-between gap-3 rounded-lg bg-[var(--surface-subtle)] px-3 py-2 text-xs font-semibold text-[var(--text-secondary)]">
-                <span>{language === 'ar' ? 'مسودة سردية' : 'Narrative draft'}</span>
+                <span>{language === 'ar' ? 'نصوص تعريفية مبدئية' : 'Draft biography text'}</span>
                 <input
                   type="checkbox"
                   checked={includeNarrative}
