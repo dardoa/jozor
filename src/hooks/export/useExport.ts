@@ -197,6 +197,7 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
                     canvasWidth: captureWidth * scaleFactor,
                     canvasHeight: captureHeight * scaleFactor,
                     useCORS: true,
+                    skipFonts: true,
                     style: {
                         transform: 'none',
                         transition: 'none',
@@ -499,6 +500,8 @@ async function convertExportImagesToBase64(svg: SVGSVGElement, authHeaders: { to
                 img.setAttribute('href', dataUrl);
                 img.removeAttribute('xlink:href');
             } catch (e) {
+                img.setAttribute('href', TRANSPARENT_PIXEL_DATA_URL);
+                img.removeAttribute('xlink:href');
                 logWarn('EXPORT', 'EXPORT_IMAGE_CONVERSION_WARNING', {
                     metadata: { url, error: e instanceof Error ? e.message : String(e) }
                 });
@@ -508,6 +511,8 @@ async function convertExportImagesToBase64(svg: SVGSVGElement, authHeaders: { to
 
     logInfo('EXPORT', 'EXPORT_IMAGE_CONVERSION_COMPLETED', { imageCount: images.length });
 }
+
+const TRANSPARENT_PIXEL_DATA_URL = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
 
 function blobToDataUrl(blob: Blob): Promise<string> {
     return new Promise((resolve, reject) => {

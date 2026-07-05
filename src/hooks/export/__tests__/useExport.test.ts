@@ -15,6 +15,11 @@ import {
   PublishingPipeline,
   PublishingTracker,
 } from '../../../features/publishing';
+import { toPng } from 'html-to-image';
+
+const { mockPdfSave } = vi.hoisted(() => ({
+  mockPdfSave: vi.fn(),
+}));
 
 vi.mock('../../../utils/fileUtils', () => ({
   downloadFile: vi.fn(),
@@ -33,6 +38,21 @@ vi.mock('../../../services/archiveService', () => ({
     blob: new Blob([JSON.stringify(payload)], { type: 'application/octet-stream' }),
     manifest: {},
   })),
+}));
+
+vi.mock('html-to-image', () => ({
+  toPng: vi.fn(async () => 'data:image/png;base64,mock-tree-snapshot'),
+  toJpeg: vi.fn(async () => 'data:image/jpeg;base64,mock-tree-snapshot'),
+  toSvg: vi.fn(async () => 'data:image/svg+xml;base64,mock-tree-snapshot'),
+}));
+
+vi.mock('jspdf', () => ({
+  default: vi.fn(function MockJsPDF() {
+    return {
+      addImage: vi.fn(),
+      save: mockPdfSave,
+    };
+  }),
 }));
 
 vi.mock('../../../features/publishing', () => ({
@@ -217,6 +237,10 @@ describe('useExport', () => {
     mockStore.relationships = {};
     mockStore.sources = {};
     mockStore.citations = {};
+    Object.defineProperty(document, 'fonts', {
+      value: { ready: Promise.resolve() },
+      configurable: true,
+    });
   });
 
   it('exports raw names for owner role', async () => {
@@ -231,6 +255,52 @@ describe('useExport', () => {
     const [data] = vi.mocked(downloadFile).mock.calls[0];
     const parsed = JSON.parse(data as string);
     expect(parsed.people['person-1'].firstName).toBe('John');
+  });
+
+  it('exports tree PDF snapshots without trying to inline remote web fonts', async () => {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg') as SVGSVGElement;
+    const viewport = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    viewport.classList.add('viewport');
+    Object.defineProperty(viewport, 'getBBox', {
+      value: () => ({ x: 0, y: 0, width: 320, height: 180 }),
+      configurable: true,
+    });
+    svg.appendChild(viewport);
+
+    const OriginalImage = globalThis.Image;
+    class MockImage {
+      onload: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      crossOrigin = '';
+
+      set src(_value: string) {
+        queueMicrotask(() => this.onload?.());
+      }
+    }
+    Object.defineProperty(globalThis, 'Image', {
+      value: MockImage,
+      configurable: true,
+    });
+
+    try {
+      const svgRef = { current: svg };
+      const { result } = renderHook(() => useExport(mockPeople, svgRef));
+
+      await act(async () => {
+        await result.current.handleExport('pdf');
+      });
+
+      expect(toPng).toHaveBeenCalledWith(svg, expect.objectContaining({
+        skipFonts: true,
+        useCORS: true,
+      }));
+      expect(mockPdfSave).toHaveBeenCalledWith('family_tree.pdf');
+    } finally {
+      Object.defineProperty(globalThis, 'Image', {
+        value: OriginalImage,
+        configurable: true,
+      });
+    }
   });
 
   it('exports masked names for viewer role and blocks raw sensitive values', async () => {
