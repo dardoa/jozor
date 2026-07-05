@@ -1,5 +1,15 @@
 # Project Log
 
+## 2026-07-05 - Manuscript Preview/Export Consistency Audit
+
+- Summary:
+  - Manuscript preview/export consistency was verified so preview, Family Book PDF, and export history consume the same manuscript options and privacy-masked data.
+  - Added new test suites in `ExportCloudPanel.test.tsx` verifying:
+    - Option changes (root, reading order, photos, biography draft, timeline, bibliography) correctly mark the preview as stale.
+    - If the preview is stale, clicking the PDF button inside the preview modal triggers a preview refresh instead of exporting stale data.
+    - Directly clicking the Family Book PDF button on the card bypasses preview and uses current configuration parameters.
+  - Confirmed alignment between `useExport.ts` and `PublishingTracker.ts` to ensure metadata matches.
+
 ## 2026-07-05 - Manuscript Options Honesty Pass
 
 - Summary:

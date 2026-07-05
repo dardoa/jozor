@@ -429,11 +429,143 @@ describe('ExportCloudPanel manuscript preview', () => {
     expect(screen.getByText(/Draft biography text/i)).toBeInTheDocument();
 
     // Check custom option is not present in select dropdown
+    // Check custom option is not present in select dropdown
     const select = screen.getByLabelText(/Reading order/i) as HTMLSelectElement;
     const options = Array.from(select.options).map(opt => opt.value);
     expect(options).not.toContain('custom');
     expect(options).toContain('narrative');
     expect(options).toContain('chronological');
     expect(options).toContain('alphabetical');
+  });
+
+  it('marks preview as stale when any relevant option is changed', async () => {
+    const onRunPublishingPreview = vi.fn().mockResolvedValue({
+      title: 'Family Manuscript',
+      html: '<html><body>Preview</body></html>',
+      pageEstimate: 4,
+    });
+
+    const { rerender } = render(
+      <ExportCloudPanel
+        {...baseProps}
+        onRunPublishingPreview={onRunPublishingPreview}
+      />
+    );
+
+    // Helper to generate preview and verify ready
+    const generatePreview = async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Preview Manuscript/i }));
+      await screen.findByText('Estimated pages: 4');
+      expect(screen.getByTestId('manuscript-preview-status-indicator')).toHaveTextContent('Preview ready');
+    };
+
+    // Test 1: Root Person change triggers stale
+    await generatePreview();
+    fireEvent.change(screen.getByLabelText(/Manuscript root/i), { target: { value: 'Branch Person' } });
+    expect(screen.getByTestId('manuscript-preview-status-indicator')).toHaveTextContent('Preview stale');
+
+    // Clean rerender for next test
+    rerender(<ExportCloudPanel {...baseProps} onRunPublishingPreview={onRunPublishingPreview} />);
+
+    // Test 2: Reading order change triggers stale
+    await generatePreview();
+    fireEvent.change(screen.getByLabelText(/Reading order/i), { target: { value: 'chronological' } });
+    expect(screen.getByTestId('manuscript-preview-status-indicator')).toHaveTextContent('Preview stale');
+
+    // Clean rerender for next test
+    rerender(<ExportCloudPanel {...baseProps} onRunPublishingPreview={onRunPublishingPreview} />);
+
+    // Test 3: Photos change triggers stale
+    await generatePreview();
+    fireEvent.click(screen.getByLabelText(/Include available profile photos/i));
+    expect(screen.getByTestId('manuscript-preview-status-indicator')).toHaveTextContent('Preview stale');
+
+    // Clean rerender for next test
+    rerender(<ExportCloudPanel {...baseProps} onRunPublishingPreview={onRunPublishingPreview} />);
+
+    // Test 4: Narrative change triggers stale
+    await generatePreview();
+    fireEvent.click(screen.getByLabelText(/Draft biography text/i));
+    expect(screen.getByTestId('manuscript-preview-status-indicator')).toHaveTextContent('Preview stale');
+
+    // Clean rerender for next test
+    rerender(<ExportCloudPanel {...baseProps} onRunPublishingPreview={onRunPublishingPreview} />);
+
+    // Test 5: Timeline change triggers stale
+    await generatePreview();
+    fireEvent.click(screen.getByLabelText(/Include timeline/i));
+    expect(screen.getByTestId('manuscript-preview-status-indicator')).toHaveTextContent('Preview stale');
+
+    // Clean rerender for next test
+    rerender(<ExportCloudPanel {...baseProps} onRunPublishingPreview={onRunPublishingPreview} />);
+
+    // Test 6: Bibliography change triggers stale
+    await generatePreview();
+    fireEvent.click(screen.getByLabelText(/Include bibliography/i));
+    expect(screen.getByTestId('manuscript-preview-status-indicator')).toHaveTextContent('Preview stale');
+  });
+
+  it('refreshes the preview when clicking the emerald button in the modal if the preview is stale', async () => {
+    const onRunPublishingPreview = vi.fn().mockResolvedValue({
+      title: 'Family Manuscript',
+      html: '<html><body>Preview</body></html>',
+      pageEstimate: 4,
+    });
+    const onRunPublishingExport = vi.fn().mockResolvedValue(undefined);
+
+    render(
+      <ExportCloudPanel
+        {...baseProps}
+        onRunPublishingPreview={onRunPublishingPreview}
+        onRunPublishingExport={onRunPublishingExport}
+      />
+    );
+
+    // 1. Click preview to open modal
+    fireEvent.click(screen.getByRole('button', { name: /Preview Manuscript/i }));
+    await screen.findByText('Estimated pages: 4');
+
+    // 2. Change a setting inside the main view to make it stale
+    fireEvent.change(screen.getByLabelText(/Branch depth/i), { target: { value: '4' } });
+    expect(screen.getByTestId('manuscript-preview-status-indicator')).toHaveTextContent('Preview stale');
+
+    // 3. Click the Refresh Preview button (which takes the place of the PDF button when stale)
+    const actionButton = screen.getByRole('button', { name: /Refresh Preview/i });
+    expect(actionButton).toBeInTheDocument();
+
+    // Clear mock calls to be sure
+    onRunPublishingPreview.mockClear();
+    fireEvent.click(actionButton);
+
+    // Should call preview generation instead of export
+    await waitFor(() => expect(onRunPublishingPreview).toHaveBeenCalled());
+    expect(onRunPublishingExport).not.toHaveBeenCalled();
+  });
+
+  it('direct card Family Book PDF button uses the current options directly', async () => {
+    const onRunPublishingExport = vi.fn().mockResolvedValue(undefined);
+    render(
+      <ExportCloudPanel
+        {...baseProps}
+        onRunPublishingExport={onRunPublishingExport}
+      />
+    );
+
+    // Change some settings
+    fireEvent.change(screen.getByLabelText(/Branch depth/i), { target: { value: 'all' } });
+    fireEvent.change(screen.getByLabelText(/Reading order/i), { target: { value: 'chronological' } });
+
+    // Click direct card export
+    fireEvent.click(screen.getByRole('button', { name: /Family Book PDF/i }));
+
+    await waitFor(() => expect(onRunPublishingExport).toHaveBeenCalled());
+    expect(onRunPublishingExport).toHaveBeenCalledWith(expect.objectContaining({
+      templateId: 'classic-book-manuscript',
+      format: 'pdf',
+      manuscriptOptions: expect.objectContaining({
+        generationsDepth: 'all',
+        orderingStrategy: 'chronological',
+      }),
+    }));
   });
 });
