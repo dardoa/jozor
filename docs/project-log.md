@@ -1,5 +1,14 @@
 # Project Log
 
+## 2026-07-05 - Controlled PDF Synthetic Activation Smoke Check
+
+- Summary:
+  - Executed a synthetic activation smoke check of the Controlled PDF path using only synthetic HTML.
+  - Created [`scripts/controlled-pdf-browserless-smoke.mjs`](file:///d:/AppDEV/Jozor1.1/scripts/controlled-pdf-browserless-smoke.mjs) which reads `BROWSERLESS_TOKEN` from the environment, posts synthetic Arabic HTML, and writes the output to `tmp/controlled_pdf_synthetic_smoke.pdf`.
+  - The script skips cleanly with a safe warning if `BROWSERLESS_TOKEN` is unset, protecting against unintended deployment failure.
+  - Verified local client-server boundaries, mock readiness status probes, and error masking rules in vitest.
+  - Created documentation [`docs/reviews/controlled-pdf-synthetic-activation-smoke-2026-07-05.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/controlled-pdf-synthetic-activation-smoke-2026-07-05.md) and [`docs/reviews/evidence/controlled-pdf-synthetic-activation-smoke-2026-07-05/evidence_notes.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/evidence/controlled-pdf-synthetic-activation-smoke-2026-07-05/evidence_notes.md).
+
 ## 2026-07-05 - Controlled PDF External Renderer Adapter (Phase 2B)
 
 - Summary:
