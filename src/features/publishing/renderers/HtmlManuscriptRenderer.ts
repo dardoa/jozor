@@ -304,6 +304,8 @@ html {
   font-family: ${theme.typography.fontFamily};
   color: ${theme.colors.text};
   background: ${theme.colors.pageBackground};
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
 }
 body {
   margin: 0;
@@ -315,6 +317,9 @@ body {
   page-break-after: always;
   background: ${theme.colors.paperBackground};
 }
+.chapter-page {
+  break-after: page;
+}
 .cover-page {
   display: grid;
   align-content: center;
@@ -324,6 +329,12 @@ body {
   color: ${theme.colors.accent};
   letter-spacing: ${theme.typography.kickerLetterSpacing};
   text-transform: uppercase;
+}
+h1, h2, .person-card, .person-card__identity, .fact-row, .bibliography-table td, .source-highlights li {
+  overflow-wrap: anywhere;
+  word-break: normal;
+  -webkit-hyphens: auto;
+  hyphens: auto;
 }
 h1 {
   margin: 0 0 12px;
@@ -451,7 +462,7 @@ small {
 }
 .fact-row {
   display: grid;
-  grid-template-columns: 110px 1fr;
+  grid-template-columns: minmax(86px, 120px) minmax(0, 1fr);
   gap: 8px;
   margin: 5px 0;
 }
@@ -460,6 +471,7 @@ dt {
 }
 dd {
   margin: 0;
+  min-width: 0;
   overflow-wrap: anywhere;
 }
 .source-highlights {
@@ -480,6 +492,10 @@ dd {
   width: 100%;
   border-collapse: collapse;
   background: ${theme.colors.cardBackground};
+  table-layout: fixed;
+}
+.bibliography-table tr {
+  break-inside: avoid;
 }
 .bibliography-table th,
 .bibliography-table td {
@@ -487,6 +503,21 @@ dd {
   padding: 8px;
   text-align: start;
   vertical-align: top;
+}
+.bibliography-table th:first-child,
+.bibliography-table td:first-child {
+  width: 44px;
+}
+.bibliography-table th:nth-child(3),
+.bibliography-table td:nth-child(3) {
+  width: 86px;
+}
+.page-footer {
+  margin-top: 18px;
+  padding-top: 8px;
+  border-top: 1px solid ${theme.colors.border};
+  color: ${theme.colors.mutedText};
+  font-size: 10px;
 }
 @media print {
   body {

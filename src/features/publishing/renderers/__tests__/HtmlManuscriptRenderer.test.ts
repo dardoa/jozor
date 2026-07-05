@@ -462,3 +462,60 @@ describe('HtmlManuscriptRenderer – template variant architecture', () => {
     expect(html).toContain('المراجع');
   });
 });
+
+describe('HtmlManuscriptRenderer – Print Layout Stability', () => {
+  it('contains the newly introduced layout stability CSS patterns', () => {
+    const html = HtmlManuscriptRenderer.renderToHtml(model, { language: 'ar' });
+
+    expect(html).toContain('print-color-adjust: exact');
+    expect(html).toContain('overflow-wrap: anywhere');
+    expect(html).toContain('break-inside: avoid');
+    expect(html).toContain('table-layout: fixed');
+    expect(html).toContain('.page-footer');
+    expect(html).toContain('grid-template-columns: minmax(86px, 120px) minmax(0, 1fr)');
+  });
+
+  it('successfully renders long Arabic names and source titles without throwing', () => {
+    const modelWithLongTitles: FamilyManuscriptModel = {
+      id: 'long-names-test',
+      title: 'مخطوط عائلة بن عبد الرحمن بن محمد بن علي آل القاضي الشريف الحسيني الأزهري الملقب بالفاكهي البغدادي الشافعي',
+      rootPersonId: 'p-long',
+      chapters: [
+        {
+          id: 'people',
+          type: 'people',
+          title: 'أفراد العائلة',
+          people: [
+            {
+              personId: 'p-long',
+              displayName: 'سيد محمد بن عبد الرحمن بن محمد بن علي بن أحمد بن عبدالله آل القاضي الشريف الحسيني الأزهري',
+              citationCoverage: 100,
+              citationCount: 1,
+              facts: [
+                { label: 'مكان الميلاد', value: 'حارة الأشراف بالبلدة القديمة بمكة المكرمة، المملكة العربية السعودية', citationCount: 1 }
+              ],
+              sourceHighlights: [
+                { sourceId: 's-long', title: 'كتاب السلوك لمعرفة دول الملوك وتاريخ الخلفاء والأمراء الأعيان من بني هاشم وقريش المجلد الرابع عشر من الطبعة الأولى بمصر سنة ١٣٢٨ هجرية', citationCount: 1 }
+              ]
+            }
+          ]
+        },
+        {
+          id: 'evidence',
+          type: 'evidence',
+          title: 'المراجع',
+          citations: [
+            { citationId: 'c-long', sourceId: 's-long', sourceTitle: 'كتاب السلوك لمعرفة دول الملوك وتاريخ الخلفاء والأمراء الأعيان من بني هاشم وقريش المجلد الرابع عشر من الطبعة الأولى بمصر سنة ١٣٢٨ هجرية', targetId: 'p-long', targetField: 'person.birth.place' }
+          ]
+        }
+      ]
+    };
+
+    const html = HtmlManuscriptRenderer.renderToHtml(modelWithLongTitles, { language: 'ar' });
+
+    expect(html).toContain('الملقب بالفاكهي');
+    expect(html).toContain('سيد محمد بن عبد الرحمن');
+    expect(html).toContain('حارة الأشراف بالبلدة القديمة');
+    expect(html).toContain('كتاب السلوك لمعرفة دول الملوك');
+  });
+});
