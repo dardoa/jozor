@@ -310,7 +310,7 @@ describe('ExportCloudPanel manuscript preview', () => {
 
     const indicator = await screen.findByTestId('controlled-pdf-readiness-indicator');
     expect(indicator).toBeInTheDocument();
-    expect(indicator).toHaveTextContent('Controlled PDF: Ready');
+    expect(indicator).toHaveTextContent('PDF engine: Ready');
   });
 
   it('renders manuscript summary panel with root, depth, strategy, and citation coverage stats', async () => {

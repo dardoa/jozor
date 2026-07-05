@@ -678,9 +678,9 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
             </div>
             <div className="mt-2 flex flex-col items-end gap-1 text-[10px] font-mono text-[var(--text-dim)]">
               <div data-testid="controlled-pdf-readiness-indicator">
-                {controlledPdfStatus === 'ready' && 'Controlled PDF: Ready'}
-                {controlledPdfStatus === 'fallback' && 'Controlled PDF: Browser print fallback'}
-                {controlledPdfStatus === 'checking' && 'Controlled PDF: Checking'}
+                {controlledPdfStatus === 'ready' && (language === 'ar' ? 'محرك PDF: جاهز' : 'PDF engine: Ready')}
+                {controlledPdfStatus === 'fallback' && (language === 'ar' ? 'محرك PDF: الطباعة من المتصفح' : 'PDF engine: Browser print')}
+                {controlledPdfStatus === 'checking' && (language === 'ar' ? 'محرك PDF: جاري الفحص' : 'PDF engine: Checking')}
               </div>
               <div className="text-right text-[10px] font-sans text-[var(--text-dim)]/80" data-testid="manuscript-visual-review-hint">
                 {language === 'ar'
@@ -688,6 +688,12 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                   : 'Manuscript renderer visual review: passed for narrative order and Arabic RTL output.'}
               </div>
             </div>
+          </div>
+
+          <div className="pt-2 border-t border-[var(--border-soft)]/60">
+            <h5 className="text-xs font-bold uppercase tracking-[0.08em] text-[var(--text-secondary)]">
+              {language === 'ar' ? 'بوسترات وصور الشجرة' : 'Tree Posters & Images'}
+            </h5>
           </div>
 
           {/* Template 2: Classic Ancestor Poster */}
