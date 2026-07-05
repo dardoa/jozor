@@ -3,15 +3,22 @@ import type {
   ManuscriptBranchSummary,
   ManuscriptChapter,
   ManuscriptCitationEntry,
-  ManuscriptPersonEntry,
   ManuscriptTimelineEntry,
 } from '../types';
+import {
+  CLASSIC_MANUSCRIPT_PRINT_TEMPLATE,
+  type ManuscriptPrintTemplate,
+} from './manuscriptTemplates';
+import { renderPersonCardByVariant } from './personCards/index';
+export { getMetadataLabel } from './personCards/classicPersonCard';
 
 export interface HtmlManuscriptRenderOptions {
   readonly language?: 'ar' | 'en';
   readonly title?: string;
   readonly fontUrl?: string;
   readonly theme?: HtmlManuscriptTheme;
+  /** Print template controlling card variant and layout options. Defaults to CLASSIC_MANUSCRIPT_PRINT_TEMPLATE. */
+  readonly template?: ManuscriptPrintTemplate;
 }
 
 export interface HtmlManuscriptTheme {
@@ -79,6 +86,7 @@ export class HtmlManuscriptRenderer {
     const direction = language === 'ar' ? 'rtl' : 'ltr';
     const title = options.title ?? model.title ?? DEFAULT_TITLE;
     const theme = options.theme ?? DEFAULT_HTML_MANUSCRIPT_THEME;
+    const template = options.template ?? CLASSIC_MANUSCRIPT_PRINT_TEMPLATE;
 
     return [
       '<!doctype html>',
@@ -91,7 +99,7 @@ export class HtmlManuscriptRenderer {
       '</head>',
       '<body>',
       renderCover(model, title),
-      model.chapters.map((chapter) => renderChapter(chapter, language)).join('\n'),
+      model.chapters.map((chapter) => renderChapter(chapter, language, template)).join('\n'),
       '</body>',
       '</html>',
     ].join('\n');
@@ -108,12 +116,12 @@ function renderCover(model: FamilyManuscriptModel, title: string): string {
   ].join('\n');
 }
 
-function renderChapter(chapter: ManuscriptChapter, language: 'ar' | 'en'): string {
+function renderChapter(chapter: ManuscriptChapter, language: 'ar' | 'en', template: ManuscriptPrintTemplate): string {
   switch (chapter.type) {
     case 'overview':
       return renderOverviewChapter(chapter.title, chapter.branchSummaries ?? [], language);
     case 'people':
-      return renderPeopleChapter(chapter.title, chapter.people ?? [], language);
+      return renderPeopleChapter(chapter.title, chapter.people ?? [], language, template);
     case 'timeline':
       return renderTimelineChapter(chapter.title, chapter.timeline ?? []);
     case 'evidence':
@@ -157,7 +165,12 @@ function renderOverviewChapter(
   ].join('\n');
 }
 
-function renderPeopleChapter(title: string, people: readonly ManuscriptPersonEntry[], language: 'ar' | 'en'): string {
+function renderPeopleChapter(
+  title: string,
+  people: readonly import('../types').ManuscriptPersonEntry[],
+  language: 'ar' | 'en',
+  template: ManuscriptPrintTemplate
+): string {
   const labels = language === 'ar'
     ? {
       coverage: 'توثيق',
@@ -180,7 +193,7 @@ function renderPeopleChapter(title: string, people: readonly ManuscriptPersonEnt
 
     return [
       ...branchDivider,
-      renderPersonCard(person, labels, language),
+      renderPersonCardByVariant(template.personCardVariant, person, { language, labels }),
     ];
   }).join('\n');
 
@@ -195,56 +208,8 @@ function renderPeopleChapter(title: string, people: readonly ManuscriptPersonEnt
   ].join('\n');
 }
 
-function renderPersonCard(
-  person: ManuscriptPersonEntry,
-  labels: { readonly coverage: string; readonly sourceSingular: string },
-  language: 'ar' | 'en'
-): string {
-  return [
-    '<article class="person-card">',
-    '<header class="person-card__header">',
-    person.photoUrl ? `<img class="person-card__photo" src="${escapeHtml(person.photoUrl)}" alt="">` : '',
-    '<div class="person-card__identity">',
-    `<h2>${escapeHtml(person.displayName)}</h2>`,
-    person.familyContext ? `<p class="person-card__context">${escapeHtml(person.familyContext.label)}</p>` : '',
-    person.relationshipToRoot ? `<div class="person-card__relationship">${escapeHtml(getMetadataLabel(person.relationshipToRoot, person.generation, language))}</div>` : '',
-    '</div>',
-    `<span>${person.citationCoverage}% ${escapeHtml(labels.coverage)}</span>`,
-    '</header>',
-    renderFamilyBreadcrumb(person),
-    person.narrative ? `<p class="person-card__narrative">${escapeHtml(person.narrative)}</p>` : '',
-    '<dl class="fact-list">',
-    ...person.facts.map((fact) => [
-      '<div class="fact-row">',
-      `<dt>${escapeHtml(fact.label)}</dt>`,
-      `<dd>${escapeHtml(fact.value)}${fact.citationCount > 0 ? ` <small>${fact.citationCount} ${escapeHtml(labels.sourceSingular)}</small>` : ''}</dd>`,
-      '</div>',
-    ].join('\n')),
-    '</dl>',
-    renderSourceHighlights(person, language),
-    '</article>',
-  ].join('\n');
-}
-
-function renderFamilyBreadcrumb(person: ManuscriptPersonEntry): string {
-  const breadcrumb = person.familyContext?.breadcrumb;
-  if (!breadcrumb || breadcrumb.length <= 1) return '';
-  return `<p class="person-card__breadcrumb">${breadcrumb.map(escapeHtml).join(' › ')}</p>`;
-}
-
-function renderSourceHighlights(person: ManuscriptPersonEntry, language: 'ar' | 'en'): string {
-  if (person.sourceHighlights.length === 0) {
-    return `<p class="sources-empty">${language === 'ar' ? 'لا توجد مصادر مرتبطة بعد.' : 'No linked sources yet.'}</p>`;
-  }
-
-  return [
-    '<ul class="source-highlights">',
-    ...person.sourceHighlights.map((source) => (
-      `<li>${escapeHtml(source.title)} <small>${source.citationCount}</small></li>`
-    )),
-    '</ul>',
-  ].join('\n');
-}
+// Person card rendering is now delegated to renderPersonCardByVariant() above.
+// The classic implementation lives in personCards/classicPersonCard.ts.
 
 function renderTimelineChapter(title: string, entries: readonly ManuscriptTimelineEntry[]): string {
   const items = entries.slice(0, 80).map((entry) => [
@@ -527,25 +492,4 @@ function escapeCssUrl(value: string): string {
   return value.replace(/["\\\n\r]/g, '');
 }
 
-export function getMetadataLabel(relationship: string, generation: number | undefined, language: 'ar' | 'en'): string {
-  const genNum = generation ?? 0;
-  if (language === 'ar') {
-    const labels: Record<string, string> = {
-      root: 'الجذر',
-      spouse: 'زوج/زوجة',
-      child: 'الجيل 1',
-      grandchild: 'الجيل 2',
-      relative: 'قريب',
-    };
-    return labels[relationship] ?? `الجيل ${genNum}`;
-  } else {
-    const labels: Record<string, string> = {
-      root: 'Root',
-      spouse: 'Spouse',
-      child: 'Generation 1',
-      grandchild: 'Generation 2',
-      relative: 'Relative',
-    };
-    return labels[relationship] ?? `Generation ${genNum}`;
-  }
-}
+// getMetadataLabel is re-exported from personCards/classicPersonCard.ts above.

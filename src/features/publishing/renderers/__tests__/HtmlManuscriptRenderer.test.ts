@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { FamilyManuscriptModel } from '../../types';
 import { HtmlManuscriptRenderer } from '../HtmlManuscriptRenderer';
+import { CLASSIC_MANUSCRIPT_PRINT_TEMPLATE } from '../manuscriptTemplates';
 
 const model: FamilyManuscriptModel = {
   id: 'manuscript-test',
@@ -384,5 +385,59 @@ describe('HtmlManuscriptRenderer – Arabic encoding guard', () => {
     for (const fragment of MOJIBAKE_FRAGMENTS_HTML) {
       expect(html).not.toContain(fragment);
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Template variant architecture tests
+// ---------------------------------------------------------------------------
+
+describe('HtmlManuscriptRenderer – template variant architecture', () => {
+  it('default render (no template option) produces .person-card elements', () => {
+    const html = HtmlManuscriptRenderer.renderToHtml(model, { language: 'ar' });
+    expect(html).toContain('class="person-card"');
+  });
+
+  it('explicit classic-card template produces same output as default', () => {
+    const htmlDefault = HtmlManuscriptRenderer.renderToHtml(model, { language: 'ar' });
+    const htmlExplicit = HtmlManuscriptRenderer.renderToHtml(model, {
+      language: 'ar',
+      template: CLASSIC_MANUSCRIPT_PRINT_TEMPLATE,
+    });
+    expect(htmlExplicit).toBe(htmlDefault);
+  });
+
+  it('leaf-card variant falls back to classic-card and renders successfully', () => {
+    const html = HtmlManuscriptRenderer.renderToHtml(model, {
+      language: 'ar',
+      template: { ...CLASSIC_MANUSCRIPT_PRINT_TEMPLATE, personCardVariant: 'leaf-card' },
+    });
+    // Falls back to classic-card — output still contains person-card markup
+    expect(html).toContain('class="person-card"');
+    expect(html).toContain('رمضان القربي');
+  });
+
+  it('photo-card variant falls back to classic-card and renders successfully', () => {
+    const html = HtmlManuscriptRenderer.renderToHtml(model, {
+      language: 'ar',
+      template: { ...CLASSIC_MANUSCRIPT_PRINT_TEMPLATE, personCardVariant: 'photo-card' },
+    });
+    expect(html).toContain('class="person-card"');
+  });
+
+  it('research-card variant falls back to classic-card and renders successfully', () => {
+    const html = HtmlManuscriptRenderer.renderToHtml(model, {
+      language: 'ar',
+      template: { ...CLASSIC_MANUSCRIPT_PRINT_TEMPLATE, personCardVariant: 'research-card' },
+    });
+    expect(html).toContain('class="person-card"');
+  });
+
+  it('compact-row variant falls back to classic-card and renders successfully', () => {
+    const html = HtmlManuscriptRenderer.renderToHtml(model, {
+      language: 'ar',
+      template: { ...CLASSIC_MANUSCRIPT_PRINT_TEMPLATE, personCardVariant: 'compact-row' },
+    });
+    expect(html).toContain('class="person-card"');
   });
 });
