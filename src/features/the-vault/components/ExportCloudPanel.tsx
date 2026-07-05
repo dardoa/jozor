@@ -17,6 +17,8 @@ import {
   Eye,
   Sparkles,
   X,
+  History,
+  Clock,
 } from 'lucide-react';
 
 import { PUBLISHING_EXPORT_RENDERERS } from '../../../types';
@@ -153,14 +155,20 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
   const language = useAppStore((state) => state.language);
   const people = useAppStore((state) => state.people);
   const focusId = useAppStore((state) => state.focusId);
+  const exportHistory = useAppStore((state) => state.exportHistory);
+  const loadExportHistory = useAppStore((state) => state.loadExportHistory);
+  const clearExportHistory = useAppStore((state) => state.clearExportHistory);
+
   const [selectedRootPersonId, setSelectedRootPersonId] = useState(() => focusId || Object.keys(people)[0] || '');
   const [rootSearchText, setRootSearchText] = useState('');
   const [generationsDepth, setGenerationsDepth] = useState<number | 'all'>(3);
+  const [confirmClearHistory, setConfirmClearHistory] = useState(false);
   const { status: controlledPdfStatus, refresh: checkControlledPdfReadiness } = useControlledPdfReadiness();
 
   React.useEffect(() => {
     void checkControlledPdfReadiness();
-  }, [checkControlledPdfReadiness]);
+    void loadExportHistory();
+  }, [checkControlledPdfReadiness, loadExportHistory]);
 
   const personOptions = useMemo(
     () => Object.values(people)
@@ -790,6 +798,216 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
             );
           })}
         </div>
+      </section>
+
+      <section className="rounded-[14px] border border-[var(--border-soft)] bg-[var(--surface-panel)] p-4 shadow-none">
+        <div className="flex items-center justify-between border-b border-[var(--border-soft)] pb-3 mb-4">
+          <div className="flex items-center gap-2">
+            <History className="h-5 w-5 text-[var(--primary-600)]" />
+            <h4 className="text-[16px] font-bold tracking-tight text-[var(--text-main)]">
+              {language === 'ar' ? 'سجل النشر والجودة' : 'Publishing History & Quality'}
+            </h4>
+          </div>
+          {exportHistory && exportHistory.length > 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                if (confirmClearHistory) {
+                  void clearExportHistory();
+                  setConfirmClearHistory(false);
+                } else {
+                  setConfirmClearHistory(true);
+                }
+              }}
+              className={`min-h-9 px-3 rounded-lg text-xs font-bold transition-all duration-200 ${
+                confirmClearHistory
+                  ? 'bg-red-600 text-white hover:bg-red-700'
+                  : 'border border-[var(--border-soft)] bg-[var(--surface-subtle)] text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]'
+              }`}
+            >
+              {confirmClearHistory
+                ? (language === 'ar' ? 'تأكيد المسح' : 'Confirm clear')
+                : (language === 'ar' ? 'مسح السجل' : 'Clear History')}
+            </button>
+          )}
+        </div>
+
+        {(!exportHistory || exportHistory.length === 0) ? (
+          <div className="rounded-2xl border border-dashed border-[var(--border-soft)] bg-[var(--surface-subtle)] p-5 text-center text-xs text-[var(--text-muted)]">
+            {language === 'ar' ? 'لا يوجد سجل تصدير بعد.' : 'No export history available yet.'}
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {[...exportHistory]
+              .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+              .map((entry) => {
+                let friendlyName = entry.templateId;
+                if (entry.templateId === 'classic-book-manuscript') {
+                  friendlyName = language === 'ar' ? 'كتاب العائلة' : 'Family Book';
+                } else if (entry.templateId === 'classic-ancestor-poster') {
+                  friendlyName = language === 'ar' ? 'شجرة الأسلاف الكلاسيكية الدافئة' : 'Classic Ancestor Poster';
+                } else if (entry.templateId === 'modern-ancestor-poster') {
+                  friendlyName = language === 'ar' ? 'شجرة الأسلاف العصرية الداكنة' : 'Modern Ancestor Poster';
+                } else if (entry.templateId === 'gedcom') {
+                  friendlyName = 'GEDCOM';
+                } else if (entry.templateId === 'json') {
+                  friendlyName = 'JSON';
+                } else if (entry.templateId === 'jozor') {
+                  friendlyName = language === 'ar' ? 'أرشيف جذور' : 'Jozor Archive';
+                }
+
+                const hasWarnings = entry.warnings && entry.warnings.length > 0;
+                const statusText = !entry.success
+                  ? (language === 'ar' ? 'فشل' : 'Failed')
+                  : hasWarnings
+                    ? (language === 'ar' ? 'تنبيهات' : 'Warnings')
+                    : (language === 'ar' ? 'ناجح' : 'Success');
+
+                const statusColorClass = !entry.success
+                  ? 'bg-red-500/10 text-red-700 border-red-500/20'
+                  : hasWarnings
+                    ? 'bg-amber-500/10 text-amber-700 border-amber-500/20'
+                    : 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20';
+
+                return (
+                  <div
+                    key={entry.id || entry.publicationId}
+                    className="flex flex-col gap-3 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-subtle)] p-4 transition-all hover:shadow-sm"
+                  >
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-sm font-bold text-[var(--text-main)]">{friendlyName}</span>
+                          <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${statusColorClass}`}>
+                            {statusText}
+                          </span>
+                        </div>
+                        <div className="mt-1 flex items-center gap-1.5 text-[11px] text-[var(--text-muted)]">
+                          <Clock className="h-3.5 w-3.5" />
+                          <span>{new Date(entry.createdAt).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-US')}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-3 text-xs text-[var(--text-secondary)]">
+                        {entry.totalPages > 0 && (
+                          <span>
+                            {language === 'ar' ? `${entry.totalPages} صفحات` : `${entry.totalPages} pages`}
+                          </span>
+                        )}
+                        <span>
+                          {language === 'ar' ? `${entry.totalPeople} أشخاص` : `${entry.totalPeople} people`}
+                        </span>
+                        {entry.privacy && (
+                          <span className="rounded bg-[var(--surface-panel)] px-1.5 py-0.5 text-[10px] font-mono">
+                            {entry.privacy.masked
+                              ? (language === 'ar' ? 'مخفي' : 'masked')
+                              : (language === 'ar' ? 'غير مخفي' : 'unmasked')}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {(entry.integrity || entry.evidence) && (
+                      <div className="grid gap-2 border-t border-[var(--border-soft)] pt-2.5 sm:grid-cols-3">
+                        {entry.integrity?.healthScore !== undefined && (
+                          <div className="flex items-center gap-2 rounded-lg bg-[var(--surface-panel)] p-2 text-xs">
+                            <span className="text-[var(--text-muted)]">
+                              {language === 'ar' ? 'صحة الشجرة:' : 'Health:'}
+                            </span>
+                            <span className="font-bold text-[var(--text-main)]">{entry.integrity.healthScore}%</span>
+                          </div>
+                        )}
+                        {entry.evidence?.citationCoverage !== undefined && (
+                          <div className="flex items-center gap-2 rounded-lg bg-[var(--surface-panel)] p-2 text-xs">
+                            <span className="text-[var(--text-muted)]">
+                              {language === 'ar' ? 'تغطية المراجع:' : 'Citations:'}
+                            </span>
+                            <span className="font-bold text-[var(--text-main)]">
+                              {Math.round(entry.evidence.citationCoverage * 100)}%
+                            </span>
+                          </div>
+                        )}
+                        {entry.integrity?.issueCount !== undefined && (
+                          <div className="flex items-center gap-2 rounded-lg bg-[var(--surface-panel)] p-2 text-xs">
+                            <span className="text-[var(--text-muted)]">
+                              {language === 'ar' ? 'المشاكل المعلقة:' : 'Issues:'}
+                            </span>
+                            <span className={`font-bold ${entry.integrity.issueCount > 0 ? 'text-amber-600' : 'text-[var(--text-main)]'}`}>
+                              {entry.integrity.issueCount}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {entry.manuscript && (
+                      <div className="border-t border-[var(--border-soft)] pt-2 text-[11px] text-[var(--text-secondary)]">
+                        <div className="font-semibold text-[var(--text-main)] mb-1">
+                          {language === 'ar' ? 'إعدادات التصدير:' : 'Export Configuration:'}
+                        </div>
+                        <div className="grid gap-x-4 gap-y-1 sm:grid-cols-2">
+                          <div>
+                            <span className="text-[var(--text-muted)]">
+                              {language === 'ar' ? 'العمق:' : 'Depth:'}{' '}
+                            </span>
+                            <span>
+                              {entry.manuscript.generationsDepth === 'all'
+                                ? (language === 'ar' ? 'كل الفروع' : 'All generations')
+                                : (language === 'ar' ? `${entry.manuscript.generationsDepth} أجيال` : `${entry.manuscript.generationsDepth} gens`)}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-[var(--text-muted)]">
+                              {language === 'ar' ? 'الترتيب:' : 'Ordering:'}{' '}
+                            </span>
+                            <span>
+                              {entry.manuscript.orderingStrategy === 'narrative'
+                                ? (language === 'ar' ? 'سردي (مسار العائلة)' : 'Family path')
+                                : entry.manuscript.orderingStrategy === 'chronological'
+                                  ? (language === 'ar' ? 'زمني' : 'Chronological')
+                                  : (language === 'ar' ? 'أبجدي' : 'Alphabetical')}
+                            </span>
+                          </div>
+                          {entry.manuscript.orderedPersonCount !== undefined && (
+                            <div>
+                              <span className="text-[var(--text-muted)]">
+                                {language === 'ar' ? 'الأشخاص المدرجون:' : 'Included people:'}{' '}
+                              </span>
+                              <span>{entry.manuscript.orderedPersonCount}</span>
+                            </div>
+                          )}
+                          <div>
+                            <span className="text-[var(--text-muted)]">
+                              {language === 'ar' ? 'الأقسام المدرجة:' : 'Included sections:'}{' '}
+                            </span>
+                            <span>
+                              {[
+                                entry.manuscript.includeImages ? (language === 'ar' ? 'الصور' : 'photos') : null,
+                                entry.manuscript.includeTimeline ? (language === 'ar' ? 'الخط الزمني' : 'timeline') : null,
+                                entry.manuscript.includeEvidence ? (language === 'ar' ? 'المراجع' : 'bibliography') : null,
+                                entry.manuscript.includeNarrative ? (language === 'ar' ? 'السرد' : 'narrative') : null,
+                              ].filter(Boolean).join(language === 'ar' ? '، ' : ', ') || (language === 'ar' ? 'فصول الأشخاص فقط' : 'people only')}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {hasWarnings && (
+                      <div className="flex items-center gap-1.5 rounded-lg bg-amber-500/5 px-2 py-1 text-[11px] text-amber-700">
+                        <AlertTriangle className="h-3.5 w-3.5" />
+                        <span>
+                          {language === 'ar'
+                            ? `تم تسجيل عدد ${entry.warnings.length} من التنبيهات أثناء تصدير المخطوط.`
+                            : `${entry.warnings.length} warnings reported during export.`}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+          </div>
+        )}
       </section>
 
       <section className="rounded-[14px] border border-[var(--border-soft)] bg-[var(--surface-panel)] p-4 shadow-none">

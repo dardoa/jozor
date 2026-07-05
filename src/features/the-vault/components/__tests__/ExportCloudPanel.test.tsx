@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi, beforeEach } from 'vitest';
 
 import { useControlledPdfReadiness } from '../../../publishing/hooks';
 
@@ -15,27 +15,21 @@ import type { TranslationSchema } from '../../../../utils/translationLoader';
 import { ExportCloudPanel } from '../ExportCloudPanel';
 import { ManuscriptExportSummary } from '../ManuscriptExportSummary';
 
+const mockLoadExportHistory = vi.fn().mockResolvedValue(undefined);
+const mockClearExportHistory = vi.fn().mockResolvedValue(undefined);
+let mockExportHistoryData: Record<string, unknown>[] = [];
+
 vi.mock('../../../../store/useAppStore', () => ({
-  useAppStore: (selector: (state: {
-    language: 'en';
-    focusId: string;
-    people: Record<string, {
-      id: string;
-      firstName?: string;
-      middleName?: string;
-      lastName?: string;
-      title?: string;
-      nickName?: string;
-      children?: string[];
-      spouses?: string[];
-    }>;
-  }) => unknown) => selector({
+  useAppStore: (selector: (state: Record<string, unknown>) => unknown) => selector({
     language: 'en',
     focusId: 'person-1',
     people: {
       'person-1': { id: 'person-1', firstName: 'Root', lastName: 'Person', children: ['person-2'], spouses: [] },
       'person-2': { id: 'person-2', firstName: 'Branch', lastName: 'Person', children: [], spouses: [] },
     },
+    exportHistory: mockExportHistoryData,
+    loadExportHistory: mockLoadExportHistory,
+    clearExportHistory: mockClearExportHistory,
   }),
 }));
 
@@ -567,5 +561,141 @@ describe('ExportCloudPanel manuscript preview', () => {
         orderingStrategy: 'chronological',
       }),
     }));
+  });
+
+  describe('Publishing History and Quality Panel', () => {
+    beforeEach(() => {
+      mockExportHistoryData = [];
+      mockLoadExportHistory.mockClear();
+      mockClearExportHistory.mockClear();
+    });
+
+    it('calls loadExportHistory on mount', () => {
+      render(<ExportCloudPanel {...baseProps} />);
+      expect(mockLoadExportHistory).toHaveBeenCalled();
+    });
+
+    it('renders empty history placeholder when no history exists', () => {
+      render(<ExportCloudPanel {...baseProps} />);
+      expect(screen.getByText('No export history available yet.')).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /Clear History/i })).not.toBeInTheDocument();
+    });
+
+    it('renders successful export history with templates, health, citations, and config options', () => {
+      mockExportHistoryData = [
+        {
+          id: 1,
+          publicationId: 'pub-1',
+          templateId: 'classic-book-manuscript',
+          exportType: 'publishing',
+          createdAt: new Date().toISOString(),
+          totalPages: 10,
+          totalPeople: 25,
+          totalFamilies: 8,
+          initiatedBy: 'user-1',
+          success: true,
+          durationMs: 4500,
+          warnings: [],
+          privacy: { masked: true },
+          evidence: { citationCoverage: 0.85 },
+          integrity: { healthScore: 94, issueCount: 2 },
+          manuscript: {
+            generationsDepth: 3,
+            orderingStrategy: 'narrative',
+            includeImages: true,
+            includeTimeline: true,
+            includeEvidence: true,
+            includeNarrative: true,
+            orderedPersonCount: 25,
+          },
+        },
+      ];
+
+      render(<ExportCloudPanel {...baseProps} />);
+
+      // Friendly template name and success status
+      expect(screen.getByText('Family Book')).toBeInTheDocument();
+      expect(screen.getByText('Success')).toBeInTheDocument();
+
+      // Core metadata
+      expect(screen.getByText('10 pages')).toBeInTheDocument();
+      expect(screen.getByText('25 people')).toBeInTheDocument();
+      expect(screen.getByText('masked')).toBeInTheDocument();
+
+      // Integrity and Evidence
+      expect(screen.getByText('Health:')).toBeInTheDocument();
+      expect(screen.getByText('94%')).toBeInTheDocument();
+      expect(screen.getByText('Citations:')).toBeInTheDocument();
+      expect(screen.getByText('85%')).toBeInTheDocument();
+      expect(screen.getByText('Issues:')).toBeInTheDocument();
+      expect(screen.getAllByText('2').length).toBeGreaterThan(0);
+
+      // Config Options
+      expect(screen.getByText('Export Configuration:')).toBeInTheDocument();
+      expect(screen.getByText('3 gens')).toBeInTheDocument();
+      expect(screen.getAllByText('Family path').length).toBeGreaterThan(0);
+      expect(screen.getByText('photos, timeline, bibliography, narrative')).toBeInTheDocument();
+    });
+
+    it('renders warnings and failures correctly without exposing raw warning strings', () => {
+      mockExportHistoryData = [
+        {
+          id: 2,
+          publicationId: 'pub-2',
+          templateId: 'gedcom',
+          exportType: 'publishing',
+          createdAt: new Date().toISOString(),
+          totalPages: 0,
+          totalPeople: 15,
+          totalFamilies: 4,
+          initiatedBy: 'user-1',
+          success: true,
+          durationMs: 1200,
+          warnings: ['WARNING: Sensitive John Doe has issue'],
+          privacy: { masked: false },
+        },
+      ];
+
+      render(<ExportCloudPanel {...baseProps} />);
+
+      expect(screen.getAllByText('GEDCOM').length).toBeGreaterThan(0);
+      expect(screen.getByText('Warnings')).toBeInTheDocument();
+      // Verify safe warnings message displays warning count, NOT raw warning string
+      expect(screen.queryByText(/John Doe/i)).not.toBeInTheDocument();
+      expect(screen.getByText('1 warnings reported during export.')).toBeInTheDocument();
+    });
+
+    it('requires a two-step confirmation to clear history', () => {
+      mockExportHistoryData = [
+        {
+          id: 3,
+          publicationId: 'pub-3',
+          templateId: 'json',
+          exportType: 'publishing',
+          createdAt: new Date().toISOString(),
+          totalPages: 0,
+          totalPeople: 5,
+          totalFamilies: 1,
+          initiatedBy: 'user-1',
+          success: true,
+          durationMs: 500,
+          warnings: [],
+        },
+      ];
+
+      render(<ExportCloudPanel {...baseProps} />);
+
+      const clearBtn = screen.getByRole('button', { name: /Clear History/i });
+      expect(clearBtn).toBeInTheDocument();
+
+      // First click: changes button label to "Confirm clear"
+      fireEvent.click(clearBtn);
+      expect(mockClearExportHistory).not.toHaveBeenCalled();
+      expect(screen.getByRole('button', { name: /Confirm clear/i })).toBeInTheDocument();
+
+      // Second click: calls clearExportHistory
+      fireEvent.click(screen.getByRole('button', { name: /Confirm clear/i }));
+      expect(mockClearExportHistory).toHaveBeenCalled();
+    });
   });
 });
