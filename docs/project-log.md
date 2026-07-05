@@ -1,5 +1,12 @@
 # Project Log
 
+## 2026-07-05 - Controlled PDF Environment Activation Checklist
+
+- Summary:
+  - Prepared the operational checklist and safety playbook for transitioning the Controlled PDF Adapter from experimental status to active staging/production.
+  - Documented environment variables (`BROWSERLESS_TOKEN`, `BROWSERLESS_ENDPOINT`, `VITE_ENABLE_CONTROLLED_PDF`), activation sequence, rollback steps, and privacy boundaries.
+  - Created documentation [`docs/reviews/controlled-pdf-environment-activation-checklist-2026-07-05.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/controlled-pdf-environment-activation-checklist-2026-07-05.md).
+
 ## 2026-07-05 - Controlled PDF Test Tree Review Gate
 
 - Summary:
