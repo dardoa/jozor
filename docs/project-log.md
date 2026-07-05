@@ -1,5 +1,12 @@
 # Project Log
 
+## 2026-07-06 - Private Beta Publishing Test Script
+
+- Summary:
+  - Created a focused private beta test script to guide users through testing the Jozor 1.0 Publishing & Printing experience.
+  - Outlined tester setup rules (sanitized data, no legal IDs, offline backup verification), test execution flows (manuscript configurations, print previews, history validations, and poster exports), and feedback questions.
+  - Created documentation [`docs/reviews/private-beta-publishing-test-script-2026-07-06.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/private-beta-publishing-test-script-2026-07-06.md).
+
 ## 2026-07-05 - Controlled PDF Environment Activation Checklist
 
 - Summary:
