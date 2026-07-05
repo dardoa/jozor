@@ -1,5 +1,15 @@
 # Project Log
 
+## 2026-07-05 - Controlled PDF Production Adapter Phase 1
+
+- Summary:
+  - Implemented the first production-ready adapter contract for Controlled PDF generation behind the `VITE_ENABLE_CONTROLLED_PDF` feature flag.
+  - Created [`ControlledPdfApiClient.ts`](file:///d:/AppDEV/Jozor1.1/src/features/publishing/services/ControlledPdfApiClient.ts) to manage the API call to the serverless rendering function at `/api/publishing/render-manuscript-pdf` with robust type checking and error scrubbing.
+  - Added a Vercel serverless function stub [`api/publishing/render-manuscript-pdf.ts`](file:///d:/AppDEV/Jozor1.1/api/publishing/render-manuscript-pdf.ts) returning a `501 Not Implemented` response.
+  - Wired `ControlledManuscriptPdfAdapter` to utilize the new API client when the feature flag is enabled.
+  - Updated `ControlledPdfReadinessService` to probe the real adapter endpoint, ensuring it correctly falls back to browser-print mode during Phase 1.
+  - Added new unit test suite [`ControlledPdfApiClient.test.ts`](file:///d:/AppDEV/Jozor1.1/src/features/publishing/services/__tests__/ControlledPdfApiClient.test.ts) and expanded existing adapter, readiness, and export service test suites.
+
 ## 2026-07-05 - Manual Real Manuscript Print Review Round 2
 
 - Summary:

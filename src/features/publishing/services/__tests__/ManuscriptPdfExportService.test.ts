@@ -7,6 +7,10 @@ describe('ManuscriptPdfExportService', () => {
   let originalEnv: string | undefined;
 
   beforeEach(() => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: false,
+      status: 501,
+    }));
     if (typeof import.meta !== 'undefined' && import.meta.env) {
       originalEnv = import.meta.env.VITE_ENABLE_CONTROLLED_PDF as string;
     }
@@ -15,10 +19,9 @@ describe('ManuscriptPdfExportService', () => {
   afterEach(() => {
     ControlledPdfFeatureFlag.setTestOverrideForTests(null);
     vi.restoreAllMocks();
+    vi.unstubAllEnvs();
     if (typeof import.meta !== 'undefined' && import.meta.env && originalEnv !== undefined) {
       vi.stubEnv('VITE_ENABLE_CONTROLLED_PDF', originalEnv);
-    } else {
-      vi.unstubAllEnvs();
     }
   });
 

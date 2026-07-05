@@ -1,4 +1,4 @@
-import { LocalControlledPdfRenderer } from './LocalControlledPdfRenderer';
+import { ControlledManuscriptPdfAdapter } from './ControlledManuscriptPdfAdapter';
 import type { ManuscriptPdfExportRequest, ManuscriptPdfExportResult } from './ManuscriptPdfExportService';
 import { ControlledPdfFeatureFlag } from './ControlledPdfFeatureFlag';
 
@@ -17,10 +17,10 @@ export class ControlledPdfReadinessService {
   public static async evaluateReadiness(
     options: ControlledPdfReadinessOptions = {}
   ): Promise<ControlledPdfReadinessResult> {
-    const activeRenderer = options.renderer ?? LocalControlledPdfRenderer.renderPdf;
+    const activeRenderer = options.renderer ?? ControlledManuscriptPdfAdapter.exportPdf;
     const reasons: string[] = [];
     const diagnostics: Record<string, unknown> = {
-      renderer: 'local-controlled',
+      renderer: 'controlled-adapter',
       probe: true,
     };
 

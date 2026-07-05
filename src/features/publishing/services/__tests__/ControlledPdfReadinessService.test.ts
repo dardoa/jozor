@@ -6,6 +6,7 @@ describe('ControlledPdfReadinessService', () => {
   let originalEnv: string | undefined;
 
   beforeEach(() => {
+    vi.clearAllMocks();
     if (typeof import.meta !== 'undefined' && import.meta.env) {
       originalEnv = import.meta.env.VITE_ENABLE_CONTROLLED_PDF as string;
     }
@@ -13,6 +14,7 @@ describe('ControlledPdfReadinessService', () => {
 
   afterEach(() => {
     ControlledPdfFeatureFlag.setTestOverrideForTests(null);
+    vi.restoreAllMocks();
     if (typeof import.meta !== 'undefined' && import.meta.env && originalEnv !== undefined) {
       vi.stubEnv('VITE_ENABLE_CONTROLLED_PDF', originalEnv);
     } else {
@@ -22,16 +24,54 @@ describe('ControlledPdfReadinessService', () => {
 
   it('reports fallback and available false when flag is disabled even if renderer works', async () => {
     vi.stubEnv('VITE_ENABLE_CONTROLLED_PDF', 'false');
-    const result = await ControlledPdfReadinessService.evaluateReadiness();
+    const successRenderer = vi.fn().mockResolvedValue({
+      mode: 'controlled-pdf',
+      available: true,
+      blob: new Blob(['pdf'], { type: 'application/pdf' }),
+    });
+
+    const result = await ControlledPdfReadinessService.evaluateReadiness({ renderer: successRenderer });
 
     expect(result.available).toBe(false);
     expect(result.recommendedMode).toBe('browser-print-fallback');
     expect(result.reasons).toContain('Controlled PDF feature flag disabled');
   });
 
-  it('reports controlled-pdf as recommended when feature flag override is enabled and local renderer succeeds', async () => {
-    ControlledPdfFeatureFlag.setTestOverrideForTests(true);
+  it('reports fallback and available false when flag is enabled but default endpoint returns 501', async () => {
+    vi.stubEnv('VITE_ENABLE_CONTROLLED_PDF', 'true');
+
+    // Mock the global fetch to simulate a 501 Not Implemented response
+    const mockResponse = {
+      ok: false,
+      status: 501,
+    };
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(mockResponse));
+
     const result = await ControlledPdfReadinessService.evaluateReadiness();
+
+    expect(result.available).toBe(false);
+    expect(result.recommendedMode).toBe('browser-print-fallback');
+    expect(result.reasons).toContain('Controlled PDF export is not configured yet.');
+    expect(result.diagnostics).toEqual({
+      renderer: 'controlled-adapter',
+      probe: true,
+      mode: 'controlled-pdf',
+      availableResult: false,
+      featureFlagEnabled: true,
+    });
+  });
+
+  it('reports controlled-pdf as recommended when feature flag override is enabled and a successful custom renderer is injected', async () => {
+    ControlledPdfFeatureFlag.setTestOverrideForTests(true);
+    const mockBlob = new Blob(['pdf-data'], { type: 'application/pdf' });
+    const successRenderer = vi.fn().mockResolvedValue({
+      mode: 'controlled-pdf',
+      available: true,
+      blob: mockBlob,
+      fileName: 'test.pdf',
+    });
+
+    const result = await ControlledPdfReadinessService.evaluateReadiness({ renderer: successRenderer });
 
     expect(result.available).toBe(true);
     expect(result.recommendedMode).toBe('controlled-pdf');
@@ -39,9 +79,17 @@ describe('ControlledPdfReadinessService', () => {
     expect(result.diagnostics.featureFlagEnabled).toBe(true);
   });
 
-  it('reports controlled-pdf as recommended when flag is enabled and local renderer prototype succeeds', async () => {
+  it('reports controlled-pdf as recommended when flag is enabled and custom renderer succeeds', async () => {
     vi.stubEnv('VITE_ENABLE_CONTROLLED_PDF', 'true');
-    const result = await ControlledPdfReadinessService.evaluateReadiness();
+    const mockBlob = new Blob(['pdf-data'], { type: 'application/pdf' });
+    const successRenderer = vi.fn().mockResolvedValue({
+      mode: 'controlled-pdf',
+      available: true,
+      blob: mockBlob,
+      fileName: 'test.pdf',
+    });
+
+    const result = await ControlledPdfReadinessService.evaluateReadiness({ renderer: successRenderer });
 
     expect(result.available).toBe(true);
     expect(result.recommendedMode).toBe('controlled-pdf');
@@ -49,16 +97,14 @@ describe('ControlledPdfReadinessService', () => {
 
     // Verify diagnostics output structure and values
     expect(result.diagnostics).toEqual({
-      renderer: 'local-controlled',
+      renderer: 'controlled-adapter',
       probe: true,
       mode: 'controlled-pdf',
       availableResult: true,
       outputType: 'application/pdf',
-      outputSize: expect.any(Number),
+      outputSize: mockBlob.size,
       featureFlagEnabled: true,
     });
-
-    expect(result.diagnostics.outputSize).toBeGreaterThan(0);
 
     // Enforce diagnostics privacy cleanup check
     expect(result.diagnostics).not.toHaveProperty('html');

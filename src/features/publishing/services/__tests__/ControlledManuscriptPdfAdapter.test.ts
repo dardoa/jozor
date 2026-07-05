@@ -1,11 +1,19 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ControlledManuscriptPdfAdapter } from '../ControlledManuscriptPdfAdapter';
 import { ControlledPdfFeatureFlag } from '../ControlledPdfFeatureFlag';
+import { ControlledPdfApiClient } from '../ControlledPdfApiClient';
+
+vi.mock('../ControlledPdfApiClient', () => ({
+  ControlledPdfApiClient: {
+    renderManuscriptPdf: vi.fn(),
+  },
+}));
 
 describe('ControlledManuscriptPdfAdapter', () => {
   let originalEnv: string | undefined;
 
   beforeEach(() => {
+    vi.clearAllMocks();
     if (typeof import.meta !== 'undefined' && import.meta.env) {
       originalEnv = import.meta.env.VITE_ENABLE_CONTROLLED_PDF as string;
     }
@@ -20,14 +28,14 @@ describe('ControlledManuscriptPdfAdapter', () => {
     }
   });
 
-  it('reports controlled PDF as disabled when feature flag is disabled', () => {
+  it('reports controlled PDF as disabled in getStatus when feature flag is disabled', () => {
     vi.stubEnv('VITE_ENABLE_CONTROLLED_PDF', 'false');
     const status = ControlledManuscriptPdfAdapter.getStatus();
     expect(status.available).toBe(false);
     expect(status.reason).toBe('Controlled PDF feature flag disabled');
   });
 
-  it('reports controlled PDF as unavailable by default when flag is enabled but not configured', () => {
+  it('reports controlled PDF as unavailable by default in getStatus when flag is enabled but not configured', () => {
     vi.stubEnv('VITE_ENABLE_CONTROLLED_PDF', 'true');
     const status = ControlledManuscriptPdfAdapter.getStatus();
     expect(status.available).toBe(false);
@@ -45,10 +53,47 @@ describe('ControlledManuscriptPdfAdapter', () => {
     expect(result.available).toBe(false);
     expect(result.fallbackRecommended).toBe(true);
     expect(result.reason).toBe('Controlled PDF feature flag disabled');
+    expect(ControlledPdfApiClient.renderManuscriptPdf).not.toHaveBeenCalled();
+  });
+
+  it('calls API client and returns success when feature flag is enabled and API succeeds', async () => {
+    vi.stubEnv('VITE_ENABLE_CONTROLLED_PDF', 'true');
+    const mockBlob = new Blob(['pdf-content'], { type: 'application/pdf' });
+    vi.mocked(ControlledPdfApiClient.renderManuscriptPdf).mockResolvedValue(mockBlob);
+
+    const result = await ControlledManuscriptPdfAdapter.exportPdf({
+      html: '<html></html>',
+      title: 'Success Test',
+    });
+
+    expect(result.mode).toBe('controlled-pdf');
+    expect(result.available).toBe(true);
+    expect(result.blob).toBe(mockBlob);
+    expect(result.fileName).toBe('success_test_manuscript.pdf');
+    expect(ControlledPdfApiClient.renderManuscriptPdf).toHaveBeenCalled();
+  });
+
+  it('returns fallback recommendation when feature flag is enabled but API fails', async () => {
+    vi.stubEnv('VITE_ENABLE_CONTROLLED_PDF', 'true');
+    vi.mocked(ControlledPdfApiClient.renderManuscriptPdf).mockRejectedValue(new Error('Controlled PDF renderer unavailable'));
+
+    const result = await ControlledManuscriptPdfAdapter.exportPdf({
+      html: '<html></html>',
+      title: 'Failure Test',
+    });
+
+    expect(result.mode).toBe('controlled-pdf');
+    expect(result.available).toBe(false);
+    expect(result.fallbackRecommended).toBe(true);
+    expect(result.reason).toBe('Controlled PDF renderer unavailable');
+    expect(ControlledPdfApiClient.renderManuscriptPdf).toHaveBeenCalled();
   });
 
   it('echoes request metadata for diagnostics and stays clean of raw data even when flag is enabled', async () => {
     vi.stubEnv('VITE_ENABLE_CONTROLLED_PDF', 'true');
+    const mockBlob = new Blob(['pdf-content'], { type: 'application/pdf' });
+    vi.mocked(ControlledPdfApiClient.renderManuscriptPdf).mockResolvedValue(mockBlob);
+
     const result = await ControlledManuscriptPdfAdapter.exportPdf({
       html: '<html><body>Sensitive Tree Data</body></html>',
       title: 'Safe Output',
@@ -80,6 +125,9 @@ describe('ControlledManuscriptPdfAdapter', () => {
 
   it('strictly sanitizes and filters out unsafe and non-allowlisted keys from diagnostics metadata', async () => {
     vi.stubEnv('VITE_ENABLE_CONTROLLED_PDF', 'true');
+    const mockBlob = new Blob(['pdf-content'], { type: 'application/pdf' });
+    vi.mocked(ControlledPdfApiClient.renderManuscriptPdf).mockResolvedValue(mockBlob);
+
     const result = await ControlledManuscriptPdfAdapter.exportPdf({
       html: '<p>Private Person</p>',
       title: 'Private Family',
@@ -99,21 +147,5 @@ describe('ControlledManuscriptPdfAdapter', () => {
     expect(result.requestMetadata).not.toHaveProperty('personName');
     expect(result.requestMetadata).not.toHaveProperty('rawTitle');
     expect(result.requestMetadata).not.toHaveProperty('unallowlisted');
-  });
-
-  it('default adapter remains an intentional stub and returns unavailable even when feature flag override is enabled', async () => {
-    // This asserts the intentional architectural stance that default adapter remains unavailable.
-    ControlledPdfFeatureFlag.setTestOverrideForTests(true);
-    const status = ControlledManuscriptPdfAdapter.getStatus();
-    expect(status.available).toBe(false);
-    expect(status.reason).toBe('Controlled PDF export is not configured yet.');
-
-    const result = await ControlledManuscriptPdfAdapter.exportPdf({
-      html: '<html></html>',
-      title: 'Stub Test',
-    });
-    expect(result.available).toBe(false);
-    expect(result.fallbackRecommended).toBe(true);
-    expect(result.reason).toBe('Controlled PDF export is not configured yet.');
   });
 });

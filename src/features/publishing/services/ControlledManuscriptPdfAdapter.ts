@@ -4,6 +4,7 @@ import type {
   ManuscriptPdfExportResult,
 } from './ManuscriptPdfExportService';
 import { ControlledPdfFeatureFlag } from './ControlledPdfFeatureFlag';
+import { ControlledPdfApiClient } from './ControlledPdfApiClient';
 
 export interface ControlledManuscriptPdfAdapterStatus {
   readonly available: boolean;
@@ -30,23 +31,36 @@ export class ControlledManuscriptPdfAdapter {
     request: ManuscriptPdfExportRequest
   ): Promise<ManuscriptPdfExportResult> => {
     const flagState = ControlledPdfFeatureFlag.getState();
+    const sanitizedMetadata = sanitizeDiagnosticsMetadata(request.metadata);
+
     if (!flagState.enabled) {
       return {
         mode: 'controlled-pdf',
         available: false,
         fallbackRecommended: true,
         reason: 'Controlled PDF feature flag disabled',
-        requestMetadata: sanitizeDiagnosticsMetadata(request.metadata),
+        requestMetadata: sanitizedMetadata,
       };
     }
 
-    return {
-      mode: 'controlled-pdf',
-      available: false,
-      fallbackRecommended: true,
-      reason: 'Controlled PDF export is not configured yet.',
-      requestMetadata: sanitizeDiagnosticsMetadata(request.metadata),
-    };
+    try {
+      const blob = await ControlledPdfApiClient.renderManuscriptPdf(request);
+      return {
+        mode: 'controlled-pdf',
+        available: true,
+        blob,
+        fileName: `${sanitizeFileName(request.title)}_manuscript.pdf`,
+        requestMetadata: sanitizedMetadata,
+      };
+    } catch (error) {
+      return {
+        mode: 'controlled-pdf',
+        available: false,
+        fallbackRecommended: true,
+        reason: error instanceof Error ? error.message : 'Controlled PDF renderer unavailable',
+        requestMetadata: sanitizedMetadata,
+      };
+    }
   };
 }
 
@@ -80,4 +94,16 @@ function isSafeDiagnosticValue(value: unknown): boolean {
     typeof value === 'boolean' ||
     value === null
   );
+}
+
+function sanitizeFileName(title: string): string {
+  const normalized = title
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '_')
+    .replace(/[^a-z0-9\u0600-\u06ff_-]+/gi, '')
+    .replace(/_+/g, '_')
+    .replace(/^_+|_+$/g, '');
+
+  return normalized || 'family_manuscript';
 }
