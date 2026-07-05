@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Manuscript print template type definitions.
  *
  * A ManuscriptPrintTemplate describes the set of rendering variants to use
@@ -30,6 +30,26 @@ export type TimelineVariant =
   | 'vertical-list'
   | 'compact-list';
 
+export type ManuscriptVisualInsertKind =
+  | 'fan-chart'
+  | 'ancestor-tree'
+  | 'descendant-tree'
+  | 'branch-mini-tree';
+
+export type ManuscriptVisualInsertPlacement =
+  | 'after-cover'
+  | 'before-people'
+  | 'before-branch'
+  | 'after-branch'
+  | 'before-timeline';
+
+export interface ManuscriptVisualInsertDefinition {
+  readonly kind: ManuscriptVisualInsertKind;
+  readonly placement: ManuscriptVisualInsertPlacement;
+  readonly enabled: boolean;
+  readonly maxGenerations?: number;
+}
+
 export interface ManuscriptPrintTemplate {
   readonly id: string;
   readonly name: string;
@@ -37,6 +57,7 @@ export interface ManuscriptPrintTemplate {
   readonly branchHeaderVariant: BranchHeaderVariant;
   readonly evidenceVariant: EvidenceVariant;
   readonly timelineVariant: TimelineVariant;
+  readonly visualInserts?: readonly ManuscriptVisualInsertDefinition[];
 }
 
 /**
@@ -50,4 +71,5 @@ export const CLASSIC_MANUSCRIPT_PRINT_TEMPLATE: ManuscriptPrintTemplate = {
   branchHeaderVariant: 'simple-divider',
   evidenceVariant: 'table',
   timelineVariant: 'vertical-list',
+  visualInserts: [],
 };

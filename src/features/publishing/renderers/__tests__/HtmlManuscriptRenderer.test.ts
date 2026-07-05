@@ -440,4 +440,25 @@ describe('HtmlManuscriptRenderer – template variant architecture', () => {
     });
     expect(html).toContain('class="person-card"');
   });
+
+  it('passing a template with enabled/disabled visual inserts does not throw and renders core chapters', () => {
+    const html = HtmlManuscriptRenderer.renderToHtml(model, {
+      language: 'ar',
+      template: {
+        ...CLASSIC_MANUSCRIPT_PRINT_TEMPLATE,
+        visualInserts: [
+          { kind: 'fan-chart', placement: 'after-cover', enabled: true },
+          { kind: 'ancestor-tree', placement: 'before-people', enabled: false },
+          { kind: 'branch-mini-tree', placement: 'before-branch', enabled: true },
+          { kind: 'descendant-tree', placement: 'before-timeline', enabled: true },
+        ],
+      },
+    });
+
+    // Output still renders core elements properly
+    expect(html).toContain('مخطوط عائلة القربي');
+    expect(html).toContain('أفراد العائلة');
+    expect(html).toContain('الخط الزمني');
+    expect(html).toContain('المراجع');
+  });
 });

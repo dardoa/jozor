@@ -10,6 +10,7 @@ import {
   type ManuscriptPrintTemplate,
 } from './manuscriptTemplates';
 import { renderPersonCardByVariant } from './personCards/index';
+import { getEnabledVisualInserts } from './visualInserts';
 export { getMetadataLabel } from './personCards/classicPersonCard';
 
 export interface HtmlManuscriptRenderOptions {
@@ -88,6 +89,10 @@ export class HtmlManuscriptRenderer {
     const theme = options.theme ?? DEFAULT_HTML_MANUSCRIPT_THEME;
     const template = options.template ?? CLASSIC_MANUSCRIPT_PRINT_TEMPLATE;
 
+    // Resolve after-cover visual inserts contract point
+    void getEnabledVisualInserts(template.visualInserts, 'after-cover');
+    // Future work: If any inserts are active, they will be rendered as full-page plates here.
+
     return [
       '<!doctype html>',
       `<html lang="${language}" dir="${direction}">`,
@@ -120,10 +125,18 @@ function renderChapter(chapter: ManuscriptChapter, language: 'ar' | 'en', templa
   switch (chapter.type) {
     case 'overview':
       return renderOverviewChapter(chapter.title, chapter.branchSummaries ?? [], language);
-    case 'people':
+    case 'people': {
+      // Resolve before-people visual inserts contract point
+      void getEnabledVisualInserts(template.visualInserts, 'before-people');
+      // Future work: Render before-people visual plates if enabled.
       return renderPeopleChapter(chapter.title, chapter.people ?? [], language, template);
-    case 'timeline':
+    }
+    case 'timeline': {
+      // Resolve before-timeline visual inserts contract point
+      void getEnabledVisualInserts(template.visualInserts, 'before-timeline');
+      // Future work: Render before-timeline visual plates if enabled.
       return renderTimelineChapter(chapter.title, chapter.timeline ?? []);
+    }
     case 'evidence':
       return renderEvidenceChapter(chapter.title, chapter.citations ?? [], language);
     default:
@@ -187,9 +200,16 @@ function renderPeopleChapter(
   const cards = people.flatMap((person) => {
     const branchLabel = person.familyContext?.branchLabel;
     const branchDivider = branchLabel && branchLabel !== activeBranchLabel
-      ? [`<div class="branch-divider"><span>${escapeHtml(branchLabel)}</span></div>`]
+      ? [
+          // Resolve before-branch visual inserts contract point
+          // const _beforeBranchInserts = getEnabledVisualInserts(template.visualInserts, 'before-branch');
+          `<div class="branch-divider"><span>${escapeHtml(branchLabel)}</span></div>`
+        ]
       : [];
     if (branchLabel) activeBranchLabel = branchLabel;
+
+    // Resolve after-branch visual inserts contract point
+    // const _afterBranchInserts = getEnabledVisualInserts(template.visualInserts, 'after-branch');
 
     return [
       ...branchDivider,
