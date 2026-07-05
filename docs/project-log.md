@@ -1,5 +1,13 @@
 # Project Log
 
+## 2026-07-05 - Controlled PDF Rendering Strategy Spike (Phase 2A)
+
+- Summary:
+  - Evaluated Controlled PDF rendering strategies comparing local serverless Chromium vs. external browserless cloud APIs.
+  - Successfully verified local headless Chrome rendering using Playwright on synthetic Arabic HTML: generated [`tmp/synthetic_spike.pdf`](file:///d:/AppDEV/Jozor1.1/tmp/synthetic_spike.pdf) in ~6.4s (~186 KB) with complete font and page-break support.
+  - Audited Vercel runtime constraints and recommended proceeding with **Option B (External Render Service)** due to function bundle size limits (50MB) and memory limits (1024MB) under large trees.
+  - Created evaluation review document [`docs/reviews/controlled-pdf-rendering-strategy-spike-2026-07-05.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/controlled-pdf-rendering-strategy-spike-2026-07-05.md) and experimental script [`scripts/controlled-pdf-render-spike.mjs`](file:///d:/AppDEV/Jozor1.1/scripts/controlled-pdf-render-spike.mjs).
+
 ## 2026-07-05 - Controlled PDF Production Adapter Phase 1
 
 - Summary:
