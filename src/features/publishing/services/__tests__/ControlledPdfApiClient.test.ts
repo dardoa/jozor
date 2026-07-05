@@ -78,4 +78,30 @@ describe('ControlledPdfApiClient', () => {
       title: 'Sensitive Title',
     })).rejects.toThrow('Controlled PDF renderer returned invalid PDF');
   });
+
+  it('throws a safe error when server returns 503', async () => {
+    const mockResponse = {
+      ok: false,
+      status: 503,
+    };
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(mockResponse));
+
+    await expect(ControlledPdfApiClient.renderManuscriptPdf({
+      html: '<html>Sensitive Data</html>',
+      title: 'Sensitive Title',
+    })).rejects.toThrow('Controlled PDF renderer unavailable');
+  });
+
+  it('throws a safe error when server returns 502', async () => {
+    const mockResponse = {
+      ok: false,
+      status: 502,
+    };
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(mockResponse));
+
+    await expect(ControlledPdfApiClient.renderManuscriptPdf({
+      html: '<html>Sensitive Data</html>',
+      title: 'Sensitive Title',
+    })).rejects.toThrow('Controlled PDF renderer unavailable');
+  });
 });

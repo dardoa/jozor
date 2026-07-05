@@ -61,6 +61,30 @@ describe('ControlledPdfReadinessService', () => {
     });
   });
 
+  it('reports fallback and available false when flag is enabled but default endpoint returns 503', async () => {
+    vi.stubEnv('VITE_ENABLE_CONTROLLED_PDF', 'true');
+
+    // Mock the global fetch to simulate a 503 Service Unavailable response
+    const mockResponse = {
+      ok: false,
+      status: 503,
+    };
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(mockResponse));
+
+    const result = await ControlledPdfReadinessService.evaluateReadiness();
+
+    expect(result.available).toBe(false);
+    expect(result.recommendedMode).toBe('browser-print-fallback');
+    expect(result.reasons).toContain('Controlled PDF renderer unavailable');
+    expect(result.diagnostics).toEqual({
+      renderer: 'controlled-adapter',
+      probe: true,
+      mode: 'controlled-pdf',
+      availableResult: false,
+      featureFlagEnabled: true,
+    });
+  });
+
   it('reports controlled-pdf as recommended when feature flag override is enabled and a successful custom renderer is injected', async () => {
     ControlledPdfFeatureFlag.setTestOverrideForTests(true);
     const mockBlob = new Blob(['pdf-data'], { type: 'application/pdf' });

@@ -1,5 +1,14 @@
 # Project Log
 
+## 2026-07-05 - Controlled PDF External Renderer Adapter (Phase 2B)
+
+- Summary:
+  - Implemented the Browserless-compatible external renderer adapter behind the `VITE_ENABLE_CONTROLLED_PDF` feature flag.
+  - Replaced the Phase 1 serverless function 501 stub in [`api/publishing/render-manuscript-pdf.ts`](file:///d:/AppDEV/Jozor1.1/api/publishing/render-manuscript-pdf.ts) with a real router that POSTs the sanitized HTML payload to the external rendering endpoint when `BROWSERLESS_TOKEN` is configured, returning a generic 503 error if the token is missing and generic 502 bad gateway errors on upstream failures.
+  - Wrote a new serverless API test suite [`src/api/__tests__/renderManuscriptPdfRoot.test.ts`](file:///d:/AppDEV/Jozor1.1/src/api/__tests__/renderManuscriptPdfRoot.test.ts) testing GET method rejections (405), missing tokens (503), missing body params (400), upstream rendering failures (502), and successful binary stream transmission (200).
+  - Updated client tests in [`ControlledPdfApiClient.test.ts`](file:///d:/AppDEV/Jozor1.1/src/features/publishing/services/__tests__/ControlledPdfApiClient.test.ts) and [`ControlledPdfReadinessService.test.ts`](file:///d:/AppDEV/Jozor1.1/src/features/publishing/services/__tests__/ControlledPdfReadinessService.test.ts) to verify correct handling of 502/503 states.
+  - Created documentation [`docs/reviews/controlled-pdf-external-renderer-adapter-2026-07-05.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/controlled-pdf-external-renderer-adapter-2026-07-05.md).
+
 ## 2026-07-05 - Controlled PDF Rendering Strategy Spike (Phase 2A)
 
 - Summary:
