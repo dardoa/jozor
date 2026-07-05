@@ -624,3 +624,100 @@ describe('ManuscriptStructureBuilder', () => {
     expect(grandchildEntry?.generation).toBe(2);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Arabic Encoding Regression Guard
+// Ensures chapter and label strings produced by ManuscriptStructureBuilder
+// for language='ar' are valid UTF-8 Arabic and never contain mojibake
+// fragments that would appear if the source file is mis-read as Windows-1252.
+// ---------------------------------------------------------------------------
+
+const MOJIBAKE_FRAGMENTS = ['Ø', 'Ù', 'â€', 'â†', 'Ã‡'];
+
+describe('ManuscriptStructureBuilder – Arabic encoding guard', () => {
+  const arPeople: Record<string, Person> = {
+    root: createMockPerson('root', 'male', { firstName: 'جذر', lastName: 'العائلة', birthDate: '1950-01-01', birthPlace: 'دمشق', children: ['child'] }),
+    child: createMockPerson('child', 'female', { firstName: 'ابنة', lastName: 'العائلة', birthDate: '1975-05-05', occupation: 'معلمة' }),
+  };
+
+  const arRelationships: Record<string, RelationshipEdge> = {
+    edge: {
+      id: 'edge', treeId: 'tree-ar', fromPersonId: 'root', toPersonId: 'child',
+      type: 'BIOLOGICAL_PARENT', status: 'ACTIVE', createdAt: '2026-01-01T00:00:00.000Z',
+    },
+  };
+
+  const arSources: Record<string, Source> = {
+    src: {
+      id: 'src', treeId: 'tree-ar', type: 'DOCUMENT', title: 'سجل النفوس',
+      normalizedKey: 'tree-ar:DOCUMENT:سجل النفوس', createdAt: '2026-01-01T00:00:00.000Z',
+    },
+  };
+
+  const arCitations: Record<string, Citation> = {
+    cit: {
+      id: 'cit', treeId: 'tree-ar', sourceId: 'src', targetType: 'PERSON',
+      targetId: 'root', targetField: 'person.birth.date', createdAt: '2026-01-01T00:00:00.000Z',
+    },
+  };
+
+  it('produces correct Arabic chapter titles and no mojibake fragments', () => {
+    const model = ManuscriptStructureBuilder.buildModel({
+      rootPersonId: 'root',
+      people: arPeople,
+      relationshipEdges: arRelationships,
+      evidence: { sources: arSources, citations: arCitations },
+      language: 'ar',
+    });
+
+    // Chapter title assertions
+    const peopleChapter = model.chapters.find((c) => c.type === 'people');
+    const timelineChapter = model.chapters.find((c) => c.type === 'timeline');
+    const evidenceChapter = model.chapters.find((c) => c.type === 'evidence');
+
+    expect(peopleChapter?.title).toContain('أفراد');
+    expect(timelineChapter?.title).toContain('الخط الزمني');
+    expect(evidenceChapter?.title).toContain('المراجع');
+
+    // Mojibake guard — serialise the entire model and check for forbidden fragments
+    const serialised = JSON.stringify(model);
+    for (const fragment of MOJIBAKE_FRAGMENTS) {
+      expect(serialised).not.toContain(fragment);
+    }
+  });
+
+  it('produces correct Arabic fact and metadata labels and no mojibake fragments', () => {
+    const model = ManuscriptStructureBuilder.buildModel({
+      rootPersonId: 'root',
+      people: arPeople,
+      relationshipEdges: arRelationships,
+      evidence: { sources: arSources, citations: arCitations },
+      language: 'ar',
+    });
+
+    const peopleChapter = model.chapters.find((c) => c.type === 'people');
+    const rootEntry = peopleChapter?.people?.find((p) => p.personId === 'root');
+    const childEntry = peopleChapter?.people?.find((p) => p.personId === 'child');
+
+    // Fact labels
+    const allFactLabels = [...(rootEntry?.facts ?? []), ...(childEntry?.facts ?? [])].map((f) => f.label);
+    for (const label of allFactLabels) {
+      for (const fragment of MOJIBAKE_FRAGMENTS) {
+        expect(label).not.toContain(fragment);
+      }
+    }
+
+    // Relationship metadata
+    expect(rootEntry?.relationshipToRoot).toBe('root');
+    expect(childEntry?.relationshipToRoot).toBe('child');
+
+    // Source highlight title
+    const highlights = rootEntry?.sourceHighlights ?? [];
+    expect(highlights.length).toBeGreaterThan(0);
+    for (const h of highlights) {
+      for (const fragment of MOJIBAKE_FRAGMENTS) {
+        expect(h.title).not.toContain(fragment);
+      }
+    }
+  });
+});

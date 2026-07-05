@@ -304,3 +304,85 @@ describe('HtmlManuscriptRenderer', () => {
     expect(html).toContain('Generation 2');
   });
 });
+
+// ---------------------------------------------------------------------------
+// Arabic Encoding Regression Guard
+// Renders the shared Arabic model and asserts the HTML output contains valid
+// Arabic Unicode strings and no mojibake fragments (Ø, Ù, â€, â†).
+// ---------------------------------------------------------------------------
+
+const MOJIBAKE_FRAGMENTS_HTML = ['Ø', 'Ù', 'â€', 'â†', 'Ã‡'];
+
+describe('HtmlManuscriptRenderer – Arabic encoding guard', () => {
+  it('HTML output contains correct Arabic chapter labels and no mojibake', () => {
+    const html = HtmlManuscriptRenderer.renderToHtml(model, { language: 'ar' });
+
+    // Correct Arabic terms must appear in the rendered HTML
+    expect(html).toContain('أفراد العائلة');
+    expect(html).toContain('توثيق');       // coverage label always present
+    expect(html).toContain('المصدر');      // evidence table header
+    expect(html).toContain('الاستشهادات'); // evidence table header
+    expect(html).toContain('الحقول');      // evidence table header
+    expect(html).toContain('مصدر');        // singular source label in person card
+
+    // Mojibake guard
+    for (const fragment of MOJIBAKE_FRAGMENTS_HTML) {
+      expect(html).not.toContain(fragment);
+    }
+  });
+
+  it('HTML output contains correct Arabic metadata labels (root, generation, spouse) and no mojibake', () => {
+    const arModelWithRelationships: FamilyManuscriptModel = {
+      id: 'guard-relationships',
+      title: 'مخطوط عائلة',
+      rootPersonId: 'p-root',
+      chapters: [{
+        id: 'people',
+        type: 'people',
+        title: 'أفراد العائلة',
+        people: [
+          {
+            personId: 'p-root',
+            displayName: 'جذر العائلة',
+            relationshipToRoot: 'root',
+            generation: 0,
+            citationCoverage: 0,
+            citationCount: 0,
+            facts: [],
+            sourceHighlights: [],
+          },
+          {
+            personId: 'p-spouse',
+            displayName: 'زوجة الجذر',
+            relationshipToRoot: 'spouse',
+            generation: 0,
+            citationCoverage: 0,
+            citationCount: 0,
+            facts: [],
+            sourceHighlights: [],
+          },
+          {
+            personId: 'p-child',
+            displayName: 'ابن الجذر',
+            relationshipToRoot: 'child',
+            generation: 1,
+            citationCoverage: 0,
+            citationCount: 0,
+            facts: [],
+            sourceHighlights: [],
+          },
+        ],
+      }],
+    };
+
+    const html = HtmlManuscriptRenderer.renderToHtml(arModelWithRelationships, { language: 'ar' });
+
+    expect(html).toContain('الجذر');
+    expect(html).toContain('زوج/زوجة');
+    expect(html).toContain('الجيل 1');
+
+    for (const fragment of MOJIBAKE_FRAGMENTS_HTML) {
+      expect(html).not.toContain(fragment);
+    }
+  });
+});

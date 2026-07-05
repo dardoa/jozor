@@ -284,3 +284,81 @@ describe('MarkdownManuscriptRenderer', () => {
     expect(markdown).toContain('- Relationship: Generation 2');
   });
 });
+
+// ---------------------------------------------------------------------------
+// Arabic Encoding Regression Guard
+// Builds an Arabic-language manuscript model, renders to Markdown and asserts:
+// (1) correct Arabic labels (العلاقة, الجذر, الجيل) appear in the output,
+// (2) no mojibake fragments (Ø, Ù, â€, â†) appear anywhere in the output.
+// ---------------------------------------------------------------------------
+
+const MOJIBAKE_FRAGMENTS_MD = ['Ø', 'Ù', 'â€', 'â†', 'Ã‡'];
+
+const arMarkdownModel: FamilyManuscriptModel = {
+  id: 'manuscript-ar-guard',
+  title: 'مخطوط عائلة',
+  rootPersonId: 'p-root',
+  chapters: [
+    {
+      id: 'people',
+      type: 'people',
+      title: 'أفراد العائلة',
+      people: [
+        {
+          personId: 'p-root',
+          displayName: 'جذر العائلة',
+          relationshipToRoot: 'root',
+          generation: 0,
+          citationCoverage: 75,
+          citationCount: 3,
+          facts: [
+            { label: 'مكان الميلاد', value: 'دمشق', citationCount: 1 },
+          ],
+          sourceHighlights: [
+            { sourceId: 's1', title: 'سجل النفوس', citationCount: 2 },
+          ],
+        },
+        {
+          personId: 'p-child',
+          displayName: 'ابن الجذر',
+          relationshipToRoot: 'child',
+          generation: 1,
+          citationCoverage: 0,
+          citationCount: 0,
+          facts: [],
+          sourceHighlights: [],
+        },
+      ],
+    },
+    {
+      id: 'evidence',
+      type: 'evidence',
+      title: 'المراجع',
+      citations: [
+        { citationId: 'c1', sourceId: 's1', sourceTitle: 'سجل النفوس', targetId: 'p-root', targetField: 'person.birth.place' },
+      ],
+    },
+  ],
+};
+
+describe('MarkdownManuscriptRenderer – Arabic encoding guard', () => {
+  it('Markdown output contains correct Arabic relationship labels and no mojibake', () => {
+    const markdown = MarkdownManuscriptRenderer.renderToMarkdown(arMarkdownModel, { language: 'ar' });
+
+    // Arabic relationship prefix must appear
+    expect(markdown).toContain('العلاقة');
+    // Root relationship label
+    expect(markdown).toContain('الجذر');
+    // Child generation label
+    expect(markdown).toContain('الجيل 1');
+    // Arabic chapter title
+    expect(markdown).toContain('أفراد العائلة');
+    // Source title
+    expect(markdown).toContain('سجل النفوس');
+
+    // Mojibake guard
+    for (const fragment of MOJIBAKE_FRAGMENTS_MD) {
+      expect(markdown).not.toContain(fragment);
+    }
+  });
+});
