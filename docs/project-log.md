@@ -1,5 +1,13 @@
 # Project Log
 
+## 2026-07-05 - Manual Real Manuscript Print Review Round 2
+
+- Summary:
+  - Performed a visual and manual review of the Family Book manuscript print layout on small, medium, and large trees.
+  - Confirmed the layout stability enhancements prevent name/source title overflows, fact row collisions, and awkward page breaks.
+  - Verified preview/export option consistency and privacy masking in the fallback print flow.
+  - Created review documentation in [`docs/reviews/manuscript-print-review-round-2-2026-07-05.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/manuscript-print-review-round-2-2026-07-05.md) and [`docs/reviews/evidence/manuscript-print-review-round-2-2026-07-05/evidence_notes.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/evidence/manuscript-print-review-round-2-2026-07-05/evidence_notes.md).
+
 ## 2026-07-05 - Manuscript Preview/Export Consistency Audit
 
 - Summary:
