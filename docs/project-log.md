@@ -1,5 +1,13 @@
 # Project Log
 
+## 2026-07-05 - Controlled PDF Test Tree Review Gate
+
+- Summary:
+  - Prepared the test tree criteria and checklist for verifying real manuscript PDF quality on the remote Browserless service without sending sensitive family data.
+  - Defined synthetic Arabic RTL test tree requirements (35 individuals, timeline events, citations, and placeholder media).
+  - Bypassed remote browser checks since `BROWSERLESS_TOKEN` is unset in the default environment, marking the review gate status as **Pending**.
+  - Created documentation [`docs/reviews/controlled-pdf-test-tree-review-2026-07-05.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/controlled-pdf-test-tree-review-2026-07-05.md) and [`docs/reviews/evidence/controlled-pdf-test-tree-review-2026-07-05/evidence_notes.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/evidence/controlled-pdf-test-tree-review-2026-07-05/evidence_notes.md).
+
 ## 2026-07-05 - Controlled PDF Synthetic Activation Smoke Check
 
 - Summary:
