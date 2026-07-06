@@ -1,5 +1,14 @@
 # Project Log
 
+## 2026-07-06 - Vault Publishing Taxonomy Manual Review Pack
+
+- Summary:
+  - Performed a manual documentation review of the Vault's refined publishing/export taxonomy.
+  - Validated clean product boundaries for Family Books (including Markdown), Visual Outputs (posters and snapshots), and Portable Data.
+  - Confirmed History & Quality card layouts use proper display mapping (product labels, format chips, category badges) without IndexedDB schema changes.
+  - Documented design decisions, deferred features, translation notes, and testing evidence.
+  - Released review pack at [`docs/reviews/vault-publishing-taxonomy-review-2026-07-06.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/vault-publishing-taxonomy-review-2026-07-06.md) and [`docs/reviews/evidence/vault-publishing-taxonomy-review-2026-07-06/evidence_notes.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/evidence/vault-publishing-taxonomy-review-2026-07-06/evidence_notes.md).
+
 ## 2026-07-06 - Visual Output Product Contract Phase 1
 
 - Summary:
