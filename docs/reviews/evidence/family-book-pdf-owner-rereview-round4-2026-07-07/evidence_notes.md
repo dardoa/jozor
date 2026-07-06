@@ -1,14 +1,15 @@
 # Family Book PDF Re-Review Round 4 - Evidence Notes
 
 **Review Date:** July 7, 2026  
-**Status:** `Pending Developer Visual Review`
+**Status:** `Blocked for External Beta` (Transitioning to renderer-level grouping validation)
 
 ---
 
 ## 1. Context and Method
 
-- **Code Validation**: Completed and verified via unit tests in `HtmlManuscriptRenderer.test.ts`.
-- **Visual Checks**: Pending developer execution in a local browser environment.
+- **Orphan Timeline Blocker**: Verified in the 3rd local rendering where the 80th event was pushed to page 30.
+- **RTL Marker Artifact**: The ordered list native numbering rendered as `.80` instead of `80.` due to RTL page flow.
+- **Next Validation**: A 5th PDF rendering will verify if the renderer-level grouping groups the events into blocks (6 events per page) and successfully merges the 80th element into page 29.
 
 ---
 
@@ -16,12 +17,3 @@
 
 - **Screenshot & PDF Artifacts**: Must remain local and untracked (under `tmp/` or local storage).
 - **Sensitive Data Protection**: Do not commit PDFs or screenshots containing real family names, photos, or lineage records to the repository.
-
----
-
-## 3. Pending Verification Items
-
-1. **Orphan timeline item**: Verify that no single event is pushed to a new page alone.
-2. **Closing section centering**: Confirm that `.manuscript-closing-section` stats (people, branches, sources) render inside borders cleanly and align properly in both Arabic and English.
-3. **Card header spacing with photo**: Verify that `.person-card__identity` column expands properly next to the image.
-4. **Photo privacy helper visibility**: Confirm that the helper text in the cloud panel is readable and styled correctly.
