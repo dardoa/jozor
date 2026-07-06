@@ -1,5 +1,12 @@
 # Project Log
 
+## 2026-07-07 - Family Book PDF Owner Re-Review Pack
+
+- Summary:
+  - Prepared the second-round owner re-review pack for Family Book PDF beta readiness after resolving blockers.
+  - Released review pack at [`docs/reviews/family-book-pdf-owner-rereview-2026-07-07.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/family-book-pdf-owner-rereview-2026-07-07.md) and [`docs/reviews/evidence/family-book-pdf-owner-rereview-2026-07-07/evidence_notes.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/evidence/family-book-pdf-owner-rereview-2026-07-07/evidence_notes.md).
+  - Listed visual verification steps for developer confirmation to transition the feature status.
+
 ## 2026-07-06 - ADR 013 Visual Publishing Studio Direction
 
 - Summary:
