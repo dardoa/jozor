@@ -437,7 +437,7 @@ describe('ExportCloudPanel manuscript preview', () => {
 
     expect(screen.getByRole('tab', { name: /Family Book/i })).toHaveAttribute('aria-selected', 'true');
     expect(screen.getByRole('button', { name: /Family Book PDF/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Markdown Manuscript/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Family Book Markdown/i })).toBeInTheDocument();
     expect(screen.queryByText(/Classic Ancestor Poster/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/No export history available yet/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Cloud files/i)).not.toBeInTheDocument();
@@ -447,7 +447,7 @@ describe('ExportCloudPanel manuscript preview', () => {
     const onRunExport = vi.fn().mockResolvedValue(undefined);
     render(<ExportCloudPanel {...baseProps} onRunExport={onRunExport} />);
 
-    fireEvent.click(screen.getByRole('button', { name: /Markdown Manuscript/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Family Book Markdown/i }));
 
     await waitFor(() => expect(onRunExport).toHaveBeenCalledWith('markdown'));
   });
@@ -784,6 +784,33 @@ describe('ExportCloudPanel manuscript preview', () => {
       expect(screen.queryByText(/John Doe/i)).not.toBeInTheDocument();
       fireEvent.click(screen.getByRole('button', { name: /Show details/i }));
       expect(screen.getByText('1 warnings reported during export.')).toBeInTheDocument();
+    });
+
+    it('renders Family Book Markdown for Markdown history entries with templateId and legacy formats', () => {
+      mockExportHistoryData = [
+        {
+          id: 3,
+          publicationId: 'pub-3',
+          templateId: 'classic-book-manuscript',
+          format: 'markdown',
+          exportType: 'publishing',
+          createdAt: new Date().toISOString(),
+          success: true,
+        },
+        {
+          id: 4,
+          publicationId: 'pub-4',
+          format: 'markdown',
+          exportType: 'publishing',
+          createdAt: new Date().toISOString(),
+          success: true,
+        },
+      ];
+
+      render(<ExportCloudPanel {...baseProps} />);
+      switchToExportSection(/History & Quality/i);
+
+      expect(screen.getAllByText('Family Book Markdown').length).toBe(2);
     });
 
     it('requires a two-step confirmation to clear history', () => {

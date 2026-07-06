@@ -697,7 +697,7 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                 className="flex items-center justify-center gap-2 rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] px-4 py-2 text-xs font-bold text-[var(--text-main)] transition-all hover:bg-[var(--surface-hover)] active:scale-[0.98]"
               >
                 <FileText className="h-3.5 w-3.5" />
-                {language === 'ar' ? 'Markdown مخطوط العائلة' : 'Markdown Manuscript'}
+                {language === 'ar' ? 'Markdown كتاب العائلة' : 'Family Book Markdown'}
               </button>
             </div>
             <div className="mt-2 flex flex-col items-end gap-1 text-[10px] font-mono text-[var(--text-dim)]">
@@ -978,7 +978,9 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
               .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
               .map((entry) => {
                 let friendlyName = entry.templateId;
-                if (entry.templateId === 'classic-book-manuscript') {
+                if (entry.templateId === 'classic-book-manuscript' && entry.format === 'markdown') {
+                  friendlyName = language === 'ar' ? 'Markdown كتاب العائلة' : 'Family Book Markdown';
+                } else if (entry.templateId === 'classic-book-manuscript') {
                   friendlyName = language === 'ar' ? 'كتاب العائلة' : 'Family Book';
                 } else if (entry.templateId === 'classic-ancestor-poster') {
                   friendlyName = language === 'ar' ? 'شجرة الأسلاف الكلاسيكية الدافئة' : 'Classic Ancestor Poster';
@@ -990,6 +992,9 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                   friendlyName = 'JSON';
                 } else if (entry.templateId === 'jozor') {
                   friendlyName = language === 'ar' ? 'أرشيف جذور' : 'Jozor Archive';
+                } else if (entry.templateId === 'markdown' || (!entry.templateId && entry.format === 'markdown')) {
+                  // Legacy fallback for old entries
+                  friendlyName = language === 'ar' ? 'Markdown كتاب العائلة' : 'Family Book Markdown';
                 }
 
                 const hasWarnings = entry.warnings && entry.warnings.length > 0;
