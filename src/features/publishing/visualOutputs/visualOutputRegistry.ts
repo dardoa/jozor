@@ -1,4 +1,9 @@
-import type { VisualOutputDefinition } from './visualOutputTypes';
+import type {
+  VisualOutputDefinition,
+  VisualOutputRenderer,
+  VisualOutputSize,
+  VisualOutputScope,
+} from './visualOutputTypes';
 
 export const VISUAL_OUTPUT_DEFINITIONS: VisualOutputDefinition[] = [
   {
@@ -16,9 +21,19 @@ export const VISUAL_OUTPUT_DEFINITIONS: VisualOutputDefinition[] = [
     rendererTargets: ['png', 'pdf'],
     layoutEngine: 'poster-layout',
     readingStrategy: 'ancestor',
-    supportedSizes: ['A4'],
-    supportedOrientations: ['portrait'],
+    supportedSizes: ['A4', 'A3', 'A2', 'A1', 'A0'],
+    supportedOrientations: ['portrait', 'landscape'],
     status: 'active',
+    capabilities: {
+      sizes: ['A4', 'A3', 'A2', 'A1', 'A0'],
+      orientations: ['portrait', 'landscape'],
+      scopes: ['selected-root', 'ancestor-line'],
+      rendererTargets: ['png', 'pdf'],
+      photoModes: ['none', 'available-profile-photos', 'circle'],
+      stylePresets: ['classic', 'warm', 'vintage'],
+      readingStrategies: ['ancestor'],
+      layoutEngines: ['poster-layout'],
+    },
   },
   {
     id: 'modern-ancestor-poster',
@@ -35,9 +50,19 @@ export const VISUAL_OUTPUT_DEFINITIONS: VisualOutputDefinition[] = [
     rendererTargets: ['png', 'pdf'],
     layoutEngine: 'poster-layout',
     readingStrategy: 'ancestor',
-    supportedSizes: ['A4'],
-    supportedOrientations: ['portrait'],
+    supportedSizes: ['A4', 'A3', 'A2', 'A1', 'A0'],
+    supportedOrientations: ['portrait', 'landscape'],
     status: 'active',
+    capabilities: {
+      sizes: ['A4', 'A3', 'A2', 'A1', 'A0'],
+      orientations: ['portrait', 'landscape'],
+      scopes: ['selected-root', 'ancestor-line'],
+      rendererTargets: ['png', 'pdf'],
+      photoModes: ['none', 'available-profile-photos', 'circle'],
+      stylePresets: ['modern', 'dark', 'minimal'],
+      readingStrategies: ['ancestor'],
+      layoutEngines: ['poster-layout'],
+    },
   },
   {
     id: 'current-tree-snapshot',
@@ -57,6 +82,14 @@ export const VISUAL_OUTPUT_DEFINITIONS: VisualOutputDefinition[] = [
     supportedSizes: ['viewport'],
     supportedOrientations: ['landscape', 'portrait', 'square'],
     status: 'active',
+    capabilities: {
+      sizes: ['viewport'],
+      orientations: ['current-view'],
+      scopes: ['current-tree', 'visible-nodes'],
+      rendererTargets: ['png', 'pdf'],
+      readingStrategies: ['narrative'],
+      layoutEngines: ['tree-layout'],
+    },
   },
 ];
 
@@ -72,4 +105,22 @@ export function listVisualOutputDefinitionsByProduct(
   productType: VisualOutputDefinition['productType']
 ): VisualOutputDefinition[] {
   return VISUAL_OUTPUT_DEFINITIONS.filter((def) => def.productType === productType);
+}
+
+export function visualOutputSupportsRenderer(id: string, renderer: VisualOutputRenderer): boolean {
+  const def = getVisualOutputDefinition(id);
+  if (!def) return false;
+  return def.capabilities.rendererTargets.includes(renderer);
+}
+
+export function visualOutputSupportsSize(id: string, size: VisualOutputSize): boolean {
+  const def = getVisualOutputDefinition(id);
+  if (!def) return false;
+  return def.capabilities.sizes.includes(size);
+}
+
+export function visualOutputSupportsScope(id: string, scope: VisualOutputScope): boolean {
+  const def = getVisualOutputDefinition(id);
+  if (!def) return false;
+  return def.capabilities.scopes.includes(scope);
 }

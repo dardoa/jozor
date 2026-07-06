@@ -30,23 +30,84 @@ export type VisualOutputReadingStrategy =
   | 'chronological'
   | 'network';
 
+export type VisualOutputSize =
+  | 'viewport'
+  | 'A4'
+  | 'A3'
+  | 'A2'
+  | 'A1'
+  | 'A0'
+  | 'instagram-square'
+  | 'facebook-cover'
+  | 'presentation-16-9'
+  | 'custom';
+
+export type VisualOutputOrientation =
+  | 'portrait'
+  | 'landscape'
+  | 'square'
+  | 'current-view';
+
+export type VisualOutputScope =
+  | 'current-tree'
+  | 'selected-root'
+  | 'ancestor-line'
+  | 'descendant-line'
+  | 'branch'
+  | 'full-tree'
+  | 'visible-nodes';
+
+export type VisualOutputPhotoMode =
+  | 'none'
+  | 'available-profile-photos'
+  | 'circle'
+  | 'square'
+  | 'sepia'
+  | 'original';
+
+export type VisualOutputStylePreset =
+  | 'classic'
+  | 'modern'
+  | 'warm'
+  | 'dark'
+  | 'vintage'
+  | 'minimal'
+  | 'royal'
+  | 'manuscript'
+  | 'arabic';
+
+export interface VisualOutputCapabilities {
+  readonly sizes: readonly VisualOutputSize[];
+  readonly orientations: readonly VisualOutputOrientation[];
+  readonly scopes: readonly VisualOutputScope[];
+  readonly rendererTargets: readonly VisualOutputRenderer[];
+  readonly photoModes?: readonly VisualOutputPhotoMode[];
+  readonly stylePresets?: readonly VisualOutputStylePreset[];
+  readonly readingStrategies?: readonly VisualOutputReadingStrategy[];
+  readonly layoutEngines?: readonly VisualOutputLayoutEngine[];
+}
+
 export interface VisualOutputDefinition {
-  id: string;
-  productType: VisualOutputProductType;
-  templateId: string;
-  displayName: {
-    en: string;
-    ar: string;
+  readonly id: string;
+  readonly productType: VisualOutputProductType;
+  readonly templateId: string;
+  readonly displayName: {
+    readonly en: string;
+    readonly ar: string;
   };
-  description: {
-    en: string;
-    ar: string;
+  readonly description: {
+    readonly en: string;
+    readonly ar: string;
   };
-  rendererTargets: VisualOutputRenderer[];
-  layoutEngine: VisualOutputLayoutEngine;
-  readingStrategy: VisualOutputReadingStrategy;
-  supportedSizes: string[];
-  supportedOrientations: Array<'portrait' | 'landscape' | 'square'>;
-  status: 'active' | 'deprecated' | 'experimental';
-  metadata?: Record<string, unknown>;
+  /** @deprecated use capabilities.rendererTargets instead */
+  readonly rendererTargets: readonly VisualOutputRenderer[];
+  readonly layoutEngine: VisualOutputLayoutEngine;
+  readonly readingStrategy: VisualOutputReadingStrategy;
+  /** @deprecated use capabilities.sizes instead */
+  readonly supportedSizes: readonly string[];
+  /** @deprecated use capabilities.orientations instead */
+  readonly supportedOrientations: ReadonlyArray<'portrait' | 'landscape' | 'square'>;
+  readonly status: 'active' | 'deprecated' | 'experimental';
+  readonly capabilities: VisualOutputCapabilities;
+  readonly metadata?: Record<string, unknown>;
 }

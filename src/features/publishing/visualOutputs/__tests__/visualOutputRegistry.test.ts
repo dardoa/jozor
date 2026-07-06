@@ -3,7 +3,11 @@ import {
   getVisualOutputDefinition,
   listVisualOutputDefinitions,
   listVisualOutputDefinitionsByProduct,
+  visualOutputSupportsRenderer,
+  visualOutputSupportsSize,
+  visualOutputSupportsScope,
 } from '../visualOutputRegistry';
+import type { VisualOutputSize } from '../visualOutputTypes';
 
 describe('Visual Output Product Contract Registry', () => {
   it('registers all current visual outputs', () => {
@@ -74,6 +78,60 @@ describe('Visual Output Product Contract Registry', () => {
       expect(def).not.toHaveProperty('focusMode');
       expect(def).not.toHaveProperty('decorationControls');
       expect(def).not.toHaveProperty('paperSizeControls');
+    });
+  });
+
+  describe('Capabilities and Options Support Helpers', () => {
+    it('verifies poster products declare large-format print sizes A4 through A0', () => {
+      const sizes: VisualOutputSize[] = ['A4', 'A3', 'A2', 'A1', 'A0'];
+      sizes.forEach((size) => {
+        expect(visualOutputSupportsSize('classic-ancestor-poster', size)).toBe(true);
+        expect(visualOutputSupportsSize('modern-ancestor-poster', size)).toBe(true);
+      });
+
+      expect(visualOutputSupportsSize('classic-ancestor-poster', 'viewport')).toBe(false);
+      expect(visualOutputSupportsSize('modern-ancestor-poster', 'custom')).toBe(false);
+    });
+
+    it('verifies snapshot product declares only viewport size', () => {
+      expect(visualOutputSupportsSize('current-tree-snapshot', 'viewport')).toBe(true);
+      expect(visualOutputSupportsSize('current-tree-snapshot', 'A4')).toBe(false);
+      expect(visualOutputSupportsSize('current-tree-snapshot', 'A3')).toBe(false);
+    });
+
+    it('verifies poster products support selected-root and ancestor-line scopes', () => {
+      expect(visualOutputSupportsScope('classic-ancestor-poster', 'selected-root')).toBe(true);
+      expect(visualOutputSupportsScope('classic-ancestor-poster', 'ancestor-line')).toBe(true);
+      expect(visualOutputSupportsScope('classic-ancestor-poster', 'full-tree')).toBe(false);
+
+      expect(visualOutputSupportsScope('modern-ancestor-poster', 'selected-root')).toBe(true);
+      expect(visualOutputSupportsScope('modern-ancestor-poster', 'ancestor-line')).toBe(true);
+      expect(visualOutputSupportsScope('modern-ancestor-poster', 'branch')).toBe(false);
+    });
+
+    it('verifies snapshot product supports current-tree and visible-nodes scopes', () => {
+      expect(visualOutputSupportsScope('current-tree-snapshot', 'current-tree')).toBe(true);
+      expect(visualOutputSupportsScope('current-tree-snapshot', 'visible-nodes')).toBe(true);
+      expect(visualOutputSupportsScope('current-tree-snapshot', 'ancestor-line')).toBe(false);
+    });
+
+    it('verifies png and pdf support helpers return true for all registered items', () => {
+      expect(visualOutputSupportsRenderer('classic-ancestor-poster', 'png')).toBe(true);
+      expect(visualOutputSupportsRenderer('classic-ancestor-poster', 'pdf')).toBe(true);
+      expect(visualOutputSupportsRenderer('classic-ancestor-poster', 'svg')).toBe(false);
+
+      expect(visualOutputSupportsRenderer('modern-ancestor-poster', 'png')).toBe(true);
+      expect(visualOutputSupportsRenderer('modern-ancestor-poster', 'pdf')).toBe(true);
+      expect(visualOutputSupportsRenderer('modern-ancestor-poster', 'html')).toBe(false);
+
+      expect(visualOutputSupportsRenderer('current-tree-snapshot', 'png')).toBe(true);
+      expect(visualOutputSupportsRenderer('current-tree-snapshot', 'pdf')).toBe(true);
+    });
+
+    it('verifies unknown IDs return false from all helper functions', () => {
+      expect(visualOutputSupportsRenderer('unknown-id', 'png')).toBe(false);
+      expect(visualOutputSupportsSize('unknown-id', 'A4')).toBe(false);
+      expect(visualOutputSupportsScope('unknown-id', 'selected-root')).toBe(false);
     });
   });
 });
