@@ -313,6 +313,31 @@ describe('ExportCloudPanel manuscript preview', () => {
     expect(indicator).toHaveTextContent('PDF engine: Ready');
   });
 
+  it('renders browser print fallback guidance note when controlled PDF status is fallback', async () => {
+    vi.mocked(useControlledPdfReadiness).mockReturnValue({
+      status: 'fallback',
+      refresh: vi.fn().mockResolvedValue(undefined),
+    });
+
+    const onRunPublishingPreview = vi.fn().mockResolvedValue({
+      title: 'Family Manuscript',
+      html: '<!doctype html><html><body>Preview</body></html>',
+      pageEstimate: 4,
+    });
+
+    render(
+      <ExportCloudPanel
+        {...baseProps}
+        onRunPublishingPreview={onRunPublishingPreview}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /Preview Manuscript/i }));
+    await screen.findByText('Estimated pages: 4');
+
+    expect(screen.getByText(/disable browser headers and footers/i)).toBeInTheDocument();
+  });
+
   it('renders manuscript summary panel with root, depth, strategy, and citation coverage stats', async () => {
     const onRunPublishingPreview = vi.fn().mockResolvedValue({
       title: 'Family Manuscript',

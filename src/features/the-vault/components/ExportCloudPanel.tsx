@@ -815,6 +815,13 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                 {language === 'ar' ? 'Markdown كتاب العائلة' : 'Family Book Markdown'}
               </button>
             </div>
+            {controlledPdfStatus === 'fallback' && (
+              <p className="mt-2.5 text-[10px] leading-relaxed text-amber-600/90 dark:text-amber-500/90 max-w-md text-start">
+                {language === 'ar'
+                  ? '⚠️ عند استخدام طباعة المتصفح، يرجى تعطيل خيار "الترويسة والتذييل" (Headers and Footers) في إعدادات الطباعة قبل الحفظ كملف PDF.'
+                  : '⚠️ For browser print fallback, please disable browser headers and footers in the print settings before saving as PDF.'}
+              </p>
+            )}
             <div className="mt-2 flex flex-col items-end gap-1 text-[10px] font-mono text-[var(--text-dim)]">
               <div data-testid="controlled-pdf-readiness-indicator">
                 {controlledPdfStatus === 'ready' && (language === 'ar' ? 'محرك PDF: جاهز' : 'PDF engine: Ready')}

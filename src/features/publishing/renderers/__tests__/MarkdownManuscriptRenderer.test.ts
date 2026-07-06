@@ -361,4 +361,50 @@ describe('MarkdownManuscriptRenderer – Arabic encoding guard', () => {
       expect(markdown).not.toContain(fragment);
     }
   });
+
+  it('polishes markdown output by softening citation coverage and avoiding empty bibliography chapter', () => {
+    const customModel: FamilyManuscriptModel = {
+      id: 'manuscript-uuid-1234',
+      title: 'Family Book of Al-Yafi',
+      rootPersonId: 'p1',
+      chapters: [
+        {
+          id: 'p-chapter',
+          type: 'people',
+          title: 'People',
+          people: [
+            {
+              personId: 'p1',
+              displayName: 'John Doe',
+              citationCoverage: 0,
+              citationCount: 0,
+              facts: [
+                { label: 'Birth Date', value: '1900-01-01', citationCount: 0 }
+              ],
+              sourceHighlights: []
+            }
+          ]
+        },
+        {
+          id: 'ev-chapter',
+          type: 'evidence',
+          title: 'Bibliography',
+          citations: []
+        }
+      ]
+    };
+
+    const markdownEn = MarkdownManuscriptRenderer.renderToMarkdown(customModel, { language: 'en' });
+
+    // Empty bibliography skipped, rendered as inline note
+    expect(markdownEn).not.toContain('## Bibliography');
+    expect(markdownEn).toContain('*No sources have been linked yet.*');
+
+    // Softened citation coverage
+    expect(markdownEn).toContain('- Citation coverage: No sources yet');
+
+    const markdownAr = MarkdownManuscriptRenderer.renderToMarkdown(customModel, { language: 'ar' });
+    expect(markdownAr).toContain('*لم تتم إضافة مصادر مرتبطة بعد.*');
+    expect(markdownAr).toContain('- Citation coverage: لا توجد مصادر بعد');
+  });
 });

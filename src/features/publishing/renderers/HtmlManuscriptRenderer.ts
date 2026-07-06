@@ -11,6 +11,7 @@ import {
 } from './manuscriptTemplates';
 import { renderPersonCardByVariant } from './personCards/index';
 import { getEnabledVisualInserts } from './visualInserts';
+import { formatManuscriptDate } from '../services/ManuscriptStructureBuilder';
 export { getMetadataLabel } from './personCards/classicPersonCard';
 
 export interface HtmlManuscriptRenderOptions {
@@ -104,7 +105,16 @@ export class HtmlManuscriptRenderer {
       '</head>',
       '<body>',
       renderCover(model, title),
-      model.chapters.map((chapter) => renderChapter(chapter, language, template)).join('\n'),
+      renderIntroduction(title, language),
+      model.chapters
+        .map((chapter) => {
+          if (chapter.type === 'evidence' && (!chapter.citations || chapter.citations.length === 0)) {
+            const text = language === 'ar' ? 'لم تتم إضافة مصادر مرتبطة بعد.' : 'No sources have been linked yet.';
+            return `<div class="manuscript-sources-note">${escapeHtml(text)}</div>`;
+          }
+          return renderChapter(chapter, language, template);
+        })
+        .join('\n'),
       '</body>',
       '</html>',
     ].join('\n');
@@ -116,9 +126,46 @@ function renderCover(model: FamilyManuscriptModel, title: string): string {
     '<section class="page cover-page">',
     '<div class="cover-kicker">Jozor Family Manuscript</div>',
     `<h1>${escapeHtml(title)}</h1>`,
-    `<p class="cover-subtitle">${escapeHtml(model.id)}</p>`,
+    `<!-- manuscript-id: ${escapeHtml(model.id)} -->`,
     '</section>',
   ].join('\n');
+}
+
+function getFamilyNameFromTitle(title: string, language: 'ar' | 'en'): string {
+  if (!title) return '';
+  const cleaned = title.trim();
+  if (language === 'ar') {
+    const match = cleaned.match(/(?:كتاب عائلة|كتاب العائلة لـ|مخطوط عائلة|عائلة)\s+(.+)/);
+    return match ? match[1].trim() : cleaned;
+  } else {
+    const match = cleaned.match(/(?:Family Book of|Family Book for|Family Manuscript of|Family Manuscript for|Family)\s+(.+)/i);
+    return match ? match[1].trim() : cleaned;
+  }
+}
+
+function renderIntroduction(title: string, language: 'ar' | 'en'): string {
+  const familyName = getFamilyNameFromTitle(title, language);
+  if (language === 'ar') {
+    const text = familyName
+      ? `يجمع هذا المخطوط أفراد عائلة ${escapeHtml(familyName)}، ويعرض الفروع والأشخاص والخط الزمني والمراجع المتاحة بحسب البيانات المسجلة في جذور.`
+      : 'يجمع هذا المخطوط أفراد العائلة، ويعرض الفروع والأشخاص والخط الزمني والمراجع المتاحة بحسب البيانات المسجلة في جذور.';
+    return [
+      '<section class="page introduction-page">',
+      '<h2>مقدمة المخطوط</h2>',
+      `<p class="intro-text">${text}</p>`,
+      '</section>'
+    ].join('\n');
+  } else {
+    const text = familyName
+      ? `This family book gathers the ${escapeHtml(familyName)} family branch, including people, branch summaries, timeline entries, and available references from the Jozor tree data.`
+      : 'This family book gathers the family branch, including people, branch summaries, timeline entries, and available references from the Jozor tree data.';
+    return [
+      '<section class="page introduction-page">',
+      '<h2>Introduction</h2>',
+      `<p class="intro-text">${text}</p>`,
+      '</section>'
+    ].join('\n');
+  }
 }
 
 function renderChapter(chapter: ManuscriptChapter, language: 'ar' | 'en', template: ManuscriptPrintTemplate): string {
@@ -135,7 +182,7 @@ function renderChapter(chapter: ManuscriptChapter, language: 'ar' | 'en', templa
       // Resolve before-timeline visual inserts contract point
       void getEnabledVisualInserts(template.visualInserts, 'before-timeline');
       // Future work: Render before-timeline visual plates if enabled.
-      return renderTimelineChapter(chapter.title, chapter.timeline ?? []);
+      return renderTimelineChapter(chapter.title, chapter.timeline ?? [], language);
     }
     case 'evidence':
       return renderEvidenceChapter(chapter.title, chapter.citations ?? [], language);
@@ -231,14 +278,17 @@ function renderPeopleChapter(
 // Person card rendering is now delegated to renderPersonCardByVariant() above.
 // The classic implementation lives in personCards/classicPersonCard.ts.
 
-function renderTimelineChapter(title: string, entries: readonly ManuscriptTimelineEntry[]): string {
-  const items = entries.slice(0, 80).map((entry) => [
-    '<li>',
-    `<time>${escapeHtml(entry.date)}</time>`,
-    `<strong>${escapeHtml(entry.personName)}</strong>`,
-    `<span>${escapeHtml(entry.title)}${entry.place ? ` - ${escapeHtml(entry.place)}` : ''}</span>`,
-    '</li>',
-  ].join('\n')).join('\n');
+function renderTimelineChapter(title: string, entries: readonly ManuscriptTimelineEntry[], language: 'ar' | 'en'): string {
+  const items = entries.slice(0, 80).map((entry) => {
+    const formattedDate = formatManuscriptDate(entry.date, language, entry.isApproximate);
+    return [
+      '<li>',
+      `<time>${escapeHtml(formattedDate)}</time>`,
+      `<strong>${escapeHtml(entry.personName)}</strong>`,
+      `<span>${escapeHtml(entry.title)}${entry.place ? ` - ${escapeHtml(entry.place)}` : ''}</span>`,
+      '</li>',
+    ].join('\n');
+  }).join('\n');
 
   return [
     '<section class="page chapter-page timeline-chapter">',
@@ -518,6 +568,31 @@ dd {
   border-top: 1px solid ${theme.colors.border};
   color: ${theme.colors.mutedText};
   font-size: 10px;
+}
+.introduction-page {
+  display: grid;
+  align-content: center;
+  text-align: center;
+  padding: 40px;
+}
+.introduction-page h2 {
+  color: ${theme.colors.accent};
+  font-size: 24px;
+  margin-bottom: 24px;
+}
+.intro-text {
+  font-size: 16px;
+  line-height: 1.8;
+  max-width: 600px;
+  margin: 0 auto;
+}
+.manuscript-sources-note {
+  margin-top: 24px;
+  padding: 12px;
+  border-top: 1px dashed ${theme.colors.border};
+  font-size: 11px;
+  color: ${theme.colors.mutedText};
+  text-align: center;
 }
 @media print {
   body {

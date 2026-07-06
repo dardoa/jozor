@@ -6,6 +6,7 @@ import type {
   ManuscriptPersonEntry,
   ManuscriptTimelineEntry,
 } from '../types';
+import { formatManuscriptDate } from '../services/ManuscriptStructureBuilder';
 
 export interface MarkdownManuscriptRenderOptions {
   readonly title?: string;
@@ -30,6 +31,11 @@ export class MarkdownManuscriptRenderer {
     }
 
     model.chapters.forEach((chapter) => {
+      if (chapter.type === 'evidence' && (!chapter.citations || chapter.citations.length === 0)) {
+        const text = language === 'ar' ? 'لم تتم إضافة مصادر مرتبطة بعد.' : 'No sources have been linked yet.';
+        lines.push(`*${text}*`, '');
+        return;
+      }
       lines.push(...renderChapter(chapter, language));
       lines.push('');
     });
@@ -47,7 +53,7 @@ function renderChapter(chapter: ManuscriptChapter, language: 'ar' | 'en'): strin
     case 'people':
       return [...lines, ...renderPeople(chapter.people ?? [], language)];
     case 'timeline':
-      return [...lines, ...renderTimeline(chapter.timeline ?? [])];
+      return [...lines, ...renderTimeline(chapter.timeline ?? [], language)];
     case 'evidence':
       return [...lines, ...renderEvidence(chapter.citations ?? [])];
     default:
@@ -87,7 +93,9 @@ function renderPeople(people: readonly ManuscriptPersonEntry[], language: 'ar' |
       ...(person.familyContext?.breadcrumb && person.familyContext.breadcrumb.length > 1
         ? [`- Family path: ${person.familyContext.breadcrumb.map(normalizeInline).join(' > ')}`]
         : []),
-      `- Citation coverage: ${person.citationCoverage}%`,
+      ...(person.citationCoverage === 0
+        ? [`- Citation coverage: ${language === 'ar' ? 'لا توجد مصادر بعد' : 'No sources yet'}`]
+        : [`- Citation coverage: ${person.citationCoverage}%`]),
       `- Citations: ${person.citationCount}`,
     ];
 
@@ -114,12 +122,13 @@ function renderPeople(people: readonly ManuscriptPersonEntry[], language: 'ar' |
   });
 }
 
-function renderTimeline(entries: readonly ManuscriptTimelineEntry[]): string[] {
+function renderTimeline(entries: readonly ManuscriptTimelineEntry[], language: 'ar' | 'en'): string[] {
   if (entries.length === 0) return ['No timeline entries.'];
 
   return entries.map((entry) => {
     const place = entry.place ? ` - ${normalizeInline(entry.place)}` : '';
-    return `- ${normalizeInline(entry.date)}: **${normalizeInline(entry.personName)}** - ${normalizeInline(entry.title)}${place}`;
+    const formattedDate = formatManuscriptDate(entry.date, language, entry.isApproximate);
+    return `- ${normalizeInline(formattedDate)}: **${normalizeInline(entry.personName)}** - ${normalizeInline(entry.title)}${place}`;
   });
 }
 

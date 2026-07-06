@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { FamilyManuscriptModel } from '../../types';
 import { HtmlManuscriptRenderer } from '../HtmlManuscriptRenderer';
 import { CLASSIC_MANUSCRIPT_PRINT_TEMPLATE } from '../manuscriptTemplates';
+import { formatManuscriptDate } from '../../services/ManuscriptStructureBuilder';
 
 const model: FamilyManuscriptModel = {
   id: 'manuscript-test',
@@ -517,5 +518,85 @@ describe('HtmlManuscriptRenderer – Print Layout Stability', () => {
     expect(html).toContain('سيد محمد بن عبد الرحمن');
     expect(html).toContain('حارة الأشراف بالبلدة القديمة');
     expect(html).toContain('كتاب السلوك لمعرفة دول الملوك');
+  });
+
+  it('polishes the cover page by hiding UUID and rendering a template introduction', () => {
+    const customModel: FamilyManuscriptModel = {
+      id: 'manuscript-uuid-1234',
+      title: 'Family Book of Al-Yafi',
+      rootPersonId: 'p1',
+      chapters: [
+        {
+          id: 'p-chapter',
+          type: 'people',
+          title: 'People',
+          people: [
+            {
+              personId: 'p1',
+              displayName: 'John Doe',
+              citationCoverage: 0,
+              citationCount: 0,
+              facts: [
+                { label: 'Birth Date', value: '1900-01-01', citationCount: 0 }
+              ],
+              sourceHighlights: []
+            }
+          ]
+        },
+        {
+          id: 'ev-chapter',
+          type: 'evidence',
+          title: 'Bibliography',
+          citations: []
+        }
+      ]
+    };
+
+    const htmlEn = HtmlManuscriptRenderer.renderToHtml(customModel, { language: 'en' });
+
+    // UUID should not be visible in text but exist in HTML comment
+    expect(htmlEn).not.toContain('<p class="cover-subtitle">manuscript-uuid-1234</p>');
+    expect(htmlEn).toContain('<!-- manuscript-id: manuscript-uuid-1234 -->');
+
+    // Family name introduction should render
+    expect(htmlEn).toContain('gathers the Al-Yafi family branch');
+
+    // Empty bibliography should be avoided and replaced by a compact inline note
+    expect(htmlEn).not.toContain('class="page chapter-page evidence-chapter"');
+    expect(htmlEn).toContain('class="manuscript-sources-note"');
+    expect(htmlEn).toContain('No sources have been linked yet.');
+
+    // Citation coverage 0% should be softened
+    expect(htmlEn).toContain('No sources yet');
+    expect(htmlEn).not.toContain('0% documented');
+
+    const htmlAr = HtmlManuscriptRenderer.renderToHtml({
+      ...customModel,
+      title: 'كتاب عائلة القربي'
+    }, { language: 'ar' });
+    expect(htmlAr).toContain('يجمع هذا المخطوط أفراد عائلة القربي');
+    expect(htmlAr).toContain('لم تتم إضافة مصادر مرتبطة بعد.');
+    expect(htmlAr).toContain('لا توجد مصادر بعد');
+  });
+
+  it('correctly formats approximate and placeholder dates using formatManuscriptDate', () => {
+    // YYYY-01-01 placeholder
+    expect(formatManuscriptDate('1900-01-01', 'en')).toBe('1900');
+    expect(formatManuscriptDate('1950-01-01', 'en', true)).toBe('about 1950');
+    expect(formatManuscriptDate('1950-01-01', 'ar', true)).toBe('حوالي 1950');
+
+    // Year only
+    expect(formatManuscriptDate('1920', 'en')).toBe('1920');
+    expect(formatManuscriptDate('1920', 'en', true)).toBe('about 1920');
+    expect(formatManuscriptDate('1920', 'ar', true)).toBe('حوالي 1920');
+
+    // Already approximate string
+    expect(formatManuscriptDate('about 1930', 'en')).toBe('about 1930');
+    expect(formatManuscriptDate('about 1930', 'ar')).toBe('حوالي 1930');
+    expect(formatManuscriptDate('حوالي 1940', 'en')).toBe('about 1940');
+
+    // Standard exact date remains exact
+    expect(formatManuscriptDate('1984-05-01', 'en')).toBe('1984-05-01');
+    expect(formatManuscriptDate('1984-05-01', 'en', true)).toBe('about 1984-05-01');
   });
 });
