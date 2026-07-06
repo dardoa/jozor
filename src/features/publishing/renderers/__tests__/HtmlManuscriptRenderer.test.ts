@@ -602,4 +602,22 @@ describe('HtmlManuscriptRenderer – Print Layout Stability', () => {
     expect(formatManuscriptDate('1984-05-01', 'en')).toBe('1984-05-01');
     expect(formatManuscriptDate('1984-05-01', 'en', true)).toBe('about 1984-05-01');
   });
+
+  it('verifies timeline orphan prevention and closing card CSS styles are correctly defined', () => {
+    const html = HtmlManuscriptRenderer.renderToHtml(model, { language: 'en' });
+
+    // Timeline list container should be break-inside auto
+    expect(html).toContain('.timeline-list {');
+    expect(html).toContain('break-inside: auto');
+
+    // Individual timeline items should be break-inside avoid
+    expect(html).toContain('.timeline-list li {');
+    expect(html).toContain('break-inside: avoid');
+
+    // Closing section should be styled as a centered card
+    expect(html).toContain('.manuscript-closing-section {');
+    expect(html).toContain('margin: 40px auto');
+    expect(html).toContain('max-width: 500px');
+    expect(html).toContain('break-inside: avoid');
+  });
 });

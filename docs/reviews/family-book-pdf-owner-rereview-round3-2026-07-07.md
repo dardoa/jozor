@@ -1,16 +1,20 @@
 # Family Book PDF Owner Re-Review Report - Round 3
 
 **Date:** July 7, 2026  
-**Status:** `Pending Round 3 Visual Confirmation`  
+**Status:** `Needs Polish`
 **Reviewer:** Owner / Antigravity
 
 ---
 
 ## Executive Summary
 
-Following the Phase 2 polish of the Family Book PDF manuscript, this report serves as a checklist and review document for the third-round owner visual review.
+Following the visual review of the generated Family Book PDF manuscript, the output has moved to **Needs Polish** (with internal beta testing now considered possible).
 
-Implementation-level fixes are complete; visual confirmation remains pending. The assistant operates in a headless development sandbox and cannot manually open/interact with a PDF viewer to visually check margins and browser print dialogues. Therefore, the final visual rendering validation is delegated to the developer/owner.
+Key visual blocker status:
+- **Browser headers/footers**: Resolved if the user manually disables headers/footers.
+- **UUID on cover**: Resolved.
+- **Approximate dates**: Resolved.
+- **Remaining Beta Blocker**: Orphaned timeline pages (nearly empty final pages containing only a single timeline event) and weak page flow before the final stats card.
 
 ---
 

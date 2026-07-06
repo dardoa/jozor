@@ -1,11 +1,14 @@
 # Project Log
 
-## 2026-07-07 - Family Book PDF Owner Visual Re-Review Round 3
+## 2026-07-07 - Family Book PDF Owner Visual Re-Review Round 3 & Timeline Orphan Page Polish
 
 - Summary:
   - Prepared the third-round owner visual review pack for Family Book PDF after Phase 2 polish.
   - Released review pack at [`docs/reviews/family-book-pdf-owner-rereview-round3-2026-07-07.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/family-book-pdf-owner-rereview-round3-2026-07-07.md) and [`docs/reviews/evidence/family-book-pdf-owner-rereview-round3-2026-07-07/evidence_notes.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/evidence/family-book-pdf-owner-rereview-round3-2026-07-07/evidence_notes.md).
   - Defined the verification checklist for developer confirmation of Phase 2 fixes.
+  - Addressed timeline orphan page issue: updated list item CSS to `break-inside: avoid` and lists to `break-inside: auto`, ensuring single events do not get orphaned alone on nearly empty pages.
+  - Polished the closing section to render as an intentional card centered on the page with a maximum width of 500px.
+  - Moved status to `Needs Polish` (making internal beta testing possible).
 
 ## 2026-07-07 - Family Book PDF Owner Re-Review Pack & Phase 2 Blocker Polish
 

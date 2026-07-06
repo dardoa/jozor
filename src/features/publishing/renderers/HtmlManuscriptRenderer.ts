@@ -575,9 +575,13 @@ dd {
 }
 .timeline-list {
   padding-inline-start: 22px;
+  break-inside: auto;
+  page-break-inside: auto;
 }
 .timeline-list li {
   margin: 8px 0;
+  break-inside: avoid;
+  page-break-inside: avoid;
 }
 .timeline-list time {
   color: ${theme.colors.accent};
@@ -640,36 +644,46 @@ dd {
   text-align: center;
 }
 .manuscript-closing-section {
-  margin-top: 40px;
-  padding: 24px;
-  border-top: 1px dashed ${theme.colors.border};
+  margin: 40px auto;
+  max-width: 500px;
+  padding: 28px;
+  background: ${theme.colors.cardBackground};
+  border: 1px solid ${theme.colors.border};
+  border-radius: ${theme.layout.cardRadius};
   text-align: center;
   break-inside: avoid;
   page-break-inside: avoid;
 }
 .closing-title {
   margin: 0 0 6px 0;
-  font-size: 16px;
+  font-size: 18px;
+  font-weight: 700;
   color: ${theme.colors.accent};
 }
 .closing-generator {
-  margin: 0 0 16px 0;
-  font-size: 11px;
+  margin: 0 0 20px 0;
+  font-size: 12px;
   color: ${theme.colors.mutedText};
 }
 .closing-stats {
-  display: inline-flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 16px;
-  font-size: 11px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
   color: ${theme.colors.mutedText};
+  max-width: 320px;
+  margin: 0 auto;
 }
 .closing-stats div {
-  background: ${theme.colors.cardBackground};
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  background: ${theme.colors.paperBackground};
   border: 1px solid ${theme.colors.border};
   border-radius: 6px;
-  padding: 6px 12px;
+  padding: 8px 14px;
 }
 @media print {
   body {
