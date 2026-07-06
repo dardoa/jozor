@@ -318,24 +318,64 @@ function renderPeopleChapter(
 // Person card rendering is now delegated to renderPersonCardByVariant() above.
 // The classic implementation lives in personCards/classicPersonCard.ts.
 
+export function groupTimelineEventsForPrint<T>(
+  events: readonly T[],
+  preferredGroupSize = 6,
+  minimumFinalGroupSize = 2
+): T[][] {
+  const groups: T[][] = [];
+  if (events.length === 0) return groups;
+
+  let currentGroup: T[] = [];
+  for (let i = 0; i < events.length; i++) {
+    currentGroup.push(events[i]);
+    if (currentGroup.length === preferredGroupSize) {
+      groups.push(currentGroup);
+      currentGroup = [];
+    }
+  }
+
+  if (currentGroup.length > 0) {
+    groups.push(currentGroup);
+  }
+
+  if (groups.length > 1 && groups[groups.length - 1].length < minimumFinalGroupSize) {
+    const lastGroup = groups.pop()!;
+    groups[groups.length - 1] = groups[groups.length - 1].concat(lastGroup);
+  }
+
+  return groups;
+}
+
 function renderTimelineChapter(title: string, entries: readonly ManuscriptTimelineEntry[], language: 'ar' | 'en'): string {
-  const items = entries.slice(0, 80).map((entry) => {
-    const formattedDate = formatManuscriptDate(entry.date, language, entry.isApproximate);
+  const sliced = entries.slice(0, 80);
+  const groups = groupTimelineEventsForPrint(sliced, 6, 2);
+
+  const groupHtmls = groups.map((group) => {
+    const items = group.map((entry) => {
+      const formattedDate = formatManuscriptDate(entry.date, language, entry.isApproximate);
+      return [
+        '<li>',
+        `<time>${escapeHtml(formattedDate)}</time>`,
+        `<strong>${escapeHtml(entry.personName)}</strong>`,
+        `<span>${escapeHtml(entry.title)}${entry.place ? ` - ${escapeHtml(entry.place)}` : ''}</span>`,
+        '</li>',
+      ].join('\n');
+    }).join('\n');
+
     return [
-      '<li>',
-      `<time>${escapeHtml(formattedDate)}</time>`,
-      `<strong>${escapeHtml(entry.personName)}</strong>`,
-      `<span>${escapeHtml(entry.title)}${entry.place ? ` - ${escapeHtml(entry.place)}` : ''}</span>`,
-      '</li>',
+      '<div class="timeline-event-group">',
+      '<ol class="timeline-list">',
+      items,
+      '</ol>',
+      '</div>',
     ].join('\n');
   }).join('\n');
 
   return [
     '<section class="page chapter-page timeline-chapter">',
     `<h1>${escapeHtml(title)}</h1>`,
-    '<ol class="timeline-list">',
-    items,
-    '</ol>',
+    groupHtmls,
     '</section>',
   ].join('\n');
 }
@@ -573,8 +613,13 @@ dd {
   margin: 10px 0 0;
   padding-inline-start: 18px;
 }
+.timeline-event-group {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
 .timeline-list {
-  padding-inline-start: 22px;
+  list-style: none;
+  padding-inline-start: 0;
   break-inside: auto;
   page-break-inside: auto;
 }

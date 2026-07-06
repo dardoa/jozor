@@ -1,11 +1,13 @@
 # Project Log
 
-## 2026-07-07 - Family Book PDF Owner Visual Re-Review Round 4
+## 2026-07-07 - Family Book PDF Owner Visual Re-Review Round 4 & Timeline Renderer-Level Orphan Fix
 
 - Summary:
-  - Prepared the fourth-round owner visual review pack for Family Book PDF after timeline orphan page and closing section card polish.
+  - Prepared the fourth-round owner visual review pack for Family Book PDF.
   - Released review pack at [`docs/reviews/family-book-pdf-owner-rereview-round4-2026-07-07.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/family-book-pdf-owner-rereview-round4-2026-07-07.md) and [`docs/reviews/evidence/family-book-pdf-owner-rereview-round4-2026-07-07/evidence_notes.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/evidence/family-book-pdf-owner-rereview-round4-2026-07-07/evidence_notes.md).
-  - Defined the verification checklist for developer visual confirmation to transition status to `Pass for Limited Beta`.
+  - Addressed final timeline orphan page blocker at the renderer level: introduced `groupTimelineEventsForPrint` helper to partition events into groups of 6, merging any trailing group of size 1 into the previous group.
+  - Resolved suspicious RTL `.80` ordered list marker artifact by applying `list-style: none` to the timeline list CSS rules (since the date `<time>` acts as the natural bullet).
+  - Updated status to `Blocked for External Beta` pending confirmation of the fifth generated PDF.
 
 ## 2026-07-07 - Family Book PDF Owner Visual Re-Review Round 3 & Timeline Orphan Page Polish
 

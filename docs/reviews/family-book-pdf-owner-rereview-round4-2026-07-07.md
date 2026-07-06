@@ -1,48 +1,46 @@
 # Family Book PDF Owner Re-Review Report - Round 4
 
-**Date:** July 7, 2026  
-**Status:** `Pending Round 4 Visual Confirmation`  
+**Date:** July 7, 2026
+**Status:** `Blocked for External Beta`
 **Reviewer:** Owner / Antigravity
 
 ---
 
 ## Executive Summary
 
-Following the Phase 2 blockers polish and timeline orphan page fixes, this report serves as a checklist and review document for the fourth-round owner visual review of the Family Book PDF.
+Following the third visual review (after Phase 2 CSS-only polish), the Family Book PDF output remains **Blocked for External Beta** (though eligible for internal staging preview).
 
-Implementation-level fixes are complete; visual confirmation remains pending. The assistant operates in a headless development sandbox and cannot manually open/interact with a PDF viewer to visually check page breaks. Therefore, the final visual rendering validation is delegated to the developer/owner.
+While the cover, metadata layout, photo alignment, and muted citation text are verified as successful, the CSS-only page-break rules did not fully resolve the timeline pagination issues under browser print engines. A single timeline event still orphans to page 30 alone, displaying with a reversed ordered list marker (`.80`).
+
+Next Action: Shift orphan prevention from CSS rules to renderer-level timeline grouping/chunking logic.
+
+---
+
+## Key Review Findings & Blocker Details
+
+1. **Timeline Orphan Event Blocker**:
+   - A single trailing timeline event (`2025 أحمد البرغل وفاة`) was pushed alone onto a nearly empty page 30.
+   - CSS `break-inside: avoid` rules are partially bypassed by browser print engines when lists overflow.
+2. **Suspicious `.80` Display Artifact**:
+   - The number `.80` was rendered before the person's name on the orphaned item.
+   - Investigation confirmed this is not a data/age value, but the native ordered list item marker (`80.`) reversed due to RTL rendering layout in standard browser viewports.
+3. **Closing Section Positioning**:
+   - The stats card needs stronger visual grounding as an intentional card block rather than an arbitrary floating header.
 
 ---
 
 ## Blocker Resolution Verification Status (Round 4)
 
-The table below indicates the current verification status for each identified blocker category:
-
-| Blocker Category | Code / Test Status | Visual Verification | Notes |
-|---|---|---|---|
-| **1. Timeline Orphan Page** | `Verified` | `Pending` | Added `break-inside: avoid` to timeline events and `break-inside: auto` to lists. |
-| **2. Closing Section Card** | `Verified` | `Pending` | Stats section styled as a centered card block (`max-width: 500px`). |
-| **3. Browser Print warnings** | `Verified` | `Pending` | Alert messages and warning notes updated in `ExportCloudPanel.tsx`. |
-| **4. Card photo spacing** | `Verified` | `Pending` | Restructured person card header to avoid Arabic text overlap. |
-| **5. Photo Privacy Note** | `Verified` | `Pending` | Added subtle checkbox helper note warning about living people. |
+| Blocker Category | Visual Verification (R3) | Next Step (R4) |
+|---|---|---|
+| **1. Timeline Orphan Page** | `Failed` | Group entries into chunks of 6; merge trailing item of size 1 at the renderer level. |
+| **2. Suspicious `.80` Marker** | `Failed` | Apply `list-style: none` to `.timeline-list` (the year is already the natural bullet). |
+| **3. Closing Card Polish** | `Passed` | Styled as an intentional block. |
+| **4. Cover & Intro pages** | `Passed` | Clean title; hidden technical UUIDs. |
+| **5. Card spacing with photos** | `Passed` | Names wrap cleanly next to images. |
 
 ---
 
-## Developer Visual Verification Checklist
+## Conclusion & Transition Plan
 
-To complete this round 4 re-review and decide if the status moves to `Pass for Limited Beta` or `Needs Polish`, please verify:
-
-1. **Timeline orphan check**: Confirm that no single, isolated timeline event is stranded alone on the final page.
-2. **Closing card check**: Verify that the closing section displays as a structured card centered vertically on the page with a clean background.
-3. **Card header spacing**: Confirm that long Arabic names wrap naturally next to photos.
-4. **Muted source text**: Verify that empty source lines render calmly as smaller, muted helper lines.
-5. **Print settings check**: Verify that disabling "Headers and footers" in the print settings removes `about:blank` and date stamps.
-
----
-
-## Conclusion & Deferred P2 Items
-
-If all visual checks pass: The status will transition to `Pass for Limited Beta`. The remaining P2 items deferred for subsequent development include:
-- Introduction text enrichment.
-- Further source highlights count reduction on card layouts.
-- Controlled PDF adapter activation (Browserless) for searchable text quality.
+Once the renderer-level timeline grouping and list marker fixes are deployed, a fifth review round will verify the layout. If successful, the readiness status will transition to `Pass for Limited Beta`, leaving remaining P2 tasks (Controlled PDF text searchability, intro text enrichment) for post-beta polish.

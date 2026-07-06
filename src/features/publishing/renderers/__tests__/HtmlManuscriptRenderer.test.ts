@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { FamilyManuscriptModel } from '../../types';
-import { HtmlManuscriptRenderer } from '../HtmlManuscriptRenderer';
+import { HtmlManuscriptRenderer, groupTimelineEventsForPrint } from '../HtmlManuscriptRenderer';
 import { CLASSIC_MANUSCRIPT_PRINT_TEMPLATE } from '../manuscriptTemplates';
 import { formatManuscriptDate } from '../../services/ManuscriptStructureBuilder';
 
@@ -604,11 +604,34 @@ describe('HtmlManuscriptRenderer – Print Layout Stability', () => {
   });
 
   it('verifies timeline orphan prevention and closing card CSS styles are correctly defined', () => {
+    // Grouping logic:
+    // Empty list
+    expect(groupTimelineEventsForPrint([])).toEqual([]);
+
+    // 13 elements: chunked into 6, 6, 1 -> 1 is merged into second group -> 6, 7
+    const items13 = Array.from({ length: 13 }, (_, i) => i);
+    const groups13 = groupTimelineEventsForPrint(items13, 6, 2);
+    expect(groups13).toHaveLength(2);
+    expect(groups13[0]).toHaveLength(6);
+    expect(groups13[1]).toHaveLength(7);
+
+    // 14 elements: chunked into 6, 6, 2 -> kept as 6, 6, 2
+    const items14 = Array.from({ length: 14 }, (_, i) => i);
+    const groups14 = groupTimelineEventsForPrint(items14, 6, 2);
+    expect(groups14).toHaveLength(3);
+    expect(groups14[0]).toHaveLength(6);
+    expect(groups14[1]).toHaveLength(6);
+    expect(groups14[2]).toHaveLength(2);
+
     const html = HtmlManuscriptRenderer.renderToHtml(model, { language: 'en' });
 
-    // Timeline list container should be break-inside auto
+    // Timeline event group wrapper should exist in output
+    expect(html).toContain('class="timeline-event-group"');
+
+    // Timeline list container should be list-style none
     expect(html).toContain('.timeline-list {');
-    expect(html).toContain('break-inside: auto');
+    expect(html).toContain('list-style: none');
+    expect(html).toContain('padding-inline-start: 0');
 
     // Individual timeline items should be break-inside avoid
     expect(html).toContain('.timeline-list li {');
