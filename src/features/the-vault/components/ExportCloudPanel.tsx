@@ -25,7 +25,7 @@ import type { TranslationSchema } from '../../../utils/translationLoader';
 import { showToast } from '../../../utils/showToast';
 import { useControlledPdfReadiness } from '../../publishing/hooks';
 import { listVisualOutputDefinitionsByProduct } from '../../publishing';
-import type { VisualOutputDefinition, VisualOutputProductType } from '../../publishing';
+import type { VisualOutputDefinition, VisualOutputProductType, ExportHistoryEntry } from '../../publishing';
 import { useAppStore } from '../../../store/useAppStore';
 import { ManuscriptExportSummary } from './ManuscriptExportSummary';
 
@@ -117,6 +117,121 @@ function getVisualProductBadge(productType?: VisualOutputProductType, language?:
     return language === 'ar' ? 'لقطة' : 'Snapshot';
   }
   return '';
+}
+
+type HistoryProductCategory =
+  | 'family-book'
+  | 'visual-output'
+  | 'portable-data'
+  | 'cloud-backup'
+  | 'unknown';
+
+interface HistoryProductDisplay {
+  category: HistoryProductCategory;
+  productLabel: string;
+  formatLabel: string;
+  badgeLabel: string;
+}
+
+function classifyHistoryEntry(entry: ExportHistoryEntry, language: 'ar' | 'en'): HistoryProductDisplay {
+  const templateId = entry.templateId;
+  const format = entry.format || '';
+
+  // 1. Family Book
+  if (templateId === 'classic-book-manuscript') {
+    return {
+      category: 'family-book',
+      productLabel: language === 'ar' ? 'كتاب العائلة' : 'Family Book',
+      formatLabel: format === 'markdown' ? 'Markdown' : 'PDF',
+      badgeLabel: language === 'ar' ? 'كتاب العائلة' : 'Family Book',
+    };
+  }
+  // Legacy fallback for old Markdown entries without templateId
+  if ((!templateId || templateId === 'markdown') && format === 'markdown') {
+    return {
+      category: 'family-book',
+      productLabel: language === 'ar' ? 'كتاب العائلة' : 'Family Book',
+      formatLabel: 'Markdown',
+      badgeLabel: language === 'ar' ? 'كتاب العائلة' : 'Family Book',
+    };
+  }
+
+  // 2. Visual Output
+  if (templateId === 'classic-ancestor-poster') {
+    return {
+      category: 'visual-output',
+      productLabel: language === 'ar' ? 'شجرة الأسلاف الكلاسيكية الدافئة' : 'Classic Ancestor Poster',
+      formatLabel: format.toUpperCase() || 'PNG',
+      badgeLabel: language === 'ar' ? 'مخرج بصري' : 'Visual Output',
+    };
+  }
+  if (templateId === 'modern-ancestor-poster') {
+    return {
+      category: 'visual-output',
+      productLabel: language === 'ar' ? 'شجرة الأسلاف العصرية الداكنة' : 'Modern Ancestor Poster',
+      formatLabel: format.toUpperCase() || 'PNG',
+      badgeLabel: language === 'ar' ? 'مخرج بصري' : 'Visual Output',
+    };
+  }
+  if (templateId === 'current-tree-snapshot') {
+    return {
+      category: 'visual-output',
+      productLabel: language === 'ar' ? 'لقطة الشجرة الحالية' : 'Current Tree Snapshot',
+      formatLabel: format.toUpperCase() || 'PNG',
+      badgeLabel: language === 'ar' ? 'مخرج بصري' : 'Visual Output',
+    };
+  }
+  // Legacy PNG fallback without templateId
+  if (!templateId && format === 'png') {
+    return {
+      category: 'visual-output',
+      productLabel: language === 'ar' ? 'لقطة الشجرة الحالية' : 'Current Tree Snapshot',
+      formatLabel: 'PNG',
+      badgeLabel: language === 'ar' ? 'مخرج بصري' : 'Visual Output',
+    };
+  }
+
+  // 3. Portable Data
+  if (templateId === 'gedcom' || format === 'gedcom') {
+    return {
+      category: 'portable-data',
+      productLabel: 'GEDCOM',
+      formatLabel: 'GEDCOM',
+      badgeLabel: language === 'ar' ? 'بيانات قابلة للنقل' : 'Portable Data',
+    };
+  }
+  if (templateId === 'json' || format === 'json') {
+    return {
+      category: 'portable-data',
+      productLabel: 'JSON',
+      formatLabel: 'JSON',
+      badgeLabel: language === 'ar' ? 'بيانات قابلة للنقل' : 'Portable Data',
+    };
+  }
+  if (templateId === 'jozor' || format === 'jozor') {
+    return {
+      category: 'portable-data',
+      productLabel: language === 'ar' ? 'أرشيف جذور' : 'Jozor Archive',
+      formatLabel: language === 'ar' ? 'أرشيف' : 'Archive',
+      badgeLabel: language === 'ar' ? 'بيانات قابلة للنقل' : 'Portable Data',
+    };
+  }
+  if (templateId === 'ics' || format === 'ics') {
+    return {
+      category: 'portable-data',
+      productLabel: language === 'ar' ? 'التقويم' : 'Calendar',
+      formatLabel: 'ICS',
+      badgeLabel: language === 'ar' ? 'بيانات قابلة للنقل' : 'Portable Data',
+    };
+  }
+
+  // 4. Default / Fallback
+  return {
+    category: 'unknown',
+    productLabel: templateId || (language === 'ar' ? 'تصدير عام' : 'Generic Export'),
+    formatLabel: format.toUpperCase() || 'UNKNOWN',
+    badgeLabel: language === 'ar' ? 'تصدير عام' : 'Generic Export',
+  };
 }
 
 function countBranchPeopleInScope(
@@ -977,25 +1092,7 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
             {[...exportHistory]
               .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
               .map((entry) => {
-                let friendlyName = entry.templateId;
-                if (entry.templateId === 'classic-book-manuscript' && entry.format === 'markdown') {
-                  friendlyName = language === 'ar' ? 'Markdown كتاب العائلة' : 'Family Book Markdown';
-                } else if (entry.templateId === 'classic-book-manuscript') {
-                  friendlyName = language === 'ar' ? 'كتاب العائلة' : 'Family Book';
-                } else if (entry.templateId === 'classic-ancestor-poster') {
-                  friendlyName = language === 'ar' ? 'شجرة الأسلاف الكلاسيكية الدافئة' : 'Classic Ancestor Poster';
-                } else if (entry.templateId === 'modern-ancestor-poster') {
-                  friendlyName = language === 'ar' ? 'شجرة الأسلاف العصرية الداكنة' : 'Modern Ancestor Poster';
-                } else if (entry.templateId === 'gedcom') {
-                  friendlyName = 'GEDCOM';
-                } else if (entry.templateId === 'json') {
-                  friendlyName = 'JSON';
-                } else if (entry.templateId === 'jozor') {
-                  friendlyName = language === 'ar' ? 'أرشيف جذور' : 'Jozor Archive';
-                } else if (entry.templateId === 'markdown' || (!entry.templateId && entry.format === 'markdown')) {
-                  // Legacy fallback for old entries
-                  friendlyName = language === 'ar' ? 'Markdown كتاب العائلة' : 'Family Book Markdown';
-                }
+                const classification = classifyHistoryEntry(entry, language);
 
                 const hasWarnings = entry.warnings && entry.warnings.length > 0;
                 const statusText = !entry.success
@@ -1020,7 +1117,13 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-sm font-bold text-[var(--text-main)]">{friendlyName}</span>
+                          <span className="text-sm font-bold text-[var(--text-main)]">{classification.productLabel}</span>
+                          <span className="rounded bg-[var(--surface-panel)] border border-[var(--border-soft)] px-1.5 py-0.5 text-[9px] font-bold uppercase text-[var(--text-main)]">
+                            {classification.formatLabel}
+                          </span>
+                          <span className="rounded-full bg-[var(--primary-500)]/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[var(--primary-700)]">
+                            {classification.badgeLabel}
+                          </span>
                           <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${statusColorClass}`}>
                             {statusText}
                           </span>

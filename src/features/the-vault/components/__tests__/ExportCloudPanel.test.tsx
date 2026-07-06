@@ -730,8 +730,9 @@ describe('ExportCloudPanel manuscript preview', () => {
       render(<ExportCloudPanel {...baseProps} />);
       switchToExportSection(/History & Quality/i);
 
-      // Friendly template name and success status
+      // Verify product title, format tag, category badge, and success status
       expect(screen.getAllByText('Family Book').length).toBeGreaterThan(0);
+      expect(screen.getByText('PDF')).toBeInTheDocument();
       expect(screen.getByText('Success')).toBeInTheDocument();
 
       // Core metadata
@@ -779,6 +780,7 @@ describe('ExportCloudPanel manuscript preview', () => {
       switchToExportSection(/History & Quality/i);
 
       expect(screen.getAllByText('GEDCOM').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('Portable Data').length).toBeGreaterThan(0);
       expect(screen.getByText('Warnings')).toBeInTheDocument();
       // Verify safe warnings message displays warning count, NOT raw warning string
       expect(screen.queryByText(/John Doe/i)).not.toBeInTheDocument();
@@ -810,7 +812,50 @@ describe('ExportCloudPanel manuscript preview', () => {
       render(<ExportCloudPanel {...baseProps} />);
       switchToExportSection(/History & Quality/i);
 
-      expect(screen.getAllByText('Family Book Markdown').length).toBe(2);
+      expect(screen.getAllByText('Family Book').length).toBe(5);
+      expect(screen.getAllByText('Markdown').length).toBe(2);
+    });
+
+    it('renders Visual Output posters and snapshots, and generic PDF fallbacks correctly', () => {
+      mockExportHistoryData = [
+        {
+          id: 5,
+          publicationId: 'pub-5',
+          templateId: 'classic-ancestor-poster',
+          format: 'pdf',
+          exportType: 'publishing',
+          createdAt: new Date().toISOString(),
+          success: true,
+        },
+        {
+          id: 6,
+          publicationId: 'pub-6',
+          format: 'png',
+          exportType: 'publishing',
+          createdAt: new Date().toISOString(),
+          success: true,
+        },
+        {
+          id: 7,
+          publicationId: 'pub-7',
+          format: 'pdf',
+          exportType: 'publishing',
+          createdAt: new Date().toISOString(),
+          success: true,
+        },
+      ];
+
+      render(<ExportCloudPanel {...baseProps} />);
+      switchToExportSection(/History & Quality/i);
+
+      expect(screen.getByText('Classic Ancestor Poster')).toBeInTheDocument();
+      expect(screen.getAllByText('Visual Output').length).toBe(2);
+
+      expect(screen.getByText('Current Tree Snapshot')).toBeInTheDocument();
+      expect(screen.getAllByText('PNG').length).toBe(1);
+
+      expect(screen.getAllByText('Generic Export').length).toBe(2);
+      expect(screen.getAllByText('PDF').length).toBe(2);
     });
 
     it('requires a two-step confirmation to clear history', () => {
