@@ -7,11 +7,9 @@ import {
   FileText,
   HardDrive,
   Image as ImageIcon,
-  Printer,
   RefreshCw,
   Save,
   Trash2,
-  BookOpen,
   Download,
   ExternalLink,
   Eye,
@@ -59,24 +57,41 @@ type ExportLabelKey =
   | 'vaultExportJson'
   | 'vaultExportGedcom'
   | 'vaultExportCalendar'
-  | 'vaultExportMarkdown'
   | 'vaultExportPng'
-  | 'vaultExportPdf'
-  | 'vaultExportPrint';
+  | 'vaultExportPdf';
 
 const EXPORT_ACTIONS: Array<{
   id: ExportType;
   labelKey: ExportLabelKey;
   icon: React.ComponentType<{ className?: string }>;
+  group: 'portable-data';
 }> = [
-  { id: 'jozor', labelKey: 'vaultExportArchive', icon: Archive },
-  { id: 'json', labelKey: 'vaultExportJson', icon: FileText },
-  { id: 'gedcom', labelKey: 'vaultExportGedcom', icon: FileText },
-  { id: 'ics', labelKey: 'vaultExportCalendar', icon: Calendar },
-  { id: 'markdown', labelKey: 'vaultExportMarkdown', icon: FileText },
+  { id: 'jozor', labelKey: 'vaultExportArchive', icon: Archive, group: 'portable-data' },
+  { id: 'json', labelKey: 'vaultExportJson', icon: FileText, group: 'portable-data' },
+  { id: 'gedcom', labelKey: 'vaultExportGedcom', icon: FileText, group: 'portable-data' },
+  { id: 'ics', labelKey: 'vaultExportCalendar', icon: Calendar, group: 'portable-data' },
+];
+
+const TREE_SNAPSHOT_ACTIONS: Array<{
+  id: Extract<ExportType, 'png' | 'pdf'>;
+  labelKey: ExportLabelKey;
+  icon: React.ComponentType<{ className?: string }>;
+}> = [
   { id: 'png', labelKey: 'vaultExportPng', icon: ImageIcon },
   { id: 'pdf', labelKey: 'vaultExportPdf', icon: FileText },
-  { id: 'print', labelKey: 'vaultExportPrint', icon: Printer },
+];
+
+type ExportPanelSection = 'family-book' | 'visuals' | 'data-export' | 'history' | 'cloud-backup';
+
+const EXPORT_PANEL_SECTIONS: Array<{
+  id: ExportPanelSection;
+  label: { en: string; ar: string };
+}> = [
+  { id: 'family-book', label: { en: 'Family Book', ar: 'كتاب العائلة' } },
+  { id: 'visuals', label: { en: 'Visual Outputs', ar: 'المخرجات البصرية' } },
+  { id: 'data-export', label: { en: 'Portable Data', ar: 'بيانات قابلة للنقل' } },
+  { id: 'history', label: { en: 'History & Quality', ar: 'السجل والجودة' } },
+  { id: 'cloud-backup', label: { en: 'Cloud Backup', ar: 'النسخ السحابي' } },
 ];
 
 const waitForDrawerDismissal = () =>
@@ -163,6 +178,8 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
   const [rootSearchText, setRootSearchText] = useState('');
   const [generationsDepth, setGenerationsDepth] = useState<number | 'all'>(3);
   const [confirmClearHistory, setConfirmClearHistory] = useState(false);
+  const [activeSection, setActiveSection] = useState<ExportPanelSection>('family-book');
+  const [expandedHistoryId, setExpandedHistoryId] = useState<number | string | null>(null);
   const { status: controlledPdfStatus, refresh: checkControlledPdfReadiness } = useControlledPdfReadiness();
 
   React.useEffect(() => {
@@ -390,7 +407,7 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                   disabled={isPreviewLoading}
                   className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-emerald-700 px-3 py-2 text-xs font-bold text-white transition-all hover:brightness-105 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {isPreviewLoading ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Printer className="h-3.5 w-3.5" />}
+                  {isPreviewLoading ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <FileText className="h-3.5 w-3.5" />}
                   {isPreviewOutdated
                     ? (language === 'ar' ? 'تحديث المعاينة' : 'Refresh Preview')
                     : (language === 'ar' ? 'PDF مخطوط العائلة' : 'Family Book PDF')}
@@ -413,6 +430,31 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
           </div>
         </div>
       )}
+      <div className="rounded-[16px] border border-[var(--border-soft)] bg-[var(--surface-panel)] p-2 shadow-none">
+        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-5" role="tablist" aria-label={language === 'ar' ? 'أقسام التصدير' : 'Export sections'}>
+          {EXPORT_PANEL_SECTIONS.map((section) => {
+            const isActive = activeSection === section.id;
+            return (
+              <button
+                key={section.id}
+                type="button"
+                role="tab"
+                aria-selected={isActive}
+                onClick={() => setActiveSection(section.id)}
+                className={`min-h-10 rounded-xl px-3 py-2 text-xs font-bold transition-all ${
+                  isActive
+                    ? 'bg-[var(--primary-600)] text-white shadow-sm'
+                    : 'text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]'
+                }`}
+              >
+                {language === 'ar' ? section.label.ar : section.label.en}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {activeSection === 'cloud-backup' && (
       <section className="rounded-[14px] border border-[var(--border-soft)] bg-[var(--surface-panel)] p-4 shadow-none">
         {hasSessionError && (
           <div className="mb-4 flex flex-col gap-4 rounded-xl border border-[var(--danger-500)]/20 bg-[var(--danger-500)]/10 p-4 animate-in fade-in slide-in-from-top-2 duration-300">
@@ -488,63 +530,15 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
           </div>
         </div>
       </section>
+      )}
 
+      {(activeSection === 'family-book' || activeSection === 'visuals') && (
       <section className="rounded-[20px] border border-[var(--primary-500)]/20 bg-gradient-to-br from-[var(--surface-panel)] via-[var(--surface-panel)] to-[var(--primary-500)]/5 p-5 shadow-sm relative overflow-hidden">
-        {/* Decorative background glow */}
-        <div className="absolute -right-16 -top-16 h-36 w-36 rounded-full bg-[var(--primary-500)]/5 blur-3xl pointer-events-none" />
-
-        <div className="flex items-center gap-3">
-          <div className="rounded-xl bg-[var(--primary-500)]/10 p-2.5 text-[var(--primary-600)]">
-            <Sparkles className="h-5 w-5" />
-          </div>
-          <div>
-            <h4 className="text-[17px] font-bold tracking-tight text-[var(--text-main)]">
-              {language === 'ar' ? 'نظام النشر والطباعة (جذور 1.0)' : 'Publishing & Printing Engine (Jozor 1.0)'}
-            </h4>
-            <p className="mt-1 text-xs text-[var(--text-muted)]">
-              {language === 'ar'
-                ? 'تصدير شجرتك باستخدام محرك التخطيط التلقائي وتوزيع الصفحات الذكي.'
-                : 'Export your tree using the automated publishing layouts and page distribution.'}
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-5 space-y-4">
+        <div className="space-y-4">
+          {activeSection === 'family-book' && (
+          <>
           {/* Template 1: Classic Family Book */}
-          <div className="flex flex-col gap-4 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-subtle)] p-4 transition-all hover:border-[var(--primary-500)]/30 hover:shadow-sm">
-            <div className="flex items-start gap-3">
-              <div className="mt-0.5 rounded-xl bg-[var(--surface-panel)] p-2 text-[var(--primary-600)]">
-                <BookOpen className="h-5 w-5" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h5 className="text-sm font-bold text-[var(--text-main)]">
-                    {language === 'ar' ? 'كتاب العائلة الكلاسيكي المصغر' : 'Classic Family Book Manuscript'}
-                  </h5>
-                  <span className="rounded-full bg-[var(--primary-500)]/10 px-2 py-0.5 text-[10px] font-semibold text-[var(--primary-600)]">
-                    A4 PDF
-                  </span>
-                </div>
-                <p className="mt-1 text-[11px] leading-relaxed text-[var(--text-muted)]">
-                  {language === 'ar'
-                    ? 'مخطوط عائلي قابل للمعاينة قبل الطباعة، مع فصول الأشخاص والخط الزمني والمراجع حسب اختيارك.'
-                    : 'A previewable family manuscript with people chapters, timeline, and bibliography based on your options.'}
-                </p>
-              </div>
-            </div>
-            <div className="rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] p-3">
-              <div className="mb-3 flex flex-col gap-2 border-b border-[var(--border-soft)] pb-3 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                  <h6 className="text-xs font-bold uppercase tracking-[0.08em] text-[var(--text-secondary)]">
-                    {language === 'ar' ? 'لوحة تحكم المخطوط' : 'Manuscript Control Panel'}
-                  </h6>
-                  <p className="mt-1 text-[11px] leading-relaxed text-[var(--text-muted)]">
-                    {language === 'ar'
-                      ? 'المعاينة وملف PDF يستخدمان نفس نموذج المخطوط والإعدادات.'
-                      : 'Preview and PDF use the same manuscript model and settings.'}
-                  </p>
-                </div>
-              </div>
+          <div className="flex flex-col gap-4 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-panel)] p-4 transition-all hover:border-[var(--primary-500)]/30 hover:shadow-sm">
               <ManuscriptExportSummary
                 language={language}
                 rootPersonName={selectedRootName}
@@ -639,7 +633,6 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                 />
               </label>
               </div>
-            </div>
 
             <div className="flex flex-col justify-end gap-2 border-t border-[var(--border-soft)] pt-3 sm:flex-row">
               <button
@@ -670,10 +663,18 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
 
               >
 
-                <Printer className="h-3.5 w-3.5" />
+                <FileText className="h-3.5 w-3.5" />
 
                 {language === 'ar' ? 'PDF مخطوط العائلة' : 'Family Book PDF'}
 
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleExport('markdown')}
+                className="flex items-center justify-center gap-2 rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] px-4 py-2 text-xs font-bold text-[var(--text-main)] transition-all hover:bg-[var(--surface-hover)] active:scale-[0.98]"
+              >
+                <FileText className="h-3.5 w-3.5" />
+                {language === 'ar' ? 'Markdown مخطوط العائلة' : 'Markdown Manuscript'}
               </button>
             </div>
             <div className="mt-2 flex flex-col items-end gap-1 text-[10px] font-mono text-[var(--text-dim)]">
@@ -682,17 +683,16 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                 {controlledPdfStatus === 'fallback' && (language === 'ar' ? 'محرك PDF: الطباعة من المتصفح' : 'PDF engine: Browser print')}
                 {controlledPdfStatus === 'checking' && (language === 'ar' ? 'محرك PDF: جاري الفحص' : 'PDF engine: Checking')}
               </div>
-              <div className="text-right text-[10px] font-sans text-[var(--text-dim)]/80" data-testid="manuscript-visual-review-hint">
-                {language === 'ar'
-                  ? 'مراجعة المظهر للمخطوط: تمت بنجاح للترتيب السردي والمخرجات العربية RTL.'
-                  : 'Manuscript renderer visual review: passed for narrative order and Arabic RTL output.'}
-              </div>
             </div>
           </div>
+          </>
+          )}
 
+          {activeSection === 'visuals' && (
+          <>
           <div className="pt-2 border-t border-[var(--border-soft)]/60">
             <h5 className="text-xs font-bold uppercase tracking-[0.08em] text-[var(--text-secondary)]">
-              {language === 'ar' ? 'بوسترات وصور الشجرة' : 'Tree Posters & Images'}
+              {language === 'ar' ? 'قوالب البوسترات' : 'Poster Templates'}
             </h5>
           </div>
 
@@ -779,33 +779,78 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
               </button>
             </div>
           </div>
+
+          <div className="rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-subtle)] p-4">
+            <h5 className="mb-3 text-xs font-bold uppercase tracking-[0.08em] text-[var(--text-secondary)]">
+              {language === 'ar' ? 'لقطات الشجرة الحالية' : 'Current Tree Snapshot'}
+            </h5>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {TREE_SNAPSHOT_ACTIONS.map((action) => {
+                const Icon = action.icon;
+                return (
+                  <button
+                    key={action.id}
+                    type="button"
+                    onClick={() => void handleExport(action.id)}
+                    className="flex min-h-12 items-center justify-between gap-3 rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3 py-2 text-start transition-all duration-200 ease-in-out hover:bg-[var(--surface-hover)]"
+                  >
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div className="rounded-lg bg-[var(--surface-subtle)] p-2 text-[var(--primary-600)]">
+                        <Icon className="h-4 w-4" />
+                      </div>
+                      <div className="text-sm font-semibold text-[var(--text-main)]">{t[action.labelKey] || action.id}</div>
+                    </div>
+                    <Download className="h-3.5 w-3.5 text-[var(--text-muted)]" />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          </>
+          )}
         </div>
       </section>
+      )}
 
+      {activeSection === 'data-export' && (
       <section className="rounded-[14px] border border-[var(--border-soft)] bg-[var(--surface-panel)] p-4 shadow-none">
         <h4 className="text-[16px] font-bold tracking-tight text-[var(--text-main)]">{t.vaultExportDataTitle}</h4>
-        <div className="mt-4 grid grid-cols-2 gap-3">
-          {EXPORT_ACTIONS.map((action) => {
-            const Icon = action.icon;
-            return (
-              <button
-                key={action.id}
-                type="button"
-                onClick={() => void handleExport(action.id)}
-                className="flex min-h-[88px] flex-col items-center justify-center gap-3 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-subtle)] px-4 py-3 text-center transition-all duration-200 ease-in-out hover:bg-[var(--surface-hover)]"
-              >
-                <div className="rounded-xl bg-[var(--surface-panel)] p-2 text-[var(--primary-600)]">
-                  <Icon className="h-4 w-4" />
-                </div>
-                <div className="min-w-0">
-                  <div className="text-sm font-semibold text-[var(--text-main)]">{t[action.labelKey] || action.id}</div>
-                </div>
-              </button>
-            );
-          })}
+        <div className="mt-4 space-y-4">
+          {(['portable-data'] as const).map((group) => (
+            <div key={group} className="rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-subtle)] p-3">
+              <h5 className="mb-3 text-xs font-bold uppercase tracking-[0.08em] text-[var(--text-secondary)]">
+                {group === 'portable-data'
+                  ? (language === 'ar' ? 'بيانات قابلة للنقل' : 'Portable Data')
+                  : (language === 'ar' ? 'مخرجات مباشرة' : 'Direct Outputs')}
+              </h5>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {EXPORT_ACTIONS.filter((action) => action.group === group).map((action) => {
+                  const Icon = action.icon;
+                  return (
+                    <button
+                      key={action.id}
+                      type="button"
+                      onClick={() => void handleExport(action.id)}
+                      className="flex min-h-12 items-center justify-between gap-3 rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3 py-2 text-start transition-all duration-200 ease-in-out hover:bg-[var(--surface-hover)]"
+                    >
+                      <div className="flex min-w-0 items-center gap-3">
+                        <div className="rounded-lg bg-[var(--surface-subtle)] p-2 text-[var(--primary-600)]">
+                          <Icon className="h-4 w-4" />
+                        </div>
+                        <div className="text-sm font-semibold text-[var(--text-main)]">{t[action.labelKey] || action.id}</div>
+                      </div>
+                      <Download className="h-3.5 w-3.5 text-[var(--text-muted)]" />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </div>
       </section>
+      )}
 
+      {activeSection === 'history' && (
       <section className="rounded-[14px] border border-[var(--border-soft)] bg-[var(--surface-panel)] p-4 shadow-none">
         <div className="flex items-center justify-between border-b border-[var(--border-soft)] pb-3 mb-4">
           <div className="flex items-center gap-2">
@@ -874,10 +919,12 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                   : hasWarnings
                     ? 'bg-amber-500/10 text-amber-700 border-amber-500/20'
                     : 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20';
+                const historyEntryId = entry.id || entry.publicationId;
+                const isHistoryExpanded = expandedHistoryId === historyEntryId;
 
                 return (
                   <div
-                    key={entry.id || entry.publicationId}
+                    key={historyEntryId}
                     className="flex flex-col gap-3 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-subtle)] p-4 transition-all hover:shadow-sm"
                   >
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -913,6 +960,19 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                       </div>
                     </div>
 
+                    <button
+                      type="button"
+                      onClick={() => setExpandedHistoryId(isHistoryExpanded ? null : historyEntryId)}
+                      className="self-start rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3 py-1.5 text-[11px] font-bold text-[var(--text-secondary)] transition-all hover:bg-[var(--surface-hover)]"
+                      aria-expanded={isHistoryExpanded}
+                    >
+                      {isHistoryExpanded
+                        ? (language === 'ar' ? 'إخفاء التفاصيل' : 'Hide details')
+                        : (language === 'ar' ? 'عرض التفاصيل' : 'Show details')}
+                    </button>
+
+                    {isHistoryExpanded && (
+                    <>
                     {(entry.integrity || entry.evidence) && (
                       <div className="grid gap-2 border-t border-[var(--border-soft)] pt-2.5 sm:grid-cols-3">
                         {entry.integrity?.healthScore !== undefined && (
@@ -1009,13 +1069,17 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                         </span>
                       </div>
                     )}
+                    </>
+                    )}
                   </div>
                 );
               })}
           </div>
         )}
       </section>
+      )}
 
+      {activeSection === 'cloud-backup' && (
       <section className="rounded-[14px] border border-[var(--border-soft)] bg-[var(--surface-panel)] p-4 shadow-none">
         <div className="mb-4 flex flex-col gap-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -1148,6 +1212,7 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
           <div className="mt-4 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-subtle)] p-4 text-[12px] text-[var(--text-muted)]">{t.vaultCloudAccessLimited}</div>
         )}
       </section>
+      )}
     </div>
   );
 };

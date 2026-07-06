@@ -21,4 +21,5 @@ export * from './services/NarrativeDraftBuilder';
 export * from './services/NarrativeOrderingEngine';
 export * from './services/ControlledPdfFeatureFlag';
 export * from './templates';
-
+export * from './visualOutputs/visualOutputTypes';
+export * from './visualOutputs/visualOutputRegistry';

@@ -1,5 +1,12 @@
 # Project Log
 
+## 2026-07-06 - Visual Output Product Contract Phase 1
+
+- Summary:
+  - Established a domain-level Visual Output Product contract for Vault visual exports, modeling posters and tree snapshots as products.
+  - Defined types (product categories, layout engines, renderers, strategies) and built a registry (`VISUAL_OUTPUT_DEFINITIONS`) with retrieval helpers.
+  - Authored ADR [`docs/adr/012-visual-output-product-contract.md`](file:///d:/AppDEV/Jozor1.1/docs/adr/012-visual-output-product-contract.md) mapping the Product > Template > Preset > Renderer hierarchy.
+
 ## 2026-07-06 - Private Beta Publishing Test Script
 
 - Summary:
