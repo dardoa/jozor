@@ -468,12 +468,21 @@ describe('ExportCloudPanel manuscript preview', () => {
 
     expect(screen.getByRole('tab', { name: /Visual Outputs/i })).toHaveAttribute('aria-selected', 'true');
 
-    // Verify metadata rendered from registry
+    // Verify metadata rendered from registry and polished gallery UI elements
     expect(screen.getByText('Classic Ancestor Poster')).toBeInTheDocument();
     expect(screen.getByText(/Traditional cozy poster design featuring warm vintage tones/i)).toBeInTheDocument();
     expect(screen.getByText('Modern Ancestor Poster')).toBeInTheDocument();
     expect(screen.getByText(/Modern dark-themed poster design utilizing contrasting elements/i)).toBeInTheDocument();
     expect(screen.getByText('Current Tree Snapshot')).toBeInTheDocument();
+
+    // Verify badges
+    expect(screen.getAllByText('Poster').length).toBe(2);
+    expect(screen.getByText('Snapshot')).toBeInTheDocument();
+
+    // Verify format tags and hints
+    expect(screen.getAllByText('Supported formats:').length).toBe(3);
+    expect(screen.getAllByText('Print-ready sizes: A4-A0').length).toBe(2);
+    expect(screen.getByText('Uses the current tree view')).toBeInTheDocument();
 
     // Click Classic Poster buttons
     const classicPngBtn = screen.getAllByRole('button', { name: /Download PNG/i })[0];

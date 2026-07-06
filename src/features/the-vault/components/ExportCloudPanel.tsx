@@ -25,6 +25,7 @@ import type { TranslationSchema } from '../../../utils/translationLoader';
 import { showToast } from '../../../utils/showToast';
 import { useControlledPdfReadiness } from '../../publishing/hooks';
 import { listVisualOutputDefinitionsByProduct } from '../../publishing';
+import type { VisualOutputDefinition, VisualOutputProductType } from '../../publishing';
 import { useAppStore } from '../../../store/useAppStore';
 import { ManuscriptExportSummary } from './ManuscriptExportSummary';
 
@@ -103,6 +104,20 @@ const waitForDrawerDismissal = () =>
     }
     window.setTimeout(resolve, 140);
   });
+
+function getRendererChips(definition?: VisualOutputDefinition): string[] {
+  return (definition?.capabilities?.rendererTargets as unknown as string[]) ?? (definition?.rendererTargets as unknown as string[]) ?? [];
+}
+
+function getVisualProductBadge(productType?: VisualOutputProductType, language?: 'ar' | 'en'): string {
+  if (productType === 'poster') {
+    return language === 'ar' ? 'بوستر' : 'Poster';
+  }
+  if (productType === 'snapshot') {
+    return language === 'ar' ? 'لقطة' : 'Snapshot';
+  }
+  return '';
+}
 
 function countBranchPeopleInScope(
   people: Record<string, Pick<Person, 'id' | 'children' | 'spouses'>>,
@@ -715,6 +730,9 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                   <h5 className="text-sm font-bold text-[var(--text-main)]">
                     {classicPosterDef?.displayName[language] || (language === 'ar' ? 'شجرة الأسلاف الكلاسيكية الدافئة' : 'Classic Ancestor Poster')}
                   </h5>
+                  <span className="rounded-full bg-[var(--primary-500)]/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[var(--primary-700)]">
+                    {getVisualProductBadge(classicPosterDef?.productType, language)}
+                  </span>
                   <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-600">
                     {language === 'ar' ? 'ثيم دافئ' : 'Warm Theme'}
                   </span>
@@ -724,6 +742,20 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                     ? 'تصميم بوستر تقليدي مريح للعين، يعتمد على نبرات لونية هادئة (4 أجيال)، ملائم للطباعة الورقية والتأطير.'
                     : 'Traditional cozy poster design featuring warm vintage tones (4 generations), perfect for print and framing.')}
                 </p>
+                <div className="mt-3 flex items-center gap-3 flex-wrap">
+                  <div className="flex items-center gap-1.5 text-[10px] font-medium text-[var(--text-secondary)]">
+                    <span>{language === 'ar' ? 'الصيغ المدعومة:' : 'Supported formats:'}</span>
+                    {getRendererChips(classicPosterDef).map((renderer) => (
+                      <span key={renderer} className="rounded bg-[var(--surface-panel)] border border-[var(--border-soft)] px-1.5 py-0.5 text-[9px] font-bold uppercase text-[var(--text-main)]">
+                        {renderer}
+                      </span>
+                    ))}
+                  </div>
+                  <span className="text-[10px] text-[var(--text-muted)]">|</span>
+                  <span className="text-[10px] font-medium text-[var(--text-muted)]">
+                    {language === 'ar' ? 'أحجام جاهزة للطباعة: A4-A0' : 'Print-ready sizes: A4-A0'}
+                  </span>
+                </div>
               </div>
             </div>
             <div className="flex justify-end gap-2 border-t border-[var(--border-soft)] pt-3">
@@ -757,6 +789,9 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                   <h5 className="text-sm font-bold text-[var(--text-main)]">
                     {modernPosterDef?.displayName[language] || (language === 'ar' ? 'شجرة الأسلاف العصرية الداكنة' : 'Modern Ancestor Poster')}
                   </h5>
+                  <span className="rounded-full bg-[var(--primary-500)]/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[var(--primary-700)]">
+                    {getVisualProductBadge(modernPosterDef?.productType, language)}
+                  </span>
                   <span className="rounded-full bg-indigo-500/10 px-2 py-0.5 text-[10px] font-semibold text-indigo-600">
                     {language === 'ar' ? 'ثيم داكن' : 'Dark Theme'}
                   </span>
@@ -766,6 +801,20 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                     ? 'تصميم شجرة عصري بألوان داكنة ونظام ألوان ذكي يبرز التباين والعمق (4 أجيال) للتعليق الإلكتروني والطباعة الفاخرة.'
                     : 'Modern dark-themed poster design utilizing contrasting elements (4 generations) for screens or premium prints.')}
                 </p>
+                <div className="mt-3 flex items-center gap-3 flex-wrap">
+                  <div className="flex items-center gap-1.5 text-[10px] font-medium text-[var(--text-secondary)]">
+                    <span>{language === 'ar' ? 'الصيغ المدعومة:' : 'Supported formats:'}</span>
+                    {getRendererChips(modernPosterDef).map((renderer) => (
+                      <span key={renderer} className="rounded bg-[var(--surface-panel)] border border-[var(--border-soft)] px-1.5 py-0.5 text-[9px] font-bold uppercase text-[var(--text-main)]">
+                        {renderer}
+                      </span>
+                    ))}
+                  </div>
+                  <span className="text-[10px] text-[var(--text-muted)]">|</span>
+                  <span className="text-[10px] font-medium text-[var(--text-muted)]">
+                    {language === 'ar' ? 'أحجام جاهزة للطباعة: A4-A0' : 'Print-ready sizes: A4-A0'}
+                  </span>
+                </div>
               </div>
             </div>
             <div className="flex justify-end gap-2 border-t border-[var(--border-soft)] pt-3">
@@ -788,30 +837,58 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
             </div>
           </div>
 
-          <div className="rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-subtle)] p-4">
-            <h5 className="mb-3 text-xs font-bold uppercase tracking-[0.08em] text-[var(--text-secondary)]">
-              {treeSnapshotDef?.displayName[language] || (language === 'ar' ? 'لقطات الشجرة الحالية' : 'Current Tree Snapshot')}
-            </h5>
-            <div className="grid gap-2 sm:grid-cols-2">
-              {TREE_SNAPSHOT_ACTIONS.map((action) => {
-                const Icon = action.icon;
-                return (
-                  <button
-                    key={action.id}
-                    type="button"
-                    onClick={() => void handleExport(action.id)}
-                    className="flex min-h-12 items-center justify-between gap-3 rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3 py-2 text-start transition-all duration-200 ease-in-out hover:bg-[var(--surface-hover)]"
-                  >
-                    <div className="flex min-w-0 items-center gap-3">
-                      <div className="rounded-lg bg-[var(--surface-subtle)] p-2 text-[var(--primary-600)]">
-                        <Icon className="h-4 w-4" />
-                      </div>
-                      <div className="text-sm font-semibold text-[var(--text-main)]">{t[action.labelKey] || action.id}</div>
-                    </div>
-                    <Download className="h-3.5 w-3.5 text-[var(--text-muted)]" />
-                  </button>
-                );
-              })}
+          {/* Current Tree Snapshot (Compact Product Card Style) */}
+          <div className="flex flex-col gap-4 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-subtle)] p-4 transition-all hover:border-[var(--primary-500)]/30 hover:shadow-sm">
+            <div className="flex items-start gap-3">
+              <div className="mt-0.5 rounded-xl bg-[var(--surface-panel)] p-2 text-[var(--primary-600)]">
+                <ImageIcon className="h-5 w-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h5 className="text-sm font-bold text-[var(--text-main)]">
+                    {treeSnapshotDef?.displayName[language] || (language === 'ar' ? 'لقطات الشجرة الحالية' : 'Current Tree Snapshot')}
+                  </h5>
+                  <span className="rounded-full bg-[var(--primary-500)]/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[var(--primary-700)]">
+                    {getVisualProductBadge(treeSnapshotDef?.productType, language)}
+                  </span>
+                </div>
+                <p className="mt-1 text-[11px] leading-relaxed text-[var(--text-muted)]">
+                  {treeSnapshotDef?.description[language] || (language === 'ar'
+                    ? 'تصدير لقطة عالية الدقة للمساحة المعروضة حالياً.'
+                    : 'A high-fidelity export of your current workspace viewport.')}
+                </p>
+                <div className="mt-3 flex items-center gap-3 flex-wrap">
+                  <div className="flex items-center gap-1.5 text-[10px] font-medium text-[var(--text-secondary)]">
+                    <span>{language === 'ar' ? 'الصيغ المدعومة:' : 'Supported formats:'}</span>
+                    {getRendererChips(treeSnapshotDef).map((renderer) => (
+                      <span key={renderer} className="rounded bg-[var(--surface-panel)] border border-[var(--border-soft)] px-1.5 py-0.5 text-[9px] font-bold uppercase text-[var(--text-main)]">
+                        {renderer}
+                      </span>
+                    ))}
+                  </div>
+                  <span className="text-[10px] text-[var(--text-muted)]">|</span>
+                  <span className="text-[10px] font-medium text-[var(--text-muted)]">
+                    {language === 'ar' ? 'يعتمد على عرض الشجرة الحالي' : 'Uses the current tree view'}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 border-t border-[var(--border-soft)] pt-3">
+              {TREE_SNAPSHOT_ACTIONS.map((action) => (
+                <button
+                  key={action.id}
+                  type="button"
+                  onClick={() => void handleExport(action.id)}
+                  className={`flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold transition-all active:scale-[0.98] ${
+                    action.id === 'pdf'
+                      ? 'bg-[var(--primary-600)] hover:bg-[var(--primary-700)] text-white hover:brightness-105'
+                      : 'border border-[var(--border-soft)] bg-[var(--surface-panel)] hover:bg-[var(--surface-hover)] text-[var(--text-main)]'
+                  }`}
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  {t[action.labelKey] || action.id.toUpperCase()}
+                </button>
+              ))}
             </div>
           </div>
           </>
