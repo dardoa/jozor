@@ -401,10 +401,10 @@ describe('MarkdownManuscriptRenderer – Arabic encoding guard', () => {
     expect(markdownEn).toContain('*No sources have been linked yet.*');
 
     // Softened citation coverage
-    expect(markdownEn).toContain('- Citation coverage: No sources yet');
+    expect(markdownEn).toContain('- Citation coverage: Sources: not added yet');
 
     const markdownAr = MarkdownManuscriptRenderer.renderToMarkdown(customModel, { language: 'ar' });
     expect(markdownAr).toContain('*لم تتم إضافة مصادر مرتبطة بعد.*');
-    expect(markdownAr).toContain('- Citation coverage: لا توجد مصادر بعد');
+    expect(markdownAr).toContain('- Citation coverage: المصادر: غير مضافة بعد');
   });
 });

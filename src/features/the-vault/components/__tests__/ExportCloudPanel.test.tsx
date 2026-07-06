@@ -332,9 +332,13 @@ describe('ExportCloudPanel manuscript preview', () => {
       />
     );
 
+    // Photo privacy helper text should be present in the form layout
+    expect(screen.getByText(/reveal living\/private people/i)).toBeInTheDocument();
+
     fireEvent.click(screen.getByRole('button', { name: /Preview Manuscript/i }));
     await screen.findByText('Estimated pages: 4');
 
+    expect(screen.getByText(/Browser print may add browser headers/i)).toBeInTheDocument();
     expect(screen.getByText(/disable browser headers and footers/i)).toBeInTheDocument();
   });
 

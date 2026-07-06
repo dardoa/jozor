@@ -734,15 +734,22 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                   <option value="alphabetical">{language === 'ar' ? 'أبجدي' : 'Alphabetical'}</option>
                 </select>
               </label>
-              <label className="flex min-h-10 cursor-pointer items-center justify-between gap-3 rounded-lg bg-[var(--surface-subtle)] px-3 py-2 text-xs font-semibold text-[var(--text-secondary)]">
-                <span>{language === 'ar' ? 'تضمين الصور الشخصية المتاحة' : 'Include available profile photos'}</span>
-                <input
-                  type="checkbox"
-                  checked={includeImages}
-                  onChange={(event) => setIncludeImages(event.target.checked)}
-                  className="h-4 w-4 accent-[var(--primary-600)]"
-                />
-              </label>
+              <div className="flex flex-col gap-1.5">
+                <label className="flex min-h-10 cursor-pointer items-center justify-between gap-3 rounded-lg bg-[var(--surface-subtle)] px-3 py-2 text-xs font-semibold text-[var(--text-secondary)]">
+                  <span>{language === 'ar' ? 'تضمين الصور الشخصية المتاحة' : 'Include available profile photos'}</span>
+                  <input
+                    type="checkbox"
+                    checked={includeImages}
+                    onChange={(event) => setIncludeImages(event.target.checked)}
+                    className="h-4 w-4 accent-[var(--primary-600)]"
+                  />
+                </label>
+                <p className="text-[10px] text-[var(--text-muted)] leading-normal px-1">
+                  {language === 'ar'
+                    ? 'قد تكشف الصور الشخصية داخل الكتاب أشخاصاً أحياء أو خاصين ما لم تنطبق قواعد إخفاء الخصوصية.'
+                    : 'Profile photos included in the book may reveal living/private people unless privacy masking applies.'}
+                </p>
+              </div>
               <label className="flex min-h-10 cursor-pointer items-center justify-between gap-3 rounded-lg bg-[var(--surface-subtle)] px-3 py-2 text-xs font-semibold text-[var(--text-secondary)]">
                 <span>{language === 'ar' ? 'نصوص تعريفية مبدئية' : 'Draft biography text'}</span>
                 <input
@@ -816,11 +823,18 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
               </button>
             </div>
             {controlledPdfStatus === 'fallback' && (
-              <p className="mt-2.5 text-[10px] leading-relaxed text-amber-600/90 dark:text-amber-500/90 max-w-md text-start">
-                {language === 'ar'
-                  ? '⚠️ عند استخدام طباعة المتصفح، يرجى تعطيل خيار "الترويسة والتذييل" (Headers and Footers) في إعدادات الطباعة قبل الحفظ كملف PDF.'
-                  : '⚠️ For browser print fallback, please disable browser headers and footers in the print settings before saving as PDF.'}
-              </p>
+              <div className="mt-2.5 text-[10px] leading-relaxed text-amber-600/90 dark:text-amber-500/90 max-w-md text-start flex flex-col gap-1">
+                <p>
+                  {language === 'ar'
+                    ? '⚠️ قد تضيف طباعة المتصفح ترويسة وتذييلاً من المتصفح (مثل date أو about:blank). لملفات PDF الجاهزة للبيتا، يرجى استخدام محرك PDF المتحكم عند توفره.'
+                    : '⚠️ Browser print may add browser headers and footers. For beta-ready PDFs, use the controlled PDF engine when available.'}
+                </p>
+                <p className="opacity-80">
+                  {language === 'ar'
+                    ? 'عند استخدام طباعة المتصفح كبديل مؤقت، يرجى تعطيل خيار "الترويسة والتذييل" (Headers and Footers) في إعدادات الطباعة قبل الحفظ.'
+                    : 'For browser print fallback, disable browser headers and footers in the print settings before saving as PDF.'}
+                </p>
+              </div>
             )}
             <div className="mt-2 flex flex-col items-end gap-1 text-[10px] font-mono text-[var(--text-dim)]">
               <div data-testid="controlled-pdf-readiness-indicator">

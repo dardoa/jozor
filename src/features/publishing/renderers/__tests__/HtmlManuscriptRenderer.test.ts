@@ -73,7 +73,7 @@ describe('HtmlManuscriptRenderer', () => {
     expect(html).toContain('هذه المسودة');
     expect(html).toContain('كفرنبل، سوريا');
     expect(html).toContain('سجل النفوس');
-    expect(html).toContain('50% توثيق');
+    expect(html).toContain('توثيق: 50%');
     expect(html).toContain('المصدر');
     expect(html).toContain('page-break-inside: avoid');
   });
@@ -83,7 +83,7 @@ describe('HtmlManuscriptRenderer', () => {
 
     expect(html).toContain('dir="ltr"');
     expect(html).toContain('2 people');
-    expect(html).toContain('50% documented');
+    expect(html).toContain('documented: 50%');
     expect(html).toContain('Person entries with key facts and citation coverage.');
     expect(html).toContain('<th>Source</th>');
   });
@@ -561,13 +561,15 @@ describe('HtmlManuscriptRenderer – Print Layout Stability', () => {
     // Family name introduction should render
     expect(htmlEn).toContain('gathers the Al-Yafi family branch');
 
-    // Empty bibliography should be avoided and replaced by a compact inline note
+    // Empty bibliography should be avoided and replaced by a compact closing section
     expect(htmlEn).not.toContain('class="page chapter-page evidence-chapter"');
-    expect(htmlEn).toContain('class="manuscript-sources-note"');
-    expect(htmlEn).toContain('No sources have been linked yet.');
+    expect(htmlEn).toContain('class="manuscript-closing-section"');
+    expect(htmlEn).toContain('End of family book');
+    expect(htmlEn).toContain('People included: <strong>1</strong>');
+    expect(htmlEn).toContain('No linked sources yet.');
 
-    // Citation coverage 0% should be softened
-    expect(htmlEn).toContain('No sources yet');
+    // Citation coverage 0% should be softened to Sources: not added yet
+    expect(htmlEn).toContain('Sources: not added yet');
     expect(htmlEn).not.toContain('0% documented');
 
     const htmlAr = HtmlManuscriptRenderer.renderToHtml({
@@ -575,8 +577,9 @@ describe('HtmlManuscriptRenderer – Print Layout Stability', () => {
       title: 'كتاب عائلة القربي'
     }, { language: 'ar' });
     expect(htmlAr).toContain('يجمع هذا المخطوط أفراد عائلة القربي');
-    expect(htmlAr).toContain('لم تتم إضافة مصادر مرتبطة بعد.');
-    expect(htmlAr).toContain('لا توجد مصادر بعد');
+    expect(htmlAr).toContain('انتهى هذا المخطوط');
+    expect(htmlAr).toContain('عدد الأشخاص: <strong>1</strong>');
+    expect(htmlAr).toContain('المصادر: غير مضافة بعد');
   });
 
   it('correctly formats approximate and placeholder dates using formatManuscriptDate', () => {

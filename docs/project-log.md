@@ -1,11 +1,12 @@
 # Project Log
 
-## 2026-07-07 - Family Book PDF Owner Re-Review Pack
+## 2026-07-07 - Family Book PDF Owner Re-Review Pack & Phase 2 Blocker Polish
 
 - Summary:
   - Prepared the second-round owner re-review pack for Family Book PDF beta readiness after resolving blockers.
   - Released review pack at [`docs/reviews/family-book-pdf-owner-rereview-2026-07-07.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/family-book-pdf-owner-rereview-2026-07-07.md) and [`docs/reviews/evidence/family-book-pdf-owner-rereview-2026-07-07/evidence_notes.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/evidence/family-book-pdf-owner-rereview-2026-07-07/evidence_notes.md).
-  - Listed visual verification steps for developer confirmation to transition the feature status.
+  - Addressed Phase 2 blockers: implemented a compact ending closing section displaying book statistics, softened card citation coverage text and moved it below the header, balanced card layouts next to photos, added photo privacy helper copy, and strengthened browser print alerts in `ExportCloudPanel.tsx`.
+  - Authored a PDF text quality tracking note at [`docs/reviews/family-book-pdf-text-quality-note-2026-07-07.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/family-book-pdf-text-quality-note-2026-07-07.md).
 
 ## 2026-07-06 - ADR 013 Visual Publishing Studio Direction
 

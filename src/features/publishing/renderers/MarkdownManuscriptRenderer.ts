@@ -94,7 +94,7 @@ function renderPeople(people: readonly ManuscriptPersonEntry[], language: 'ar' |
         ? [`- Family path: ${person.familyContext.breadcrumb.map(normalizeInline).join(' > ')}`]
         : []),
       ...(person.citationCoverage === 0
-        ? [`- Citation coverage: ${language === 'ar' ? 'لا توجد مصادر بعد' : 'No sources yet'}`]
+        ? [`- Citation coverage: ${language === 'ar' ? 'المصادر: غير مضافة بعد' : 'Sources: not added yet'}`]
         : [`- Citation coverage: ${person.citationCoverage}%`]),
       `- Citations: ${person.citationCount}`,
     ];
