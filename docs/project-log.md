@@ -1,5 +1,12 @@
 # Project Log
 
+## 2026-07-06 - ADR 013 Visual Publishing Studio Direction
+
+- Summary:
+  - Documented the architectural and UX direction for the future Visual Publishing Studio.
+  - Authored [`docs/adr/013-visual-publishing-studio-direction.md`](file:///d:/AppDEV/Jozor1.1/docs/adr/013-visual-publishing-studio-direction.md) proposing a Preview-first, Configuration-first model.
+  - Outlined flow taxonomy, conceptual UI layout shape, non-goals, and connection to the Vault's current gallery layout.
+
 ## 2026-07-06 - Visual Outputs Gallery Manual Review Pack
 
 - Summary:
