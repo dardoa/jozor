@@ -1,15 +1,15 @@
 # Family Book PDF Re-Review Round 4 - Evidence Notes
 
 **Review Date:** July 7, 2026  
-**Status:** `Blocked for External Beta` (Transitioning to renderer-level grouping validation)
+**Status:** `Pass for Limited Beta`
 
 ---
 
 ## 1. Context and Method
 
-- **Orphan Timeline Blocker**: Verified in the 3rd local rendering where the 80th event was pushed to page 30.
-- **RTL Marker Artifact**: The ordered list native numbering rendered as `.80` instead of `80.` due to RTL page flow.
-- **Next Validation**: A 5th PDF rendering will verify if the renderer-level grouping groups the events into blocks (6 events per page) and successfully merges the 80th element into page 29.
+- **Visual Verification**: Owner visual review of the fourth generated PDF confirms the timeline orphan page has been resolved and the final-page flow is acceptable.
+- **RTL Marker Artifact**: The reversed list number `.80` is fully resolved by hiding native list numbers.
+- **Controlled PDF Searchability**: Deferred as a known quality limitation.
 
 ---
 
