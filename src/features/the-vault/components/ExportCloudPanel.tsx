@@ -24,6 +24,7 @@ import type { DriveFile, ExportType, ManuscriptOrderingStrategy, Person, Publish
 import type { TranslationSchema } from '../../../utils/translationLoader';
 import { showToast } from '../../../utils/showToast';
 import { useControlledPdfReadiness } from '../../publishing/hooks';
+import { listVisualOutputDefinitionsByProduct } from '../../publishing';
 import { useAppStore } from '../../../store/useAppStore';
 import { ManuscriptExportSummary } from './ManuscriptExportSummary';
 
@@ -181,6 +182,13 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
   const [activeSection, setActiveSection] = useState<ExportPanelSection>('family-book');
   const [expandedHistoryId, setExpandedHistoryId] = useState<number | string | null>(null);
   const { status: controlledPdfStatus, refresh: checkControlledPdfReadiness } = useControlledPdfReadiness();
+
+  const posterVisualOutputs = useMemo(() => listVisualOutputDefinitionsByProduct('poster'), []);
+  const snapshotVisualOutputs = useMemo(() => listVisualOutputDefinitionsByProduct('snapshot'), []);
+
+  const classicPosterDef = useMemo(() => posterVisualOutputs.find((def) => def.id === 'classic-ancestor-poster'), [posterVisualOutputs]);
+  const modernPosterDef = useMemo(() => posterVisualOutputs.find((def) => def.id === 'modern-ancestor-poster'), [posterVisualOutputs]);
+  const treeSnapshotDef = useMemo(() => snapshotVisualOutputs.find((def) => def.id === 'current-tree-snapshot'), [snapshotVisualOutputs]);
 
   React.useEffect(() => {
     void checkControlledPdfReadiness();
@@ -705,16 +713,16 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h5 className="text-sm font-bold text-[var(--text-main)]">
-                    {language === 'ar' ? 'شجرة الأسلاف الكلاسيكية الدافئة' : 'Classic Ancestor Poster'}
+                    {classicPosterDef?.displayName[language] || (language === 'ar' ? 'شجرة الأسلاف الكلاسيكية الدافئة' : 'Classic Ancestor Poster')}
                   </h5>
                   <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-600">
                     {language === 'ar' ? 'ثيم دافئ' : 'Warm Theme'}
                   </span>
                 </div>
                 <p className="mt-1 text-[11px] leading-relaxed text-[var(--text-muted)]">
-                  {language === 'ar'
+                  {classicPosterDef?.description[language] || (language === 'ar'
                     ? 'تصميم بوستر تقليدي مريح للعين، يعتمد على نبرات لونية هادئة (4 أجيال)، ملائم للطباعة الورقية والتأطير.'
-                    : 'Traditional cozy poster design featuring warm vintage tones (4 generations), perfect for print and framing.'}
+                    : 'Traditional cozy poster design featuring warm vintage tones (4 generations), perfect for print and framing.')}
                 </p>
               </div>
             </div>
@@ -747,16 +755,16 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h5 className="text-sm font-bold text-[var(--text-main)]">
-                    {language === 'ar' ? 'شجرة الأسلاف العصرية الداكنة' : 'Modern Ancestor Poster'}
+                    {modernPosterDef?.displayName[language] || (language === 'ar' ? 'شجرة الأسلاف العصرية الداكنة' : 'Modern Ancestor Poster')}
                   </h5>
                   <span className="rounded-full bg-indigo-500/10 px-2 py-0.5 text-[10px] font-semibold text-indigo-600">
                     {language === 'ar' ? 'ثيم داكن' : 'Dark Theme'}
                   </span>
                 </div>
                 <p className="mt-1 text-[11px] leading-relaxed text-[var(--text-muted)]">
-                  {language === 'ar'
+                  {modernPosterDef?.description[language] || (language === 'ar'
                     ? 'تصميم شجرة عصري بألوان داكنة ونظام ألوان ذكي يبرز التباين والعمق (4 أجيال) للتعليق الإلكتروني والطباعة الفاخرة.'
-                    : 'Modern dark-themed poster design utilizing contrasting elements (4 generations) for screens or premium prints.'}
+                    : 'Modern dark-themed poster design utilizing contrasting elements (4 generations) for screens or premium prints.')}
                 </p>
               </div>
             </div>
@@ -782,7 +790,7 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
 
           <div className="rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-subtle)] p-4">
             <h5 className="mb-3 text-xs font-bold uppercase tracking-[0.08em] text-[var(--text-secondary)]">
-              {language === 'ar' ? 'لقطات الشجرة الحالية' : 'Current Tree Snapshot'}
+              {treeSnapshotDef?.displayName[language] || (language === 'ar' ? 'لقطات الشجرة الحالية' : 'Current Tree Snapshot')}
             </h5>
             <div className="grid gap-2 sm:grid-cols-2">
               {TREE_SNAPSHOT_ACTIONS.map((action) => {

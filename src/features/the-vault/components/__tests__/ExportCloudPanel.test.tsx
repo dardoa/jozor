@@ -452,17 +452,59 @@ describe('ExportCloudPanel manuscript preview', () => {
     await waitFor(() => expect(onRunExport).toHaveBeenCalledWith('markdown'));
   });
 
-  it('switches to Visual Outputs and renders poster templates with tree snapshots', () => {
-    render(<ExportCloudPanel {...baseProps} />);
+  it('switches to Visual Outputs and renders poster templates with tree snapshots', async () => {
+    const onRunPublishingExport = vi.fn().mockResolvedValue(undefined);
+    const onRunExport = vi.fn().mockResolvedValue(undefined);
+
+    render(
+      <ExportCloudPanel
+        {...baseProps}
+        onRunPublishingExport={onRunPublishingExport}
+        onRunExport={onRunExport}
+      />
+    );
 
     switchToExportSection(/Visual Outputs/i);
 
     expect(screen.getByRole('tab', { name: /Visual Outputs/i })).toHaveAttribute('aria-selected', 'true');
-    expect(screen.getByText(/Classic Ancestor Poster/i)).toBeInTheDocument();
-    expect(screen.getByText(/Modern Ancestor Poster/i)).toBeInTheDocument();
-    expect(screen.getByText(/Current Tree Snapshot/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /^PDF$/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /^PNG$/i })).toBeInTheDocument();
+
+    // Verify metadata rendered from registry
+    expect(screen.getByText('Classic Ancestor Poster')).toBeInTheDocument();
+    expect(screen.getByText(/Traditional cozy poster design featuring warm vintage tones/i)).toBeInTheDocument();
+    expect(screen.getByText('Modern Ancestor Poster')).toBeInTheDocument();
+    expect(screen.getByText(/Modern dark-themed poster design utilizing contrasting elements/i)).toBeInTheDocument();
+    expect(screen.getByText('Current Tree Snapshot')).toBeInTheDocument();
+
+    // Click Classic Poster buttons
+    const classicPngBtn = screen.getAllByRole('button', { name: /Download PNG/i })[0];
+    const classicPdfBtn = screen.getAllByRole('button', { name: /Download PDF/i })[0];
+
+    fireEvent.click(classicPngBtn);
+    await waitFor(() => expect(onRunPublishingExport).toHaveBeenLastCalledWith({ templateId: 'classic-ancestor-poster', format: 'png' }));
+
+    fireEvent.click(classicPdfBtn);
+    await waitFor(() => expect(onRunPublishingExport).toHaveBeenLastCalledWith({ templateId: 'classic-ancestor-poster', format: 'pdf' }));
+
+    // Click Modern Poster buttons
+    const modernPngBtn = screen.getAllByRole('button', { name: /Download PNG/i })[1];
+    const modernPdfBtn = screen.getAllByRole('button', { name: /Download PDF/i })[1];
+
+    fireEvent.click(modernPngBtn);
+    await waitFor(() => expect(onRunPublishingExport).toHaveBeenLastCalledWith({ templateId: 'modern-ancestor-poster', format: 'png' }));
+
+    fireEvent.click(modernPdfBtn);
+    await waitFor(() => expect(onRunPublishingExport).toHaveBeenLastCalledWith({ templateId: 'modern-ancestor-poster', format: 'pdf' }));
+
+    // Click Snapshot buttons
+    const snapshotPngBtn = screen.getByRole('button', { name: /^PNG$/i });
+    const snapshotPdfBtn = screen.getByRole('button', { name: /^PDF$/i });
+
+    fireEvent.click(snapshotPngBtn);
+    await waitFor(() => expect(onRunExport).toHaveBeenLastCalledWith('png'));
+
+    fireEvent.click(snapshotPdfBtn);
+    await waitFor(() => expect(onRunExport).toHaveBeenLastCalledWith('pdf'));
+
     expect(screen.queryByLabelText(/Manuscript root/i)).not.toBeInTheDocument();
   });
 
