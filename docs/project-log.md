@@ -1,5 +1,14 @@
 # Project Log
 
+## 2026-07-06 - Visual Output Preview Asset Contract Phase 1
+
+- Summary:
+  - Extended the Visual Output Product contract with `previewAsset` and `recommendedFor` fields.
+  - Implemented designed layout placeholders at the top of Classic Poster, Modern Poster, and Tree Snapshot cards inside the Vault Visual Outputs tab.
+  - Rendered at most 3 passive `recommendedFor` chips under product description details based on selected language (Arabic/English).
+  - Expanded unit test assertions in `visualOutputRegistry.test.ts` and `ExportCloudPanel.test.tsx`.
+  - Updated ADR [`docs/adr/012-visual-output-product-contract.md`](file:///d:/AppDEV/Jozor1.1/docs/adr/012-visual-output-product-contract.md).
+
 ## 2026-07-06 - Vault Publishing Taxonomy Manual Review Pack
 
 - Summary:

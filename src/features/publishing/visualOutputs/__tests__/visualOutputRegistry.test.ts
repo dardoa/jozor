@@ -133,5 +133,22 @@ describe('Visual Output Product Contract Registry', () => {
       expect(visualOutputSupportsSize('unknown-id', 'A4')).toBe(false);
       expect(visualOutputSupportsScope('unknown-id', 'selected-root')).toBe(false);
     });
+
+    it('verifies all registered visual outputs have previewAsset and recommendedFor metadata', () => {
+      const list = listVisualOutputDefinitions();
+      list.forEach((def) => {
+        expect(def).toHaveProperty('previewAsset');
+        expect(def.previewAsset.type).toBe('placeholder');
+        expect(def.previewAsset.alt.en).toBeTypeOf('string');
+        expect(def.previewAsset.alt.ar).toBeTypeOf('string');
+        expect(def.previewAsset.aspectRatio).toBeTypeOf('string');
+
+        expect(def).toHaveProperty('recommendedFor');
+        expect(def.recommendedFor?.en).toBeInstanceOf(Array);
+        expect(def.recommendedFor?.ar).toBeInstanceOf(Array);
+        expect(def.recommendedFor?.en.length).toBeGreaterThan(0);
+        expect(def.recommendedFor?.ar.length).toBeGreaterThan(0);
+      });
+    });
   });
 });

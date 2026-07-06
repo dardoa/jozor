@@ -475,6 +475,22 @@ describe('ExportCloudPanel manuscript preview', () => {
     expect(screen.getByText(/Modern dark-themed poster design utilizing contrasting elements/i)).toBeInTheDocument();
     expect(screen.getByText('Current Tree Snapshot')).toBeInTheDocument();
 
+    // Verify preview placeholders
+    expect(screen.getByLabelText('Preview of Classic Ancestor Poster')).toBeInTheDocument();
+    expect(screen.getByLabelText('Preview of Modern Ancestor Poster')).toBeInTheDocument();
+    expect(screen.getByLabelText('Preview of Current Tree Snapshot')).toBeInTheDocument();
+
+    // Verify recommendation chips
+    expect(screen.getByText('Printing')).toBeInTheDocument();
+    expect(screen.getByText('Family reunion')).toBeInTheDocument();
+    expect(screen.getByText('Archives')).toBeInTheDocument();
+    expect(screen.getByText('Digital display')).toBeInTheDocument();
+    expect(screen.getByText('Presentations')).toBeInTheDocument();
+    expect(screen.getByText('Premium print')).toBeInTheDocument();
+    expect(screen.getByText('Quick sharing')).toBeInTheDocument();
+    expect(screen.getByText('Documentation')).toBeInTheDocument();
+    expect(screen.getByText('Current view')).toBeInTheDocument();
+
     // Verify badges
     expect(screen.getAllByText('Poster').length).toBe(2);
     expect(screen.getByText('Snapshot')).toBeInTheDocument();

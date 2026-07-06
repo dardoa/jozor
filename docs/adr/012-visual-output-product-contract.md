@@ -32,3 +32,8 @@ We extend the Visual Output Product contract with a dedicated capability schema 
 - Vault test suites can assert and verify output capabilities using the registered definitions.
 - Future work on the Visual Publishing Studio has a stable domain layer to build upon.
 - Top-level fields (`supportedSizes`, `supportedOrientations`, and `rendererTargets`) are preserved as deprecated compatibility aliases for existing consumption, mirroring the registry capabilities.
+
+## Preview Assets and Recommendations
+We extend the Visual Output registry with metadata fields for `previewAsset` and `recommendedFor`.
+- **Preview Assets**: Metadata describing the template preview style, aspect ratio, and accessibility text. All current templates use a `placeholder` type to allow layout preview blocks before actual static images or canvas representations are chosen.
+- **Recommendations**: Small tag tags (`recommendedFor`) representing suitable printing or digital targets. This information is purely visual metadata and is not an active parameter for renderers.

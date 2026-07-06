@@ -836,6 +836,20 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
 
           {/* Template 2: Classic Ancestor Poster */}
           <div className="flex flex-col gap-4 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-subtle)] p-4 transition-all hover:border-[var(--primary-500)]/30 hover:shadow-sm">
+            {classicPosterDef?.previewAsset && (
+              <div
+                className="w-full h-32 rounded-xl bg-[var(--surface-panel)] border border-[var(--border-soft)] flex items-center justify-center text-[var(--text-dim)] font-medium text-xs relative overflow-hidden select-none"
+                aria-label={classicPosterDef.previewAsset.alt[language]}
+              >
+                <div className="absolute inset-0 bg-gradient-to-tr from-[var(--primary-500)]/5 via-transparent to-transparent pointer-events-none" />
+                <div className="flex flex-col items-center gap-1.5 z-10">
+                  <ImageIcon className="h-5 w-5 text-[var(--text-secondary)] opacity-60" />
+                  <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider font-mono">
+                    {language === 'ar' ? 'معاينة القالب الكلاسيكي' : 'Classic Template Preview'}
+                  </span>
+                </div>
+              </div>
+            )}
             <div className="flex items-start gap-3">
               <div className="mt-0.5 rounded-xl bg-[var(--surface-panel)] p-2 text-[var(--primary-600)]">
                 <ImageIcon className="h-5 w-5" />
@@ -857,6 +871,21 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                     ? 'تصميم بوستر تقليدي مريح للعين، يعتمد على نبرات لونية هادئة (4 أجيال)، ملائم للطباعة الورقية والتأطير.'
                     : 'Traditional cozy poster design featuring warm vintage tones (4 generations), perfect for print and framing.')}
                 </p>
+                {classicPosterDef?.recommendedFor && (
+                  <div className="mt-2 flex items-center gap-1.5 flex-wrap">
+                    <span className="text-[10px] font-semibold text-[var(--text-muted)]">
+                      {language === 'ar' ? 'مناسب لـ:' : 'Recommended for:'}
+                    </span>
+                    {classicPosterDef.recommendedFor[language].slice(0, 3).map((rec) => (
+                      <span
+                        key={rec}
+                        className="rounded-full bg-[var(--surface-panel)] border border-[var(--border-soft)] px-2 py-0.5 text-[9px] font-medium text-[var(--text-secondary)]"
+                      >
+                        {rec}
+                      </span>
+                    ))}
+                  </div>
+                )}
                 <div className="mt-3 flex items-center gap-3 flex-wrap">
                   <div className="flex items-center gap-1.5 text-[10px] font-medium text-[var(--text-secondary)]">
                     <span>{language === 'ar' ? 'الصيغ المدعومة:' : 'Supported formats:'}</span>
@@ -895,6 +924,20 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
 
           {/* Template 3: Modern Ancestor Poster */}
           <div className="flex flex-col gap-4 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-subtle)] p-4 transition-all hover:border-[var(--primary-500)]/30 hover:shadow-sm">
+            {modernPosterDef?.previewAsset && (
+              <div
+                className="w-full h-32 rounded-xl bg-[var(--surface-panel)] border border-[var(--border-soft)] flex items-center justify-center text-[var(--text-dim)] font-medium text-xs relative overflow-hidden select-none"
+                aria-label={modernPosterDef.previewAsset.alt[language]}
+              >
+                <div className="absolute inset-0 bg-gradient-to-tr from-[var(--indigo-500)]/5 via-transparent to-transparent pointer-events-none" />
+                <div className="flex flex-col items-center gap-1.5 z-10">
+                  <Sparkles className="h-5 w-5 text-[var(--text-secondary)] opacity-60" />
+                  <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider font-mono">
+                    {language === 'ar' ? 'معاينة القالب العصري' : 'Modern Template Preview'}
+                  </span>
+                </div>
+              </div>
+            )}
             <div className="flex items-start gap-3">
               <div className="mt-0.5 rounded-xl bg-[var(--surface-panel)] p-2 text-[var(--primary-600)]">
                 <Sparkles className="h-5 w-5" />
@@ -916,6 +959,21 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                     ? 'تصميم شجرة عصري بألوان داكنة ونظام ألوان ذكي يبرز التباين والعمق (4 أجيال) للتعليق الإلكتروني والطباعة الفاخرة.'
                     : 'Modern dark-themed poster design utilizing contrasting elements (4 generations) for screens or premium prints.')}
                 </p>
+                {modernPosterDef?.recommendedFor && (
+                  <div className="mt-2 flex items-center gap-1.5 flex-wrap">
+                    <span className="text-[10px] font-semibold text-[var(--text-muted)]">
+                      {language === 'ar' ? 'مناسب لـ:' : 'Recommended for:'}
+                    </span>
+                    {modernPosterDef.recommendedFor[language].slice(0, 3).map((rec) => (
+                      <span
+                        key={rec}
+                        className="rounded-full bg-[var(--surface-panel)] border border-[var(--border-soft)] px-2 py-0.5 text-[9px] font-medium text-[var(--text-secondary)]"
+                      >
+                        {rec}
+                      </span>
+                    ))}
+                  </div>
+                )}
                 <div className="mt-3 flex items-center gap-3 flex-wrap">
                   <div className="flex items-center gap-1.5 text-[10px] font-medium text-[var(--text-secondary)]">
                     <span>{language === 'ar' ? 'الصيغ المدعومة:' : 'Supported formats:'}</span>
@@ -954,6 +1012,20 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
 
           {/* Current Tree Snapshot (Compact Product Card Style) */}
           <div className="flex flex-col gap-4 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-subtle)] p-4 transition-all hover:border-[var(--primary-500)]/30 hover:shadow-sm">
+            {treeSnapshotDef?.previewAsset && (
+              <div
+                className="w-full h-20 rounded-xl bg-[var(--surface-panel)] border border-[var(--border-soft)] flex items-center justify-center text-[var(--text-dim)] font-medium text-xs relative overflow-hidden select-none"
+                aria-label={treeSnapshotDef.previewAsset.alt[language]}
+              >
+                <div className="absolute inset-0 bg-gradient-to-tr from-[var(--primary-500)]/3 via-transparent to-transparent pointer-events-none" />
+                <div className="flex flex-col items-center gap-1 z-10">
+                  <ImageIcon className="h-4 w-4 text-[var(--text-secondary)] opacity-60" />
+                  <span className="text-[9px] text-[var(--text-muted)] uppercase tracking-wider font-mono">
+                    {language === 'ar' ? 'معاينة لقطة الشجرة الحالية' : 'Current Tree Preview'}
+                  </span>
+                </div>
+              </div>
+            )}
             <div className="flex items-start gap-3">
               <div className="mt-0.5 rounded-xl bg-[var(--surface-panel)] p-2 text-[var(--primary-600)]">
                 <ImageIcon className="h-5 w-5" />
@@ -972,6 +1044,21 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                     ? 'تصدير لقطة عالية الدقة للمساحة المعروضة حالياً.'
                     : 'A high-fidelity export of your current workspace viewport.')}
                 </p>
+                {treeSnapshotDef?.recommendedFor && (
+                  <div className="mt-2 flex items-center gap-1.5 flex-wrap">
+                    <span className="text-[10px] font-semibold text-[var(--text-muted)]">
+                      {language === 'ar' ? 'مناسب لـ:' : 'Recommended for:'}
+                    </span>
+                    {treeSnapshotDef.recommendedFor[language].slice(0, 3).map((rec) => (
+                      <span
+                        key={rec}
+                        className="rounded-full bg-[var(--surface-panel)] border border-[var(--border-soft)] px-2 py-0.5 text-[9px] font-medium text-[var(--text-secondary)]"
+                      >
+                        {rec}
+                      </span>
+                    ))}
+                  </div>
+                )}
                 <div className="mt-3 flex items-center gap-3 flex-wrap">
                   <div className="flex items-center gap-1.5 text-[10px] font-medium text-[var(--text-secondary)]">
                     <span>{language === 'ar' ? 'الصيغ المدعومة:' : 'Supported formats:'}</span>

@@ -34,6 +34,18 @@ export const VISUAL_OUTPUT_DEFINITIONS: VisualOutputDefinition[] = [
       readingStrategies: ['ancestor'],
       layoutEngines: ['poster-layout'],
     },
+    previewAsset: {
+      type: 'placeholder',
+      aspectRatio: 'poster',
+      alt: {
+        en: 'Preview of Classic Ancestor Poster',
+        ar: 'معاينة بوستر الأسلاف الكلاسيكي',
+      },
+    },
+    recommendedFor: {
+      en: ['Printing', 'Family reunion', 'Archives'],
+      ar: ['الطباعة', 'لمّات العائلة', 'الأرشفة'],
+    },
   },
   {
     id: 'modern-ancestor-poster',
@@ -63,6 +75,18 @@ export const VISUAL_OUTPUT_DEFINITIONS: VisualOutputDefinition[] = [
       readingStrategies: ['ancestor'],
       layoutEngines: ['poster-layout'],
     },
+    previewAsset: {
+      type: 'placeholder',
+      aspectRatio: 'poster',
+      alt: {
+        en: 'Preview of Modern Ancestor Poster',
+        ar: 'معاينة بوستر الأسلاف العصري',
+      },
+    },
+    recommendedFor: {
+      en: ['Digital display', 'Presentations', 'Premium print'],
+      ar: ['العرض الرقمي', 'العروض التقديمية', 'الطباعة الفاخرة'],
+    },
   },
   {
     id: 'current-tree-snapshot',
@@ -89,6 +113,18 @@ export const VISUAL_OUTPUT_DEFINITIONS: VisualOutputDefinition[] = [
       rendererTargets: ['png', 'pdf'],
       readingStrategies: ['narrative'],
       layoutEngines: ['tree-layout'],
+    },
+    previewAsset: {
+      type: 'placeholder',
+      aspectRatio: 'landscape',
+      alt: {
+        en: 'Preview of Current Tree Snapshot',
+        ar: 'معاينة لقطة الشجرة الحالية',
+      },
+    },
+    recommendedFor: {
+      en: ['Quick sharing', 'Documentation', 'Current view'],
+      ar: ['المشاركة السريعة', 'التوثيق', 'العرض الحالي'],
     },
   },
 ];

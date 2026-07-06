@@ -87,6 +87,21 @@ export interface VisualOutputCapabilities {
   readonly layoutEngines?: readonly VisualOutputLayoutEngine[];
 }
 
+export interface VisualOutputPreviewAsset {
+  readonly type: 'placeholder' | 'image' | 'generated';
+  readonly src?: string;
+  readonly alt: {
+    readonly en: string;
+    readonly ar: string;
+  };
+  readonly aspectRatio?: 'portrait' | 'landscape' | 'square' | 'poster';
+}
+
+export interface VisualOutputRecommendation {
+  readonly en: readonly string[];
+  readonly ar: readonly string[];
+}
+
 export interface VisualOutputDefinition {
   readonly id: string;
   readonly productType: VisualOutputProductType;
@@ -109,5 +124,7 @@ export interface VisualOutputDefinition {
   readonly supportedOrientations: ReadonlyArray<'portrait' | 'landscape' | 'square'>;
   readonly status: 'active' | 'deprecated' | 'experimental';
   readonly capabilities: VisualOutputCapabilities;
+  readonly previewAsset: VisualOutputPreviewAsset;
+  readonly recommendedFor?: VisualOutputRecommendation;
   readonly metadata?: Record<string, unknown>;
 }
