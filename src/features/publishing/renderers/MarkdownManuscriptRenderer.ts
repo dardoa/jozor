@@ -30,12 +30,9 @@ export class MarkdownManuscriptRenderer {
       lines.push('');
     }
 
+    lines.push(...renderIntroduction(model.title, language));
+
     model.chapters.forEach((chapter) => {
-      if (chapter.type === 'evidence' && (!chapter.citations || chapter.citations.length === 0)) {
-        const text = language === 'ar' ? 'لم تتم إضافة مصادر مرتبطة بعد.' : 'No sources have been linked yet.';
-        lines.push(`*${text}*`, '');
-        return;
-      }
       lines.push(...renderChapter(chapter, language));
       lines.push('');
     });
@@ -44,29 +41,70 @@ export class MarkdownManuscriptRenderer {
   }
 }
 
+function getFamilyNameFromTitle(title: string, language: 'ar' | 'en'): string {
+  if (!title) return '';
+  const cleaned = title.trim();
+  if (language === 'ar') {
+    const match = cleaned.match(/(?:كتاب عائلة|كتاب العائلة لـ|مخطوط عائلة|عائلة)\s+(.+)/);
+    return match ? match[1].trim() : cleaned;
+  } else {
+    const match = cleaned.match(/(?:Family Book of|Family Book for|Family Manuscript of|Family Manuscript for|Family)\s+(.+)/i);
+    return match ? match[1].trim() : cleaned;
+  }
+}
+
+function renderIntroduction(title: string, language: 'ar' | 'en'): string[] {
+  const familyName = getFamilyNameFromTitle(title, language);
+  if (language === 'ar') {
+    const text = familyName
+      ? `يجمع هذا المخطوط أفراد عائلة ${familyName}، ويعرض الفروع والأشخاص والخط الزمني والمراجع المتاحة بحسب البيانات المسجلة في جذور.`
+      : 'يجمع هذا المخطوط أفراد العائلة، ويعرض الفروع والأشخاص والخط الزمني والمراجع المتاحة بحسب البيانات المسجلة في جذور.';
+    return [
+      '## مقدمة المخطوط',
+      '',
+      text,
+      '',
+    ];
+  } else {
+    const text = familyName
+      ? `This family book gathers the ${familyName} family branch, including people, branch summaries, timeline entries, and available references from the Jozor tree data.`
+      : 'This family book gathers the family branch, including people, branch summaries, timeline entries, and available references from the Jozor tree data.';
+    return [
+      '## Manuscript Introduction',
+      '',
+      text,
+      '',
+    ];
+  }
+}
+
 function renderChapter(chapter: ManuscriptChapter, language: 'ar' | 'en'): string[] {
-  const lines = [`## ${normalizeInline(chapter.title)}`, ''];
+  const sectionTitle = chapter.type === 'evidence'
+    ? (language === 'ar' ? 'المراجع والمصادر' : 'References and Sources')
+    : chapter.title;
+  const lines = [`## ${normalizeInline(sectionTitle)}`, ''];
 
   switch (chapter.type) {
     case 'overview':
-      return [...lines, ...renderOverview(chapter.branchSummaries ?? [])];
+      return [...lines, ...renderOverview(chapter.branchSummaries ?? [], language)];
     case 'people':
       return [...lines, ...renderPeople(chapter.people ?? [], language)];
     case 'timeline':
       return [...lines, ...renderTimeline(chapter.timeline ?? [], language)];
     case 'evidence':
-      return [...lines, ...renderEvidence(chapter.citations ?? [])];
+      return [...lines, ...renderEvidence(chapter.citations ?? [], language)];
     default:
       return lines;
   }
 }
 
-function renderOverview(branchSummaries: readonly ManuscriptBranchSummary[]): string[] {
+function renderOverview(branchSummaries: readonly ManuscriptBranchSummary[], language: 'ar' | 'en'): string[] {
   if (branchSummaries.length === 0) return ['No branch summaries.'];
 
-  return branchSummaries.map((summary) => (
-    `- ${normalizeInline(summary.label)} - ${summary.personCount} ${summary.personCount === 1 ? 'person' : 'people'}`
-  ));
+  return branchSummaries.map((summary) => {
+    const peopleSuffix = language === 'ar' ? 'شخصاً' : (summary.personCount === 1 ? 'person' : 'people');
+    return `- ${normalizeInline(summary.label)} - ${summary.personCount} ${peopleSuffix}`;
+  });
 }
 
 function renderPeople(people: readonly ManuscriptPersonEntry[], language: 'ar' | 'en'): string[] {
@@ -76,12 +114,18 @@ function renderPeople(people: readonly ManuscriptPersonEntry[], language: 'ar' |
   return people.flatMap((person) => {
     const branchLines: string[] = [];
     const branchLabel = person.familyContext?.branchLabel;
+
+    const branchPrefix = language === 'ar' ? 'الفرع' : 'Branch';
     if (branchLabel && branchLabel !== activeBranchLabel) {
       activeBranchLabel = branchLabel;
-      branchLines.push(`#### Branch: ${normalizeInline(branchLabel)}`, '');
+      branchLines.push(`#### ${branchPrefix}: ${normalizeInline(branchLabel)}`, '');
     }
 
-    const relationshipPrefix = language === 'ar' ? 'العلاقة' : 'Relationship';
+    const relationshipPrefix = language === 'ar' ? 'العلاقة مع الجذر' : 'Relationship to root';
+    const familyContextPrefix = language === 'ar' ? 'الجيل في المخطوط (السياق العائلي)' : 'Manuscript generation (Family context)';
+    const familyPathPrefix = language === 'ar' ? 'المسار العائلي' : 'Family path';
+    const citationCoveragePrefix = language === 'ar' ? 'حالة المصادر' : 'Source status';
+    const citationsPrefix = language === 'ar' ? 'عدد الاستشهادات' : 'Citations';
 
     const lines = [
       `### ${normalizeInline(person.displayName)}`,
@@ -89,14 +133,14 @@ function renderPeople(people: readonly ManuscriptPersonEntry[], language: 'ar' |
       ...(person.relationshipToRoot
         ? [`- ${relationshipPrefix}: ${normalizeInline(getMetadataLabel(person.relationshipToRoot, person.generation, language))}`]
         : []),
-      ...(person.familyContext ? [`- Family context: ${normalizeInline(person.familyContext.label)}`] : []),
+      ...(person.familyContext ? [`- ${familyContextPrefix}: ${normalizeInline(person.familyContext.label)}`] : []),
       ...(person.familyContext?.breadcrumb && person.familyContext.breadcrumb.length > 1
-        ? [`- Family path: ${person.familyContext.breadcrumb.map(normalizeInline).join(' > ')}`]
+        ? [`- ${familyPathPrefix}: ${person.familyContext.breadcrumb.map(normalizeInline).join(' > ')}`]
         : []),
       ...(person.citationCoverage === 0
-        ? [`- Citation coverage: ${language === 'ar' ? 'المصادر: غير مضافة بعد' : 'Sources: not added yet'}`]
-        : [`- Citation coverage: ${person.citationCoverage}%`]),
-      `- Citations: ${person.citationCount}`,
+        ? [`- ${citationCoveragePrefix}: ${language === 'ar' ? 'المصادر غير مضافة بعد' : 'not added yet'}`]
+        : [`- ${citationCoveragePrefix}: ${person.citationCoverage}%`]),
+      `- ${citationsPrefix}: ${person.citationCount}`,
     ];
 
     if (person.narrative) {
@@ -104,7 +148,8 @@ function renderPeople(people: readonly ManuscriptPersonEntry[], language: 'ar' |
     }
 
     if (person.facts.length > 0) {
-      lines.push('', '#### Facts', '');
+      const factsTitle = language === 'ar' ? 'الحقائق' : 'Facts';
+      lines.push('', `#### ${factsTitle}`, '');
       person.facts.forEach((fact) => {
         const suffix = fact.citationCount > 0 ? ` (${fact.citationCount} citation${fact.citationCount === 1 ? '' : 's'})` : '';
         lines.push(`- **${normalizeInline(fact.label)}:** ${normalizeInline(fact.value)}${suffix}`);
@@ -112,7 +157,8 @@ function renderPeople(people: readonly ManuscriptPersonEntry[], language: 'ar' |
     }
 
     if (person.sourceHighlights.length > 0) {
-      lines.push('', '#### Source highlights', '');
+      const sourceHighlightsTitle = language === 'ar' ? 'أبرز المصادر' : 'Source highlights';
+      lines.push('', `#### ${sourceHighlightsTitle}`, '');
       person.sourceHighlights.forEach((source) => {
         lines.push(`- ${normalizeInline(source.title)} (${source.citationCount})`);
       });
@@ -126,14 +172,19 @@ function renderTimeline(entries: readonly ManuscriptTimelineEntry[], language: '
   if (entries.length === 0) return ['No timeline entries.'];
 
   return entries.map((entry) => {
-    const place = entry.place ? ` - ${normalizeInline(entry.place)}` : '';
+    const separator = ' — ';
+    const place = entry.place ? `${separator}${normalizeInline(entry.place)}` : '';
     const formattedDate = formatManuscriptDate(entry.date, language, entry.isApproximate);
-    return `- ${normalizeInline(formattedDate)}: **${normalizeInline(entry.personName)}** - ${normalizeInline(entry.title)}${place}`;
+    return `- ${normalizeInline(formattedDate)}: **${normalizeInline(entry.personName)}**${separator}${normalizeInline(entry.title)}${place}`;
   });
 }
 
-function renderEvidence(citations: readonly ManuscriptCitationEntry[]): string[] {
-  if (citations.length === 0) return ['No bibliography entries.'];
+function renderEvidence(citations: readonly ManuscriptCitationEntry[], language: 'ar' | 'en'): string[] {
+  if (citations.length === 0) {
+    return [
+      language === 'ar' ? 'لم تتم إضافة مصادر مرتبطة بعد.' : 'No linked sources have been added yet.'
+    ];
+  }
 
   const bySource = new Map<string, { count: number; fields: Set<string> }>();
   citations.forEach((citation) => {
@@ -143,11 +194,14 @@ function renderEvidence(citations: readonly ManuscriptCitationEntry[]): string[]
     bySource.set(citation.sourceTitle, current);
   });
 
+  const citationSuffix = language === 'ar' ? 'استشهادات' : 'citations';
+  const fieldsPrefix = language === 'ar' ? 'الحقول' : 'fields';
+
   return [...bySource.entries()]
     .sort((a, b) => b[1].count - a[1].count || a[0].localeCompare(b[0]))
     .map(([sourceTitle, info]) => {
-      const fields = [...info.fields].sort().join(', ') || 'general';
-      return `- ${normalizeInline(sourceTitle)} - ${info.count} citation${info.count === 1 ? '' : 's'}; fields: ${normalizeInline(fields)}`;
+      const fields = [...info.fields].sort().join(', ') || (language === 'ar' ? 'عام' : 'general');
+      return `- ${normalizeInline(sourceTitle)} — ${info.count} ${citationSuffix}; ${fieldsPrefix}: ${normalizeInline(fields)}`;
     });
 }
 

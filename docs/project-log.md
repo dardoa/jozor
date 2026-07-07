@@ -1,5 +1,12 @@
 # Project Log
 
+## 2026-07-07 - Family Book Markdown Beta Polish Pass
+
+- Summary:
+  - Prepared the owner review report for the Family Book Markdown format.
+  - Released review pack at [`docs/reviews/family-book-markdown-owner-review-2026-07-07.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/family-book-markdown-owner-review-2026-07-07.md) setting initial status to `Needs Polish` with target `Pass for Limited Beta as Review/Archive Format`.
+  - Addressed Markdown beta polish blockers: implemented template-based introductions, fully localized technical field labels (e.g. relationship, generation depth, citation coverage, source highlights as `أبرز المصادر`, count suffixes, and branch headers), updated timeline lines to use em dash (` — `) separators, and structured references as a formal heading section.
+
 ## 2026-07-07 - Family Book PDF Promotion to Pass for Limited Beta
 
 - Summary:
