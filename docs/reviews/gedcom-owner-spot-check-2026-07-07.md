@@ -1,42 +1,46 @@
 # GEDCOM Export Owner Spot Check Report
 
 **Date:** July 7, 2026  
-**Status:** `Needs Polish`  
+**Status:** `Spot Check Pass`
 **Reviewer:** Owner / Antigravity
 
 ---
 
 ## Executive Summary
 
-This report documents the owner spot check for the GEDCOM export format. While structural and security integrity checks passed successfully, a critical data precision blocker was identified: year-only and partial dates are incorrectly normalized to exact January 1 dates on export. Consequently, the status is set to `Needs Polish` until precision formatting is implemented.
+Following the visual/textual review of the regenerated GEDCOM file (representing the iteration after the date precision fix), the export output status is officially promoted to **Spot Check Pass**.
+
+All critical precision blockers are resolved. GEDCOM is cleared for limited beta release as part of the portable data export suite.
 
 ---
 
-## Spot Check Evaluation
+## Spot Check Evaluation & Verified Metrics
 
-### 1. Structural Checks (PASSED)
-- Exporter output is syntactically valid GEDCOM.
-- `CHAR UTF-8` encoding tag is present.
-- Arabic names are fully preserved without encoding distortion.
-- INDI and FAM records are properly cross-referenced (FAMC, FAMS, HUSB, WIFE, CHIL).
+### 1. Date Precision (PASSED)
+- **Total DATE lines:** `81`
+- **Year-only dates exported correctly:** `77` (e.g. `2 DATE 1977`)
+- **False `1 JAN YYYY` dates:** `0`
+- **Full exact dates preserved:** `4` (e.g. `2 DATE 15 MAR 1977`)
 
-### 2. Privacy & Security Checks (PASSED)
+### 2. Structural & Reference Checks (PASSED)
+- **INDI records:** `90`
+- **FAM records:** `32`
+- **Relationship references checked:** `253`
+- **Missing references:** `0`
+- **UTF-8 Support:** `CHAR UTF-8` present and Arabic name sequences are fully preserved.
+
+### 3. Privacy & Security Checks (PASSED)
 - Living and private people are masked or skipped where configured.
-- No obvious sensitive database metadata leaks in custom tags.
-
-### 3. Date Precision (FAILED - BLOCKER)
-- **Issue**: Dates entered as year-only values (e.g. `1977`) are normalized internally to `1977-01-01` and exported to GEDCOM as:
-  ```gedcom
-  2 DATE 1 JAN 1977
-  ```
-  This is incorrect as it introduces false day and month precision.
-- **Requirement**: Year-only dates must export as `YYYY`. Partial dates must export as `MON YYYY`. Placeholder `YYYY-01-01` dates must not export as exact `1 JAN YYYY` unless explicit day/month precision is verified by metadata.
+- No database primary keys or raw sensitive fields leak in custom tags.
 
 ---
 
-## Conclusion & Decision
+## Conclusion & Non-Blocking Follow-ups
+
+All date precision and structural blockers are resolved. Remaining non-blocking items for future sprints:
+- **UUID-like IDs**: Acceptable for beta but may be polished to sequential integers/IDs in the future.
+- **NOTE entry validation**: One NOTE entry exists and should be confirmed by the owner as real user data, not seeded/test content.
 
 > [!IMPORTANT]
 > **Decision:**
-> GEDCOM export cannot be marked as Spot Check Pass until date precision is preserved.
-> Refining exporter logic to respect date precision is a priority blocker before portable data exports are considered beta-ready.
+> GEDCOM export is promoted to Spot Check Pass and cleared for limited beta release.

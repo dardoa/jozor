@@ -21,7 +21,7 @@ This document provides a consolidated readiness status for all publishing and ex
 | **Classic Ancestor Poster** | `Pending Owner Output Review` | UI taxonomy updated; actual generated output needs verification. |
 | **Modern Ancestor Poster** | `Pending Owner Output Review` | UI taxonomy updated; actual generated output needs verification. |
 | **Tree Snapshot PNG/PDF** | `Pending Owner Output Review` | Legacy label fallback; output needs visual verification. |
-| **GEDCOM Export** | `Needs Polish` | Core structure is solid, but blocked by date precision distortion. See [GEDCOM Spot Check Report](file:///d:/AppDEV/Jozor1.1/docs/reviews/gedcom-owner-spot-check-2026-07-07.md). |
+| **GEDCOM Export** | `Spot Check Pass for Limited Beta` | Validated owner spot check; date precision preserved. See [GEDCOM Spot Check Report](file:///d:/AppDEV/Jozor1.1/docs/reviews/gedcom-owner-spot-check-2026-07-07.md). |
 | **JSON Export** | `Pending Owner Spot Check` | Structure is standard; pending data verification. |
 | **Jozor Archive** | `Pending Owner Spot Check` | Zip package layout standard; pending verification. |
 | **Calendar/ICS Export** | `Pending Owner Spot Check` | Standard ICS structure; pending verification. |
@@ -34,7 +34,7 @@ This document provides a consolidated readiness status for all publishing and ex
 The following outputs are explicitly **not yet beta-cleared** for public or external testing:
 - **Visual Poster Outputs**: The classic and modern ancestor poster PDF/PNG exports have not been visually reviewed by the owner.
 - **Tree Snapshots**: The snapshot PDF/PNG exports have not been visually reviewed by the owner.
-- **Portable Data Exports**: Portable data exports (JSON, Jozor Archive, Calendar/ICS) have not been spot-checked by the owner. GEDCOM has automated validation coverage but is blocked by date precision distortion (`Needs Polish` status).
+- **Portable Data Exports**: Selected portable data exports (JSON, Jozor Archive, Calendar/ICS) have not been spot-checked by the owner. GEDCOM has successfully passed the owner spot check.
 
 ---
 

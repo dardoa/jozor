@@ -1,5 +1,12 @@
 # Project Log
 
+## 2026-07-07 - GEDCOM Promotion to Spot Check Pass
+
+- Summary:
+  - Promoted GEDCOM Export to `Spot Check Pass` for Limited Beta.
+  - Documented owner re-review results and verified metrics (0 false 1 JAN dates, correct year-only exports, valid references structure) in [`docs/reviews/gedcom-owner-spot-check-2026-07-07.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/gedcom-owner-spot-check-2026-07-07.md).
+  - Updated consolidated readiness summary [`docs/reviews/publishing-outputs-limited-beta-readiness-2026-07-07.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/publishing-outputs-limited-beta-readiness-2026-07-07.md) and logged evidence notes in [`docs/reviews/evidence/gedcom-owner-spot-check-2026-07-07/evidence_notes.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/evidence/gedcom-owner-spot-check-2026-07-07/evidence_notes.md).
+
 ## 2026-07-07 - GEDCOM Date Precision Export Polish
 
 - Summary:
