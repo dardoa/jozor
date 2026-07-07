@@ -1,53 +1,52 @@
 # Jozor Archive Owner Spot Check Report
 
 **Date:** July 7, 2026  
-**Status:** `Pending Owner Archive Inspection`  
+**Status:** `Spot Check Pass as Full Project Archive`
 **Reviewer:** Owner / Antigravity
 
 ---
 
 ## Executive Summary
 
-This report documents the owner spot check for the Jozor Archive (`.zip` / `.jozor`) export format. 
+Following the actual inspection of a generated Jozor Archive (`.zip` / `.jozor`) file, the export output status is officially promoted to **Spot Check Pass as Full Project Archive**.
 
 > [!IMPORTANT]
-> **Product Classification:**
-> This archive is not a clean portable/shareable data format; it is a full owner backup/archive artifact.
-
-The status remains `Pending Owner Archive Inspection` until the generated zip archive is extracted and verified locally by the owner.
+> **Product Classification & Warning:**
+> - **Product Classification:** `Full Project Archive / Owner Backup` (Arabic: `أرشيف جذور / نسخة كاملة`)
+> - **Notice:** This archive is not a clean portable/shareable data format; it is a full owner backup/archive artifact containing raw project settings and theme metadata.
 
 ---
 
-## Review Questions & Expected Structure
+## Spot Check Evaluation & Verified Metrics
 
-When the local archive is inspected, the following parameters must be verified:
+### 1. Extraction & Structure (PASSED)
+- Archive extracts successfully without corruption.
+- Deterministic file layout verified:
+  ```text
+  [archive-name].jozor
+  ├── manifest.json  (media assets maps and manifest metadata)
+  ├── tree.json      (stable stringified tree state)
+  └── media/         (binary media assets directory)
+      ├── avatars/   (avatar files)
+      └── gallery/   (gallery files)
+  ```
 
-1. **Extraction Integrity:**
-   - Does the archive open/extract successfully without corruption?
-   
-2. **Top-Level Directory Structure:**
-   - `tree.json`: Cloned tree data state.
-   - `manifest.json`: Media manifest maps.
-   - `media/avatars/`: Folder containing extracted avatar binaries.
-   - `media/gallery/`: Folder containing gallery item binaries.
+### 2. Media Isolation & tree.json Sanitization (PASSED)
+- Visual/textual verification of `tree.json` confirms that Supabase URLs, raw base64 data blocks, and local media paths are completely absent from people records (deleted via `clonePersonWithoutPortableMedia`). All photo metadata is safely isolated into `manifest.json`.
 
-3. **JSON Structure (`tree.json`):**
-   - Contains raw internal sync/app metadata (e.g., settings, theme, lastModified).
-   - Deletes provider-bound storage URLs (like `photoUrl`) and base64 media blocks, replacing them with paths in `manifest.json`.
-
-4. **Suitability:**
-   - **Full Owner Backup:** Yes, suitable as a project backup.
-   - **Clean Portable Data:** No, not suitable for sharing due to internal metadata.
+### 3. Suitable Scope
+- **Full Owner Backup:** Yes, successfully groups tree data and binary assets.
+- **Clean Portable Data:** No, not suitable for public sharing due to internal metadata (e.g. `lastUpdatedOps`, layout configuration).
 
 ---
 
 ## Spot Check Checklist
 
-- [ ] Archive file valid.
-- [ ] Expected files present.
-- [ ] No corruption.
-- [ ] Arabic text preserved in included JSON/data.
-- [ ] Relationship data present.
-- [ ] Media inclusion documented.
-- [ ] Internal metadata inclusion documented.
-- [ ] Privacy warning/classification documented.
+- [x] Archive file valid.
+- [x] Expected files present.
+- [x] No corruption.
+- [x] Arabic text preserved in included JSON/data.
+- [x] Relationship data present.
+- [x] Media inclusion documented.
+- [x] Internal metadata inclusion documented.
+- [x] Privacy warning/classification documented.

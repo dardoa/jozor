@@ -1,5 +1,13 @@
 # Project Log
 
+## 2026-07-07 - Jozor Archive Actual Inspection & Status Promotion
+
+- Summary:
+  - Promoted Jozor Archive to `Spot Check Pass as Full Project Archive` following actual programmatic zip extraction and inspection.
+  - Verified structure (`manifest.json`, `tree.json`, and isolated binary media under `media/avatars/` and `media/gallery/`).
+  - Confirmed that Supabase URLs, raw base64 data, and storage paths are successfully deleted from `tree.json`, verifying correct media separation.
+  - Documented findings in [`docs/reviews/jozor-archive-owner-spot-check-2026-07-07.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/jozor-archive-owner-spot-check-2026-07-07.md) and evidence notes in [`docs/reviews/evidence/jozor-archive-owner-spot-check-2026-07-07/evidence_notes.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/evidence/jozor-archive-owner-spot-check-2026-07-07/evidence_notes.md).
+
 ## 2026-07-07 - Calendar ICS Owner Spot Check
 
 - Summary:
