@@ -1,5 +1,13 @@
 # Project Log
 
+## 2026-07-07 - Family Book Markdown Promotion to Pass for Limited Beta
+
+- Summary:
+  - Visual and textual review of the regenerated Markdown export confirms introduction, localized labels, references section structure, and em dash separators are fully successful.
+  - Officially promoted status to `Pass for Limited Beta` inside [`docs/reviews/family-book-markdown-owner-review-2026-07-07.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/family-book-markdown-owner-review-2026-07-07.md).
+  - Documented owner visual confirmation details in [`docs/reviews/evidence/family-book-markdown-limited-beta-review-2026-07-07/evidence_notes.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/evidence/family-book-markdown-limited-beta-review-2026-07-07/evidence_notes.md).
+  - Created a follow-up tracker in [`docs/reviews/family-book-markdown-limited-beta-followups-2026-07-07.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/family-book-markdown-limited-beta-followups-2026-07-07.md) for non-blocking P2/P3 items (relation/generation simplification, citation zero-state reduction, branch overview count wording, family path separator, and optional RTL wrapper mode).
+
 ## 2026-07-07 - Family Book Markdown Beta Polish Pass
 
 - Summary:
