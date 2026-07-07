@@ -1,5 +1,12 @@
 # Project Log
 
+## 2026-07-07 - JSON Export Product Boundary & Spot Check Report
+
+- Summary:
+  - Documented JSON owner spot check findings in [`docs/reviews/json-owner-spot-check-2026-07-07.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/json-owner-spot-check-2026-07-07.md), blocking current JSON output as public portable export due to media storage URLs, raw base64 data, and sync metadata leakage.
+  - Defined two JSON export products in the new design note [`docs/reviews/clean-portable-json-export-design-2026-07-07.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/clean-portable-json-export-design-2026-07-07.md): Full Jozor Project JSON (internal backup) and Clean Portable JSON (user-facing, privacy-compliant format).
+  - Updated consolidated readiness summary [`docs/reviews/publishing-outputs-limited-beta-readiness-2026-07-07.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/publishing-outputs-limited-beta-readiness-2026-07-07.md).
+
 ## 2026-07-07 - GEDCOM Promotion to Spot Check Pass
 
 - Summary:
