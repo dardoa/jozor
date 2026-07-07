@@ -16,12 +16,12 @@ This document provides a consolidated readiness status for all publishing and ex
 
 | Publishing / Export Output | Status | Notes |
 |---|---|---|
-| **Family Book PDF** | `Pass for Limited Beta` | Visual manuscript output; P2/P3 follow-ups tracked separately. |
+| **Family Book PDF** | `Pass for Limited Beta` | Visual family book output; remaining P2/P3 polish tracked separately. |
 | **Family Book Markdown** | `Pass for Limited Beta` | Cleared as a review/archive text format, not a visual replacement for PDF. |
 | **Classic Ancestor Poster** | `Pending Owner Output Review` | UI taxonomy updated; actual generated output needs verification. |
 | **Modern Ancestor Poster** | `Pending Owner Output Review` | UI taxonomy updated; actual generated output needs verification. |
 | **Tree Snapshot PNG/PDF** | `Pending Owner Output Review` | Legacy label fallback; output needs visual verification. |
-| **GEDCOM Export** | `Automated Validation Pass / Pending Owner Spot Check` | Core parser tests passed; pending owner spot check. |
+| **GEDCOM Export** | `Needs Polish` | Core structure is solid, but blocked by date precision distortion. See [GEDCOM Spot Check Report](file:///d:/AppDEV/Jozor1.1/docs/reviews/gedcom-owner-spot-check-2026-07-07.md). |
 | **JSON Export** | `Pending Owner Spot Check` | Structure is standard; pending data verification. |
 | **Jozor Archive** | `Pending Owner Spot Check` | Zip package layout standard; pending verification. |
 | **Calendar/ICS Export** | `Pending Owner Spot Check` | Standard ICS structure; pending verification. |
@@ -34,7 +34,7 @@ This document provides a consolidated readiness status for all publishing and ex
 The following outputs are explicitly **not yet beta-cleared** for public or external testing:
 - **Visual Poster Outputs**: The classic and modern ancestor poster PDF/PNG exports have not been visually reviewed by the owner.
 - **Tree Snapshots**: The snapshot PDF/PNG exports have not been visually reviewed by the owner.
-- **Portable Data Exports**: Portable data exports (JSON, Jozor Archive, Calendar/ICS) have not been spot-checked by the owner. GEDCOM has automated validation coverage but still requires a final spot check.
+- **Portable Data Exports**: Portable data exports (JSON, Jozor Archive, Calendar/ICS) have not been spot-checked by the owner. GEDCOM has automated validation coverage but is blocked by date precision distortion (`Needs Polish` status).
 
 ---
 
@@ -43,6 +43,7 @@ The following outputs are explicitly **not yet beta-cleared** for public or exte
 Refer to the following documents for tracking post-beta polish:
 - [Family Book PDF Follow-ups](file:///d:/AppDEV/Jozor1.1/docs/reviews/family-book-pdf-limited-beta-followups-2026-07-07.md)
 - [Family Book Markdown Follow-ups](file:///d:/AppDEV/Jozor1.1/docs/reviews/family-book-markdown-limited-beta-followups-2026-07-07.md)
+- [GEDCOM Export Spot Check Report](file:///d:/AppDEV/Jozor1.1/docs/reviews/gedcom-owner-spot-check-2026-07-07.md)
 - **Visual Outputs**: Future target is to verify generated assets and plan the Preview-first Visual Publishing Studio under [ADR 013](file:///d:/AppDEV/Jozor1.1/docs/adr/013-visual-publishing-studio-direction.md).
 
 ---

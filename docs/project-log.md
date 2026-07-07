@@ -1,5 +1,12 @@
 # Project Log
 
+## 2026-07-07 - GEDCOM Date Precision Export Polish
+
+- Summary:
+  - Addressed GEDCOM export date precision blockers: implemented precision-aware formatting rules in `formatDateForGEDCOM` preserving partial dates (`MON YYYY`), year-only dates (`YYYY`), approximate dates (`ABT YYYY`), and standardizing placeholder `YYYY-01-01` formats (exporting as `YYYY` unless explicit day/month precision is verified by metadata).
+  - Authored the GEDCOM owner spot check report [`docs/reviews/gedcom-owner-spot-check-2026-07-07.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/gedcom-owner-spot-check-2026-07-07.md) setting initial status to `Needs Polish` (moved from validation pass).
+  - Updated the consolidated readiness summary [`docs/reviews/publishing-outputs-limited-beta-readiness-2026-07-07.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/publishing-outputs-limited-beta-readiness-2026-07-07.md) to log `Needs Polish` for GEDCOM.
+
 ## 2026-07-07 - Publishing Outputs Limited Beta Readiness Summary
 
 - Summary:

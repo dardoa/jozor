@@ -76,8 +76,7 @@ describe('GEDCOM Logic - Date Functions', () => {
         });
 
         it('should handle year-only dates', () => {
-            // Year-only dates are parsed as Jan 1 of that year
-            expect(formatGedcomDate('1990')).toBe('1 JAN 1990');
+            expect(formatGedcomDate('1990')).toBe('1990');
         });
 
         it('should handle empty or invalid dates', () => {
@@ -86,8 +85,7 @@ describe('GEDCOM Logic - Date Functions', () => {
         });
 
         it('should handle partial dates', () => {
-            // Partial dates are parsed as 1st of that month
-            expect(formatGedcomDate('1990-01')).toBe('1 JAN 1990');
+            expect(formatGedcomDate('1990-01')).toBe('JAN 1990');
         });
     });
 
@@ -131,7 +129,7 @@ describe('GEDCOM Logic - Export', () => {
             expect(output).toContain('0 @p1@ INDI');
             expect(output).toContain('1 NAME John /Doe/');
             expect(output).toContain('1 SEX M');
-            expect(output).toContain('2 DATE 1 JAN 1990');
+            expect(output).toContain('2 DATE 1990');
         });
 
         it('should export family links (FAMS, FAMC)', () => {
@@ -198,6 +196,100 @@ describe('GEDCOM Logic - Export', () => {
             expect(output).toContain('1 DEAT');
             expect(output).toContain('2 DATE 15 MAY 2020');
             expect(output).toContain('2 PLAC London');
+        });
+
+        it('preserves date precision on export, preventing false exact dates', () => {
+            const p: Person = {
+                ...mockPerson,
+                id: 'p1',
+                birthDate: '1977',
+                metadata: {},
+            } as any;
+            const output = exportToGEDCOM({ p1: p });
+            expect(output).toContain('2 DATE 1977');
+            expect(output).not.toContain('2 DATE 1 JAN 1977');
+        });
+
+        it('exports full exact date correctly', () => {
+            const p: Person = {
+                ...mockPerson,
+                id: 'p1',
+                birthDate: '1977-03-15',
+            } as any;
+            const output = exportToGEDCOM({ p1: p });
+            expect(output).toContain('2 DATE 15 MAR 1977');
+        });
+
+        it('exports year-month date correctly', () => {
+            const p: Person = {
+                ...mockPerson,
+                id: 'p1',
+                birthDate: '1977-03',
+            } as any;
+            const output = exportToGEDCOM({ p1: p });
+            expect(output).toContain('2 DATE MAR 1977');
+        });
+
+        it('exports approximate year date correctly using metadata', () => {
+            const p: Person = {
+                ...mockPerson,
+                id: 'p1',
+                birthDate: '1977',
+                metadata: {
+                    birthDateApproximate: true,
+                },
+            } as any;
+            const output = exportToGEDCOM({ p1: p });
+            expect(output).toContain('2 DATE ABT 1977');
+        });
+
+        it('exports placeholder YYYY-01-01 as YYYY unless metadata specifies exact precision', () => {
+            const p1: Person = {
+                ...mockPerson,
+                id: 'p1',
+                birthDate: '1977-01-01',
+                metadata: {},
+            } as any;
+            const output1 = exportToGEDCOM({ p1: p1 });
+            expect(output1).toContain('2 DATE 1977');
+            expect(output1).not.toContain('2 DATE 1 JAN 1977');
+
+            const p2: Person = {
+                ...mockPerson,
+                id: 'p2',
+                birthDate: '1977-01-01',
+                metadata: {
+                    birthDatePrecision: 'day',
+                },
+            } as any;
+            const output2 = exportToGEDCOM({ p2: p2 });
+            expect(output2).toContain('2 DATE 1 JAN 1977');
+        });
+
+        it('preserves pre-existing GEDCOM approximate/date prefixes', () => {
+            const p1: Person = {
+                ...mockPerson,
+                id: 'p1',
+                birthDate: 'ABT 1977',
+            } as any;
+            const output1 = exportToGEDCOM({ p1: p1 });
+            expect(output1).toContain('2 DATE ABT 1977');
+
+            const p2: Person = {
+                ...mockPerson,
+                id: 'p2',
+                birthDate: 'BEF 1977',
+            } as any;
+            const output2 = exportToGEDCOM({ p2: p2 });
+            expect(output2).toContain('2 DATE BEF 1977');
+
+            const p3: Person = {
+                ...mockPerson,
+                id: 'p3',
+                birthDate: 'AFT 1977',
+            } as any;
+            const output3 = exportToGEDCOM({ p3: p3 });
+            expect(output3).toContain('2 DATE AFT 1977');
         });
 
         it('should export parent-child family records even when parents are not spouses', () => {
