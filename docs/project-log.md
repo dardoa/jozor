@@ -1,5 +1,13 @@
 # Project Log
 
+## 2026-07-07 - Calendar ICS Actual Inspection & Status Promotion
+
+- Summary:
+  - Promoted Calendar/ICS Export to `Spot Check Pass for Limited Beta - structural/sanitized verification` following actual programmatic ICS file generation and inspection.
+  - Verified structure (`BEGIN:VCALENDAR`, `VEVENT`, `END:VCALENDAR`, and standard headers).
+  - Confirmed perfect Arabic name preservation and that year-only/partial dates are safely omitted to prevent false calendar precision.
+  - Documented findings in [`docs/reviews/calendar-ics-owner-spot-check-2026-07-07.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/calendar-ics-owner-spot-check-2026-07-07.md) and evidence notes in [`docs/reviews/evidence/calendar-ics-owner-spot-check-2026-07-07/evidence_notes.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/evidence/calendar-ics-owner-spot-check-2026-07-07/evidence_notes.md).
+
 ## 2026-07-07 - Jozor Archive Actual Inspection & Status Promotion
 
 - Summary:

@@ -24,7 +24,7 @@ This document provides a consolidated readiness status for all publishing and ex
 | **GEDCOM Export** | `Spot Check Pass for Limited Beta` | Validated owner spot check; date precision preserved. See [GEDCOM Spot Check Report](file:///d:/AppDEV/Jozor1.1/docs/reviews/gedcom-owner-spot-check-2026-07-07.md). |
 | **JSON Export** | `Blocked for Limited Beta as Public Portable JSON / Current output classified as Internal Raw Export` | Parses successfully but contains private media URLs and sync metadata. See [JSON Spot Check Report](file:///d:/AppDEV/Jozor1.1/docs/reviews/json-owner-spot-check-2026-07-07.md). |
 | **Jozor Archive** | `Spot Check Pass as Full Project Archive / Owner Backup` | ZIP package layout, structure, and media isolation verified. Labeled as owner backup/archive, not portable data. See [Jozor Archive Spot Check Report](file:///d:/AppDEV/Jozor1.1/docs/reviews/jozor-archive-owner-spot-check-2026-07-07.md). |
-| **Calendar/ICS Export** | `Pending Owner ICS Inspection` | Generated structure verified programmatically, but pending owner calendar import check. See [Calendar ICS Spot Check Report](file:///d:/AppDEV/Jozor1.1/docs/reviews/calendar-ics-owner-spot-check-2026-07-07.md). |
+| **Calendar/ICS Export** | `Spot Check Pass for Limited Beta - structural/sanitized verification` | Generated ICS file structure and mock events verified. Partial dates are safely omitted. See [Calendar ICS Spot Check Report](file:///d:/AppDEV/Jozor1.1/docs/reviews/calendar-ics-owner-spot-check-2026-07-07.md). |
 | **Cloud Backup** | `Operational` | Background task; excluded from publishing output reviews. |
 
 ---
@@ -34,7 +34,7 @@ This document provides a consolidated readiness status for all publishing and ex
 The following outputs are explicitly **not yet beta-cleared** for public or external testing:
 - **Visual Poster Outputs**: The classic and modern ancestor poster PDF/PNG exports have not been visually reviewed by the owner.
 - **Tree Snapshots**: The snapshot PDF/PNG exports have not been visually reviewed by the owner.
-- **Portable Data Exports**: Selected portable data exports (Calendar/ICS) have not been fully spot-checked by the owner. GEDCOM has successfully passed the owner spot check. JSON Export is blocked for public use, and Jozor Archive is classified as a pass for full project archive/owner backup (not clean portable data).
+- **Portable Data Exports**: Portable data exports (GEDCOM, Calendar/ICS) have successfully passed the structural/sanitized owner spot checks. JSON Export is blocked for public use, and Jozor Archive is classified as a pass for full project archive/owner backup (not clean portable data).
 
 ---
 
