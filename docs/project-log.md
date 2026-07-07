@@ -1,5 +1,12 @@
 # Project Log
 
+## 2026-07-07 - Visual Poster Outputs Structural Spot Check & Status Promotion
+
+- Summary:
+  - Promoted Classic Ancestor Poster and Modern Ancestor Poster (PNG and PDF) to `Spot Check Pass for Limited Beta - structural/sanitized verification` following actual programmatic canvas layout verification.
+  - Verified document page composition (`1000px x 800px`), symmetric node positioning coordinates, margins, edges path points, and perfect Arabic name preservation.
+  - Documented findings in [`docs/reviews/visual-poster-outputs-structural-spot-check-2026-07-07.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/visual-poster-outputs-structural-spot-check-2026-07-07.md) and evidence notes in [`docs/reviews/evidence/visual-poster-outputs-structural-spot-check-2026-07-07/evidence_notes.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/evidence/visual-poster-outputs-structural-spot-check-2026-07-07/evidence_notes.md).
+
 ## 2026-07-07 - Calendar ICS Actual Inspection & Status Promotion
 
 - Summary:
