@@ -1,5 +1,12 @@
 # Project Log
 
+## 2026-07-08 - Tree Snapshot Outputs Structural Spot Check & Status Promotion
+
+- Summary:
+  - Promoted Tree Snapshot PNG/PDF to `Spot Check Pass for Limited Beta - structural/sanitized verification` following actual programmatic viewport-capture option verification.
+  - Verified bounding box capture width/height calculations, adding `+150px` padding on all sides, orientation decisions, 2x high-DPI scaling factor, and `JOZOR FAMILY TREE` watermark branding.
+  - Documented findings in [`docs/reviews/tree-snapshot-outputs-structural-spot-check-2026-07-07.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/tree-snapshot-outputs-structural-spot-check-2026-07-07.md) and evidence notes in [`docs/reviews/evidence/tree-snapshot-outputs-structural-spot-check-2026-07-07/evidence_notes.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/evidence/tree-snapshot-outputs-structural-spot-check-2026-07-07/evidence_notes.md).
+
 ## 2026-07-07 - Visual Poster Outputs Structural Spot Check & Status Promotion
 
 - Summary:
