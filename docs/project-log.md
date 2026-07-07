@@ -1,5 +1,11 @@
 # Project Log
 
+## 2026-07-07 - Calendar ICS Owner Spot Check
+
+- Summary:
+  - Documented Calendar/ICS owner spot check report in [`docs/reviews/calendar-ics-owner-spot-check-2026-07-07.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/calendar-ics-owner-spot-check-2026-07-07.md) setting status to `Pending Owner ICS Inspection` and documenting partial dates omission as a known limitation.
+  - Updated consolidated readiness summary [`docs/reviews/publishing-outputs-limited-beta-readiness-2026-07-07.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/publishing-outputs-limited-beta-readiness-2026-07-07.md).
+
 ## 2026-07-07 - Jozor Archive Owner Spot Check
 
 - Summary:
