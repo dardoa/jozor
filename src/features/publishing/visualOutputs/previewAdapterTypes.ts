@@ -46,3 +46,8 @@ export interface VisualPreviewModel {
     readonly maxNodes?: number;
   };
 }
+
+export interface VisualPreviewAdapter {
+  readonly productType: VisualOutputProductType;
+  readonly createPreviewModel: (request: VisualPreviewRequest) => VisualPreviewModel;
+}

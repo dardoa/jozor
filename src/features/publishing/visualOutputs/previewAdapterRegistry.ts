@@ -133,7 +133,7 @@ export const snapshotPreviewAdapter: VisualPreviewAdapter = {
 };
 
 // Registry lookup mapping dictionary
-const adaptersMap: Record<VisualOutputProductType, VisualPreviewAdapter> = {
+const adaptersMap: Partial<Record<VisualOutputProductType, VisualPreviewAdapter>> = {
   poster: posterPreviewAdapter,
   snapshot: snapshotPreviewAdapter,
 };
@@ -149,6 +149,5 @@ export function getVisualPreviewAdapter(productType: VisualOutputProductType): V
  * Returns a list of all registered preview adapters.
  */
 export function listVisualPreviewAdapters(): VisualPreviewAdapter[] {
-  return Object.values(adaptersMap);
+  return Object.values(adaptersMap) as VisualPreviewAdapter[];
 }
-export type { VisualPreviewAdapter };
