@@ -172,9 +172,13 @@ interface VisualPublishingStudioState {
 - Established the sanitizer generic interface contract [`previewSanitizerContract.ts`](file:///d:/AppDEV/Jozor1.1/src/features/publishing/visualOutputs/previewSanitizerContract.ts) isolating raw database entities.
 - Verified under unit tests in [`previewSanitizerTypes.test.ts`](file:///d:/AppDEV/Jozor1.1/src/features/publishing/visualOutputs/__tests__/previewSanitizerTypes.test.ts) that sanitized node shapes reject all forbidden fields and enforce masking rules.
 
-### Phase 3E: Static Sanitizer Mock Implementation (Next Step)
-- Build a static preview sanitizer adapter class or function to map dummy raw inputs to sanitized graphs without database access.
-- Wire mock sanitization runs under test suites to assert data compliance under varying privacy policies.
+### Phase 3E: Static Sanitizer Mock Implementation (Completed)
+- Implemented a test/mock helper sanitizer [`previewMockSanitizer.ts`](file:///d:/AppDEV/Jozor1.1/src/features/publishing/visualOutputs/previewMockSanitizer.ts) to verify sanitization constraints.
+- Confirmed under unit tests in [`previewMockSanitizer.test.ts`](file:///d:/AppDEV/Jozor1.1/src/features/publishing/visualOutputs/__tests__/previewMockSanitizer.test.ts) that names, years, photos, and edges are mapped, masked, and cropped correctly according to active policies with zero leakage.
+
+### Phase 3F: Adapter accepts SanitizedPreviewGraph (Next Step)
+- Refactor `previewAdapterTypes.ts` to accept optional `sanitizedGraph` in request parameters.
+- Update `posterPreviewAdapter` and `snapshotPreviewAdapter` to render preview models derived from this sanitized graph model rather than hardcoded layout arrays.
 
 ### Phase 3: Product-Specific Controls
 - Add controls for customized margins, orientation toggle, and generation scope sliders.

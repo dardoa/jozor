@@ -88,6 +88,7 @@ The following fields must be strictly blacklisted and completely stripped at the
 ## Implications
 
 - **Phase 3D - Sanitizer Contract Types (Completed)**: Formalized the boundary design rules into TypeScript contracts in [`previewSanitizerTypes.ts`](file:///d:/AppDEV/Jozor1.1/src/features/publishing/visualOutputs/previewSanitizerTypes.ts) and [`previewSanitizerContract.ts`](file:///d:/AppDEV/Jozor1.1/src/features/publishing/visualOutputs/previewSanitizerContract.ts). The contract abstracts raw tree entities using generics (`TRawGraph = unknown`) and forces `previewId` as the unique identifier to assert absolute decoupling.
+- **Phase 3E - Static Sanitizer Mock Implementation (Completed)**: Built a test utility sanitizer [`previewMockSanitizer.ts`](file:///d:/AppDEV/Jozor1.1/src/features/publishing/visualOutputs/previewMockSanitizer.ts) to verify data mapping, year-only parsing, edge truncation, and privacy masking under varying policies without database access.
 
 ---
 

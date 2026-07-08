@@ -27,3 +27,4 @@ export * from './visualOutputs/previewAdapterTypes';
 export * from './visualOutputs/previewAdapterRegistry';
 export * from './visualOutputs/previewSanitizerTypes';
 export * from './visualOutputs/previewSanitizerContract';
+export * from './visualOutputs/previewMockSanitizer';

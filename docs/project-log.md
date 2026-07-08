@@ -1,5 +1,14 @@
 # Project Log
 
+## 2026-07-08 - Visual Publishing Studio Phase 3E: Static Sanitizer Mock Implementation
+
+- Summary:
+  - Implemented the `mockPreviewSanitizer` test/mock helper class in `previewMockSanitizer.ts`.
+  - Added support for mapping raw node shapes (`MockPreviewRawNode` / `MockPreviewRawGraph`) with dummy credentials to sanitized outputs.
+  - Implemented safe birth/death year extraction, masking policies based on language locale, profile photo silhouetting, and node limits cropping.
+  - Exported the mock sanitizer and mock raw interfaces from the publishing index file.
+  - Wrote comprehensive unit tests (`previewMockSanitizer.test.ts`) validating privacy protection (masking living/private profiles, stripping emails, phones, and addresses), node limits, edge filtering, and ensuring `owner-full` mode complies with safety boundaries.
+
 ## 2026-07-08 - Visual Publishing Studio Phase 3D: Sanitizer Contract Types
 
 - Summary:
