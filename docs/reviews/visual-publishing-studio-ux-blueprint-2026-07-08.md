@@ -176,9 +176,13 @@ interface VisualPublishingStudioState {
 - Implemented a test/mock helper sanitizer [`previewMockSanitizer.ts`](file:///d:/AppDEV/Jozor1.1/src/features/publishing/visualOutputs/previewMockSanitizer.ts) to verify sanitization constraints.
 - Confirmed under unit tests in [`previewMockSanitizer.test.ts`](file:///d:/AppDEV/Jozor1.1/src/features/publishing/visualOutputs/__tests__/previewMockSanitizer.test.ts) that names, years, photos, and edges are mapped, masked, and cropped correctly according to active policies with zero leakage.
 
-### Phase 3F: Adapter accepts SanitizedPreviewGraph (Next Step)
-- Refactor `previewAdapterTypes.ts` to accept optional `sanitizedGraph` in request parameters.
-- Update `posterPreviewAdapter` and `snapshotPreviewAdapter` to render preview models derived from this sanitized graph model rather than hardcoded layout arrays.
+### Phase 3F: Adapter accepts SanitizedPreviewGraph (Completed)
+- Refactored [`previewAdapterTypes.ts`](file:///d:/AppDEV/Jozor1.1/src/features/publishing/visualOutputs/previewAdapterTypes.ts) introducing the optional `sanitizedGraph` parameter.
+- Updated `posterPreviewAdapter` and `snapshotPreviewAdapter` inside [`previewAdapterRegistry.ts`](file:///d:/AppDEV/Jozor1.1/src/features/publishing/visualOutputs/previewAdapterRegistry.ts) to map node and edge entities directly from the sanitized graph when present, while retaining original warning queues and truncation flags.
+- Verified integration behavior under unit tests in [`previewAdapterRegistry.test.ts`](file:///d:/AppDEV/Jozor1.1/src/features/publishing/visualOutputs/__tests__/previewAdapterRegistry.test.ts).
+
+### Phase 3G: Preview Adapter & Sanitizer Review Pack (Next Step)
+- Package visual publishing contract developments (Phases 3A-3F) for safety verification and architectural audit.
 
 ### Phase 3: Product-Specific Controls
 - Add controls for customized margins, orientation toggle, and generation scope sliders.

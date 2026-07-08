@@ -1,5 +1,13 @@
 # Project Log
 
+## 2026-07-08 - Visual Publishing Studio Phase 3F: Adapter Accepts SanitizedPreviewGraph
+
+- Summary:
+  - Added optional `sanitizedGraph` parameter to the `VisualPreviewRequest` in `previewAdapterTypes.ts`.
+  - Updated both `posterPreviewAdapter` and `snapshotPreviewAdapter` in `previewAdapterRegistry.ts` to consume and map `SanitizedPreviewGraph` details into `VisualPreviewModel` outputs, preserving warnings and truncated flags.
+  - Retained safe mock fallback routines when `sanitizedGraph` is omitted from request variables.
+  - Expanded unit test coverage in `previewAdapterRegistry.test.ts` to assert that poster and snapshot adapters map session-isolated preview IDs correctly, propagate custom telemetry warnings, and preserve truncation states.
+
 ## 2026-07-08 - Visual Publishing Studio Phase 3E: Static Sanitizer Mock Implementation
 
 - Summary:
