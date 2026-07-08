@@ -124,9 +124,16 @@ interface VisualPublishingStudioState {
 - Verified that the current Visual Outputs cards remain active and unchanged.
 - Reviewed and certified under status `Pass as Hidden Architecture Scaffold` in [`visual-publishing-studio-shell-review-2026-07-08.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/visual-publishing-studio-shell-review-2026-07-08.md).
 
-### Phase 2: Live Preview
-- Integrate dynamic SVG/Canvas rendering in the Preview Pane.
-- Refresh preview on demand when tree settings or root person changes.
+### Phase 2A: Registry-backed Studio Defaults (Completed)
+- Bound the hidden Visual Publishing Studio shell directly to `VisualOutputRegistry`.
+- Updated subcomponents (`VisualOutputPreviewPane`, `VisualOutputConfigPanel`, `VisualOutputActionBar`) to receive and display definitions, rendering name, description, capabilities, size limits, and layout parameters.
+- Kept the UI passive and hidden behind the local disabled scaffold constant (`SHOW_VISUAL_STUDIO_SHELL = false`) with zero runtime export changes.
+- Added test coverage verifying registry defaults binding and correct translation lookups.
+
+### Phase 2B: Live Preview / Interactive Selector State (Next Step)
+- Render selected product preview.
+- Use registry/capabilities to populate options.
+- Keep controls limited.
 
 ### Phase 3: Product-Specific Controls
 - Add controls for customized margins, orientation toggle, and generation scope sliders.

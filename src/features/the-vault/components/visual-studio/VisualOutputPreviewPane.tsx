@@ -1,12 +1,20 @@
 import React from 'react';
 import { Eye } from 'lucide-react';
+import type { VisualOutputDefinition } from '../../../publishing';
 
 interface VisualOutputPreviewPaneProps {
   language: 'ar' | 'en';
+  selectedDefinition?: VisualOutputDefinition;
 }
 
-export const VisualOutputPreviewPane: React.FC<VisualOutputPreviewPaneProps> = ({ language }) => {
+export const VisualOutputPreviewPane: React.FC<VisualOutputPreviewPaneProps> = ({
+  language,
+  selectedDefinition,
+}) => {
   const isAr = language === 'ar';
+  const displayName = selectedDefinition?.displayName[language] || '';
+  const description = selectedDefinition?.description[language] || '';
+  const previewType = selectedDefinition?.previewAsset?.type || 'placeholder';
 
   return (
     <div
@@ -17,12 +25,15 @@ export const VisualOutputPreviewPane: React.FC<VisualOutputPreviewPaneProps> = (
         <Eye className="h-6 w-6 opacity-60" />
       </div>
       <h5 className="text-sm font-bold text-[var(--text-main)]">
-        {isAr ? 'ستظهر المعاينة البصرية هنا' : 'Visual preview will appear here'}
+        {displayName || (isAr ? 'ستظهر المعاينة البصرية هنا' : 'Visual preview will appear here')}
       </h5>
-      <p className="text-[11px] text-[var(--text-muted)] mt-1 max-w-[280px] leading-normal">
+      <p className="text-[11px] text-[var(--text-secondary)] mt-1 max-w-[340px] leading-normal font-medium">
+        {description}
+      </p>
+      <p className="text-[10px] text-[var(--text-muted)] mt-2 italic">
         {isAr
-          ? 'ستتمكن لاحقاً من رؤية الشجرة وتكبيرها وتحريكها مباشرة قبل التصدير.'
-          : 'You will be able to see the tree, zoom, and pan live before exporting.'}
+          ? `نوع المعاينة: ${previewType} (ستتمكن لاحقاً من رؤية الشجرة وتكبيرها وتحريكها مباشرة)`
+          : `Preview type: ${previewType} (dynamic zoom/pan live preview coming soon)`}
       </p>
     </div>
   );

@@ -3,6 +3,7 @@ import { VisualOutputReadinessNotice } from './VisualOutputReadinessNotice';
 import { VisualOutputPreviewPane } from './VisualOutputPreviewPane';
 import { VisualOutputConfigPanel } from './VisualOutputConfigPanel';
 import { VisualOutputActionBar } from './VisualOutputActionBar';
+import { getVisualOutputDefinition } from '../../../publishing';
 
 interface VisualPublishingStudioProps {
   language: 'ar' | 'en';
@@ -14,6 +15,8 @@ export const VisualPublishingStudio: React.FC<VisualPublishingStudioProps> = ({
   isPreviewOnly = false,
 }) => {
   const isAr = language === 'ar';
+  const selectedTemplateId = 'classic-ancestor-poster';
+  const selectedDefinition = getVisualOutputDefinition(selectedTemplateId);
 
   return (
     <div
@@ -35,14 +38,14 @@ export const VisualPublishingStudio: React.FC<VisualPublishingStudioProps> = ({
 
       <div className="grid gap-4 md:grid-cols-3">
         <div className="md:col-span-2">
-          <VisualOutputPreviewPane language={language} />
+          <VisualOutputPreviewPane language={language} selectedDefinition={selectedDefinition} />
         </div>
         <div>
-          <VisualOutputConfigPanel language={language} />
+          <VisualOutputConfigPanel language={language} selectedDefinition={selectedDefinition} />
         </div>
       </div>
 
-      {!isPreviewOnly && <VisualOutputActionBar language={language} />}
+      {!isPreviewOnly && <VisualOutputActionBar language={language} selectedDefinition={selectedDefinition} />}
     </div>
   );
 };

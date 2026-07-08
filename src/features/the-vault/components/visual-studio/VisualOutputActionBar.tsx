@@ -1,12 +1,20 @@
 import React from 'react';
 import { Eye, FileText, ImageIcon } from 'lucide-react';
+import type { VisualOutputDefinition } from '../../../publishing';
 
 interface VisualOutputActionBarProps {
   language: 'ar' | 'en';
+  selectedDefinition?: VisualOutputDefinition;
 }
 
-export const VisualOutputActionBar: React.FC<VisualOutputActionBarProps> = ({ language }) => {
+export const VisualOutputActionBar: React.FC<VisualOutputActionBarProps> = ({
+  language,
+  selectedDefinition,
+}) => {
   const isAr = language === 'ar';
+  const supportedTargets = selectedDefinition?.capabilities.rendererTargets || [];
+  const supportsPng = supportedTargets.includes('png');
+  const supportsPdf = supportedTargets.includes('pdf');
 
   return (
     <div
@@ -25,22 +33,26 @@ export const VisualOutputActionBar: React.FC<VisualOutputActionBarProps> = ({ la
           <Eye className="h-3.5 w-3.5" />
           {isAr ? 'معاينة الاستوديو' : 'Studio Preview'}
         </button>
-        <button
-          type="button"
-          disabled
-          className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] text-[var(--text-main)] px-3 py-2 text-xs font-bold opacity-50 cursor-not-allowed select-none"
-        >
-          <ImageIcon className="h-3.5 w-3.5" />
-          {isAr ? 'تصدير PNG' : 'Export PNG'}
-        </button>
-        <button
-          type="button"
-          disabled
-          className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 rounded-xl bg-[var(--primary-600)] text-white px-3 py-2 text-xs font-bold opacity-50 cursor-not-allowed select-none"
-        >
-          <FileText className="h-3.5 w-3.5" />
-          {isAr ? 'تصدير PDF' : 'Export PDF'}
-        </button>
+        {supportsPng && (
+          <button
+            type="button"
+            disabled
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] text-[var(--text-main)] px-3 py-2 text-xs font-bold opacity-50 cursor-not-allowed select-none"
+          >
+            <ImageIcon className="h-3.5 w-3.5" />
+            {isAr ? 'تصدير PNG' : 'Export PNG'}
+          </button>
+        )}
+        {supportsPdf && (
+          <button
+            type="button"
+            disabled
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 rounded-xl bg-[var(--primary-600)] text-white px-3 py-2 text-xs font-bold opacity-50 cursor-not-allowed select-none"
+          >
+            <FileText className="h-3.5 w-3.5" />
+            {isAr ? 'تصدير PDF' : 'Export PDF'}
+          </button>
+        )}
       </div>
     </div>
   );

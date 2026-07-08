@@ -1,5 +1,17 @@
 # Project Log
 
+## 2026-07-08 - Visual Publishing Studio Phase 2A: Registry Defaults
+
+- Summary:
+  - Bound the hidden Visual Publishing Studio shell directly to the central `VisualOutputRegistry` source of truth.
+  - Updated components to ingest and render registry metadata:
+    - `VisualPublishingStudio.tsx`: Fetches the `classic-ancestor-poster` definition as default and forwards it.
+    - `VisualOutputPreviewPane.tsx`: Renders the default template's active-language name, description, and preview asset type.
+    - `VisualOutputConfigPanel.tsx`: Renders capabilities, engine, strategy, sizes, and layout settings in read-only spec rows.
+    - `VisualOutputActionBar.tsx`: Renders disabled PDF/PNG export buttons dynamically based on registry capabilities.
+  - Added test cases in `VisualPublishingStudio.test.tsx` verifying default registry properties rendering in English/Arabic.
+  - Kept the studio component hidden behind the disabled scaffold constant `SHOW_VISUAL_STUDIO_SHELL = false` to preserve production stability.
+
 ## 2026-07-08 - Visual Publishing Studio Shell Review
 
 - Summary:

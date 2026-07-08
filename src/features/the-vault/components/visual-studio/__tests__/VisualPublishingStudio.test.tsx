@@ -3,35 +3,38 @@ import '@testing-library/jest-dom';
 import { describe, expect, it } from 'vitest';
 import { VisualPublishingStudio } from '../VisualPublishingStudio';
 
-describe('VisualPublishingStudio Shell Scaffolding', () => {
-  it('renders all sections and texts in English correctly', () => {
+describe('VisualPublishingStudio Registry Integration Defaults', () => {
+  it('renders classic-ancestor-poster defaults in English correctly', () => {
     render(<VisualPublishingStudio language="en" />);
 
-    // Main title & desc
+    // Main title
     expect(screen.getByText('Visual Publishing Studio')).toBeInTheDocument();
-    expect(screen.getByText(/Design and configure family tree charts/i)).toBeInTheDocument();
 
-    // Readiness notice
-    expect(screen.getByTestId('visual-studio-readiness-notice')).toBeInTheDocument();
-    expect(screen.getByText(/Studio shell preview. Current exports remain available below./i)).toBeInTheDocument();
-
-    // Preview Pane
+    // Preview Pane displays classic-ancestor-poster title & description from registry
     expect(screen.getByTestId('visual-studio-preview-pane')).toBeInTheDocument();
-    expect(screen.getByText('Visual preview will appear here')).toBeInTheDocument();
+    expect(screen.getByText('Classic Ancestor Poster')).toBeInTheDocument();
+    expect(
+      screen.getByText('Traditional cozy poster design featuring warm vintage tones (4 generations), perfect for print and framing.')
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Preview type: placeholder/i)).toBeInTheDocument();
 
-    // Config Panel
+    // Config Panel displays registry fields
     expect(screen.getByTestId('visual-studio-config-panel')).toBeInTheDocument();
-    expect(screen.getByText('Product')).toBeInTheDocument();
-    expect(screen.getByText('Template')).toBeInTheDocument();
-    expect(screen.getByText('Layout')).toBeInTheDocument();
-    expect(screen.getByText('Scope')).toBeInTheDocument();
-    expect(screen.getByText('Content')).toBeInTheDocument();
+    expect(screen.getByText('Product Type')).toBeInTheDocument();
+    expect(screen.getByText('poster')).toBeInTheDocument();
+    expect(screen.getByText('Template ID')).toBeInTheDocument();
+    expect(screen.getByText('classic-ancestor')).toBeInTheDocument();
+    expect(screen.getByText('Layout Engine')).toBeInTheDocument();
+    expect(screen.getByText('poster-layout')).toBeInTheDocument();
+    expect(screen.getByText('Reading Strategy')).toBeInTheDocument();
+    expect(screen.getByText('ancestor')).toBeInTheDocument();
+    expect(screen.getByText('Supported Sizes')).toBeInTheDocument();
+    expect(screen.getByText('A4, A3, A2, A1, A0')).toBeInTheDocument();
+    expect(screen.getByText('Supported Scopes')).toBeInTheDocument();
+    expect(screen.getByText('selected-root, ancestor-line')).toBeInTheDocument();
 
-    // Action Bar
+    // Action Bar displays disabled buttons
     expect(screen.getByTestId('visual-studio-action-bar')).toBeInTheDocument();
-    expect(screen.getByText('Studio actions are not active yet')).toBeInTheDocument();
-
-    // Buttons are disabled
     const previewBtn = screen.getByRole('button', { name: /Studio Preview/i });
     const pngBtn = screen.getByRole('button', { name: /Export PNG/i });
     const pdfBtn = screen.getByRole('button', { name: /Export PDF/i });
@@ -41,27 +44,24 @@ describe('VisualPublishingStudio Shell Scaffolding', () => {
     expect(pdfBtn).toBeDisabled();
   });
 
-  it('renders all sections and texts in Arabic correctly', () => {
+  it('renders classic-ancestor-poster defaults in Arabic correctly', () => {
     render(<VisualPublishingStudio language="ar" />);
 
     // Main title
     expect(screen.getByText('استوديو النشر البصري')).toBeInTheDocument();
 
-    // Readiness notice
-    expect(screen.getByText(/معاينة هيكل الاستوديو. التصديرات الحالية ما زالت متاحة أدناه./i)).toBeInTheDocument();
+    // Preview Pane displays Arabic display name & description from registry
+    expect(screen.getByText('شجرة الأسلاف الكلاسيكية الدافئة')).toBeInTheDocument();
+    expect(
+      screen.getByText('تصميم بوستر تقليدي مريح للعين، يعتمد على نبرات لونية هادئة (4 أجيال)، ملائم للطباعة الورقية والتأطير.')
+    ).toBeInTheDocument();
+    expect(screen.getByText(/نوع المعاينة: placeholder/i)).toBeInTheDocument();
 
-    // Preview Pane
-    expect(screen.getByText('ستظهر المعاينة البصرية هنا')).toBeInTheDocument();
-
-    // Config Panel
-    expect(screen.getByText('المنتج')).toBeInTheDocument();
-    expect(screen.getByText('القالب')).toBeInTheDocument();
-    expect(screen.getByText('التخطيط')).toBeInTheDocument();
-    expect(screen.getByText('النطاق')).toBeInTheDocument();
-    expect(screen.getByText('المحتوى')).toBeInTheDocument();
-
-    // Action Bar
-    expect(screen.getByText('إجراءات الاستوديو غير مفعلة بعد')).toBeInTheDocument();
+    // Config Panel displays Arabic titles with registry values
+    expect(screen.getByText('نوع المنتج')).toBeInTheDocument();
+    expect(screen.getByText('القالب المعرف')).toBeInTheDocument();
+    expect(screen.getByText('محرك التخطيط')).toBeInTheDocument();
+    expect(screen.getByText('استراتيجية القراءة')).toBeInTheDocument();
   });
 
   it('hides Action Bar when isPreviewOnly is true', () => {

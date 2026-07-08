@@ -1,32 +1,48 @@
 import React from 'react';
+import type { VisualOutputDefinition } from '../../../publishing';
 
 interface VisualOutputConfigPanelProps {
   language: 'ar' | 'en';
+  selectedDefinition?: VisualOutputDefinition;
 }
 
-export const VisualOutputConfigPanel: React.FC<VisualOutputConfigPanelProps> = ({ language }) => {
+export const VisualOutputConfigPanel: React.FC<VisualOutputConfigPanelProps> = ({
+  language,
+  selectedDefinition,
+}) => {
   const isAr = language === 'ar';
+
+  const productType = selectedDefinition?.productType || '';
+  const layoutEngine = selectedDefinition?.layoutEngine || '';
+  const readingStrategy = selectedDefinition?.readingStrategy || '';
+  const supportedSizes = selectedDefinition?.capabilities.sizes.join(', ') || '';
+  const supportedScopes = selectedDefinition?.capabilities.scopes.join(', ') || '';
+  const templateId = selectedDefinition?.templateId || '';
 
   const sections = [
     {
-      title: isAr ? 'المنتج' : 'Product',
-      value: isAr ? 'بوستر الأسلاف' : 'Ancestor Poster',
+      title: isAr ? 'نوع المنتج' : 'Product Type',
+      value: productType,
     },
     {
-      title: isAr ? 'القالب' : 'Template',
-      value: isAr ? 'كلاسيكي دافئ' : 'Classic Warm',
+      title: isAr ? 'القالب المعرف' : 'Template ID',
+      value: templateId,
     },
     {
-      title: isAr ? 'التخطيط' : 'Layout',
-      value: isAr ? 'تلقائي (أفقي)' : 'Auto (Landscape)',
+      title: isAr ? 'محرك التخطيط' : 'Layout Engine',
+      value: layoutEngine,
     },
     {
-      title: isAr ? 'النطاق' : 'Scope',
-      value: isAr ? '4 أجيال' : '4 Generations',
+      title: isAr ? 'استراتيجية القراءة' : 'Reading Strategy',
+      value: readingStrategy,
     },
     {
-      title: isAr ? 'المحتوى' : 'Content',
-      value: isAr ? 'التواريخ الكاملة، الصور الشخصية' : 'Full dates, Profile photos',
+      title: isAr ? 'الأحجام المدعومة' : 'Supported Sizes',
+      value: supportedSizes,
+    },
+    {
+      title: isAr ? 'النطاق المتاح' : 'Supported Scopes',
+      value: supportedScopes,
     },
   ];
 
@@ -36,7 +52,7 @@ export const VisualOutputConfigPanel: React.FC<VisualOutputConfigPanelProps> = (
       data-testid="visual-studio-config-panel"
     >
       <h5 className="text-xs font-bold uppercase tracking-[0.08em] text-[var(--text-secondary)] border-b border-[var(--border-soft)]/60 pb-2 mb-1">
-        {isAr ? 'إعدادات النشر المبدئية' : 'Publishing Configuration'}
+        {isAr ? 'إعدادات النشر النشطة' : 'Active Publishing Specs'}
       </h5>
       <div className="space-y-3">
         {sections.map((section, idx) => (
