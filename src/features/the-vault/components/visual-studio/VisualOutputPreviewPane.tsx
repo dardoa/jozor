@@ -10,7 +10,6 @@ export const VisualOutputPreviewPane: React.FC<VisualOutputPreviewPaneProps> = (
   language,
   selectedDefinition,
 }) => {
-  const isAr = language === 'ar';
   const displayName = selectedDefinition?.displayName[language] || '';
   const description = selectedDefinition?.description[language] || '';
   const previewAlt = selectedDefinition?.previewAsset?.alt[language] || '';
