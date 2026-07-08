@@ -148,13 +148,15 @@ interface VisualPublishingStudioState {
 - Created verification notes in [`evidence_notes.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/evidence/visual-publishing-studio-hidden-review-2026-07-08/evidence_notes.md) confirming zero leaks, disabled actions, and static CSS-driven mockups.
 - Certified the foundation gate as `Pass as Hidden Studio Foundation`.
 
-### Phase 2E: Preview Integration ADR & Design Note (Next Step)
-- Establish an architectural decision record (ADR) detailing preview rendering strategies before writing runtime code:
-  * **Renderer Reuse**: Decide if the preview pane reuses the poster renderer engine or implements a lightweight client-side simulator.
-  * **Viewport Integration**: Plan real tree canvas viewport support, zoom/pan bounds, and interactive coordinate maps.
-  * **Privacy Masking**: Define expectations for placeholder rendering when user credentials, names, or profile pictures need masking.
-  * **Performance Scaling**: Address load latency and RAM profiles when rendering extremely large, multi-generational ancestor networks.
-  * **Fidelity Levels**: Balance rendering performance (low fidelity placeholder SVG) vs print fidelity exports (high fidelity PDF output).
+### Phase 2E: Preview Integration ADR & Design Note (Completed)
+- Established [`ADR 014: Visual Publishing Studio Preview Integration`](file:///d:/AppDEV/Jozor1.1/docs/adr/014-visual-publishing-studio-preview-integration.md) to govern data flow and safety.
+- Mandated the **Preview Adapter Layer** pattern to isolate UI components from active exporter compilation logic.
+- Outlined explicit rules regarding privacy masking (redacting contact fields, private profiles) and performance limits (dynamic debounces and conservative cap limits).
+
+### Phase 3A: Preview Adapter Contract (Next Step)
+- Define TypeScript type contracts and API interfaces for the sanitized preview model.
+- Write mock/passive data mapping adapters (`PosterPreviewAdapter`, `SnapshotPreviewAdapter`) that parse tree inputs without rendering graphics.
+- Verify through unit tests that mock data conforms strictly to privacy redaction regulations.
 
 ### Phase 3: Product-Specific Controls
 - Add controls for customized margins, orientation toggle, and generation scope sliders.

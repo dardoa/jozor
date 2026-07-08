@@ -1,5 +1,13 @@
 # Project Log
 
+## 2026-07-08 - ADR 014: Visual Publishing Studio Preview Integration
+
+- Summary:
+  - Formulated and documented `ADR 014: Visual Publishing Studio Preview Integration` to govern dynamic preview development.
+  - Established the **Preview Adapter Layer** pattern, decoupling preview render calculations from active file exporter engines.
+  - Specified concrete rules for privacy protection (masking living/private profiles, omitting contact details, media URLs) and runtime performance (conservative node caps, debounces).
+  - Updated the Visual Publishing Studio UX Blueprint to reference ADR 014 and mapped Phase 3A (Preview Adapter Contract) as the next logical milestone.
+
 ## 2026-07-08 - Visual Publishing Studio Phase 2D: Studio Hidden Review
 
 - Summary:

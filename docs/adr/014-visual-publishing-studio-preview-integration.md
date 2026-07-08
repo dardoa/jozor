@@ -1,0 +1,92 @@
+# ADR 014: Visual Publishing Studio Preview Integration
+
+## Status
+
+`Proposed`
+
+---
+
+## Context
+
+The hidden Visual Publishing Studio shell is fully established, reading metadata from `VisualOutputRegistry`, managing local selection state, and rendering static preview mockups.
+
+However, moving from static mockups to active dynamic previews introduces significant architectural risks:
+1. **Privacy leaks**: Direct rendering of family trees inside the studio preview pane could inadvertently expose private names, emails, addresses, media paths, or alive status details without proper credentials or masking.
+2. **Performance lag**: Generating full high-fidelity vector diagrams (SVG or PDF layouts) for large, multi-generational user trees in real-time during studio configuration changes can freeze the browser thread.
+3. **Complexity coupling**: Directly importing active exporter file generation engines into UI components leads to tight coupling, making the codebase fragile and difficult to test.
+
+---
+
+## Decision
+
+We will adopt the **Preview Adapter Layer** pattern. The studio UI will never import or call export runtime handlers directly. Instead, templates will be processed through a dedicated adapter that filters data and maps it into a simplified model suitable for lightweight client-side preview rendering.
+
+```text
+Registry Definition & User Config
+             ↓
+      Preview Adapter
+             ↓
+   Sanitized Preview Model
+             ↓
+     Preview Renderer
+             ↓
+    Studio Preview Pane
+```
+
+---
+
+## Preview Modes
+
+The preview pane supports three progressive tiers of fidelity:
+
+1. **Static Mock Preview** *(Implemented)*:
+   - Zero database calls or family tree data extraction.
+   - Abstract HTML/CSS nodes and lines representing the template type.
+   - Extremely safe, fast, and completely isolated.
+
+2. **Sanitized Data Preview** *(Planned for Phase 3)*:
+   - Uses a stripped-down, filtered subset of family tree data.
+   - Applies strict privacy masking rules directly in the adapter layer.
+   - Used for the first dynamic rendering pass.
+
+3. **High Fidelity Preview** *(Future scope)*:
+   - Reuses pure layout calculations from active exports.
+   - Displays a close representation of the final poster/snapshot output, but remains separate from file compilation engines (PDF/PNG generators).
+
+---
+
+## Privacy Rules
+
+To protect database confidentiality, the following rules are enforced inside the Preview Adapter:
+- **No live images**: The preview pane will never display person profile photos or media assets by default. If enabled in future custom themes, media paths must undergo strict secure masking check validations.
+- **Privacy Masking**: Individuals flagged as living or private must have names, dates, and places obscured using identical masking policies applied during final export generation.
+- **Strict Data Exclusions**: The sanitized preview model must never contain sensitive attributes, including:
+  - Personal contact details (emails, phone numbers, addresses).
+  - Raw system IDs, database primary keys, or sync metadata.
+  - Raw file system paths or external media URLs.
+
+---
+
+## Renderer Strategy
+
+- **Complete Decoupling**: Studio preview frames must never trigger active PDF compilers or PNG export processes.
+- **Dedicated Adapters**: Every visual template type must define a matching preview adapter class or function:
+  - `PosterPreviewAdapter` (Poster template layout and size constraints)
+  - `SnapshotPreviewAdapter` (Viewport boundary coordinates)
+- **Shared Pure Logic**: Layout positioning calculations (e.g. coordinates calculation, node spacing) can be extracted into shared helper files, but UI preview and background export runners must remain independent.
+
+---
+
+## Performance Boundaries
+
+- **Conservative Caps**: Initial node limit caps for the preview rendering pass should be conservative and product-specific to prevent thread blockage.
+- **Debounced Rendering**: Any interactive updates to preview pane components must be debounced and cancellable to ensure a smooth, lag-free UI experience.
+- **Graceful Truncation**: When trees exceed performance caps, the preview must gracefully display a notification (e.g. "Preview limited for large trees") rather than crashing the workspace.
+
+---
+
+## Implications
+
+The next developmental step is:
+**Visual Publishing Studio Phase 3A - Preview Adapter Contract**
+This phase will formalize the TypeScript interfaces, type contracts, and mock adapters for the Sanitized Preview Model, rather than immediately writing live preview renderers.
