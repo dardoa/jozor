@@ -1,5 +1,13 @@
 # Project Log
 
+## 2026-07-08 - Visual Publishing Studio Phase 2D: Studio Hidden Review
+
+- Summary:
+  - Conducted a comprehensive safety, isolation, and architectural gate review covering Phases 2A, 2B, and 2C.
+  - Created review report (`visual-publishing-studio-hidden-review-2026-07-08.md`) certifying the foundation as `Pass as Hidden Studio Foundation`.
+  - Added evidence notes documenting component lists, test validations, registry defaults bindings, and dynamic updates verification.
+  - Updated the Visual Publishing Studio UX Blueprint, establishing design note gates (privacy bounds, performance profiles, canvas reuse) as prerequisites for any future live preview integration.
+
 ## 2026-07-08 - Visual Publishing Studio Phase 2C: Static Preview Composition
 
 - Summary:

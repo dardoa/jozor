@@ -143,9 +143,18 @@ interface VisualPublishingStudioState {
 - Integrated accessibility `aria-label` tags mapping to `previewAsset.alt` from registry.
 - Kept mock previews 100% static using HTML/CSS only, with zero database calls or private user information.
 
-### Phase 2D: Studio Hidden Review (Next Step)
-- Establish structural verification of state updates and visual placeholders in a hidden review document.
-- Audit type definitions and lint warnings before continuing.
+### Phase 2D: Studio Hidden Review (Completed)
+- Conducted architectural safety review across Phases 2A-2C in [`visual-publishing-studio-hidden-review-2026-07-08.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/visual-publishing-studio-hidden-review-2026-07-08.md).
+- Created verification notes in [`evidence_notes.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/evidence/visual-publishing-studio-hidden-review-2026-07-08/evidence_notes.md) confirming zero leaks, disabled actions, and static CSS-driven mockups.
+- Certified the foundation gate as `Pass as Hidden Studio Foundation`.
+
+### Phase 2E: Preview Integration ADR & Design Note (Next Step)
+- Establish an architectural decision record (ADR) detailing preview rendering strategies before writing runtime code:
+  * **Renderer Reuse**: Decide if the preview pane reuses the poster renderer engine or implements a lightweight client-side simulator.
+  * **Viewport Integration**: Plan real tree canvas viewport support, zoom/pan bounds, and interactive coordinate maps.
+  * **Privacy Masking**: Define expectations for placeholder rendering when user credentials, names, or profile pictures need masking.
+  * **Performance Scaling**: Address load latency and RAM profiles when rendering extremely large, multi-generational ancestor networks.
+  * **Fidelity Levels**: Balance rendering performance (low fidelity placeholder SVG) vs print fidelity exports (high fidelity PDF output).
 
 ### Phase 3: Product-Specific Controls
 - Add controls for customized margins, orientation toggle, and generation scope sliders.
