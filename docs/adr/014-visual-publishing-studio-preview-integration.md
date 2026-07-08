@@ -2,7 +2,7 @@
 
 ## Status
 
-`Proposed`
+`Accepted`
 
 ---
 
@@ -87,6 +87,5 @@ To protect database confidentiality, the following rules are enforced inside the
 
 ## Implications
 
-The next developmental step is:
-**Visual Publishing Studio Phase 3A - Preview Adapter Contract**
-This phase will formalize the TypeScript interfaces, type contracts, and mock adapters for the Sanitized Preview Model, rather than immediately writing live preview renderers.
+- **Phase 3A - Preview Adapter Contract (Completed)**: Formalized the TypeScript interfaces, type contracts, and placeholder adapters for the Sanitized Preview Model under unit tests.
+- **Phase 3B - Sanitized Mock Preview Model Integration (Next Step)**: Inject the mock preview adapters inside the hidden Visual Publishing Studio shell to feed the visual mockup components, keeping data and exporters decoupled.

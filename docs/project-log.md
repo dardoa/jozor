@@ -1,5 +1,15 @@
 # Project Log
 
+## 2026-07-08 - Visual Publishing Studio Phase 3A: Preview Adapter Contract
+
+- Summary:
+  - Established TypeScript contracts and data structures for the preview adapter framework.
+  - Added new modules under `src/features/publishing/visualOutputs/`:
+    - `previewAdapterTypes.ts`: Declares interfaces for requests, person nodes, relationship edges, and sanitized preview models.
+    - `previewAdapterRegistry.ts`: Implements isolated placeholder adapters (`posterPreviewAdapter`, `snapshotPreviewAdapter`) and registry helpers (`getVisualPreviewAdapter`, `listVisualPreviewAdapters`).
+  - Exported all new adapter types from the central publishing package index file.
+  - Wrote comprehensive unit tests (`previewAdapterRegistry.test.ts`) validating translation requests, node cap truncations, and strict privacy masking compliance.
+
 ## 2026-07-08 - ADR 014: Visual Publishing Studio Preview Integration
 
 - Summary:

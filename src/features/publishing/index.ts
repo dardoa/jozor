@@ -23,3 +23,5 @@ export * from './services/ControlledPdfFeatureFlag';
 export * from './templates';
 export * from './visualOutputs/visualOutputTypes';
 export * from './visualOutputs/visualOutputRegistry';
+export * from './visualOutputs/previewAdapterTypes';
+export * from './visualOutputs/previewAdapterRegistry';

@@ -1,0 +1,48 @@
+import type {
+  VisualOutputProductType,
+  VisualOutputLayoutEngine,
+  VisualOutputReadingStrategy,
+} from './visualOutputTypes';
+
+export type VisualPreviewMode = 'static-mock' | 'sanitized-data' | 'high-fidelity';
+
+export type VisualPreviewPrivacyMode = 'public' | 'masked' | 'owner-full';
+
+export interface VisualPreviewRequest {
+  readonly definitionId: string;
+  readonly mode: VisualPreviewMode;
+  readonly privacyMode: VisualPreviewPrivacyMode;
+  readonly language: 'en' | 'ar';
+  readonly maxNodes?: number;
+}
+
+export interface VisualPreviewPersonNode {
+  readonly id: string;
+  readonly displayName: string;
+  readonly generation?: number;
+  readonly isMasked?: boolean;
+  readonly hasPhoto?: boolean;
+}
+
+export interface VisualPreviewEdge {
+  readonly fromId: string;
+  readonly toId: string;
+  readonly relationshipType?: 'parent-child' | 'spouse' | 'ancestor';
+}
+
+export interface VisualPreviewModel {
+  readonly definitionId: string;
+  readonly productType: VisualOutputProductType;
+  readonly layoutEngine: VisualOutputLayoutEngine;
+  readonly readingStrategy: VisualOutputReadingStrategy;
+  readonly mode: VisualPreviewMode;
+  readonly privacyMode: VisualPreviewPrivacyMode;
+  readonly nodes: readonly VisualPreviewPersonNode[];
+  readonly edges: readonly VisualPreviewEdge[];
+  readonly warnings: readonly string[];
+  readonly metadata: {
+    readonly truncated: boolean;
+    readonly nodeCount: number;
+    readonly maxNodes?: number;
+  };
+}

@@ -153,10 +153,15 @@ interface VisualPublishingStudioState {
 - Mandated the **Preview Adapter Layer** pattern to isolate UI components from active exporter compilation logic.
 - Outlined explicit rules regarding privacy masking (redacting contact fields, private profiles) and performance limits (dynamic debounces and conservative cap limits).
 
-### Phase 3A: Preview Adapter Contract (Next Step)
-- Define TypeScript type contracts and API interfaces for the sanitized preview model.
-- Write mock/passive data mapping adapters (`PosterPreviewAdapter`, `SnapshotPreviewAdapter`) that parse tree inputs without rendering graphics.
-- Verify through unit tests that mock data conforms strictly to privacy redaction regulations.
+### Phase 3A: Preview Adapter Contract (Completed)
+- Defined TypeScript type contracts and API interfaces in [`previewAdapterTypes.ts`](file:///d:/AppDEV/Jozor1.1/src/features/publishing/visualOutputs/previewAdapterTypes.ts).
+- Implemented static placeholder mapping adapters (`posterPreviewAdapter`, `snapshotPreviewAdapter`) and registry lookup utilities in [`previewAdapterRegistry.ts`](file:///d:/AppDEV/Jozor1.1/src/features/publishing/visualOutputs/previewAdapterRegistry.ts).
+- Validated via unit tests in [`previewAdapterRegistry.test.ts`](file:///d:/AppDEV/Jozor1.1/src/features/publishing/visualOutputs/__tests__/previewAdapterRegistry.test.ts) that mock outputs conform strictly to privacy rules.
+
+### Phase 3B: Sanitized Mock Preview Model Integration (Next Step)
+- Integrate the placeholder preview adapters into the hidden studio UI components.
+- Feed layout specs, abstract nodes, and edge connections dynamically to the preview panel layout based on the derived adapter model.
+- Test preview layout changes when selector state shifts without exposing real database contents.
 
 ### Phase 3: Product-Specific Controls
 - Add controls for customized margins, orientation toggle, and generation scope sliders.
