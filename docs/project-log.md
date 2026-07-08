@@ -1,5 +1,14 @@
 # Project Log
 
+## 2026-07-08 - Visual Publishing Studio Phase 3D: Sanitizer Contract Types
+
+- Summary:
+  - Created the TypeScript types under `previewSanitizerTypes.ts` mapping out life status, relationship hints, policy settings, sanitized nodes/edges, and graph models.
+  - Implemented `previewId` as the unique key for nodes to ensure physical decoupling from raw person IDs.
+  - Created `previewSanitizerContract.ts` defining the `VisualPreviewSanitizer<TRawGraph = unknown>` generic interface signature.
+  - Exported the new modules in the publishing package index file.
+  - Wrote comprehensive unit tests (`previewSanitizerTypes.test.ts`) verifying that sanitized node instances exclude all forbidden fields (phone, email, address, notes, photoUrl, citation snippets) and validating that `owner-full` mode is a policy setting that does not bypass sanitizer rules.
+
 ## 2026-07-08 - Visual Publishing Studio Phase 3C: Sanitized Tree Data Boundary Design
 
 - Summary:

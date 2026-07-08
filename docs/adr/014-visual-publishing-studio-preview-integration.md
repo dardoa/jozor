@@ -91,4 +91,6 @@ Governed by the [`Sanitized Tree Data Boundary Design`](file:///d:/AppDEV/Jozor1
 
 - **Phase 3A - Preview Adapter Contract (Completed)**: Formalized the TypeScript interfaces, type contracts, and placeholder adapters for the Sanitized Preview Model under unit tests.
 - **Phase 3B - Sanitized Mock Preview Model Integration (Completed)**: Wired the preview adapters to the hidden studio shell to inject static mock preview telemetry (counts, warning indicators, and truncation tags) into the mockup layout panes.
-- **Phase 3C - Sanitized Tree Data Boundary Design (Next Step)**: Map out the data boundary design to load active family tree node counts securely without exposing database records or profile content.
+- **Phase 3C - Sanitized Tree Data Boundary Design (Completed)**: Established the [`Sanitized Tree Data Boundary Design`](file:///d:/AppDEV/Jozor1.1/docs/reviews/visual-publishing-studio-sanitized-tree-data-boundary-2026-07-08.md) mapping out allowed preview fields, blacklisted forbidden properties, and rules of isolation.
+- **Phase 3D - Sanitizer Contract Types (Completed)**: Created the type contracts and generic interface signature `VisualPreviewSanitizer<TRawGraph>` to formalize isolation from database engines.
+- **Phase 3E - Static Sanitizer Mock Implementation (Next Step)**: Build a static sanitization adapter class that transforms mock inputs without reading active stores, validating types compliance under unit tests.

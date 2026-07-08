@@ -25,3 +25,5 @@ export * from './visualOutputs/visualOutputTypes';
 export * from './visualOutputs/visualOutputRegistry';
 export * from './visualOutputs/previewAdapterTypes';
 export * from './visualOutputs/previewAdapterRegistry';
+export * from './visualOutputs/previewSanitizerTypes';
+export * from './visualOutputs/previewSanitizerContract';

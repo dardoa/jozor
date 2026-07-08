@@ -167,9 +167,14 @@ interface VisualPublishingStudioState {
 - Established the [`Sanitized Tree Data Boundary Design`](file:///d:/AppDEV/Jozor1.1/docs/reviews/visual-publishing-studio-sanitized-tree-data-boundary-2026-07-08.md) mapping out allowed preview fields, blacklisted forbidden properties, and rules of isolation.
 - Enforced that raw tree entities must never be passed directly into preview renderers, and even `owner-full` mode cannot bypass sanitization.
 
-### Phase 3D: Sanitizer Contract Types (Next Step)
-- Define TypeScript contract interfaces for the input raw tree payload and output sanitized tree models.
-- Declare the type signoffs for the sanitization helper functions, maintaining zero real database read dependencies at runtime.
+### Phase 3D: Sanitizer Contract Types (Completed)
+- Defined TypeScript types for life status, relationship hints, policy settings, nodes, edges, and graphs under [`previewSanitizerTypes.ts`](file:///d:/AppDEV/Jozor1.1/src/features/publishing/visualOutputs/previewSanitizerTypes.ts).
+- Established the sanitizer generic interface contract [`previewSanitizerContract.ts`](file:///d:/AppDEV/Jozor1.1/src/features/publishing/visualOutputs/previewSanitizerContract.ts) isolating raw database entities.
+- Verified under unit tests in [`previewSanitizerTypes.test.ts`](file:///d:/AppDEV/Jozor1.1/src/features/publishing/visualOutputs/__tests__/previewSanitizerTypes.test.ts) that sanitized node shapes reject all forbidden fields and enforce masking rules.
+
+### Phase 3E: Static Sanitizer Mock Implementation (Next Step)
+- Build a static preview sanitizer adapter class or function to map dummy raw inputs to sanitized graphs without database access.
+- Wire mock sanitization runs under test suites to assert data compliance under varying privacy policies.
 
 ### Phase 3: Product-Specific Controls
 - Add controls for customized margins, orientation toggle, and generation scope sliders.
