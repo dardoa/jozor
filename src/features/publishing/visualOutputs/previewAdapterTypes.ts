@@ -3,6 +3,7 @@ import type {
   VisualOutputLayoutEngine,
   VisualOutputReadingStrategy,
 } from './visualOutputTypes';
+import type { SanitizedPreviewGraph } from './previewSanitizerTypes';
 
 export type VisualPreviewMode = 'static-mock' | 'sanitized-data' | 'high-fidelity';
 
@@ -14,6 +15,7 @@ export interface VisualPreviewRequest {
   readonly privacyMode: VisualPreviewPrivacyMode;
   readonly language: 'en' | 'ar';
   readonly maxNodes?: number;
+  readonly sanitizedGraph?: SanitizedPreviewGraph;
 }
 
 export interface VisualPreviewPersonNode {

@@ -18,6 +18,40 @@ export const posterPreviewAdapter: VisualPreviewAdapter = {
       throw new Error(`Definition not found: ${request.definitionId}`);
     }
 
+    if (request.sanitizedGraph) {
+      const g = request.sanitizedGraph;
+      const nodes: VisualPreviewPersonNode[] = g.nodes.map((n) => ({
+        id: n.previewId,
+        displayName: n.displayName,
+        generation: n.generation,
+        isMasked: n.isMasked,
+        hasPhoto: n.hasPhoto,
+      }));
+
+      const edges: VisualPreviewEdge[] = g.edges.map((e) => ({
+        fromId: e.fromPreviewId,
+        toId: e.toPreviewId,
+        relationshipType: e.relationshipType === 'spouse' ? 'spouse' : 'parent-child',
+      }));
+
+      return {
+        definitionId: def.id,
+        productType: 'poster',
+        layoutEngine: def.layoutEngine,
+        readingStrategy: def.readingStrategy,
+        mode: request.mode,
+        privacyMode: request.privacyMode,
+        nodes,
+        edges,
+        warnings: g.warnings,
+        metadata: {
+          truncated: g.metadata.truncated,
+          nodeCount: g.nodes.length,
+          maxNodes: g.metadata.policy.maxNodes,
+        },
+      };
+    }
+
     // Isolated placeholder nodes representing generic tree members
     const allNodes: VisualPreviewPersonNode[] = [
       { id: '1', displayName: isAr ? 'جذر المعاينة' : 'Preview root', generation: 1 },
@@ -83,6 +117,40 @@ export const snapshotPreviewAdapter: VisualPreviewAdapter = {
     const def = getVisualOutputDefinition(request.definitionId);
     if (!def) {
       throw new Error(`Definition not found: ${request.definitionId}`);
+    }
+
+    if (request.sanitizedGraph) {
+      const g = request.sanitizedGraph;
+      const nodes: VisualPreviewPersonNode[] = g.nodes.map((n) => ({
+        id: n.previewId,
+        displayName: n.displayName,
+        generation: n.generation,
+        isMasked: n.isMasked,
+        hasPhoto: n.hasPhoto,
+      }));
+
+      const edges: VisualPreviewEdge[] = g.edges.map((e) => ({
+        fromId: e.fromPreviewId,
+        toId: e.toPreviewId,
+        relationshipType: e.relationshipType === 'spouse' ? 'spouse' : 'parent-child',
+      }));
+
+      return {
+        definitionId: def.id,
+        productType: 'snapshot',
+        layoutEngine: def.layoutEngine,
+        readingStrategy: def.readingStrategy,
+        mode: request.mode,
+        privacyMode: request.privacyMode,
+        nodes,
+        edges,
+        warnings: g.warnings,
+        metadata: {
+          truncated: g.metadata.truncated,
+          nodeCount: g.nodes.length,
+          maxNodes: g.metadata.policy.maxNodes,
+        },
+      };
     }
 
     // Viewport snapshot mock data
