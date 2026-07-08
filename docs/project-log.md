@@ -1,5 +1,14 @@
 # Project Log
 
+## 2026-07-08 - Visual Publishing Studio Phase 3C: Sanitized Tree Data Boundary Design
+
+- Summary:
+  - Formulated the design documentation `visual-publishing-studio-sanitized-tree-data-boundary-2026-07-08.md` establishing the data security sandboxing guidelines for preview renderers.
+  - Specified the core rule of isolation: **Raw tree entities must never be passed directly into preview renderers.**
+  - Outlined permitted preview fields (masked names, session-isolated IDs, generation levels, years ranges) and strictly blacklisted forbidden attributes (raw database IDs, emails, phone numbers, addresses, citation snippets, sync statuses).
+  - Explicitly defined privacy masking levels, verifying that `owner-full` mode does not bypass the sanitizer boundary but only alters the masking strategy within it.
+  - Linked the boundary rules to ADR 014 and mapped the Phase 3D (Sanitizer Contract Types) next milestone in the UX blueprint.
+
 ## 2026-07-08 - Visual Publishing Studio Phase 3B: Hidden Sanitized Preview Model Integration
 
 - Summary:

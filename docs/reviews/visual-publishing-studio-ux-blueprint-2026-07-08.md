@@ -163,9 +163,13 @@ interface VisualPublishingStudioState {
 - Propagated telemetry results to the Preview Pane [`VisualOutputPreviewPane.tsx`](file:///d:/AppDEV/Jozor1.1/src/features/the-vault/components/visual-studio/VisualOutputPreviewPane.tsx) and Config Panel [`VisualOutputConfigPanel.tsx`](file:///d:/AppDEV/Jozor1.1/src/features/the-vault/components/visual-studio/VisualOutputConfigPanel.tsx).
 - Handled edge cases with fallback checks for missing adapters and validated warning badge behaviors under vitest.
 
-### Phase 3C: Sanitized Tree Data Boundary Design (Next Step)
-- Establish the data boundary contracts to count active tree profiles and nodes securely.
-- Ensure no personal or sensitive database profile fields are leaked to the preview adapter.
+### Phase 3C: Sanitized Tree Data Boundary Design (Completed)
+- Established the [`Sanitized Tree Data Boundary Design`](file:///d:/AppDEV/Jozor1.1/docs/reviews/visual-publishing-studio-sanitized-tree-data-boundary-2026-07-08.md) mapping out allowed preview fields, blacklisted forbidden properties, and rules of isolation.
+- Enforced that raw tree entities must never be passed directly into preview renderers, and even `owner-full` mode cannot bypass sanitization.
+
+### Phase 3D: Sanitizer Contract Types (Next Step)
+- Define TypeScript contract interfaces for the input raw tree payload and output sanitized tree models.
+- Declare the type signoffs for the sanitization helper functions, maintaining zero real database read dependencies at runtime.
 
 ### Phase 3: Product-Specific Controls
 - Add controls for customized margins, orientation toggle, and generation scope sliders.

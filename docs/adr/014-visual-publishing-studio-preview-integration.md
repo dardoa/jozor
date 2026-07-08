@@ -57,13 +57,15 @@ The preview pane supports three progressive tiers of fidelity:
 
 ## Privacy Rules
 
-To protect database confidentiality, the following rules are enforced inside the Preview Adapter:
+Governed by the [`Sanitized Tree Data Boundary Design`](file:///d:/AppDEV/Jozor1.1/docs/reviews/visual-publishing-studio-sanitized-tree-data-boundary-2026-07-08.md), the following rules are enforced:
+- **Rule of Isolation**: **Raw tree entities must never be passed directly into preview renderers.** Every data flow from the family store or database must pass through a sanitization pipeline before reaching the preview panel.
 - **No live images**: The preview pane will never display person profile photos or media assets by default. If enabled in future custom themes, media paths must undergo strict secure masking check validations.
-- **Privacy Masking**: Individuals flagged as living or private must have names, dates, and places obscured using identical masking policies applied during final export generation.
+- **Privacy Masking**: Individuals flagged as living or private must have names, dates, and places obscured using identical masking policies applied during final export generation. Even in `owner-full` mode, data must pass through the sanitizer and cannot bypass the adapter boundary.
 - **Strict Data Exclusions**: The sanitized preview model must never contain sensitive attributes, including:
-  - Personal contact details (emails, phone numbers, addresses).
-  - Raw system IDs, database primary keys, or sync metadata.
-  - Raw file system paths or external media URLs.
+  * Personal contact details (emails, phone numbers, addresses).
+  * Raw system IDs, database primary keys, relationship IDs, or sync metadata.
+  * Raw file system paths, cloud sync status, or external media URLs.
+  * Raw citation text or source snippets.
 
 ---
 
