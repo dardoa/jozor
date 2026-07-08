@@ -136,10 +136,16 @@ interface VisualPublishingStudioState {
 - Verified dynamic specs updates (productType, layoutEngine, readingStrategy, supported sizes/orientations/scopes) and conditional action buttons based on selected registry options, while keeping all controls passive and buttons disabled.
 - Added tests asserting state updates on clicking template options inside the studio.
 
-### Phase 2C: Static Preview Composition (Next Step)
-- Compose preview container structure.
-- Add mock thumbnail assets.
-- Integrate static preset themes.
+### Phase 2C: Static Preview Composition (Completed)
+- Transformed the preview pane into a visual mockup frame with semantic placeholder representation depending on selected template type.
+- Poster templates render a portrait frame (`poster-preview-composition`) with abstract ancestors nodes and branches styling matching theme colors (cozy warm vintage vs slate dark theme).
+- Snapshot templates render a landscape frame (`snapshot-preview-composition`) with grid alignment and abstract viewport nodes.
+- Integrated accessibility `aria-label` tags mapping to `previewAsset.alt` from registry.
+- Kept mock previews 100% static using HTML/CSS only, with zero database calls or private user information.
+
+### Phase 2D: Studio Hidden Review (Next Step)
+- Establish structural verification of state updates and visual placeholders in a hidden review document.
+- Audit type definitions and lint warnings before continuing.
 
 ### Phase 3: Product-Specific Controls
 - Add controls for customized margins, orientation toggle, and generation scope sliders.

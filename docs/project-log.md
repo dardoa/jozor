@@ -1,5 +1,15 @@
 # Project Log
 
+## 2026-07-08 - Visual Publishing Studio Phase 2C: Static Preview Composition
+
+- Summary:
+  - Transformed the placeholder preview inside `VisualOutputPreviewPane.tsx` into a visual static preview mockup frame.
+  - Implemented product-specific layouts using HTML/CSS only (no canvas/SVG or user private data):
+    - Poster: Renders a portrait frame (`poster-preview-composition`) with abstract ancestors nodes and branches, switching styling theme (cozy warm vintage vs slate dark theme) depending on selected ID.
+    - Snapshot: Renders a landscape frame (`snapshot-preview-composition`) with abstract viewport boxes and grid overlay.
+  - Linked accessibility `aria-label` to the selected template's `previewAsset.alt` description from the registry.
+  - Updated unit tests in `VisualPublishingStudio.test.tsx` to assert on mockup frames, aria-label mapping, and selection state updates.
+
 ## 2026-07-08 - Visual Publishing Studio Phase 2B: Product Selector State
 
 - Summary:
