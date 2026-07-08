@@ -12,6 +12,11 @@ This document provides a consolidated readiness status for all publishing and ex
 
 ---
 
+> [!NOTE]
+> **Vault Export UI Labeling:** As of July 8, 2026, the Vault Export UI has been updated to reflect these readiness decisions with explicit badges, reclassified titles, and plain text descriptions (e.g. Jozor Full Backup, Raw Project JSON, and Limited Beta Ready/Structural Beta Pass tags) to prevent tester confusion.
+
+---
+
 ## Output Readiness Status
 
 | Publishing / Export Output | Status | Notes |

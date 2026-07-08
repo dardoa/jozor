@@ -1,5 +1,15 @@
 # Project Log
 
+## 2026-07-08 - Vault Export Readiness Labeling Pass
+
+- Summary:
+  - Updated the Vault export UI labels, descriptions, and badges to match Limited Beta readiness decisions.
+  - Added `Limited beta ready` badge to Classic Family Book card.
+  - Renamed `Jozor Archive` to `Jozor Full Backup` with badge `Owner only / full backup` and explicit description cautioning against public sharing.
+  - Renamed `JSON` to `Raw Project JSON` with badge `Internal raw export / not for sharing` and description explaining it is a raw developer/internal backup.
+  - Added `Structural beta pass` badges and custom description text for Classic Poster, Modern Poster, Tree Snapshot, and Calendar/ICS.
+  - Updated `ExportCloudPanel.test.tsx` to assert new labels, descriptions, badges, and verify same click handlers are still triggered.
+
 ## 2026-07-08 - Tree Snapshot Outputs Structural Spot Check & Status Promotion
 
 - Summary:

@@ -523,6 +523,8 @@ describe('ExportCloudPanel manuscript preview', () => {
     // Verify badges
     expect(screen.getAllByText('Poster').length).toBe(2);
     expect(screen.getByText('Snapshot')).toBeInTheDocument();
+    expect(screen.getAllByText('Structural beta pass').length).toBe(3);
+    expect(screen.getAllByText(/Export is structurally verified. Review the result visually on your own tree before sharing./i).length).toBe(3);
 
     // Verify format tags and hints
     expect(screen.getAllByText('Supported formats:').length).toBe(3);
@@ -570,9 +572,33 @@ describe('ExportCloudPanel manuscript preview', () => {
     expect(screen.getByText('Export data')).toBeInTheDocument();
     expect(screen.getAllByText('Portable Data').length).toBeGreaterThan(0);
     expect(screen.getByRole('button', { name: /GEDCOM/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /JSON/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Jozor archive/i })).toBeInTheDocument();
+    expect(screen.getByText(/Genealogy exchange format. Owner spot check passed./i)).toBeInTheDocument();
+    expect(screen.getByText(/Limited beta ready/i)).toBeInTheDocument();
+
+    expect(screen.getByRole('button', { name: /Raw Project JSON/i })).toBeInTheDocument();
+    expect(screen.getByText(/Internal raw export \/ not for sharing/i)).toBeInTheDocument();
+    expect(screen.getByText(/May include internal metadata, media references, and raw project fields. Not a clean portable JSON export./i)).toBeInTheDocument();
+
+    expect(screen.getByRole('button', { name: /Jozor Full Backup/i })).toBeInTheDocument();
+    expect(screen.getByText(/Owner only \/ full backup/i)).toBeInTheDocument();
+    expect(screen.getByText(/Full owner archive. May contain raw project data, media, and backup files. Not a public sharing format./i)).toBeInTheDocument();
+
     expect(screen.getByRole('button', { name: /Calendar/i })).toBeInTheDocument();
+    expect(screen.getByText(/Structural beta pass/i)).toBeInTheDocument();
+    expect(screen.getByText(/Exports complete-date events only; partial dates such as year-only values are skipped to avoid false precision./i)).toBeInTheDocument();
+
+    // Verify click handlers are triggered correctly
+    fireEvent.click(screen.getByRole('button', { name: /Raw Project JSON/i }));
+    expect(baseProps.onRunExport).toHaveBeenCalledWith('json');
+
+    fireEvent.click(screen.getByRole('button', { name: /Jozor Full Backup/i }));
+    expect(baseProps.onRunExport).toHaveBeenCalledWith('jozor');
+
+    fireEvent.click(screen.getByRole('button', { name: /GEDCOM/i }));
+    expect(baseProps.onRunExport).toHaveBeenCalledWith('gedcom');
+
+    fireEvent.click(screen.getByRole('button', { name: /Calendar/i }));
+    expect(baseProps.onRunExport).toHaveBeenCalledWith('ics');
     expect(screen.queryByText('Direct Outputs')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /^PDF$/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /^PNG$/i })).not.toBeInTheDocument();

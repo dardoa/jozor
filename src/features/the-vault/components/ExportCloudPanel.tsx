@@ -677,6 +677,14 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
           <>
           {/* Template 1: Classic Family Book */}
           <div className="flex flex-col gap-4 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-panel)] p-4 transition-all hover:border-[var(--primary-500)]/30 hover:shadow-sm">
+              <div className="flex items-center justify-between gap-3 border-b border-[var(--border-soft)]/60 pb-3">
+                <h5 className="text-sm font-bold text-[var(--text-main)]">
+                  {language === 'ar' ? 'كتاب العائلة الكلاسيكي' : 'Classic Family Book'}
+                </h5>
+                <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 shrink-0">
+                  {language === 'ar' ? 'جاهز للبيتا المحدودة' : 'Limited beta ready'}
+                </span>
+              </div>
               <ManuscriptExportSummary
                 language={language}
                 rootPersonName={selectedRootName}
@@ -886,11 +894,19 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                   <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-600">
                     {language === 'ar' ? 'ثيم دافئ' : 'Warm Theme'}
                   </span>
+                  <span className="rounded-full bg-indigo-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+                    {language === 'ar' ? 'اجتياز بنيوي للبيتا' : 'Structural beta pass'}
+                  </span>
                 </div>
                 <p className="mt-1 text-[11px] leading-relaxed text-[var(--text-muted)]">
                   {classicPosterDef?.description[language] || (language === 'ar'
                     ? 'تصميم بوستر تقليدي مريح للعين، يعتمد على نبرات لونية هادئة (4 أجيال)، ملائم للطباعة الورقية والتأطير.'
                     : 'Traditional cozy poster design featuring warm vintage tones (4 generations), perfect for print and framing.')}
+                </p>
+                <p className="mt-1 text-[10px] font-medium leading-relaxed text-indigo-600/90 dark:text-indigo-400/90">
+                  {language === 'ar'
+                    ? 'تم التحقق من التصدير بنيوياً. راجع النتيجة بصرياً على شجرتك قبل المشاركة.'
+                    : 'Export is structurally verified. Review the result visually on your own tree before sharing.'}
                 </p>
                 {classicPosterDef?.recommendedFor && (
                   <div className="mt-2 flex items-center gap-1.5 flex-wrap">
@@ -974,11 +990,19 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                   <span className="rounded-full bg-indigo-500/10 px-2 py-0.5 text-[10px] font-semibold text-indigo-600">
                     {language === 'ar' ? 'ثيم داكن' : 'Dark Theme'}
                   </span>
+                  <span className="rounded-full bg-indigo-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+                    {language === 'ar' ? 'اجتياز بنيوي للبيتا' : 'Structural beta pass'}
+                  </span>
                 </div>
                 <p className="mt-1 text-[11px] leading-relaxed text-[var(--text-muted)]">
                   {modernPosterDef?.description[language] || (language === 'ar'
                     ? 'تصميم شجرة عصري بألوان داكنة ونظام ألوان ذكي يبرز التباين والعمق (4 أجيال) للتعليق الإلكتروني والطباعة الفاخرة.'
                     : 'Modern dark-themed poster design utilizing contrasting elements (4 generations) for screens or premium prints.')}
+                </p>
+                <p className="mt-1 text-[10px] font-medium leading-relaxed text-indigo-600/90 dark:text-indigo-400/90">
+                  {language === 'ar'
+                    ? 'تم التحقق من التصدير بنيوياً. راجع النتيجة بصرياً على شجرتك قبل المشاركة.'
+                    : 'Export is structurally verified. Review the result visually on your own tree before sharing.'}
                 </p>
                 {modernPosterDef?.recommendedFor && (
                   <div className="mt-2 flex items-center gap-1.5 flex-wrap">
@@ -1059,11 +1083,19 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                   <span className="rounded-full bg-[var(--primary-500)]/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[var(--primary-700)]">
                     {getVisualProductBadge(treeSnapshotDef?.productType, language)}
                   </span>
+                  <span className="rounded-full bg-indigo-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+                    {language === 'ar' ? 'اجتياز بنيوي للبيتا' : 'Structural beta pass'}
+                  </span>
                 </div>
                 <p className="mt-1 text-[11px] leading-relaxed text-[var(--text-muted)]">
                   {treeSnapshotDef?.description[language] || (language === 'ar'
                     ? 'تصدير لقطة عالية الدقة للمساحة المعروضة حالياً.'
                     : 'A high-fidelity export of your current workspace viewport.')}
+                </p>
+                <p className="mt-1 text-[10px] font-medium leading-relaxed text-indigo-600/90 dark:text-indigo-400/90">
+                  {language === 'ar'
+                    ? 'تم التحقق من التصدير بنيوياً. راجع النتيجة بصرياً على شجرتك قبل المشاركة.'
+                    : 'Export is structurally verified. Review the result visually on your own tree before sharing.'}
                 </p>
                 {treeSnapshotDef?.recommendedFor && (
                   <div className="mt-2 flex items-center gap-1.5 flex-wrap">
@@ -1134,20 +1166,65 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
               <div className="grid gap-2 sm:grid-cols-2">
                 {EXPORT_ACTIONS.filter((action) => action.group === group).map((action) => {
                   const Icon = action.icon;
+                  let displayName = t[action.labelKey] || action.id;
+                  let badgeText = '';
+                  let descriptionText = '';
+                  let badgeStyle = '';
+
+                  if (action.id === 'jozor') {
+                    displayName = language === 'ar' ? 'نسخة جذور الكاملة' : 'Jozor Full Backup';
+                    badgeText = language === 'ar' ? 'للمالك فقط / نسخة كاملة' : 'Owner only / full backup';
+                    descriptionText = language === 'ar'
+                      ? 'أرشيف كامل للمالك. قد يحتوي بيانات خاماً وصوراً وملفات مشروع. ليس ملف مشاركة عام.'
+                      : 'Full owner archive. May contain raw project data, media, and backup files. Not a public sharing format.';
+                    badgeStyle = 'bg-amber-500/10 text-amber-600 dark:text-amber-400';
+                  } else if (action.id === 'json') {
+                    displayName = language === 'ar' ? 'JSON خام للمشروع' : 'Raw Project JSON';
+                    badgeText = language === 'ar' ? 'تصدير خام داخلي / غير مخصص للمشاركة' : 'Internal raw export / not for sharing';
+                    descriptionText = language === 'ar'
+                      ? 'قد يحتوي بيانات داخلية وروابط وسائط وحقول مشروع خام. ليس JSON نظيفاً قابلاً للمشاركة.'
+                      : 'May include internal metadata, media references, and raw project fields. Not a clean portable JSON export.';
+                    badgeStyle = 'bg-rose-500/10 text-rose-600 dark:text-rose-400';
+                  } else if (action.id === 'gedcom') {
+                    badgeText = language === 'ar' ? 'جاهز للبيتا المحدودة' : 'Limited beta ready';
+                    descriptionText = language === 'ar'
+                      ? 'صيغة تبادل مع برامج الأنساب. اجتازت معاينة المالك.'
+                      : 'Genealogy exchange format. Owner spot check passed.';
+                    badgeStyle = 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400';
+                  } else if (action.id === 'ics') {
+                    badgeText = language === 'ar' ? 'اجتياز بنيوي للبيتا' : 'Structural beta pass';
+                    descriptionText = language === 'ar'
+                      ? 'يصدر الأحداث ذات التواريخ الكاملة فقط، ويتجاهل التواريخ الجزئية مثل السنة فقط لتجنب الدقة الزائفة.'
+                      : 'Exports complete-date events only; partial dates such as year-only values are skipped to avoid false precision.';
+                    badgeStyle = 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400';
+                  }
+
                   return (
                     <button
                       key={action.id}
                       type="button"
                       onClick={() => void handleExport(action.id)}
-                      className="flex min-h-12 items-center justify-between gap-3 rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3 py-2 text-start transition-all duration-200 ease-in-out hover:bg-[var(--surface-hover)]"
+                      className="flex flex-col items-start gap-2 rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] p-3 text-start transition-all duration-200 ease-in-out hover:bg-[var(--surface-hover)] focus:outline-none focus:ring-2 focus:ring-[var(--primary-500)]/40 w-full"
                     >
-                      <div className="flex min-w-0 items-center gap-3">
-                        <div className="rounded-lg bg-[var(--surface-subtle)] p-2 text-[var(--primary-600)]">
-                          <Icon className="h-4 w-4" />
+                      <div className="flex w-full items-center justify-between gap-3">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div className="rounded-lg bg-[var(--surface-subtle)] p-2 text-[var(--primary-600)] shrink-0">
+                            <Icon className="h-4 w-4" />
+                          </div>
+                          <div className="text-sm font-semibold text-[var(--text-main)] truncate">{displayName}</div>
                         </div>
-                        <div className="text-sm font-semibold text-[var(--text-main)]">{t[action.labelKey] || action.id}</div>
+                        <Download className="h-3.5 w-3.5 text-[var(--text-muted)] shrink-0" />
                       </div>
-                      <Download className="h-3.5 w-3.5 text-[var(--text-muted)]" />
+                      {badgeText && (
+                        <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${badgeStyle}`}>
+                          {badgeText}
+                        </span>
+                      )}
+                      {descriptionText && (
+                        <p className="text-[11px] leading-relaxed text-[var(--text-muted)] mt-1">
+                          {descriptionText}
+                        </p>
+                      )}
                     </button>
                   );
                 })}
