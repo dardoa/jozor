@@ -1,5 +1,14 @@
 # Project Log
 
+## 2026-07-08 - Visual Publishing Studio UX Blueprint
+
+- Summary:
+  - Created the UX blueprint document [`docs/reviews/visual-publishing-studio-ux-blueprint-2026-07-08.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/visual-publishing-studio-ux-blueprint-2026-07-08.md) for the future Visual Publishing Studio.
+  - Defined product philosophy (Preview-first, Configuration-first, Gallery-light) and target customization flow.
+  - Specified layout zones (Preview Area, Configuration Sidebar, Action Bar) and mapped out the transition relationship with the current Visual Outputs cards.
+  - Outlined Phase 1 Non-Goals (no live rendering, no custom theme editor, no paper size reflow, no drag/drop canvas) to maintain execution boundaries.
+  - Sketched component structure (`VisualPublishingStudio`, `VisualOutputPreviewPane`, etc.) and drafted the state model.
+
 ## 2026-07-08 - Vault Export Readiness Labeling Pass
 
 - Summary:
