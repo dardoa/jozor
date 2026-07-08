@@ -1,5 +1,5 @@
 import React from 'react';
-import type { VisualOutputDefinition } from '../../../publishing';
+import type { VisualOutputDefinition, VisualPreviewModel } from '../../../publishing';
 
 interface VisualOutputConfigPanelProps {
   language: 'ar' | 'en';
@@ -7,6 +7,7 @@ interface VisualOutputConfigPanelProps {
   selectedDefinitionId?: string;
   selectedDefinition?: VisualOutputDefinition;
   onSelectDefinition?: (id: string) => void;
+  previewModel?: VisualPreviewModel;
 }
 
 export const VisualOutputConfigPanel: React.FC<VisualOutputConfigPanelProps> = ({
@@ -15,6 +16,7 @@ export const VisualOutputConfigPanel: React.FC<VisualOutputConfigPanelProps> = (
   selectedDefinitionId,
   selectedDefinition,
   onSelectDefinition,
+  previewModel,
 }) => {
   const isAr = language === 'ar';
 
@@ -52,11 +54,38 @@ export const VisualOutputConfigPanel: React.FC<VisualOutputConfigPanelProps> = (
     },
   ];
 
+  // Preview Telemetry Stats
+  const previewTelemetry = previewModel
+    ? [
+        {
+          title: isAr ? 'وضع المعاينة' : 'Preview Mode',
+          value: previewModel.mode,
+        },
+        {
+          title: isAr ? 'مستوى الخصوصية' : 'Privacy Level',
+          value: previewModel.privacyMode,
+        },
+        {
+          title: isAr ? 'العقد المعروضة' : 'Rendered Nodes',
+          value: previewModel.nodes.length,
+        },
+        {
+          title: isAr ? 'الروابط النشطة' : 'Active Connections',
+          value: previewModel.edges.length,
+        },
+        {
+          title: isAr ? 'حالة الاقتصاص' : 'Truncation Status',
+          value: previewModel.metadata.truncated ? (isAr ? 'نعم' : 'Yes') : (isAr ? 'لا' : 'No'),
+        },
+      ]
+    : [];
+
   return (
     <div
       className="flex flex-col gap-4 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-panel)] p-4 text-start"
       data-testid="visual-studio-config-panel"
     >
+      {/* Template Selectors */}
       <div className="flex flex-col gap-2">
         <h5 className="text-xs font-bold uppercase tracking-[0.08em] text-[var(--text-secondary)] border-b border-[var(--border-soft)]/60 pb-1.5">
           {isAr ? 'اختر القالب' : 'Select Template'}
@@ -82,6 +111,7 @@ export const VisualOutputConfigPanel: React.FC<VisualOutputConfigPanelProps> = (
         </div>
       </div>
 
+      {/* Active Specifications */}
       <div className="flex flex-col gap-2">
         <h5 className="text-xs font-bold uppercase tracking-[0.08em] text-[var(--text-secondary)] border-b border-[var(--border-soft)]/60 pb-1.5">
           {isAr ? 'إعدادات النشر النشطة' : 'Active Publishing Specs'}
@@ -99,6 +129,41 @@ export const VisualOutputConfigPanel: React.FC<VisualOutputConfigPanelProps> = (
           ))}
         </div>
       </div>
+
+      {/* Preview Telemetry Specifications */}
+      {previewModel && (
+        <div className="flex flex-col gap-2" data-testid="visual-studio-telemetry-panel">
+          <h5 className="text-xs font-bold uppercase tracking-[0.08em] text-[var(--text-secondary)] border-b border-[var(--border-soft)]/60 pb-1.5">
+            {isAr ? 'إحصاءات المعاينة' : 'Preview Telemetry'}
+          </h5>
+          <div className="space-y-2">
+            {previewTelemetry.map((telemetry, idx) => (
+              <div key={idx} className="flex flex-col gap-0.5 rounded-lg bg-[var(--surface-subtle)] px-3 py-1.5 border border-[var(--border-soft)]/40">
+                <span className="text-[9px] font-bold text-[var(--text-muted)] uppercase tracking-wider">
+                  {telemetry.title}
+                </span>
+                <span className="text-xs font-semibold text-[var(--text-secondary)] select-none">
+                  {telemetry.value}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {/* Warnings list rendering */}
+          {previewModel.warnings.length > 0 && (
+            <div className="mt-1 space-y-1.5" data-testid="visual-studio-telemetry-warnings">
+              {previewModel.warnings.map((warning, idx) => (
+                <div
+                  key={idx}
+                  className="rounded-lg border border-indigo-500/20 bg-indigo-500/5 px-3 py-1.5 text-[10px] leading-normal text-indigo-700 dark:text-indigo-300 font-medium"
+                >
+                  {warning}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

@@ -158,10 +158,14 @@ interface VisualPublishingStudioState {
 - Implemented static placeholder mapping adapters (`posterPreviewAdapter`, `snapshotPreviewAdapter`) and registry lookup utilities in [`previewAdapterRegistry.ts`](file:///d:/AppDEV/Jozor1.1/src/features/publishing/visualOutputs/previewAdapterRegistry.ts).
 - Validated via unit tests in [`previewAdapterRegistry.test.ts`](file:///d:/AppDEV/Jozor1.1/src/features/publishing/visualOutputs/__tests__/previewAdapterRegistry.test.ts) that mock outputs conform strictly to privacy rules.
 
-### Phase 3B: Sanitized Mock Preview Model Integration (Next Step)
-- Integrate the placeholder preview adapters into the hidden studio UI components.
-- Feed layout specs, abstract nodes, and edge connections dynamically to the preview panel layout based on the derived adapter model.
-- Test preview layout changes when selector state shifts without exposing real database contents.
+### Phase 3B: Sanitized Mock Preview Model Integration (Completed)
+- Integrated the static preview adapter hook inside [`VisualPublishingStudio.tsx`](file:///d:/AppDEV/Jozor1.1/src/features/the-vault/components/visual-studio/VisualPublishingStudio.tsx).
+- Propagated telemetry results to the Preview Pane [`VisualOutputPreviewPane.tsx`](file:///d:/AppDEV/Jozor1.1/src/features/the-vault/components/visual-studio/VisualOutputPreviewPane.tsx) and Config Panel [`VisualOutputConfigPanel.tsx`](file:///d:/AppDEV/Jozor1.1/src/features/the-vault/components/visual-studio/VisualOutputConfigPanel.tsx).
+- Handled edge cases with fallback checks for missing adapters and validated warning badge behaviors under vitest.
+
+### Phase 3C: Sanitized Tree Data Boundary Design (Next Step)
+- Establish the data boundary contracts to count active tree profiles and nodes securely.
+- Ensure no personal or sensitive database profile fields are leaked to the preview adapter.
 
 ### Phase 3: Product-Specific Controls
 - Add controls for customized margins, orientation toggle, and generation scope sliders.

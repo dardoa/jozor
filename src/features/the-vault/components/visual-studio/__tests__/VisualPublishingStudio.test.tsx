@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { VisualPublishingStudio } from '../VisualPublishingStudio';
 
 describe('VisualPublishingStudio Registry Integration Defaults', () => {
-  it('renders classic-ancestor-poster defaults in English correctly', () => {
+  it('renders classic-ancestor-poster defaults in English correctly with preview telemetry', () => {
     render(<VisualPublishingStudio language="en" />);
 
     // Main title
@@ -23,6 +23,10 @@ describe('VisualPublishingStudio Registry Integration Defaults', () => {
     expect(previewFrame).toHaveAttribute('aria-label', 'Preview of Classic Ancestor Poster');
     expect(screen.getByTestId('poster-preview-composition')).toBeInTheDocument();
 
+    // Verify Telemetry counts and truncation badges in the Preview Pane
+    expect(within(previewPane).getByText(/Preview nodes: 5/i)).toBeInTheDocument();
+    expect(within(previewPane).getByText(/Preview limited/i)).toBeInTheDocument();
+
     // Config Panel displays registry fields
     expect(screen.getByTestId('visual-studio-config-panel')).toBeInTheDocument();
     expect(screen.getByText('Product Type')).toBeInTheDocument();
@@ -38,6 +42,20 @@ describe('VisualPublishingStudio Registry Integration Defaults', () => {
     expect(screen.getByText('Supported Scopes')).toBeInTheDocument();
     expect(screen.getByText('selected-root, ancestor-line')).toBeInTheDocument();
 
+    // Verify Telemetry Panel specifications inside Config Panel
+    expect(screen.getByTestId('visual-studio-telemetry-panel')).toBeInTheDocument();
+    expect(screen.getByText('Preview Mode')).toBeInTheDocument();
+    expect(screen.getByText('static-mock')).toBeInTheDocument();
+    expect(screen.getByText('Privacy Level')).toBeInTheDocument();
+    expect(screen.getByText('masked')).toBeInTheDocument();
+    expect(screen.getByText('Rendered Nodes')).toBeInTheDocument();
+    expect(screen.getByText('Truncation Status')).toBeInTheDocument();
+    expect(screen.getByText('Yes')).toBeInTheDocument();
+
+    // Verify Telemetry warning list
+    expect(screen.getByTestId('visual-studio-telemetry-warnings')).toBeInTheDocument();
+    expect(screen.getByText(/Preview nodes count truncated/i)).toBeInTheDocument();
+
     // Action Bar displays disabled buttons
     expect(screen.getByTestId('visual-studio-action-bar')).toBeInTheDocument();
     const previewBtn = screen.getByRole('button', { name: /Studio Preview/i });
@@ -49,7 +67,7 @@ describe('VisualPublishingStudio Registry Integration Defaults', () => {
     expect(pdfBtn).toBeDisabled();
   });
 
-  it('renders classic-ancestor-poster defaults in Arabic correctly', () => {
+  it('renders classic-ancestor-poster defaults in Arabic correctly with telemetry', () => {
     render(<VisualPublishingStudio language="ar" />);
 
     // Main title
@@ -66,14 +84,25 @@ describe('VisualPublishingStudio Registry Integration Defaults', () => {
     const previewFrame = screen.getByTestId('visual-preview-frame');
     expect(previewFrame).toHaveAttribute('aria-label', 'معاينة بوستر الأسلاف الكلاسيكي');
 
+    // Verify Arabic Telemetry in Preview Pane
+    expect(within(previewPane).getByText(/العقد في المعاينة: 5/i)).toBeInTheDocument();
+    expect(within(previewPane).getByText(/المعاينة محدودة/i)).toBeInTheDocument();
+
     // Config Panel displays Arabic titles with registry values
     expect(screen.getByText('نوع المنتج')).toBeInTheDocument();
     expect(screen.getByText('القالب المعرف')).toBeInTheDocument();
     expect(screen.getByText('محرك التخطيط')).toBeInTheDocument();
     expect(screen.getByText('استراتيجية القراءة')).toBeInTheDocument();
+
+    // Verify Arabic Telemetry Panel
+    expect(screen.getByText('وضع المعاينة')).toBeInTheDocument();
+    expect(screen.getByText('مستوى الخصوصية')).toBeInTheDocument();
+    expect(screen.getByText('العقد المعروضة')).toBeInTheDocument();
+    expect(screen.getByText('حالة الاقتصاص')).toBeInTheDocument();
+    expect(screen.getByText('نعم')).toBeInTheDocument();
   });
 
-  it('updates state dynamically when selecting templates', () => {
+  it('updates state dynamically and changes telemetry counts when selecting templates', () => {
     render(<VisualPublishingStudio language="en" />);
 
     const previewPane = screen.getByTestId('visual-studio-preview-pane');
@@ -91,6 +120,10 @@ describe('VisualPublishingStudio Registry Integration Defaults', () => {
     expect(screen.getByTestId('poster-preview-composition')).toBeInTheDocument();
     expect(previewFrame).toHaveAttribute('aria-label', 'Preview of Modern Ancestor Poster');
 
+    // Verify Modern Poster Telemetry (still truncated to 5)
+    expect(within(previewPane).getByText(/Preview nodes: 5/i)).toBeInTheDocument();
+    expect(within(previewPane).getByText(/Preview limited/i)).toBeInTheDocument();
+
     // Click on "Current Tree Snapshot" button inside template selectors
     const snapshotBtn = within(selectors).getByRole('button', { name: 'Current Tree Snapshot' });
     fireEvent.click(snapshotBtn);
@@ -102,6 +135,11 @@ describe('VisualPublishingStudio Registry Integration Defaults', () => {
     expect(screen.getByText('viewport')).toBeInTheDocument();
     expect(screen.getByTestId('snapshot-preview-composition')).toBeInTheDocument();
     expect(previewFrame).toHaveAttribute('aria-label', 'Preview of Current Tree Snapshot');
+
+    // Verify Snapshot Telemetry (3 nodes < 5 cap, so NOT truncated)
+    expect(within(previewPane).getByText(/Preview nodes: 3/i)).toBeInTheDocument();
+    expect(within(previewPane).queryByText(/Preview limited/i)).not.toBeInTheDocument();
+    expect(screen.getByText('No')).toBeInTheDocument(); // Truncation Status is No
 
     // Verify buttons remain disabled
     const pngBtn = screen.getByRole('button', { name: /Export PNG/i });

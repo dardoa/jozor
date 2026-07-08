@@ -3,7 +3,11 @@ import { VisualOutputReadinessNotice } from './VisualOutputReadinessNotice';
 import { VisualOutputPreviewPane } from './VisualOutputPreviewPane';
 import { VisualOutputConfigPanel } from './VisualOutputConfigPanel';
 import { VisualOutputActionBar } from './VisualOutputActionBar';
-import { getVisualOutputDefinition, listVisualOutputDefinitions } from '../../../publishing';
+import {
+  getVisualOutputDefinition,
+  listVisualOutputDefinitions,
+  getVisualPreviewAdapter,
+} from '../../../publishing';
 
 interface VisualPublishingStudioProps {
   language: 'ar' | 'en';
@@ -21,6 +25,16 @@ export const VisualPublishingStudio: React.FC<VisualPublishingStudioProps> = ({
 
   const fallbackDefinition = getVisualOutputDefinition('classic-ancestor-poster') || definitions[0];
   const selectedDefinition = getVisualOutputDefinition(selectedDefinitionId) || fallbackDefinition;
+
+  // Build the sanitized preview model using the preview adapter (Phase 3B)
+  const adapter = getVisualPreviewAdapter(selectedDefinition.productType);
+  const previewModel = adapter?.createPreviewModel({
+    definitionId: selectedDefinition.id,
+    mode: 'static-mock',
+    privacyMode: 'masked',
+    language,
+    maxNodes: 5, // Small cap limit to trigger truncation on poster mock (7 nodes) and not snapshot (3 nodes)
+  });
 
   return (
     <div
@@ -42,7 +56,11 @@ export const VisualPublishingStudio: React.FC<VisualPublishingStudioProps> = ({
 
       <div className="grid gap-4 md:grid-cols-3">
         <div className="md:col-span-2">
-          <VisualOutputPreviewPane language={language} selectedDefinition={selectedDefinition} />
+          <VisualOutputPreviewPane
+            language={language}
+            selectedDefinition={selectedDefinition}
+            previewModel={previewModel}
+          />
         </div>
         <div>
           <VisualOutputConfigPanel
@@ -51,6 +69,7 @@ export const VisualPublishingStudio: React.FC<VisualPublishingStudioProps> = ({
             selectedDefinitionId={selectedDefinitionId}
             selectedDefinition={selectedDefinition}
             onSelectDefinition={setSelectedDefinitionId}
+            previewModel={previewModel}
           />
         </div>
       </div>

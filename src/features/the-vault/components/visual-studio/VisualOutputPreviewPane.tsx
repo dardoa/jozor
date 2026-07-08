@@ -1,15 +1,18 @@
 import React from 'react';
-import type { VisualOutputDefinition } from '../../../publishing';
+import type { VisualOutputDefinition, VisualPreviewModel } from '../../../publishing';
 
 interface VisualOutputPreviewPaneProps {
   language: 'ar' | 'en';
   selectedDefinition?: VisualOutputDefinition;
+  previewModel?: VisualPreviewModel;
 }
 
 export const VisualOutputPreviewPane: React.FC<VisualOutputPreviewPaneProps> = ({
   language,
   selectedDefinition,
+  previewModel,
 }) => {
+  const isAr = language === 'ar';
   const displayName = selectedDefinition?.displayName[language] || '';
   const description = selectedDefinition?.description[language] || '';
   const previewAlt = selectedDefinition?.previewAsset?.alt[language] || '';
@@ -18,6 +21,11 @@ export const VisualOutputPreviewPane: React.FC<VisualOutputPreviewPaneProps> = (
 
   // Determine mockup styling based on template theme
   const isDarkPreset = definitionId === 'modern-ancestor-poster';
+
+  // Preview Telemetry Stats
+  const nodeCount = previewModel?.nodes.length ?? 0;
+  const edgeCount = previewModel?.edges.length ?? 0;
+  const isTruncated = previewModel?.metadata.truncated ?? false;
 
   return (
     <div
@@ -114,6 +122,22 @@ export const VisualOutputPreviewPane: React.FC<VisualOutputPreviewPaneProps> = (
         <p className="text-[11px] text-[var(--text-secondary)] max-w-[340px] leading-normal font-medium mx-auto">
           {description}
         </p>
+
+        {/* Preview Telemetry Stats */}
+        {previewModel && (
+          <div className="mt-2 flex flex-col items-center gap-1.5">
+            <span className="text-[10px] font-semibold text-[var(--text-muted)] select-none">
+              {isAr
+                ? `العقد في المعاينة: ${nodeCount} | الروابط: ${edgeCount}`
+                : `Preview nodes: ${nodeCount} | Connections: ${edgeCount}`}
+            </span>
+            {isTruncated && (
+              <span className="text-indigo-600 dark:text-indigo-300 bg-indigo-500/5 border border-indigo-500/20 px-2 py-0.5 rounded text-[10px] font-bold select-none">
+                {isAr ? 'المعاينة محدودة' : 'Preview limited'}
+              </span>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

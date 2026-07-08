@@ -1,5 +1,14 @@
 # Project Log
 
+## 2026-07-08 - Visual Publishing Studio Phase 3B: Hidden Sanitized Preview Model Integration
+
+- Summary:
+  - Integrated the Preview Adapter Contract (`getVisualPreviewAdapter`) inside the hidden Visual Publishing Studio shell.
+  - Linked selection state in `VisualPublishingStudio.tsx` to automatically query matching adapters, with full fallback safety for template types without adapters.
+  - Updated `VisualOutputPreviewPane.tsx` to display active node/connection counts and render a small, passive warning badge (`Preview limited` / `المعاينة محدودة`) when layout data is truncated.
+  - Expanded `VisualOutputConfigPanel.tsx` with a read-only "Preview Telemetry" segment showcasing mode, privacy mode, node/edge counts, and truncation status.
+  - Wrote comprehensive DOM unit tests in `VisualPublishingStudio.test.tsx` verifying telemetry counts, truncation badge states, and selector actions, confirming all export capabilities remain strictly disabled.
+
 ## 2026-07-08 - Visual Publishing Studio Phase 3A: Preview Adapter Contract
 
 - Summary:
