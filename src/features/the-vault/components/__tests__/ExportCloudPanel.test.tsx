@@ -564,6 +564,12 @@ describe('ExportCloudPanel manuscript preview', () => {
     expect(screen.queryByLabelText(/Manuscript root/i)).not.toBeInTheDocument();
   });
 
+  it('does not display Visual Publishing Studio shell by default', () => {
+    render(<ExportCloudPanel {...baseProps} />);
+    switchToExportSection(/Visual Outputs/i);
+    expect(screen.queryByTestId('visual-publishing-studio')).not.toBeInTheDocument();
+  });
+
   it('switches to Portable Data and renders only portable utility exports', () => {
     render(<ExportCloudPanel {...baseProps} />);
 

@@ -1,5 +1,18 @@
 # Project Log
 
+## 2026-07-08 - Visual Publishing Studio Shell Phase 1
+
+- Summary:
+  - Created the modular component structure for the future Visual Publishing Studio shell under `src/features/the-vault/components/visual-studio/`:
+    - `VisualPublishingStudio.tsx`: Main layout coordinator.
+    - `VisualOutputPreviewPane.tsx`: Viewport preview placeholder card.
+    - `VisualOutputConfigPanel.tsx`: Conceptual layout config options.
+    - `VisualOutputActionBar.tsx`: Muted disabled action controls.
+    - `VisualOutputReadinessNotice.tsx`: Disclaimer label indicating scaffold preview status.
+  - Safely integrated into `ExportCloudPanel.tsx` under the tab `visuals`, hidden from the production Vault flow by default behind the disabled scaffold constant `SHOW_VISUAL_STUDIO_SHELL = false`.
+  - Added unit test suite `VisualPublishingStudio.test.tsx` verifying component isolation, rendering copy in English/Arabic, and disabled buttons.
+  - Added unit test in `ExportCloudPanel.test.tsx` verifying that existing Visual Outputs cards render normally and the Studio shell is hidden by default.
+
 ## 2026-07-08 - Visual Publishing Studio UX Blueprint
 
 - Summary:

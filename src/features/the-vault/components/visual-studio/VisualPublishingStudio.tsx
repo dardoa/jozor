@@ -1,0 +1,49 @@
+import React from 'react';
+import { VisualOutputReadinessNotice } from './VisualOutputReadinessNotice';
+import { VisualOutputPreviewPane } from './VisualOutputPreviewPane';
+import { VisualOutputConfigPanel } from './VisualOutputConfigPanel';
+import { VisualOutputActionBar } from './VisualOutputActionBar';
+
+interface VisualPublishingStudioProps {
+  language: 'ar' | 'en';
+  isPreviewOnly?: boolean;
+}
+
+export const VisualPublishingStudio: React.FC<VisualPublishingStudioProps> = ({
+  language,
+  isPreviewOnly = false,
+}) => {
+  const isAr = language === 'ar';
+
+  return (
+    <div
+      className="flex flex-col gap-4 rounded-[20px] border border-[var(--primary-500)]/20 bg-gradient-to-br from-[var(--surface-panel)] via-[var(--surface-panel)] to-[var(--primary-500)]/5 p-5 shadow-sm relative overflow-hidden"
+      data-testid="visual-publishing-studio"
+    >
+      <div className="flex flex-col gap-1 text-start">
+        <h4 className="text-[16px] font-bold tracking-tight text-[var(--text-main)]">
+          {isAr ? 'استوديو النشر البصري' : 'Visual Publishing Studio'}
+        </h4>
+        <p className="text-[11px] text-[var(--text-muted)] leading-relaxed">
+          {isAr
+            ? 'تصميم وتهيئة لوحات شجرة العائلة وبوسترات الأسلاف بجودة طباعة عالية.'
+            : 'Design and configure family tree charts and ancestor posters with high print fidelity.'}
+        </p>
+      </div>
+
+      <VisualOutputReadinessNotice language={language} />
+
+      <div className="grid gap-4 md:grid-cols-3">
+        <div className="md:col-span-2">
+          <VisualOutputPreviewPane language={language} />
+        </div>
+        <div>
+          <VisualOutputConfigPanel language={language} />
+        </div>
+      </div>
+
+      {!isPreviewOnly && <VisualOutputActionBar language={language} />}
+    </div>
+  );
+};
+export default VisualPublishingStudio;

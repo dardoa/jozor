@@ -117,11 +117,11 @@ interface VisualPublishingStudioState {
 - High-DPI canvas capture and watermark logic tested.
 - Export cards styled with readiness status badges.
 
-### Phase 1: Studio Shell (Next Step)
-- Create the `VisualPublishingStudio` shell layout.
-- Split UI into Preview Pane (with preview assets placeholders) and Config Panel sidebars.
-- Link template card selections to open the studio view.
-- Maintain existing export handler connections.
+### Phase 1: Studio Shell (Completed)
+- Created the isolated component structure (`VisualPublishingStudio` composing `VisualOutputPreviewPane`, `VisualOutputConfigPanel`, `VisualOutputActionBar`, and `VisualOutputReadinessNotice`).
+- Integrated into `ExportCloudPanel.tsx` but kept hidden from the production flow behind a disabled scaffold constant (`SHOW_VISUAL_STUDIO_SHELL = false`).
+- Added full unit test suite `VisualPublishingStudio.test.tsx` verifying Scaffolding render behavior in English/Arabic.
+- Verified that the current Visual Outputs cards remain active and unchanged.
 
 ### Phase 2: Live Preview
 - Integrate dynamic SVG/Canvas rendering in the Preview Pane.

@@ -28,6 +28,7 @@ import { listVisualOutputDefinitionsByProduct } from '../../publishing';
 import type { VisualOutputDefinition, VisualOutputProductType, ExportHistoryEntry } from '../../publishing';
 import { useAppStore } from '../../../store/useAppStore';
 import { ManuscriptExportSummary } from './ManuscriptExportSummary';
+import { VisualPublishingStudio } from './visual-studio/VisualPublishingStudio';
 
 interface ExportCloudPanelProps {
   canManageCloud: boolean;
@@ -287,6 +288,7 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
   isSaving = false,
   isDeleting = false,
 }) => {
+  const SHOW_VISUAL_STUDIO_SHELL = false;
   const [newFileName, setNewFileName] = useState('');
   const [confirmOverwriteId, setConfirmOverwriteId] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
@@ -857,6 +859,11 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
 
           {activeSection === 'visuals' && (
           <>
+          {SHOW_VISUAL_STUDIO_SHELL && (
+            <div className="mb-6">
+              <VisualPublishingStudio language={language} />
+            </div>
+          )}
           <div className="pt-2 border-t border-[var(--border-soft)]/60">
             <h5 className="text-xs font-bold uppercase tracking-[0.08em] text-[var(--text-secondary)]">
               {language === 'ar' ? 'قوالب البوسترات' : 'Poster Templates'}
