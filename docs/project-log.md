@@ -1,5 +1,15 @@
 # Project Log
 
+## 2026-07-08 - Visual Publishing Studio Phase 2B: Product Selector State
+
+- Summary:
+  - Implemented dynamic template selection state inside the hidden Visual Publishing Studio shell.
+  - Added state hooks and callbacks:
+    - `VisualPublishingStudio.tsx`: Manages `selectedDefinitionId` state, updating derived definitions.
+    - `VisualOutputConfigPanel.tsx`: Renders template selection buttons for all registered options (Classic Poster, Modern Poster, Tree Snapshot).
+  - Updated subcomponents (`VisualOutputPreviewPane`, `VisualOutputConfigPanel`, `VisualOutputActionBar`) to update dynamically when selection changes, adjusting titles, specs, and supported action bar buttons.
+  - Added unit tests in `VisualPublishingStudio.test.tsx` verifying specs update, layouts reflow, capabilities adjust, and buttons remain disabled on template change.
+
 ## 2026-07-08 - Visual Publishing Studio Phase 2A: Registry Defaults
 
 - Summary:

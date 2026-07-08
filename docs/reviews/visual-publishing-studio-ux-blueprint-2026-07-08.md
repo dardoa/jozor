@@ -130,10 +130,16 @@ interface VisualPublishingStudioState {
 - Kept the UI passive and hidden behind the local disabled scaffold constant (`SHOW_VISUAL_STUDIO_SHELL = false`) with zero runtime export changes.
 - Added test coverage verifying registry defaults binding and correct translation lookups.
 
-### Phase 2B: Live Preview / Interactive Selector State (Next Step)
-- Render selected product preview.
-- Use registry/capabilities to populate options.
-- Keep controls limited.
+### Phase 2B: Read-only Product Selector State (Completed)
+- Integrated local state selection (`selectedDefinitionId`, `setSelectedDefinitionId`) in `VisualPublishingStudio.tsx` to handle changing template types.
+- Updated `VisualOutputConfigPanel.tsx` to render template selection list (Classic Poster, Modern Poster, Tree Snapshot) and trigger template updates.
+- Verified dynamic specs updates (productType, layoutEngine, readingStrategy, supported sizes/orientations/scopes) and conditional action buttons based on selected registry options, while keeping all controls passive and buttons disabled.
+- Added tests asserting state updates on clicking template options inside the studio.
+
+### Phase 2C: Static Preview Composition (Next Step)
+- Compose preview container structure.
+- Add mock thumbnail assets.
+- Integrate static preset themes.
 
 ### Phase 3: Product-Specific Controls
 - Add controls for customized margins, orientation toggle, and generation scope sliders.

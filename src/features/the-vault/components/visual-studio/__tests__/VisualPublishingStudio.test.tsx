@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { describe, expect, it } from 'vitest';
 import { VisualPublishingStudio } from '../VisualPublishingStudio';
@@ -11,12 +11,12 @@ describe('VisualPublishingStudio Registry Integration Defaults', () => {
     expect(screen.getByText('Visual Publishing Studio')).toBeInTheDocument();
 
     // Preview Pane displays classic-ancestor-poster title & description from registry
-    expect(screen.getByTestId('visual-studio-preview-pane')).toBeInTheDocument();
-    expect(screen.getByText('Classic Ancestor Poster')).toBeInTheDocument();
+    const previewPane = screen.getByTestId('visual-studio-preview-pane');
+    expect(within(previewPane).getByText('Classic Ancestor Poster')).toBeInTheDocument();
     expect(
-      screen.getByText('Traditional cozy poster design featuring warm vintage tones (4 generations), perfect for print and framing.')
+      within(previewPane).getByText('Traditional cozy poster design featuring warm vintage tones (4 generations), perfect for print and framing.')
     ).toBeInTheDocument();
-    expect(screen.getByText(/Preview type: placeholder/i)).toBeInTheDocument();
+    expect(within(previewPane).getByText(/Preview type: placeholder/i)).toBeInTheDocument();
 
     // Config Panel displays registry fields
     expect(screen.getByTestId('visual-studio-config-panel')).toBeInTheDocument();
@@ -51,17 +51,48 @@ describe('VisualPublishingStudio Registry Integration Defaults', () => {
     expect(screen.getByText('استوديو النشر البصري')).toBeInTheDocument();
 
     // Preview Pane displays Arabic display name & description from registry
-    expect(screen.getByText('شجرة الأسلاف الكلاسيكية الدافئة')).toBeInTheDocument();
+    const previewPane = screen.getByTestId('visual-studio-preview-pane');
+    expect(within(previewPane).getByText('شجرة الأسلاف الكلاسيكية الدافئة')).toBeInTheDocument();
     expect(
-      screen.getByText('تصميم بوستر تقليدي مريح للعين، يعتمد على نبرات لونية هادئة (4 أجيال)، ملائم للطباعة الورقية والتأطير.')
+      within(previewPane).getByText('تصميم بوستر تقليدي مريح للعين، يعتمد على نبرات لونية هادئة (4 أجيال)، ملائم للطباعة الورقية والتأطير.')
     ).toBeInTheDocument();
-    expect(screen.getByText(/نوع المعاينة: placeholder/i)).toBeInTheDocument();
+    expect(within(previewPane).getByText(/نوع المعاينة: placeholder/i)).toBeInTheDocument();
 
     // Config Panel displays Arabic titles with registry values
     expect(screen.getByText('نوع المنتج')).toBeInTheDocument();
     expect(screen.getByText('القالب المعرف')).toBeInTheDocument();
     expect(screen.getByText('محرك التخطيط')).toBeInTheDocument();
     expect(screen.getByText('استراتيجية القراءة')).toBeInTheDocument();
+  });
+
+  it('updates state dynamically when selecting templates', () => {
+    render(<VisualPublishingStudio language="en" />);
+
+    const previewPane = screen.getByTestId('visual-studio-preview-pane');
+    const selectors = screen.getByTestId('visual-studio-template-selectors');
+
+    // Click on "Modern Ancestor Poster" button inside template selectors
+    const modernBtn = within(selectors).getByRole('button', { name: 'Modern Ancestor Poster' });
+    fireEvent.click(modernBtn);
+
+    // Verify it updates Preview Pane title and description
+    expect(within(previewPane).getByText('Modern Ancestor Poster')).toBeInTheDocument();
+    expect(within(previewPane).getByText(/Modern dark-themed poster design utilizing contrasting elements/i)).toBeInTheDocument();
+    expect(screen.getByText('modern-ancestor')).toBeInTheDocument();
+
+    // Click on "Current Tree Snapshot" button inside template selectors
+    const snapshotBtn = within(selectors).getByRole('button', { name: 'Current Tree Snapshot' });
+    fireEvent.click(snapshotBtn);
+
+    // Verify it updates fields to snapshot specs
+    expect(within(previewPane).getByText('Current Tree Snapshot')).toBeInTheDocument();
+    expect(screen.getByText('tree-layout')).toBeInTheDocument();
+    expect(screen.getByText('narrative')).toBeInTheDocument();
+    expect(screen.getByText('viewport')).toBeInTheDocument();
+
+    // Verify buttons remain disabled
+    const pngBtn = screen.getByRole('button', { name: /Export PNG/i });
+    expect(pngBtn).toBeDisabled();
   });
 
   it('hides Action Bar when isPreviewOnly is true', () => {

@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { VisualOutputReadinessNotice } from './VisualOutputReadinessNotice';
 import { VisualOutputPreviewPane } from './VisualOutputPreviewPane';
 import { VisualOutputConfigPanel } from './VisualOutputConfigPanel';
 import { VisualOutputActionBar } from './VisualOutputActionBar';
-import { getVisualOutputDefinition } from '../../../publishing';
+import { getVisualOutputDefinition, listVisualOutputDefinitions } from '../../../publishing';
 
 interface VisualPublishingStudioProps {
   language: 'ar' | 'en';
@@ -15,8 +15,12 @@ export const VisualPublishingStudio: React.FC<VisualPublishingStudioProps> = ({
   isPreviewOnly = false,
 }) => {
   const isAr = language === 'ar';
-  const selectedTemplateId = 'classic-ancestor-poster';
-  const selectedDefinition = getVisualOutputDefinition(selectedTemplateId);
+  const definitions = listVisualOutputDefinitions();
+
+  const [selectedDefinitionId, setSelectedDefinitionId] = useState('classic-ancestor-poster');
+
+  const fallbackDefinition = getVisualOutputDefinition('classic-ancestor-poster') || definitions[0];
+  const selectedDefinition = getVisualOutputDefinition(selectedDefinitionId) || fallbackDefinition;
 
   return (
     <div
@@ -41,7 +45,13 @@ export const VisualPublishingStudio: React.FC<VisualPublishingStudioProps> = ({
           <VisualOutputPreviewPane language={language} selectedDefinition={selectedDefinition} />
         </div>
         <div>
-          <VisualOutputConfigPanel language={language} selectedDefinition={selectedDefinition} />
+          <VisualOutputConfigPanel
+            language={language}
+            definitions={definitions}
+            selectedDefinitionId={selectedDefinitionId}
+            selectedDefinition={selectedDefinition}
+            onSelectDefinition={setSelectedDefinitionId}
+          />
         </div>
       </div>
 
