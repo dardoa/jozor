@@ -117,11 +117,12 @@ interface VisualPublishingStudioState {
 - High-DPI canvas capture and watermark logic tested.
 - Export cards styled with readiness status badges.
 
-### Phase 1: Studio Shell (Completed)
+### Phase 1: Studio Shell (Completed & Reviewed)
 - Created the isolated component structure (`VisualPublishingStudio` composing `VisualOutputPreviewPane`, `VisualOutputConfigPanel`, `VisualOutputActionBar`, and `VisualOutputReadinessNotice`).
 - Integrated into `ExportCloudPanel.tsx` but kept hidden from the production flow behind a disabled scaffold constant (`SHOW_VISUAL_STUDIO_SHELL = false`).
 - Added full unit test suite `VisualPublishingStudio.test.tsx` verifying Scaffolding render behavior in English/Arabic.
 - Verified that the current Visual Outputs cards remain active and unchanged.
+- Reviewed and certified under status `Pass as Hidden Architecture Scaffold` in [`visual-publishing-studio-shell-review-2026-07-08.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/visual-publishing-studio-shell-review-2026-07-08.md).
 
 ### Phase 2: Live Preview
 - Integrate dynamic SVG/Canvas rendering in the Preview Pane.

@@ -1,5 +1,15 @@
 # Project Log
 
+## 2026-07-08 - Visual Publishing Studio Shell Review
+
+- Summary:
+  - Documented review of Phase 1 in [`docs/reviews/visual-publishing-studio-shell-review-2026-07-08.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/visual-publishing-studio-shell-review-2026-07-08.md) under status `Pass as Hidden Architecture Scaffold`.
+  - Created evidence notes in [`docs/reviews/evidence/visual-publishing-studio-shell-review-2026-07-08/evidence_notes.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/evidence/visual-publishing-studio-shell-review-2026-07-08/evidence_notes.md) verifying:
+    - Disabled scaffold constant `SHOW_VISUAL_STUDIO_SHELL = false` is enforced.
+    - Traditional Visual Outputs cards remain fully functional.
+    - Action buttons in tests are successfully disabled.
+    - Zero private family or image resources are committed.
+
 ## 2026-07-08 - Visual Publishing Studio Shell Phase 1
 
 - Summary:
