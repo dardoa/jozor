@@ -1,9 +1,12 @@
 # Visual Publishing Studio Preview Runtime Integration Plan
 
-- **Status**: `Planning Only`
+- **Status**: `Planning Only (Phase 4A Plan Complete, Phase 4B skeleton under tests)`
 - **Goal**: Map out the bridge between live database tree stores and the sanitized preview graph models.
-- **Milestone**: Phase 4A
+- **Milestones**: Phase 4A (Integration Plan), Phase 4B (Production Sanitizer Skeleton)
 - **Date**: 2026-07-09
+
+> [!NOTE]
+> **Production-shaped does not mean production-wired.** Phase 4B delivers a production-shaped `productionPreviewSanitizer` skeleton verified under unit tests, but leaves all store/IndexedDB runtime wiring disabled.
 
 ---
 

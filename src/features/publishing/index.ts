@@ -28,3 +28,4 @@ export * from './visualOutputs/previewAdapterRegistry';
 export * from './visualOutputs/previewSanitizerTypes';
 export * from './visualOutputs/previewSanitizerContract';
 export * from './visualOutputs/previewMockSanitizer';
+export * from './visualOutputs/previewProductionSanitizer';

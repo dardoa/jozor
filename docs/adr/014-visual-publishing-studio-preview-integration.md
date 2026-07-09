@@ -97,7 +97,8 @@ Governed by the [`Sanitized Tree Data Boundary Design`](file:///d:/AppDEV/Jozor1
 - **Phase 3F - Adapter accepts SanitizedPreviewGraph (Completed)**: Refactored the preview adapter request contract and mapped `SanitizedPreviewGraph` parameters to `VisualPreviewModel` inside [`previewAdapterRegistry.ts`](file:///d:/AppDEV/Jozor1.1/src/features/publishing/visualOutputs/previewAdapterRegistry.ts), ensuring no raw entities enter the layout engine.
 - **Phase 3G - Preview Adapter & Sanitizer Review Pack (Completed)**: Conducted architectural audit and created signoff checklist in [`visual-publishing-studio-preview-adapter-foundation-review-2026-07-08.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/visual-publishing-studio-preview-adapter-foundation-review-2026-07-08.md) confirming zero database dependencies.
 - **Phase 4A - Preview Runtime Integration Planning (Completed)**: Formulated the specification and design guidelines in [`visual-publishing-studio-preview-runtime-integration-plan-2026-07-09.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/visual-publishing-studio-preview-runtime-integration-plan-2026-07-09.md) outlining data routing security rules and selectors architecture.
-- **Phase 4B - Production Preview Sanitizer Skeleton (Next Step)**: Implement signatures and test fixtures for the production-grade sanitizer without studio wiring.
+- **Phase 4B - Production Preview Sanitizer Skeleton (Completed)**: Developed [`previewProductionSanitizer.ts`](file:///d:/AppDEV/Jozor1.1/src/features/publishing/visualOutputs/previewProductionSanitizer.ts) defining schema signatures and verifying data protection boundaries.
+- **Phase 4C - Preview Raw Graph Selector Contract (Next Step)**: Define signatures and selectors contract mapping store shapes into sanitizer parameters.
 
 ---
 

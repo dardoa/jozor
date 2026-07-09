@@ -1,5 +1,14 @@
 # Project Log
 
+## 2026-07-09 - Visual Publishing Studio Phase 4B: Production Preview Sanitizer Skeleton
+
+- Summary:
+  - Implemented the production-shaped sanitizer skeleton `productionPreviewSanitizer` in `previewProductionSanitizer.ts`.
+  - Defined raw interfaces `PreviewSanitizerRawNode` and `PreviewSanitizerRawGraph` intentionally omitting contact and media url properties.
+  - Implemented sequential generated `previewId` mapping, masking, birth/death year extraction, and edge capping/pruning.
+  - Wrote comprehensive unit tests (`previewProductionSanitizer.test.ts`) validating masking logic, edge truncation, and compile-time type-exclusion safety of the raw interfaces.
+  - Updated documentation files, ADR 014, and UX blueprint indicating Phase 4C is the next step.
+
 ## 2026-07-09 - Visual Publishing Studio Phase 4A: Preview Runtime Integration Planning
 
 - Summary:

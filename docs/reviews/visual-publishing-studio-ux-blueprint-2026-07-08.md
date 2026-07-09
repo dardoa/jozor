@@ -187,8 +187,14 @@ interface VisualPublishingStudioState {
 ### Phase 4A: Preview Runtime Integration Planning (Completed)
 - Completed the integration design specifications in [`visual-publishing-studio-preview-runtime-integration-plan-2026-07-09.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/visual-publishing-studio-preview-runtime-integration-plan-2026-07-09.md) outlining data routing security boundaries and selectors design.
 
-### Phase 4B: Production Preview Sanitizer Skeleton (Next Step)
-- Define TypeScript signature and test scaffolding for the production-grade `productionPreviewSanitizer` without hooking up to live studio state.
+### Phase 4B: Production Preview Sanitizer Skeleton (Completed)
+- Designed and built the generic `productionPreviewSanitizer` in [`previewProductionSanitizer.ts`](file:///d:/AppDEV/Jozor1.1/src/features/publishing/visualOutputs/previewProductionSanitizer.ts).
+- Enforced compile-level safety by creating input signatures (`PreviewSanitizerRawNode`, `PreviewSanitizerRawGraph`) that strictly exclude email, phone, and detailed notes.
+- Wrote and executed unit tests in [`previewProductionSanitizer.test.ts`](file:///d:/AppDEV/Jozor1.1/src/features/publishing/visualOutputs/__tests__/previewProductionSanitizer.test.ts).
+
+### Phase 4C: Preview Raw Graph Selector Contract (Next Step)
+- Design and document the Redux selectors signatures and contract schemas to query active tree structures, outputting production-shaped raw graph structures for the sanitizer.
+
 
 ### Phase 3: Product-Specific Controls
 - Add controls for customized margins, orientation toggle, and generation scope sliders.
