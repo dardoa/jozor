@@ -184,8 +184,11 @@ interface VisualPublishingStudioState {
 ### Phase 3G: Preview Adapter & Sanitizer Review Pack (Completed)
 - Completed the foundation audit report [`visual-publishing-studio-preview-adapter-foundation-review-2026-07-08.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/visual-publishing-studio-preview-adapter-foundation-review-2026-07-08.md) and signed off on the foundation layer as: `Pass as Preview Adapter Foundation`, `Ready for Preview Runtime Integration Planning`, `Not Connected to Real Tree Data`.
 
-### Phase 4A: Preview Runtime Integration Planning (Next Step)
-- Establish architectural planning for dynamic database queries and reactive layout modifications, ensuring database queries are sanitized securely and updates are debounced before runtime integration.
+### Phase 4A: Preview Runtime Integration Planning (Completed)
+- Completed the integration design specifications in [`visual-publishing-studio-preview-runtime-integration-plan-2026-07-09.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/visual-publishing-studio-preview-runtime-integration-plan-2026-07-09.md) outlining data routing security boundaries and selectors design.
+
+### Phase 4B: Production Preview Sanitizer Skeleton (Next Step)
+- Define TypeScript signature and test scaffolding for the production-grade `productionPreviewSanitizer` without hooking up to live studio state.
 
 ### Phase 3: Product-Specific Controls
 - Add controls for customized margins, orientation toggle, and generation scope sliders.

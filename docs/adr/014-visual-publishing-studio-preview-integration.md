@@ -96,7 +96,8 @@ Governed by the [`Sanitized Tree Data Boundary Design`](file:///d:/AppDEV/Jozor1
 - **Phase 3E - Static Sanitizer Mock Implementation (Completed)**: Built a test utility sanitizer `mockPreviewSanitizer` to verify data mapping, year-only parsing, edge truncation, and privacy masking under varying policies without database access.
 - **Phase 3F - Adapter accepts SanitizedPreviewGraph (Completed)**: Refactored the preview adapter request contract and mapped `SanitizedPreviewGraph` parameters to `VisualPreviewModel` inside [`previewAdapterRegistry.ts`](file:///d:/AppDEV/Jozor1.1/src/features/publishing/visualOutputs/previewAdapterRegistry.ts), ensuring no raw entities enter the layout engine.
 - **Phase 3G - Preview Adapter & Sanitizer Review Pack (Completed)**: Conducted architectural audit and created signoff checklist in [`visual-publishing-studio-preview-adapter-foundation-review-2026-07-08.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/visual-publishing-studio-preview-adapter-foundation-review-2026-07-08.md) confirming zero database dependencies.
-- **Phase 4A - Preview Runtime Integration Planning (Next Step)**: Design the database query sanitizer and hook layout updates to user modifications safely.
+- **Phase 4A - Preview Runtime Integration Planning (Completed)**: Formulated the specification and design guidelines in [`visual-publishing-studio-preview-runtime-integration-plan-2026-07-09.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/visual-publishing-studio-preview-runtime-integration-plan-2026-07-09.md) outlining data routing security rules and selectors architecture.
+- **Phase 4B - Production Preview Sanitizer Skeleton (Next Step)**: Implement signatures and test fixtures for the production-grade sanitizer without studio wiring.
 
 ---
 

@@ -1,5 +1,13 @@
 # Project Log
 
+## 2026-07-09 - Visual Publishing Studio Phase 4A: Preview Runtime Integration Planning
+
+- Summary:
+  - Formulated the Preview Runtime Integration Plan (`visual-publishing-studio-preview-runtime-integration-plan-2026-07-09.md`) detailing runtime flow specs.
+  - Declared the absolute security gate: only selectors can query database entities; adapters and Studio components never see raw data.
+  - Specified requirements for selectors, production sanitizer interfaces, privacy policy mapping, and performance cap safeguards.
+  - Updated ADR 014 and UX blueprint defining Phase 4B (Production Preview Sanitizer Skeleton) as the next step.
+
 ## 2026-07-08 - Visual Publishing Studio Preview Adapter Foundation Review Pack
 
 - Summary:
