@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Visual Publishing Studio Phase 0B Mockup: Mobile Radial Mode (390x844)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700&family=Noto+Sans+Arabic:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-500: #d8a85f;
+      --bg-dark: #151918;
+      --panel-dark: #202622;
+      --border-dark: #2d3631;
+      --text-main: #f0f4f2;
+      --text-muted: #86a69d;
+      --accent-gold: #d8a85f;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Noto Sans Arabic', sans-serif;
+      background-color: #0b0d0c; color: var(--text-main);
+      display: flex; justify-content: center; align-items: center;
+      min-height: 100vh; padding: 0;
+    }
+
+    .mobile-viewport {
+      width: 390px; height: 844px; background: var(--bg-dark);
+      border-radius: 40px; border: 8px solid #22262a;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+      display: flex; flex-direction: column; overflow: hidden; position: relative;
+    }
+
+    .mobile-header {
+      height: 52px; background: var(--panel-dark); border-bottom: 1px solid var(--border-dark);
+      display: flex; align-items: center; justify-content: space-between; padding: 0 16px;
+    }
+    .mobile-title { font-size: 13px; font-weight: 800; color: var(--text-main); }
+
+    .mobile-qs-bar {
+      background: #191e1c; border-bottom: 1px solid var(--border-dark);
+      padding: 6px 12px; display: flex; align-items: center; justify-content: space-between; gap: 6px;
+    }
+    .qs-btn { border: none; background: transparent; padding: 4px 8px; font-size: 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-family: inherit; color: var(--text-muted); }
+    .qs-btn.active { background: var(--accent-gold); color: #121514; font-weight: 800; }
+
+    .preview-mobile-card {
+      background: #181d1b; border-bottom: 1px solid var(--border-dark);
+      height: 260px; display: flex; flex-direction: column; align-items: center;
+      justify-content: center; position: relative; padding: 10px;
+    }
+
+    .mobile-quality-bar {
+      background: var(--panel-dark); border-bottom: 1px solid var(--border-dark);
+      padding: 6px 12px; font-size: 10px; font-weight: 700; color: var(--accent-gold);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+
+    .mobile-settings-body {
+      flex: 1; overflow-y: auto; display: flex; flex-direction: column; background: var(--panel-dark); padding-bottom: 70px;
+    }
+
+    .mobile-tabs {
+      display: flex; border-bottom: 1px solid var(--border-dark); background: #191e1c;
+      overflow-x: auto; scrollbar-width: none;
+    }
+    .tab-btn {
+      padding: 10px 14px; border: none; background: transparent; font-size: 11px;
+      font-weight: 700; color: var(--text-muted); border-bottom: 2px solid transparent;
+      white-space: nowrap; cursor: pointer; font-family: inherit;
+    }
+    .tab-btn.active { color: var(--accent-gold); border-bottom-color: var(--accent-gold); }
+
+    .content-padding { padding: 12px; display: flex; flex-direction: column; gap: 12px; }
+
+    .section-card {
+      background: #1a201d; border: 1px solid var(--border-dark);
+      border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 10px;
+    }
+    .section-title { font-size: 11px; font-weight: 800; color: var(--accent-gold); text-transform: uppercase; }
+
+    .form-group { display: flex; flex-direction: column; gap: 4px; }
+    .form-label { font-size: 10px; font-weight: 700; color: var(--text-main); }
+    .form-select {
+      width: 100%; height: 34px; padding: 0 8px; border-radius: 6px;
+      border: 1px solid var(--border-dark); background: #121514; font-size: 11px; font-weight: 600;
+      font-family: inherit; color: var(--text-main);
+    }
+
+    .btn-sheet-trigger {
+      width: 100%; height: 36px; background: #262f2a; border: 1px solid #3d4a43;
+      color: var(--accent-gold); border-radius: 6px; font-size: 11px; font-weight: 700;
+      cursor: pointer; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+
+    .desktop-recommendation-banner {
+      background: #1e2622; border: 1px solid #35453d; border-radius: 8px;
+      padding: 8px 10px; font-size: 10px; color: var(--text-muted); line-height: 1.4; font-weight: 600;
+    }
+
+    .mobile-action-bar {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      background: var(--panel-dark); border-top: 1px solid var(--border-dark);
+      padding: 10px 12px 24px 12px; display: flex; gap: 6px; z-index: 20;
+      box-shadow: 0 -4px 12px rgba(0,0,0,0.3);
+    }
+    .btn-export-primary {
+      flex: 1; height: 38px; background: var(--accent-gold); color: #121514;
+      border: none; border-radius: 7px; font-size: 11px; font-weight: 800; font-family: inherit;
+    }
+    .btn-export-sec {
+      height: 38px; padding: 0 10px; background: #121514; color: var(--text-main);
+      border: 1px solid var(--border-dark); border-radius: 7px; font-size: 11px; font-weight: 700; font-family: inherit;
+    }
+  </style>
+</head>
+<body>
+
+<div class="mobile-viewport">
+  <header class="mobile-header">
+    <span class="mobile-title">استوديو النشر البصري</span>
+    <span style="font-size:10px; color:var(--text-muted);">↩ ↪</span>
+  </header>
+
+  <div class="mobile-qs-bar">
+    <div style="display:flex; gap:4px;">
+      <button class="qs-btn">حول شخص</button>
+      <button class="qs-btn active">دائري / مروحي</button>
+    </div>
+    <select class="form-select" style="width:65px; height:26px; font-size:9px; background:#121514;">
+      <option selected>A2</option>
+      <option>A1</option>
+    </select>
+  </div>
+
+  <div class="preview-mobile-card">
+    <svg width="250" height="200" viewBox="0 0 320 250">
+      <circle cx="160" cy="125" r="35" stroke="#2d3732" stroke-width="1.5" stroke-dasharray="2,2"/>
+      <circle cx="160" cy="125" r="75" stroke="#2d3732" stroke-width="1.5" stroke-dasharray="2,2"/>
+      <circle cx="160" cy="125" r="110" stroke="#2d3732" stroke-width="1.5" stroke-dasharray="2,2"/>
+
+      <circle cx="160" cy="125" r="22" fill="#202622" stroke="#d8a85f" stroke-width="2"/>
+      <text x="160" y="129" font-size="9" font-weight="800" fill="#f0f4f2" text-anchor="middle">المركز</text>
+
+      <rect x="130" y="38" width="60" height="20" rx="4" fill="#202622" stroke="#d8a85f"/>
+      <text x="160" y="52" font-size="9" font-weight="700" fill="#f0f4f2" text-anchor="middle">الجيل الثاني</text>
+    </svg>
+  </div>
+
+  <div class="mobile-quality-bar">
+    <span>جودة العرض الشعاعي: ممتازة (Pass)</span>
+    <span>A2 أفقي</span>
+  </div>
+
+  <div class="mobile-settings-body">
+    <nav class="mobile-tabs">
+      <button class="tab-btn">المحتوى</button>
+      <button class="tab-btn active">التخطيط</button>
+      <button class="tab-btn">البطاقات</button>
+      <button class="tab-btn">المظهر</button>
+      <button class="tab-btn">الطباعة</button>
+    </nav>
+
+    <div class="content-padding">
+      <div class="section-card">
+        <div class="section-title">التخطيط (دائري / مروحي)</div>
+        <div class="form-group">
+          <label class="form-label">شكل العرض</label>
+          <select class="form-select">
+            <option selected>دائرة كاملة (360°)</option>
+            <option>نصف مروحة (180°)</option>
+          </select>
+        </div>
+
+        <button class="btn-sheet-trigger">
+          <span>⚙️ إعدادات متقدمة (Secondary Sheet)</span>
+        </button>
+      </div>
+
+      <div class="desktop-recommendation-banner">
+        💡 <strong>نصيحة للنشر الشعاعي:</strong> للعرض الدقيق والتحكم بالتفاصيل الهندسية على الأوراق الكبيرة، يفضل استخدام الحاسوب المكتبي.
+      </div>
+    </div>
+  </div>
+
+  <footer class="action-bar-sticky">
+    <button class="btn-export-sec">PNG</button>
+    <button class="btn-export-sec">SVG</button>
+    <button class="btn-export-primary">تصدير PDF شعاعي</button>
+  </footer>
+</div>
+
+</body>
+</html>

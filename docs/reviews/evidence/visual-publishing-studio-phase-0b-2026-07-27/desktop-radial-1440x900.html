@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Visual Publishing Studio Phase 0B Mockup: Desktop Radial Mode (1440x900)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700&family=Noto+Sans+Arabic:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-500: #d8a85f;
+      --primary-600: #b8863b;
+      --bg-dark: #151918;
+      --panel-dark: #202622;
+      --border-dark: #2d3631;
+      --text-main: #f0f4f2;
+      --text-muted: #86a69d;
+      --accent-gold: #d8a85f;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Noto Sans Arabic', 'Inter', sans-serif;
+      background-color: #0b0d0c;
+      color: var(--text-main);
+      display: flex; justify-content: center; align-items: center;
+      min-height: 100vh; padding: 0;
+    }
+
+    .device-viewport {
+      width: 1440px; height: 900px; background: var(--bg-dark);
+      display: flex; flex-direction: column; overflow: hidden; position: relative;
+    }
+
+    .studio-header {
+      height: 60px; background: var(--panel-dark); border-bottom: 1px solid var(--border-dark);
+      display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 10;
+    }
+    .header-left-tools { display: flex; align-items: center; gap: 12px; }
+    .studio-title { font-size: 15px; font-weight: 800; color: var(--text-main); }
+    .history-controls {
+      display: flex; align-items: center; gap: 4px; background: #171b19;
+      border: 1px solid var(--border-dark); padding: 3px; border-radius: 8px;
+    }
+    .btn-icon {
+      border: none; background: transparent; padding: 4px 8px; font-size: 11px;
+      font-weight: 700; color: var(--text-muted); border-radius: 5px; cursor: pointer; font-family: inherit;
+    }
+
+    .quick-setup-bar {
+      display: flex; align-items: center; gap: 12px; background: #191e1c;
+      border: 1px solid var(--border-dark); padding: 4px 12px; border-radius: 10px;
+    }
+    .qs-label { font-size: 10px; font-weight: 800; color: var(--text-muted); }
+    .qs-pill-group {
+      display: flex; align-items: center; gap: 4px; background: #121514;
+      padding: 2px; border-radius: 7px; border: 1px solid var(--border-dark);
+    }
+    .qs-btn {
+      border: none; background: transparent; padding: 4px 10px; font-size: 11px;
+      font-weight: 700; border-radius: 5px; cursor: pointer; color: var(--text-muted); font-family: inherit;
+    }
+    .qs-btn.active {
+      background: var(--accent-gold); color: #121514; font-weight: 800;
+    }
+
+    .studio-body {
+      flex: 1; display: grid; grid-template-columns: 920px 1fr; height: calc(900px - 60px);
+    }
+
+    .preview-pane-container {
+      background: #111413; border-left: 1px solid var(--border-dark);
+      display: flex; flex-direction: column; position: sticky; top: 0;
+      height: 100%; padding: 16px; gap: 12px;
+    }
+
+    .preview-canvas-card {
+      flex: 1; background: #181d1b; border-radius: 12px;
+      border: 1px solid #2d3732; box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.5);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      position: relative; overflow: hidden; padding: 20px;
+    }
+
+    /* Large Full-Canvas Radial SVG */
+    .radial-graph-svg {
+      width: 100%; height: 540px;
+    }
+
+    .quality-status-bar {
+      background: var(--panel-dark); border-radius: 10px; padding: 10px 16px;
+      border: 1px solid var(--border-dark); display: flex; align-items: center; justify-content: space-between;
+    }
+
+    .settings-sidebar {
+      background: var(--panel-dark); display: flex; flex-direction: column; height: 100%; overflow-y: auto;
+    }
+
+    .task-nav-tabs {
+      display: flex; border-bottom: 1px solid var(--border-dark); background: #191e1c;
+      position: sticky; top: 0; z-index: 5;
+    }
+    .tab-btn {
+      flex: 1; padding: 12px 4px; border: none; background: transparent;
+      font-size: 11px; font-weight: 700; color: var(--text-muted);
+      border-bottom: 2px solid transparent; cursor: pointer; font-family: inherit; text-align: center;
+    }
+    .tab-btn.active { color: var(--accent-gold); border-bottom-color: var(--accent-gold); background: var(--panel-dark); }
+
+    .settings-content { padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+
+    .section-card {
+      background: #1a201d; border: 1px solid var(--border-dark);
+      border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 12px;
+    }
+    .section-header { display: flex; justify-content: space-between; align-items: center; }
+    .section-title { font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--accent-gold); }
+    .modified-badge { font-size: 9px; background: #3d3419; color: #f59e0b; padding: 2px 6px; border-radius: 4px; font-weight: 700; }
+    .btn-reset-sec { border: none; background: transparent; font-size: 10px; font-weight: 700; color: var(--accent-gold); cursor: pointer; font-family: inherit; }
+
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-label { font-size: 11px; font-weight: 700; color: var(--text-main); }
+    .form-select {
+      width: 100%; height: 34px; padding: 0 8px; border-radius: 6px;
+      border: 1px solid var(--border-dark); background: #121514;
+      font-size: 11px; font-weight: 600; font-family: inherit; color: var(--text-main);
+    }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+    .opt-btn {
+      height: 34px; border-radius: 6px; border: 1px solid var(--border-dark);
+      background: #121514; font-size: 11px; font-weight: 700; color: var(--text-muted); cursor: pointer; font-family: inherit;
+    }
+    .opt-btn.active { border-color: var(--accent-gold); background: #262f2a; color: var(--accent-gold); }
+
+    .action-bar-sticky {
+      position: sticky; bottom: 0; background: var(--panel-dark);
+      border-top: 1px solid var(--border-dark); padding: 12px 16px;
+      display: flex; gap: 8px; z-index: 5;
+    }
+    .btn-export-primary {
+      flex: 1; height: 38px; background: var(--accent-gold); color: #121514;
+      border: none; border-radius: 7px; font-size: 11px; font-weight: 800; cursor: pointer; font-family: inherit;
+    }
+    .btn-export-sec {
+      height: 38px; padding: 0 12px; background: #121514; color: var(--text-main);
+      border: 1px solid var(--border-dark); border-radius: 7px;
+      font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit;
+    }
+  </style>
+</head>
+<body>
+
+<div class="device-viewport">
+  <header class="studio-header">
+    <div class="header-left-tools">
+      <h1 class="studio-title">استوديو النشر البصري</h1>
+      <div class="history-controls">
+        <button class="btn-icon">↩ تراجع</button>
+        <button class="btn-icon">↪ إعادة</button>
+      </div>
+      <button class="btn-reset-sec" style="margin-right:8px;">استعادة اللوحة بالكامل</button>
+    </div>
+
+    <!-- Quick Setup Bar -->
+    <div class="quick-setup-bar">
+      <span class="qs-label">إعداد سريع:</span>
+      <div class="qs-pill-group">
+        <button class="qs-btn">حول شخص</button>
+        <button class="qs-btn active">دائري / مروحي</button>
+        <button class="qs-btn">متدرج</button>
+      </div>
+      <div class="qs-pill-group">
+        <button class="qs-btn">التراث الكلاسيكي</button>
+        <button class="qs-btn active">المعرض العصري</button>
+      </div>
+      <select class="form-select" style="width:70px; height:28px; font-size:10px; background:#121514;">
+        <option>A4</option>
+        <option>A3</option>
+        <option selected>A2</option>
+        <option>A1</option>
+        <option>A0</option>
+      </select>
+    </div>
+  </header>
+
+  <div class="studio-body">
+    <!-- Preview Pane (Large Radial Diagram) -->
+    <main class="preview-pane-container">
+      <div class="preview-canvas-card">
+        <svg class="radial-graph-svg" viewBox="0 0 750 520" fill="none">
+          <!-- Concentric Ring Circles Spanning Canvas -->
+          <circle cx="375" cy="260" r="60" stroke="#2d3732" stroke-width="1.5" stroke-dasharray="3,3"/>
+          <circle cx="375" cy="260" r="130" stroke="#2d3732" stroke-width="1.5" stroke-dasharray="3,3"/>
+          <circle cx="375" cy="260" r="200" stroke="#2d3732" stroke-width="1.5" stroke-dasharray="3,3"/>
+          <circle cx="375" cy="260" r="250" stroke="#2d3732" stroke-width="1.5" stroke-dasharray="3,3"/>
+
+          <!-- Rays -->
+          <line x1="375" y1="260" x2="375" y2="10" stroke="#86a69d" stroke-width="1.5"/>
+          <line x1="375" y1="260" x2="625" y2="260" stroke="#86a69d" stroke-width="1.5"/>
+          <line x1="375" y1="260" x2="375" y2="510" stroke="#86a69d" stroke-width="1.5"/>
+          <line x1="375" y1="260" x2="125" y2="260" stroke="#86a69d" stroke-width="1.5"/>
+          <line x1="375" y1="260" x2="551" y2="84" stroke="#86a69d" stroke-width="1"/>
+          <line x1="375" y1="260" x2="551" y2="436" stroke="#86a69d" stroke-width="1"/>
+          <line x1="375" y1="260" x2="199" y2="436" stroke="#86a69d" stroke-width="1"/>
+          <line x1="375" y1="260" x2="199" y2="84" stroke="#86a69d" stroke-width="1"/>
+
+          <!-- Center Root Node -->
+          <circle cx="375" cy="260" r="40" fill="#202622" stroke="#d8a85f" stroke-width="3"/>
+          <text x="375" y="265" font-size="12" font-weight="800" fill="#f0f4f2" text-anchor="middle">سليمان الكبير</text>
+
+          <!-- Ring 1 (Straight Un-warped Arabic Badges) -->
+          <g transform="translate(375, 130)">
+            <rect x="-40" y="-14" width="80" height="28" rx="6" fill="#202622" stroke="#d8a85f"/>
+            <text x="0" y="4" font-size="11" font-weight="700" fill="#f0f4f2" text-anchor="middle">عبد الله (الأب)</text>
+          </g>
+          <g transform="translate(505, 260)">
+            <rect x="-40" y="-14" width="80" height="28" rx="6" fill="#202622" stroke="#d8a85f"/>
+            <text x="0" y="4" font-size="11" font-weight="700" fill="#f0f4f2" text-anchor="middle">فاطمة (الأم)</text>
+          </g>
+          <g transform="translate(375, 390)">
+            <rect x="-40" y="-14" width="80" height="28" rx="6" fill="#202622" stroke="#d8a85f"/>
+            <text x="0" y="4" font-size="11" font-weight="700" fill="#f0f4f2" text-anchor="middle">فرع الجنوب</text>
+          </g>
+          <g transform="translate(245, 260)">
+            <rect x="-40" y="-14" width="80" height="28" rx="6" fill="#202622" stroke="#d8a85f"/>
+            <text x="0" y="4" font-size="11" font-weight="700" fill="#f0f4f2" text-anchor="middle">فرع الغرب</text>
+          </g>
+
+          <!-- Outer Ring Badges (Gen 3 - 5) -->
+          <g transform="translate(551, 84)">
+            <rect x="-35" y="-12" width="70" height="24" rx="5" fill="#151918" stroke="#86a69d"/>
+            <text x="0" y="4" font-size="10" font-weight="700" fill="#d8a85f" text-anchor="middle">الجد عبد العزيز</text>
+          </g>
+          <g transform="translate(551, 436)">
+            <rect x="-35" y="-12" width="70" height="24" rx="5" fill="#151918" stroke="#86a69d"/>
+            <text x="0" y="4" font-size="10" font-weight="700" fill="#d8a85f" text-anchor="middle">الجدة نورة</text>
+          </g>
+          <g transform="translate(199, 436)">
+            <rect x="-35" y="-12" width="70" height="24" rx="5" fill="#151918" stroke="#86a69d"/>
+            <text x="0" y="4" font-size="10" font-weight="700" fill="#d8a85f" text-anchor="middle">الجد منصور</text>
+          </g>
+          <g transform="translate(199, 84)">
+            <rect x="-35" y="-12" width="70" height="24" rx="5" fill="#151918" stroke="#86a69d"/>
+            <text x="0" y="4" font-size="10" font-weight="700" fill="#d8a85f" text-anchor="middle">الجدة حصة</text>
+          </g>
+
+          <!-- Outer Ring Nodes -->
+          <circle cx="375" cy="10" r="10" fill="#d8a85f"/>
+          <circle cx="625" cy="260" r="10" fill="#d8a85f"/>
+          <circle cx="375" cy="510" r="10" fill="#d8a85f"/>
+          <circle cx="125" cy="260" r="10" fill="#d8a85f"/>
+        </svg>
+      </div>
+
+      <div class="quality-status-bar">
+        <div style="font-size:11px; font-weight:700; color:var(--text-main);">جودة التخطيط الشعاعي: ممتازة (Pass)</div>
+        <div style="font-size:10px; font-weight:700; color:var(--accent-gold); background:#262f2a; padding:4px 8px; border-radius:5px;">A2 landscape</div>
+      </div>
+    </main>
+
+    <aside class="settings-sidebar">
+      <nav class="task-nav-tabs">
+        <button class="tab-btn">المحتوى</button>
+        <button class="tab-btn active">التخطيط</button>
+        <button class="tab-btn">البطاقات</button>
+        <button class="tab-btn">المظهر</button>
+        <button class="tab-btn">الطباعة</button>
+      </nav>
+
+      <div class="settings-content">
+        <div class="section-card">
+          <div class="section-header">
+            <span class="section-title">التخطيط الشعاعي (دائري / مروحي)</span>
+            <div>
+              <span class="modified-badge">معدّل</span>
+              <button class="btn-reset-sec">استعادة القسم</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">شكل العرض</label>
+            <div class="grid-2">
+              <button class="opt-btn active">دائرة كاملة (360°)</button>
+              <button class="opt-btn">نصف مروحة (180°)</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">عدد الأجيال</label>
+            <select class="form-select">
+              <option>3 أجيال</option>
+              <option>4 أجيال</option>
+              <option selected>5 أجيال (5 Rings)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <footer class="action-bar-sticky">
+        <button class="btn-export-sec">SVG</button>
+        <button class="btn-export-sec">PNG</button>
+        <button class="btn-export-primary">تصدير PDF شعاعي</button>
+      </footer>
+    </aside>
+  </div>
+</div>
+
+</body>
+</html>

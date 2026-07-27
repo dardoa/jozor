@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Visual Publishing Studio Phase 0B Mockup: Mobile Focus Mode (390x844)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700&family=Noto+Sans+Arabic:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-500: #a86f35;
+      --primary-600: #8c5929;
+      --primary-700: #6f431c;
+      --surface-panel: #ffffff;
+      --surface-subtle: #fcfbfa;
+      --border-soft: #e6ded5;
+      --text-main: #1f1b17;
+      --text-secondary: #595147;
+      --text-muted: #8c8275;
+      --bg-canvas: #f4ead8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Noto Sans Arabic', sans-serif;
+      background-color: #0d0f11; color: var(--text-main);
+      display: flex; justify-content: center; align-items: center;
+      min-height: 100vh; padding: 0;
+    }
+
+    .mobile-viewport {
+      width: 390px; height: 844px; background: #faf8f5;
+      border-radius: 40px; border: 8px solid #22262a;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+      display: flex; flex-direction: column; overflow: hidden; position: relative;
+    }
+
+    .mobile-header {
+      height: 52px; background: #ffffff; border-bottom: 1px solid var(--border-soft);
+      display: flex; align-items: center; justify-content: space-between; padding: 0 16px;
+    }
+    .mobile-title { font-size: 13px; font-weight: 800; color: var(--text-main); }
+    .history-tools { display: flex; gap: 4px; }
+    .btn-mini { border: 1px solid var(--border-soft); background: #ffffff; padding: 2px 6px; font-size: 10px; font-weight: 700; border-radius: 4px; cursor: pointer; }
+
+    /* Interactive Quick Setup Header Bar */
+    .mobile-qs-bar {
+      background: #f7f3ed; border-bottom: 1px solid var(--border-soft);
+      padding: 6px 12px; display: flex; align-items: center; justify-content: space-between; gap: 6px;
+    }
+    .qs-btn { border: none; background: transparent; padding: 4px 8px; font-size: 10px; font-weight: 700; border-radius: 4px; cursor: pointer; font-family: inherit; }
+    .qs-btn.active { background: var(--primary-600); color: #ffffff; }
+
+    /* Useful Non-Miniature Preview Pane (260px Height) */
+    .preview-mobile-card {
+      background: var(--bg-canvas); border-bottom: 1px solid #d4c4b0;
+      height: 260px; display: flex; flex-direction: column; align-items: center;
+      justify-content: center; position: relative; padding: 10px;
+    }
+
+    /* Persistent Compact Quality Summary Bar */
+    .mobile-quality-bar {
+      background: #ffffff; border-bottom: 1px solid var(--border-soft);
+      padding: 6px 12px; font-size: 10px; font-weight: 700; color: var(--primary-700);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+
+    .mobile-settings-body {
+      flex: 1; overflow-y: auto; display: flex; flex-direction: column; padding-bottom: 70px;
+    }
+
+    .mobile-tabs {
+      display: flex; border-bottom: 1px solid var(--border-soft); background: #ffffff;
+      overflow-x: auto; scrollbar-width: none;
+    }
+    .tab-btn {
+      padding: 10px 14px; border: none; background: transparent; font-size: 11px;
+      font-weight: 700; color: var(--text-muted); border-bottom: 2px solid transparent;
+      white-space: nowrap; cursor: pointer; font-family: inherit;
+    }
+    .tab-btn.active { color: var(--primary-600); border-bottom-color: var(--primary-600); }
+
+    .content-padding { padding: 12px; display: flex; flex-direction: column; gap: 12px; }
+
+    .section-card {
+      background: #ffffff; border: 1px solid var(--border-soft);
+      border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 10px;
+    }
+    .section-title { font-size: 11px; font-weight: 800; color: var(--text-secondary); }
+    .modified-badge { font-size: 9px; background: #fef3c7; color: #92400e; padding: 2px 5px; border-radius: 4px; font-weight: 700; }
+
+    .form-group { display: flex; flex-direction: column; gap: 4px; }
+    .form-label { font-size: 10px; font-weight: 700; color: var(--text-main); }
+    .form-select {
+      width: 100%; height: 34px; padding: 0 8px; border-radius: 6px;
+      border: 1px solid var(--border-soft); font-size: 11px; font-weight: 600; font-family: inherit;
+    }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+
+    .desktop-recommendation-banner {
+      background: #fffbe6; border: 1px solid #ffe58f; border-radius: 8px;
+      padding: 8px 10px; font-size: 10px; color: #873800; line-height: 1.4; font-weight: 600;
+    }
+
+    /* Fixed Bottom Export Bar with Safe Inset Space */
+    .mobile-action-bar {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      background: #ffffff; border-top: 1px solid var(--border-soft);
+      padding: 10px 12px 24px 12px; display: flex; gap: 6px; z-index: 20;
+      box-shadow: 0 -4px 12px rgba(0,0,0,0.06);
+    }
+    .btn-export-primary {
+      flex: 1; height: 38px; background: var(--primary-600); color: #ffffff;
+      border: none; border-radius: 7px; font-size: 11px; font-weight: 700; font-family: inherit;
+    }
+    .btn-export-sec {
+      height: 38px; padding: 0 10px; background: #ffffff; color: var(--text-main);
+      border: 1px solid var(--border-soft); border-radius: 7px; font-size: 11px; font-weight: 700; font-family: inherit;
+    }
+  </style>
+</head>
+<body>
+
+<div class="mobile-viewport">
+  <header class="mobile-header">
+    <span class="mobile-title">استوديو النشر البصري</span>
+    <div class="history-tools">
+      <button class="btn-mini">↩</button>
+      <button class="btn-mini">↪</button>
+    </div>
+  </header>
+
+  <!-- Quick Setup Header Bar -->
+  <div class="mobile-qs-bar">
+    <div style="display:flex; gap:4px;">
+      <button class="qs-btn active">حول شخص</button>
+      <button class="qs-btn">دائري / مروحي</button>
+    </div>
+    <select class="form-select" style="width:65px; height:26px; font-size:9px;">
+      <option selected>A2</option>
+      <option>A3</option>
+    </select>
+  </div>
+
+  <!-- Useful Non-Miniature Preview Pane -->
+  <div class="preview-mobile-card">
+    <svg width="280" height="190" viewBox="0 0 400 260">
+      <path d="M 200 130 L 130 65" stroke="#8d6d4e" stroke-width="2"/>
+      <path d="M 200 130 L 270 65" stroke="#8d6d4e" stroke-width="2"/>
+      <path d="M 200 130 L 130 195" stroke="#a86f35" stroke-width="2"/>
+      <path d="M 200 130 L 270 195" stroke="#a86f35" stroke-width="2"/>
+      <path d="M 200 130 L 310 130" stroke="#c29b38" stroke-width="2"/>
+
+      <rect x="140" y="108" width="120" height="44" rx="6" fill="#fffaf0" stroke="#a86f35" stroke-width="2.5"/>
+      <text x="200" y="134" font-size="12" font-weight="800" fill="#6f431c" text-anchor="middle">عبد العزيز (محوري)</text>
+
+      <rect x="100" y="50" width="60" height="26" rx="4" fill="#fffaf0" stroke="#a86f35"/>
+      <rect x="240" y="50" width="60" height="26" rx="4" fill="#fffaf0" stroke="#a86f35"/>
+    </svg>
+  </div>
+
+  <!-- Persistent Compact Quality Summary -->
+  <div class="mobile-quality-bar">
+    <span>جودة الطباعة: ممتازة (300 DPI)</span>
+    <span>A2 أفقي</span>
+  </div>
+
+  <!-- Settings Area -->
+  <div class="mobile-settings-body">
+    <nav class="mobile-tabs">
+      <button class="tab-btn active">المحتوى</button>
+      <button class="tab-btn">التخطيط</button>
+      <button class="tab-btn">البطاقات</button>
+      <button class="tab-btn">المظهر</button>
+      <button class="tab-btn">الطباعة</button>
+    </nav>
+
+    <div class="content-padding">
+      <div class="section-card">
+        <div style="display:flex; justify-content:space-between;">
+          <span class="section-title">الشخص المحوري والأجيال</span>
+          <span class="modified-badge">معدّل</span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">اختر الشخص المحوري</label>
+          <select class="form-select">
+            <option selected>عبد العزيز بن فيصل آل منصور</option>
+          </select>
+        </div>
+
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">عمق الأسلاف</label>
+            <select class="form-select"><option selected>جيلان (2)</option></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">عمق الأحفاد</label>
+            <select class="form-select"><option selected>جيلان (2)</option></select>
+          </div>
+        </div>
+      </div>
+
+      <div class="desktop-recommendation-banner">
+        💡 <strong>نصيحة للنشر:</strong> للحصول على دقة تحكم أعلى في البوسترات الكبيرة، يوصى بالتحرير من جهاز مكتبي. جميع خيارات التصدير متاحة بالكامل هنا.
+      </div>
+    </div>
+  </div>
+
+  <!-- Fully Visible Unclipped Mobile Action Bar -->
+  <footer class="mobile-action-bar">
+    <button class="btn-export-sec">PNG</button>
+    <button class="btn-export-sec">SVG</button>
+    <button class="btn-export-primary">تصدير PDF للطباعة</button>
+  </footer>
+</div>
+
+</body>
+</html>

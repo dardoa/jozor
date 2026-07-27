@@ -52,3 +52,8 @@ export * from './visualOutputs/branchPosterCollection';
 export * from './visualOutputs/branchPosterCollectionExport';
 export * from './visualOutputs/tiledWallPoster';
 export * from './visualOutputs/tiledWallPosterExport';
+export * from './visualOutputs/posterStateContracts';
+export * from './visualOutputs/posterPresets';
+export * from './visualOutputs/posterCompatibilityModel';
+export * from './visualOutputs/posterDesignState';
+export * from './visualOutputs/posterDesignDocument';

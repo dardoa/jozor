@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Neutral Comparison: Radial Mode on A2 Classic Heritage (1440x900)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700&family=Noto+Sans+Arabic:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-500: #a86f35;
+      --primary-600: #8c5929;
+      --primary-700: #6f431c;
+      --surface-panel: #ffffff;
+      --surface-subtle: #fcfbfa;
+      --border-soft: #e6ded5;
+      --text-main: #1f1b17;
+      --text-secondary: #595147;
+      --text-muted: #8c8275;
+      --bg-canvas: #f4ead8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Noto Sans Arabic', 'Inter', sans-serif;
+      background-color: #0f1114; color: var(--text-main);
+      display: flex; justify-content: center; align-items: center;
+      min-height: 100vh; padding: 0;
+    }
+
+    .device-viewport {
+      width: 1440px; height: 900px; background: #faf8f5;
+      display: flex; flex-direction: column; overflow: hidden; position: relative;
+    }
+
+    .studio-header {
+      height: 60px; background: #ffffff; border-bottom: 1px solid var(--border-soft);
+      display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 10;
+    }
+    .studio-title { font-size: 15px; font-weight: 800; color: var(--text-main); }
+    .badge-comp { background: #e0f2fe; color: #0369a1; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 16px; border: 1px solid #bae6fd; }
+
+    .quick-setup-bar {
+      display: flex; align-items: center; gap: 12px; background: #f7f3ed;
+      border: 1px solid #e3d7c7; padding: 4px 12px; border-radius: 10px;
+    }
+    .qs-pill-group { display: flex; align-items: center; gap: 4px; background: #ffffff; padding: 2px; border-radius: 7px; border: 1px solid var(--border-soft); }
+    .qs-btn { border: none; background: transparent; padding: 4px 10px; font-size: 11px; font-weight: 700; border-radius: 5px; cursor: pointer; color: var(--text-secondary); font-family: inherit; }
+    .qs-btn.active { background: var(--primary-600); color: #ffffff; }
+
+    .studio-body {
+      flex: 1; display: grid; grid-template-columns: 920px 1fr; height: calc(900px - 60px);
+    }
+
+    .preview-pane-container {
+      background: #ece4d8; border-left: 1px solid var(--border-soft);
+      display: flex; flex-direction: column; position: sticky; top: 0;
+      height: 100%; padding: 16px; gap: 12px;
+    }
+
+    .preview-canvas-card {
+      flex: 1; background: var(--bg-canvas); border-radius: 12px;
+      border: 2px solid #d4c4b0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; padding: 20px; position: relative;
+    }
+
+    .radial-svg { width: 100%; height: 540px; }
+
+    .quality-status-bar {
+      background: #ffffff; border-radius: 10px; padding: 10px 16px;
+      border: 1px solid var(--border-soft); display: flex; align-items: center; justify-content: space-between;
+    }
+
+    .settings-sidebar { background: #ffffff; display: flex; flex-direction: column; height: 100%; overflow-y: auto; }
+    .settings-content { padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+
+    .section-card {
+      background: var(--surface-subtle); border: 1px solid var(--border-soft);
+      border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 12px;
+    }
+    .section-title { font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-secondary); }
+
+    .action-bar-sticky { position: sticky; bottom: 0; background: #ffffff; border-top: 1px solid var(--border-soft); padding: 12px 16px; display: flex; gap: 8px; }
+    .btn-export-primary { flex: 1; height: 38px; background: var(--primary-600); color: #ffffff; border: none; border-radius: 7px; font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit; }
+  </style>
+</head>
+<body>
+
+<div class="device-viewport">
+  <header class="studio-header">
+    <div style="display:flex; align-items:center; gap:12px;">
+      <h1 class="studio-title">مقارنة محايدة: دائري / مروحي (Radial Mode)</h1>
+      <span class="badge-comp">مقابلة محايدة 1:1 (A2 · التراث الكلاسيكي)</span>
+    </div>
+
+    <div class="quick-setup-bar">
+      <span class="qs-label">النمط المستهدف:</span>
+      <div class="qs-pill-group">
+        <button class="qs-btn">حول شخص (Focus)</button>
+        <button class="qs-btn active">دائري / مروحي (Radial)</button>
+      </div>
+      <span style="font-size:11px; font-weight:700; color:var(--primary-700);">A2 أفقي</span>
+    </div>
+  </header>
+
+  <div class="studio-body">
+    <main class="preview-pane-container">
+      <div class="preview-canvas-card">
+        <div style="text-align:center; margin-bottom:14px;">
+          <h2 style="font-family:'Amiri',serif; font-size:26px; color:#6f431c;">عائلة سليمان الكبير (15 شخصاً)</h2>
+          <p style="font-size:11px; color:#8c6e4e;">عرض شعاعي مروحي ممركز على الجد مع أجيال الأسلاف والأحفاد</p>
+        </div>
+
+        <!-- Enriched Large Radial SVG using identical 15-person fixture & Classic Heritage palette -->
+        <svg class="radial-svg" viewBox="0 0 750 480" fill="none">
+          <!-- Concentric Ring Guides -->
+          <circle cx="375" cy="240" r="55" stroke="#d4c4b0" stroke-width="1.5" stroke-dasharray="3,3"/>
+          <circle cx="375" cy="240" r="120" stroke="#d4c4b0" stroke-width="1.5" stroke-dasharray="3,3"/>
+          <circle cx="375" cy="240" r="185" stroke="#d4c4b0" stroke-width="1.5" stroke-dasharray="3,3"/>
+          <circle cx="375" cy="240" r="230" stroke="#d4c4b0" stroke-width="1.5" stroke-dasharray="3,3"/>
+
+          <!-- Radial Ray Connectors -->
+          <line x1="375" y1="240" x2="375" y2="10" stroke="#a86f35" stroke-width="1.5"/>
+          <line x1="375" y1="240" x2="605" y2="240" stroke="#a86f35" stroke-width="1.5"/>
+          <line x1="375" y1="240" x2="375" y2="470" stroke="#a86f35" stroke-width="1.5"/>
+          <line x1="375" y1="240" x2="145" y2="240" stroke="#a86f35" stroke-width="1.5"/>
+          <line x1="375" y1="240" x2="537" y2="78" stroke="#a86f35" stroke-width="1"/>
+          <line x1="375" y1="240" x2="537" y2="402" stroke="#a86f35" stroke-width="1"/>
+          <line x1="375" y1="240" x2="213" y2="402" stroke="#a86f35" stroke-width="1"/>
+          <line x1="375" y1="240" x2="213" y2="78" stroke="#a86f35" stroke-width="1"/>
+
+          <!-- Center Root Node (15-person Fixture Focal Root) -->
+          <circle cx="375" cy="240" r="38" fill="#fffaf0" stroke="#a86f35" stroke-width="3"/>
+          <text x="375" y="244" font-size="11" font-weight="800" fill="#6f431c" text-anchor="middle">عبد العزيز (المركز)</text>
+
+          <!-- Ring 1 (Straight Un-warped Arabic Badges) -->
+          <g transform="translate(375, 120)">
+            <rect x="-40" y="-13" width="80" height="26" rx="5" fill="#fffaf0" stroke="#a86f35" stroke-width="1.5"/>
+            <text x="0" y="4" font-size="10" font-weight="700" fill="#1f1b17" text-anchor="middle">فيصل (الأب)</text>
+          </g>
+
+          <g transform="translate(495, 240)">
+            <rect x="-40" y="-13" width="80" height="26" rx="5" fill="#fffaf0" stroke="#a86f35" stroke-width="1.5"/>
+            <text x="0" y="4" font-size="10" font-weight="700" fill="#1f1b17" text-anchor="middle">سارة (الأم)</text>
+          </g>
+
+          <g transform="translate(375, 360)">
+            <rect x="-40" y="-13" width="80" height="26" rx="5" fill="#fffaf0" stroke="#a86f35" stroke-width="1.5"/>
+            <text x="0" y="4" font-size="10" font-weight="700" fill="#1f1b17" text-anchor="middle">محمد (ابن)</text>
+          </g>
+
+          <g transform="translate(255, 240)">
+            <rect x="-40" y="-13" width="80" height="26" rx="5" fill="#fffaf0" stroke="#a86f35" stroke-width="1.5"/>
+            <text x="0" y="4" font-size="10" font-weight="700" fill="#1f1b17" text-anchor="middle">خالد (شقيق)</text>
+          </g>
+
+          <!-- Ring 2 Badges -->
+          <g transform="translate(537, 78)">
+            <rect x="-35" y="-11" width="70" height="22" rx="4" fill="#fffaf0" stroke="#8d6d4e"/>
+            <text x="0" y="4" font-size="9" font-weight="700" fill="#1f1b17" text-anchor="middle">سليمان 1</text>
+          </g>
+          <g transform="translate(537, 402)">
+            <rect x="-35" y="-11" width="70" height="22" rx="4" fill="#fffaf0" stroke="#8d6d4e"/>
+            <text x="0" y="4" font-size="9" font-weight="700" fill="#1f1b17" text-anchor="middle">موضي</text>
+          </g>
+          <g transform="translate(213, 402)">
+            <rect x="-35" y="-11" width="70" height="22" rx="4" fill="#fffaf0" stroke="#8d6d4e"/>
+            <text x="0" y="4" font-size="9" font-weight="700" fill="#1f1b17" text-anchor="middle">عثمان</text>
+          </g>
+          <g transform="translate(213, 78)">
+            <rect x="-35" y="-11" width="70" height="22" rx="4" fill="#fffaf0" stroke="#8d6d4e"/>
+            <text x="0" y="4" font-size="9" font-weight="700" fill="#1f1b17" text-anchor="middle">نورة</text>
+          </g>
+
+          <!-- Ring 3 Outer Points -->
+          <circle cx="375" cy="10" r="8" fill="#a86f35"/>
+          <circle cx="605" cy="240" r="8" fill="#a86f35"/>
+          <circle cx="375" cy="470" r="8" fill="#a86f35"/>
+          <circle cx="145" cy="240" r="8" fill="#a86f35"/>
+        </svg>
+      </div>
+
+      <div class="quality-status-bar">
+        <div style="font-size:11px; font-weight:700;">شروط المقارنة: 15 شخصاً · A2 أفقي · التراث الكلاسيكي</div>
+        <div style="font-size:11px; font-weight:700; color:var(--primary-700); background:#f4ead8; padding:4px 8px; border-radius:5px;">جودة التوزيع الشعاعي: ممتازة (300 DPI)</div>
+      </div>
+    </main>
+
+    <aside class="settings-sidebar">
+      <div class="settings-content">
+        <div class="section-card">
+          <div class="section-title">بيانات المقارنة المحايدة</div>
+          <p style="font-size:11px; color:var(--text-secondary); line-height:1.5;">
+            هذا العرض يعتمد نفس السجل العائلي (15 شخصاً) بنفس وثيقة A2 الكلاسيكية لتقييم تجربة المستخدم شعاعياً.
+          </p>
+        </div>
+      </div>
+      <footer class="action-bar-sticky">
+        <button class="btn-export-primary">تصدير وثيقة المقارنة PDF</button>
+      </footer>
+    </aside>
+  </div>
+</div>
+
+</body>
+</html>
