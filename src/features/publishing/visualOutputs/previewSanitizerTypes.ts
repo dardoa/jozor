@@ -16,6 +16,9 @@ export interface VisualPreviewSanitizerPolicy {
   readonly privacyMode: VisualPreviewPrivacyMode;
   readonly includePhotos: boolean;
   readonly includeYears: boolean;
+  readonly includeBirthPlace?: boolean;
+  readonly includeOccupation?: boolean;
+  readonly includeDescription?: boolean;
   readonly maxNodes: number;
   readonly language: 'en' | 'ar';
 }
@@ -30,6 +33,9 @@ export interface SanitizedPreviewNode {
   readonly hasPhoto: boolean;
   readonly birthYear?: number;
   readonly deathYear?: number;
+  readonly birthPlaceLabel?: string;
+  readonly occupationLabel?: string;
+  readonly descriptionLabel?: string;
 }
 
 export interface SanitizedPreviewEdge {

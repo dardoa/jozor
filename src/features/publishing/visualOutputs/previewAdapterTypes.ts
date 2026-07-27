@@ -24,6 +24,8 @@ export interface VisualPreviewPersonNode {
   readonly generation?: number;
   readonly isMasked?: boolean;
   readonly hasPhoto?: boolean;
+  readonly birthYear?: number;
+  readonly deathYear?: number;
 }
 
 export interface VisualPreviewEdge {

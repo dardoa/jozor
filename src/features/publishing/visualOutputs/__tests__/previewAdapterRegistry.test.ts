@@ -35,7 +35,7 @@ describe('Visual Preview Adapter Registry Contracts', () => {
 
     expect(modelEn.definitionId).toBe('classic-ancestor-poster');
     expect(modelEn.productType).toBe('poster');
-    expect(modelEn.layoutEngine).toBe('poster-layout');
+    expect(modelEn.layoutEngine).toBe('ancestor-tiered');
     expect(modelEn.readingStrategy).toBe('ancestor');
     expect(modelEn.nodes.length).toBeGreaterThan(0);
     expect(modelEn.nodes[0].displayName).toBe('Preview root');
@@ -133,6 +133,8 @@ describe('Visual Preview Adapter Registry Contracts', () => {
           lifeStatus: 'deceased' as const,
           isMasked: false,
           hasPhoto: true,
+          birthYear: 1910,
+          deathYear: 1980,
         },
         {
           previewId: 'preview-node-2',
@@ -178,6 +180,8 @@ describe('Visual Preview Adapter Registry Contracts', () => {
     expect(posterModel.nodes[0].id).toBe('preview-node-1');
     expect(posterModel.nodes[0].displayName).toBe('Sanitized Ali');
     expect(posterModel.nodes[0].hasPhoto).toBe(true);
+    expect(posterModel.nodes[0].birthYear).toBe(1910);
+    expect(posterModel.nodes[0].deathYear).toBe(1980);
     expect(posterModel.edges.length).toBe(1);
     expect(posterModel.edges[0].fromId).toBe('preview-node-2');
     expect(posterModel.edges[0].toId).toBe('preview-node-1');

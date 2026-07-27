@@ -26,6 +26,8 @@ export const posterPreviewAdapter: VisualPreviewAdapter = {
         generation: n.generation,
         isMasked: n.isMasked,
         hasPhoto: n.hasPhoto,
+        birthYear: n.birthYear,
+        deathYear: n.deathYear,
       }));
 
       const edges: VisualPreviewEdge[] = g.edges.map((e) => ({
@@ -127,6 +129,8 @@ export const snapshotPreviewAdapter: VisualPreviewAdapter = {
         generation: n.generation,
         isMasked: n.isMasked,
         hasPhoto: n.hasPhoto,
+        birthYear: n.birthYear,
+        deathYear: n.deathYear,
       }));
 
       const edges: VisualPreviewEdge[] = g.edges.map((e) => ({

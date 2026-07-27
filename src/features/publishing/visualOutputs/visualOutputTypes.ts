@@ -16,6 +16,10 @@ export type VisualOutputRenderer = 'png' | 'pdf' | 'svg' | 'html';
 export type VisualOutputLayoutEngine =
   | 'tree-layout'
   | 'poster-layout'
+  | 'ancestor-tiered'
+  | 'descendant-tiered'
+  | 'family-network-tiered'
+  | 'full-tree-overview'
   | 'radial-layout'
   | 'timeline-layout'
   | 'map-layout'
@@ -68,6 +72,7 @@ export type VisualOutputPhotoMode =
 export type VisualOutputStylePreset =
   | 'classic'
   | 'modern'
+  | 'modern-gallery'
   | 'warm'
   | 'dark'
   | 'vintage'
@@ -75,6 +80,8 @@ export type VisualOutputStylePreset =
   | 'royal'
   | 'manuscript'
   | 'arabic';
+
+export type VisualOutputGenerationDepth = 1 | 2 | 3 | 4 | 'all';
 
 export interface VisualOutputCapabilities {
   readonly sizes: readonly VisualOutputSize[];
@@ -85,6 +92,7 @@ export interface VisualOutputCapabilities {
   readonly stylePresets?: readonly VisualOutputStylePreset[];
   readonly readingStrategies?: readonly VisualOutputReadingStrategy[];
   readonly layoutEngines?: readonly VisualOutputLayoutEngine[];
+  readonly generationDepths?: readonly VisualOutputGenerationDepth[];
 }
 
 export interface VisualOutputPreviewAsset {
@@ -114,6 +122,8 @@ export interface VisualOutputDefinition {
     readonly en: string;
     readonly ar: string;
   };
+  /** Canonical visual source. Derived renderer targets must consume this output. */
+  readonly defaultRenderer?: VisualOutputRenderer;
   /** @deprecated use capabilities.rendererTargets instead */
   readonly rendererTargets: readonly VisualOutputRenderer[];
   readonly layoutEngine: VisualOutputLayoutEngine;
@@ -124,6 +134,7 @@ export interface VisualOutputDefinition {
   readonly supportedOrientations: ReadonlyArray<'portrait' | 'landscape' | 'square'>;
   readonly status: 'active' | 'deprecated' | 'experimental';
   readonly capabilities: VisualOutputCapabilities;
+  readonly plannedCapabilities?: Partial<VisualOutputCapabilities>;
   readonly previewAsset: VisualOutputPreviewAsset;
   readonly recommendedFor?: VisualOutputRecommendation;
   readonly metadata?: Record<string, unknown>;

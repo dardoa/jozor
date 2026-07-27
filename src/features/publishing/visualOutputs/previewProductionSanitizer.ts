@@ -17,6 +17,9 @@ export interface PreviewSanitizerRawNode {
   readonly relationshipHint?: VisualPreviewRelationshipHint;
   readonly birthDate?: string; // YYYY-MM-DD or YYYY
   readonly deathDate?: string; // YYYY-MM-DD or YYYY
+  readonly birthPlace?: string;
+  readonly occupation?: string;
+  readonly description?: string;
   readonly hasProfilePhoto?: boolean;
 }
 
@@ -35,6 +38,23 @@ const extractYearOnly = (dateStr?: string): number | undefined => {
   if (!dateStr) return undefined;
   const match = dateStr.match(/^\d{4}/);
   return match ? parseInt(match[0], 10) : undefined;
+};
+
+const sanitizeShortLabel = (value?: string): string | undefined => {
+  if (!value) return undefined;
+  const normalized = value.replace(/\p{Cc}/gu, ' ').replace(/\s+/g, ' ').trim();
+  if (!normalized) return undefined;
+  return Array.from(normalized).slice(0, 60).join('');
+};
+
+const sanitizeDescriptionLabel = (value?: string): string | undefined => {
+  if (!value) return undefined;
+  const normalized = value.replace(/\p{Cc}/gu, ' ').replace(/\s+/g, ' ').trim();
+  if (!normalized) return undefined;
+  const characters = Array.from(normalized);
+  return characters.length > 90
+    ? `${characters.slice(0, 87).join('')}...`
+    : normalized;
 };
 
 /**
@@ -83,6 +103,16 @@ export const productionPreviewSanitizer: VisualPreviewSanitizer<PreviewSanitizer
 
       // Profile photo indicator ONLY if enabled, unmasked, and exists in raw graph
       const hasPhoto = !!policy.includePhotos && !isMasked && !!rawNode.hasProfilePhoto;
+      const canIncludePublicDetails = !isMasked && !rawNode.isLiving;
+      const birthPlaceLabel = policy.includeBirthPlace && canIncludePublicDetails
+        ? sanitizeShortLabel(rawNode.birthPlace)
+        : undefined;
+      const occupationLabel = policy.includeOccupation && canIncludePublicDetails
+        ? sanitizeShortLabel(rawNode.occupation)
+        : undefined;
+      const descriptionLabel = policy.includeDescription && canIncludePublicDetails
+        ? sanitizeDescriptionLabel(rawNode.description)
+        : undefined;
 
       return {
         previewId,
@@ -94,6 +124,9 @@ export const productionPreviewSanitizer: VisualPreviewSanitizer<PreviewSanitizer
         hasPhoto,
         birthYear,
         deathYear,
+        birthPlaceLabel,
+        occupationLabel,
+        descriptionLabel,
       };
     });
 

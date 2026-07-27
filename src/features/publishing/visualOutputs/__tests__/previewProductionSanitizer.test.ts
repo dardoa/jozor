@@ -17,6 +17,9 @@ describe('Preview Production Sanitizer Skeleton Rules', () => {
         relationshipHint: 'ancestor',
         birthDate: '1905-01-01',
         deathDate: '1970-12-31',
+        birthPlace: '  Damascus\u0000  Syria  ',
+        occupation: 'Historian',
+        description: '  Preserved\u0000 family archives and documented oral history for future generations.  ',
         hasProfilePhoto: true,
       },
       {
@@ -27,6 +30,9 @@ describe('Preview Production Sanitizer Skeleton Rules', () => {
         generation: 2,
         relationshipHint: 'parent',
         birthDate: '1960-06-15',
+        birthPlace: 'Riyadh',
+        occupation: 'Engineer',
+        description: 'This living profile description must remain private.',
         hasProfilePhoto: true,
       },
       {
@@ -134,6 +140,51 @@ describe('Preview Production Sanitizer Skeleton Rules', () => {
     expect(result.edges.length).toBe(1);
     expect(result.edges[0].fromPreviewId).toBe('preview-node-1');
     expect(result.edges[0].toPreviewId).toBe('preview-node-2');
+  });
+
+  it('allows short public poster details while stripping them from living and private nodes', () => {
+    const result = productionPreviewSanitizer.sanitize(sampleRawGraph, {
+      privacyMode: 'masked',
+      includePhotos: false,
+      includeYears: false,
+      includeBirthPlace: true,
+      includeOccupation: true,
+      includeDescription: true,
+      maxNodes: 10,
+      language: 'en',
+    });
+
+    expect(result.nodes[0].birthPlaceLabel).toBe('Damascus Syria');
+    expect(result.nodes[0].occupationLabel).toBe('Historian');
+    expect(result.nodes[0].descriptionLabel).toBe(
+      'Preserved family archives and documented oral history for future generations.'
+    );
+    expect(result.nodes[1].birthPlaceLabel).toBeUndefined();
+    expect(result.nodes[1].occupationLabel).toBeUndefined();
+    expect(result.nodes[1].descriptionLabel).toBeUndefined();
+    expect(JSON.stringify(result)).not.toContain('Riyadh');
+    expect(JSON.stringify(result)).not.toContain('Engineer');
+    expect(JSON.stringify(result)).not.toContain('living profile description');
+  });
+
+  it('normalizes and caps the optional descriptive line without exposing the full source text', () => {
+    const longDescription = `Family historian ${'and archive keeper '.repeat(10)}`;
+    const graph: PreviewSanitizerRawGraph = {
+      nodes: [{ ...sampleRawGraph.nodes[0], description: longDescription }],
+      edges: [],
+    };
+    const result = productionPreviewSanitizer.sanitize(graph, {
+      privacyMode: 'owner-full',
+      includePhotos: false,
+      includeYears: false,
+      includeDescription: true,
+      maxNodes: 1,
+      language: 'en',
+    });
+
+    expect(result.nodes[0].descriptionLabel).toHaveLength(90);
+    expect(result.nodes[0].descriptionLabel).toMatch(/\.\.\.$/);
+    expect(result.nodes[0].descriptionLabel).not.toBe(longDescription.trim());
   });
 
   it('verifies owner-full policy mode enforces data rules while displaying public ancestor details', () => {
