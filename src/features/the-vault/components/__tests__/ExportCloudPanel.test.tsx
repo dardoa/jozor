@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 
@@ -481,7 +481,7 @@ describe('ExportCloudPanel manuscript preview', () => {
     await waitFor(() => expect(onRunExport).toHaveBeenCalledWith('markdown'));
   });
 
-  it('switches to Visual Outputs and renders poster templates with tree snapshots', async () => {
+  it('switches to Visual Outputs and exposes Studio poster downloads while keeping snapshot export active', async () => {
     const onRunPublishingExport = vi.fn().mockResolvedValue(undefined);
     const onRunExport = vi.fn().mockResolvedValue(undefined);
 
@@ -497,59 +497,37 @@ describe('ExportCloudPanel manuscript preview', () => {
 
     expect(screen.getByRole('tab', { name: /Visual Outputs/i })).toHaveAttribute('aria-selected', 'true');
 
-    // Verify metadata rendered from registry and polished gallery UI elements
-    expect(screen.getByText('Classic Ancestor Poster')).toBeInTheDocument();
-    expect(screen.getByText(/Traditional cozy poster design featuring warm vintage tones/i)).toBeInTheDocument();
-    expect(screen.getByText('Modern Ancestor Poster')).toBeInTheDocument();
-    expect(screen.getByText(/Modern dark-themed poster design utilizing contrasting elements/i)).toBeInTheDocument();
-    expect(screen.getByText('Current Tree Snapshot')).toBeInTheDocument();
+    // Verify Studio metadata rendered from registry
+    expect(screen.getAllByText('Classic Ancestor Poster').length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Warm print-first family poster/i).length).toBeGreaterThan(0);
+    expect(screen.getByRole('button', { name: 'Modern Gallery Poster' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Dense Genealogy Poster' })).toBeInTheDocument();
+    expect(screen.getAllByText('Current Tree Snapshot').length).toBeGreaterThan(0);
 
     // Verify preview placeholders
-    expect(screen.getByLabelText('Preview of Classic Ancestor Poster')).toBeInTheDocument();
-    expect(screen.getByLabelText('Preview of Modern Ancestor Poster')).toBeInTheDocument();
-    expect(screen.getByLabelText('Preview of Current Tree Snapshot')).toBeInTheDocument();
+    expect(screen.getAllByLabelText('Preview of Classic Ancestor Poster').length).toBeGreaterThan(0);
+    expect(screen.getAllByLabelText('Preview of Current Tree Snapshot').length).toBeGreaterThan(0);
 
-    // Verify recommendation chips
-    expect(screen.getByText('Printing')).toBeInTheDocument();
-    expect(screen.getByText('Family reunion')).toBeInTheDocument();
-    expect(screen.getByText('Archives')).toBeInTheDocument();
-    expect(screen.getByText('Digital display')).toBeInTheDocument();
-    expect(screen.getByText('Presentations')).toBeInTheDocument();
-    expect(screen.getByText('Premium print')).toBeInTheDocument();
+    // Verify the active export area no longer exposes legacy poster downloads
+    const actualExportSection = screen.getByTestId('visual-actual-export-section');
+    expect(within(actualExportSection).getByText(/legacy poster PDF path remains paused/i)).toBeInTheDocument();
+    expect(within(actualExportSection).queryByRole('button', { name: /Download PNG/i })).not.toBeInTheDocument();
+    expect(within(actualExportSection).queryByRole('button', { name: /Download PDF/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Download PNG/i })).toBeEnabled();
+    expect(screen.getByRole('button', { name: /Download PDF/i })).toBeEnabled();
+    expect(onRunPublishingExport).not.toHaveBeenCalled();
+
+    // Verify the tree snapshot card remains the current downloadable visual output
     expect(screen.getByText('Quick sharing')).toBeInTheDocument();
     expect(screen.getByText('Documentation')).toBeInTheDocument();
     expect(screen.getByText('Current view')).toBeInTheDocument();
-
-    // Verify badges
-    expect(screen.getAllByText('Poster').length).toBe(2);
     expect(screen.getByText('Snapshot')).toBeInTheDocument();
-    expect(screen.getAllByText('Structural beta pass').length).toBe(3);
-    expect(screen.getAllByText(/Export is structurally verified. Review the result visually on your own tree before sharing./i).length).toBe(3);
+    expect(screen.getByText('Structural beta pass')).toBeInTheDocument();
+    expect(screen.getByText(/Export is structurally verified. Review the result visually on your own tree before sharing./i)).toBeInTheDocument();
 
     // Verify format tags and hints
-    expect(screen.getAllByText('Supported formats:').length).toBe(3);
-    expect(screen.getAllByText('Print-ready sizes: A4-A0').length).toBe(2);
+    expect(screen.getByText('Supported formats:')).toBeInTheDocument();
     expect(screen.getByText('Uses the current tree view')).toBeInTheDocument();
-
-    // Click Classic Poster buttons
-    const classicPngBtn = screen.getAllByRole('button', { name: /Download PNG/i })[0];
-    const classicPdfBtn = screen.getAllByRole('button', { name: /Download PDF/i })[0];
-
-    fireEvent.click(classicPngBtn);
-    await waitFor(() => expect(onRunPublishingExport).toHaveBeenLastCalledWith({ templateId: 'classic-ancestor-poster', format: 'png' }));
-
-    fireEvent.click(classicPdfBtn);
-    await waitFor(() => expect(onRunPublishingExport).toHaveBeenLastCalledWith({ templateId: 'classic-ancestor-poster', format: 'pdf' }));
-
-    // Click Modern Poster buttons
-    const modernPngBtn = screen.getAllByRole('button', { name: /Download PNG/i })[1];
-    const modernPdfBtn = screen.getAllByRole('button', { name: /Download PDF/i })[1];
-
-    fireEvent.click(modernPngBtn);
-    await waitFor(() => expect(onRunPublishingExport).toHaveBeenLastCalledWith({ templateId: 'modern-ancestor-poster', format: 'png' }));
-
-    fireEvent.click(modernPdfBtn);
-    await waitFor(() => expect(onRunPublishingExport).toHaveBeenLastCalledWith({ templateId: 'modern-ancestor-poster', format: 'pdf' }));
 
     // Click Snapshot buttons
     const snapshotPngBtn = screen.getByRole('button', { name: /^PNG$/i });
@@ -564,10 +542,25 @@ describe('ExportCloudPanel manuscript preview', () => {
     expect(screen.queryByLabelText(/Manuscript root/i)).not.toBeInTheDocument();
   });
 
-  it('does not display Visual Publishing Studio shell by default', () => {
+  it('displays the visual review area and separates current export actions', async () => {
     render(<ExportCloudPanel {...baseProps} />);
     switchToExportSection(/Visual Outputs/i);
-    expect(screen.queryByTestId('visual-publishing-studio')).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByTestId('visual-publishing-studio')).toBeInTheDocument();
+      expect(screen.getByTestId('studio-poster-renderer-preview')).toHaveAttribute(
+        'data-poster-renderer',
+        'svg-v1'
+      );
+    });
+    expect(screen.getByText('Visual outputs preview')).toBeInTheDocument();
+    expect(screen.getByText(/Choose an output type and customize the poster/i)).toBeInTheDocument();
+    expect(screen.getByText('Additional outputs')).toBeInTheDocument();
+    expect(screen.getByText(/Use the following card to download a Tree Snapshot/i)).toBeInTheDocument();
+    expect(screen.getByText(/legacy poster PDF path remains paused/i)).toBeInTheDocument();
+    expect(screen.queryByText('sanitized-data')).not.toBeInTheDocument();
+    expect(screen.getByTestId('visual-studio-action-bar')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Download PNG/i })).toBeEnabled();
+    expect(screen.getByRole('button', { name: /Download PDF/i })).toBeEnabled();
   });
 
   it('switches to Portable Data and renders only portable utility exports', () => {

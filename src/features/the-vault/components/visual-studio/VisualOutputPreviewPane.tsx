@@ -1,92 +1,83 @@
 import React from 'react';
-import type { VisualOutputDefinition, VisualPreviewModel } from '../../../publishing';
+import {
+  renderPosterSceneToSvg,
+  type PosterScene,
+  type StudioPosterSvgResources,
+  type VisualOutputDefinition,
+  type VisualPreviewModel,
+} from '../../../publishing';
 
 interface VisualOutputPreviewPaneProps {
   language: 'ar' | 'en';
   selectedDefinition?: VisualOutputDefinition;
   previewModel?: VisualPreviewModel;
+  posterScene?: PosterScene;
+  posterSvgResources?: StudioPosterSvgResources;
 }
+
+const ar = {
+  peopleVisible: '\u0627\u0644\u0623\u0634\u062e\u0627\u0635 \u0627\u0644\u0638\u0627\u0647\u0631\u0648\u0646',
+  relationshipsVisible: '\u0627\u0644\u0639\u0644\u0627\u0642\u0627\u062a \u0627\u0644\u0638\u0627\u0647\u0631\u0629',
+  previewSimplified: '\u0627\u0644\u0645\u0639\u0627\u064a\u0646\u0629 \u0645\u062e\u062a\u0635\u0631\u0629',
+};
 
 export const VisualOutputPreviewPane: React.FC<VisualOutputPreviewPaneProps> = ({
   language,
   selectedDefinition,
   previewModel,
+  posterScene,
+  posterSvgResources,
 }) => {
   const isAr = language === 'ar';
   const displayName = selectedDefinition?.displayName[language] || '';
   const description = selectedDefinition?.description[language] || '';
   const previewAlt = selectedDefinition?.previewAsset?.alt[language] || '';
   const productType = selectedDefinition?.productType || 'poster';
-  const definitionId = selectedDefinition?.id || '';
+  const posterOrientation = posterScene?.document.orientation ?? 'portrait';
 
-  // Determine mockup styling based on template theme
-  const isDarkPreset = definitionId === 'modern-ancestor-poster';
-
-  // Preview Telemetry Stats
   const nodeCount = previewModel?.nodes.length ?? 0;
   const edgeCount = previewModel?.edges.length ?? 0;
   const isTruncated = previewModel?.metadata.truncated ?? false;
+  const posterRender = productType === 'poster' && posterScene
+    ? renderPosterSceneToSvg({ scene: posterScene, resources: posterSvgResources })
+    : undefined;
+  const previewAspectRatio = posterRender
+    ? `${posterRender.metadata.width} / ${posterRender.metadata.height}`
+    : undefined;
+  const previewMaxWidth = posterOrientation === 'portrait' ? 460 : 760;
 
   return (
     <div
-      className="flex flex-col items-center gap-4 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-subtle)] p-6 text-center select-none"
+      className="flex flex-col items-center gap-4 rounded-lg border border-[var(--border-soft)] bg-[var(--surface-subtle)] p-4 text-center select-none"
       data-testid="visual-studio-preview-pane"
     >
-      {/* Mockup Preview Frame */}
       <div
-        className="w-full flex items-center justify-center p-4 bg-[var(--surface-panel)] rounded-xl border border-[var(--border-soft)]/60 min-h-[220px]"
+        className="flex min-h-[360px] w-full items-center justify-center rounded-lg border border-[var(--border-soft)]/60 bg-[var(--surface-panel)] p-3 md:min-h-[440px]"
         data-testid="visual-preview-frame"
         aria-label={previewAlt}
       >
-        {productType === 'poster' ? (
-          /* Poster Template Mockup (Portrait Frame) */
+        {productType === 'poster' && posterRender ? (
           <div
-            className={`w-[140px] h-[190px] rounded-lg border-2 shadow-sm flex flex-col justify-between p-2 relative overflow-hidden transition-all duration-300 ${
-              isDarkPreset
-                ? 'border-slate-700 bg-slate-900/90 text-slate-300'
-                : 'border-amber-700/30 bg-amber-50/60 text-amber-900'
-            }`}
-            data-testid="poster-preview-composition"
+            dir="ltr"
+            className="w-full shrink-0 overflow-hidden border border-[var(--border-soft)] bg-white shadow-md transition-[max-width,aspect-ratio] duration-200"
+            data-testid="studio-poster-page-frame"
+            data-poster-scene-version={posterScene?.version}
+            style={{ maxWidth: previewMaxWidth, aspectRatio: previewAspectRatio }}
           >
-            {/* Poster Header Mock */}
-            <div className={`text-[8px] font-bold text-center border-b pb-1 truncate ${
-              isDarkPreset ? 'border-slate-800 text-slate-400' : 'border-amber-200/60 text-amber-800'
-            }`}>
-              {displayName}
-            </div>
-
-            {/* Abstract Ancestor Tree Mock (Branching upwards from bottom root) */}
-            <div className="flex-1 flex flex-col justify-end items-center gap-2.5 pb-2 relative">
-              {/* Grandparents (Level 3) - 4 small nodes */}
-              <div className="flex justify-between w-full px-2">
-                <div className={`w-2 h-2 rounded-full ${isDarkPreset ? 'bg-indigo-500/80' : 'bg-amber-600/70'}`} />
-                <div className={`w-2 h-2 rounded-full ${isDarkPreset ? 'bg-indigo-500/80' : 'bg-amber-600/70'}`} />
-                <div className={`w-2 h-2 rounded-full ${isDarkPreset ? 'bg-indigo-500/80' : 'bg-amber-600/70'}`} />
-                <div className={`w-2 h-2 rounded-full ${isDarkPreset ? 'bg-indigo-500/80' : 'bg-amber-600/70'}`} />
-              </div>
-
-              {/* Parents (Level 2) - 2 nodes */}
-              <div className="flex justify-around w-[75%]">
-                <div className={`w-3 h-3 rounded-full ${isDarkPreset ? 'bg-teal-500/80' : 'bg-amber-700/80'}`} />
-                <div className={`w-3 h-3 rounded-full ${isDarkPreset ? 'bg-teal-500/80' : 'bg-amber-700/80'}`} />
-              </div>
-
-              {/* Root Person (Level 1) - 1 node */}
-              <div className={`w-4 h-4 rounded-full ${isDarkPreset ? 'bg-indigo-600' : 'bg-amber-800'}`} />
-
-              {/* Connecting lines via CSS absolute borders */}
-              <div className={`absolute bottom-5 left-[50%] w-0.5 h-6 -translate-x-1/2 border-l border-dashed ${
-                isDarkPreset ? 'border-slate-700' : 'border-amber-300'
-              }`} />
-            </div>
+            <div
+              role="img"
+              aria-label={previewAlt || displayName}
+              data-testid="studio-poster-renderer-preview"
+              className="h-full w-full border-0 [&>svg]:block [&>svg]:h-full [&>svg]:w-full"
+              data-poster-renderer="svg-v1"
+              dangerouslySetInnerHTML={{ __html: posterRender.svg }}
+            />
           </div>
         ) : (
-          /* Viewport Snapshot Mockup (Landscape Frame) */
           <div
-            className="w-[200px] h-[130px] rounded-lg border border-[var(--border-soft)] bg-[var(--surface-subtle)] shadow-sm flex flex-col p-1.5 relative overflow-hidden"
+            className="w-[300px] h-[190px] rounded-xl border border-[var(--border-soft)] bg-[var(--surface-subtle)] shadow-md flex flex-col p-2 relative overflow-hidden"
             data-testid="snapshot-preview-composition"
           >
-            {/* Viewport UI header mock */}
             <div className="flex items-center gap-1 border-b border-[var(--border-soft)] pb-1 mb-1.5">
               <div className="w-1.5 h-1.5 rounded-full bg-red-400" />
               <div className="w-1.5 h-1.5 rounded-full bg-yellow-400" />
@@ -94,46 +85,42 @@ export const VisualOutputPreviewPane: React.FC<VisualOutputPreviewPaneProps> = (
               <div className="text-[7px] text-[var(--text-muted)] font-mono ml-1">Jozor Workspace</div>
             </div>
 
-            {/* Abstract Tree Nodes / Grid Mock */}
-            <div className="flex-1 grid grid-cols-3 gap-2 p-1 relative bg-[var(--surface-panel)] border border-[var(--border-soft)]/40 rounded">
-              <div className="flex flex-col gap-1.5 justify-center items-center">
-                <div className="w-6 h-3 rounded bg-[var(--primary-500)]/10 border border-[var(--primary-500)]/30" />
-                <div className="w-6 h-3 rounded bg-[var(--primary-500)]/10 border border-[var(--primary-500)]/30" />
+            <div className="flex-1 grid grid-cols-3 gap-2 p-2 relative bg-[var(--surface-panel)] border border-[var(--border-soft)]/40 rounded">
+              <div className="flex flex-col gap-3 justify-center items-center">
+                <div className="w-9 h-4 rounded bg-[var(--primary-500)]/10 border border-[var(--primary-500)]/30" />
+                <div className="w-9 h-4 rounded bg-[var(--primary-500)]/10 border border-[var(--primary-500)]/30" />
               </div>
               <div className="flex flex-col justify-center items-center">
-                <div className="w-8 h-4 rounded bg-[var(--primary-500)]/20 border border-[var(--primary-500)]/50" />
+                <div className="w-12 h-6 rounded bg-[var(--primary-500)]/20 border border-[var(--primary-500)]/50" />
               </div>
-              <div className="flex flex-col gap-1.5 justify-center items-center">
-                <div className="w-6 h-3 rounded bg-[var(--primary-500)]/10 border border-[var(--primary-500)]/30" />
-                <div className="w-6 h-3 rounded bg-[var(--primary-500)]/10 border border-[var(--primary-500)]/30" />
+              <div className="flex flex-col gap-3 justify-center items-center">
+                <div className="w-9 h-4 rounded bg-[var(--primary-500)]/10 border border-[var(--primary-500)]/30" />
+                <div className="w-9 h-4 rounded bg-[var(--primary-500)]/10 border border-[var(--primary-500)]/30" />
               </div>
-              {/* Abstract grid background helper */}
               <div className="absolute inset-0 bg-grid opacity-[0.03] pointer-events-none" />
             </div>
           </div>
         )}
       </div>
 
-      {/* Template Metadata Details */}
       <div className="flex flex-col gap-1 text-center">
         <h5 className="text-sm font-bold text-[var(--text-main)]">
           {displayName}
         </h5>
-        <p className="text-[11px] text-[var(--text-secondary)] max-w-[340px] leading-normal font-medium mx-auto">
+        <p className="text-[11px] text-[var(--text-secondary)] max-w-[360px] leading-normal font-medium mx-auto">
           {description}
         </p>
 
-        {/* Preview Telemetry Stats */}
         {previewModel && (
           <div className="mt-2 flex flex-col items-center gap-1.5">
             <span className="text-[10px] font-semibold text-[var(--text-muted)] select-none">
               {isAr
-                ? `العقد في المعاينة: ${nodeCount} | الروابط: ${edgeCount}`
-                : `Preview nodes: ${nodeCount} | Connections: ${edgeCount}`}
+                ? `${ar.peopleVisible}: ${nodeCount} | ${ar.relationshipsVisible}: ${edgeCount}`
+                : `People visible: ${nodeCount} | Relationships visible: ${edgeCount}`}
             </span>
             {isTruncated && (
               <span className="text-indigo-600 dark:text-indigo-300 bg-indigo-500/5 border border-indigo-500/20 px-2 py-0.5 rounded text-[10px] font-bold select-none">
-                {isAr ? 'المعاينة محدودة' : 'Preview limited'}
+                {isAr ? ar.previewSimplified : 'Preview simplified'}
               </span>
             )}
           </div>
