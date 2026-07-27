@@ -87,6 +87,7 @@ export interface ExportHistoryEntry {
   readonly treeId: string;
   readonly templateId: string;
   readonly exportType: 'legacy' | 'publishing';
+  readonly format?: string;
   readonly createdAt: string;
   readonly totalPages: number;
   readonly totalPeople: number;

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 
@@ -88,6 +88,10 @@ const baseProps = {
   isAuthorized: true,
   onGoogleLogin: vi.fn(),
   currentActiveDriveFileId: null,
+};
+
+const switchToExportSection = (name: RegExp) => {
+  fireEvent.click(screen.getByRole('tab', { name }));
 };
 
 describe('ExportCloudPanel manuscript preview', () => {
@@ -185,8 +189,6 @@ describe('ExportCloudPanel manuscript preview', () => {
       />
     );
 
-    expect(screen.getByText('Manuscript Control Panel')).toBeInTheDocument();
-    expect(screen.getByText(/Preview and PDF use the same manuscript model and settings/i)).toBeInTheDocument();
     expect(screen.getByText(/Estimated people count:/i)).toBeInTheDocument();
     expect(screen.getAllByText((_, element) => element?.textContent?.includes('Estimated people count: 2') ?? false).length).toBeGreaterThan(0);
     expect(screen.getByText(/Ordering strategy:/i)).toBeInTheDocument();
@@ -204,8 +206,6 @@ describe('ExportCloudPanel manuscript preview', () => {
     expect(screen.getByText(/All branch/i)).toBeInTheDocument();
     expect(screen.getAllByText((_, element) => element?.textContent?.includes('Estimated people count: 1') ?? false).length).toBeGreaterThan(0);
     expect(screen.getByText(/photos, timeline, bibliography, narrative/i)).toBeInTheDocument();
-    expect(screen.getByTestId('manuscript-visual-review-hint')).toHaveTextContent(/Manuscript renderer visual review/i);
-
     await waitFor(() => expect(onRunPublishingPreview).toHaveBeenCalled());
     expect(onRunPublishingPreview).toHaveBeenCalledWith(expect.objectContaining({
       manuscriptOptions: expect.objectContaining({
@@ -311,6 +311,35 @@ describe('ExportCloudPanel manuscript preview', () => {
     const indicator = await screen.findByTestId('controlled-pdf-readiness-indicator');
     expect(indicator).toBeInTheDocument();
     expect(indicator).toHaveTextContent('PDF engine: Ready');
+  });
+
+  it('renders browser print fallback guidance note when controlled PDF status is fallback', async () => {
+    vi.mocked(useControlledPdfReadiness).mockReturnValue({
+      status: 'fallback',
+      refresh: vi.fn().mockResolvedValue(undefined),
+    });
+
+    const onRunPublishingPreview = vi.fn().mockResolvedValue({
+      title: 'Family Manuscript',
+      html: '<!doctype html><html><body>Preview</body></html>',
+      pageEstimate: 4,
+    });
+
+    render(
+      <ExportCloudPanel
+        {...baseProps}
+        onRunPublishingPreview={onRunPublishingPreview}
+      />
+    );
+
+    // Photo privacy helper text should be present in the form layout
+    expect(screen.getByText(/reveal living\/private people/i)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /Preview Manuscript/i }));
+    await screen.findByText('Estimated pages: 4');
+
+    expect(screen.getByText(/Browser print may add browser headers/i)).toBeInTheDocument();
+    expect(screen.getByText(/disable browser headers and footers/i)).toBeInTheDocument();
   });
 
   it('renders manuscript summary panel with root, depth, strategy, and citation coverage stats', async () => {
@@ -430,6 +459,162 @@ describe('ExportCloudPanel manuscript preview', () => {
     expect(options).toContain('narrative');
     expect(options).toContain('chronological');
     expect(options).toContain('alphabetical');
+  });
+
+  it('defaults to the Family Book section and keeps other workflows hidden', () => {
+    render(<ExportCloudPanel {...baseProps} />);
+
+    expect(screen.getByRole('tab', { name: /Family Book/i })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('button', { name: /Family Book PDF/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Family Book Markdown/i })).toBeInTheDocument();
+    expect(screen.queryByText(/Classic Ancestor Poster/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/No export history available yet/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Cloud files/i)).not.toBeInTheDocument();
+  });
+
+  it('exports the manuscript Markdown from the Family Book workflow', async () => {
+    const onRunExport = vi.fn().mockResolvedValue(undefined);
+    render(<ExportCloudPanel {...baseProps} onRunExport={onRunExport} />);
+
+    fireEvent.click(screen.getByRole('button', { name: /Family Book Markdown/i }));
+
+    await waitFor(() => expect(onRunExport).toHaveBeenCalledWith('markdown'));
+  });
+
+  it('switches to Visual Outputs and exposes Studio poster downloads while keeping snapshot export active', async () => {
+    const onRunPublishingExport = vi.fn().mockResolvedValue(undefined);
+    const onRunExport = vi.fn().mockResolvedValue(undefined);
+
+    render(
+      <ExportCloudPanel
+        {...baseProps}
+        onRunPublishingExport={onRunPublishingExport}
+        onRunExport={onRunExport}
+      />
+    );
+
+    switchToExportSection(/Visual Outputs/i);
+
+    expect(screen.getByRole('tab', { name: /Visual Outputs/i })).toHaveAttribute('aria-selected', 'true');
+
+    // Verify Studio metadata rendered from registry
+    expect(screen.getAllByText('Classic Ancestor Poster').length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Warm print-first family poster/i).length).toBeGreaterThan(0);
+    expect(screen.getByRole('button', { name: 'Modern Gallery Poster' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Dense Genealogy Poster' })).toBeInTheDocument();
+    expect(screen.getAllByText('Current Tree Snapshot').length).toBeGreaterThan(0);
+
+    // Verify preview placeholders
+    expect(screen.getAllByLabelText('Preview of Classic Ancestor Poster').length).toBeGreaterThan(0);
+    expect(screen.getAllByLabelText('Preview of Current Tree Snapshot').length).toBeGreaterThan(0);
+
+    // Verify the active export area no longer exposes legacy poster downloads
+    const actualExportSection = screen.getByTestId('visual-actual-export-section');
+    expect(within(actualExportSection).getByText(/legacy poster PDF path remains paused/i)).toBeInTheDocument();
+    expect(within(actualExportSection).queryByRole('button', { name: /Download PNG/i })).not.toBeInTheDocument();
+    expect(within(actualExportSection).queryByRole('button', { name: /Download PDF/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Download PNG/i })).toBeEnabled();
+    expect(screen.getByRole('button', { name: /Download PDF/i })).toBeEnabled();
+    expect(onRunPublishingExport).not.toHaveBeenCalled();
+
+    // Verify the tree snapshot card remains the current downloadable visual output
+    expect(screen.getByText('Quick sharing')).toBeInTheDocument();
+    expect(screen.getByText('Documentation')).toBeInTheDocument();
+    expect(screen.getByText('Current view')).toBeInTheDocument();
+    expect(screen.getByText('Snapshot')).toBeInTheDocument();
+    expect(screen.getByText('Structural beta pass')).toBeInTheDocument();
+    expect(screen.getByText(/Export is structurally verified. Review the result visually on your own tree before sharing./i)).toBeInTheDocument();
+
+    // Verify format tags and hints
+    expect(screen.getByText('Supported formats:')).toBeInTheDocument();
+    expect(screen.getByText('Uses the current tree view')).toBeInTheDocument();
+
+    // Click Snapshot buttons
+    const snapshotPngBtn = screen.getByRole('button', { name: /^PNG$/i });
+    const snapshotPdfBtn = screen.getByRole('button', { name: /^PDF$/i });
+
+    fireEvent.click(snapshotPngBtn);
+    await waitFor(() => expect(onRunExport).toHaveBeenLastCalledWith('png'));
+
+    fireEvent.click(snapshotPdfBtn);
+    await waitFor(() => expect(onRunExport).toHaveBeenLastCalledWith('pdf'));
+
+    expect(screen.queryByLabelText(/Manuscript root/i)).not.toBeInTheDocument();
+  });
+
+  it('displays the visual review area and separates current export actions', async () => {
+    render(<ExportCloudPanel {...baseProps} />);
+    switchToExportSection(/Visual Outputs/i);
+    await waitFor(() => {
+      expect(screen.getByTestId('visual-publishing-studio')).toBeInTheDocument();
+      expect(screen.getByTestId('studio-poster-renderer-preview')).toHaveAttribute(
+        'data-poster-renderer',
+        'svg-v1'
+      );
+    });
+    expect(screen.getByText('Visual outputs preview')).toBeInTheDocument();
+    expect(screen.getByText(/Choose an output type and customize the poster/i)).toBeInTheDocument();
+    expect(screen.getByText('Additional outputs')).toBeInTheDocument();
+    expect(screen.getByText(/Use the following card to download a Tree Snapshot/i)).toBeInTheDocument();
+    expect(screen.getByText(/legacy poster PDF path remains paused/i)).toBeInTheDocument();
+    expect(screen.queryByText('sanitized-data')).not.toBeInTheDocument();
+    expect(screen.getByTestId('visual-studio-action-bar')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Download PNG/i })).toBeEnabled();
+    expect(screen.getByRole('button', { name: /Download PDF/i })).toBeEnabled();
+  });
+
+  it('switches to Portable Data and renders only portable utility exports', () => {
+    render(<ExportCloudPanel {...baseProps} />);
+
+    switchToExportSection(/Portable Data/i);
+
+    expect(screen.getByText('Export data')).toBeInTheDocument();
+    expect(screen.getAllByText('Portable Data').length).toBeGreaterThan(0);
+    expect(screen.getByRole('button', { name: /GEDCOM/i })).toBeInTheDocument();
+    expect(screen.getByText(/Genealogy exchange format. Owner spot check passed./i)).toBeInTheDocument();
+    expect(screen.getByText(/Limited beta ready/i)).toBeInTheDocument();
+
+    expect(screen.getByRole('button', { name: /Raw Project JSON/i })).toBeInTheDocument();
+    expect(screen.getByText(/Internal raw export \/ not for sharing/i)).toBeInTheDocument();
+    expect(screen.getByText(/May include internal metadata, media references, and raw project fields. Not a clean portable JSON export./i)).toBeInTheDocument();
+
+    expect(screen.getByRole('button', { name: /Jozor Full Backup/i })).toBeInTheDocument();
+    expect(screen.getByText(/Owner only \/ full backup/i)).toBeInTheDocument();
+    expect(screen.getByText(/Full owner archive. May contain raw project data, media, and backup files. Not a public sharing format./i)).toBeInTheDocument();
+
+    expect(screen.getByRole('button', { name: /Calendar/i })).toBeInTheDocument();
+    expect(screen.getByText(/Structural beta pass/i)).toBeInTheDocument();
+    expect(screen.getByText(/Exports complete-date events only; partial dates such as year-only values are skipped to avoid false precision./i)).toBeInTheDocument();
+
+    // Verify click handlers are triggered correctly
+    fireEvent.click(screen.getByRole('button', { name: /Raw Project JSON/i }));
+    expect(baseProps.onRunExport).toHaveBeenCalledWith('json');
+
+    fireEvent.click(screen.getByRole('button', { name: /Jozor Full Backup/i }));
+    expect(baseProps.onRunExport).toHaveBeenCalledWith('jozor');
+
+    fireEvent.click(screen.getByRole('button', { name: /GEDCOM/i }));
+    expect(baseProps.onRunExport).toHaveBeenCalledWith('gedcom');
+
+    fireEvent.click(screen.getByRole('button', { name: /Calendar/i }));
+    expect(baseProps.onRunExport).toHaveBeenCalledWith('ics');
+    expect(screen.queryByText('Direct Outputs')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^PDF$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^PNG$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Markdown/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Print/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Family Book PDF/i })).not.toBeInTheDocument();
+  });
+
+  it('keeps Google Drive disconnected messaging inside the Cloud Backup workflow', () => {
+    render(<ExportCloudPanel {...baseProps} isAuthorized={false} />);
+
+    expect(screen.queryByText(/Google Drive Disconnected/i)).not.toBeInTheDocument();
+
+    switchToExportSection(/Cloud Backup/i);
+
+    expect(screen.getByText(/Google Drive Disconnected/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Cloud files/i).length).toBeGreaterThan(0);
   });
 
   it('marks preview as stale when any relevant option is changed', async () => {
@@ -577,6 +762,7 @@ describe('ExportCloudPanel manuscript preview', () => {
 
     it('renders empty history placeholder when no history exists', () => {
       render(<ExportCloudPanel {...baseProps} />);
+      switchToExportSection(/History & Quality/i);
       expect(screen.getByText('No export history available yet.')).toBeInTheDocument();
       expect(screen.queryByRole('button', { name: /Clear History/i })).not.toBeInTheDocument();
     });
@@ -612,15 +798,19 @@ describe('ExportCloudPanel manuscript preview', () => {
       ];
 
       render(<ExportCloudPanel {...baseProps} />);
+      switchToExportSection(/History & Quality/i);
 
-      // Friendly template name and success status
-      expect(screen.getByText('Family Book')).toBeInTheDocument();
+      // Verify product title, format tag, category badge, and success status
+      expect(screen.getAllByText('Family Book').length).toBeGreaterThan(0);
+      expect(screen.getByText('PDF')).toBeInTheDocument();
       expect(screen.getByText('Success')).toBeInTheDocument();
 
       // Core metadata
       expect(screen.getByText('10 pages')).toBeInTheDocument();
       expect(screen.getByText('25 people')).toBeInTheDocument();
       expect(screen.getByText('masked')).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('button', { name: /Show details/i }));
 
       // Integrity and Evidence
       expect(screen.getByText('Health:')).toBeInTheDocument();
@@ -657,12 +847,85 @@ describe('ExportCloudPanel manuscript preview', () => {
       ];
 
       render(<ExportCloudPanel {...baseProps} />);
+      switchToExportSection(/History & Quality/i);
 
       expect(screen.getAllByText('GEDCOM').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('Portable Data').length).toBeGreaterThan(0);
       expect(screen.getByText('Warnings')).toBeInTheDocument();
       // Verify safe warnings message displays warning count, NOT raw warning string
       expect(screen.queryByText(/John Doe/i)).not.toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: /Show details/i }));
       expect(screen.getByText('1 warnings reported during export.')).toBeInTheDocument();
+    });
+
+    it('renders Family Book Markdown for Markdown history entries with templateId and legacy formats', () => {
+      mockExportHistoryData = [
+        {
+          id: 3,
+          publicationId: 'pub-3',
+          templateId: 'classic-book-manuscript',
+          format: 'markdown',
+          exportType: 'publishing',
+          createdAt: new Date().toISOString(),
+          success: true,
+        },
+        {
+          id: 4,
+          publicationId: 'pub-4',
+          format: 'markdown',
+          exportType: 'publishing',
+          createdAt: new Date().toISOString(),
+          success: true,
+        },
+      ];
+
+      render(<ExportCloudPanel {...baseProps} />);
+      switchToExportSection(/History & Quality/i);
+
+      expect(screen.getAllByText('Family Book').length).toBe(5);
+      expect(screen.getAllByText('Markdown').length).toBe(2);
+    });
+
+    it('renders Visual Output posters and snapshots, and generic PDF fallbacks correctly', () => {
+      mockExportHistoryData = [
+        {
+          id: 5,
+          publicationId: 'pub-5',
+          templateId: 'classic-ancestor-poster',
+          format: 'pdf',
+          exportType: 'publishing',
+          createdAt: new Date().toISOString(),
+          success: true,
+        },
+        {
+          id: 6,
+          publicationId: 'pub-6',
+          format: 'png',
+          exportType: 'publishing',
+          createdAt: new Date().toISOString(),
+          success: true,
+        },
+        {
+          id: 7,
+          publicationId: 'pub-7',
+          format: 'pdf',
+          exportType: 'publishing',
+          createdAt: new Date().toISOString(),
+          success: true,
+        },
+      ];
+
+      render(<ExportCloudPanel {...baseProps} />);
+      switchToExportSection(/History & Quality/i);
+
+      expect(screen.getByText('Classic Ancestor Poster')).toBeInTheDocument();
+      expect(screen.getAllByText('Visual Output').length).toBe(2);
+
+      expect(screen.getByText('Current Tree Snapshot')).toBeInTheDocument();
+      expect(screen.getAllByText('PNG').length).toBe(1);
+
+      expect(screen.getAllByText('Generic Export').length).toBe(2);
+      expect(screen.getAllByText('PDF').length).toBe(2);
     });
 
     it('requires a two-step confirmation to clear history', () => {
@@ -684,6 +947,7 @@ describe('ExportCloudPanel manuscript preview', () => {
       ];
 
       render(<ExportCloudPanel {...baseProps} />);
+      switchToExportSection(/History & Quality/i);
 
       const clearBtn = screen.getByRole('button', { name: /Clear History/i });
       expect(clearBtn).toBeInTheDocument();

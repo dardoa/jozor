@@ -19,7 +19,7 @@ vi.mock('@paddle/paddle-node-sdk', () => ({
 
 import { Readable } from 'stream';
 import type { VercelRequest } from '@vercel/node';
-import handler from '../../../api/billing/paddle-webhook';
+import handler from '../../../shared/server/api/billing/paddle-webhook';
 
 const createRequest = (body: unknown) => {
   const rawBody = JSON.stringify(body);

@@ -1,4 +1,4 @@
-﻿import type { ManuscriptPersonEntry } from '../../types';
+import type { ManuscriptPersonEntry } from '../../types';
 
 export interface PersonCardRenderLabels {
   readonly coverage: string;
@@ -29,8 +29,12 @@ export function renderClassicPersonCard(
     person.familyContext ? `<p class="person-card__context">${escapeHtml(person.familyContext.label)}</p>` : '',
     person.relationshipToRoot ? `<div class="person-card__relationship">${escapeHtml(getMetadataLabel(person.relationshipToRoot, person.generation, language))}</div>` : '',
     '</div>',
-    `<span>${person.citationCoverage}% ${escapeHtml(labels.coverage)}</span>`,
     '</header>',
+    '<div class="person-card__coverage">',
+    person.citationCoverage === 0
+      ? `<span>${language === 'ar' ? 'المصادر: غير مضافة بعد' : 'Sources: not added yet'}</span>`
+      : `<span>${escapeHtml(labels.coverage)}: ${person.citationCoverage}%</span>`,
+    '</div>',
     renderFamilyBreadcrumb(person),
     person.narrative ? `<p class="person-card__narrative">${escapeHtml(person.narrative)}</p>` : '',
     '<dl class="fact-list">',

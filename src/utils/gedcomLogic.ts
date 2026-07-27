@@ -4,6 +4,8 @@ import { evaluateDataIntegrity, type DataIntegrityIssue } from '../domain/dataIn
 import type { RelationshipEdge } from '../types/relationship';
 import { buildGedcomFamilyGroups } from './gedcomRelationshipAdapter';
 
+type GedcomDateMetadata = Readonly<Record<string, unknown>>;
+
 export interface GedcomImportReport {
   peopleCount: number;
   familyCount: number;
@@ -38,26 +40,151 @@ const GEDCOM_MONTHS = new Set([
   'DEC',
 ]);
 
-// Helper to format date for GEDCOM (YYYY-MM-DD -> DD MMM YYYY)
-export const formatGedcomDate = (dateStr: string) => {
-  if (!dateStr) return '';
-  const d = new Date(dateStr);
-  if (isNaN(d.getTime())) return dateStr; // Return as is if not parseable
-  const months = [
-    'JAN',
-    'FEB',
-    'MAR',
-    'APR',
-    'MAY',
-    'JUN',
-    'JUL',
-    'AUG',
-    'SEP',
-    'OCT',
-    'NOV',
-    'DEC',
-  ];
-  return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+export function formatDateForGEDCOM(
+  dateValue?: string,
+  metadata?: GedcomDateMetadata,
+  dateField?: 'birth' | 'death' | 'start' | 'end'
+): string | null {
+  if (!dateValue) return null;
+  const trimmed = dateValue.trim();
+  if (!trimmed) return null;
+
+  // 1. Detect standard GEDCOM date prefixes or structures and return as-is
+  const gedcomPrefixRegex = /^(?:ABT|BEF|AFT|EST|CAL|FROM|TO|INT)\b/i;
+  if (gedcomPrefixRegex.test(trimmed)) {
+    return trimmed;
+  }
+
+  // 2. Detect approximate markers (e.g. "~1977", "about 1977", "حوالي 1977") and return "ABT YYYY"
+  const approxPrefixRegex = /^(?:~|ca\.?|about|circa|حوالي)\s*(\d{4})/i;
+  const approxMatch = trimmed.match(approxPrefixRegex);
+  if (approxMatch) {
+    return `ABT ${approxMatch[1]}`;
+  }
+
+  // 3. Resolve approximate flag from metadata
+  let isApproximate = false;
+  if (metadata && typeof metadata === 'object') {
+    if (dateField === 'birth') {
+      isApproximate = Boolean(metadata.birthDateApproximate || metadata.birthDate_approximate);
+    } else if (dateField === 'death') {
+      isApproximate = Boolean(metadata.deathDateApproximate || metadata.deathDate_approximate);
+    } else if (dateField === 'start') {
+      isApproximate = Boolean(metadata.startDateApproximate || metadata.startDate_approximate);
+    } else if (dateField === 'end') {
+      isApproximate = Boolean(metadata.endDateApproximate || metadata.endDate_approximate);
+    }
+  }
+
+  // 4. Resolve precision from metadata
+  let precision: 'year' | 'month' | 'day' | null = null;
+  if (metadata && typeof metadata === 'object') {
+    const precVal = dateField === 'birth'
+      ? (metadata.birthDatePrecision || metadata.birthDate_precision)
+      : dateField === 'death'
+      ? (metadata.deathDatePrecision || metadata.deathDate_precision)
+      : dateField === 'start'
+      ? (metadata.startDatePrecision || metadata.startDate_precision)
+      : dateField === 'end'
+      ? (metadata.endDatePrecision || metadata.endDate_precision)
+      : null;
+
+    if (typeof precVal === 'string') {
+      const lower = precVal.toLowerCase();
+      if (lower === 'day' || lower === 'full' || lower === 'exact') {
+        precision = 'day';
+      } else if (lower === 'month' || lower === 'year-month') {
+        precision = 'month';
+      } else if (lower === 'year' || lower === 'year-only') {
+        precision = 'year';
+      }
+    }
+  }
+
+  // 5. Try to parse standard YYYY-MM-DD
+  const ymdMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (ymdMatch) {
+    const year = ymdMatch[1];
+    const month = ymdMatch[2];
+    const day = ymdMatch[3];
+    const dayNum = parseInt(day, 10);
+    const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+    const monthIndex = parseInt(month, 10) - 1;
+    const monthStr = months[monthIndex] || 'JAN';
+
+    // If day is 01 and month is 01 (i.e. YYYY-01-01)
+    if (month === '01' && day === '01') {
+      // Preserve exact "1 JAN YYYY" only when data explicitly indicates day/month precision
+      if (precision === 'day') {
+        return `${isApproximate ? 'ABT ' : ''}${dayNum} ${monthStr} ${year}`;
+      }
+      return `${isApproximate ? 'ABT ' : ''}${year}`;
+    }
+
+    if (precision === 'year') {
+      return `${isApproximate ? 'ABT ' : ''}${year}`;
+    }
+    if (precision === 'month') {
+      return `${isApproximate ? 'ABT ' : ''}${monthStr} ${year}`;
+    }
+    return `${isApproximate ? 'ABT ' : ''}${dayNum} ${monthStr} ${year}`;
+  }
+
+  // 6. Try to parse YYYY-MM
+  const ymMatch = trimmed.match(/^(\d{4})-(\d{2})$/);
+  if (ymMatch) {
+    const year = ymMatch[1];
+    const month = ymMatch[2];
+    const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+    const monthIndex = parseInt(month, 10) - 1;
+    const monthStr = months[monthIndex] || 'JAN';
+
+    if (precision === 'year') {
+      return `${isApproximate ? 'ABT ' : ''}${year}`;
+    }
+    return `${isApproximate ? 'ABT ' : ''}${monthStr} ${year}`;
+  }
+
+  // 7. Try to parse YYYY
+  const yearMatch = trimmed.match(/^(\d{4})$/);
+  if (yearMatch) {
+    const year = yearMatch[1];
+    return `${isApproximate ? 'ABT ' : ''}${year}`;
+  }
+
+  // 8. Fallback for parseable Date structures
+  const d = new Date(trimmed);
+  if (!isNaN(d.getTime())) {
+    const year = d.getFullYear();
+    const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+    const monthStr = months[d.getMonth()];
+    const day = d.getDate();
+
+    if (d.getMonth() === 0 && d.getDate() === 1) {
+      if (precision === 'day') {
+        return `${isApproximate ? 'ABT ' : ''}${day} ${monthStr} ${year}`;
+      }
+      return `${isApproximate ? 'ABT ' : ''}${year}`;
+    }
+
+    if (precision === 'year') {
+      return `${isApproximate ? 'ABT ' : ''}${year}`;
+    }
+    if (precision === 'month') {
+      return `${isApproximate ? 'ABT ' : ''}${monthStr} ${year}`;
+    }
+    return `${isApproximate ? 'ABT ' : ''}${day} ${monthStr} ${year}`;
+  }
+
+  return trimmed;
+}
+
+export const formatGedcomDate = (
+  dateStr: string,
+  metadata?: GedcomDateMetadata,
+  dateField?: 'birth' | 'death' | 'start' | 'end'
+): string => {
+  return formatDateForGEDCOM(dateStr, metadata, dateField) || '';
 };
 
 // Helper to parse GEDCOM date (DD MMM YYYY -> YYYY-MM-DD)
@@ -202,17 +329,23 @@ export const exportToGEDCOM = (
     parents: string[];
     children: string[];
     relInfo?: RelationshipInfo;
+    metadata?: RelationshipEdge['metadata'];
   };
   const families = new Map<string, ExportFamily>();
 
   const getFamilyKey = (parents: string[]): string => parents.slice().sort().join('_');
 
-  const getOrCreateFamily = (parents: string[], relInfo?: RelationshipInfo): ExportFamily => {
+  const getOrCreateFamily = (
+    parents: string[],
+    relInfo?: RelationshipInfo,
+    metadata?: RelationshipEdge['metadata']
+  ): ExportFamily => {
     const normalizedParents = parents.filter((id, index, ids) => people[id] && ids.indexOf(id) === index).slice(0, 2);
     const key = getFamilyKey(normalizedParents);
     const existing = families.get(key);
     if (existing) {
       if (!existing.relInfo && relInfo) existing.relInfo = relInfo;
+      if (!existing.metadata && metadata) existing.metadata = metadata;
       return existing;
     }
 
@@ -221,6 +354,7 @@ export const exportToGEDCOM = (
       parents: normalizedParents,
       children: [],
       relInfo,
+      metadata,
     };
     families.set(key, family);
     return family;
@@ -242,7 +376,7 @@ export const exportToGEDCOM = (
       const person = people[id];
       person.spouses.forEach((spouseId) => {
         if (!people[spouseId]) return;
-        getOrCreateFamily([id, spouseId], person.partnerDetails?.[spouseId]);
+        getOrCreateFamily([id, spouseId], person.partnerDetails?.[spouseId], person.metadata);
       });
     });
 
@@ -275,6 +409,7 @@ export const exportToGEDCOM = (
 
       // Resolve relInfo details if spouse edges have metadata
       let relInfo: RelationshipInfo | undefined;
+      let familyMetadata: RelationshipEdge['metadata'];
       if (parents.length >= 2) {
         const [p1, p2] = parents;
         // Search in relationshipEdges
@@ -287,6 +422,7 @@ export const exportToGEDCOM = (
         });
 
         if (edge?.metadata) {
+          familyMetadata = edge.metadata;
           relInfo = {
             type: 'married',
             startDate: edge.metadata.startDate,
@@ -321,6 +457,7 @@ export const exportToGEDCOM = (
         parents,
         children,
         relInfo,
+        metadata: familyMetadata,
       });
     });
   }
@@ -359,14 +496,14 @@ export const exportToGEDCOM = (
     // Birth
     if (p.birthDate || p.birthPlace) {
       lines.push('1 BIRT');
-      if (p.birthDate) lines.push(`2 DATE ${formatGedcomDate(p.birthDate)}`);
+      if (p.birthDate) lines.push(`2 DATE ${formatGedcomDate(p.birthDate, p.metadata, 'birth')}`);
       if (p.birthPlace) lines.push(`2 PLAC ${p.birthPlace}`);
     }
 
     // Death
     if (p.isDeceased) {
       lines.push('1 DEAT');
-      if (p.deathDate) lines.push(`2 DATE ${formatGedcomDate(p.deathDate)}`);
+      if (p.deathDate) lines.push(`2 DATE ${formatGedcomDate(p.deathDate, p.metadata, 'death')}`);
       if (p.deathPlace) lines.push(`2 PLAC ${p.deathPlace}`);
     }
 
@@ -403,12 +540,12 @@ export const exportToGEDCOM = (
     if (relInfo) {
       if (relInfo.type === 'married' || relInfo.type === 'divorced') {
         lines.push('1 MARR');
-        if (relInfo.startDate) lines.push(`2 DATE ${formatGedcomDate(relInfo.startDate)}`);
+        if (relInfo.startDate) lines.push(`2 DATE ${formatGedcomDate(relInfo.startDate, family.metadata, 'start')}`);
         if (relInfo.startPlace) lines.push(`2 PLAC ${relInfo.startPlace}`);
       }
       if (relInfo.type === 'divorced') {
         lines.push('1 DIV');
-        if (relInfo.endDate) lines.push(`2 DATE ${formatGedcomDate(relInfo.endDate)}`);
+        if (relInfo.endDate) lines.push(`2 DATE ${formatGedcomDate(relInfo.endDate, family.metadata, 'end')}`);
         if (relInfo.endPlace) lines.push(`2 PLAC ${relInfo.endPlace}`);
       }
     }

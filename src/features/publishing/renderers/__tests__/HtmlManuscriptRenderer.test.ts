@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import type { FamilyManuscriptModel } from '../../types';
-import { HtmlManuscriptRenderer } from '../HtmlManuscriptRenderer';
+import { HtmlManuscriptRenderer, groupTimelineEventsForPrint } from '../HtmlManuscriptRenderer';
 import { CLASSIC_MANUSCRIPT_PRINT_TEMPLATE } from '../manuscriptTemplates';
+import { formatManuscriptDate } from '../../services/ManuscriptStructureBuilder';
 
 const model: FamilyManuscriptModel = {
   id: 'manuscript-test',
@@ -72,7 +73,7 @@ describe('HtmlManuscriptRenderer', () => {
     expect(html).toContain('هذه المسودة');
     expect(html).toContain('كفرنبل، سوريا');
     expect(html).toContain('سجل النفوس');
-    expect(html).toContain('50% توثيق');
+    expect(html).toContain('توثيق: 50%');
     expect(html).toContain('المصدر');
     expect(html).toContain('page-break-inside: avoid');
   });
@@ -82,7 +83,7 @@ describe('HtmlManuscriptRenderer', () => {
 
     expect(html).toContain('dir="ltr"');
     expect(html).toContain('2 people');
-    expect(html).toContain('50% documented');
+    expect(html).toContain('documented: 50%');
     expect(html).toContain('Person entries with key facts and citation coverage.');
     expect(html).toContain('<th>Source</th>');
   });
@@ -517,5 +518,129 @@ describe('HtmlManuscriptRenderer – Print Layout Stability', () => {
     expect(html).toContain('سيد محمد بن عبد الرحمن');
     expect(html).toContain('حارة الأشراف بالبلدة القديمة');
     expect(html).toContain('كتاب السلوك لمعرفة دول الملوك');
+  });
+
+  it('polishes the cover page by hiding UUID and rendering a template introduction', () => {
+    const customModel: FamilyManuscriptModel = {
+      id: 'manuscript-uuid-1234',
+      title: 'Family Book of Al-Yafi',
+      rootPersonId: 'p1',
+      chapters: [
+        {
+          id: 'p-chapter',
+          type: 'people',
+          title: 'People',
+          people: [
+            {
+              personId: 'p1',
+              displayName: 'John Doe',
+              citationCoverage: 0,
+              citationCount: 0,
+              facts: [
+                { label: 'Birth Date', value: '1900-01-01', citationCount: 0 }
+              ],
+              sourceHighlights: []
+            }
+          ]
+        },
+        {
+          id: 'ev-chapter',
+          type: 'evidence',
+          title: 'Bibliography',
+          citations: []
+        }
+      ]
+    };
+
+    const htmlEn = HtmlManuscriptRenderer.renderToHtml(customModel, { language: 'en' });
+
+    // UUID should not be visible in text but exist in HTML comment
+    expect(htmlEn).not.toContain('<p class="cover-subtitle">manuscript-uuid-1234</p>');
+    expect(htmlEn).toContain('<!-- manuscript-id: manuscript-uuid-1234 -->');
+
+    // Family name introduction should render
+    expect(htmlEn).toContain('gathers the Al-Yafi family branch');
+
+    // Empty bibliography should be avoided and replaced by a compact closing section
+    expect(htmlEn).not.toContain('class="page chapter-page evidence-chapter"');
+    expect(htmlEn).toContain('class="manuscript-closing-section"');
+    expect(htmlEn).toContain('End of family book');
+    expect(htmlEn).toContain('People included: <strong>1</strong>');
+    expect(htmlEn).toContain('No linked sources yet.');
+
+    // Citation coverage 0% should be softened to Sources: not added yet
+    expect(htmlEn).toContain('Sources: not added yet');
+    expect(htmlEn).not.toContain('0% documented');
+
+    const htmlAr = HtmlManuscriptRenderer.renderToHtml({
+      ...customModel,
+      title: 'كتاب عائلة القربي'
+    }, { language: 'ar' });
+    expect(htmlAr).toContain('يجمع هذا المخطوط أفراد عائلة القربي');
+    expect(htmlAr).toContain('انتهى هذا المخطوط');
+    expect(htmlAr).toContain('عدد الأشخاص: <strong>1</strong>');
+    expect(htmlAr).toContain('المصادر: غير مضافة بعد');
+  });
+
+  it('correctly formats approximate and placeholder dates using formatManuscriptDate', () => {
+    // YYYY-01-01 placeholder
+    expect(formatManuscriptDate('1900-01-01', 'en')).toBe('1900');
+    expect(formatManuscriptDate('1950-01-01', 'en', true)).toBe('about 1950');
+    expect(formatManuscriptDate('1950-01-01', 'ar', true)).toBe('حوالي 1950');
+
+    // Year only
+    expect(formatManuscriptDate('1920', 'en')).toBe('1920');
+    expect(formatManuscriptDate('1920', 'en', true)).toBe('about 1920');
+    expect(formatManuscriptDate('1920', 'ar', true)).toBe('حوالي 1920');
+
+    // Already approximate string
+    expect(formatManuscriptDate('about 1930', 'en')).toBe('about 1930');
+    expect(formatManuscriptDate('about 1930', 'ar')).toBe('حوالي 1930');
+    expect(formatManuscriptDate('حوالي 1940', 'en')).toBe('about 1940');
+
+    // Standard exact date remains exact
+    expect(formatManuscriptDate('1984-05-01', 'en')).toBe('1984-05-01');
+    expect(formatManuscriptDate('1984-05-01', 'en', true)).toBe('about 1984-05-01');
+  });
+
+  it('verifies timeline orphan prevention and closing card CSS styles are correctly defined', () => {
+    // Grouping logic:
+    // Empty list
+    expect(groupTimelineEventsForPrint([])).toEqual([]);
+
+    // 13 elements: chunked into 6, 6, 1 -> 1 is merged into second group -> 6, 7
+    const items13 = Array.from({ length: 13 }, (_, i) => i);
+    const groups13 = groupTimelineEventsForPrint(items13, 6, 2);
+    expect(groups13).toHaveLength(2);
+    expect(groups13[0]).toHaveLength(6);
+    expect(groups13[1]).toHaveLength(7);
+
+    // 14 elements: chunked into 6, 6, 2 -> kept as 6, 6, 2
+    const items14 = Array.from({ length: 14 }, (_, i) => i);
+    const groups14 = groupTimelineEventsForPrint(items14, 6, 2);
+    expect(groups14).toHaveLength(3);
+    expect(groups14[0]).toHaveLength(6);
+    expect(groups14[1]).toHaveLength(6);
+    expect(groups14[2]).toHaveLength(2);
+
+    const html = HtmlManuscriptRenderer.renderToHtml(model, { language: 'en' });
+
+    // Timeline event group wrapper should exist in output
+    expect(html).toContain('class="timeline-event-group"');
+
+    // Timeline list container should be list-style none
+    expect(html).toContain('.timeline-list {');
+    expect(html).toContain('list-style: none');
+    expect(html).toContain('padding-inline-start: 0');
+
+    // Individual timeline items should be break-inside avoid
+    expect(html).toContain('.timeline-list li {');
+    expect(html).toContain('break-inside: avoid');
+
+    // Closing section should be styled as a centered card
+    expect(html).toContain('.manuscript-closing-section {');
+    expect(html).toContain('margin: 40px auto');
+    expect(html).toContain('max-width: 500px');
+    expect(html).toContain('break-inside: avoid');
   });
 });

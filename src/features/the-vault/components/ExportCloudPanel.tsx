@@ -7,11 +7,9 @@ import {
   FileText,
   HardDrive,
   Image as ImageIcon,
-  Printer,
   RefreshCw,
   Save,
   Trash2,
-  BookOpen,
   Download,
   ExternalLink,
   Eye,
@@ -26,8 +24,11 @@ import type { DriveFile, ExportType, ManuscriptOrderingStrategy, Person, Publish
 import type { TranslationSchema } from '../../../utils/translationLoader';
 import { showToast } from '../../../utils/showToast';
 import { useControlledPdfReadiness } from '../../publishing/hooks';
+import { listVisualOutputDefinitionsByProduct } from '../../publishing';
+import type { VisualOutputDefinition, VisualOutputProductType, ExportHistoryEntry } from '../../publishing';
 import { useAppStore } from '../../../store/useAppStore';
 import { ManuscriptExportSummary } from './ManuscriptExportSummary';
+import { VisualPublishingStudio } from './visual-studio/VisualPublishingStudio';
 
 interface ExportCloudPanelProps {
   canManageCloud: boolean;
@@ -59,24 +60,43 @@ type ExportLabelKey =
   | 'vaultExportJson'
   | 'vaultExportGedcom'
   | 'vaultExportCalendar'
-  | 'vaultExportMarkdown'
   | 'vaultExportPng'
-  | 'vaultExportPdf'
-  | 'vaultExportPrint';
+  | 'vaultExportPdf';
 
 const EXPORT_ACTIONS: Array<{
   id: ExportType;
   labelKey: ExportLabelKey;
   icon: React.ComponentType<{ className?: string }>;
+  group: 'portable-data';
 }> = [
-  { id: 'jozor', labelKey: 'vaultExportArchive', icon: Archive },
-  { id: 'json', labelKey: 'vaultExportJson', icon: FileText },
-  { id: 'gedcom', labelKey: 'vaultExportGedcom', icon: FileText },
-  { id: 'ics', labelKey: 'vaultExportCalendar', icon: Calendar },
-  { id: 'markdown', labelKey: 'vaultExportMarkdown', icon: FileText },
+  { id: 'jozor', labelKey: 'vaultExportArchive', icon: Archive, group: 'portable-data' },
+  { id: 'json', labelKey: 'vaultExportJson', icon: FileText, group: 'portable-data' },
+  { id: 'gedcom', labelKey: 'vaultExportGedcom', icon: FileText, group: 'portable-data' },
+  { id: 'ics', labelKey: 'vaultExportCalendar', icon: Calendar, group: 'portable-data' },
+];
+
+const TREE_SNAPSHOT_ACTIONS: Array<{
+  id: Extract<ExportType, 'png' | 'pdf'>;
+  labelKey: ExportLabelKey;
+  icon: React.ComponentType<{ className?: string }>;
+}> = [
   { id: 'png', labelKey: 'vaultExportPng', icon: ImageIcon },
   { id: 'pdf', labelKey: 'vaultExportPdf', icon: FileText },
-  { id: 'print', labelKey: 'vaultExportPrint', icon: Printer },
+];
+
+const SHOW_LEGACY_POSTER_EXPORT_CARDS = false;
+
+type ExportPanelSection = 'family-book' | 'visuals' | 'data-export' | 'history' | 'cloud-backup';
+
+const EXPORT_PANEL_SECTIONS: Array<{
+  id: ExportPanelSection;
+  label: { en: string; ar: string };
+}> = [
+  { id: 'family-book', label: { en: 'Family Book', ar: 'كتاب العائلة' } },
+  { id: 'visuals', label: { en: 'Visual Outputs', ar: 'المخرجات البصرية' } },
+  { id: 'data-export', label: { en: 'Portable Data', ar: 'بيانات قابلة للنقل' } },
+  { id: 'history', label: { en: 'History & Quality', ar: 'السجل والجودة' } },
+  { id: 'cloud-backup', label: { en: 'Cloud Backup', ar: 'النسخ السحابي' } },
 ];
 
 const waitForDrawerDismissal = () =>
@@ -87,6 +107,135 @@ const waitForDrawerDismissal = () =>
     }
     window.setTimeout(resolve, 140);
   });
+
+function getRendererChips(definition?: VisualOutputDefinition): string[] {
+  return (definition?.capabilities?.rendererTargets as unknown as string[]) ?? (definition?.rendererTargets as unknown as string[]) ?? [];
+}
+
+function getVisualProductBadge(productType?: VisualOutputProductType, language?: 'ar' | 'en'): string {
+  if (productType === 'poster') {
+    return language === 'ar' ? 'بوستر' : 'Poster';
+  }
+  if (productType === 'snapshot') {
+    return language === 'ar' ? 'لقطة' : 'Snapshot';
+  }
+  return '';
+}
+
+type HistoryProductCategory =
+  | 'family-book'
+  | 'visual-output'
+  | 'portable-data'
+  | 'cloud-backup'
+  | 'unknown';
+
+interface HistoryProductDisplay {
+  category: HistoryProductCategory;
+  productLabel: string;
+  formatLabel: string;
+  badgeLabel: string;
+}
+
+function classifyHistoryEntry(entry: ExportHistoryEntry, language: 'ar' | 'en'): HistoryProductDisplay {
+  const templateId = entry.templateId;
+  const format = entry.format || '';
+
+  // 1. Family Book
+  if (templateId === 'classic-book-manuscript') {
+    return {
+      category: 'family-book',
+      productLabel: language === 'ar' ? 'كتاب العائلة' : 'Family Book',
+      formatLabel: format === 'markdown' ? 'Markdown' : 'PDF',
+      badgeLabel: language === 'ar' ? 'كتاب العائلة' : 'Family Book',
+    };
+  }
+  // Legacy fallback for old Markdown entries without templateId
+  if ((!templateId || templateId === 'markdown') && format === 'markdown') {
+    return {
+      category: 'family-book',
+      productLabel: language === 'ar' ? 'كتاب العائلة' : 'Family Book',
+      formatLabel: 'Markdown',
+      badgeLabel: language === 'ar' ? 'كتاب العائلة' : 'Family Book',
+    };
+  }
+
+  // 2. Visual Output
+  if (templateId === 'classic-ancestor-poster') {
+    return {
+      category: 'visual-output',
+      productLabel: language === 'ar' ? 'شجرة الأسلاف الكلاسيكية الدافئة' : 'Classic Ancestor Poster',
+      formatLabel: format.toUpperCase() || 'PNG',
+      badgeLabel: language === 'ar' ? 'مخرج بصري' : 'Visual Output',
+    };
+  }
+  if (templateId === 'modern-ancestor-poster') {
+    return {
+      category: 'visual-output',
+      productLabel: language === 'ar' ? 'شجرة الأسلاف العصرية الداكنة' : 'Modern Ancestor Poster',
+      formatLabel: format.toUpperCase() || 'PNG',
+      badgeLabel: language === 'ar' ? 'مخرج بصري' : 'Visual Output',
+    };
+  }
+  if (templateId === 'current-tree-snapshot') {
+    return {
+      category: 'visual-output',
+      productLabel: language === 'ar' ? 'لقطة الشجرة الحالية' : 'Current Tree Snapshot',
+      formatLabel: format.toUpperCase() || 'PNG',
+      badgeLabel: language === 'ar' ? 'مخرج بصري' : 'Visual Output',
+    };
+  }
+  // Legacy PNG fallback without templateId
+  if (!templateId && format === 'png') {
+    return {
+      category: 'visual-output',
+      productLabel: language === 'ar' ? 'لقطة الشجرة الحالية' : 'Current Tree Snapshot',
+      formatLabel: 'PNG',
+      badgeLabel: language === 'ar' ? 'مخرج بصري' : 'Visual Output',
+    };
+  }
+
+  // 3. Portable Data
+  if (templateId === 'gedcom' || format === 'gedcom') {
+    return {
+      category: 'portable-data',
+      productLabel: 'GEDCOM',
+      formatLabel: 'GEDCOM',
+      badgeLabel: language === 'ar' ? 'بيانات قابلة للنقل' : 'Portable Data',
+    };
+  }
+  if (templateId === 'json' || format === 'json') {
+    return {
+      category: 'portable-data',
+      productLabel: 'JSON',
+      formatLabel: 'JSON',
+      badgeLabel: language === 'ar' ? 'بيانات قابلة للنقل' : 'Portable Data',
+    };
+  }
+  if (templateId === 'jozor' || format === 'jozor') {
+    return {
+      category: 'portable-data',
+      productLabel: language === 'ar' ? 'أرشيف جذور' : 'Jozor Archive',
+      formatLabel: language === 'ar' ? 'أرشيف' : 'Archive',
+      badgeLabel: language === 'ar' ? 'بيانات قابلة للنقل' : 'Portable Data',
+    };
+  }
+  if (templateId === 'ics' || format === 'ics') {
+    return {
+      category: 'portable-data',
+      productLabel: language === 'ar' ? 'التقويم' : 'Calendar',
+      formatLabel: 'ICS',
+      badgeLabel: language === 'ar' ? 'بيانات قابلة للنقل' : 'Portable Data',
+    };
+  }
+
+  // 4. Default / Fallback
+  return {
+    category: 'unknown',
+    productLabel: templateId || (language === 'ar' ? 'تصدير عام' : 'Generic Export'),
+    formatLabel: format.toUpperCase() || 'UNKNOWN',
+    badgeLabel: language === 'ar' ? 'تصدير عام' : 'Generic Export',
+  };
+}
 
 function countBranchPeopleInScope(
   people: Record<string, Pick<Person, 'id' | 'children' | 'spouses'>>,
@@ -163,7 +312,16 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
   const [rootSearchText, setRootSearchText] = useState('');
   const [generationsDepth, setGenerationsDepth] = useState<number | 'all'>(3);
   const [confirmClearHistory, setConfirmClearHistory] = useState(false);
+  const [activeSection, setActiveSection] = useState<ExportPanelSection>('family-book');
+  const [expandedHistoryId, setExpandedHistoryId] = useState<number | string | null>(null);
   const { status: controlledPdfStatus, refresh: checkControlledPdfReadiness } = useControlledPdfReadiness();
+
+  const posterVisualOutputs = useMemo(() => listVisualOutputDefinitionsByProduct('poster'), []);
+  const snapshotVisualOutputs = useMemo(() => listVisualOutputDefinitionsByProduct('snapshot'), []);
+
+  const classicPosterDef = useMemo(() => posterVisualOutputs.find((def) => def.id === 'classic-ancestor-poster'), [posterVisualOutputs]);
+  const modernPosterDef = useMemo(() => posterVisualOutputs.find((def) => def.id === 'modern-ancestor-poster'), [posterVisualOutputs]);
+  const treeSnapshotDef = useMemo(() => snapshotVisualOutputs.find((def) => def.id === 'current-tree-snapshot'), [snapshotVisualOutputs]);
 
   React.useEffect(() => {
     void checkControlledPdfReadiness();
@@ -390,7 +548,7 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                   disabled={isPreviewLoading}
                   className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-emerald-700 px-3 py-2 text-xs font-bold text-white transition-all hover:brightness-105 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {isPreviewLoading ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Printer className="h-3.5 w-3.5" />}
+                  {isPreviewLoading ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <FileText className="h-3.5 w-3.5" />}
                   {isPreviewOutdated
                     ? (language === 'ar' ? 'تحديث المعاينة' : 'Refresh Preview')
                     : (language === 'ar' ? 'PDF مخطوط العائلة' : 'Family Book PDF')}
@@ -413,6 +571,31 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
           </div>
         </div>
       )}
+      <div className="rounded-[16px] border border-[var(--border-soft)] bg-[var(--surface-panel)] p-2 shadow-none">
+        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-5" role="tablist" aria-label={language === 'ar' ? 'أقسام التصدير' : 'Export sections'}>
+          {EXPORT_PANEL_SECTIONS.map((section) => {
+            const isActive = activeSection === section.id;
+            return (
+              <button
+                key={section.id}
+                type="button"
+                role="tab"
+                aria-selected={isActive}
+                onClick={() => setActiveSection(section.id)}
+                className={`min-h-10 rounded-xl px-3 py-2 text-xs font-bold transition-all ${
+                  isActive
+                    ? 'bg-[var(--primary-600)] text-white shadow-sm'
+                    : 'text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]'
+                }`}
+              >
+                {language === 'ar' ? section.label.ar : section.label.en}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {activeSection === 'cloud-backup' && (
       <section className="rounded-[14px] border border-[var(--border-soft)] bg-[var(--surface-panel)] p-4 shadow-none">
         {hasSessionError && (
           <div className="mb-4 flex flex-col gap-4 rounded-xl border border-[var(--danger-500)]/20 bg-[var(--danger-500)]/10 p-4 animate-in fade-in slide-in-from-top-2 duration-300">
@@ -488,62 +671,22 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
           </div>
         </div>
       </section>
+      )}
 
+      {(activeSection === 'family-book' || activeSection === 'visuals') && (
       <section className="rounded-[20px] border border-[var(--primary-500)]/20 bg-gradient-to-br from-[var(--surface-panel)] via-[var(--surface-panel)] to-[var(--primary-500)]/5 p-5 shadow-sm relative overflow-hidden">
-        {/* Decorative background glow */}
-        <div className="absolute -right-16 -top-16 h-36 w-36 rounded-full bg-[var(--primary-500)]/5 blur-3xl pointer-events-none" />
-
-        <div className="flex items-center gap-3">
-          <div className="rounded-xl bg-[var(--primary-500)]/10 p-2.5 text-[var(--primary-600)]">
-            <Sparkles className="h-5 w-5" />
-          </div>
-          <div>
-            <h4 className="text-[17px] font-bold tracking-tight text-[var(--text-main)]">
-              {language === 'ar' ? 'نظام النشر والطباعة (جذور 1.0)' : 'Publishing & Printing Engine (Jozor 1.0)'}
-            </h4>
-            <p className="mt-1 text-xs text-[var(--text-muted)]">
-              {language === 'ar'
-                ? 'تصدير شجرتك باستخدام محرك التخطيط التلقائي وتوزيع الصفحات الذكي.'
-                : 'Export your tree using the automated publishing layouts and page distribution.'}
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-5 space-y-4">
+        <div className="space-y-4">
+          {activeSection === 'family-book' && (
+          <>
           {/* Template 1: Classic Family Book */}
-          <div className="flex flex-col gap-4 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-subtle)] p-4 transition-all hover:border-[var(--primary-500)]/30 hover:shadow-sm">
-            <div className="flex items-start gap-3">
-              <div className="mt-0.5 rounded-xl bg-[var(--surface-panel)] p-2 text-[var(--primary-600)]">
-                <BookOpen className="h-5 w-5" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h5 className="text-sm font-bold text-[var(--text-main)]">
-                    {language === 'ar' ? 'كتاب العائلة الكلاسيكي المصغر' : 'Classic Family Book Manuscript'}
-                  </h5>
-                  <span className="rounded-full bg-[var(--primary-500)]/10 px-2 py-0.5 text-[10px] font-semibold text-[var(--primary-600)]">
-                    A4 PDF
-                  </span>
-                </div>
-                <p className="mt-1 text-[11px] leading-relaxed text-[var(--text-muted)]">
-                  {language === 'ar'
-                    ? 'مخطوط عائلي قابل للمعاينة قبل الطباعة، مع فصول الأشخاص والخط الزمني والمراجع حسب اختيارك.'
-                    : 'A previewable family manuscript with people chapters, timeline, and bibliography based on your options.'}
-                </p>
-              </div>
-            </div>
-            <div className="rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] p-3">
-              <div className="mb-3 flex flex-col gap-2 border-b border-[var(--border-soft)] pb-3 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                  <h6 className="text-xs font-bold uppercase tracking-[0.08em] text-[var(--text-secondary)]">
-                    {language === 'ar' ? 'لوحة تحكم المخطوط' : 'Manuscript Control Panel'}
-                  </h6>
-                  <p className="mt-1 text-[11px] leading-relaxed text-[var(--text-muted)]">
-                    {language === 'ar'
-                      ? 'المعاينة وملف PDF يستخدمان نفس نموذج المخطوط والإعدادات.'
-                      : 'Preview and PDF use the same manuscript model and settings.'}
-                  </p>
-                </div>
+          <div className="flex flex-col gap-4 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-panel)] p-4 transition-all hover:border-[var(--primary-500)]/30 hover:shadow-sm">
+              <div className="flex items-center justify-between gap-3 border-b border-[var(--border-soft)]/60 pb-3">
+                <h5 className="text-sm font-bold text-[var(--text-main)]">
+                  {language === 'ar' ? 'كتاب العائلة الكلاسيكي' : 'Classic Family Book'}
+                </h5>
+                <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 shrink-0">
+                  {language === 'ar' ? 'جاهز للبيتا المحدودة' : 'Limited beta ready'}
+                </span>
               </div>
               <ManuscriptExportSummary
                 language={language}
@@ -602,15 +745,22 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                   <option value="alphabetical">{language === 'ar' ? 'أبجدي' : 'Alphabetical'}</option>
                 </select>
               </label>
-              <label className="flex min-h-10 cursor-pointer items-center justify-between gap-3 rounded-lg bg-[var(--surface-subtle)] px-3 py-2 text-xs font-semibold text-[var(--text-secondary)]">
-                <span>{language === 'ar' ? 'تضمين الصور الشخصية المتاحة' : 'Include available profile photos'}</span>
-                <input
-                  type="checkbox"
-                  checked={includeImages}
-                  onChange={(event) => setIncludeImages(event.target.checked)}
-                  className="h-4 w-4 accent-[var(--primary-600)]"
-                />
-              </label>
+              <div className="flex flex-col gap-1.5">
+                <label className="flex min-h-10 cursor-pointer items-center justify-between gap-3 rounded-lg bg-[var(--surface-subtle)] px-3 py-2 text-xs font-semibold text-[var(--text-secondary)]">
+                  <span>{language === 'ar' ? 'تضمين الصور الشخصية المتاحة' : 'Include available profile photos'}</span>
+                  <input
+                    type="checkbox"
+                    checked={includeImages}
+                    onChange={(event) => setIncludeImages(event.target.checked)}
+                    className="h-4 w-4 accent-[var(--primary-600)]"
+                  />
+                </label>
+                <p className="text-[10px] text-[var(--text-muted)] leading-normal px-1">
+                  {language === 'ar'
+                    ? 'قد تكشف الصور الشخصية داخل الكتاب أشخاصاً أحياء أو خاصين ما لم تنطبق قواعد إخفاء الخصوصية.'
+                    : 'Profile photos included in the book may reveal living/private people unless privacy masking applies.'}
+                </p>
+              </div>
               <label className="flex min-h-10 cursor-pointer items-center justify-between gap-3 rounded-lg bg-[var(--surface-subtle)] px-3 py-2 text-xs font-semibold text-[var(--text-secondary)]">
                 <span>{language === 'ar' ? 'نصوص تعريفية مبدئية' : 'Draft biography text'}</span>
                 <input
@@ -639,7 +789,6 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                 />
               </label>
               </div>
-            </div>
 
             <div className="flex flex-col justify-end gap-2 border-t border-[var(--border-soft)] pt-3 sm:flex-row">
               <button
@@ -670,34 +819,84 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
 
               >
 
-                <Printer className="h-3.5 w-3.5" />
+                <FileText className="h-3.5 w-3.5" />
 
                 {language === 'ar' ? 'PDF مخطوط العائلة' : 'Family Book PDF'}
 
               </button>
+              <button
+                type="button"
+                onClick={() => void handleExport('markdown')}
+                className="flex items-center justify-center gap-2 rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] px-4 py-2 text-xs font-bold text-[var(--text-main)] transition-all hover:bg-[var(--surface-hover)] active:scale-[0.98]"
+              >
+                <FileText className="h-3.5 w-3.5" />
+                {language === 'ar' ? 'Markdown كتاب العائلة' : 'Family Book Markdown'}
+              </button>
             </div>
+            {controlledPdfStatus === 'fallback' && (
+              <div className="mt-2.5 text-[10px] leading-relaxed text-amber-600/90 dark:text-amber-500/90 max-w-md text-start flex flex-col gap-1">
+                <p>
+                  {language === 'ar'
+                    ? '⚠️ قد تضيف طباعة المتصفح ترويسة وتذييلاً من المتصفح (مثل date أو about:blank). لملفات PDF الجاهزة للبيتا، يرجى استخدام محرك PDF المتحكم عند توفره.'
+                    : '⚠️ Browser print may add browser headers and footers. For beta-ready PDFs, use the controlled PDF engine when available.'}
+                </p>
+                <p className="opacity-80">
+                  {language === 'ar'
+                    ? 'عند استخدام طباعة المتصفح كبديل مؤقت، يرجى تعطيل خيار "الترويسة والتذييل" (Headers and Footers) في إعدادات الطباعة قبل الحفظ.'
+                    : 'For browser print fallback, disable browser headers and footers in the print settings before saving as PDF.'}
+                </p>
+              </div>
+            )}
             <div className="mt-2 flex flex-col items-end gap-1 text-[10px] font-mono text-[var(--text-dim)]">
               <div data-testid="controlled-pdf-readiness-indicator">
                 {controlledPdfStatus === 'ready' && (language === 'ar' ? 'محرك PDF: جاهز' : 'PDF engine: Ready')}
                 {controlledPdfStatus === 'fallback' && (language === 'ar' ? 'محرك PDF: الطباعة من المتصفح' : 'PDF engine: Browser print')}
                 {controlledPdfStatus === 'checking' && (language === 'ar' ? 'محرك PDF: جاري الفحص' : 'PDF engine: Checking')}
               </div>
-              <div className="text-right text-[10px] font-sans text-[var(--text-dim)]/80" data-testid="manuscript-visual-review-hint">
-                {language === 'ar'
-                  ? 'مراجعة المظهر للمخطوط: تمت بنجاح للترتيب السردي والمخرجات العربية RTL.'
-                  : 'Manuscript renderer visual review: passed for narrative order and Arabic RTL output.'}
-              </div>
+            </div>
+          </div>
+          </>
+          )}
+
+          {activeSection === 'visuals' && (
+          <>
+          <div className="mb-6">
+            <VisualPublishingStudio language={language} previewSourceMode="store" />
+          </div>
+          <div data-testid="visual-actual-export-section" className="pt-2 border-t border-[var(--border-soft)]/60">
+            <h5 className="text-xs font-bold uppercase tracking-[0.08em] text-[var(--text-secondary)]">
+              {language === 'ar' ? '\u0645\u062e\u0631\u062c\u0627\u062a \u0625\u0636\u0627\u0641\u064a\u0629' : 'Additional outputs'}
+            </h5>
+            <p className="mt-1 text-[11px] leading-relaxed text-[var(--text-muted)]">
+              {language === 'ar'
+                ? 'استخدم البطاقة التالية لتنزيل لقطة الشجرة. تنزيلات PNG وPDF للبوستر متاحة من الاستوديو أعلاه.'
+                : 'Use the following card to download a Tree Snapshot. Poster PNG and PDF downloads are available from the Studio above.'}
+            </p>
+            <div className="mt-3 rounded-xl border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-[11px] font-medium leading-relaxed text-amber-700 dark:text-amber-300">
+              {language === 'ar'
+                ? 'مسار PDF القديم للبوسترات موقوف. يتم إنشاء PNG وPDF أعلاه بواسطة محرك الاستوديو الجديد.'
+                : 'The legacy poster PDF path remains paused. PNG and PDF above are generated by the new Studio renderer.'}
             </div>
           </div>
 
-          <div className="pt-2 border-t border-[var(--border-soft)]/60">
-            <h5 className="text-xs font-bold uppercase tracking-[0.08em] text-[var(--text-secondary)]">
-              {language === 'ar' ? 'بوسترات وصور الشجرة' : 'Tree Posters & Images'}
-            </h5>
-          </div>
-
+          {SHOW_LEGACY_POSTER_EXPORT_CARDS && (
+          <>
           {/* Template 2: Classic Ancestor Poster */}
           <div className="flex flex-col gap-4 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-subtle)] p-4 transition-all hover:border-[var(--primary-500)]/30 hover:shadow-sm">
+            {classicPosterDef?.previewAsset && (
+              <div
+                className="w-full h-32 rounded-xl bg-[var(--surface-panel)] border border-[var(--border-soft)] flex items-center justify-center text-[var(--text-dim)] font-medium text-xs relative overflow-hidden select-none"
+                aria-label={classicPosterDef.previewAsset.alt[language]}
+              >
+                <div className="absolute inset-0 bg-gradient-to-tr from-[var(--primary-500)]/5 via-transparent to-transparent pointer-events-none" />
+                <div className="flex flex-col items-center gap-1.5 z-10">
+                  <ImageIcon className="h-5 w-5 text-[var(--text-secondary)] opacity-60" />
+                  <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider font-mono">
+                    {language === 'ar' ? 'معاينة القالب الكلاسيكي' : 'Classic Template Preview'}
+                  </span>
+                </div>
+              </div>
+            )}
             <div className="flex items-start gap-3">
               <div className="mt-0.5 rounded-xl bg-[var(--surface-panel)] p-2 text-[var(--primary-600)]">
                 <ImageIcon className="h-5 w-5" />
@@ -705,17 +904,57 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h5 className="text-sm font-bold text-[var(--text-main)]">
-                    {language === 'ar' ? 'شجرة الأسلاف الكلاسيكية الدافئة' : 'Classic Ancestor Poster'}
+                    {classicPosterDef?.displayName[language] || (language === 'ar' ? 'شجرة الأسلاف الكلاسيكية الدافئة' : 'Classic Ancestor Poster')}
                   </h5>
+                  <span className="rounded-full bg-[var(--primary-500)]/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[var(--primary-700)]">
+                    {getVisualProductBadge(classicPosterDef?.productType, language)}
+                  </span>
                   <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-600">
                     {language === 'ar' ? 'ثيم دافئ' : 'Warm Theme'}
                   </span>
+                  <span className="rounded-full bg-indigo-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+                    {language === 'ar' ? 'اجتياز بنيوي للبيتا' : 'Structural beta pass'}
+                  </span>
                 </div>
                 <p className="mt-1 text-[11px] leading-relaxed text-[var(--text-muted)]">
-                  {language === 'ar'
+                  {classicPosterDef?.description[language] || (language === 'ar'
                     ? 'تصميم بوستر تقليدي مريح للعين، يعتمد على نبرات لونية هادئة (4 أجيال)، ملائم للطباعة الورقية والتأطير.'
-                    : 'Traditional cozy poster design featuring warm vintage tones (4 generations), perfect for print and framing.'}
+                    : 'Traditional cozy poster design featuring warm vintage tones (4 generations), perfect for print and framing.')}
                 </p>
+                <p className="mt-1 text-[10px] font-medium leading-relaxed text-indigo-600/90 dark:text-indigo-400/90">
+                  {language === 'ar'
+                    ? 'تم التحقق من التصدير بنيوياً. راجع النتيجة بصرياً على شجرتك قبل المشاركة.'
+                    : 'Export is structurally verified. Review the result visually on your own tree before sharing.'}
+                </p>
+                {classicPosterDef?.recommendedFor && (
+                  <div className="mt-2 flex items-center gap-1.5 flex-wrap">
+                    <span className="text-[10px] font-semibold text-[var(--text-muted)]">
+                      {language === 'ar' ? 'مناسب لـ:' : 'Recommended for:'}
+                    </span>
+                    {classicPosterDef.recommendedFor[language].slice(0, 3).map((rec) => (
+                      <span
+                        key={rec}
+                        className="rounded-full bg-[var(--surface-panel)] border border-[var(--border-soft)] px-2 py-0.5 text-[9px] font-medium text-[var(--text-secondary)]"
+                      >
+                        {rec}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <div className="mt-3 flex items-center gap-3 flex-wrap">
+                  <div className="flex items-center gap-1.5 text-[10px] font-medium text-[var(--text-secondary)]">
+                    <span>{language === 'ar' ? 'الصيغ المدعومة:' : 'Supported formats:'}</span>
+                    {getRendererChips(classicPosterDef).map((renderer) => (
+                      <span key={renderer} className="rounded bg-[var(--surface-panel)] border border-[var(--border-soft)] px-1.5 py-0.5 text-[9px] font-bold uppercase text-[var(--text-main)]">
+                        {renderer}
+                      </span>
+                    ))}
+                  </div>
+                  <span className="text-[10px] text-[var(--text-muted)]">|</span>
+                  <span className="text-[10px] font-medium text-[var(--text-muted)]">
+                    {language === 'ar' ? 'أحجام جاهزة للطباعة: A4-A0' : 'Print-ready sizes: A4-A0'}
+                  </span>
+                </div>
               </div>
             </div>
             <div className="flex justify-end gap-2 border-t border-[var(--border-soft)] pt-3">
@@ -740,6 +979,20 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
 
           {/* Template 3: Modern Ancestor Poster */}
           <div className="flex flex-col gap-4 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-subtle)] p-4 transition-all hover:border-[var(--primary-500)]/30 hover:shadow-sm">
+            {modernPosterDef?.previewAsset && (
+              <div
+                className="w-full h-32 rounded-xl bg-[var(--surface-panel)] border border-[var(--border-soft)] flex items-center justify-center text-[var(--text-dim)] font-medium text-xs relative overflow-hidden select-none"
+                aria-label={modernPosterDef.previewAsset.alt[language]}
+              >
+                <div className="absolute inset-0 bg-gradient-to-tr from-[var(--indigo-500)]/5 via-transparent to-transparent pointer-events-none" />
+                <div className="flex flex-col items-center gap-1.5 z-10">
+                  <Sparkles className="h-5 w-5 text-[var(--text-secondary)] opacity-60" />
+                  <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider font-mono">
+                    {language === 'ar' ? 'معاينة القالب العصري' : 'Modern Template Preview'}
+                  </span>
+                </div>
+              </div>
+            )}
             <div className="flex items-start gap-3">
               <div className="mt-0.5 rounded-xl bg-[var(--surface-panel)] p-2 text-[var(--primary-600)]">
                 <Sparkles className="h-5 w-5" />
@@ -747,17 +1000,57 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h5 className="text-sm font-bold text-[var(--text-main)]">
-                    {language === 'ar' ? 'شجرة الأسلاف العصرية الداكنة' : 'Modern Ancestor Poster'}
+                    {modernPosterDef?.displayName[language] || (language === 'ar' ? 'شجرة الأسلاف العصرية الداكنة' : 'Modern Ancestor Poster')}
                   </h5>
+                  <span className="rounded-full bg-[var(--primary-500)]/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[var(--primary-700)]">
+                    {getVisualProductBadge(modernPosterDef?.productType, language)}
+                  </span>
                   <span className="rounded-full bg-indigo-500/10 px-2 py-0.5 text-[10px] font-semibold text-indigo-600">
                     {language === 'ar' ? 'ثيم داكن' : 'Dark Theme'}
                   </span>
+                  <span className="rounded-full bg-indigo-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+                    {language === 'ar' ? 'اجتياز بنيوي للبيتا' : 'Structural beta pass'}
+                  </span>
                 </div>
                 <p className="mt-1 text-[11px] leading-relaxed text-[var(--text-muted)]">
-                  {language === 'ar'
+                  {modernPosterDef?.description[language] || (language === 'ar'
                     ? 'تصميم شجرة عصري بألوان داكنة ونظام ألوان ذكي يبرز التباين والعمق (4 أجيال) للتعليق الإلكتروني والطباعة الفاخرة.'
-                    : 'Modern dark-themed poster design utilizing contrasting elements (4 generations) for screens or premium prints.'}
+                    : 'Modern dark-themed poster design utilizing contrasting elements (4 generations) for screens or premium prints.')}
                 </p>
+                <p className="mt-1 text-[10px] font-medium leading-relaxed text-indigo-600/90 dark:text-indigo-400/90">
+                  {language === 'ar'
+                    ? 'تم التحقق من التصدير بنيوياً. راجع النتيجة بصرياً على شجرتك قبل المشاركة.'
+                    : 'Export is structurally verified. Review the result visually on your own tree before sharing.'}
+                </p>
+                {modernPosterDef?.recommendedFor && (
+                  <div className="mt-2 flex items-center gap-1.5 flex-wrap">
+                    <span className="text-[10px] font-semibold text-[var(--text-muted)]">
+                      {language === 'ar' ? 'مناسب لـ:' : 'Recommended for:'}
+                    </span>
+                    {modernPosterDef.recommendedFor[language].slice(0, 3).map((rec) => (
+                      <span
+                        key={rec}
+                        className="rounded-full bg-[var(--surface-panel)] border border-[var(--border-soft)] px-2 py-0.5 text-[9px] font-medium text-[var(--text-secondary)]"
+                      >
+                        {rec}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <div className="mt-3 flex items-center gap-3 flex-wrap">
+                  <div className="flex items-center gap-1.5 text-[10px] font-medium text-[var(--text-secondary)]">
+                    <span>{language === 'ar' ? 'الصيغ المدعومة:' : 'Supported formats:'}</span>
+                    {getRendererChips(modernPosterDef).map((renderer) => (
+                      <span key={renderer} className="rounded bg-[var(--surface-panel)] border border-[var(--border-soft)] px-1.5 py-0.5 text-[9px] font-bold uppercase text-[var(--text-main)]">
+                        {renderer}
+                      </span>
+                    ))}
+                  </div>
+                  <span className="text-[10px] text-[var(--text-muted)]">|</span>
+                  <span className="text-[10px] font-medium text-[var(--text-muted)]">
+                    {language === 'ar' ? 'أحجام جاهزة للطباعة: A4-A0' : 'Print-ready sizes: A4-A0'}
+                  </span>
+                </div>
               </div>
             </div>
             <div className="flex justify-end gap-2 border-t border-[var(--border-soft)] pt-3">
@@ -779,33 +1072,190 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
               </button>
             </div>
           </div>
+          </>
+          )}
+
+          {/* Current Tree Snapshot (Compact Product Card Style) */}
+          <div className="flex flex-col gap-4 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-subtle)] p-4 transition-all hover:border-[var(--primary-500)]/30 hover:shadow-sm">
+            {treeSnapshotDef?.previewAsset && (
+              <div
+                className="w-full h-20 rounded-xl bg-[var(--surface-panel)] border border-[var(--border-soft)] flex items-center justify-center text-[var(--text-dim)] font-medium text-xs relative overflow-hidden select-none"
+                aria-label={treeSnapshotDef.previewAsset.alt[language]}
+              >
+                <div className="absolute inset-0 bg-gradient-to-tr from-[var(--primary-500)]/3 via-transparent to-transparent pointer-events-none" />
+                <div className="flex flex-col items-center gap-1 z-10">
+                  <ImageIcon className="h-4 w-4 text-[var(--text-secondary)] opacity-60" />
+                  <span className="text-[9px] text-[var(--text-muted)] uppercase tracking-wider font-mono">
+                    {language === 'ar' ? 'معاينة لقطة الشجرة الحالية' : 'Current Tree Preview'}
+                  </span>
+                </div>
+              </div>
+            )}
+            <div className="flex items-start gap-3">
+              <div className="mt-0.5 rounded-xl bg-[var(--surface-panel)] p-2 text-[var(--primary-600)]">
+                <ImageIcon className="h-5 w-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h5 className="text-sm font-bold text-[var(--text-main)]">
+                    {treeSnapshotDef?.displayName[language] || (language === 'ar' ? 'لقطات الشجرة الحالية' : 'Current Tree Snapshot')}
+                  </h5>
+                  <span className="rounded-full bg-[var(--primary-500)]/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[var(--primary-700)]">
+                    {getVisualProductBadge(treeSnapshotDef?.productType, language)}
+                  </span>
+                  <span className="rounded-full bg-indigo-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+                    {language === 'ar' ? 'اجتياز بنيوي للبيتا' : 'Structural beta pass'}
+                  </span>
+                </div>
+                <p className="mt-1 text-[11px] leading-relaxed text-[var(--text-muted)]">
+                  {treeSnapshotDef?.description[language] || (language === 'ar'
+                    ? 'تصدير لقطة عالية الدقة للمساحة المعروضة حالياً.'
+                    : 'A high-fidelity export of your current workspace viewport.')}
+                </p>
+                <p className="mt-1 text-[10px] font-medium leading-relaxed text-indigo-600/90 dark:text-indigo-400/90">
+                  {language === 'ar'
+                    ? 'تم التحقق من التصدير بنيوياً. راجع النتيجة بصرياً على شجرتك قبل المشاركة.'
+                    : 'Export is structurally verified. Review the result visually on your own tree before sharing.'}
+                </p>
+                {treeSnapshotDef?.recommendedFor && (
+                  <div className="mt-2 flex items-center gap-1.5 flex-wrap">
+                    <span className="text-[10px] font-semibold text-[var(--text-muted)]">
+                      {language === 'ar' ? 'مناسب لـ:' : 'Recommended for:'}
+                    </span>
+                    {treeSnapshotDef.recommendedFor[language].slice(0, 3).map((rec) => (
+                      <span
+                        key={rec}
+                        className="rounded-full bg-[var(--surface-panel)] border border-[var(--border-soft)] px-2 py-0.5 text-[9px] font-medium text-[var(--text-secondary)]"
+                      >
+                        {rec}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <div className="mt-3 flex items-center gap-3 flex-wrap">
+                  <div className="flex items-center gap-1.5 text-[10px] font-medium text-[var(--text-secondary)]">
+                    <span>{language === 'ar' ? 'الصيغ المدعومة:' : 'Supported formats:'}</span>
+                    {getRendererChips(treeSnapshotDef).map((renderer) => (
+                      <span key={renderer} className="rounded bg-[var(--surface-panel)] border border-[var(--border-soft)] px-1.5 py-0.5 text-[9px] font-bold uppercase text-[var(--text-main)]">
+                        {renderer}
+                      </span>
+                    ))}
+                  </div>
+                  <span className="text-[10px] text-[var(--text-muted)]">|</span>
+                  <span className="text-[10px] font-medium text-[var(--text-muted)]">
+                    {language === 'ar' ? 'يعتمد على عرض الشجرة الحالي' : 'Uses the current tree view'}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 border-t border-[var(--border-soft)] pt-3">
+              {TREE_SNAPSHOT_ACTIONS.map((action) => (
+                <button
+                  key={action.id}
+                  type="button"
+                  onClick={() => void handleExport(action.id)}
+                  className={`flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold transition-all active:scale-[0.98] ${
+                    action.id === 'pdf'
+                      ? 'bg-[var(--primary-600)] hover:bg-[var(--primary-700)] text-white hover:brightness-105'
+                      : 'border border-[var(--border-soft)] bg-[var(--surface-panel)] hover:bg-[var(--surface-hover)] text-[var(--text-main)]'
+                  }`}
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  {t[action.labelKey] || action.id.toUpperCase()}
+                </button>
+              ))}
+            </div>
+          </div>
+          </>
+          )}
         </div>
       </section>
+      )}
 
+      {activeSection === 'data-export' && (
       <section className="rounded-[14px] border border-[var(--border-soft)] bg-[var(--surface-panel)] p-4 shadow-none">
         <h4 className="text-[16px] font-bold tracking-tight text-[var(--text-main)]">{t.vaultExportDataTitle}</h4>
-        <div className="mt-4 grid grid-cols-2 gap-3">
-          {EXPORT_ACTIONS.map((action) => {
-            const Icon = action.icon;
-            return (
-              <button
-                key={action.id}
-                type="button"
-                onClick={() => void handleExport(action.id)}
-                className="flex min-h-[88px] flex-col items-center justify-center gap-3 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-subtle)] px-4 py-3 text-center transition-all duration-200 ease-in-out hover:bg-[var(--surface-hover)]"
-              >
-                <div className="rounded-xl bg-[var(--surface-panel)] p-2 text-[var(--primary-600)]">
-                  <Icon className="h-4 w-4" />
-                </div>
-                <div className="min-w-0">
-                  <div className="text-sm font-semibold text-[var(--text-main)]">{t[action.labelKey] || action.id}</div>
-                </div>
-              </button>
-            );
-          })}
+        <div className="mt-4 space-y-4">
+          {(['portable-data'] as const).map((group) => (
+            <div key={group} className="rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-subtle)] p-3">
+              <h5 className="mb-3 text-xs font-bold uppercase tracking-[0.08em] text-[var(--text-secondary)]">
+                {group === 'portable-data'
+                  ? (language === 'ar' ? 'بيانات قابلة للنقل' : 'Portable Data')
+                  : (language === 'ar' ? 'مخرجات مباشرة' : 'Direct Outputs')}
+              </h5>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {EXPORT_ACTIONS.filter((action) => action.group === group).map((action) => {
+                  const Icon = action.icon;
+                  let displayName = t[action.labelKey] || action.id;
+                  let badgeText = '';
+                  let descriptionText = '';
+                  let badgeStyle = '';
+
+                  if (action.id === 'jozor') {
+                    displayName = language === 'ar' ? 'نسخة جذور الكاملة' : 'Jozor Full Backup';
+                    badgeText = language === 'ar' ? 'للمالك فقط / نسخة كاملة' : 'Owner only / full backup';
+                    descriptionText = language === 'ar'
+                      ? 'أرشيف كامل للمالك. قد يحتوي بيانات خاماً وصوراً وملفات مشروع. ليس ملف مشاركة عام.'
+                      : 'Full owner archive. May contain raw project data, media, and backup files. Not a public sharing format.';
+                    badgeStyle = 'bg-amber-500/10 text-amber-600 dark:text-amber-400';
+                  } else if (action.id === 'json') {
+                    displayName = language === 'ar' ? 'JSON خام للمشروع' : 'Raw Project JSON';
+                    badgeText = language === 'ar' ? 'تصدير خام داخلي / غير مخصص للمشاركة' : 'Internal raw export / not for sharing';
+                    descriptionText = language === 'ar'
+                      ? 'قد يحتوي بيانات داخلية وروابط وسائط وحقول مشروع خام. ليس JSON نظيفاً قابلاً للمشاركة.'
+                      : 'May include internal metadata, media references, and raw project fields. Not a clean portable JSON export.';
+                    badgeStyle = 'bg-rose-500/10 text-rose-600 dark:text-rose-400';
+                  } else if (action.id === 'gedcom') {
+                    badgeText = language === 'ar' ? 'جاهز للبيتا المحدودة' : 'Limited beta ready';
+                    descriptionText = language === 'ar'
+                      ? 'صيغة تبادل مع برامج الأنساب. اجتازت معاينة المالك.'
+                      : 'Genealogy exchange format. Owner spot check passed.';
+                    badgeStyle = 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400';
+                  } else if (action.id === 'ics') {
+                    badgeText = language === 'ar' ? 'اجتياز بنيوي للبيتا' : 'Structural beta pass';
+                    descriptionText = language === 'ar'
+                      ? 'يصدر الأحداث ذات التواريخ الكاملة فقط، ويتجاهل التواريخ الجزئية مثل السنة فقط لتجنب الدقة الزائفة.'
+                      : 'Exports complete-date events only; partial dates such as year-only values are skipped to avoid false precision.';
+                    badgeStyle = 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400';
+                  }
+
+                  return (
+                    <button
+                      key={action.id}
+                      type="button"
+                      onClick={() => void handleExport(action.id)}
+                      className="flex flex-col items-start gap-2 rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] p-3 text-start transition-all duration-200 ease-in-out hover:bg-[var(--surface-hover)] focus:outline-none focus:ring-2 focus:ring-[var(--primary-500)]/40 w-full"
+                    >
+                      <div className="flex w-full items-center justify-between gap-3">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div className="rounded-lg bg-[var(--surface-subtle)] p-2 text-[var(--primary-600)] shrink-0">
+                            <Icon className="h-4 w-4" />
+                          </div>
+                          <div className="text-sm font-semibold text-[var(--text-main)] truncate">{displayName}</div>
+                        </div>
+                        <Download className="h-3.5 w-3.5 text-[var(--text-muted)] shrink-0" />
+                      </div>
+                      {badgeText && (
+                        <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${badgeStyle}`}>
+                          {badgeText}
+                        </span>
+                      )}
+                      {descriptionText && (
+                        <p className="text-[11px] leading-relaxed text-[var(--text-muted)] mt-1">
+                          {descriptionText}
+                        </p>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </div>
       </section>
+      )}
 
+      {activeSection === 'history' && (
       <section className="rounded-[14px] border border-[var(--border-soft)] bg-[var(--surface-panel)] p-4 shadow-none">
         <div className="flex items-center justify-between border-b border-[var(--border-soft)] pb-3 mb-4">
           <div className="flex items-center gap-2">
@@ -847,20 +1297,7 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
             {[...exportHistory]
               .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
               .map((entry) => {
-                let friendlyName = entry.templateId;
-                if (entry.templateId === 'classic-book-manuscript') {
-                  friendlyName = language === 'ar' ? 'كتاب العائلة' : 'Family Book';
-                } else if (entry.templateId === 'classic-ancestor-poster') {
-                  friendlyName = language === 'ar' ? 'شجرة الأسلاف الكلاسيكية الدافئة' : 'Classic Ancestor Poster';
-                } else if (entry.templateId === 'modern-ancestor-poster') {
-                  friendlyName = language === 'ar' ? 'شجرة الأسلاف العصرية الداكنة' : 'Modern Ancestor Poster';
-                } else if (entry.templateId === 'gedcom') {
-                  friendlyName = 'GEDCOM';
-                } else if (entry.templateId === 'json') {
-                  friendlyName = 'JSON';
-                } else if (entry.templateId === 'jozor') {
-                  friendlyName = language === 'ar' ? 'أرشيف جذور' : 'Jozor Archive';
-                }
+                const classification = classifyHistoryEntry(entry, language);
 
                 const hasWarnings = entry.warnings && entry.warnings.length > 0;
                 const statusText = !entry.success
@@ -874,16 +1311,24 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                   : hasWarnings
                     ? 'bg-amber-500/10 text-amber-700 border-amber-500/20'
                     : 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20';
+                const historyEntryId = entry.id || entry.publicationId;
+                const isHistoryExpanded = expandedHistoryId === historyEntryId;
 
                 return (
                   <div
-                    key={entry.id || entry.publicationId}
+                    key={historyEntryId}
                     className="flex flex-col gap-3 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-subtle)] p-4 transition-all hover:shadow-sm"
                   >
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-sm font-bold text-[var(--text-main)]">{friendlyName}</span>
+                          <span className="text-sm font-bold text-[var(--text-main)]">{classification.productLabel}</span>
+                          <span className="rounded bg-[var(--surface-panel)] border border-[var(--border-soft)] px-1.5 py-0.5 text-[9px] font-bold uppercase text-[var(--text-main)]">
+                            {classification.formatLabel}
+                          </span>
+                          <span className="rounded-full bg-[var(--primary-500)]/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[var(--primary-700)]">
+                            {classification.badgeLabel}
+                          </span>
                           <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${statusColorClass}`}>
                             {statusText}
                           </span>
@@ -913,6 +1358,19 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                       </div>
                     </div>
 
+                    <button
+                      type="button"
+                      onClick={() => setExpandedHistoryId(isHistoryExpanded ? null : historyEntryId)}
+                      className="self-start rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3 py-1.5 text-[11px] font-bold text-[var(--text-secondary)] transition-all hover:bg-[var(--surface-hover)]"
+                      aria-expanded={isHistoryExpanded}
+                    >
+                      {isHistoryExpanded
+                        ? (language === 'ar' ? 'إخفاء التفاصيل' : 'Hide details')
+                        : (language === 'ar' ? 'عرض التفاصيل' : 'Show details')}
+                    </button>
+
+                    {isHistoryExpanded && (
+                    <>
                     {(entry.integrity || entry.evidence) && (
                       <div className="grid gap-2 border-t border-[var(--border-soft)] pt-2.5 sm:grid-cols-3">
                         {entry.integrity?.healthScore !== undefined && (
@@ -1009,13 +1467,17 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                         </span>
                       </div>
                     )}
+                    </>
+                    )}
                   </div>
                 );
               })}
           </div>
         )}
       </section>
+      )}
 
+      {activeSection === 'cloud-backup' && (
       <section className="rounded-[14px] border border-[var(--border-soft)] bg-[var(--surface-panel)] p-4 shadow-none">
         <div className="mb-4 flex flex-col gap-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -1148,6 +1610,7 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
           <div className="mt-4 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-subtle)] p-4 text-[12px] text-[var(--text-muted)]">{t.vaultCloudAccessLimited}</div>
         )}
       </section>
+      )}
     </div>
   );
 };

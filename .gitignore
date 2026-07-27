@@ -52,6 +52,12 @@ playwright/.cache/
 .cache/
 .eslintcache
 lint*.json
+tmp/
+
+# Local visual-review sources may contain owner data or unlicensed reference media.
+docs/reviews/evidence/poster-visual-direction-pass-2026-07-13/
+scripts/poster-visual-direction-artifacts.mjs
+scripts/visual-studio-svg-default-artifacts.mjs
 
 # IDE and AI Tooling
 .cursor/

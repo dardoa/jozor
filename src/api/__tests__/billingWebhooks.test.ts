@@ -1,8 +1,8 @@
-import { describe, it, expect, vi } from 'vitest';
-import paddleWebhookHandler from '../../../api/billing/paddle-webhook';
-import createCheckoutHandler from '../../../api/billing/create-checkout-session';
+import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest';
+import paddleWebhookHandler from '../../../shared/server/api/billing/paddle-webhook';
+import createCheckoutHandler from '../../../shared/server/api/billing/create-checkout-session';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { MAX_JSON_BODY_SIZE } from '../../../api/shared/server/bodyLimits';
+import { MAX_JSON_BODY_SIZE } from '../../../shared/server/http/bodyLimits';
 
 vi.mock('../../../shared/auth/internalJwt', () => ({
   verifyInternalToken: vi.fn().mockResolvedValue({ uid: 'user123', email: 'test@example.com' }),
@@ -41,6 +41,19 @@ function createMockResponse() {
 }
 
 describe('Billing Webhooks SEC3 Body Limit Tests', () => {
+  const originalEnv = process.env;
+
+  beforeEach(() => {
+    process.env = {
+      ...originalEnv,
+      PADDLE_WEBHOOK_SECRET: 'test-webhook-secret',
+    };
+  });
+
+  afterEach(() => {
+    process.env = originalEnv;
+  });
+
   describe('paddle-webhook', () => {
     it('returns 413 Payload Too Large when payload exceeds 5MB', async () => {
       const req = createMockRequest(MAX_JSON_BODY_SIZE + 1024, 'POST', {
@@ -70,7 +83,7 @@ describe('Billing Webhooks SEC3 Body Limit Tests', () => {
     });
 
     it('disables Vercel body parsing so every request uses the limited raw stream', async () => {
-      const checkoutModule = await import('../../../api/billing/create-checkout-session');
+      const checkoutModule = await import('../../../shared/server/api/billing/create-checkout-session');
 
       expect(checkoutModule.config).toEqual({
         api: {

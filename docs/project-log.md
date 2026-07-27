@@ -1,5 +1,1264 @@
 # Project Log
 
+## 2026-07-22 - Studio SVG Print Delivery
+
+- Summary:
+  - Exposed the canonical PosterScene SVG as a direct owner download alongside PNG and raster PDF.
+  - Reused the existing `exportStudioPoster` SVG path without Canvas, PDF runtime, legacy poster code, or a second layout calculation.
+  - Kept print-quality blocking consistent across SVG, PNG, and PDF.
+  - Downloaded and inspected an actual Dense A0 complete-tree SVG containing 90 people and 155 relationships.
+  - Verified correct `1189 x 841 mm` physical sizing, an embedded Arabic font, zero external asset links, and no storage URLs, tokens, raw IDs, scripts, or mojibake.
+  - Added bilingual print-format guidance that recommends SVG for large-format printing while truthfully identifying PDF as raster and PNG as a high-resolution image.
+  - Passed 50 targeted Studio, action-bar, and export-adapter tests; no commit was created.
+
+## 2026-07-22 - Dense A0 Complete-tree Composition Polish
+
+- Summary:
+  - Replaced the generic 12% header reservation for complete-tree overview scenes with an adaptive 5% reservation and a safe minimum.
+  - Reduced only the full-tree section gap, leaving detailed ancestor and descendant poster geometry unchanged.
+  - Re-ran the signed-in 90-person A0 preview and confirmed all 155 relationships remain visible with no clipping, title collision, or orphan nodes.
+  - Measured the graph from approximately 10.8% through 88.9% of the page height, closing the excessive-header-space P2 item.
+  - Regenerated a `6400 x 4525` PNG and one-page A0 landscape raster PDF and confirmed their compact header, nodes, connectors, footer, Arabic shaping, and privacy treatment match visually.
+  - Preserved the canonical PosterScene path shared by preview, PNG, and raster PDF.
+  - Passed 122 targeted PosterScene, SVG renderer, and Studio tests; no commit was created.
+
+## 2026-07-22 - Dense Genealogy Real-tree A0 Overview Review
+
+- Summary:
+  - Repeated the representative-density gate in the signed-in owner runtime against the actual complete tree.
+  - Verified a sanitized scene containing 90 people, 155 relationships, and five generations without exposing private source records.
+  - Confirmed A3 landscape is correctly blocked while A0 landscape remains available with a truthful print-density warning.
+  - Generated and locally inspected a `6400 x 4525` PNG and a one-page A0 landscape raster PDF derived from the same SVG scene.
+  - Confirmed Arabic shaping, privacy masking, page framing, connectors, and cards with no mojibake, blank pages, or orphan nodes.
+  - Classified the result as a compact complete-tree overview rather than a photo-detail poster.
+  - Kept physical print proof open because the one-pass A0 raster is approximately 137 DPI; generous header space remains P2 polish.
+  - Kept all owner artifacts local and created no commit.
+
+## 2026-07-22 - Dense Genealogy Representative-density Print Gate
+
+- Summary:
+  - Replaced the previous weak 90-person full-tree assertion with a physical print-readiness gate.
+  - Raised Dense Overview typography to preserve an estimated eight-point minimum on physical output.
+  - Added a page-area capacity rule for complete-tree overview scenes, using 48 nodes on A3 as the reference.
+  - Verified a sanitized 90-person, 89-relationship A0 landscape scene with all nodes in bounds, zero overlaps, bounded raster memory, and no raw/private keys in SVG output.
+  - Verified the same graph is blocked on A3 and routed to large-tree products.
+  - Verified a 385-person complete tree is blocked on A0 rather than compressed below the readability floor.
+  - Updated Studio tests so small A0 scenes remain downloadable while genuinely dense A3 scenes expose Dense, Branch Collection, and Tiled Wall recovery paths.
+  - Kept actual owner-tree representative-density and physical print review pending because the local signed-in browser session was unavailable.
+  - No commit was created.
+
+## 2026-07-21 - Modern Gallery Four-generation Owner Artifact Review
+
+- Summary:
+  - Re-reviewed Modern Gallery against a populated four-generation owner-tree ancestor fixture with a deliberately long Arabic title.
+  - Fixed a template-switch race that could pass a stale Classic font resource into the new Modern scene before its Noto Sans Arabic asset resolved.
+  - Preserved the strict renderer guard for explicitly supplied mismatched resources.
+  - Generated and reviewed a `4526 x 3200` PNG and a one-page physical A3 landscape raster PDF.
+  - Confirmed Gallery Rail containment, Arabic shaping, photos, masking, ten cards, ten relationships, and footer integrity.
+  - Measured PNG/PDF parity at `1.634 / 255` mean absolute pixel difference after scaling.
+  - Promoted Modern Gallery from experimental to active in the Visual Output Registry.
+  - Kept physical print and representative high-density/large-format proof as separate gates.
+  - No commit was created.
+
+## 2026-07-21 - Poster Header Owner Tree Preview Review
+
+- Summary:
+  - Reviewed Ceremonial, Gallery Rail, and Compact Registry headers in the signed-in owner tree.
+  - Used a populated four-generation ancestor scene and a deliberately long Arabic poster title.
+  - Fixed title/subtitle collisions in Ceremonial and Compact Registry compositions.
+  - Kept Gallery Rail title and subtitle inside the identity rail without overlap.
+  - Added a long-title geometry regression assertion for all three header systems.
+  - Generated and reviewed a corrected `4526 x 3200` PNG and one-page A3 landscape raster PDF.
+  - Fixed RTL physical anchoring after the first PNG exposed title and summary clipping at opposite page edges.
+  - Confirmed PNG/PDF parity with a mean absolute pixel difference of `1.468 / 255` after scaling.
+  - Extended the owner artifact matrix to Ceremonial and Gallery Rail A3 exports, with PNG/PDF differences of `1.459 / 255` and `1.452 / 255`.
+  - Reviewed an A4 portrait Ceremonial export with ten cards, zero card intersections, a one-page A4 PDF, and a `2.398 / 255` PNG/PDF difference.
+  - Confirmed long-title containment, Arabic shaping, photos, masked fallbacks, connectors, and footer across the A3 and A4 configurations.
+  - Preserved canonical PosterScene node and connector geometry.
+  - Closed the header artifact gate for all three header systems on the reviewed four-generation ancestor fixture.
+  - No commit was created.
+
+## 2026-07-19 - Poster Header Composition Owner Controls
+
+- Summary:
+  - Added Ceremonial, Gallery Rail, Compact Registry, and Style Default title compositions.
+  - Assigned distinct authored defaults to Classic Heritage, Modern Gallery, Dense Genealogy, and Branch Index.
+  - Kept header composition inside PosterScene and the shared SVG preview/export renderer.
+  - Localized registry people/generation metadata and preserved Arabic direction.
+  - Propagated explicit owner selection through Branch Collection and derived outputs.
+  - Preserved all node, connector, page-bound, and print-quality geometry.
+  - Owner screenshot and PNG/PDF visual review remain pending.
+  - No commit was created.
+
+## 2026-07-19 - Poster Person Description Owner Control
+
+- Summary:
+  - Added an optional, default-off short descriptive line to person-card content controls.
+  - Passed biography text through the production sanitizer as a normalized, 90-character `descriptionLabel` only.
+  - Withheld descriptions from living and private profiles and kept raw biography fields outside PosterScene and SVG.
+  - Propagated the choice through ancestor, descendant, full-tree, and Branch Collection scenes.
+  - Adapted Dense card name treatment to prevent overlap when all optional detail rows are enabled.
+  - Passed targeted sanitizer, selector, scene, SVG, branch, and Studio tests.
+  - Owner visual review remains pending.
+  - No commit was created.
+
+## 2026-07-19 - Poster Ornament Owner Controls
+
+- Summary:
+  - Added Style Default, None, Lineage Medallion, Modern Gallery Marks, and Corner Branches.
+  - Kept ornamentation separate from background treatments and page frames.
+  - Rendered every motif as internal SVG geometry with no external assets or URLs.
+  - Preserved cards, connectors, bounds, privacy behavior, and print-quality evaluation.
+  - Propagated owner selection through Branch Collection and Tiled Wall source scenes.
+  - Passed 123 targeted tests, typecheck, scoped ESLint, and diff validation.
+  - Owner visual review remains pending because the local browser surface is unavailable for this pass.
+  - No commit was created.
+
+## 2026-07-18 - Poster Arabic Font Family Owner Controls
+
+- Summary:
+  - Added owner choices for Amiri Heritage, Noto Sans Arabic, and Noto Kufi Arabic.
+  - Bundled the two Noto variable TrueType files and their SIL Open Font License 1.1 texts.
+  - Recorded the resolved family in PosterScene and loaded only the matching local asset.
+  - Added per-family resolver caching and SVG rejection for identified resource/scene mismatches.
+  - Propagated the family through preview, PNG, raster PDF, Branch Collection, and Tiled Wall.
+  - Passed 125 targeted tests, typecheck, scoped ESLint, asset signature/license checks, and diff validation.
+  - Owner visual review remains pending because the local browser surface is unavailable for this pass.
+  - No commit was created.
+
+## 2026-07-18 - Poster Card Content Layout Owner Controls
+
+- Summary:
+  - Added Style Default, Standard, Photo-focused, and Text-minimal card-layout choices.
+  - Reflowed portrait and card geometry before layout so preview, PNG, PDF, Branch Collection, and Tiled Wall stay aligned.
+  - Enlarged photos or initials in Photo-focused and removed photo markup entirely in Text-minimal.
+  - Preserved resolver-only image embedding, privacy masking, session preview IDs, and print-quality gates.
+  - Kept existing Classic and Dense defaults stable while Modern Gallery uses Photo-focused.
+  - Passed 117 targeted builder, SVG, Studio, and Branch Collection tests, typecheck, scoped ESLint, and diff validation.
+  - Owner visual review remains pending because the local browser surface is unavailable for this pass.
+  - No commit was created.
+
+## 2026-07-18 - Poster Tree Spacing Owner Controls
+
+- Summary:
+  - Added Style Default, Compact, Balanced, and Airy tree-spacing choices.
+  - Stored the selected density in PosterLayoutSpec and consumed it inside all active poster layout engines.
+  - Authored Classic as Balanced, Modern as Airy, and Dense or Branch Index as Compact by default.
+  - Preserved node selection, privacy state, relationship semantics, SVG-first rendering, and export derivation.
+  - Kept PrintQualityReport, large-tree routing, and single-sheet blocking authoritative after reflow.
+  - Passed 114 targeted tests, typecheck, scoped ESLint, and diff validation.
+  - Owner visual review remains pending.
+  - No commit was created.
+
+## 2026-07-18 - Poster Print Margin Owner Controls
+
+- Summary:
+  - Added Compact, Balanced, and Generous bounded print-margin choices.
+  - Recorded the selected preset and physical/scene insets in PosterDocumentSpec before layout.
+  - Reflowed all poster engines through the resulting safe area and re-evaluated PrintQualityReport.
+  - Propagated the document geometry through Branch Collection while preserving Tiled Wall sheet assembly margins.
+  - Kept physical page size, SVG-first rendering, privacy boundaries, and export derivation unchanged.
+  - Passed 111 targeted tests, an additional 7-test branch propagation check, typecheck, scoped ESLint, and diff validation.
+  - Owner visual review remains pending.
+  - No commit was created.
+
+## 2026-07-17 - Poster Card Corner Owner Controls
+
+- Summary:
+  - Added Style Default, Square, Soft, and Rounded person-card corner choices.
+  - Stored the resolved choice in canonical PosterScene and reused its radius for cards, shadows, and inner frames.
+  - Preserved card dimensions, node positions, connector endpoints, page bounds, and print-quality gates.
+  - Authored Classic as Soft, Modern as Rounded, Dense as Square, and Branch Index as Soft by default.
+  - Propagated explicit choices through Branch Collection while Tiled Wall inherited the canonical scene.
+  - Passed 108 targeted tests, typecheck, scoped ESLint, and diff validation.
+  - Owner visual review remains pending because the in-app browser blocked the local application URL for this pass.
+  - No commit was created.
+
+## 2026-07-17 - Poster Connector Path Owner Controls
+
+- Summary:
+  - Added Style Default, Straight, Stepped Corners, and Curved generation-line path choices.
+  - Stored the resolved path in canonical PosterScene and changed only SVG path commands while preserving connector endpoints.
+  - Kept spouse and relative relationships straight for semantic clarity.
+  - Authored Classic as Curved, Modern as Straight, and Dense or Branch Index as Stepped Corners by default.
+  - Propagated explicit choices through Branch Collection while Tiled Wall inherited the canonical scene.
+  - Passed 105 targeted tests, typecheck, scoped ESLint, diff validation, and signed-in Arabic owner runtime review.
+  - No commit was created.
+
+## 2026-07-17 - Poster Page Frame Owner Controls
+
+- Summary:
+  - Added Style Default, No Frame, Minimal, Heritage, and Modern Gallery page-frame choices.
+  - Stored the resolved frame in canonical PosterScene and selected one shared SVG composition for all derived outputs.
+  - Kept Classic Heritage, Modern Gallery, and Dense Genealogy defaults visually distinct without coupling manual choices to theme internals.
+  - Preserved tree, card, connector, typography, and physical-page geometry and propagated the choice through collection products.
+  - Passed 102 targeted tests, typecheck, scoped ESLint, diff validation, and signed-in Arabic owner runtime review.
+  - No commit was created.
+
+## 2026-07-17 - Poster Card Frame Owner Controls
+
+- Summary:
+  - Added Style Default, Minimal, Classic, and Lightly Ornate person-card frame choices.
+  - Stored the resolved treatment in canonical PosterScene and rendered border, accent, and inner-frame detail through shared SVG.
+  - Kept Classic authored as Classic and Modern, Dense, or Branch Index minimal by default.
+  - Preserved card, connector, typography, and page geometry while propagating the choice through collection products.
+  - Passed 99 targeted tests, typecheck, scoped ESLint, diff validation, and signed-in Arabic owner runtime review.
+  - No commit was created.
+
+## 2026-07-17 - Poster Card Depth Owner Controls
+
+- Summary:
+  - Added Style Default, Flat, Soft Shadow, and Elevated person-card depth choices.
+  - Stored the resolved effect in canonical PosterScene and rendered it through one internal SVG filter.
+  - Kept Classic softly raised, Modern elevated, and Dense or Branch Index flat by default.
+  - Preserved node, connector, page, and typography geometry across all effects and propagated choices through collection products.
+  - Passed 96 targeted tests, typecheck, scoped ESLint, diff validation, and signed-in Arabic owner runtime review.
+  - No commit was created.
+
+## 2026-07-17 - Poster Person Card Size Owner Controls
+
+- Summary:
+  - Added Small, Standard, and Large owner choices for person-card and photo geometry.
+  - Stored the size in canonical PosterScene and reflowed it through the active layout engine before SVG rendering.
+  - Preserved preview, SVG, PNG, raster PDF, Branch Collection, and Tiled Wall parity without legacy rendering.
+  - Kept overlap, text-size, truncation, memory, and single-sheet quality gates authoritative.
+  - Passed 93 targeted tests, typecheck, scoped ESLint, diff validation, and signed-in Arabic owner runtime review.
+  - No commit was created.
+
+## 2026-07-17 - Poster Typography Hierarchy Owner Controls
+
+- Summary:
+  - Added Balanced, Larger Names, and Compact typography-density choices without exposing unembedded system-font families.
+  - Stored the choice in canonical PosterScene and applied it to card text, title, and subtitle through the shared SVG path.
+  - Preserved card, connector, bounds, and physical-page geometry while retaining long-name fitting and print-quality checks.
+  - Propagated the preset through Branch Collection and inherited it in Tiled Wall output.
+  - Passed 90 targeted tests, typecheck, scoped ESLint, diff validation, and signed-in Arabic owner runtime review.
+  - No commit was created.
+
+## 2026-07-17 - Poster Background Decoration Owner Controls
+
+- Summary:
+  - Added Style Default, Clean, Heritage Paper, and Subtle Lineage Grid treatments to the owner-facing Studio.
+  - Stored the resolved treatment in canonical PosterScene and rendered it as an internal SVG layer shared by preview and derived exports.
+  - Preserved all node, connector, bounds, and physical-page geometry across treatments.
+  - Propagated explicit treatments through Branch Collection while Tiled Wall continued to inherit its canonical scene.
+  - Passed 87 targeted tests, typecheck, scoped ESLint, diff validation, and a signed-in Arabic owner runtime review.
+  - No commit was created.
+
+## 2026-07-17 - Poster Theme Fine-Tuning Owner Controls
+
+- Summary:
+  - Added optional owner swatches for poster background, card background, accent/frame, and relationship lines.
+  - Stored normalized six-digit hex overrides in canonical PosterScene and discarded all other CSS-like values.
+  - Derived readable foreground colors independently for the poster surface, cards, and initials.
+  - Propagated the same overrides through preview, SVG, PNG, raster PDF, Branch Collection, and Tiled Wall outputs without geometry changes.
+  - Added an owner-facing restore action that returns to the authored palette.
+  - No commit was created.
+
+## 2026-07-17 - Poster Large-Tree Routing Pass
+
+- Summary:
+  - Replaced the blocked single-sheet dead end with reversible owner choices for Dense Genealogy, A0 landscape, and the large-tree product workspace.
+  - Made the large-tree route prepare a full-tree, all-generation, Dense, A0 landscape preview that exposes Overview, Branch Collection, and Tiled Wall products.
+  - Kept PNG/PDF disabled until PrintQualityReport passes and confirmed that recommendation buttons never start downloads.
+  - Left all existing export handlers and artifact formats unchanged.
+  - No commit was created.
+
+## 2026-07-17 - Poster Owner Visual Controls Review
+
+- Summary:
+  - Exercised card details, photo shapes, connector styles, footer identity, and all four print palettes against the signed-in owner's real Arabic tree.
+  - Confirmed that the controls update the canonical SVG scene without exposing raw IDs, preview IDs, storage URLs, contact fields, notes, or sync metadata.
+  - Verified localized relationship, birth-place, and occupation lines while living/private people remained masked.
+  - Confirmed the A3 print-quality gate blocks an unreadable 74-person all-generation descendant composition and that a two-generation composition renders normally.
+  - Promoted the visual-control layer to Owner Runtime Visual Pass; physical print and large-tree product gates remain separate.
+  - No commit was created.
+
+## 2026-07-17 - Poster Theme Palette Owner Controls
+
+- Summary:
+  - Added Style Default, Warm Heritage, Dark Gallery, Family Evergreen, and Print Monochrome palette swatches.
+  - Resolved the owner-facing automatic choice to a concrete palette inside PosterScene so every artifact is deterministic and self-describing.
+  - Applied coordinated palette tokens to poster surfaces, text, cards, borders, avatars, accents, relationship lines, and secondary details in the shared SVG renderer.
+  - Preserved node and connector geometry and propagated palette overrides through Branch Collection and Tiled Wall outputs.
+  - Passed 81 targeted PosterScene, SVG renderer, Studio, and Branch Collection tests; owner visual review remains pending.
+  - No commit was created.
+
+## 2026-07-17 - Poster Footer Identity Owner Controls
+
+- Summary:
+  - Added an optional 80-character footer phrase and an owner toggle for the localized Jozor attribution.
+  - Kept the truthful tree-scope label automatic and composed custom text on a separate centered footer line to avoid A4 crowding.
+  - Enforced control-character removal, whitespace normalization, and length capping at the canonical PosterScene boundary, followed by SVG XML escaping.
+  - Propagated identity settings through Studio preview, PNG, raster PDF, Branch Collection, and Tiled Wall outputs.
+  - Passed 79 targeted PosterScene, SVG renderer, Studio, and Branch Collection tests; owner visual review remains pending.
+  - No commit was created.
+
+## 2026-07-17 - Poster Connector Style Owner Controls
+
+- Summary:
+  - Added Subtle, Classic, and Bold relationship-line presets to the owner-facing Studio.
+  - Stored the selection in canonical PosterScene layout data so preview, PNG, raster PDF, Branch Collection, and Tiled Wall share the same SVG treatment.
+  - Kept node rectangles, connector endpoints, and paths identical across the presets; only line weight and visual emphasis change.
+  - Preserved theme-aware colors and existing spouse/relative relationship treatments.
+  - Passed 45 targeted Studio, SVG renderer, and Branch Collection tests; owner real-tree visual review remains pending.
+  - No commit was created.
+
+## 2026-07-17 - Poster Card Content Owner Controls
+
+- Summary:
+  - Added owner controls for birth/death years, localized relationship labels, birth place, and occupation.
+  - Kept years and relationship hints inside the existing sanitized boundary and prevented raw relationship values from appearing in SVG.
+  - Made the settings part of canonical PosterScene content so Preview, PNG, raster PDF, Tiled Wall, and Branch Collection detail posters share the same result.
+  - Kept the Branch Collection index compact and free of optional card details.
+  - Verified Arabic controls on the signed-in owner tree and measured safe Dense Genealogy spacing with no overlap or overflow.
+  - Extended the sanitizer with opt-in, 60-character birth-place and occupation labels for deceased, non-private people only; living/private values remain absent.
+  - Kept notes, addresses, residence, media paths, and descriptive text outside the poster boundary.
+  - Passed 82 tests across the final six-file targeted suite, including Dense-card overflow coverage, plus typecheck, scoped ESLint, and owner runtime review for years/relationship; place/occupation real-tree visual review remains pending.
+  - No commit was created.
+
+## 2026-07-17 - Poster Photo Shape Owner Control
+
+- Summary:
+  - Added circular, square, and soft-corner photo choices to the owner-facing Studio controls.
+  - Made the selected shape part of the canonical PosterScene card preset instead of a preview-only CSS choice.
+  - Updated the shared SVG renderer so image clips, avatar rings, fills, and initials fallbacks use identical geometry.
+  - Preserved image-resolver privacy, the global photo toggle, and living-person photo hiding.
+  - Passed the shape into Branch Collection scenes while keeping the branch index intentionally photo-free; Tiled Wall Poster inherits the canonical scene automatically.
+  - Generated and inspected a real-tree A3 landscape PNG and one-page raster PDF with soft-corner photo clipping; preview and exports matched.
+  - Passed 30 PosterScene tests, 14 SVG renderer tests, 19 Studio tests, 7 Branch Collection tests, typecheck, and scoped ESLint.
+  - No commit was created.
+
+## 2026-07-17 - Dense Genealogy Owner Export Review
+
+- Summary:
+  - Generated real-tree Dense Genealogy descendant PNG and PDF artifacts at A3 landscape with privacy masking and owner-controlled photos.
+  - Corrected a Dense preset name size that fell below the eight-point physical print floor and caused the quality gate to block valid A3 output.
+  - Found and corrected the follow-on avatar/name collision by increasing compact-card height, reducing avatar diameter, and deriving name position from the avatar ring boundary.
+  - Regenerated a 4526 x 3200 PNG and a one-page physical A3 raster PDF; Arabic, masked labels, photos, connectors, and shared geometry matched without overlap.
+  - Added regression checks for both physical name readability and avatar/name clearance.
+  - Retained representative high-density physical print proof as a separate product gate.
+  - No commit was created.
+
+## 2026-07-17 - Modern Gallery Owner Export Review
+
+- Summary:
+  - Generated real-tree Modern Gallery descendant PNG and PDF artifacts at A3 landscape with privacy masking and owner-controlled photos.
+  - Found that SVG `currentColor` text resolved to black because the root defined `fill` without the CSS `color` property.
+  - Corrected the canonical SVG foreground inheritance so preview, PNG, and PDF share readable light text on the dark gallery surface.
+  - Regenerated a 4526 x 3200 PNG and a one-page physical A3 raster PDF; Arabic, masked labels, photos, frame, and geometry matched.
+  - Recorded a non-blocking P2 opportunity to improve central-space composition for wide two-tier descendant layouts.
+  - Passed 17 targeted renderer/runtime tests, typecheck, scoped ESLint, and owner visual inspection.
+  - No commit was created.
+
+## 2026-07-17 - Branch Collection Index Pass
+
+- Summary:
+  - Replaced the technical full-tree `overview.svg` with a concise branch index built from the sanitized collection graph.
+  - Added stable branch numbers and represented-person counts matching the ordered files in `branches/`.
+  - Removed photos and life-year details from the index while preserving the shared PosterScene-to-SVG path.
+  - Added a dedicated `branch-index` card preset with wider text cards and no decorative initials avatar.
+  - Added the dedicated `branch-index-grid` engine so index cards use a compact multi-row composition instead of long tiered connectors.
+  - Added `overviewKind: branch-index` to the public manifest and clarified the Arabic and English README instructions.
+  - Verified a ten-branch A0 index with zero overlapping cards and no print block.
+  - Regenerated the owner package with 10 branch posters and 84 represented people; the visual index review passed with a `4 + 4 + 2` grid, no photos, no external hrefs, and intact Arabic text.
+  - Passed 139 visual-output tests and 49 Studio/export-panel tests, typecheck, scoped ESLint, and `git diff --check`.
+  - No commit was created.
+
+## 2026-07-16 - Visual Publishing Studio Runtime Completion Review
+
+- Summary:
+  - Added active Modern Gallery and Dense Genealogy runtime directions on the shared PosterScene-to-SVG path.
+  - Corrected the Modern direction name and copy so it no longer claims a dark four-generation-only product.
+  - Included direct spouses in descendant branch posters without importing unrelated external branches.
+  - Added a pre-download Branch Collection quality gate and owner-facing page/preset guidance.
+  - Generated a real-tree A0 Dense Branch Collection with 10 branch posters, 84 represented people, and privacy-safe embedded photos.
+  - Verified zero external image links and zero storage/token references in the generated SVG package.
+  - Recorded the Studio runtime as a foundation pass while retaining separate owner visual and physical-print gates.
+  - No commit was created.
+
+## 2026-07-15 - Tiled Wall Poster Assembly Guidance Pass
+
+- Summary:
+  - Added safe per-sheet node/connector utilization counts without exposing family data.
+  - Added a non-blocking sparse-edge note while preserving the independent readability gate.
+  - Expanded the ZIP README with a full assembly map, physical dimensions, 100% scale warning, proof step, and trim/alignment instructions.
+  - Added deterministic SVG file paths and utilization metadata to `assembly.json`.
+  - Verified the real-tree 6x5 A2 configuration displays 30 sheets, 283.8 x 236.0 cm, 42.7 pt minimum text, and 8 decorative-only edge sheets.
+  - Added an advisory lower-cost grid search that preserves print-pass status and at least 75% of the selected text size.
+  - Verified the real-tree recommendation reduces the package to 4x4 (16 sheets) with an estimated 33.5 pt minimum text size.
+  - Added an owner-triggered apply action that changes only rows and columns, preserving A2, overlap, and all poster settings.
+  - Verified the applied 4x4 result at 227.2 x 157.6 cm, then restored the owner's 6x5 A2 selection.
+  - Passed 23 targeted tests, typecheck, scoped ESLint, and `git diff --check`.
+  - No commit was created.
+
+## 2026-07-15 - Tiled Wall Poster Owner Digital Assembly Review
+
+- Summary:
+  - Inspected the owner-generated tiled-wall ZIP locally without committing private artifacts.
+  - Verified a complete 6x5 A2 landscape package with 30 valid, numbered SVG sheets.
+  - Confirmed shared geometry for 90 nodes and 155 connectors with zero cross-sheet coordinate mismatches.
+  - Confirmed embedded Arabic fonts, correct print marks, no mojibake, no external asset URLs, and no raw identifier indicators.
+  - Promoted the package to Digital Assembly Pass while retaining the physical print proof as the remaining gate.
+  - Recorded edge-sheet utilization, richer assembly instructions, and photo-enabled package proof as non-blocking follow-ups.
+  - No commit was created.
+
+## 2026-07-15 - Tiled Wall Poster Per-sheet Render Optimization
+
+- Summary:
+  - Culled off-sheet nodes and connectors during tile SVG rendering without changing canonical geometry.
+  - Preserved overlapping artwork on adjacent sheets and kept connector paths in shared scene coordinates.
+  - Fixed the final-size multiplication symbol that previously appeared as a Unicode escape literal.
+  - Re-ran real-tree 3x3 package generation successfully with a visible progress state and no console errors.
+  - Recorded that archive-content review remains pending because the in-app browser does not expose its download path.
+  - No commit was created.
+
+## 2026-07-15 - Tiled Wall Poster Readability Gate
+
+- Summary:
+  - Added assembled physical dimensions and estimated minimum text size to the tiled-wall plan.
+  - Classified configurations as print readable, warning, or blocked and prevented unreadable ZIP exports.
+  - Displayed a concise owner-facing quality summary rather than technical scene telemetry.
+  - Verified the default 3x3 A3 landscape configuration against the 90-person real tree: 118.4 x 81.5 cm and 17.3 pt minimum text.
+  - Observed no browser console errors; no commit was created.
+
+## 2026-07-15 - Tiled Wall Poster Studio Delivery
+
+- Summary:
+  - Added printable safe margins, crop marks, edge alignment references, and stable page coordinates to every SVG tile.
+  - Exposed rows, columns, A4/A3/A2 sheet size, and overlap controls for full-tree scope in the Studio.
+  - Added direct ZIP delivery while preserving one canonical PosterScene across every sheet.
+  - Reworded the single-sheet density block to recommend Branch Collection or Tiled Wall Poster instead of unavailable generation reduction.
+  - Verified the controls against the owner's 90-person, 155-relationship tree without horizontal overflow.
+  - Kept owner print assembly review as the remaining release gate; no commit was created.
+
+## 2026-07-15 - Tiled Wall Poster Geometry and SVG Package Foundation
+
+- Summary:
+  - Added deterministic tiled-wall planning from one canonical PosterScene without per-sheet layout recalculation.
+  - Preserved aspect ratio with a uniform scene-to-millimeter scale and centered padding for mismatched wall grids.
+  - Added millimeter overlap, stable row/column ordering, assembled wall dimensions, and truncation protection.
+  - Extended the SVG renderer with viewport rendering while preserving the default full-scene output exactly.
+  - Added a ZIP package of numbered SVG tiles, a privacy-safe assembly manifest, and localized instructions.
+  - Kept the product hidden pending crop marks, safe margins, Studio controls, and owner visual assembly review.
+  - Passed 11 targeted tests; no commit was created.
+
+## 2026-07-15 - Branch Poster Collection Studio Delivery
+
+- Summary:
+  - Added a complete Branch Collection ZIP exporter built from canonical PosterScene SVG output.
+  - Packaged a full-tree overview, ordered branch posters, a public manifest, and localized instructions.
+  - Reused embedded Arabic font and normalized image assets without exposing raw storage sources or person IDs.
+  - Added the download action to full-tree scope only when descendant branches are available.
+  - Kept the collection path independent from single-page raster quality blocks, so it remains the honest alternative for oversized trees.
+  - Passed 21 targeted Branch Collection and Studio tests; no commit was created.
+
+## 2026-07-15 - Branch Poster Collection Foundation
+
+- Summary:
+  - Added a sanitized Branch Collection manifest and deterministic branch-poster builder.
+  - Split direct descendant branches without applying binary ancestor limits.
+  - Normalized local generations and created one descendant-tiered PosterScene per branch.
+  - Preserved cross-branch relationships as manifest references instead of invalid in-poster connectors.
+  - Rejected raw anchor identifiers and kept raw people, contact fields, media paths, and storage URLs outside the collection boundary.
+  - Kept the product hidden until cover, package export, Studio controls, and owner visual review are complete.
+  - Passed 31 targeted tests, TypeScript, and scoped ESLint; no commit was created.
+
+## 2026-07-15 - Full-tree Overview Poster Foundation
+
+- Summary:
+  - Accepted Overview Poster, Branch Collection, and Tiled Wall Poster as the three official large-tree publishing products.
+  - Replaced Classic detail-card rendering for full-tree scope with the dedicated `full-tree-overview` engine.
+  - Added the `dense-overview` card preset with compact name/year nodes and no profile photos.
+  - Preserved all sanitized relationship types and the canonical PosterScene-to-SVG rendering path.
+  - Kept A0 raster downloads blocked when effective DPI is below the print threshold; the gate was not weakened.
+  - Recorded Tiled Wall Poster as an in-application product with shared-scene tile geometry, crop marks, overlap, numbering, and multi-page PDF requirements.
+  - Passed 57 targeted tests, TypeScript, and scoped ESLint; no commit was created.
+
+## 2026-07-15 - Expanded Poster Scopes Real-tree Review
+
+- Summary:
+  - Removed the binary ancestor node-cap assumption from descendant and full-tree Studio requests.
+  - Verified a four-generation A0 descendant poster against the owner's signed-in tree with 51 people and 55 relationships and no truncation.
+  - Added a dense-network print-quality block for Classic full-tree scenes above 48 people or 80 connectors.
+  - Verified that the complete 90-person, 155-relationship tree remains represented but PNG/PDF actions are disabled as visually unsuitable.
+  - Preserved sanitized preview identifiers and kept raw person data outside PosterScene and warning payloads.
+  - Passed 42 targeted tests, TypeScript, and scoped ESLint; no commit was created.
+
+## 2026-07-14 - Classic Heritage Large-format Runtime
+
+- Summary:
+  - Added truthful A2, A1, and A0 physical document specifications to Classic Heritage.
+  - Added page-size-specific print margins and adaptive raster scales shared by quality evaluation, PNG, and raster PDF.
+  - Kept A4/A3 at 2x, used 1.5x for A2, and capped A1/A0 at 1x to avoid unsafe canvas memory.
+  - Added low-DPI quality warnings while retaining hard blocks for unreadable text, overlap, truncation, and excessive memory.
+  - Exposed A2/A1/A0 in the Studio page-size control and updated registry capabilities.
+  - Passed 62 targeted tests, TypeScript, and scoped ESLint.
+  - Recorded physical-print and owner visual approval as pending for large formats.
+
+## 2026-07-14 - Descendant And Full-tree Poster Runtime
+
+- Summary:
+  - Added first-class Ancestors, Descendants, and Full Tree controls to Visual Publishing Studio.
+  - Implemented all-generation descendant traversal and complete-tree selection across parent-child, spouse/partner, and relative relationships.
+  - Added `descendant-tiered` and `family-network-tiered` PosterScene layout engines.
+  - Preserved relationship types in canonical SVG and styled spouse/relative links distinctly.
+  - Kept raw IDs and private fields outside PosterScene while retaining the existing photo and masking boundary.
+  - Hid the generation limiter for Full Tree and kept A4/A3 exports behind PrintQualityReport.
+  - Passed 68 targeted tests, TypeScript, and scoped ESLint.
+  - Recorded real-tree owner visual review as pending because localhost access was rejected by the in-app browser policy.
+
+## 2026-07-14 - Classic Heritage All-generations And Print-quality Gate
+
+- Summary:
+  - Exposed an All generations control for Classic Heritage ancestor posters.
+  - Added a 127-person sanitized selection cap and blocked export when that cap produces an incomplete poster.
+  - Implemented real PosterScene print-quality evaluation for DPI, printed font size, raster memory, card overlap, truncation, and empty scenes.
+  - Disabled PNG/PDF actions for blocked scenes and added owner-facing Arabic/English correction guidance.
+  - Reviewed the Arabic All control on the owner's signed-in real tree; two 10-person samples passed without quality warnings.
+  - Passed 56 integrated tests, TypeScript, and scoped ESLint.
+
+## 2026-07-14 - All-generation Ancestor Selector Foundation
+
+- Summary:
+  - Generalized preview selector depth to accept bounded generations or all reachable ancestors.
+  - Added all-generation traversal to live and fixture ancestor selectors without exposing raw person entities downstream.
+  - Preserved one overflow sentinel so the production sanitizer can report node-cap truncation truthfully.
+  - Kept the owner-facing Studio control limited to 1-4 generations pending PrintQualityReport and deep-tree visual QA.
+  - Passed 21 targeted tests, TypeScript, and scoped ESLint.
+
+## 2026-07-14 - Classic Heritage Limited Beta Gate Closure
+
+- Summary:
+  - Promoted the new Classic Heritage Studio PNG/PDF path to Pass for Limited Beta in the consolidated readiness map.
+  - Kept legacy Classic/Modern poster exports explicitly blocked and classified Modern Gallery as planned, not implemented.
+  - Removed the remaining React act warning by awaiting the Arabic font resource in the Vault integration test.
+  - Recorded the implemented scope and the planned all-generation, descendant, and full-tree boundaries without overstating runtime support.
+  - Passed both unit-test shards, production build, TypeScript, Studio-scoped ESLint, and git diff validation.
+  - Recorded 16 repository-wide ESLint warnings confined to GEDCOM logic/tests as separate non-Studio technical debt; no lint errors were reported.
+
+## 2026-07-14 - Poster Scope And Generation Product Requirements
+
+- Summary:
+  - Accepted all available generations as a required ancestor and descendant poster capability.
+  - Defined Ancestors, Descendants, and Full Tree as separate first-class scope choices.
+  - Required a dedicated full-tree overview engine that preserves complete supported relationships.
+  - Recorded these features as planned registry capabilities while keeping runtime claims limited to 1-4 ancestor generations.
+
+## 2026-07-14 - Classic Heritage Real-tree Owner Visual Review
+
+- Summary:
+  - Reviewed Classic Heritage against the owner's signed-in real tree with a 10-person, four-generation A3 landscape sample.
+  - Verified six embedded profile photos, intact Arabic, balanced single-page geometry, and matching SVG-derived PNG/PDF composition.
+  - Found and fixed an automatic-title privacy leak where a masked living root's name remained in the poster title.
+  - Added regression coverage so masked roots receive a generic automatic title while explicit owner titles remain supported.
+  - Promoted the new Studio Classic Heritage path to Pass for Limited Beta; the legacy Classic Poster remains retired.
+
+## 2026-07-13 - Classic Heritage Studio Owner Screenshot Review
+
+- Summary:
+  - Reviewed the Arabic Studio through the real guest application flow and captured owner-facing screenshot evidence.
+  - Promoted A3 landscape with horizontal ancestor flow and four generations to the wall-poster defaults.
+  - Made the canonical SVG preview responsive and visually dominant without recalculating PosterScene geometry.
+  - Removed duplicate preview telemetry and technical sanitizer/debug labels from the configuration panel.
+  - Passed the Studio integration gate on sanitized guest data while keeping real-tree density and photo review explicitly pending.
+
+## 2026-07-13 - Classic Heritage SVG Theme
+
+- Summary:
+  - Replaced the Minimal Technical Tree card identity with the first print-oriented `classic-heritage` preset.
+  - Added a warm paper surface, restrained double frame, Arabic ceremonial heading, integrated footer, and soft bronze relationship paths.
+  - Enlarged owner-authorized portraits, added overlapping circular image wells and initials fallback, and emphasized the selected root.
+  - Kept `PosterScene` geometry canonical across Studio preview, SVG, PNG, and one-page raster PDF.
+  - Generated and visually inspected Arabic A4 and A3 landscape fixtures with six embedded portraits and no private source leakage.
+  - Kept Modern Gallery, Dense Genealogy, A2/A1/A0, advanced customization, and vector PDF outside this phase.
+
+## 2026-07-13 - SVG Poster Image Asset Resolver
+
+- Summary:
+  - Added a controlled resolver for owner-authorized JPEG, PNG, and WebP person photos.
+  - Kept raw storage URLs and paths outside sanitized graphs, PosterScene, DOM markup, and exported artifacts.
+  - Added show-photo and hide-living-photo owner controls with initials fallback.
+  - Embedded resolved photo bytes in the canonical SVG used by preview, PNG, and PDF.
+  - Verified six sanitized portraits in a one-page Arabic A3 fixture with zero source leakage and matching geometry.
+  - Kept the visual classification at Minimal Technical Tree Baseline pending the Classic Heritage theme implementation.
+
+## 2026-07-13 - SVG Poster Arabic Font Embedding
+
+- Summary:
+  - Added a controlled resolver for the bundled Amiri TrueType font.
+  - Enforced same-origin bundled paths, TrueType signature validation, byte limits, and cached base64 conversion.
+  - Embedded the resolved font in the canonical Studio poster SVG used by preview, PNG, and PDF.
+  - Made poster export await a verified font resource instead of relying on an installed client font.
+  - Regenerated and visually inspected an Arabic A3 fixture with matching SVG-derived PNG and PDF output.
+
+## 2026-07-13 - SVG Default Poster Rendering Direction Pass
+
+- Summary:
+  - Accepted SVG as the canonical visual renderer for PosterScene-based Studio posters.
+  - Switched active Studio preview from HTML iframe rendering to inline canonical SVG.
+  - Added direct SVG output and made PNG/PDF consume the exact same serialized SVG.
+  - Retained one-page raster PDF as an explicit temporary fallback derived from SVG.
+  - Verified an Arabic A3 landscape fixture across preview, SVG, PNG, and PDF with matching geometry and intact text.
+  - Deferred embedded Arabic fonts, controlled photo assets, A2/A1/A0, and vector PDF to gated follow-up phases.
+
+## 2026-07-13 - Visual Publishing Studio Closure Truth Pass
+
+- Summary:
+  - Reworded the photo option to state that it marks people with available photos without embedding image files.
+  - Added owner-facing helper copy and a regression assertion for the sanitized photo boundary.
+  - Reconciled the UX blueprint so implemented live-selector phases are marked Completed rather than Next Step.
+  - Split legacy blocked poster status from the new Studio Classic/Modern readiness rows.
+  - Recorded the current Studio state as engineering-complete for sanitized output, with real-tree owner review as the only release gate.
+
+## 2026-07-13 - Studio Poster Four-Generation Density QA
+
+- Summary:
+  - Generated Classic and Modern Arabic Studio posters from a complete sanitized four-generation graph with 15 people and 14 relationships.
+  - Inspected high-DPI PNG output and Poppler-rendered one-page A4 PDFs for overlap, clipping, Arabic integrity, and connector continuity.
+  - Confirmed the narrow eight-card generation remains readable in both themes.
+  - Replaced cramped photo text inside avatar circles with name initials and a subtle photo-availability ring.
+  - Added a permanent 15-node / 14-edge renderer regression test.
+  - Verified A4 landscape plus A3 portrait and landscape PNG/PDF output with correct physical page dimensions.
+  - Kept the release gate at real-tree owner visual review; no private family artifact was committed.
+
+## 2026-07-13 - Studio Poster Identity Pass
+
+- Summary:
+  - Replaced generic template titles with root-aware poster titles and depth-aware subtitles.
+  - Added compact owner controls for editing the poster title and short description.
+  - Bound owner-authored copy to preview, PNG, PDF, and downloaded file naming.
+  - Added conservative input limits and adaptive renderer heading sizes for long copy.
+  - Added tests for root-driven defaults, custom copy propagation, file naming, and long-heading scaling.
+
+## 2026-07-11 - Studio Poster Sanitized Visual QA
+
+- Summary:
+  - Generated Classic and Modern Arabic posters from the real Studio renderer with sanitized fixture data.
+  - Inspected high-DPI PNG output and Poppler-rendered PDF pages.
+  - Reduced excessive generation spacing and made person-card surfaces opaque over connectors.
+  - Removed dangling year separators and improved the Arabic people-count footer.
+  - Corrected PDF physical sizing by passing A4/A3 millimeter dimensions explicitly.
+  - Verified a one-page A4 PDF at `595.276 x 841.89 pt` with intact Arabic and no browser artifacts.
+  - Set status to `Sanitized Visual QA Pass / Real-tree Owner Review Pending`.
+
+## 2026-07-11 - Studio Controlled Visual PDF Runtime
+
+- Summary:
+  - Added a one-page Studio PDF runtime that reuses the high-DPI PNG composition and jsPDF.
+  - Matched PDF page dimensions and orientation to A4/A3 portrait/landscape Studio settings.
+  - Activated PNG and PDF downloads in the Studio while keeping the legacy poster PDF path paused.
+  - Preserved the shared sanitizer, privacy, root, depth, photo, and layout pipeline.
+  - Added browser-compatible Blob byte conversion and focused runtime/component tests.
+  - Recorded the status as `Runtime Ready for Owner PDF Visual Review`; raster text search remains a known limitation.
+
+## 2026-07-11 - Studio Poster Layout v2
+
+- Summary:
+  - Replaced decorative generation rows with a root-relative binary ancestor layout.
+  - Positioned the root at the bottom and ancestors above it using actual parent-child relationships.
+  - Added calculated CSS connectors behind the person nodes.
+  - Preserved missing branch slots and adapted node width for dense generations.
+  - Added tests proving node/connector counts, root/parent coordinates, and the absence of SVG/canvas output.
+  - Set real-tree Classic and Modern PNG review as the gate before Controlled PDF work.
+
+## 2026-07-10 - Studio Poster Configuration Pass
+
+- Summary:
+  - Added owner-facing poster controls for 2-4 generations, A4/A3 size, portrait/landscape orientation, privacy, and photos.
+  - Added owner root-person selection through session-only tokens and rebuilt ancestor slices relative to the chosen root.
+  - Bound the controls to selector limits, sanitizer policy, preview composition, and PNG export page dimensions.
+  - Preserved and rendered sanitized birth/death years in poster person nodes.
+  - Corrected landscape preview framing by isolating the scaled iframe host from Arabic RTL inheritance.
+  - Added behavioral tests proving A3 landscape PNG handoff and privacy/photo updates.
+  - Recorded the pass in `visual-publishing-studio-poster-configuration-pass-2026-07-10.md`.
+
+## 2026-07-10 - Studio Poster Owner PNG Export Integration
+
+- Summary:
+  - Wired the new Studio poster renderer and browser PNG runtime to one active owner-review download action.
+  - Limited the action to Classic and Modern posters; Tree Snapshot keeps its existing export cards.
+  - Preferred the focused person as poster root and expanded poster selection to four generations / 15 people.
+  - Added loading, success, failure, MIME validation, and duplicate-click protection.
+  - Reframed the lower Visual Outputs section as `Additional outputs` so it does not compete with the Studio.
+  - Added the owner PNG integration review and evidence notes.
+  - Kept the legacy poster PDF path paused; Controlled PDF remains the next runtime milestone after PNG owner review.
+
+## 2026-07-10 - Studio Poster Browser PNG Runtime Foundation
+
+- Summary:
+  - Added `studioPosterBrowserPngRuntime.ts` as the first runtime implementation for the new Studio poster export path.
+  - The runtime writes the v1 poster HTML into a hidden iframe and uses `html-to-image` to produce PNG output.
+  - Added tests proving PNG Blob creation, typeless Blob normalization, and iframe cleanup on runtime failure.
+  - Kept the runtime unconnected to Visual Outputs UI export actions.
+  - Set the next milestone to `Studio Poster Controlled PDF Runtime Planning`.
+
+## 2026-07-10 - Studio Poster Export Adapter Contract
+
+- Summary:
+  - Added `studioPosterExportAdapter.ts` as the new Studio poster export boundary.
+  - Kept the adapter runtime-injected so it does not directly depend on legacy poster rendering, jsPDF, html-to-image, Playwright, or DOM APIs.
+  - Added tests for PNG/PDF MIME validation, empty Blob rejection, file-name sanitization, and renderer HTML handoff.
+  - Created the export adapter planning document (`visual-publishing-studio-poster-export-adapter-planning-2026-07-10.md`).
+  - Kept UI export button wiring out of scope.
+
+## 2026-07-10 - Studio Poster Renderer v1 Preview Integration
+
+- Summary:
+  - Integrated `renderStudioPosterHtml` into the Visual Publishing Studio poster preview surface.
+  - Replaced the old abstract poster mockup with a sandboxed iframe rendering the v1 UTF-8 HTML/CSS poster document.
+  - Scaled the renderer document inside the preview area so the poster reads as a page instead of a cropped viewport.
+  - Kept export handlers disconnected and left PNG/PDF generation out of scope.
+  - Created the preview integration review (`visual-publishing-studio-poster-renderer-v1-preview-integration-2026-07-10.md`).
+  - Set the next milestone to `Studio Poster Renderer v1 Export Adapter Planning`.
+
+## 2026-07-10 - Visual Publishing Studio Poster Renderer v1 Foundation
+
+- Summary:
+  - Started the new Studio-owned poster renderer path after pausing legacy poster downloads.
+  - Added `studioPosterRenderer.ts`, a pure HTML/CSS poster renderer that accepts only `VisualPreviewModel`.
+  - Ensured the renderer produces UTF-8 HTML, supports Arabic RTL, escapes user-visible strings, and avoids canvas/SVG/script usage.
+  - Added unit tests for Arabic rendering, HTML escaping, and rejecting non-poster preview models.
+  - Created the renderer v1 plan (`visual-publishing-studio-poster-renderer-v1-plan-2026-07-10.md`).
+  - Kept export button wiring and PDF/PNG generation out of scope for this foundation pass.
+
+## 2026-07-10 - Visual Studio Renderer Pivot
+
+- Summary:
+  - Approved the product decision to stop rescuing legacy Classic/Modern Poster exports before beta.
+  - Created the Visual Studio renderer pivot report (`visual-studio-renderer-pivot-2026-07-10.md`).
+  - Paused legacy poster download cards in the Visual Outputs tab while keeping legacy handlers in the codebase.
+  - Kept Tree Snapshot available as the current downloadable visual output.
+  - Updated the consolidated readiness summary so Classic/Modern legacy posters are no longer presented as beta-ready.
+  - Set the next milestone to `Visual Publishing Studio Poster Renderer v1 Plan`.
+
+## 2026-07-10 - Classic Poster Owner Visual Review
+
+- Summary:
+  - Created the Classic Poster owner visual review report for `شجرة أسلاف سليم النور.pdf`.
+  - Set Classic Poster status to `Blocked` after real PDF review.
+  - Documented blockers: broken Arabic PDF text rendering, nearly empty first page, sparse second page with only one small person card, raw English `Family tree`, and questionable pagination/viewport output.
+  - Updated the consolidated publishing readiness summary so the owner PDF review overrides the earlier structural/sanitized spot check for Classic Poster.
+  - Added evidence notes without committing the generated PDF or private family data.
+  - Set the next milestone to `Classic Poster PDF Renderer Fix Plan`.
+
+## 2026-07-10 - Visual Outputs Tab Owner Screenshot Review Pack
+
+- Summary:
+  - Created the owner screenshot review report for the Visual Outputs tab.
+  - Promoted the status to `Pass for Visual Output Reviews` after reviewing refreshed owner screenshots.
+  - Added local evidence notes for screenshot review without committing private screenshots or export artifacts.
+  - Confirmed the refreshed UI no longer shows technical labels such as `sanitized-data` or `masked` in the Studio side panel.
+  - Confirmed the review gate precedes Classic Poster, Modern Poster, and Tree Snapshot owner visual reviews.
+
+## 2026-07-10 - Visual Outputs Tab Visual Polish Pass
+
+- Summary:
+  - Enlarged the Visual Publishing Studio preview composition to give the preview area stronger visual presence.
+  - Reduced the side panel into a compact output selector and owner-facing review summary.
+  - Removed visible technical/debugging labels from the review surface, including preview mode, privacy mode, template IDs, and layout engines.
+  - Renamed the lower section to `Actual export` and clarified that the existing cards download files now.
+  - Preserved all existing export handlers and file generation paths.
+  - Created the visual polish review report (`visual-outputs-tab-visual-polish-pass-2026-07-10.md`).
+
+## 2026-07-10 - Visual Outputs Tab Alignment Pass
+
+- Summary:
+  - Reframed the visible Visual Publishing Studio as a preview/review area for Limited Beta.
+  - Removed the disabled Studio action bar from the Visual Outputs tab to avoid presenting two competing export systems.
+  - Replaced technical preview wording with owner-facing review copy.
+  - Added a `Current export actions` separator above the existing Classic/Modern Poster and Tree Snapshot cards.
+  - Preserved existing PNG/PDF export card handlers without runtime export changes.
+  - Created the alignment review report (`visual-outputs-tab-alignment-pass-2026-07-10.md`).
+
+## 2026-07-09 - Visual Publishing Studio Owner Default Exposure
+
+- Summary:
+  - Removed the local `SHOW_VISUAL_STUDIO_SHELL` hiding gate from `ExportCloudPanel`.
+  - Rendered `VisualPublishingStudio` by default in the Visual Outputs tab using `previewSourceMode="store"`.
+  - Kept existing Classic/Modern Poster and Tree Snapshot export cards active below the Studio.
+  - Kept Studio action buttons disabled and export handlers disconnected.
+  - Updated tests to assert the Studio appears by default.
+  - Created the owner exposure review (`visual-publishing-studio-owner-default-exposure-review-2026-07-09.md`).
+
+## 2026-07-09 - Visual Publishing Studio Hidden Store Bridge Skeleton
+
+- Summary:
+  - Added `useVisualStudioStorePreviewSource` as an isolated optional bridge from allowed `useAppStore` fields into `PreviewLiveTreeSource`.
+  - Added `previewSourceMode="store"` support to `VisualPublishingStudio` while keeping fixture mode as the default.
+  - Ensured the Vault export panel still renders the Studio without store mode and remains hidden behind `SHOW_VISUAL_STUDIO_SHELL = false`.
+  - Added tests proving hidden store-mode telemetry builds through sanitizer/adapters without raw ID or media URL exposure.
+  - Created the hidden store bridge review (`visual-publishing-studio-hidden-store-bridge-review-2026-07-09.md`).
+
+## 2026-07-09 - Visual Publishing Studio Phase 4U: Foundation Closure Review
+
+- Summary:
+  - Created the hidden runtime store wiring plan (`visual-publishing-studio-hidden-runtime-store-wiring-plan-2026-07-09.md`).
+  - Deferred actual runtime store subscription and user exposure to a future gated activation pack.
+  - Created the foundation closure review (`visual-publishing-studio-foundation-closure-review-2026-07-09.md`).
+  - Closed the current Studio package as `Pass as Hidden Studio Foundation`.
+  - Preserved disabled action buttons, hidden UI flag, and zero export handler wiring.
+
+## 2026-07-09 - Visual Publishing Studio Phase 4S: Pure Live Source Mapper
+
+- Summary:
+  - Created the hidden live-source wiring plan (`visual-publishing-studio-hidden-live-source-wiring-plan-2026-07-09.md`).
+  - Added `previewLiveSourceMapper.ts` to map explicitly allowed store-shaped fields into `PreviewLiveTreeSource`.
+  - Verified the mapper excludes contact fields, media URLs/paths, notes, source text, and metadata at compile time.
+  - Added `previewLiveSourceMapper.test.ts` covering poster and snapshot selector handoffs through the sanitizer boundary.
+  - Created the pure live source mapper review (`visual-publishing-studio-pure-live-source-mapper-review-2026-07-09.md`).
+
+## 2026-07-09 - Visual Publishing Studio Phase 4Q: Hidden Fixture Selector Wiring
+
+- Summary:
+  - Created the hidden selector wiring plan (`visual-publishing-studio-hidden-selector-wiring-plan-2026-07-09.md`).
+  - Updated `VisualPublishingStudio` to build preview telemetry through static fixture data, fixture selectors, `productionPreviewSanitizer`, and preview adapters.
+  - Switched hidden Studio telemetry mode to `sanitized-data`.
+  - Preserved `SHOW_VISUAL_STUDIO_SHELL = false`, disabled action buttons, and zero export handler/store/IndexedDB wiring.
+  - Created the hidden fixture selector wiring review (`visual-publishing-studio-hidden-fixture-selector-wiring-review-2026-07-09.md`).
+
+## 2026-07-09 - Visual Publishing Studio Phase 4O: Live Selector Implementation Review Pack
+
+- Summary:
+  - Created the live selector implementation review (`visual-publishing-studio-live-selector-implementation-review-2026-07-09.md`).
+  - Reviewed poster and snapshot minimal selectors as `Pass as Minimal Live Selector Layer`.
+  - Confirmed selector outputs pass through `productionPreviewSanitizer` and adapters without raw ID leakage.
+  - Kept runtime selector registry activation, hidden Studio wiring, and IndexedDB reads blocked.
+  - Updated ADR 014 and UX blueprint to set Hidden Studio Selector Wiring Planning as the next step.
+
+## 2026-07-09 - Visual Publishing Studio Phase 4N: Snapshot Selector Minimal Implementation
+
+- Summary:
+  - Expanded `selectSnapshotPreviewGraph` in `previewLiveGraphSelectors.ts` to select explicit visible node IDs from the minimal `PreviewLiveTreeSource`.
+  - Preserved empty graph behavior when `visibleNodeIds` are absent.
+  - Updated tests to verify visible-node selection, edge pruning, sanitizer masking, adapter ingestion, and raw ID exclusion.
+  - Kept runtime selector registry activation and hidden Studio wiring blocked.
+  - Updated ADR 014, UX blueprint, and snapshot planning notes.
+
+## 2026-07-09 - Visual Publishing Studio Phase 4M: Snapshot Selector Planning
+
+- Summary:
+  - Created the snapshot selector planning document (`visual-publishing-studio-snapshot-selector-planning-2026-07-09.md`).
+  - Defined visible-node scoped boundaries and blocked full-tree traversal by default.
+  - Kept viewport runtime reads and selector registry activation blocked.
+  - Updated ADR 014 and UX blueprint to set Snapshot Selector Minimal Implementation as the next step.
+
+## 2026-07-09 - Visual Publishing Studio Phase 4L: Poster Live Selector Review Pack
+
+- Summary:
+  - Created the poster live selector review report (`visual-publishing-studio-poster-live-selector-review-2026-07-09.md`).
+  - Certified the minimal poster selector as `Pass as Minimal Poster Selector Pattern`.
+  - Confirmed runtime selector registry activation, hidden Studio integration, IndexedDB reads, and snapshot implementation remain blocked.
+  - Updated ADR 014 and UX blueprint to set Snapshot Selector Planning as the next step.
+
+## 2026-07-09 - Visual Publishing Studio Phase 4K: Poster Live Selector Minimal Implementation
+
+- Summary:
+  - Expanded `selectPosterPreviewGraph` in `previewLiveGraphSelectors.ts` to read a minimal `PreviewLiveTreeSource` fixture shape.
+  - Implemented root-centered ancestor selection with generation depth and node count limits.
+  - Kept `selectSnapshotPreviewGraph` as an empty skeleton pending viewport source boundary approval.
+  - Updated tests to verify poster selection, sanitizer masking, adapter ingestion, raw ID exclusion, and compile-level rejection of contact/media fields.
+  - Updated ADR 014, UX blueprint, and live selector review gate notes.
+
+## 2026-07-09 - Visual Publishing Studio Phase 4J: Live Selector Review Gate
+
+- Summary:
+  - Created the live selector review gate document (`visual-publishing-studio-live-selector-review-gate-2026-07-09.md`).
+  - Reviewed Phases 4F-4I and approved only the smallest poster selector implementation as the next step.
+  - Kept Studio integration, runtime selector registry activation, snapshot selector implementation, and IndexedDB reads blocked.
+  - Updated ADR 014, live selector planning, and UX blueprint to point to Phase 4K.
+
+## 2026-07-09 - Visual Publishing Studio Phase 4I: Live Selector Privacy Regression Tests
+
+- Summary:
+  - Added `previewLiveSelectorPrivacyRegression.test.ts` with store-shaped fixtures containing contact fields, media references, notes, source text, relationship IDs, and sync metadata.
+  - Verified fixture mapping excludes forbidden fields before `productionPreviewSanitizer`.
+  - Verified sanitizer masking of living/private people and generated preview IDs.
+  - Updated ADR 014, runtime planning, store discovery, and UX blueprint to set the Live Selector Review Gate as the next step.
+
+## 2026-07-09 - Visual Publishing Studio Phase 4H: Store Shape Discovery
+
+- Summary:
+  - Created the store shape discovery document (`visual-publishing-studio-store-shape-discovery-2026-07-09.md`).
+  - Inspected `Person`, `RelationshipEdge`, `TreeSettings`, `FamilySlice`, and `useAppStore` selectors.
+  - Documented allowed mapping fields and forbidden downstream fields for future live selectors.
+  - Confirmed no runtime store/IndexedDB wiring was introduced.
+  - Updated ADR 014, runtime planning, live selector planning, and UX blueprint to set privacy regression tests as the next step.
+
+## 2026-07-09 - Visual Publishing Studio Phase 4G: Live Store Selector Skeleton
+
+- Summary:
+  - Added empty live selector skeletons in `previewLiveGraphSelectors.ts`.
+  - Implemented `selectPosterPreviewGraph` and `selectSnapshotPreviewGraph` returning empty `PreviewSanitizerRawGraph` structures.
+  - Kept skeletons unregistered from the runtime selector registry.
+  - Added tests (`previewLiveGraphSelectors.test.ts`) validating empty safe outputs, sanitizer compatibility, and absence of store/IndexedDB/domain imports.
+  - Updated ADR 014, runtime planning, UX blueprint, and live selector planning notes to set Store Shape Discovery as the next step.
+
+## 2026-07-09 - Visual Publishing Studio Phase 4F: Live Store Selector Planning
+
+- Summary:
+  - Created the live store selector planning document (`visual-publishing-studio-live-store-selector-planning-2026-07-09.md`).
+  - Defined planned future selectors `selectPosterPreviewGraph` and `selectSnapshotPreviewGraph`.
+  - Documented privacy regression requirements, performance constraints, runtime guards, and implementation order.
+  - Confirmed direct store/IndexedDB wiring remains blocked until selector skeleton tests and store shape discovery are complete.
+  - Updated ADR 014, the runtime integration plan, and UX blueprint to mark Phase 4F complete.
+
+## 2026-07-09 - Visual Publishing Studio Phase 4E: Runtime Selector Foundation Review Pack
+
+- Summary:
+  - Created the runtime selector foundation review report (`visual-publishing-studio-runtime-selector-foundation-review-2026-07-09.md`).
+  - Added evidence notes documenting the fixture selector -> production sanitizer -> preview adapter verification path.
+  - Confirmed that the runtime selector registry remains empty and no store/IndexedDB integration exists.
+  - Updated ADR 014, the runtime integration plan, and UX blueprint to mark Phase 4E complete and set Live Store Selector Planning as the next milestone.
+
+## 2026-07-09 - Visual Publishing Studio Phase 4D: Fixture Selector Implementation
+
+- Summary:
+  - Added fixture-only graph selectors in `previewFixtureGraphSelectors.ts`.
+  - Implemented poster fixture selection with root prioritization and generation-depth filtering.
+  - Implemented snapshot fixture selection constrained by visible fixture node IDs.
+  - Preserved the runtime selector registry as intentionally empty and separate from fixture selectors.
+  - Added unit tests (`previewFixtureGraphSelectors.test.ts`) proving the fixture selector -> production sanitizer -> preview adapter chain without leaking fixture/raw IDs or contact/media fields.
+  - Updated ADR 014, the runtime integration plan, and UX blueprint to mark Phase 4D complete.
+
+## 2026-07-09 - Visual Publishing Studio Phase 4C: Preview Raw Graph Selector Contract
+
+- Summary:
+  - Added selector contract types in `previewGraphSelectorTypes.ts`, defining `VisualPreviewSelectorContext` and `VisualPreviewGraphSelector<TRawSource = unknown>`.
+  - Added an intentionally empty selector registry in `previewGraphSelectorRegistry.ts`, preserving the no-runtime-wiring boundary.
+  - Exported selector contracts from the publishing package index.
+  - Added unit tests (`previewGraphSelectorTypes.test.ts`) validating poster and snapshot contexts, compile-level exclusion of contact/media fields, and absence of store/IndexedDB/domain imports.
+  - Updated ADR 014, the runtime integration plan, and UX blueprint to mark Phase 4C complete and identify fixture selectors as the next step.
+
+## 2026-07-09 - Visual Publishing Studio Phase 4B: Production Preview Sanitizer Skeleton
+
+- Summary:
+  - Implemented the production-shaped sanitizer skeleton `productionPreviewSanitizer` in `previewProductionSanitizer.ts`.
+  - Defined raw interfaces `PreviewSanitizerRawNode` and `PreviewSanitizerRawGraph` intentionally omitting contact and media url properties.
+  - Implemented sequential generated `previewId` mapping, masking, birth/death year extraction, and edge capping/pruning.
+  - Wrote comprehensive unit tests (`previewProductionSanitizer.test.ts`) validating masking logic, edge truncation, and compile-time type-exclusion safety of the raw interfaces.
+  - Updated documentation files, ADR 014, and UX blueprint indicating Phase 4C is the next step.
+
+## 2026-07-09 - Visual Publishing Studio Phase 4A: Preview Runtime Integration Planning
+
+- Summary:
+  - Formulated the Preview Runtime Integration Plan (`visual-publishing-studio-preview-runtime-integration-plan-2026-07-09.md`) detailing runtime flow specs.
+  - Declared the absolute security gate: only selectors can query database entities; adapters and Studio components never see raw data.
+  - Specified requirements for selectors, production sanitizer interfaces, privacy policy mapping, and performance cap safeguards.
+  - Updated ADR 014 and UX blueprint defining Phase 4B (Production Preview Sanitizer Skeleton) as the next step.
+
+## 2026-07-08 - Visual Publishing Studio Preview Adapter Foundation Review Pack
+
+- Summary:
+  - Formulated the Preview Adapter Foundation Review report (`visual-publishing-studio-preview-adapter-foundation-review-2026-07-08.md`) closing Phases 3A-3F as `Pass as Preview Adapter Foundation`.
+  - Created evidence notes (`evidence_notes.md`) confirming unit tests passed, zero raw user records or primary keys leaked, no database integration, and feature flag remaining false.
+  - Updated ADR 014 with Foundation Review Result.
+  - Refactored UX blueprint marking Phases 3A-3F as completed and Phase 4A (Preview Runtime Integration Planning) as the next step.
+
+## 2026-07-08 - Visual Publishing Studio Phase 3F: Adapter Accepts SanitizedPreviewGraph
+
+- Summary:
+  - Added optional `sanitizedGraph` parameter to the `VisualPreviewRequest` in `previewAdapterTypes.ts`.
+  - Updated both `posterPreviewAdapter` and `snapshotPreviewAdapter` in `previewAdapterRegistry.ts` to consume and map `SanitizedPreviewGraph` details into `VisualPreviewModel` outputs, preserving warnings and truncated flags.
+  - Retained safe mock fallback routines when `sanitizedGraph` is omitted from request variables.
+  - Expanded unit test coverage in `previewAdapterRegistry.test.ts` to assert that poster and snapshot adapters map session-isolated preview IDs correctly, propagate custom telemetry warnings, and preserve truncation states.
+
+## 2026-07-08 - Visual Publishing Studio Phase 3E: Static Sanitizer Mock Implementation
+
+- Summary:
+  - Implemented the `mockPreviewSanitizer` test/mock helper class in `previewMockSanitizer.ts`.
+  - Added support for mapping raw node shapes (`MockPreviewRawNode` / `MockPreviewRawGraph`) with dummy credentials to sanitized outputs.
+  - Implemented safe birth/death year extraction, masking policies based on language locale, profile photo silhouetting, and node limits cropping.
+  - Exported the mock sanitizer and mock raw interfaces from the publishing index file.
+  - Wrote comprehensive unit tests (`previewMockSanitizer.test.ts`) validating privacy protection (masking living/private profiles, stripping emails, phones, and addresses), node limits, edge filtering, and ensuring `owner-full` mode complies with safety boundaries.
+
+## 2026-07-08 - Visual Publishing Studio Phase 3D: Sanitizer Contract Types
+
+- Summary:
+  - Created the TypeScript types under `previewSanitizerTypes.ts` mapping out life status, relationship hints, policy settings, sanitized nodes/edges, and graph models.
+  - Implemented `previewId` as the unique key for nodes to ensure physical decoupling from raw person IDs.
+  - Created `previewSanitizerContract.ts` defining the `VisualPreviewSanitizer<TRawGraph = unknown>` generic interface signature.
+  - Exported the new modules in the publishing package index file.
+  - Wrote comprehensive unit tests (`previewSanitizerTypes.test.ts`) verifying that sanitized node instances exclude all forbidden fields (phone, email, address, notes, photoUrl, citation snippets) and validating that `owner-full` mode is a policy setting that does not bypass sanitizer rules.
+
+## 2026-07-08 - Visual Publishing Studio Phase 3C: Sanitized Tree Data Boundary Design
+
+- Summary:
+  - Formulated the design documentation `visual-publishing-studio-sanitized-tree-data-boundary-2026-07-08.md` establishing the data security sandboxing guidelines for preview renderers.
+  - Specified the core rule of isolation: **Raw tree entities must never be passed directly into preview renderers.**
+  - Outlined permitted preview fields (masked names, session-isolated IDs, generation levels, years ranges) and strictly blacklisted forbidden attributes (raw database IDs, emails, phone numbers, addresses, citation snippets, sync statuses).
+  - Explicitly defined privacy masking levels, verifying that `owner-full` mode does not bypass the sanitizer boundary but only alters the masking strategy within it.
+  - Linked the boundary rules to ADR 014 and mapped the Phase 3D (Sanitizer Contract Types) next milestone in the UX blueprint.
+
+## 2026-07-08 - Visual Publishing Studio Phase 3B: Hidden Sanitized Preview Model Integration
+
+- Summary:
+  - Integrated the Preview Adapter Contract (`getVisualPreviewAdapter`) inside the hidden Visual Publishing Studio shell.
+  - Linked selection state in `VisualPublishingStudio.tsx` to automatically query matching adapters, with full fallback safety for template types without adapters.
+  - Updated `VisualOutputPreviewPane.tsx` to display active node/connection counts and render a small, passive warning badge (`Preview limited` / `المعاينة محدودة`) when layout data is truncated.
+  - Expanded `VisualOutputConfigPanel.tsx` with a read-only "Preview Telemetry" segment showcasing mode, privacy mode, node/edge counts, and truncation status.
+  - Wrote comprehensive DOM unit tests in `VisualPublishingStudio.test.tsx` verifying telemetry counts, truncation badge states, and selector actions, confirming all export capabilities remain strictly disabled.
+
+## 2026-07-08 - Visual Publishing Studio Phase 3A: Preview Adapter Contract
+
+- Summary:
+  - Established TypeScript contracts and data structures for the preview adapter framework.
+  - Added new modules under `src/features/publishing/visualOutputs/`:
+    - `previewAdapterTypes.ts`: Declares interfaces for requests, person nodes, relationship edges, and sanitized preview models.
+    - `previewAdapterRegistry.ts`: Implements isolated placeholder adapters (`posterPreviewAdapter`, `snapshotPreviewAdapter`) and registry helpers (`getVisualPreviewAdapter`, `listVisualPreviewAdapters`).
+  - Exported all new adapter types from the central publishing package index file.
+  - Wrote comprehensive unit tests (`previewAdapterRegistry.test.ts`) validating translation requests, node cap truncations, and strict privacy masking compliance.
+
+## 2026-07-08 - ADR 014: Visual Publishing Studio Preview Integration
+
+- Summary:
+  - Formulated and documented `ADR 014: Visual Publishing Studio Preview Integration` to govern dynamic preview development.
+  - Established the **Preview Adapter Layer** pattern, decoupling preview render calculations from active file exporter engines.
+  - Specified concrete rules for privacy protection (masking living/private profiles, omitting contact details, media URLs) and runtime performance (conservative node caps, debounces).
+  - Updated the Visual Publishing Studio UX Blueprint to reference ADR 014 and mapped Phase 3A (Preview Adapter Contract) as the next logical milestone.
+
+## 2026-07-08 - Visual Publishing Studio Phase 2D: Studio Hidden Review
+
+- Summary:
+  - Conducted a comprehensive safety, isolation, and architectural gate review covering Phases 2A, 2B, and 2C.
+  - Created review report (`visual-publishing-studio-hidden-review-2026-07-08.md`) certifying the foundation as `Pass as Hidden Studio Foundation`.
+  - Added evidence notes documenting component lists, test validations, registry defaults bindings, and dynamic updates verification.
+  - Updated the Visual Publishing Studio UX Blueprint, establishing design note gates (privacy bounds, performance profiles, canvas reuse) as prerequisites for any future live preview integration.
+
+## 2026-07-08 - Visual Publishing Studio Phase 2C: Static Preview Composition
+
+- Summary:
+  - Transformed the placeholder preview inside `VisualOutputPreviewPane.tsx` into a visual static preview mockup frame.
+  - Implemented product-specific layouts using HTML/CSS only (no canvas/SVG or user private data):
+    - Poster: Renders a portrait frame (`poster-preview-composition`) with abstract ancestors nodes and branches, switching styling theme (cozy warm vintage vs slate dark theme) depending on selected ID.
+    - Snapshot: Renders a landscape frame (`snapshot-preview-composition`) with abstract viewport boxes and grid overlay.
+  - Linked accessibility `aria-label` to the selected template's `previewAsset.alt` description from the registry.
+  - Updated unit tests in `VisualPublishingStudio.test.tsx` to assert on mockup frames, aria-label mapping, and selection state updates.
+
+## 2026-07-08 - Visual Publishing Studio Phase 2B: Product Selector State
+
+- Summary:
+  - Implemented dynamic template selection state inside the hidden Visual Publishing Studio shell.
+  - Added state hooks and callbacks:
+    - `VisualPublishingStudio.tsx`: Manages `selectedDefinitionId` state, updating derived definitions.
+    - `VisualOutputConfigPanel.tsx`: Renders template selection buttons for all registered options (Classic Poster, Modern Poster, Tree Snapshot).
+  - Updated subcomponents (`VisualOutputPreviewPane`, `VisualOutputConfigPanel`, `VisualOutputActionBar`) to update dynamically when selection changes, adjusting titles, specs, and supported action bar buttons.
+  - Added unit tests in `VisualPublishingStudio.test.tsx` verifying specs update, layouts reflow, capabilities adjust, and buttons remain disabled on template change.
+
+## 2026-07-08 - Visual Publishing Studio Phase 2A: Registry Defaults
+
+- Summary:
+  - Bound the hidden Visual Publishing Studio shell directly to the central `VisualOutputRegistry` source of truth.
+  - Updated components to ingest and render registry metadata:
+    - `VisualPublishingStudio.tsx`: Fetches the `classic-ancestor-poster` definition as default and forwards it.
+    - `VisualOutputPreviewPane.tsx`: Renders the default template's active-language name, description, and preview asset type.
+    - `VisualOutputConfigPanel.tsx`: Renders capabilities, engine, strategy, sizes, and layout settings in read-only spec rows.
+    - `VisualOutputActionBar.tsx`: Renders disabled PDF/PNG export buttons dynamically based on registry capabilities.
+  - Added test cases in `VisualPublishingStudio.test.tsx` verifying default registry properties rendering in English/Arabic.
+  - Kept the studio component hidden behind the disabled scaffold constant `SHOW_VISUAL_STUDIO_SHELL = false` to preserve production stability.
+
+## 2026-07-08 - Visual Publishing Studio Shell Review
+
+- Summary:
+  - Documented review of Phase 1 in [`docs/reviews/visual-publishing-studio-shell-review-2026-07-08.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/visual-publishing-studio-shell-review-2026-07-08.md) under status `Pass as Hidden Architecture Scaffold`.
+  - Created evidence notes in [`docs/reviews/evidence/visual-publishing-studio-shell-review-2026-07-08/evidence_notes.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/evidence/visual-publishing-studio-shell-review-2026-07-08/evidence_notes.md) verifying:
+    - Disabled scaffold constant `SHOW_VISUAL_STUDIO_SHELL = false` is enforced.
+    - Traditional Visual Outputs cards remain fully functional.
+    - Action buttons in tests are successfully disabled.
+    - Zero private family or image resources are committed.
+
+## 2026-07-08 - Visual Publishing Studio Shell Phase 1
+
+- Summary:
+  - Created the modular component structure for the future Visual Publishing Studio shell under `src/features/the-vault/components/visual-studio/`:
+    - `VisualPublishingStudio.tsx`: Main layout coordinator.
+    - `VisualOutputPreviewPane.tsx`: Viewport preview placeholder card.
+    - `VisualOutputConfigPanel.tsx`: Conceptual layout config options.
+    - `VisualOutputActionBar.tsx`: Muted disabled action controls.
+    - `VisualOutputReadinessNotice.tsx`: Disclaimer label indicating scaffold preview status.
+  - Safely integrated into `ExportCloudPanel.tsx` under the tab `visuals`, hidden from the production Vault flow by default behind the disabled scaffold constant `SHOW_VISUAL_STUDIO_SHELL = false`.
+  - Added unit test suite `VisualPublishingStudio.test.tsx` verifying component isolation, rendering copy in English/Arabic, and disabled buttons.
+  - Added unit test in `ExportCloudPanel.test.tsx` verifying that existing Visual Outputs cards render normally and the Studio shell is hidden by default.
+
+## 2026-07-08 - Visual Publishing Studio UX Blueprint
+
+- Summary:
+  - Created the UX blueprint document [`docs/reviews/visual-publishing-studio-ux-blueprint-2026-07-08.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/visual-publishing-studio-ux-blueprint-2026-07-08.md) for the future Visual Publishing Studio.
+  - Defined product philosophy (Preview-first, Configuration-first, Gallery-light) and target customization flow.
+  - Specified layout zones (Preview Area, Configuration Sidebar, Action Bar) and mapped out the transition relationship with the current Visual Outputs cards.
+  - Outlined Phase 1 Non-Goals (no live rendering, no custom theme editor, no paper size reflow, no drag/drop canvas) to maintain execution boundaries.
+  - Sketched component structure (`VisualPublishingStudio`, `VisualOutputPreviewPane`, etc.) and drafted the state model.
+
+## 2026-07-08 - Vault Export Readiness Labeling Pass
+
+- Summary:
+  - Updated the Vault export UI labels, descriptions, and badges to match Limited Beta readiness decisions.
+  - Added `Limited beta ready` badge to Classic Family Book card.
+  - Renamed `Jozor Archive` to `Jozor Full Backup` with badge `Owner only / full backup` and explicit description cautioning against public sharing.
+  - Renamed `JSON` to `Raw Project JSON` with badge `Internal raw export / not for sharing` and description explaining it is a raw developer/internal backup.
+  - Added `Structural beta pass` badges and custom description text for Classic Poster, Modern Poster, Tree Snapshot, and Calendar/ICS.
+  - Updated `ExportCloudPanel.test.tsx` to assert new labels, descriptions, badges, and verify same click handlers are still triggered.
+
+## 2026-07-08 - Tree Snapshot Outputs Structural Spot Check & Status Promotion
+
+- Summary:
+  - Promoted Tree Snapshot PNG/PDF to `Spot Check Pass for Limited Beta - structural/sanitized verification` following actual programmatic viewport-capture option verification.
+  - Verified bounding box capture width/height calculations, adding `+150px` padding on all sides, orientation decisions, 2x high-DPI scaling factor, and `JOZOR FAMILY TREE` watermark branding.
+  - Documented findings in [`docs/reviews/tree-snapshot-outputs-structural-spot-check-2026-07-07.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/tree-snapshot-outputs-structural-spot-check-2026-07-07.md) and evidence notes in [`docs/reviews/evidence/tree-snapshot-outputs-structural-spot-check-2026-07-07/evidence_notes.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/evidence/tree-snapshot-outputs-structural-spot-check-2026-07-07/evidence_notes.md).
+
+## 2026-07-07 - Visual Poster Outputs Structural Spot Check & Status Promotion
+
+- Summary:
+  - Promoted Classic Ancestor Poster and Modern Ancestor Poster (PNG and PDF) to `Spot Check Pass for Limited Beta - structural/sanitized verification` following actual programmatic canvas layout verification.
+  - Verified document page composition (`1000px x 800px`), symmetric node positioning coordinates, margins, edges path points, and perfect Arabic name preservation.
+  - Documented findings in [`docs/reviews/visual-poster-outputs-structural-spot-check-2026-07-07.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/visual-poster-outputs-structural-spot-check-2026-07-07.md) and evidence notes in [`docs/reviews/evidence/visual-poster-outputs-structural-spot-check-2026-07-07/evidence_notes.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/evidence/visual-poster-outputs-structural-spot-check-2026-07-07/evidence_notes.md).
+
+## 2026-07-07 - Calendar ICS Actual Inspection & Status Promotion
+
+- Summary:
+  - Promoted Calendar/ICS Export to `Spot Check Pass for Limited Beta - structural/sanitized verification` following actual programmatic ICS file generation and inspection.
+  - Verified structure (`BEGIN:VCALENDAR`, `VEVENT`, `END:VCALENDAR`, and standard headers).
+  - Confirmed perfect Arabic name preservation and that year-only/partial dates are safely omitted to prevent false calendar precision.
+  - Documented findings in [`docs/reviews/calendar-ics-owner-spot-check-2026-07-07.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/calendar-ics-owner-spot-check-2026-07-07.md) and evidence notes in [`docs/reviews/evidence/calendar-ics-owner-spot-check-2026-07-07/evidence_notes.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/evidence/calendar-ics-owner-spot-check-2026-07-07/evidence_notes.md).
+
+## 2026-07-07 - Jozor Archive Actual Inspection & Status Promotion
+
+- Summary:
+  - Promoted Jozor Archive to `Spot Check Pass as Full Project Archive` following actual programmatic zip extraction and inspection.
+  - Verified structure (`manifest.json`, `tree.json`, and isolated binary media under `media/avatars/` and `media/gallery/`).
+  - Confirmed that Supabase URLs, raw base64 data, and storage paths are successfully deleted from `tree.json`, verifying correct media separation.
+  - Documented findings in [`docs/reviews/jozor-archive-owner-spot-check-2026-07-07.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/jozor-archive-owner-spot-check-2026-07-07.md) and evidence notes in [`docs/reviews/evidence/jozor-archive-owner-spot-check-2026-07-07/evidence_notes.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/evidence/jozor-archive-owner-spot-check-2026-07-07/evidence_notes.md).
+
+## 2026-07-07 - Calendar ICS Owner Spot Check
+
+- Summary:
+  - Documented Calendar/ICS owner spot check report in [`docs/reviews/calendar-ics-owner-spot-check-2026-07-07.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/calendar-ics-owner-spot-check-2026-07-07.md) setting status to `Pending Owner ICS Inspection` and documenting partial dates omission as a known limitation.
+  - Updated consolidated readiness summary [`docs/reviews/publishing-outputs-limited-beta-readiness-2026-07-07.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/publishing-outputs-limited-beta-readiness-2026-07-07.md).
+
+## 2026-07-07 - Jozor Archive Owner Spot Check
+
+- Summary:
+  - Documented Jozor Archive owner spot check report in [`docs/reviews/jozor-archive-owner-spot-check-2026-07-07.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/jozor-archive-owner-spot-check-2026-07-07.md), setting status to `Pending Owner Archive Inspection` and classifying it as a Full Project Backup (not clean portable data).
+  - Updated consolidated readiness summary [`docs/reviews/publishing-outputs-limited-beta-readiness-2026-07-07.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/publishing-outputs-limited-beta-readiness-2026-07-07.md).
+
+## 2026-07-07 - JSON Export Product Boundary & Spot Check Report
+
+- Summary:
+  - Documented JSON owner spot check findings in [`docs/reviews/json-owner-spot-check-2026-07-07.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/json-owner-spot-check-2026-07-07.md), blocking current JSON output as public portable export due to media storage URLs, raw base64 data, and sync metadata leakage.
+  - Defined two JSON export products in the new design note [`docs/reviews/clean-portable-json-export-design-2026-07-07.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/clean-portable-json-export-design-2026-07-07.md): Full Jozor Project JSON (internal backup) and Clean Portable JSON (user-facing, privacy-compliant format).
+  - Updated consolidated readiness summary [`docs/reviews/publishing-outputs-limited-beta-readiness-2026-07-07.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/publishing-outputs-limited-beta-readiness-2026-07-07.md).
+
+## 2026-07-07 - GEDCOM Promotion to Spot Check Pass
+
+- Summary:
+  - Promoted GEDCOM Export to `Spot Check Pass` for Limited Beta.
+  - Documented owner re-review results and verified metrics (0 false 1 JAN dates, correct year-only exports, valid references structure) in [`docs/reviews/gedcom-owner-spot-check-2026-07-07.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/gedcom-owner-spot-check-2026-07-07.md).
+  - Updated consolidated readiness summary [`docs/reviews/publishing-outputs-limited-beta-readiness-2026-07-07.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/publishing-outputs-limited-beta-readiness-2026-07-07.md) and logged evidence notes in [`docs/reviews/evidence/gedcom-owner-spot-check-2026-07-07/evidence_notes.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/evidence/gedcom-owner-spot-check-2026-07-07/evidence_notes.md).
+
+## 2026-07-07 - GEDCOM Date Precision Export Polish
+
+- Summary:
+  - Addressed GEDCOM export date precision blockers: implemented precision-aware formatting rules in `formatDateForGEDCOM` preserving partial dates (`MON YYYY`), year-only dates (`YYYY`), approximate dates (`ABT YYYY`), and standardizing placeholder `YYYY-01-01` formats (exporting as `YYYY` unless explicit day/month precision is verified by metadata).
+  - Authored the GEDCOM owner spot check report [`docs/reviews/gedcom-owner-spot-check-2026-07-07.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/gedcom-owner-spot-check-2026-07-07.md) setting initial status to `Needs Polish` (moved from validation pass).
+  - Updated the consolidated readiness summary [`docs/reviews/publishing-outputs-limited-beta-readiness-2026-07-07.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/publishing-outputs-limited-beta-readiness-2026-07-07.md) to log `Needs Polish` for GEDCOM.
+
+## 2026-07-07 - Publishing Outputs Limited Beta Readiness Summary
+
+- Summary:
+  - Consolidated readiness reviews and status reports for all Vault publishing and export outputs.
+  - Released consolidated summary report at [`docs/reviews/publishing-outputs-limited-beta-readiness-2026-07-07.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/publishing-outputs-limited-beta-readiness-2026-07-07.md) and [`docs/reviews/evidence/publishing-outputs-limited-beta-readiness-2026-07-07/evidence_notes.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/evidence/publishing-outputs-limited-beta-readiness-2026-07-07/evidence_notes.md).
+  - Promoted Family Book outputs (PDF and Markdown) to `Pass for Limited Beta`, and marked visual outputs and portable data exports as pending owner output spot checks/reviews.
+
+## 2026-07-07 - Family Book Markdown Promotion to Pass for Limited Beta
+
+- Summary:
+  - Visual and textual review of the regenerated Markdown export confirms introduction, localized labels, references section structure, and em dash separators are fully successful.
+  - Officially promoted status to `Pass for Limited Beta` inside [`docs/reviews/family-book-markdown-owner-review-2026-07-07.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/family-book-markdown-owner-review-2026-07-07.md).
+  - Documented owner visual confirmation details in [`docs/reviews/evidence/family-book-markdown-limited-beta-review-2026-07-07/evidence_notes.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/evidence/family-book-markdown-limited-beta-review-2026-07-07/evidence_notes.md).
+  - Created a follow-up tracker in [`docs/reviews/family-book-markdown-limited-beta-followups-2026-07-07.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/family-book-markdown-limited-beta-followups-2026-07-07.md) for non-blocking P2/P3 items (relation/generation simplification, citation zero-state reduction, branch overview count wording, family path separator, and optional RTL wrapper mode).
+
+## 2026-07-07 - Family Book Markdown Beta Polish Pass
+
+- Summary:
+  - Prepared the owner review report for the Family Book Markdown format.
+  - Released review pack at [`docs/reviews/family-book-markdown-owner-review-2026-07-07.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/family-book-markdown-owner-review-2026-07-07.md) setting initial status to `Needs Polish` with target `Pass for Limited Beta as Review/Archive Format`.
+  - Addressed Markdown beta polish blockers: implemented template-based introductions, fully localized technical field labels (e.g. relationship, generation depth, citation coverage, source highlights as `أبرز المصادر`, count suffixes, and branch headers), updated timeline lines to use em dash (` — `) separators, and structured references as a formal heading section.
+
+## 2026-07-07 - Family Book PDF Promotion to Pass for Limited Beta
+
+- Summary:
+  - Visual review of the fourth generated PDF confirms timeline orphan prevention and list marker fixes are fully successful.
+  - Officially promoted status to `Pass for Limited Beta` inside [`docs/reviews/family-book-pdf-owner-rereview-round4-2026-07-07.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/family-book-pdf-owner-rereview-round4-2026-07-07.md).
+  - Documented owner visual confirmation details in [`docs/reviews/evidence/family-book-pdf-owner-rereview-round4-2026-07-07/evidence_notes.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/evidence/family-book-pdf-owner-rereview-round4-2026-07-07/evidence_notes.md).
+  - Created a follow-up tracker in [`docs/reviews/family-book-pdf-limited-beta-followups-2026-07-07.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/family-book-pdf-limited-beta-followups-2026-07-07.md) for non-blocking P2/P3 items (closing page balance, source highlights repetition, photo privacy confirmation, and Controlled PDF searchability).
+
+## 2026-07-07 - Family Book PDF Owner Visual Re-Review Round 4 & Timeline Renderer-Level Orphan Fix
+
+- Summary:
+  - Prepared the fourth-round owner visual review pack for Family Book PDF.
+  - Released review pack at [`docs/reviews/family-book-pdf-owner-rereview-round4-2026-07-07.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/family-book-pdf-owner-rereview-round4-2026-07-07.md) and [`docs/reviews/evidence/family-book-pdf-owner-rereview-round4-2026-07-07/evidence_notes.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/evidence/family-book-pdf-owner-rereview-round4-2026-07-07/evidence_notes.md).
+  - Addressed final timeline orphan page blocker at the renderer level: introduced `groupTimelineEventsForPrint` helper to partition events into groups of 6, merging any trailing group of size 1 into the previous group.
+  - Resolved suspicious RTL `.80` ordered list marker artifact by applying `list-style: none` to the timeline list CSS rules (since the date `<time>` acts as the natural bullet).
+  - Updated status to `Blocked for External Beta` pending confirmation of the fifth generated PDF.
+
+## 2026-07-07 - Family Book PDF Owner Visual Re-Review Round 3 & Timeline Orphan Page Polish
+
+- Summary:
+  - Prepared the third-round owner visual review pack for Family Book PDF after Phase 2 polish.
+  - Released review pack at [`docs/reviews/family-book-pdf-owner-rereview-round3-2026-07-07.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/family-book-pdf-owner-rereview-round3-2026-07-07.md) and [`docs/reviews/evidence/family-book-pdf-owner-rereview-round3-2026-07-07/evidence_notes.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/evidence/family-book-pdf-owner-rereview-round3-2026-07-07/evidence_notes.md).
+  - Defined the verification checklist for developer confirmation of Phase 2 fixes.
+  - Addressed timeline orphan page issue: updated list item CSS to `break-inside: avoid` and lists to `break-inside: auto`, ensuring single events do not get orphaned alone on nearly empty pages.
+  - Polished the closing section to render as an intentional card centered on the page with a maximum width of 500px.
+  - Moved status to `Needs Polish` (making internal beta testing possible).
+
+## 2026-07-07 - Family Book PDF Owner Re-Review Pack & Phase 2 Blocker Polish
+
+- Summary:
+  - Prepared the second-round owner re-review pack for Family Book PDF beta readiness after resolving blockers.
+  - Released review pack at [`docs/reviews/family-book-pdf-owner-rereview-2026-07-07.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/family-book-pdf-owner-rereview-2026-07-07.md) and [`docs/reviews/evidence/family-book-pdf-owner-rereview-2026-07-07/evidence_notes.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/evidence/family-book-pdf-owner-rereview-2026-07-07/evidence_notes.md).
+  - Addressed Phase 2 blockers: implemented a compact ending closing section displaying book statistics, softened card citation coverage text and moved it below the header, balanced card layouts next to photos, added photo privacy helper copy, and strengthened browser print alerts in `ExportCloudPanel.tsx`.
+  - Authored a PDF text quality tracking note at [`docs/reviews/family-book-pdf-text-quality-note-2026-07-07.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/family-book-pdf-text-quality-note-2026-07-07.md).
+
+## 2026-07-06 - ADR 013 Visual Publishing Studio Direction
+
+- Summary:
+  - Documented the architectural and UX direction for the future Visual Publishing Studio.
+  - Authored [`docs/adr/013-visual-publishing-studio-direction.md`](file:///d:/AppDEV/Jozor1.1/docs/adr/013-visual-publishing-studio-direction.md) proposing a Preview-first, Configuration-first model.
+  - Outlined flow taxonomy, conceptual UI layout shape, non-goals, and connection to the Vault's current gallery layout.
+
+## 2026-07-06 - Visual Outputs Gallery Manual Review Pack
+
+- Summary:
+  - Performed a focused manual review of the Vault's visual outputs product gallery layout.
+  - Verified visual scanning characteristics, compact snapshot layout, passive chip designs, and placeholder formatting.
+  - Documented RTL/Arabic translations and layout design reviews.
+  - Released review pack at [`docs/reviews/visual-outputs-gallery-review-2026-07-06.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/visual-outputs-gallery-review-2026-07-06.md) and [`docs/reviews/evidence/visual-outputs-gallery-review-2026-07-06/evidence_notes.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/evidence/visual-outputs-gallery-review-2026-07-06/evidence_notes.md).
+
+## 2026-07-06 - Visual Output Preview Asset Contract Phase 1
+
+- Summary:
+  - Extended the Visual Output Product contract with `previewAsset` and `recommendedFor` fields.
+  - Implemented designed layout placeholders at the top of Classic Poster, Modern Poster, and Tree Snapshot cards inside the Vault Visual Outputs tab.
+  - Rendered at most 3 passive `recommendedFor` chips under product description details based on selected language (Arabic/English).
+  - Expanded unit test assertions in `visualOutputRegistry.test.ts` and `ExportCloudPanel.test.tsx`.
+  - Updated ADR [`docs/adr/012-visual-output-product-contract.md`](file:///d:/AppDEV/Jozor1.1/docs/adr/012-visual-output-product-contract.md).
+
+## 2026-07-06 - Vault Publishing Taxonomy Manual Review Pack
+
+- Summary:
+  - Performed a manual documentation review of the Vault's refined publishing/export taxonomy.
+  - Validated clean product boundaries for Family Books (including Markdown), Visual Outputs (posters and snapshots), and Portable Data.
+  - Confirmed History & Quality card layouts use proper display mapping (product labels, format chips, category badges) without IndexedDB schema changes.
+  - Documented design decisions, deferred features, translation notes, and testing evidence.
+  - Released review pack at [`docs/reviews/vault-publishing-taxonomy-review-2026-07-06.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/vault-publishing-taxonomy-review-2026-07-06.md) and [`docs/reviews/evidence/vault-publishing-taxonomy-review-2026-07-06/evidence_notes.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/evidence/vault-publishing-taxonomy-review-2026-07-06/evidence_notes.md).
+
+## 2026-07-06 - Visual Output Product Contract Phase 1
+
+- Summary:
+  - Established a domain-level Visual Output Product contract for Vault visual exports, modeling posters and tree snapshots as products.
+  - Defined types (product categories, layout engines, renderers, strategies) and built a registry (`VISUAL_OUTPUT_DEFINITIONS`) with retrieval helpers.
+  - Authored ADR [`docs/adr/012-visual-output-product-contract.md`](file:///d:/AppDEV/Jozor1.1/docs/adr/012-visual-output-product-contract.md) mapping the Product > Template > Preset > Renderer hierarchy.
+
 ## 2026-07-06 - Private Beta Publishing Test Script
 
 - Summary:

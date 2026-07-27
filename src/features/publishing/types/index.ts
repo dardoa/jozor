@@ -176,6 +176,7 @@ export interface ManuscriptTimelineEntry {
   readonly date: string;
   readonly title: string;
   readonly place?: string;
+  readonly isApproximate?: boolean;
 }
 
 export interface ManuscriptCitationEntry {

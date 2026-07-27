@@ -11,7 +11,7 @@ vi.mock('@supabase/supabase-js', () => ({
   createClient: (...args: unknown[]) => createClientMock(...args),
 }));
 
-import handler from '../../../api/billing/customer-portal';
+import handler from '../../../shared/server/api/billing/customer-portal';
 
 const createRequest = (body: unknown, headers: Record<string, string>) => {
   const rawBody = Buffer.from(JSON.stringify(body));

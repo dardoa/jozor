@@ -282,6 +282,7 @@ function buildPersonEntries(
   rootPersonId: string,
   includeImages: boolean,
   labels: ReturnType<typeof getManuscriptLabels>,
+  language: 'ar' | 'en',
   narrativeOrder?: readonly string[],
   familyContexts?: ReadonlyMap<string, ManuscriptFamilyContext>,
   narrativeMetadata?: Record<string, {
@@ -300,10 +301,15 @@ function buildPersonEntries(
 
   return orderedPeople
     .map((person) => {
+      const isBirthApprox = Boolean(person.metadata?.birthDateApproximate || person.metadata?.birthDate_approximate);
+      const isDeathApprox = Boolean(person.metadata?.deathDateApproximate || person.metadata?.deathDate_approximate);
+      const formattedBirthDate = formatManuscriptDate(person.birthDate, language, isBirthApprox);
+      const formattedDeathDate = formatManuscriptDate(person.deathDate, language, isDeathApprox);
+
       const facts = [
-        createFact(labels.birthDate, person.birthDate, countCitationsForPerson(citations, person.id, 'person.birth.date')),
+        createFact(labels.birthDate, formattedBirthDate, countCitationsForPerson(citations, person.id, 'person.birth.date')),
         createFact(labels.birthPlace, person.birthPlace, countCitationsForPerson(citations, person.id, 'person.birth.place')),
-        createFact(labels.deathDate, person.deathDate, countCitationsForPerson(citations, person.id, 'person.death.date')),
+        createFact(labels.deathDate, formattedDeathDate, countCitationsForPerson(citations, person.id, 'person.death.date')),
         createFact(labels.deathPlace, person.deathPlace, countCitationsForPerson(citations, person.id, 'person.death.place')),
         createFact(labels.residence, person.currentResidence || person.residence, countCitationsForPerson(citations, person.id)),
         createFact(labels.occupation, person.occupation || person.profession, countCitationsForPerson(citations, person.id)),
@@ -352,7 +358,10 @@ function buildBranchSummaries(people: readonly ManuscriptPersonEntry[]): readonl
   }));
 }
 
-function buildTimelineEntries(people: Record<string, Person>, labels: ReturnType<typeof getManuscriptLabels>): readonly ManuscriptTimelineEntry[] {
+function buildTimelineEntries(
+  people: Record<string, Person>,
+  labels: ReturnType<typeof getManuscriptLabels>
+): readonly ManuscriptTimelineEntry[] {
   const entries: ManuscriptTimelineEntry[] = [];
 
   Object.values(people).forEach((person) => {
@@ -365,6 +374,7 @@ function buildTimelineEntries(people: Record<string, Person>, labels: ReturnType
         date: person.birthDate,
         title: labels.birthEvent,
         place: person.birthPlace || undefined,
+        isApproximate: Boolean(person.metadata?.birthDateApproximate || person.metadata?.birthDate_approximate),
       });
     }
 
@@ -375,6 +385,7 @@ function buildTimelineEntries(people: Record<string, Person>, labels: ReturnType
         date: person.deathDate,
         title: labels.deathEvent,
         place: person.deathPlace || undefined,
+        isApproximate: Boolean(person.metadata?.deathDateApproximate || person.metadata?.deathDate_approximate),
       });
     }
 
@@ -386,6 +397,7 @@ function buildTimelineEntries(people: Record<string, Person>, labels: ReturnType
         date: event.date,
         title: event.title,
         place: event.place || undefined,
+        isApproximate: false,
       });
     });
   });
@@ -463,6 +475,7 @@ export class ManuscriptStructureBuilder {
       options.rootPersonId,
       Boolean(options.includeImages),
       labels,
+      language,
       narrativeOrder,
       familyContexts,
       narrativeMetadata
@@ -558,4 +571,45 @@ export class ManuscriptStructureBuilder {
       ],
     }));
   }
+}
+
+export function formatManuscriptDate(dateStr: string, language: 'ar' | 'en', isApproximate?: boolean): string {
+  if (!dateStr) return '';
+  const trimmed = dateStr.trim();
+
+  // Detect placeholder full date YYYY-01-01
+  const placeholderRegex = /^(\d{4})-01-01$/;
+  const match = trimmed.match(placeholderRegex);
+
+  if (match) {
+    const year = match[1];
+    if (isApproximate) {
+      return language === 'ar' ? `حوالي ${year}` : `about ${year}`;
+    }
+    return year;
+  }
+
+  // If the date is just a year (e.g. "1900")
+  const yearOnlyRegex = /^(\d{4})$/;
+  const yearMatch = trimmed.match(yearOnlyRegex);
+  if (yearMatch) {
+    const year = yearMatch[1];
+    if (isApproximate) {
+      return language === 'ar' ? `حوالي ${year}` : `about ${year}`;
+    }
+    return year;
+  }
+
+  // If the date string already starts with approximate markers (e.g. "~1900", "ca. 1900", "about 1900", "حوالي 1900")
+  if (/^(~|ca\.?|about|circa|حوالي)\s*(\d{4})/i.test(trimmed)) {
+    const yearPart = trimmed.replace(/^(~|ca\.?|about|circa|حوالي)\s*/i, '');
+    return language === 'ar' ? `حوالي ${yearPart}` : `about ${yearPart}`;
+  }
+
+  // Otherwise check if isApproximate flag is true, and format standard dates
+  if (isApproximate) {
+    return language === 'ar' ? `حوالي ${trimmed}` : `about ${trimmed}`;
+  }
+
+  return trimmed;
 }

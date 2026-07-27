@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import type { ManuscriptPersonEntry } from '../../../types';
 import { getMetadataLabel, renderClassicPersonCard } from '../classicPersonCard';
 
@@ -44,7 +44,7 @@ describe('renderClassicPersonCard', () => {
 
   it('renders citation coverage with coverage label', () => {
     const html = renderClassicPersonCard(basePerson, arContext);
-    expect(html).toContain('75% توثيق');
+    expect(html).toContain('توثيق: 75%');
   });
 
   it('renders fact labels and values', () => {
@@ -166,6 +166,36 @@ describe('renderClassicPersonCard', () => {
     const html = renderClassicPersonCard(person, enContext);
     expect(html).not.toContain('<script>');
     expect(html).toContain('&lt;script&gt;');
+  });
+
+  it('renders a soft metadata line for 0% citation coverage', () => {
+    const person: ManuscriptPersonEntry = {
+      ...basePerson,
+      citationCoverage: 0,
+    };
+    const htmlAr = renderClassicPersonCard(person, arContext);
+    expect(htmlAr).toContain('المصادر: غير مضافة بعد');
+    expect(htmlAr).toContain('class="person-card__coverage"');
+
+    const htmlEn = renderClassicPersonCard(person, enContext);
+    expect(htmlEn).toContain('Sources: not added yet');
+    expect(htmlEn).toContain('class="person-card__coverage"');
+  });
+
+  it('renders long Arabic names and photo side-by-side cleanly without competing with citation tags', () => {
+    const person: ManuscriptPersonEntry = {
+      ...basePerson,
+      displayName: 'السيد محمد بن عبد الرحمن بن محمد بن عبد الله بن علوي الحداد القربي الملقب بالفاكهي',
+      photoUrl: 'https://example.com/long-name-photo.jpg',
+      citationCoverage: 100,
+    };
+    const html = renderClassicPersonCard(person, arContext);
+    expect(html).toContain('person-card__photo');
+    expect(html).toContain('person-card__identity');
+    expect(html).toContain('السيد محمد بن عبد الرحمن بن محمد');
+
+    // Citation tag should be outside the header to prevent crowding/overlapping
+    expect(html).toContain('</div>\n</header>\n<div class="person-card__coverage">');
   });
 });
 
