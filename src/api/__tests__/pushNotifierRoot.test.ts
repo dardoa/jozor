@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const verifyInternalTokenMock = vi.fn();
 const getUserMock = vi.fn();
@@ -67,7 +67,14 @@ describe('root push notifier API function', () => {
       VAPID_SUBJECT: 'mailto:test@example.com',
       CRON_SECRET: 'cron-secret',
       APP_ORIGIN: 'http://localhost:5173',
+      SUPABASE_URL: 'https://example.supabase.co',
+      SUPABASE_ANON_KEY: 'anon-key',
+      SUPABASE_SERVICE_ROLE_KEY: 'service-role-key',
     };
+  });
+
+  afterEach(() => {
+    process.env = originalEnv;
   });
 
   it('exports Vercel push notifier handlers', () => {

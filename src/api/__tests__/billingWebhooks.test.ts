@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest';
 import paddleWebhookHandler from '../../../api/billing/paddle-webhook';
 import createCheckoutHandler from '../../../api/billing/create-checkout-session';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
@@ -41,6 +41,19 @@ function createMockResponse() {
 }
 
 describe('Billing Webhooks SEC3 Body Limit Tests', () => {
+  const originalEnv = process.env;
+
+  beforeEach(() => {
+    process.env = {
+      ...originalEnv,
+      PADDLE_WEBHOOK_SECRET: 'test-webhook-secret',
+    };
+  });
+
+  afterEach(() => {
+    process.env = originalEnv;
+  });
+
   describe('paddle-webhook', () => {
     it('returns 413 Payload Too Large when payload exceeds 5MB', async () => {
       const req = createMockRequest(MAX_JSON_BODY_SIZE + 1024, 'POST', {
