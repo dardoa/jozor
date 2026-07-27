@@ -1,7 +1,7 @@
 # Visual Poster Outputs Structural Spot Check Report
 
-**Date:** July 7, 2026  
-**Status:** `Spot Check Pass for Limited Beta - structural/sanitized verification`  
+**Date:** July 7, 2026
+**Status:** `Spot Check Pass for Limited Beta - structural/sanitized verification`
 **Reviewer:** Owner / Antigravity
 
 ---
@@ -16,6 +16,10 @@ The outputs are officially promoted to **Spot Check Pass for Limited Beta - stru
 > **Owner Review Constraint:**
 > - **Visual Quality Notice:** Structural verification confirms that layout coordinates, margins, page sizing, theme styles, and RTL direction are correct on sanitized data. It does not guarantee that every layout is "visually beautiful" on a real family tree.
 > - **Recommendation:** Owner real-tree visual inspection remains optional/recommended before broad tester exposure.
+
+> [!WARNING]
+> **July 10, 2026 Owner Review Override:**
+> The Classic Ancestor Poster PDF failed real-tree owner visual review and is now `Blocked` for Limited Beta. The product direction has pivoted away from legacy poster exports toward a new Studio renderer path. The structural result below remains historical evidence only; it does not clear Classic or Modern legacy posters for tester exposure. See [Classic Poster Owner Visual Review](file:///d:/AppDEV/Jozor1.1/docs/reviews/classic-poster-owner-visual-review-2026-07-10.md) and [Visual Studio Renderer Pivot](file:///d:/AppDEV/Jozor1.1/docs/reviews/visual-studio-renderer-pivot-2026-07-10.md).
 
 ---
 
@@ -45,9 +49,9 @@ The outputs are officially promoted to **Spot Check Pass for Limited Beta - stru
 | Output Format | Status | Notes |
 |---|---|---|
 | **Classic Ancestor Poster (PNG)** | `Spot Check Pass - structural/sanitized` | Coordinates and styling verified. |
-| **Classic Ancestor Poster (PDF)** | `Spot Check Pass - structural/sanitized` | Coordinates and styling verified. |
+| **Classic Ancestor Poster (PDF)** | `Blocked after owner PDF visual review` | Historical structural coordinates passed, but real PDF review found broken Arabic text rendering and sparse poster output. |
 | **Modern Ancestor Poster (PNG)** | `Spot Check Pass - structural/sanitized` | Coordinates and styling verified. |
-| **Modern Ancestor Poster (PDF)** | `Spot Check Pass - structural/sanitized` | Coordinates and styling verified. |
+| **Modern Ancestor Poster (PDF)** | `Paused legacy output` | Historical structural coordinates passed, but legacy poster downloads are paused in favor of the Studio renderer path. |
 
 ---
 

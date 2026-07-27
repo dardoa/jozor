@@ -4,6 +4,10 @@
 
 `Accepted`
 
+> Poster rendering now follows [ADR 015](./015-svg-default-poster-rendering.md).
+> ADR 014 remains authoritative for sanitization and adapter boundaries; ADR 015
+> supersedes renderer separation after a sanitized `PosterScene` has been created.
+
 ---
 
 ## Context
@@ -98,7 +102,27 @@ Governed by the [`Sanitized Tree Data Boundary Design`](file:///d:/AppDEV/Jozor1
 - **Phase 3G - Preview Adapter & Sanitizer Review Pack (Completed)**: Conducted architectural audit and created signoff checklist in [`visual-publishing-studio-preview-adapter-foundation-review-2026-07-08.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/visual-publishing-studio-preview-adapter-foundation-review-2026-07-08.md) confirming zero database dependencies.
 - **Phase 4A - Preview Runtime Integration Planning (Completed)**: Formulated the specification and design guidelines in [`visual-publishing-studio-preview-runtime-integration-plan-2026-07-09.md`](file:///d:/AppDEV/Jozor1.1/docs/reviews/visual-publishing-studio-preview-runtime-integration-plan-2026-07-09.md) outlining data routing security rules and selectors architecture.
 - **Phase 4B - Production Preview Sanitizer Skeleton (Completed)**: Developed [`previewProductionSanitizer.ts`](file:///d:/AppDEV/Jozor1.1/src/features/publishing/visualOutputs/previewProductionSanitizer.ts) defining schema signatures and verifying data protection boundaries.
-- **Phase 4C - Preview Raw Graph Selector Contract (Next Step)**: Define signatures and selectors contract mapping store shapes into sanitizer parameters.
+- **Phase 4C - Preview Raw Graph Selector Contract (Completed)**: Defined `VisualPreviewGraphSelector<TRawSource = unknown>`, `VisualPreviewSelectorContext`, and an intentionally empty selector registry so future readers can only output `PreviewSanitizerRawGraph` and cannot pass raw domain entities into adapters or Studio components.
+- **Phase 4D - Fixture Selector Implementation (Completed)**: Added fixture-only selectors that exercise the selector -> production sanitizer -> adapter chain under unit tests while keeping the runtime selector registry empty.
+- **Phase 4E - Runtime Selector Foundation Review Pack (Completed)**: Reviewed and signed off on Phases 4A-4D as `Pass as Runtime Selector Foundation`, while confirming no live store or IndexedDB integration exists.
+- **Phase 4F - Live Store Selector Planning (Completed)**: Defined the product-specific selector planning path, privacy regression requirements, runtime guards, and blocked direct store/IndexedDB integration until selector skeleton tests exist.
+- **Phase 4G - Live Store Selector Skeleton (Completed)**: Added empty poster and snapshot selector skeletons that return safe empty graphs, remain unregistered in the runtime registry, and do not import store or IndexedDB modules.
+- **Phase 4H - Store Shape Discovery (Completed)**: Documented the relevant `useAppStore`, `Person`, `RelationshipEdge`, and `TreeSettings` fields that future selectors may read, while keeping live reads blocked.
+- **Phase 4I - Live Selector Privacy Regression Tests (Completed)**: Added store-shaped fixture tests proving contact info, media URLs/paths, notes, source text, relationship IDs, and sync metadata do not cross into preview raw or sanitized graph outputs.
+- **Phase 4J - Live Selector Review Gate (Completed)**: Approved the next minimal poster selector implementation with fixture tests only, while keeping Studio integration and runtime selector registration blocked.
+- **Phase 4K - Poster Live Selector Minimal Implementation (Completed)**: Implemented a root/depth-limited poster selector over `PreviewLiveTreeSource` fixtures, preserving sanitizer and adapter boundaries without registering the selector for runtime Studio use.
+- **Phase 4L - Poster Live Selector Review Pack (Completed)**: Reviewed and approved the minimal poster selector pattern as safe for planning snapshot selector boundaries.
+- **Phase 4M - Snapshot Selector Planning (Completed)**: Defined visible-node scoped snapshot selector boundaries, explicitly blocking full-tree traversal and viewport runtime reads.
+- **Phase 4N - Snapshot Selector Minimal Implementation (Completed)**: Implemented explicit visible-node snapshot selection over `PreviewLiveTreeSource` fixtures, preserving sanitizer and adapter boundaries without runtime registration.
+- **Phase 4O - Live Selector Implementation Review Pack (Completed)**: Reviewed poster and snapshot minimal selectors as `Pass as Minimal Live Selector Layer`, while keeping runtime registry and Studio wiring blocked.
+- **Phase 4P - Hidden Studio Selector Wiring Planning (Completed)**: Planned a fixture-only wiring path for the hidden Studio that exercises selector -> sanitizer -> adapter without store reads or runtime registry activation.
+- **Phase 4Q - Hidden Studio Fixture Selector Wiring (Completed)**: Updated the hidden Studio to build telemetry from static fixture data through fixture selectors, `productionPreviewSanitizer`, and preview adapters while keeping the shell invisible and all actions disabled.
+- **Phase 4R - Hidden Live-Source Wiring Planning (Completed)**: Planned the pure mapper boundary from explicitly allowed store-shaped fields into `PreviewLiveTreeSource`, without store subscriptions or IndexedDB reads.
+- **Phase 4S - Pure Live Source Mapper (Completed)**: Added `mapPreviewStoreSourceToLiveTreeSource`, a compile-level safe mapper that excludes contact fields, media URLs, notes, and metadata before selector processing.
+- **Phase 4T - Hidden Runtime Store Wiring Planning (Completed)**: Defined the deferred runtime store bridge boundary and explicitly blocked runtime store subscriptions for this foundation pass.
+- **Phase 4U - Visual Publishing Studio Foundation Closure Review (Completed)**: Closed the current Studio foundation as `Pass as Hidden Studio Foundation`, ready for a future gated runtime integration pack but not ready for user exposure.
+- **Hidden Store Bridge Skeleton (Completed)**: Added the optional `previewSourceMode="store"` path through `useVisualStudioStorePreviewSource`, mapping allowed store fields into the sanitizer pipeline while keeping Vault exposure disabled.
+- **Owner Default Exposure (Completed)**: Removed the local Vault hiding gate and rendered the Studio by default in Visual Outputs for owner/internal review with `previewSourceMode="store"`, while keeping Studio export actions disabled.
 
 ---
 
@@ -107,3 +131,15 @@ Governed by the [`Sanitized Tree Data Boundary Design`](file:///d:/AppDEV/Jozor1
 - **Status**: `Pass as Preview Adapter Foundation`
 - **Connectivity**: `Not Connected to Real Tree Data`
 - **Sign-off**: Approved by architecture committee on 2026-07-08.
+
+## Runtime Selector Foundation Result
+
+- **Status**: `Pass as Runtime Selector Foundation`
+- **Connectivity**: `Not Connected to Store or IndexedDB`
+- **Sign-off**: Approved by architecture committee on 2026-07-09.
+
+## Live Selector Planning Result
+
+- **Status**: `Planning Complete`
+- **Connectivity**: `No Store or IndexedDB Wiring`
+- **Next Step**: `Owner Visual QA for Studio Layout`

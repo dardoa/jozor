@@ -20,13 +20,15 @@ To establish a strict, sandboxed boundary separating the raw user family tree da
 The sanitized model represents an abstract layout schema. Only the following minimal set of fields is permitted:
 
 ### For Person Nodes
-- **`id`**: A generated, session-isolated preview node ID (e.g. `preview-node-1`). Never the raw database UUID.
+- **`previewId`**: A generated, session-isolated preview node ID (e.g. `preview-node-1`). Never the raw database UUID.
 - **`displayName`**: The name string, filtered according to active privacy masking.
 - **`generation`**: Numeric generation level relative to root (e.g. `1`, `2`, `3`).
 - **`isMasked`**: Boolean flag indicating if the profile name was redacted.
 - **`hasPhoto`**: Boolean flag indicating if a profile photo exists.
 - **`lifeStatus`**: Limited status enum: `'living' | 'deceased' | 'unknown'`.
 - **`yearsRange`**: Year-only range string (e.g. `1910 - 1980` or `1985 - Present`) if public/deceased. omitted entirely if private.
+- **`birthPlaceLabel`**: Optional short birth-place label for a deceased, non-private person. Included only by an explicit owner display policy.
+- **`occupationLabel`**: Optional short occupation label for a deceased, non-private person. Included only by an explicit owner display policy.
 
 ### For Relationship Edges
 - **`fromId`**: Generated preview ID of origin.
@@ -46,6 +48,7 @@ The following fields must be strictly blacklisted and completely stripped at the
 - **Media URLs & Image Payloads** (Supabase storage URLs, file paths, base64 image data)
 - **Cloud Sync Status & Metadata**
 - **User Notes** (Private/public notes, stories, descriptions)
+- **Residence/Address Fields** (Current residence, home address, workplace address, or precise location records)
 - **Raw Citation Text & Source Snippets**
 - **Audit/History Metadata** (Created at, modified by, version numbers)
 
@@ -91,6 +94,7 @@ The following fields must be strictly blacklisted and completely stripped at the
 - **Phase 3E - Static Sanitizer Mock Implementation (Completed)**: Built a test utility sanitizer [`previewMockSanitizer.ts`](file:///d:/AppDEV/Jozor1.1/src/features/publishing/visualOutputs/previewMockSanitizer.ts) to verify data mapping, year-only parsing, edge truncation, and privacy masking under varying policies without database access.
 - **Phase 3F - Adapter accepts SanitizedPreviewGraph (Completed)**: Refactored the preview adapter request contract and mapped `SanitizedPreviewGraph` parameters to `VisualPreviewModel` inside [`previewAdapterRegistry.ts`](file:///d:/AppDEV/Jozor1.1/src/features/publishing/visualOutputs/previewAdapterRegistry.ts), ensuring no raw entities enter the layout engine.
 - **Phase 4B - Production Sanitizer Skeleton (Completed)**: Implemented [`previewProductionSanitizer.ts`](file:///d:/AppDEV/Jozor1.1/src/features/publishing/visualOutputs/previewProductionSanitizer.ts) defining the `PreviewSanitizerRawNode` schema. The input interface strictly lacks any contact properties (`email`, `phone`, `address`) or raw `notes` and `photoUrl` strings, preventing potential database attribute leakage at the type definition layer.
+- **2026-07-17 Card Detail Extension**: Added opt-in `birthPlaceLabel` and `occupationLabel`. Values are whitespace/control-character normalized, capped at 60 characters, and removed for living or private people. Addresses, residence, notes, and workplace metadata remain outside the boundary.
 
 ---
 
