@@ -4,6 +4,8 @@ import { evaluateDataIntegrity, type DataIntegrityIssue } from '../domain/dataIn
 import type { RelationshipEdge } from '../types/relationship';
 import { buildGedcomFamilyGroups } from './gedcomRelationshipAdapter';
 
+type GedcomDateMetadata = Readonly<Record<string, unknown>>;
+
 export interface GedcomImportReport {
   peopleCount: number;
   familyCount: number;
@@ -40,7 +42,7 @@ const GEDCOM_MONTHS = new Set([
 
 export function formatDateForGEDCOM(
   dateValue?: string,
-  metadata?: any,
+  metadata?: GedcomDateMetadata,
   dateField?: 'birth' | 'death' | 'start' | 'end'
 ): string | null {
   if (!dateValue) return null;
@@ -102,7 +104,9 @@ export function formatDateForGEDCOM(
   // 5. Try to parse standard YYYY-MM-DD
   const ymdMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})$/);
   if (ymdMatch) {
-    const [_, year, month, day] = ymdMatch;
+    const year = ymdMatch[1];
+    const month = ymdMatch[2];
+    const day = ymdMatch[3];
     const dayNum = parseInt(day, 10);
     const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
     const monthIndex = parseInt(month, 10) - 1;
@@ -129,7 +133,8 @@ export function formatDateForGEDCOM(
   // 6. Try to parse YYYY-MM
   const ymMatch = trimmed.match(/^(\d{4})-(\d{2})$/);
   if (ymMatch) {
-    const [_, year, month] = ymMatch;
+    const year = ymMatch[1];
+    const month = ymMatch[2];
     const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
     const monthIndex = parseInt(month, 10) - 1;
     const monthStr = months[monthIndex] || 'JAN';
@@ -176,7 +181,7 @@ export function formatDateForGEDCOM(
 
 export const formatGedcomDate = (
   dateStr: string,
-  metadata?: any,
+  metadata?: GedcomDateMetadata,
   dateField?: 'birth' | 'death' | 'start' | 'end'
 ): string => {
   return formatDateForGEDCOM(dateStr, metadata, dateField) || '';
@@ -324,13 +329,17 @@ export const exportToGEDCOM = (
     parents: string[];
     children: string[];
     relInfo?: RelationshipInfo;
-    metadata?: any;
+    metadata?: RelationshipEdge['metadata'];
   };
   const families = new Map<string, ExportFamily>();
 
   const getFamilyKey = (parents: string[]): string => parents.slice().sort().join('_');
 
-  const getOrCreateFamily = (parents: string[], relInfo?: RelationshipInfo, metadata?: any): ExportFamily => {
+  const getOrCreateFamily = (
+    parents: string[],
+    relInfo?: RelationshipInfo,
+    metadata?: RelationshipEdge['metadata']
+  ): ExportFamily => {
     const normalizedParents = parents.filter((id, index, ids) => people[id] && ids.indexOf(id) === index).slice(0, 2);
     const key = getFamilyKey(normalizedParents);
     const existing = families.get(key);
@@ -400,7 +409,7 @@ export const exportToGEDCOM = (
 
       // Resolve relInfo details if spouse edges have metadata
       let relInfo: RelationshipInfo | undefined;
-      let familyMetadata: any;
+      let familyMetadata: RelationshipEdge['metadata'];
       if (parents.length >= 2) {
         const [p1, p2] = parents;
         // Search in relationshipEdges

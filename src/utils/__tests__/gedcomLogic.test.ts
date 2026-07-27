@@ -204,7 +204,7 @@ describe('GEDCOM Logic - Export', () => {
                 id: 'p1',
                 birthDate: '1977',
                 metadata: {},
-            } as any;
+            };
             const output = exportToGEDCOM({ p1: p });
             expect(output).toContain('2 DATE 1977');
             expect(output).not.toContain('2 DATE 1 JAN 1977');
@@ -215,7 +215,7 @@ describe('GEDCOM Logic - Export', () => {
                 ...mockPerson,
                 id: 'p1',
                 birthDate: '1977-03-15',
-            } as any;
+            };
             const output = exportToGEDCOM({ p1: p });
             expect(output).toContain('2 DATE 15 MAR 1977');
         });
@@ -225,7 +225,7 @@ describe('GEDCOM Logic - Export', () => {
                 ...mockPerson,
                 id: 'p1',
                 birthDate: '1977-03',
-            } as any;
+            };
             const output = exportToGEDCOM({ p1: p });
             expect(output).toContain('2 DATE MAR 1977');
         });
@@ -238,7 +238,7 @@ describe('GEDCOM Logic - Export', () => {
                 metadata: {
                     birthDateApproximate: true,
                 },
-            } as any;
+            };
             const output = exportToGEDCOM({ p1: p });
             expect(output).toContain('2 DATE ABT 1977');
         });
@@ -249,7 +249,7 @@ describe('GEDCOM Logic - Export', () => {
                 id: 'p1',
                 birthDate: '1977-01-01',
                 metadata: {},
-            } as any;
+            };
             const output1 = exportToGEDCOM({ p1: p1 });
             expect(output1).toContain('2 DATE 1977');
             expect(output1).not.toContain('2 DATE 1 JAN 1977');
@@ -261,7 +261,7 @@ describe('GEDCOM Logic - Export', () => {
                 metadata: {
                     birthDatePrecision: 'day',
                 },
-            } as any;
+            };
             const output2 = exportToGEDCOM({ p2: p2 });
             expect(output2).toContain('2 DATE 1 JAN 1977');
         });
@@ -271,7 +271,7 @@ describe('GEDCOM Logic - Export', () => {
                 ...mockPerson,
                 id: 'p1',
                 birthDate: 'ABT 1977',
-            } as any;
+            };
             const output1 = exportToGEDCOM({ p1: p1 });
             expect(output1).toContain('2 DATE ABT 1977');
 
@@ -279,7 +279,7 @@ describe('GEDCOM Logic - Export', () => {
                 ...mockPerson,
                 id: 'p2',
                 birthDate: 'BEF 1977',
-            } as any;
+            };
             const output2 = exportToGEDCOM({ p2: p2 });
             expect(output2).toContain('2 DATE BEF 1977');
 
@@ -287,7 +287,7 @@ describe('GEDCOM Logic - Export', () => {
                 ...mockPerson,
                 id: 'p3',
                 birthDate: 'AFT 1977',
-            } as any;
+            };
             const output3 = exportToGEDCOM({ p3: p3 });
             expect(output3).toContain('2 DATE AFT 1977');
         });
