@@ -1,13 +1,13 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
-import { verifyInternalToken } from '../../shared/auth/internalJwt.js';
+import { verifyInternalToken } from '../../../auth/internalJwt.js';
 import {
   buildCorsHeaders,
   getHeaderOrigin,
   isRequestOriginAllowed,
   resolveAllowedOriginFromEnv,
-} from '../../shared/http/cors.js';
-import { MAX_JSON_BODY_SIZE, PayloadTooLargeError } from '../shared/server/bodyLimits.js';
+} from '../../../http/cors.js';
+import { MAX_JSON_BODY_SIZE, PayloadTooLargeError } from '../../http/bodyLimits.js';
 
 export const config = {
   api: {

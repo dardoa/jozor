@@ -11,7 +11,7 @@ vi.mock('@supabase/supabase-js', () => ({
 
 import { Readable } from 'stream';
 import type { VercelRequest } from '@vercel/node';
-import handler from '../../../api/billing/create-checkout-session';
+import handler from '../../../shared/server/api/billing/create-checkout-session';
 
 const createRequest = (body: unknown, headers: Record<string, string>) => {
   const rawBody = Buffer.from(JSON.stringify(body));

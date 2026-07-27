@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import deleteAccountHandler from '../../../api/auth/delete-account';
-import createCheckoutHandler from '../../../api/billing/create-checkout-session';
-import customerPortalHandler from '../../../api/billing/customer-portal';
-import paddleWebhookHandler from '../../../api/billing/paddle-webhook';
+import billingActionHandler from '../../../api/billing/[action]';
+import createCheckoutHandler from '../../../shared/server/api/billing/create-checkout-session';
+import customerPortalHandler from '../../../shared/server/api/billing/customer-portal';
+import paddleWebhookHandler from '../../../shared/server/api/billing/paddle-webhook';
 
 const createResponse = () => {
   const response = {
@@ -47,5 +48,29 @@ describe('root SaaS API functions', () => {
 
     expect(res.statusCode).toBe(405);
     expect(res.body).toEqual({ error: 'Method Not Allowed' });
+  });
+
+  it.each([
+    'create-checkout-session',
+    'customer-portal',
+    'paddle-webhook',
+  ])('dispatches the public billing route for %s', async (action) => {
+    const req = { method: 'GET', headers: {}, query: { action } };
+    const res = createResponse();
+
+    await billingActionHandler(req as never, res as never);
+
+    expect(res.statusCode).toBe(405);
+    expect(res.body).toEqual({ error: 'Method Not Allowed' });
+  });
+
+  it('returns 404 for an unknown billing route', async () => {
+    const req = { method: 'GET', headers: {}, query: { action: 'unknown' } };
+    const res = createResponse();
+
+    await billingActionHandler(req as never, res as never);
+
+    expect(res.statusCode).toBe(404);
+    expect(res.body).toEqual({ error: 'Billing endpoint not found' });
   });
 });
