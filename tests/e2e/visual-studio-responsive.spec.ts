@@ -723,6 +723,10 @@ test.describe('Visual Publishing Studio Responsive QA Evidence Pass', () => {
       // 6. Preview SVG Bounds & ViewBox Aspect Ratio Verification
       const previewSvg = page.locator('[data-testid="studio-poster-renderer-preview"] svg').first();
       await expect(previewSvg, `Preview SVG not visible at ${name}`).toBeVisible({ timeout: 15000 });
+      await expect.poll(
+        async () => Boolean(await previewSvg.boundingBox()),
+        { message: `SVG bounding box missing at ${name}`, timeout: 5000 }
+      ).toBe(true);
 
       const viewBoxAttr = await previewSvg.getAttribute('viewBox');
       expect(viewBoxAttr, `Missing viewBox attribute on SVG at ${name}`).toBeTruthy();
