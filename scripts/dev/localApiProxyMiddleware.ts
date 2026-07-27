@@ -220,7 +220,7 @@ const handleCheckoutSession = async (
 ) => {
   try {
     syncProcessEnv(env);
-    const { default: checkoutHandler } = await import('../../api/billing/create-checkout-session');
+    const { default: checkoutHandler } = await import('../../shared/server/api/billing/create-checkout-session');
     await invokeVercelHandler(checkoutHandler, req, res);
   } catch (error: unknown) {
     sendJson(res, 500, { error: getErrorMessage(error) });
@@ -234,7 +234,7 @@ const handleCustomerPortal = async (
 ) => {
   try {
     syncProcessEnv(env);
-    const { default: customerPortalHandler } = await import('../../api/billing/customer-portal');
+    const { default: customerPortalHandler } = await import('../../shared/server/api/billing/customer-portal');
     await invokeVercelHandler(customerPortalHandler, req, res);
   } catch (error: unknown) {
     sendJson(res, 500, { error: getErrorMessage(error) });
@@ -248,7 +248,7 @@ const handlePaddleWebhook = async (
 ) => {
   try {
     syncProcessEnv(env);
-    const { default: paddleWebhookHandler } = await import('../../api/billing/paddle-webhook');
+    const { default: paddleWebhookHandler } = await import('../../shared/server/api/billing/paddle-webhook');
     await invokeVercelHandler(paddleWebhookHandler, req, createLocalResponse(res));
   } catch (error: unknown) {
     sendJson(res, 500, { error: getErrorMessage(error) });
