@@ -57,3 +57,4 @@ export * from './visualOutputs/posterPresets';
 export * from './visualOutputs/posterCompatibilityModel';
 export * from './visualOutputs/posterDesignState';
 export * from './visualOutputs/posterDesignDocument';
+export * from './visualOutputs/focusFamilyPosterLayout';

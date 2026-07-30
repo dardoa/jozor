@@ -70,6 +70,16 @@ export interface PosterDocumentSpec {
   readonly margins: PosterInsets;
 }
 
+export type PosterFocusDepth = 1 | 2 | 3 | 4 | 'all';
+
+export interface PosterFocusLayoutOptions {
+  readonly focalPreviewId: string;
+  readonly ancestorDepth: PosterFocusDepth;
+  readonly descendantDepth: PosterFocusDepth;
+  readonly includeFocalSpouses: boolean;
+  readonly includeFocalSiblings: boolean;
+}
+
 export interface PosterContentSpec {
   readonly definitionId: string;
   readonly language: PosterLanguage;
@@ -77,7 +87,11 @@ export interface PosterContentSpec {
   readonly subtitle?: string;
   readonly footerText?: string;
   readonly showJozorAttribution?: boolean;
-  readonly scope: 'selected-root-ancestors' | 'selected-root-descendants' | 'full-tree';
+  readonly scope:
+    | 'selected-root-ancestors'
+    | 'selected-root-descendants'
+    | 'full-tree'
+    | 'selected-root-focus';
   readonly rootPreviewId?: string;
   readonly generationCount: number;
   readonly privacyMode: VisualPreviewPrivacyMode;
@@ -94,7 +108,8 @@ export interface PosterLayoutSpec {
     | 'descendant-tiered'
     | 'family-network-tiered'
     | 'full-tree-overview'
-    | 'branch-index-grid';
+    | 'branch-index-grid'
+    | 'focus-family';
   readonly direction: 'vertical' | 'horizontal';
   readonly connectorStyle: PosterConnectorStyle;
   readonly spacingPreset: PosterSpacingPreset;
@@ -211,6 +226,7 @@ export interface PosterLayoutEngineRequest {
   readonly content: PosterContentSpec;
   readonly layout: PosterLayoutSpec;
   readonly cardPreset: PosterCardPreset;
+  readonly focusOptions?: PosterFocusLayoutOptions;
 }
 
 export interface PosterLayoutEngineResult {

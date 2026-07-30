@@ -3,6 +3,7 @@ import { descendantTieredPosterLayoutEngine } from './descendantTieredPosterLayo
 import { familyNetworkPosterLayoutEngine } from './familyNetworkPosterLayout';
 import { fullTreeOverviewPosterLayoutEngine } from './fullTreeOverviewPosterLayout';
 import { branchIndexPosterLayoutEngine } from './branchIndexPosterLayout';
+import { focusFamilyPosterLayoutEngine } from './focusFamilyPosterLayout';
 import { getPosterRasterScale } from './posterDocumentSpecs';
 import { evaluatePosterPrintQuality } from './posterPrintQuality';
 import type { SanitizedPreviewGraph } from './previewSanitizerTypes';
@@ -24,6 +25,7 @@ import type {
   PosterDocumentSpec,
   PosterDecorationPreset,
   PosterOrnamentPreset,
+  PosterFocusLayoutOptions,
   PosterLayoutSpec,
   PosterPhotoShape,
   PosterScene,
@@ -31,12 +33,15 @@ import type {
   PosterTypographyPreset,
   PosterFontFamily,
   PosterVisualStylePreset,
+  PosterLayoutEngine,
 } from './posterSceneTypes';
 
 export interface CreatePosterSceneRequest {
   readonly graph: SanitizedPreviewGraph;
   readonly document: PosterDocumentSpec;
   readonly content: PosterContentSpec;
+  readonly engineId?: PosterLayoutSpec['engineId'];
+  readonly focusOptions?: PosterFocusLayoutOptions;
   readonly theme?: PosterSceneTheme;
   readonly stylePreset?: PosterVisualStylePreset;
   readonly photoShape?: PosterPhotoShape;
@@ -347,12 +352,22 @@ export function createFullTreeOverviewCardPreset(
   };
 }
 
+const POSTER_LAYOUT_ENGINES: Record<PosterLayoutSpec['engineId'], PosterLayoutEngine> = {
+  'ancestor-tiered': ancestorTieredPosterLayoutEngine,
+  'descendant-tiered': descendantTieredPosterLayoutEngine,
+  'family-network-tiered': familyNetworkPosterLayoutEngine,
+  'full-tree-overview': fullTreeOverviewPosterLayoutEngine,
+  'branch-index-grid': branchIndexPosterLayoutEngine,
+  'focus-family': focusFamilyPosterLayoutEngine,
+};
+
 function createLayoutSpec(
   document: PosterDocumentSpec,
   direction: PosterLayoutSpec['direction'],
   scope: PosterContentSpec['scope'],
   connectorStyle: PosterConnectorStyle,
-  spacingPreset: PosterSpacingPreset
+  spacingPreset: PosterSpacingPreset,
+  requestedEngineId?: PosterLayoutSpec['engineId']
 ): PosterLayoutSpec {
   const isFullTreeOverview = scope === 'full-tree';
   const headerHeight = isFullTreeOverview
@@ -371,12 +386,17 @@ function createLayoutSpec(
     - footerHeight
     - sectionGap;
 
-  return {
-    engineId: scope === 'full-tree'
+  const resolvedEngineId = requestedEngineId
+    ?? (scope === 'full-tree'
       ? 'full-tree-overview'
       : scope === 'selected-root-descendants'
         ? 'descendant-tiered'
-        : 'ancestor-tiered',
+        : scope === 'selected-root-focus'
+          ? 'focus-family'
+          : 'ancestor-tiered');
+
+  return {
+    engineId: resolvedEngineId,
     direction,
     connectorStyle,
     spacingPreset,
@@ -408,8 +428,33 @@ export function createPosterScene(request: CreatePosterSceneRequest): PosterScen
     request.direction ?? 'vertical',
     content.scope,
     request.connectorStyle ?? 'classic',
-    spacingPreset
+    spacingPreset,
+    request.engineId
   );
+
+  const targetEngineId = baseLayout.engineId;
+
+  if (content.scope === 'selected-root-focus' && targetEngineId !== 'focus-family') {
+    throw new Error("Content scope 'selected-root-focus' requires engineId to be 'focus-family'.");
+  }
+
+  if (targetEngineId === 'focus-family') {
+    if (content.scope !== 'selected-root-focus') {
+      throw new Error("Focus engine ('focus-family') requires content.scope to be 'selected-root-focus'.");
+    }
+    if (!request.focusOptions) {
+      throw new Error("Focus engine ('focus-family') requires focusOptions.");
+    }
+    const focalNode = request.graph.nodes.find((n) => n.previewId === request.focusOptions?.focalPreviewId);
+    if (!focalNode) {
+      throw new Error(`Focal preview ID '${request.focusOptions.focalPreviewId}' not found in graph.`);
+    }
+  } else {
+    if (request.focusOptions) {
+      throw new Error(`focusOptions can only be supplied when engineId is 'focus-family' (received engine '${targetEngineId}').`);
+    }
+  }
+
   const colorPalette = request.colorPalette ?? getDefaultPosterColorPalette(stylePreset);
   const colorOverrides = normalizePosterColorOverrides(request.colorOverrides);
   const decoration = request.decoration ?? getDefaultPosterDecoration(stylePreset);
@@ -445,21 +490,19 @@ export function createPosterScene(request: CreatePosterSceneRequest): PosterScen
   const scaledCardPreset = applyPosterCardScalePreset(contentLayoutCardPreset, cardScalePreset);
   const corneredCardPreset = applyPosterCardCornerPreset(scaledCardPreset, cardCornerPreset);
   const cardPreset = applyPosterTypographyPreset(corneredCardPreset, typographyPreset);
-  const layoutEngine = layout.engineId === 'branch-index-grid'
-    ? branchIndexPosterLayoutEngine
-    : layout.engineId === 'full-tree-overview'
-    ? fullTreeOverviewPosterLayoutEngine
-    : layout.engineId === 'family-network-tiered'
-      ? familyNetworkPosterLayoutEngine
-    : layout.engineId === 'descendant-tiered'
-      ? descendantTieredPosterLayoutEngine
-      : ancestorTieredPosterLayoutEngine;
+
+  const layoutEngine = POSTER_LAYOUT_ENGINES[layout.engineId];
+  if (!layoutEngine) {
+    throw new Error(`Unknown layout engine ID: '${String(layout.engineId)}'.`);
+  }
+
   const geometry = layoutEngine.createLayout({
     graph: request.graph,
     document: request.document,
     content,
     layout,
     cardPreset,
+    focusOptions: request.focusOptions,
   });
   const quality = evaluatePosterPrintQuality({
     document: request.document,
