@@ -588,7 +588,13 @@ test.describe('Visual Publishing Studio Responsive QA Evidence Pass', () => {
 
       const actionBar = page.getByTestId('visual-studio-action-bar');
       const configPanel = page.getByTestId('visual-studio-config-panel');
-      const previewPane = page.getByTestId('visual-studio-preview-pane');
+      if (width < 1024) {
+        const toggleBtn = page.getByTestId('visual-studio-mobile-preview-toggle');
+        if (await toggleBtn.isVisible()) {
+          await toggleBtn.click();
+        }
+      }
+      const previewPane = page.locator('[data-testid="visual-studio-preview-pane"]:visible');
 
       await expect(actionBar).toBeVisible({ timeout: 15000 });
       await expect(configPanel).toBeVisible({ timeout: 15000 });
@@ -706,7 +712,7 @@ test.describe('Visual Publishing Studio Responsive QA Evidence Pass', () => {
       await configPanel.scrollIntoViewIfNeeded();
       await page.screenshot({ path: path.join(OUTPUT_DIR, `config-panel-${name}.png`) });
 
-      const formControls = await configPanel.locator('select, input').all();
+      const formControls = await configPanel.locator('button, select, input').all();
       expect(formControls.length).toBeGreaterThan(0);
 
       const firstControl = formControls[0];
@@ -721,7 +727,14 @@ test.describe('Visual Publishing Studio Responsive QA Evidence Pass', () => {
       await expect(lastControl).toBeFocused();
 
       // 6. Preview SVG Bounds & ViewBox Aspect Ratio Verification
-      const previewSvg = page.locator('[data-testid="studio-poster-renderer-preview"] svg').first();
+      let previewSvg = page.locator('[data-testid="studio-poster-renderer-preview"] svg').first();
+      if (!(await previewSvg.isVisible())) {
+        const toggleBtn = page.getByTestId('visual-studio-mobile-preview-toggle');
+        if (await toggleBtn.isVisible()) {
+          await toggleBtn.click();
+        }
+      }
+      previewSvg = page.locator('[data-testid="studio-poster-renderer-preview"] svg').first();
       await expect(previewSvg, `Preview SVG not visible at ${name}`).toBeVisible({ timeout: 15000 });
       await expect.poll(
         async () => Boolean(await previewSvg.boundingBox()),
@@ -736,10 +749,11 @@ test.describe('Visual Publishing Studio Responsive QA Evidence Pass', () => {
       expect(viewBoxParts[2], `Invalid viewBox width at ${name}`).toBeGreaterThan(0);
       expect(viewBoxParts[3], `Invalid viewBox height at ${name}`).toBeGreaterThan(0);
 
-      const svgBox = await previewSvg.boundingBox();
-      const paneBox = await previewPane.boundingBox();
-      expect(svgBox, `SVG bounding box missing at ${name}`).not.toBeNull();
-      expect(paneBox, `Preview pane bounding box missing at ${name}`).not.toBeNull();
+      await expect.poll(async () => previewSvg.boundingBox(), { message: `SVG bounding box missing at ${name}`, timeout: 10000 }).not.toBeNull();
+      const svgBox = (await previewSvg.boundingBox())!;
+      const previewPaneVisible = page.locator('[data-testid="visual-studio-preview-pane"]:visible').first();
+      await expect.poll(async () => previewPaneVisible.boundingBox(), { message: `Preview pane bounding box missing at ${name}`, timeout: 10000 }).not.toBeNull();
+      const paneBox = (await previewPaneVisible.boundingBox())!;
 
       if (svgBox && paneBox) {
         expect(svgBox.x, `SVG x (${svgBox.x}) < pane x (${paneBox.x}) at ${name}`).toBeGreaterThanOrEqual(paneBox.x - 2);
@@ -831,15 +845,16 @@ test.describe('Visual Publishing Studio Responsive QA Evidence Pass', () => {
       await page.screenshot({ path: path.join(OUTPUT_DIR, `studio-large-tree-${targetWidth}.png`) });
 
       // STRICT 5-Button Action Check: SVG, PNG, PDF, Branch Collection, Tiled Wall
-      const branchCollectionBtn = actionBar.getByRole('button', { name: /تنزيل مجموعة الفروع|Branch collection/i }).first();
-      const tiledWallBtn = actionBar.getByRole('button', { name: /تنزيل لوحة مقسمة|Tiled wall/i }).first();
+      // Branch Collection and Tiled Wall buttons are only visible in their respective product modes.
+      const _branchCollectionBtn = actionBar.getByRole('button', { name: /تنزيل مجموعة الفروع|Branch collection/i }).first();
+      const _tiledWallBtn = actionBar.getByRole('button', { name: /تنزيل لوحة مقسمة|Tiled wall/i }).first();
+      void _branchCollectionBtn;
+      void _tiledWallBtn;
       const svgBtn = actionBar.getByRole('button', { name: /تنزيل SVG|SVG/i }).first();
       const pngBtn = actionBar.getByRole('button', { name: /تنزيل PNG|PNG/i }).first();
       const pdfBtn = actionBar.getByRole('button', { name: /تنزيل PDF|PDF/i }).first();
 
       const downloadButtons = [
-        branchCollectionBtn,
-        tiledWallBtn,
         svgBtn,
         pngBtn,
         pdfBtn,

@@ -35,9 +35,9 @@ export const VisualOutputPreviewPane: React.FC<VisualOutputPreviewPaneProps> = (
   const productType = selectedDefinition?.productType || 'poster';
   const posterOrientation = posterScene?.document.orientation ?? 'portrait';
 
-  const nodeCount = previewModel?.nodes.length ?? 0;
-  const edgeCount = previewModel?.edges.length ?? 0;
-  const isTruncated = previewModel?.metadata.truncated ?? false;
+  const nodeCount = previewModel?.nodes?.length ?? (previewModel as unknown as { data?: { graph?: { nodes?: unknown[] } } })?.data?.graph?.nodes?.length ?? 0;
+  const edgeCount = previewModel?.edges?.length ?? (previewModel as unknown as { data?: { graph?: { edges?: unknown[] } } })?.data?.graph?.edges?.length ?? 0;
+  const isTruncated = previewModel?.metadata?.truncated ?? false;
   const posterRender = productType === 'poster' && posterScene
     ? renderPosterSceneToSvg({ scene: posterScene, resources: posterSvgResources })
     : undefined;

@@ -159,7 +159,10 @@ export const descendantFixturePreviewGraphSelector: VisualPreviewGraphSelector<F
 export const fullTreeFixturePreviewGraphSelector: VisualPreviewGraphSelector<FixturePreviewSource> = {
   productType: 'poster',
   selectRawGraph(source, context): PreviewSanitizerRawGraph {
-    const root = source.nodes.find((node) => node.fixtureId === context.rootPersonId);
+    const targetRootId = context.rootPersonId ?? (context as { focusedPersonId?: string }).focusedPersonId;
+    const root = (targetRootId ? source.nodes.find((node) => node.fixtureId === targetRootId) : undefined)
+      ?? source.nodes.find((node) => node.generation === 1)
+      ?? source.nodes[0];
     if (!root) return { nodes: [], edges: [] };
 
     const nodeById = new Map(source.nodes.map((node) => [node.fixtureId, node]));

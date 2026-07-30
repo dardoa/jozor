@@ -98,6 +98,8 @@ export interface VisualStudioPosterOptions {
   readonly tiledColumns: number;
   readonly tiledSheetSize: VisualStudioTiledSheetSize;
   readonly tiledOverlapMm: number;
+  readonly productMode?: 'detailed-poster' | 'full-tree-overview' | 'branch-collection' | 'tiled-wall';
+  readonly branchCollectionIndexTitle?: string;
 }
 
 export interface VisualStudioPosterRootOption {

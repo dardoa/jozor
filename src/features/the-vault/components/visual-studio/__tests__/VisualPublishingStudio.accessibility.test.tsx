@@ -1,7 +1,7 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { describe, expect, it, vi } from 'vitest';
-import { getVisualOutputDefinition } from '../../../../publishing';
+import { getVisualOutputDefinition, createInitialPosterDesignState } from '../../../../publishing';
 import { VisualPublishingStudio } from '../VisualPublishingStudio';
 import { VisualOutputActionBar } from '../VisualOutputActionBar';
 import { VisualOutputConfigPanel } from '../VisualOutputConfigPanel';
@@ -35,7 +35,7 @@ class MockPosterImage {
   onerror: (() => void) | null = null;
 
   set src(_value: string) {
-    queueMicrotask(() => this.onload?.());
+    this.onload?.();
   }
 }
 
@@ -141,45 +141,7 @@ describe('VisualPublishingStudio Accessibility & Interaction Suite', () => {
         selectedDefinitionId="classic-ancestor-poster"
         selectedDefinition={classicDefinition}
         definitions={[classicDefinition]}
-        posterOptions={{
-          scope: 'ancestors',
-          generationDepth: 3,
-          size: 'A3',
-          orientation: 'portrait',
-          direction: 'vertical',
-          privacyMode: 'masked',
-          includePhotos: true,
-          hideLivingPhotos: false,
-          photoShape: 'circle',
-          cardLayout: 'style-default',
-          cardScale: 'standard',
-          cardEffect: 'style-default',
-          cardFrame: 'style-default',
-          cardCorner: 'style-default',
-          typography: 'balanced',
-          fontFamily: 'amiri',
-          pageFrame: 'style-default',
-          header: 'style-default',
-          connectorPath: 'straight',
-          connectorStyle: 'classic',
-          colorPalette: 'heritage-warm',
-          decoration: 'style-default',
-          ornament: 'style-default',
-          tiledRows: 2,
-          tiledColumns: 2,
-          tiledSheetSize: 'A4',
-          tiledOverlapMm: 8,
-          marginPreset: 'balanced',
-          spacing: 'balanced',
-          showYears: true,
-          showRelationship: true,
-          showBirthPlace: false,
-          showOccupation: false,
-          showDescription: false,
-          footerText: '',
-          showJozorAttribution: true,
-          colorOverrides: undefined,
-        }}
+        state={createInitialPosterDesignState('classic-heritage')}
         posterRootOptions={[{ token: 'father', label: 'محمد بن علي' }]}
         selectedPosterRootToken="father"
       />
@@ -191,6 +153,9 @@ describe('VisualPublishingStudio Accessibility & Interaction Suite', () => {
     expect(ancestorsBtn).toHaveAttribute('aria-pressed', 'true');
     expect(descendantsBtn).toHaveAttribute('aria-pressed', 'false');
 
+    const contentTab = screen.getByRole('tab', { name: 'المحتوى والنطاق' });
+    fireEvent.click(contentTab);
+
     const yearsCheckbox = screen.getByRole('checkbox', { name: 'عرض سنوات الميلاد والوفاة' });
     const birthPlaceCheckbox = screen.getByRole('checkbox', { name: 'عرض مكان الميلاد' });
 
@@ -200,7 +165,17 @@ describe('VisualPublishingStudio Accessibility & Interaction Suite', () => {
 
   it('renders semantic group containers with explicit accessible names', () => {
     render(
-      <VisualPublishingStudio language="ar" previewSourceMode="fixture" />
+      <VisualPublishingStudio
+        language="ar"
+        previewSourceMode="fixture"
+        posterFontAssetResolver={{ resolveArabicFont: async () => ({ id: 'amiri', familyName: 'JozorPosterArabic', format: 'truetype', dataUri: 'data:font/ttf;base64,AAEAAEFCQ0Q=', byteLength: 8, source: 'bundled' }) }}
+        posterImageAssetResolver={{ resolveImages: async () => ({ assets: {}, failedPreviewIds: [] }) }}
+        posterSvgResources={{
+          embeddedArabicFontDataUri: 'data:font/ttf;base64,AAEAAEFCQ0Q=',
+          embeddedArabicFontFormat: 'truetype',
+          embeddedImages: {},
+        }}
+      />
     );
 
     const templateGroup = screen.getByTestId('visual-studio-template-group');
