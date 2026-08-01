@@ -112,6 +112,15 @@ export interface PosterContentSpec {
   readonly showDescription?: boolean;
 }
 
+export interface PosterRadialLayoutOptions {
+  readonly focalPreviewId: string;
+  readonly radialSpan: '360-full-circle' | '180-half-fan';
+  readonly generationRings: 3 | 4 | 5 | 6;
+  readonly ringSpacing: 'compact' | 'balanced' | 'spacious';
+  readonly centerCardScale: 'compact' | 'standard' | 'large';
+  readonly labelOrientation: 'straight-unwarped' | 'curved';
+}
+
 export interface PosterLayoutSpec {
   readonly engineId:
     | 'ancestor-tiered'
@@ -119,7 +128,8 @@ export interface PosterLayoutSpec {
     | 'family-network-tiered'
     | 'full-tree-overview'
     | 'branch-index-grid'
-    | 'focus-family';
+    | 'focus-family'
+    | 'radial-generations';
   readonly direction: 'vertical' | 'horizontal';
   readonly connectorStyle: PosterConnectorStyle;
   readonly spacingPreset: PosterSpacingPreset;
@@ -237,6 +247,7 @@ export interface PosterLayoutEngineRequest {
   readonly layout: PosterLayoutSpec;
   readonly cardPreset: PosterCardPreset;
   readonly focusOptions?: PosterFocusLayoutOptions;
+  readonly radialOptions?: PosterRadialLayoutOptions;
 }
 
 export interface PosterLayoutEngineResult {

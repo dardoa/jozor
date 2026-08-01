@@ -4,6 +4,7 @@ import { familyNetworkPosterLayoutEngine } from './familyNetworkPosterLayout';
 import { fullTreeOverviewPosterLayoutEngine } from './fullTreeOverviewPosterLayout';
 import { branchIndexPosterLayoutEngine } from './branchIndexPosterLayout';
 import { focusFamilyPosterLayoutEngine } from './focusFamilyPosterLayout';
+import { radialGenerationsPosterLayoutEngine } from './radialGenerationsPosterLayout';
 import { getPosterRasterScale } from './posterDocumentSpecs';
 import { evaluatePosterPrintQuality } from './posterPrintQuality';
 import type { SanitizedPreviewGraph } from './previewSanitizerTypes';
@@ -26,6 +27,7 @@ import type {
   PosterDecorationPreset,
   PosterOrnamentPreset,
   PosterFocusLayoutOptions,
+  PosterRadialLayoutOptions,
   PosterLayoutSpec,
   PosterPhotoShape,
   PosterScene,
@@ -42,6 +44,7 @@ export interface CreatePosterSceneRequest {
   readonly content: PosterContentSpec;
   readonly engineId?: PosterLayoutSpec['engineId'];
   readonly focusOptions?: PosterFocusLayoutOptions;
+  readonly radialOptions?: PosterRadialLayoutOptions;
   readonly theme?: PosterSceneTheme;
   readonly stylePreset?: PosterVisualStylePreset;
   readonly photoShape?: PosterPhotoShape;
@@ -359,6 +362,7 @@ const POSTER_LAYOUT_ENGINES: Record<PosterLayoutSpec['engineId'], PosterLayoutEn
   'full-tree-overview': fullTreeOverviewPosterLayoutEngine,
   'branch-index-grid': branchIndexPosterLayoutEngine,
   'focus-family': focusFamilyPosterLayoutEngine,
+  'radial-generations': radialGenerationsPosterLayoutEngine,
 };
 
 function createLayoutSpec(
@@ -455,6 +459,32 @@ export function createPosterScene(request: CreatePosterSceneRequest): PosterScen
     }
   }
 
+  if (targetEngineId === 'radial-generations') {
+    if (content.scope !== 'selected-root-ancestors' && content.scope !== 'selected-root-descendants') {
+      throw new Error(
+        "Radial engine ('radial-generations') requires content.scope to be 'selected-root-ancestors' or 'selected-root-descendants'."
+      );
+    }
+    if (!request.radialOptions) {
+      throw new Error("Radial engine ('radial-generations') requires radialOptions.");
+    }
+    const focalNode = request.graph.nodes.find((n) => n.previewId === request.radialOptions?.focalPreviewId);
+    if (!focalNode) {
+      throw new Error(`Focal preview ID '${request.radialOptions.focalPreviewId}' not found in graph.`);
+    }
+    const g = request.radialOptions.generationRings;
+    if (typeof g !== 'number' || !Number.isInteger(g) || g < 3 || g > 6) {
+      throw new Error("Radial engine ('radial-generations') generationRings must be an integer between 3 and 6.");
+    }
+    if (request.radialOptions.labelOrientation === 'curved') {
+      throw new Error("Curved radial label orientation is currently unsupported for Arabic text.");
+    }
+  } else {
+    if (request.radialOptions) {
+      throw new Error(`radialOptions can only be supplied when engineId is 'radial-generations' (received engine '${targetEngineId}').`);
+    }
+  }
+
   const colorPalette = request.colorPalette ?? getDefaultPosterColorPalette(stylePreset);
   const colorOverrides = normalizePosterColorOverrides(request.colorOverrides);
   const decoration = request.decoration ?? getDefaultPosterDecoration(stylePreset);
@@ -503,6 +533,7 @@ export function createPosterScene(request: CreatePosterSceneRequest): PosterScen
     layout,
     cardPreset,
     focusOptions: request.focusOptions,
+    radialOptions: request.radialOptions,
   });
   const quality = evaluatePosterPrintQuality({
     document: request.document,
