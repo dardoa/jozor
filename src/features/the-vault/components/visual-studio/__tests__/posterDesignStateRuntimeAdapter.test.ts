@@ -58,14 +58,14 @@ describe('Phase 1B: posterDesignStateRuntimeAdapter', () => {
     expect(opts.cardCorner).toBe('rounded');
   });
 
-  it('rejects Focus Family layout mode as unsupported in current runtime', () => {
+  it('rejects Focus Family mapping when the resolved focal preview ID is missing', () => {
     let state = createInitialPosterDesignState('classic-heritage');
     state = switchLayoutMode(state, 'focus-family');
 
     const result = mapPosterDesignStateToRuntimeOptions(state);
     expect(result.supported).toBe(false);
     expect(result.posterOptions).toBeUndefined();
-    expect(result.reason).toBeDefined();
+    expect(result.reason).toBe('Missing or unresolvable focal person selection.');
   });
 
   it('rejects Radial Generations layout mode as unsupported in current runtime', () => {

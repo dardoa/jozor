@@ -80,6 +80,16 @@ export interface PosterFocusLayoutOptions {
   readonly includeFocalSiblings: boolean;
 }
 
+export interface PosterPersonTokenOption {
+  readonly token: string;
+  readonly label: string;
+}
+
+export interface PosterPersonTokenCatalog {
+  readonly tokens: readonly PosterPersonTokenOption[];
+  readonly defaultToken?: string;
+}
+
 export interface PosterContentSpec {
   readonly definitionId: string;
   readonly language: PosterLanguage;

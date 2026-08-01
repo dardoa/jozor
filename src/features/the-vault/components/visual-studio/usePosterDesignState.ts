@@ -5,7 +5,9 @@ import {
   isPresetModified,
   updateSharedSetting,
   updateTieredBucket,
+  updateFocusBucket,
   updateProductBucket,
+  switchLayoutMode as switchLayoutModeState,
   resetSection as resetSectionState,
   resetPoster as resetPosterState,
   PosterHistoryManager,
@@ -14,9 +16,11 @@ import {
 import type {
   PosterDesignState,
   PosterProductMode,
+  PosterLayoutMode,
   PosterTreeScope,
   SharedPosterSettings,
   TieredSettingsBucket,
+  FocusSettingsBucket,
   ProductModeSettingsBucket,
 } from '../../../publishing';
 
@@ -32,7 +36,9 @@ export interface UsePosterDesignStateReturn {
   readonly updateAppearance: (updates: Partial<SharedPosterSettings>) => void;
   readonly updatePrint: (updates: Partial<SharedPosterSettings> & Partial<ProductModeSettingsBucket>) => void;
   readonly switchProductMode: (mode: PosterProductMode) => void;
+  readonly switchLayoutMode: (mode: PosterLayoutMode, focalPersonToken?: string) => void;
   readonly switchScope: (scope: PosterTreeScope) => void;
+  readonly updateFocus: (updates: Partial<FocusSettingsBucket>) => void;
   readonly resetSection: (sectionId: 'content' | 'layout' | 'cards' | 'appearance' | 'print') => void;
   readonly resetPoster: (presetId?: string) => void;
   readonly undo: () => void;
@@ -220,6 +226,25 @@ export function usePosterDesignState(initialPresetId: string = 'classic-heritage
     [applyStateUpdate]
   );
 
+  const switchLayoutMode = useCallback(
+    (mode: PosterLayoutMode, focalPersonToken?: string) => {
+      applyStateUpdate((current) => {
+        const switched = switchLayoutModeState(current, mode);
+        return mode === 'focus-family' && focalPersonToken
+          ? updateFocusBucket(switched, { focalPersonToken })
+          : switched;
+      });
+    },
+    [applyStateUpdate]
+  );
+
+  const updateFocus = useCallback(
+    (updates: Partial<FocusSettingsBucket>) => {
+      applyStateUpdate((current) => updateFocusBucket(current, updates));
+    },
+    [applyStateUpdate]
+  );
+
   const resetSection = useCallback(
     (sectionId: 'content' | 'layout' | 'cards' | 'appearance' | 'print') => {
       applyStateUpdate((current) => resetSectionState(current, sectionId));
@@ -266,7 +291,9 @@ export function usePosterDesignState(initialPresetId: string = 'classic-heritage
     updateAppearance,
     updatePrint,
     switchProductMode,
+    switchLayoutMode,
     switchScope,
+    updateFocus,
     resetSection,
     resetPoster,
     undo,

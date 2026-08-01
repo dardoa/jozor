@@ -14,9 +14,11 @@ import {
 import type {
   PosterDesignState,
   PosterProductMode,
+  PosterLayoutMode,
   PosterTreeScope,
   SharedPosterSettings,
   TieredSettingsBucket,
+  FocusSettingsBucket,
   TiledWallPosterPlan,
   VisualOutputDefinition,
 } from '../../../publishing';
@@ -46,7 +48,9 @@ export interface VisualOutputConfigPanelProps {
   onUpdateAppearance?: (updates: Partial<SharedPosterSettings>) => void;
   onUpdatePrint?: (updates: Partial<SharedPosterSettings> & Record<string, unknown>) => void;
   onSwitchProductMode?: (mode: PosterProductMode) => void;
+  onSwitchLayoutMode?: (mode: PosterLayoutMode) => void;
   onSwitchScope?: (scope: PosterTreeScope) => void;
+  onUpdateFocus?: (updates: Partial<FocusSettingsBucket>) => void;
   onResetSection?: (sectionId: 'content' | 'layout' | 'cards' | 'appearance' | 'print') => void;
   onResetPoster?: (presetId?: string) => void;
   onUndo?: () => void;
@@ -57,12 +61,14 @@ export interface VisualOutputConfigPanelProps {
   selectedDefinition?: VisualOutputDefinition;
   posterRootOptions?: readonly VisualStudioPosterRootOption[];
   selectedPosterRootToken?: string;
+  selectedFocalPersonToken?: string;
   onSelectPosterRoot?: (token: string) => void;
   posterTitle?: string;
   posterSubtitle?: string;
   onPosterTitleChange?: (value: string) => void;
   onPosterSubtitleChange?: (value: string) => void;
   tiledWallPlan?: TiledWallPosterPlan;
+  activeSection?: StudioWorkspaceSectionId;
 }
 
 const ar = {
@@ -342,18 +348,22 @@ export const VisualOutputConfigPanel: React.FC<VisualOutputConfigPanelProps> = (
   onUpdateAppearance,
   onUpdatePrint,
   onSwitchProductMode,
+  onSwitchLayoutMode,
   onSwitchScope,
+  onUpdateFocus,
   onResetSection,
   onResetPoster,
   onUndo,
   onRedo,
   posterRootOptions = [],
   selectedPosterRootToken,
+  selectedFocalPersonToken,
   onSelectPosterRoot,
   posterTitle = '',
   posterSubtitle = '',
   onPosterTitleChange,
   onPosterSubtitleChange,
+  activeSection: propActiveSection,
 }) => {
   const isAr = language === 'ar';
   const t = isAr ? ar : en;
@@ -364,7 +374,7 @@ export const VisualOutputConfigPanel: React.FC<VisualOutputConfigPanelProps> = (
 
   const effectivePosterRootToken = selectedPosterRootToken || currentState.shared.selectedPosterRootToken;
 
-  const [activeSection, setActiveSection] = useState<StudioWorkspaceSectionId>('quick-setup');
+  const [activeSection, setActiveSection] = useState<StudioWorkspaceSectionId>(propActiveSection || 'quick-setup');
 
   const currentPresetDef = getPosterPresetDefinition(currentState.activePresetId);
   const showQualityWarning = requiresPrintQualityGate(
@@ -765,6 +775,41 @@ export const VisualOutputConfigPanel: React.FC<VisualOutputConfigPanelProps> = (
 
         {activeSection === 'layout' && (
           <div className="space-y-4">
+            {/* Layout Mode Selector (Tiered vs Focus Family) */}
+            {currentState.productMode === 'detailed-poster' && (
+              <fieldset className="space-y-1.5" role="group" aria-label="Layout Engine">
+                <legend className="text-xs font-medium text-stone-400 mb-1">
+                  {isAr ? 'نمط التخطيط' : 'Layout Engine'}
+                </legend>
+                <div className="grid grid-cols-2 gap-2" data-testid="poster-layout-engine-control">
+                  <button
+                    type="button"
+                    aria-pressed={currentState.layoutMode === 'tiered'}
+                    onClick={() => onSwitchLayoutMode?.('tiered')}
+                    className={`px-3 py-2 rounded-lg border text-xs text-center transition-colors ${
+                      currentState.layoutMode === 'tiered'
+                        ? 'border-amber-500 bg-amber-500/10 text-amber-300 font-medium'
+                        : 'border-stone-800 bg-stone-950/40 text-stone-400 hover:border-stone-700'
+                    }`}
+                  >
+                    {isAr ? 'متدرج' : 'Tiered Generations'}
+                  </button>
+                  <button
+                    type="button"
+                    aria-pressed={currentState.layoutMode === 'focus-family'}
+                    onClick={() => onSwitchLayoutMode?.('focus-family')}
+                    className={`px-3 py-2 rounded-lg border text-xs text-center transition-colors ${
+                      currentState.layoutMode === 'focus-family'
+                        ? 'border-amber-500 bg-amber-500/10 text-amber-300 font-medium'
+                        : 'border-stone-800 bg-stone-950/40 text-stone-400 hover:border-stone-700'
+                    }`}
+                  >
+                    {isAr ? 'حول شخص' : 'Focus Family'}
+                  </button>
+                </div>
+              </fieldset>
+            )}
+
             {/* Direction */}
             <fieldset className="space-y-1.5" role="group" aria-label={t.treeDirection}>
               <legend className="text-xs font-medium text-stone-400 mb-1">{t.treeDirection}</legend>
@@ -791,7 +836,7 @@ export const VisualOutputConfigPanel: React.FC<VisualOutputConfigPanelProps> = (
             </fieldset>
 
             {/* Depth (Tiered Ancestors/Descendants) */}
-            {currentState.scope !== 'full-tree' && (
+            {currentState.layoutMode === 'tiered' && currentState.scope !== 'full-tree' && (
               <div>
                 <label className="block text-xs font-medium text-stone-400 mb-1.5">{t.generationsDepth}</label>
                 <div className="grid grid-cols-5 gap-1.5" data-testid="poster-depth-control">
@@ -814,6 +859,112 @@ export const VisualOutputConfigPanel: React.FC<VisualOutputConfigPanelProps> = (
               </div>
             )}
 
+            {/* Focus Family Contextual Controls */}
+            {currentState.layoutMode === 'focus-family' && (
+              <div className="space-y-3 border-t border-stone-800/80 pt-3" data-testid="focus-family-controls">
+                {/* Focal Person Token Selector */}
+                <div>
+                  <label className="block text-xs font-medium text-stone-400 mb-1.5">
+                    {isAr ? 'الشخص المحوري' : 'Focal Person'}
+                  </label>
+                  <select
+                    aria-label={isAr ? '\u0627\u0644\u0634\u062e\u0635 \u0627\u0644\u0645\u062d\u0648\u0631\u064a' : 'Focal Person'}
+                    value={selectedFocalPersonToken ?? currentState.focus.focalPersonToken}
+                    onChange={(e) => onUpdateFocus?.({ focalPersonToken: e.target.value })}
+                    className="w-full bg-stone-950 border border-stone-800 rounded-lg px-3 py-2 text-xs text-stone-200 focus:outline-none focus:border-amber-500"
+                    data-testid="focal-person-select"
+                  >
+                    {posterRootOptions.length > 0 ? (
+                      posterRootOptions.map((opt) => (
+                        <option key={opt.token} value={opt.token}>
+                          {opt.label}
+                        </option>
+                      ))
+                    ) : (
+                      <>
+                        <option value="focal-token-1">{isAr ? 'الجد الأول (افتراضي)' : 'Ancestor Root 1 (Default)'}</option>
+                        <option value="focal-token-2">{isAr ? 'الأب عبد الله' : 'Father Abdullah'}</option>
+                        <option value="focal-token-3">{isAr ? 'الابن محمد' : 'Son Mohammed'}</option>
+                      </>
+                    )}
+                  </select>
+                </div>
+
+                {/* Ancestor Depth */}
+                <div>
+                  <label className="block text-xs font-medium text-stone-400 mb-1.5">
+                    {isAr ? 'عمق الأسلاف (للأعلى)' : 'Ancestor Depth (Up)'}
+                  </label>
+                  <div className="grid grid-cols-5 gap-1.5" data-testid="focus-ancestor-depth">
+                    {[1, 2, 3, 4, 'all' as const].map((depth) => (
+                      <button
+                        key={`anc-${depth}`}
+                        type="button"
+                        aria-pressed={currentState.focus.ancestorDepth === depth}
+                        onClick={() => onUpdateFocus?.({ ancestorDepth: depth as 1 | 2 | 3 | 4 | 'all' })}
+                        className={`py-2 rounded-lg border text-xs text-center font-medium transition-colors ${
+                          currentState.focus.ancestorDepth === depth
+                            ? 'border-amber-500 bg-amber-500/10 text-amber-300'
+                            : 'border-stone-800 bg-stone-950/40 text-stone-400 hover:border-stone-700'
+                        }`}
+                      >
+                        {depth === 'all' ? (isAr ? 'الكل' : 'All') : depth}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Descendant Depth */}
+                <div>
+                  <label className="block text-xs font-medium text-stone-400 mb-1.5">
+                    {isAr ? 'عمق الأحفاد (للأسفل)' : 'Descendant Depth (Down)'}
+                  </label>
+                  <div className="grid grid-cols-5 gap-1.5" data-testid="focus-descendant-depth">
+                    {[1, 2, 3, 4, 'all' as const].map((depth) => (
+                      <button
+                        key={`desc-${depth}`}
+                        type="button"
+                        aria-pressed={currentState.focus.descendantDepth === depth}
+                        onClick={() => onUpdateFocus?.({ descendantDepth: depth as 1 | 2 | 3 | 4 | 'all' })}
+                        className={`py-2 rounded-lg border text-xs text-center font-medium transition-colors ${
+                          currentState.focus.descendantDepth === depth
+                            ? 'border-amber-500 bg-amber-500/10 text-amber-300'
+                            : 'border-stone-800 bg-stone-950/40 text-stone-400 hover:border-stone-700'
+                        }`}
+                      >
+                        {depth === 'all' ? (isAr ? 'الكل' : 'All') : depth}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Include Spouses & Siblings Checkboxes */}
+                <div className="space-y-2 text-xs pt-1">
+                  <label className="flex items-center gap-2 text-stone-300 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={currentState.focus.includeSpouses}
+                      onChange={(e) => onUpdateFocus?.({ includeSpouses: e.target.checked })}
+                      className="rounded border-stone-700 bg-stone-950 text-amber-500 focus:ring-amber-500/40"
+                      data-testid="focus-include-spouses"
+                    />
+                    <span>{isAr ? 'تضمين الأزواج والزوجات' : 'Include Spouses'}</span>
+                  </label>
+
+                  <label className="flex items-center gap-2 text-stone-300 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={currentState.focus.includeSiblings}
+                      onChange={(e) => onUpdateFocus?.({ includeSiblings: e.target.checked })}
+                      className="rounded border-stone-700 bg-stone-950 text-amber-500 focus:ring-amber-500/40"
+                      data-testid="focus-include-siblings"
+                    />
+                    <span>{isAr ? 'تضمين الإخوة والأخوات' : 'Include Siblings'}</span>
+                  </label>
+                </div>
+              </div>
+            )}
+
             {/* Spacing Density */}
             <fieldset className="space-y-1.5" role="group" aria-label={t.treeSpacing}>
               <legend className="text-xs font-medium text-stone-400 mb-1">{t.treeSpacing}</legend>
@@ -827,7 +978,7 @@ export const VisualOutputConfigPanel: React.FC<VisualOutputConfigPanelProps> = (
                   <button
                     key={sp}
                     type="button"
-                    onClick={() => onUpdateLayout?.({ spacing: sp })}
+                    onClick={() => onUpdateLayout?.({ spacing: sp === 'style-default' ? 'balanced' : sp })}
                     className={`px-3 py-2 rounded-lg border text-xs text-center transition-colors ${
                       currentState.shared.spacing === sp
                         ? 'border-amber-500 bg-amber-500/10 text-amber-300 font-medium'

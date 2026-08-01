@@ -20,6 +20,8 @@ interface VisualOutputActionBarProps {
   branchCollectionAvailable?: boolean;
   branchCollectionBlocked?: boolean;
   tiledWallAvailable?: boolean;
+  isBlocked?: boolean;
+  capacityErrorGuidance?: string;
   onExportSvg?: () => void;
   onExportPng?: () => void;
   onExportPdf?: () => void;
@@ -38,6 +40,8 @@ export const VisualOutputActionBar: React.FC<VisualOutputActionBarProps> = ({
   branchCollectionAvailable = false,
   branchCollectionBlocked = false,
   tiledWallAvailable = false,
+  isBlocked = false,
+  capacityErrorGuidance,
   onExportSvg,
   onExportPng,
   onExportPdf,
@@ -52,7 +56,7 @@ export const VisualOutputActionBar: React.FC<VisualOutputActionBarProps> = ({
   const supportsPng = selectedDefinition?.capabilities.rendererTargets.includes('png') ?? false;
   const supportsPdf = selectedDefinition?.capabilities.rendererTargets.includes('pdf') ?? false;
   const isExporting = Boolean(exportingFormat);
-  const isPrintBlocked = quality?.status === 'blocked';
+  const isPrintBlocked = isBlocked || quality?.status === 'blocked';
   const hasPrintWarning = quality?.status === 'warning';
   const hasLargeTreeAlternative = branchCollectionAvailable || tiledWallAvailable;
   const hasGuidedRecovery = Boolean(
@@ -98,6 +102,14 @@ export const VisualOutputActionBar: React.FC<VisualOutputActionBarProps> = ({
             ? 'اختر SVG للطباعة الكبيرة والدقة المتجهة؛ PDF نسخة نقطية من نفس التصميم، وPNG صورة عالية الدقة.'
             : 'Choose SVG for large-format vector printing; PDF is a raster copy of the same design, and PNG is a high-resolution image.'}
         </span>
+        {capacityErrorGuidance && (
+          <span
+            className="text-[10px] font-semibold text-rose-600 dark:text-rose-400 whitespace-normal break-words"
+            data-testid="focus-capacity-error-guidance"
+          >
+            {capacityErrorGuidance}
+          </span>
+        )}
         {(isPrintBlocked || hasPrintWarning) && (
           <span
             className={isPrintBlocked ? 'text-[10px] font-semibold text-red-700 whitespace-normal break-words' : 'text-[10px] font-semibold text-amber-700 whitespace-normal break-words'}

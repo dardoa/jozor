@@ -17,6 +17,7 @@ import type {
   PosterColorPalette,
   PosterColorOverrides,
   PosterFontFamily,
+  PosterFocusDepth,
 } from './posterSceneTypes';
 
 import type { VisualPreviewPrivacyMode } from './previewAdapterTypes';
@@ -45,7 +46,10 @@ export type PosterTreeScope =
   | 'full-tree'
   | 'ancestors'
   | 'descendants'
-  | 'selected-branch';
+  | 'selected-branch'
+  | 'around-person';
+
+export type TieredTreeScope = Exclude<PosterTreeScope, 'around-person'>;
 
 export type PosterPaperSize = 'A4' | 'A3' | 'A2' | 'A1' | 'A0';
 export type PosterPageOrientation = 'portrait' | 'landscape';
@@ -70,13 +74,15 @@ export interface SharedPosterSettings {
   readonly showBirthPlace: boolean;
   readonly showOccupation: boolean;
   readonly showDescription: boolean;
+  readonly showJozorAttribution: boolean;
+  readonly headerText: string;
+  readonly subheaderText: string;
+  readonly footerText: string;
+  readonly colorPalette: 'style-default' | PosterColorPalette;
+  readonly colorOverrides?: PosterColorOverrides;
   readonly connectorStyle: PosterConnectorStyle;
   readonly connectorPath: 'style-default' | PosterConnectorPathStyle;
   readonly spacing: 'style-default' | PosterSpacingPreset;
-  readonly footerText: string;
-  readonly showJozorAttribution: boolean;
-  readonly colorPalette: 'style-default' | PosterColorPalette;
-  readonly colorOverrides?: PosterColorOverrides;
   readonly decoration: 'style-default' | PosterDecorationPreset;
   readonly ornament: 'style-default' | PosterOrnamentPreset;
   readonly typography: PosterTypographyPreset;
@@ -97,6 +103,7 @@ export interface SharedPosterSettings {
  */
 export interface TieredSettingsBucket {
   readonly generationDepth: 1 | 2 | 3 | 4 | 'all';
+  readonly lastTieredScope: TieredTreeScope;
 }
 
 /**
@@ -104,8 +111,8 @@ export interface TieredSettingsBucket {
  */
 export interface FocusSettingsBucket {
   readonly focalPersonToken: string;
-  readonly ancestorDepth: 1 | 2 | 3 | 4 | 'all';
-  readonly descendantDepth: 1 | 2 | 3 | 4 | 'all';
+  readonly ancestorDepth: PosterFocusDepth;
+  readonly descendantDepth: PosterFocusDepth;
   readonly includeSpouses: boolean;
   readonly includeSiblings: boolean;
   readonly focalCardEmphasis: 'standard' | 'bolder-border' | 'glowing';

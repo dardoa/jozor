@@ -15,6 +15,7 @@ export type VisualPreviewRelationshipHint =
 export interface VisualPreviewSanitizerPolicy {
   readonly privacyMode: VisualPreviewPrivacyMode;
   readonly includePhotos: boolean;
+  readonly hideLivingPhotos?: boolean;
   readonly includeYears: boolean;
   readonly includeBirthPlace?: boolean;
   readonly includeOccupation?: boolean;

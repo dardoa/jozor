@@ -89,15 +89,15 @@ export function getPosterLayoutCombinationCapability(
     }
 
     if (layoutMode === 'focus-family') {
-      if (scope === 'ancestors' || scope === 'descendants') {
+      if (scope === 'around-person') {
         return {
-          status: 'planned',
-          isRuntimeSupported: false,
-          isPlanned: true,
+          status: 'runtime-supported-and-reachable',
+          isRuntimeSupported: true,
+          isPlanned: false,
           requiresQualityGate: false,
           description: {
-            en: 'Focus family layout is planned for Phase 1 geometry.',
-            ar: 'تخطيط حول شخص محوّل ومخطط للتنفيذ الهندسي.',
+            en: 'Focus family layout is supported in the Studio runtime.',
+            ar: 'تخطيط العائلة حول شخص منفذ، لكنه محجوب حتى اكتمال أدلة التشغيل.',
           },
         };
       }
@@ -107,8 +107,8 @@ export function getPosterLayoutCombinationCapability(
         isPlanned: false,
         requiresQualityGate: false,
         description: {
-          en: 'Focus family layout is incompatible with full-tree or selected-branch scope.',
-          ar: 'تخطيط حول شخص غير متوافق مع نطاق الشجرة الكاملة أو الفرع المختار.',
+          en: 'Focus family layout is incompatible with non-focal tree scopes.',
+          ar: 'تخطيط حول شخص غير متوافق مع النطاقات غير المحورية.',
         },
       };
     }

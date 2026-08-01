@@ -20,6 +20,7 @@ export type VisualOutputLayoutEngine =
   | 'descendant-tiered'
   | 'family-network-tiered'
   | 'full-tree-overview'
+  | 'focus-family'
   | 'radial-layout'
   | 'timeline-layout'
   | 'map-layout'

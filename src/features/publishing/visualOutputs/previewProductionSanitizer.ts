@@ -101,8 +101,9 @@ export const productionPreviewSanitizer: VisualPreviewSanitizer<PreviewSanitizer
       const birthYear = shouldIncludeYears ? extractYearOnly(rawNode.birthDate) : undefined;
       const deathYear = shouldIncludeYears ? extractYearOnly(rawNode.deathDate) : undefined;
 
-      // Profile photo indicator ONLY if enabled, unmasked, and exists in raw graph
-      const hasPhoto = !!policy.includePhotos && !isMasked && !!rawNode.hasProfilePhoto;
+      // Profile photo indicator ONLY if enabled, unmasked, exists in raw graph, and not suppressed by hideLivingPhotos
+      const isLivingPhotoSuppressed = !!policy.hideLivingPhotos && !!rawNode.isLiving;
+      const hasPhoto = !!policy.includePhotos && !isMasked && !!rawNode.hasProfilePhoto && !isLivingPhotoSuppressed;
       const canIncludePublicDetails = !isMasked && !rawNode.isLiving;
       const birthPlaceLabel = policy.includeBirthPlace && canIncludePublicDetails
         ? sanitizeShortLabel(rawNode.birthPlace)

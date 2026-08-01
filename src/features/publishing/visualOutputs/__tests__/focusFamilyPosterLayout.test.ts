@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createPosterScene } from '../posterSceneBuilder';
 import {
+  FocusLayoutCapacityError,
   focusFamilyPosterLayoutEngine,
   getCardPerimeterPoint,
   validateFocusDepth,
@@ -787,7 +788,7 @@ describe('Focus Family Layout Engine (Phase 2A Test Completeness & Capacity Guar
 
     const docSpec = createPosterDocumentSpec('A4', 'portrait', 'compact');
 
-    expect(() =>
+    const createOvercrowdedScene = () =>
       createPosterScene({
         graph: overcrowdedGraph,
         document: docSpec,
@@ -807,8 +808,10 @@ describe('Focus Family Layout Engine (Phase 2A Test Completeness & Capacity Guar
           includeFocalSpouses: true,
           includeFocalSiblings: true,
         },
-      })
-    ).toThrow(/Focus layout capacity exceeded/);
+      });
+
+    expect(createOvercrowdedScene).toThrowError(FocusLayoutCapacityError);
+    expect(createOvercrowdedScene).toThrow(/Focus layout capacity exceeded/);
   });
 
   // Test 15: Connector perimeter helper & edge deduplication

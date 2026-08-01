@@ -58,3 +58,4 @@ export * from './visualOutputs/posterCompatibilityModel';
 export * from './visualOutputs/posterDesignState';
 export * from './visualOutputs/posterDesignDocument';
 export * from './visualOutputs/focusFamilyPosterLayout';
+export * from './visualOutputs/previewFocusGraphSelector';

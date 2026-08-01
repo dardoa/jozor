@@ -668,7 +668,7 @@ test.describe('Visual Publishing Studio Accessibility QA Final Evidence Closure 
     }
   });
 
-  test('5. Selected, pressed, checked, enabled, and runtime-rejected states verification', async ({ page }) => {
+  test('5. Selected, pressed, checked, enabled, Focus-active, and Radial-rejected states verification', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 720 });
     await seedSanitizedScenario(page, 'ar');
     await navigateToStudioForKeyboardTest(page, 1280);
@@ -702,10 +702,17 @@ test.describe('Visual Publishing Studio Accessibility QA Final Evidence Closure 
     await expect(downloadPng).toBeEnabled();
     await expect(downloadPdf).toBeEnabled();
 
-    const focusModeOption = studio.locator('[data-product-mode="focus"]');
+    await studio.locator('#tab-layout').click();
+    const layoutChoices = studio.getByTestId('poster-layout-engine-control').getByRole('button');
+    await expect(layoutChoices).toHaveCount(2);
+    const focusModeOption = layoutChoices.nth(1);
     const radialModeOption = studio.locator('[data-product-mode="radial"]');
 
-    expect(await focusModeOption.count()).toBe(0);
+    await expect(focusModeOption).toBeVisible();
+    await expect(focusModeOption).toHaveAccessibleName(/\S+/);
+    await focusModeOption.click();
+    await expect(focusModeOption).toHaveAttribute('aria-pressed', 'true');
+    await expect(studio.getByTestId('focus-family-controls')).toBeVisible();
     expect(await radialModeOption.count()).toBe(0);
   });
 });

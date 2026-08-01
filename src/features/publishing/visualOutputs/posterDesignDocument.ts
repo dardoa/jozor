@@ -56,10 +56,11 @@ const REQUIRED_SHARED_KEYS = new Set([
   'photoShape', 'showYears', 'showRelationship', 'showBirthPlace', 'showOccupation', 'showDescription',
   'connectorStyle', 'connectorPath', 'spacing', 'footerText', 'showJozorAttribution', 'colorPalette',
   'colorOverrides', 'decoration', 'ornament', 'typography', 'fontFamily', 'cardScale', 'cardEffect',
-  'cardFrame', 'cardCorner', 'cardLayout', 'pageFrame', 'header', 'selectedPosterRootToken',
+  'cardFrame', 'cardCorner', 'cardLayout', 'pageFrame', 'header', 'headerText', 'subheaderText', 'selectedPosterRootToken',
 ]);
 
-const REQUIRED_TIERED_KEYS = new Set(['generationDepth']);
+const REQUIRED_TIERED_KEYS_V1 = new Set(['generationDepth']);
+const REQUIRED_TIERED_KEYS_V2 = new Set(['generationDepth', 'lastTieredScope']);
 const REQUIRED_FOCUS_KEYS = new Set(['focalPersonToken', 'ancestorDepth', 'descendantDepth', 'includeSpouses', 'includeSiblings', 'focalCardEmphasis']);
 const REQUIRED_RADIAL_KEYS = new Set(['radialSpan', 'generationRings', 'ringSpacing', 'centerCardScale', 'labelOrientation']);
 const REQUIRED_PRODUCT_BUCKET_KEYS = new Set(['tiledRows', 'tiledColumns', 'tiledSheetSize', 'tiledOverlapMm', 'branchCollectionIndexTitle']);
@@ -145,7 +146,7 @@ export function scanValueForSecurityViolations(val: unknown, path: string = ''):
 /**
  * Validates state safety and returns detailed error message if unsafe or structurally invalid.
  */
-export function validateStateSafety(state: unknown): { readonly safe: boolean; readonly error?: string } {
+export function validateStateSafety(state: unknown, schemaVersion: number = 2): { readonly safe: boolean; readonly error?: string } {
   if (typeof state !== 'object' || state === null) {
     return { safe: false, error: 'State must be a non-null object' };
   }
@@ -156,7 +157,7 @@ export function validateStateSafety(state: unknown): { readonly safe: boolean; r
 
   const validProductModes = ['detailed-poster', 'full-tree-overview', 'branch-collection', 'tiled-wall'];
   const validLayoutModes = ['tiered', 'focus-family', 'radial-generations'];
-  const validScopes = ['full-tree', 'ancestors', 'descendants', 'selected-branch'];
+  const validScopes = ['full-tree', 'ancestors', 'descendants', 'selected-branch', 'around-person'];
 
   if (!validProductModes.includes(String(s.productMode))) return { safe: false, error: 'Invalid productMode' };
   if (!validLayoutModes.includes(String(s.layoutMode))) return { safe: false, error: 'Invalid layoutMode' };
@@ -181,7 +182,8 @@ export function validateStateSafety(state: unknown): { readonly safe: boolean; r
   const sharedErr = checkExactKeys(shared, REQUIRED_SHARED_KEYS, 'shared bucket');
   if (sharedErr) return { safe: false, error: sharedErr };
 
-  const tieredErr = checkExactKeys(tiered, REQUIRED_TIERED_KEYS, 'tiered bucket');
+  const tieredKeys = schemaVersion === 1 ? REQUIRED_TIERED_KEYS_V1 : REQUIRED_TIERED_KEYS_V2;
+  const tieredErr = checkExactKeys(tiered, tieredKeys, 'tiered bucket');
   if (tieredErr) return { safe: false, error: tieredErr };
 
   const focusErr = checkExactKeys(focus, REQUIRED_FOCUS_KEYS, 'focus bucket');
@@ -298,6 +300,14 @@ export function validateStateSafety(state: unknown): { readonly safe: boolean; r
     }
   }
 
+  if (schemaVersion === 2) {
+    const lastScope = tiered.lastTieredScope;
+    const validLastScopes = ['ancestors', 'descendants', 'full-tree'];
+    if (!validLastScopes.includes(String(lastScope))) {
+      return { safe: false, error: 'Invalid tiered.lastTieredScope' };
+    }
+  }
+
   const ancDepth = focus.ancestorDepth;
   if (ancDepth !== 'all') {
     if (typeof ancDepth !== 'number' || !Number.isInteger(ancDepth) || ancDepth < 1 || ancDepth > 4) {
@@ -376,8 +386,38 @@ export function validateStateSafety(state: unknown): { readonly safe: boolean; r
 /**
  * Safely checks if an unknown input is a valid PosterDesignState shape without casting prematurely.
  */
-export function validateStateShape(state: unknown): state is PosterDesignState {
-  return validateStateSafety(state).safe;
+export function validateStateShape(state: unknown, schemaVersion: number = 2): state is PosterDesignState {
+  return validateStateSafety(state, schemaVersion).safe;
+}
+
+/**
+ * Migrates a PosterDesignDocument from Schema Version 1 to Schema Version 2.
+ */
+export function migratePosterDesignDocumentV1ToV2(doc: PosterDesignDocument): PosterDesignDocument {
+  if (doc.metadata.schemaVersion === 2) {
+    return doc;
+  }
+
+  const lastScope =
+    doc.state.scope !== 'around-person'
+      ? (doc.state.scope as Exclude<typeof doc.state.scope, 'around-person'>)
+      : 'ancestors';
+
+  return {
+    ...doc,
+    metadata: {
+      ...doc.metadata,
+      schemaVersion: 2,
+      updatedAtIso: new Date().toISOString(),
+    },
+    state: {
+      ...doc.state,
+      tiered: {
+        ...doc.state.tiered,
+        lastTieredScope: doc.state.tiered.lastTieredScope ?? lastScope,
+      },
+    },
+  };
 }
 
 /**
@@ -387,7 +427,7 @@ export function serializePosterDesignDocument(
   state: PosterDesignState,
   title?: string
 ): string {
-  const safety = validateStateSafety(state);
+  const safety = validateStateSafety(state, 2);
   if (!safety.safe) {
     throw new Error(`Serialization security violation: ${safety.error}`);
   }
@@ -400,7 +440,7 @@ export function serializePosterDesignDocument(
   const document: PosterDesignDocument = {
     version: '1.0',
     metadata: {
-      schemaVersion: 1,
+      schemaVersion: 2,
       createdAtIso: new Date().toISOString(),
       updatedAtIso: new Date().toISOString(),
       title: cleanTitle,
@@ -432,7 +472,7 @@ export function deserializePosterDesignDocument(jsonString: string): PosterDesig
     throw new Error('Deserialization error: Document failed structural or security validation');
   }
 
-  return parsed;
+  return migratePosterDesignDocumentV1ToV2(parsed);
 }
 
 /**
@@ -454,7 +494,8 @@ export function validatePosterDesignDocument(doc: unknown): doc is PosterDesignD
     const metaKeyErr = checkExactKeys(meta, REQUIRED_METADATA_KEYS, 'metadata');
     if (metaKeyErr) return false;
 
-    if (meta.schemaVersion !== 1) return false;
+    const version = meta.schemaVersion;
+    if (version !== 1 && version !== 2) return false;
     if (typeof meta.createdAtIso !== 'string' || isNaN(Date.parse(meta.createdAtIso))) return false;
     if (typeof meta.updatedAtIso !== 'string' || isNaN(Date.parse(meta.updatedAtIso))) return false;
     if (typeof meta.authorApp !== 'string' || !meta.authorApp) return false;
@@ -464,10 +505,45 @@ export function validatePosterDesignDocument(doc: unknown): doc is PosterDesignD
       if (SCRIPT_TAG_REGEX.test(meta.title) || STORAGE_URL_REGEX.test(meta.title)) return false;
     }
 
-    if (!validateStateShape(d.state)) return false;
+    if (!validateStateShape(d.state, version as number)) return false;
 
     return true;
   } catch {
     return false;
   }
+}
+
+export interface PosterDocumentSchemaValidationResult {
+  readonly valid: boolean;
+  readonly error?: string;
+  readonly migratedDocument?: PosterDesignDocument;
+}
+
+/**
+ * Validates document schema version with explicit v1 migration, strict v2 completeness,
+ * and controlled rejection of unknown schema versions.
+ */
+export function validatePosterDesignDocumentSchema(doc: unknown): PosterDocumentSchemaValidationResult {
+  if (typeof doc !== 'object' || doc === null) {
+    return { valid: false, error: 'Document must be a non-null object' };
+  }
+
+  const d = doc as Record<string, unknown>;
+  const meta = d.metadata as Record<string, unknown> | undefined;
+  const version = meta?.schemaVersion;
+
+  if (typeof version !== 'number' || (version !== 1 && version !== 2)) {
+    return { valid: false, error: `Unsupported or unknown document schemaVersion: ${String(version)}` };
+  }
+
+  if (!validatePosterDesignDocument(doc)) {
+    return { valid: false, error: 'Document failed structural or security validation' };
+  }
+
+  const migratedDocument = migratePosterDesignDocumentV1ToV2(doc as PosterDesignDocument);
+  if (!validatePosterDesignDocument(migratedDocument) || migratedDocument.metadata.schemaVersion !== 2) {
+    return { valid: false, error: 'Migrated document failed strict v2 schema validation' };
+  }
+
+  return { valid: true, migratedDocument };
 }

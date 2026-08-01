@@ -8,7 +8,7 @@ import { usePosterDesignState } from './usePosterDesignState';
 import { mapPosterDesignStateToRuntimeOptions } from './posterDesignStateRuntimeAdapter';
 import {
   getVisualStudioPosterNodeLimit,
-  type VisualStudioPosterRootOption,
+  type BaseStudioPosterOptions,
 } from './visualStudioPosterOptions';
 import { downloadFile } from '../../../../utils/fileUtils';
 import { toast } from 'sonner';
@@ -38,6 +38,11 @@ import {
   selectSnapshotPreviewGraph,
   descendantFixturePreviewGraphSelector,
   fullTreeFixturePreviewGraphSelector,
+  selectFocusGraphBoundary,
+  createFocusTokenCatalog,
+  createRawGraphFromLiveSource,
+  createRawGraphFromFixtureSource,
+  FocusLayoutCapacityError,
   type FixturePreviewSource,
   type PreviewLiveTreeSource,
   type PosterContentSpec,
@@ -125,6 +130,28 @@ const STUDIO_PREVIEW_FIXTURE_SOURCE: FixturePreviewSource = {
       birthDate: '1927-01-01',
       deathDate: '1994-01-01',
     },
+    {
+      fixtureId: 'fixture-spouse',
+      displayName: 'Preview Spouse',
+      generation: 1,
+      relationshipHint: 'spouse',
+      isLiving: true,
+      hasProfilePhoto: true,
+    },
+    {
+      fixtureId: 'fixture-child',
+      displayName: 'Preview Child',
+      generation: 1,
+      relationshipHint: 'descendant',
+      isLiving: true,
+    },
+    {
+      fixtureId: 'fixture-sibling',
+      displayName: 'Preview Sibling',
+      generation: 1,
+      relationshipHint: 'relative',
+      isLiving: true,
+    },
   ],
   edges: [
     { fromFixtureId: 'fixture-father', toFixtureId: 'fixture-root', relationshipType: 'parent-child' },
@@ -133,7 +160,18 @@ const STUDIO_PREVIEW_FIXTURE_SOURCE: FixturePreviewSource = {
     { fromFixtureId: 'fixture-grandmother-a', toFixtureId: 'fixture-father', relationshipType: 'parent-child' },
     { fromFixtureId: 'fixture-grandfather-b', toFixtureId: 'fixture-mother', relationshipType: 'parent-child' },
     { fromFixtureId: 'fixture-grandmother-b', toFixtureId: 'fixture-mother', relationshipType: 'parent-child' },
+    { fromFixtureId: 'fixture-root', toFixtureId: 'fixture-spouse', relationshipType: 'spouse' },
+    { fromFixtureId: 'fixture-root', toFixtureId: 'fixture-child', relationshipType: 'parent-child' },
+    { fromFixtureId: 'fixture-father', toFixtureId: 'fixture-sibling', relationshipType: 'parent-child' },
   ],
+};
+
+const isFocusCapacityError = (error: unknown): boolean => {
+  if (error instanceof FocusLayoutCapacityError) return true;
+  if (!error || typeof error !== 'object') return false;
+  const candidate = error as { code?: unknown; message?: unknown };
+  return candidate.code === 'FOCUS_LAYOUT_CAPACITY_EXCEEDED'
+    || (typeof candidate.message === 'string' && candidate.message.startsWith('Focus layout capacity exceeded:'));
 };
 
 const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = ({
@@ -150,12 +188,9 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
   const definitions = listVisualOutputDefinitions();
 
   const studioDesign = usePosterDesignState('classic-heritage');
-  const mappingResult = mapPosterDesignStateToRuntimeOptions(studioDesign.state);
 
   const [exportingFormat, setExportingFormat] = useState<StudioPosterExportFormat | 'branch-collection' | 'tiled-wall' | undefined>(undefined);
   const [isMobilePreviewExpanded, setIsMobilePreviewExpanded] = useState(false);
-
-  const posterOptions = mappingResult.posterOptions;
 
   const selectedDefinition = useMemo(() => {
     const isDescendant = studioDesign.state.scope === 'descendants';
@@ -172,6 +207,184 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
   const selectedPosterStyle: PosterVisualStylePreset = selectedDefinition.id.startsWith('modern')
     ? 'modern-gallery'
     : 'classic-heritage';
+
+  const isDescendantScope = studioDesign.state.scope === 'descendants';
+  const isFullTreeScope = studioDesign.state.scope === 'full-tree';
+
+  const configuredPosterLimit = useMemo(() => {
+    const depth = studioDesign.state.tiered.generationDepth;
+    return getVisualStudioPosterNodeLimit(
+      (typeof depth === 'number' ? depth : 4) as 1 | 2 | 3 | 4 | 'all',
+      studioDesign.state.scope ?? 'ancestors'
+    );
+  }, [studioDesign.state.scope, studioDesign.state.tiered.generationDepth]);
+
+  const storeNodeIds = useMemo(
+    () => (storePreviewSource ? Object.keys(storePreviewSource.people) : []),
+    [storePreviewSource]
+  );
+
+  const rawGraphData = useMemo(() => {
+    const selectorProduct = (selectedDefinition.productType === 'snapshot' ? 'snapshot' : 'poster') as 'poster' | 'snapshot';
+    const maxNodes = selectorProduct === 'poster'
+      ? isFullTreeScope
+        ? 150
+        : configuredPosterLimit
+      : 12;
+
+    return previewSourceMode === 'store' && storePreviewSource
+      ? (selectorProduct === 'snapshot'
+          ? selectSnapshotPreviewGraph
+          : isFullTreeScope
+            ? selectFullTreePosterPreviewGraph
+            : isDescendantScope
+            ? selectDescendantPosterPreviewGraph
+            : selectPosterPreviewGraph).selectRawGraph(
+          storePreviewSource,
+          {
+            productType: selectorProduct,
+            definitionId: selectedDefinition.id,
+            rootPersonId: storeRootPersonId ?? storeNodeIds[0],
+            visibleNodeIds: storeNodeIds.slice(0, maxNodes),
+            maxDepth: selectorProduct === 'poster'
+              ? (isFullTreeScope ? 'all' : studioDesign.state.tiered.generationDepth ?? 4)
+              : 3,
+            maxNodes,
+            language,
+          }
+        )
+      : (selectorProduct === 'poster' && isFullTreeScope
+          ? fullTreeFixturePreviewGraphSelector
+          : selectorProduct === 'poster' && isDescendantScope
+            ? descendantFixturePreviewGraphSelector
+          : getFixtureVisualPreviewGraphSelector(selectorProduct)).selectRawGraph(STUDIO_PREVIEW_FIXTURE_SOURCE, {
+          productType: selectorProduct,
+          definitionId: selectedDefinition.id,
+          rootPersonId: 'fixture-root',
+          visibleNodeIds: STUDIO_PREVIEW_FIXTURE_SOURCE.nodes.map((node) => node.fixtureId).slice(0, maxNodes),
+          maxDepth: selectorProduct === 'poster'
+            ? (isFullTreeScope ? 'all' : studioDesign.state.tiered.generationDepth ?? 4)
+            : 3,
+          maxNodes,
+          language,
+        });
+  }, [
+    configuredPosterLimit,
+    isDescendantScope,
+    isFullTreeScope,
+    language,
+    previewSourceMode,
+    selectedDefinition,
+    storeNodeIds,
+    storePreviewSource,
+    storeRootPersonId,
+    studioDesign.state.tiered.generationDepth,
+  ]);
+
+  const completeRawSourceGraph = useMemo(() => {
+    return previewSourceMode === 'store' && storePreviewSource
+      ? createRawGraphFromLiveSource(storePreviewSource)
+      : createRawGraphFromFixtureSource(STUDIO_PREVIEW_FIXTURE_SOURCE);
+  }, [previewSourceMode, storePreviewSource]);
+
+  const focusTokenCatalog = useMemo(() => {
+    if (!completeRawSourceGraph?.nodes?.length) return undefined;
+    return createFocusTokenCatalog(completeRawSourceGraph.nodes, {
+      language,
+      privacyMode: studioDesign.state.shared.privacyMode,
+    });
+  }, [completeRawSourceGraph, language, studioDesign.state.shared.privacyMode]);
+
+  const selectedFocalPersonToken = useMemo(() => {
+    const currentToken = studioDesign.state.focus.focalPersonToken;
+    return focusTokenCatalog?.hasToken(currentToken)
+      ? currentToken
+      : focusTokenCatalog?.defaultToken;
+  }, [focusTokenCatalog, studioDesign.state.focus.focalPersonToken]);
+
+  const focusSelectionResult = useMemo(() => {
+    if (studioDesign.state.layoutMode !== 'focus-family' || !completeRawSourceGraph?.nodes?.length) {
+      return undefined;
+    }
+    if (!focusTokenCatalog || !selectedFocalPersonToken) return undefined;
+
+    try {
+      const selection = selectFocusGraphBoundary(completeRawSourceGraph, focusTokenCatalog, {
+        focalPersonToken: selectedFocalPersonToken,
+        ancestorDepth: studioDesign.state.focus.ancestorDepth,
+        descendantDepth: studioDesign.state.focus.descendantDepth,
+        includeSpouses: studioDesign.state.focus.includeSpouses,
+        includeSiblings: studioDesign.state.focus.includeSiblings,
+        privacyMode: studioDesign.state.shared.privacyMode,
+        language,
+        includePhotos: studioDesign.state.shared.includePhotos,
+        hideLivingPhotos: studioDesign.state.shared.hideLivingPhotos,
+        includeYears: studioDesign.state.shared.showYears,
+      });
+      return { selection, error: undefined };
+    } catch (err) {
+      if (isFocusCapacityError(err)) {
+        return {
+          selection: undefined,
+          error: err instanceof FocusLayoutCapacityError ? err : new FocusLayoutCapacityError('Exceeded focus capacity.'),
+        };
+      }
+      throw err;
+    }
+  }, [completeRawSourceGraph, focusTokenCatalog, language, selectedFocalPersonToken, studioDesign.state.focus, studioDesign.state.layoutMode, studioDesign.state.shared]);
+
+  const rootPeople = useMemo(() => {
+    return (rawGraphData?.nodes ?? []).map((node, index) => ({
+      sessionToken: `preview-root-${index + 1}`,
+      displayName: node.displayName || '',
+    }));
+  }, [rawGraphData]);
+
+  const posterRootOptions = useMemo(() => {
+    if (studioDesign.state.layoutMode === 'focus-family' && focusTokenCatalog) {
+      return focusTokenCatalog.tokens;
+    }
+    return rootPeople.map((person) => ({
+      token: person.sessionToken,
+      label: person.displayName,
+    }));
+  }, [focusTokenCatalog, rootPeople, studioDesign.state.layoutMode]);
+
+  const selectedPosterRootToken = useMemo(() => {
+    if (previewSourceMode === 'store' && storeRootPersonId && storeNodeIds.length) {
+      const matchIndex = storeNodeIds.indexOf(storeRootPersonId);
+      if (matchIndex >= 0) {
+        return `preview-root-${matchIndex + 1}`;
+      }
+    }
+    return studioDesign.state.shared.selectedPosterRootToken || 'preview-root-1';
+  }, [previewSourceMode, storeNodeIds, storeRootPersonId, studioDesign.state.shared.selectedPosterRootToken]);
+
+  const [userPosterTitle, setUserPosterTitle] = useState('');
+  const [userPosterSubtitle, setUserPosterSubtitle] = useState('');
+
+  const defaultPosterTitle = isAr
+    ? (isFullTreeScope ? 'الشجرة العائلية الكاملة' : 'لوحة العائلة')
+    : (isFullTreeScope ? 'Full Family Tree' : 'Ancestor Tree');
+
+  const defaultPosterSubtitle = isAr
+    ? 'السجل العائلي'
+    : 'Family Record';
+
+  const posterTitle = userPosterTitle.trim() || defaultPosterTitle;
+  const posterSubtitle = userPosterSubtitle.trim() || defaultPosterSubtitle;
+
+  const mappingResult = useMemo(() => {
+    return mapPosterDesignStateToRuntimeOptions(studioDesign.state, {
+      focalPreviewId: focusSelectionResult?.selection?.focalPreviewId,
+      definitionId: selectedDefinition.id,
+      language,
+      title: posterTitle,
+      subtitle: posterSubtitle,
+    });
+  }, [focusSelectionResult?.selection?.focalPreviewId, language, posterSubtitle, posterTitle, selectedDefinition.id, studioDesign.state]);
+
+  const posterOptions = mappingResult.posterOptions;
 
   const [resolvedPosterSvgResources, setResolvedPosterSvgResources] = useState<StudioPosterSvgResources>();
   const [resolvedPosterImages, setResolvedPosterImages] = useState<StudioPosterSvgResources['embeddedImages']>();
@@ -214,135 +427,25 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
     };
   }, [posterFontAssetResolver, resolvedPosterFontFamily, suppliedPosterSvgResources]);
 
-  const posterRootMappings = useMemo(() => {
-    const candidates = previewSourceMode === 'store' && storePreviewSource
-      ? Object.values(storePreviewSource.people).map((person) => ({ rawId: person.rawId, label: person.displayName || '' }))
-      : STUDIO_PREVIEW_FIXTURE_SOURCE.nodes.map((person) => ({ rawId: person.fixtureId, label: person.displayName }));
-
-    return candidates.map((candidate, index) => ({
-      ...candidate,
-      token: `preview-root-${index + 1}`,
-    }));
-  }, [previewSourceMode, storePreviewSource]);
-
-  const preferredPosterRoot = posterRootMappings.find((option) => option.rawId === storeRootPersonId)
-    ?? posterRootMappings[0];
-  const effectiveSelectedPosterRootToken = previewSourceMode === 'store' && studioDesign.state.shared.selectedPosterRootToken === 'preview-root-1' && preferredPosterRoot
-    ? preferredPosterRoot.token
-    : studioDesign.state.shared.selectedPosterRootToken;
-  const selectedPosterRoot = posterRootMappings.find((option) => option.token === effectiveSelectedPosterRootToken)
-    ?? preferredPosterRoot;
-  const posterRootOptions: VisualStudioPosterRootOption[] = posterRootMappings.map(({ token, label }, index) => ({
-    token,
-    label: label || (isAr ? `شخص ${index + 1}` : `Person ${index + 1}`),
-  }));
-  const selectedRootLabel = selectedPosterRoot?.label?.trim();
-  const selectedRootPrivacyRecord = selectedPosterRoot
-    ? (previewSourceMode === 'store'
-        ? storePreviewSource?.people[selectedPosterRoot.rawId]
-        : STUDIO_PREVIEW_FIXTURE_SOURCE.nodes.find((node) => node.fixtureId === selectedPosterRoot.rawId))
-    : undefined;
-  const selectedRootIsMasked = Boolean(
-    selectedRootPrivacyRecord?.isPrivate
-      || (posterOptions?.privacyMode === 'masked' && selectedRootPrivacyRecord?.isLiving)
+  const adapter = useMemo(
+    () => getVisualPreviewAdapter(selectedDefinition.productType),
+    [selectedDefinition.productType]
   );
-  const safeSelectedRootLabel = selectedRootIsMasked ? undefined : selectedRootLabel;
-  const isDescendantScope = studioDesign.state.scope === 'descendants';
-  const isFullTreeScope = studioDesign.state.scope === 'full-tree';
-  const defaultPosterTitle = isAr
-    ? (isFullTreeScope
-        ? 'الشجرة العائلية الكاملة'
-        : safeSelectedRootLabel
-        ? `${isDescendantScope ? 'شجرة أحفاد' : 'شجرة أسلاف'} ${safeSelectedRootLabel}`
-        : (isDescendantScope ? 'شجرة الأحفاد' : 'شجرة الأسلاف'))
-    : (isFullTreeScope
-        ? 'Full Family Tree'
-        : safeSelectedRootLabel
-        ? `${safeSelectedRootLabel} ${isDescendantScope ? 'Descendant' : 'Ancestor'} Tree`
-        : `${isDescendantScope ? 'Descendant' : 'Ancestor'} Tree`);
-  const defaultPosterSubtitle = isAr
-    ? (isFullTreeScope
-        ? 'كل الأشخاص والعلاقات المسجلة في الشجرة'
-        : posterOptions?.generationDepth === 'all'
-        ? 'كل الأجيال المتاحة في السجل العائلي'
-        : posterOptions?.generationDepth === 1
-        ? 'جيل واحد من السجل العائلي'
-        : `${posterOptions?.generationDepth ?? 4} أجيال من السجل العائلي`)
-    : isFullTreeScope
-      ? 'All people and relationships recorded in the tree'
-      : posterOptions?.generationDepth === 'all'
-      ? 'All available generations from the family record'
-      : `${posterOptions?.generationDepth ?? 4} ${posterOptions?.generationDepth === 1 ? 'generation' : 'generations'} from the family record`;
-  const [userPosterTitle, setUserPosterTitle] = useState('');
-  const [userPosterSubtitle, setUserPosterSubtitle] = useState('');
-
-  const posterTitle = userPosterTitle.trim() || defaultPosterTitle;
-  const posterSubtitle = userPosterSubtitle.trim() || defaultPosterSubtitle;
 
   const previewData = useMemo(() => {
-    if (!posterOptions) return undefined;
+    const selectorProduct = selectedDefinition.productType;
+    const maxNodes = selectorProduct === 'poster' ? (isFullTreeScope ? 150 : configuredPosterLimit) : 12;
+    const privacyMode = selectorProduct === 'poster' ? (studioDesign.state.shared.privacyMode ?? 'masked') : 'masked';
 
-    const adapter = getVisualPreviewAdapter(selectedDefinition.productType);
-    const selectorProduct = selectedDefinition.productType === 'snapshot' ? 'snapshot' : 'poster';
-    const storeNodeIds = storePreviewSource ? Object.keys(storePreviewSource.people) : [];
-    const availablePosterNodeCount = previewSourceMode === 'store'
-      ? storeNodeIds.length
-      : STUDIO_PREVIEW_FIXTURE_SOURCE.nodes.length;
-    const configuredPosterLimit = getVisualStudioPosterNodeLimit(
-      posterOptions.generationDepth,
-      posterOptions.scope
-    );
-    const maxNodes = selectorProduct === 'poster'
-      ? posterOptions.scope === 'ancestors' && posterOptions.generationDepth !== 'all'
-        ? configuredPosterLimit
-        : Math.max(configuredPosterLimit, availablePosterNodeCount)
-      : 12;
-    const privacyMode = selectorProduct === 'poster' ? posterOptions.privacyMode : 'masked';
-    const rawGraph =
-      previewSourceMode === 'store' && storePreviewSource
-        ? (selectorProduct === 'snapshot'
-            ? selectSnapshotPreviewGraph
-            : isFullTreeScope
-              ? selectFullTreePosterPreviewGraph
-              : isDescendantScope
-              ? selectDescendantPosterPreviewGraph
-              : selectPosterPreviewGraph).selectRawGraph(
-            storePreviewSource,
-            {
-              productType: selectorProduct,
-              definitionId: selectedDefinition.id,
-              rootPersonId: selectedPosterRoot?.rawId ?? storeRootPersonId ?? storeNodeIds[0],
-              visibleNodeIds: storeNodeIds.slice(0, maxNodes),
-              maxDepth: selectorProduct === 'poster'
-                ? (isFullTreeScope ? 'all' : posterOptions.generationDepth)
-                : 3,
-              maxNodes,
-              language,
-            }
-          )
-        : (selectorProduct === 'poster' && isFullTreeScope
-            ? fullTreeFixturePreviewGraphSelector
-            : selectorProduct === 'poster' && isDescendantScope
-              ? descendantFixturePreviewGraphSelector
-            : getFixtureVisualPreviewGraphSelector(selectorProduct)).selectRawGraph(STUDIO_PREVIEW_FIXTURE_SOURCE, {
-            productType: selectorProduct,
-            definitionId: selectedDefinition.id,
-            rootPersonId: selectedPosterRoot?.rawId ?? 'fixture-root',
-            visibleNodeIds: STUDIO_PREVIEW_FIXTURE_SOURCE.nodes.map((node) => node.fixtureId).slice(0, maxNodes),
-            maxDepth: selectorProduct === 'poster'
-              ? (isFullTreeScope ? 'all' : posterOptions.generationDepth)
-              : 3,
-            maxNodes,
-            language,
-          });
-
-    const sanitizedGraph = productionPreviewSanitizer.sanitize(rawGraph, {
-      privacyMode,
-      includePhotos: posterOptions.includePhotos,
-      includeYears: posterOptions.showYears,
-      maxNodes,
-      language,
-    });
+    const sanitizedGraph = focusSelectionResult?.selection
+      ? focusSelectionResult.selection.sanitizedGraph
+      : productionPreviewSanitizer.sanitize(rawGraphData, {
+          privacyMode,
+          includePhotos: studioDesign.state.shared.includePhotos,
+          includeYears: studioDesign.state.shared.showYears,
+          maxNodes,
+          language,
+        });
 
     const previewModel = adapter ? adapter.createPreviewModel({
       definitionId: selectedDefinition.id,
@@ -355,20 +458,22 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
 
     return {
       graph: sanitizedGraph,
+      focalPreviewId: focusSelectionResult?.selection?.focalPreviewId,
       previewModel,
       definition: selectedDefinition,
       language,
     };
   }, [
-    isDescendantScope,
+    adapter,
+    configuredPosterLimit,
+    focusSelectionResult?.selection,
     isFullTreeScope,
     language,
-    posterOptions,
-    previewSourceMode,
+    rawGraphData,
     selectedDefinition,
-    selectedPosterRoot?.rawId,
-    storePreviewSource,
-    storeRootPersonId,
+    studioDesign.state.shared.includePhotos,
+    studioDesign.state.shared.privacyMode,
+    studioDesign.state.shared.showYears,
   ]);
 
   const previewModel = useMemo(
@@ -381,67 +486,120 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
   );
 
   const posterDocumentSpec = useMemo(() => {
-    if (!posterOptions || selectedDefinition.productType === 'snapshot') return undefined;
+    if (!mappingResult.posterOptions || selectedDefinition.productType === 'snapshot') return undefined;
 
     return createPosterDocumentSpec(
-      posterOptions.size || 'A3',
-      posterOptions.orientation || 'landscape',
-      posterOptions.marginPreset || 'balanced'
+      studioDesign.state.shared.size || 'A3',
+      studioDesign.state.shared.orientation || 'landscape',
+      studioDesign.state.shared.marginPreset || 'balanced'
     );
-  }, [posterOptions, selectedDefinition.productType]);
+  }, [mappingResult.posterOptions, selectedDefinition.productType, studioDesign.state.shared]);
 
-  const posterScene = useMemo(() => {
-    if (!posterOptions || !posterDocumentSpec || !previewData?.graph) return undefined;
+  const posterSceneEvaluation = useMemo(() => {
+    if (focusSelectionResult?.error) {
+      return { scene: undefined, capacityError: focusSelectionResult.error };
+    }
+    if (!mappingResult.posterOptions || !posterDocumentSpec || !previewData?.graph) {
+      return { scene: undefined, capacityError: undefined };
+    }
 
     const opt = <T extends string>(val: T | undefined): Exclude<T, 'style-default'> | undefined =>
       val && val !== 'style-default' ? (val as Exclude<T, 'style-default'>) : undefined;
 
+    if (mappingResult.posterOptions.engineId === 'focus-family' && focusSelectionResult?.selection) {
+      try {
+        const scene = createPosterScene({
+          graph: focusSelectionResult.selection.sanitizedGraph,
+          document: posterDocumentSpec,
+          content: {
+            ...mappingResult.posterOptions.content,
+            scope: 'selected-root-focus',
+          },
+          engineId: 'focus-family',
+          focusOptions: mappingResult.posterOptions.focusOptions,
+          stylePreset: selectedPosterStyle,
+          photoShape: studioDesign.state.shared.photoShape,
+          connectorStyle: studioDesign.state.shared.connectorStyle,
+          connectorPathStyle: opt(studioDesign.state.shared.connectorPath),
+          colorPalette: opt(studioDesign.state.shared.colorPalette),
+          colorOverrides: studioDesign.state.shared.colorOverrides,
+          decoration: opt(studioDesign.state.shared.decoration),
+          ornament: opt(studioDesign.state.shared.ornament),
+          typographyPreset: studioDesign.state.shared.typography,
+          fontFamily: opt(studioDesign.state.shared.fontFamily),
+          cardScalePreset: studioDesign.state.shared.cardScale,
+          cardEffectPreset: opt(studioDesign.state.shared.cardEffect),
+          cardFramePreset: opt(studioDesign.state.shared.cardFrame),
+          cardCornerPreset: opt(studioDesign.state.shared.cardCorner),
+          cardLayoutPreset: opt(studioDesign.state.shared.cardLayout),
+          pageFramePreset: opt(studioDesign.state.shared.pageFrame),
+          headerPreset: opt(studioDesign.state.shared.header),
+          spacingPreset: opt(studioDesign.state.shared.spacing),
+          direction: studioDesign.state.shared.direction,
+        });
+        return { scene, capacityError: undefined };
+      } catch (err) {
+        if (isFocusCapacityError(err)) {
+          return {
+            scene: undefined,
+            capacityError: err instanceof FocusLayoutCapacityError ? err : new FocusLayoutCapacityError('Exceeded focus capacity.'),
+          };
+        }
+        throw err;
+      }
+    }
+
     const content: PosterContentSpec = {
       definitionId: selectedDefinition.id,
       language,
-      generationCount: typeof posterOptions.generationDepth === 'number' ? posterOptions.generationDepth : 4,
-      privacyMode: posterOptions.privacyMode,
+      generationCount: typeof (mappingResult.posterOptions as BaseStudioPosterOptions)?.generationDepth === 'number' ? ((mappingResult.posterOptions as BaseStudioPosterOptions).generationDepth as number) : 4,
+      privacyMode: studioDesign.state.shared.privacyMode,
       title: posterTitle,
       subtitle: posterSubtitle,
-      footerText: normalizePosterFooterText(posterOptions.footerText || ''),
-      showJozorAttribution: posterOptions.showJozorAttribution,
-      scope: posterOptions.scope === 'ancestors'
+      footerText: normalizePosterFooterText(studioDesign.state.shared.footerText || ''),
+      showJozorAttribution: studioDesign.state.shared.showJozorAttribution,
+      scope: studioDesign.state.scope === 'ancestors'
         ? 'selected-root-ancestors'
-        : posterOptions.scope === 'descendants'
+        : studioDesign.state.scope === 'descendants'
           ? 'selected-root-descendants'
           : 'full-tree',
-      showYears: posterOptions.showYears,
-      showRelationship: posterOptions.showRelationship,
-      showBirthPlace: posterOptions.showBirthPlace,
-      showOccupation: posterOptions.showOccupation,
-      showDescription: posterOptions.showDescription,
+      showYears: studioDesign.state.shared.showYears,
+      showRelationship: studioDesign.state.shared.showRelationship,
+      showBirthPlace: studioDesign.state.shared.showBirthPlace,
+      showOccupation: studioDesign.state.shared.showOccupation,
+      showDescription: studioDesign.state.shared.showDescription,
     };
 
-    return createPosterScene({
-      graph: previewData.graph,
-      document: posterDocumentSpec,
-      content,
-      stylePreset: selectedPosterStyle,
-      photoShape: posterOptions.photoShape,
-      connectorStyle: posterOptions.connectorStyle,
-      connectorPathStyle: opt(posterOptions.connectorPath),
-      colorPalette: opt(posterOptions.colorPalette),
-      colorOverrides: posterOptions.colorOverrides,
-      decoration: opt(posterOptions.decoration),
-      ornament: opt(posterOptions.ornament),
-      typographyPreset: posterOptions.typography,
-      fontFamily: opt(posterOptions.fontFamily),
-      cardScalePreset: posterOptions.cardScale,
-      cardEffectPreset: opt(posterOptions.cardEffect),
-      cardFramePreset: opt(posterOptions.cardFrame),
-      cardCornerPreset: opt(posterOptions.cardCorner),
-      cardLayoutPreset: opt(posterOptions.cardLayout),
-      pageFramePreset: opt(posterOptions.pageFrame),
-      headerPreset: opt(posterOptions.header),
-      spacingPreset: opt(posterOptions.spacing),
-      direction: posterOptions.direction,
-    });
-  }, [posterDocumentSpec, previewData?.graph, selectedDefinition.id, language, posterOptions, posterTitle, posterSubtitle, selectedPosterStyle]);
+    return {
+      scene: createPosterScene({
+        graph: previewData.graph,
+        document: posterDocumentSpec,
+        content,
+        stylePreset: selectedPosterStyle,
+        photoShape: studioDesign.state.shared.photoShape,
+        connectorStyle: studioDesign.state.shared.connectorStyle,
+        connectorPathStyle: opt(studioDesign.state.shared.connectorPath),
+        colorPalette: opt(studioDesign.state.shared.colorPalette),
+        colorOverrides: studioDesign.state.shared.colorOverrides,
+        decoration: opt(studioDesign.state.shared.decoration),
+        ornament: opt(studioDesign.state.shared.ornament),
+        typographyPreset: studioDesign.state.shared.typography,
+        fontFamily: opt(studioDesign.state.shared.fontFamily),
+        cardScalePreset: studioDesign.state.shared.cardScale,
+        cardEffectPreset: opt(studioDesign.state.shared.cardEffect),
+        cardFramePreset: opt(studioDesign.state.shared.cardFrame),
+        cardCornerPreset: opt(studioDesign.state.shared.cardCorner),
+        cardLayoutPreset: opt(studioDesign.state.shared.cardLayout),
+        pageFramePreset: opt(studioDesign.state.shared.pageFrame),
+        headerPreset: opt(studioDesign.state.shared.header),
+        spacingPreset: opt(studioDesign.state.shared.spacing),
+        direction: studioDesign.state.shared.direction,
+      }),
+      capacityError: undefined,
+    };
+  }, [focusSelectionResult, mappingResult.posterOptions, posterDocumentSpec, previewData?.graph, selectedDefinition.id, language, posterTitle, posterSubtitle, selectedPosterStyle, studioDesign.state]);
+
+  const posterScene = posterSceneEvaluation.scene;
 
   const branchPosterCollection = useMemo(() => {
     if (!posterOptions || !posterDocumentSpec || studioDesign.state.productMode !== 'branch-collection' || !previewData?.graph) {
@@ -705,14 +863,20 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
             onUpdateAppearance={studioDesign.updateAppearance}
             onUpdatePrint={studioDesign.updatePrint}
             onSwitchProductMode={studioDesign.switchProductMode}
+            onSwitchLayoutMode={(mode) => studioDesign.switchLayoutMode(
+              mode,
+              mode === 'focus-family' ? selectedFocalPersonToken : undefined
+            )}
             onSwitchScope={studioDesign.switchScope}
+            onUpdateFocus={studioDesign.updateFocus}
             onResetSection={studioDesign.resetSection}
             onResetPoster={studioDesign.resetPoster}
             onUndo={studioDesign.undo}
             onRedo={studioDesign.redo}
             definitions={definitions}
             posterRootOptions={posterRootOptions}
-            selectedPosterRootToken={effectiveSelectedPosterRootToken}
+            selectedPosterRootToken={selectedPosterRootToken}
+            selectedFocalPersonToken={selectedFocalPersonToken}
             onSelectPosterRoot={(token) => studioDesign.updateContent({ selectedPosterRootToken: token })}
             posterTitle={userPosterTitle}
             onPosterTitleChange={setUserPosterTitle}
@@ -731,6 +895,12 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
         branchCollectionAvailable={Boolean(branchPosterCollection?.itemCount && branchCollectionBlockingWarnings.length === 0)}
         branchCollectionBlocked={Boolean(branchPosterCollection?.itemCount && branchCollectionBlockingWarnings.length > 0)}
         tiledWallAvailable={Boolean(tiledWallPosterPlan && tiledWallPosterPlan.quality.status !== 'blocked')}
+        isBlocked={Boolean(posterSceneEvaluation.capacityError)}
+        capacityErrorGuidance={
+          posterSceneEvaluation.capacityError
+            ? (isAr ? 'عذرًا، تجاوز عدد الأشخاص المحيطين سعة الصفحات. يرجى تقليل العمق.' : 'Exceeded layout node capacity for Focus layout. Please reduce depth.')
+            : undefined
+        }
         onExportSvg={mappingResult.supported ? () => void handleExport('svg') : undefined}
         onExportPng={mappingResult.supported ? () => void handleExport('png') : undefined}
         onExportPdf={mappingResult.supported ? () => void handleExport('pdf') : undefined}
@@ -739,7 +909,7 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
         onUseDensePreset={selectedDefinition.id === 'dense-genealogy-poster'
           ? undefined
           : () => studioDesign.selectPreset('classic-heritage')}
-        onUseLargestPage={posterOptions?.size === 'A0'
+        onUseLargestPage={mappingResult.posterOptions?.size === 'A0'
           ? undefined
           : () => studioDesign.updatePrint({ size: 'A0', orientation: 'landscape' })}
         onSetUpLargeTreeProducts={isFullTreeScope

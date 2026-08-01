@@ -214,6 +214,82 @@ describe('Preview Production Sanitizer Skeleton Rules', () => {
     expect(cousin.isMasked).toBe(true);
   });
 
+  it('evaluates complete policy matrix for owner-full / masked / includePhotos / hideLivingPhotos', () => {
+    const rawGraph: PreviewSanitizerRawGraph = {
+      nodes: [
+        { rawId: 'n1', displayName: 'Deceased Person', isLiving: false, isPrivate: false, hasProfilePhoto: true },
+        { rawId: 'n2', displayName: 'Living Public Person', isLiving: true, isPrivate: false, hasProfilePhoto: true },
+        { rawId: 'n3', displayName: 'Living Private Person', isLiving: true, isPrivate: true, hasProfilePhoto: true },
+      ],
+      edges: [],
+    };
+
+    // Matrix 1: masked, includePhotos: true, hideLivingPhotos: false
+    const res1 = productionPreviewSanitizer.sanitize(rawGraph, {
+      privacyMode: 'masked',
+      includePhotos: true,
+      hideLivingPhotos: false,
+      includeYears: true,
+      maxNodes: 10,
+      language: 'en',
+    });
+    expect(res1.nodes[0].hasPhoto).toBe(true);  // Deceased -> photo shown
+    expect(res1.nodes[1].hasPhoto).toBe(false); // Living in masked -> photo hidden
+    expect(res1.nodes[2].hasPhoto).toBe(false); // Private in masked -> photo hidden
+
+    // Matrix 2: masked, includePhotos: true, hideLivingPhotos: true
+    const res2 = productionPreviewSanitizer.sanitize(rawGraph, {
+      privacyMode: 'masked',
+      includePhotos: true,
+      hideLivingPhotos: true,
+      includeYears: true,
+      maxNodes: 10,
+      language: 'en',
+    });
+    expect(res2.nodes[0].hasPhoto).toBe(true);  // Deceased -> photo shown
+    expect(res2.nodes[1].hasPhoto).toBe(false); // Living -> hideLivingPhotos hides it
+    expect(res2.nodes[2].hasPhoto).toBe(false); // Living private -> hidden
+
+    // Matrix 3: owner-full, includePhotos: true, hideLivingPhotos: false
+    const res3 = productionPreviewSanitizer.sanitize(rawGraph, {
+      privacyMode: 'owner-full',
+      includePhotos: true,
+      hideLivingPhotos: false,
+      includeYears: true,
+      maxNodes: 10,
+      language: 'en',
+    });
+    expect(res3.nodes[0].hasPhoto).toBe(true);  // Deceased -> photo shown
+    expect(res3.nodes[1].hasPhoto).toBe(true);  // Living public in owner-full -> photo shown
+    expect(res3.nodes[2].hasPhoto).toBe(false); // Living private in owner-full -> photo hidden
+
+    // Matrix 4: owner-full, includePhotos: true, hideLivingPhotos: true
+    const res4 = productionPreviewSanitizer.sanitize(rawGraph, {
+      privacyMode: 'owner-full',
+      includePhotos: true,
+      hideLivingPhotos: true,
+      includeYears: true,
+      maxNodes: 10,
+      language: 'en',
+    });
+    expect(res4.nodes[0].hasPhoto).toBe(true);  // Deceased -> photo shown
+    expect(res4.nodes[1].hasPhoto).toBe(false); // Living public with hideLivingPhotos: true -> photo hidden
+    expect(res4.nodes[2].hasPhoto).toBe(false); // Living private -> photo hidden
+
+    // Matrix 5: includePhotos: false (overrides all photo settings)
+    const res5 = productionPreviewSanitizer.sanitize(rawGraph, {
+      privacyMode: 'owner-full',
+      includePhotos: false,
+      hideLivingPhotos: false,
+      includeYears: true,
+      maxNodes: 10,
+      language: 'en',
+    });
+    expect(res5.nodes[0].hasPhoto).toBe(false);
+    expect(res5.nodes[1].hasPhoto).toBe(false);
+    expect(res5.nodes[2].hasPhoto).toBe(false);
+  });
+
   it('asserts compile-time types safety checks', () => {
     // @ts-expect-error email is intentionally not allowed in PreviewSanitizerRawNode
     const invalidNodeEmail: PreviewSanitizerRawNode = { rawId: '1', displayName: 'Ali', email: 'ali@test.com' };

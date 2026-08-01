@@ -4,6 +4,15 @@ import type {
 } from '../../../publishing';
 import { getPosterLayoutCombinationCapability } from '../../../publishing';
 import type { VisualStudioPosterOptions, VisualStudioPosterScope } from './visualStudioPosterOptions';
+import type { PosterContentSpec, PosterFocusLayoutOptions } from '../../../publishing/visualOutputs/posterSceneTypes';
+
+export interface PosterRuntimeContext {
+  readonly focalPreviewId?: string;
+  readonly definitionId?: string;
+  readonly language?: 'en' | 'ar';
+  readonly title?: string;
+  readonly subtitle?: string;
+}
 
 export interface VisualStudioPosterOptionsMappingResult {
   readonly supported: boolean;
@@ -13,21 +22,17 @@ export interface VisualStudioPosterOptionsMappingResult {
 }
 
 /**
- * Pure runtime adapter that maps PosterDesignState into the existing Visual Studio poster options
- * consumed by the current Tiered runtime.
- *
- * Rules:
- * - Maps ONLY runtime-supported combinations (runtime-supported-and-reachable or quality-gated).
- * - Rejects planned Focus or Radial combinations before passing to PosterScene.
- * - Does not modify PosterScene, selectors, sanitizers, or exporters.
+ * Pure runtime adapter that maps PosterDesignState + explicit PosterRuntimeContext into
+ * the discriminated VisualStudioPosterOptions union (TieredPosterOptions | FocusPosterOptions).
  */
 export function mapPosterDesignStateToRuntimeOptions(
-  state: PosterDesignState
+  state: PosterDesignState,
+  context?: PosterRuntimeContext
 ): VisualStudioPosterOptionsMappingResult {
   const capability = getPosterLayoutCombinationCapability(state.productMode, state.layoutMode, state.scope);
 
-  // Focus and Radial layout modes are planned/unsupported in Phase 1B runtime
-  if (state.layoutMode !== 'tiered' || !capability.isRuntimeSupported) {
+  // Rejects unsupported combinations
+  if (!capability.isRuntimeSupported) {
     return {
       supported: false,
       capability,
@@ -35,8 +40,8 @@ export function mapPosterDesignStateToRuntimeOptions(
     };
   }
 
-  const posterOptions: VisualStudioPosterOptions = {
-    scope: (state.scope === 'selected-branch' ? 'ancestors' : state.scope) as VisualStudioPosterScope,
+  const baseOptions = {
+    scope: (state.scope === 'around-person' || state.scope === 'selected-branch' ? 'ancestors' : state.scope) as VisualStudioPosterScope,
     generationDepth: state.tiered.generationDepth,
     size: state.shared.size,
     orientation: state.shared.orientation,
@@ -77,9 +82,78 @@ export function mapPosterDesignStateToRuntimeOptions(
     branchCollectionIndexTitle: state.productBucket.branchCollectionIndexTitle,
   };
 
+  // Focus Family layout mode
+  if (state.layoutMode === 'focus-family') {
+    if (!context?.focalPreviewId) {
+      return {
+        supported: false,
+        capability,
+        reason: 'Missing or unresolvable focal person selection.',
+      };
+    }
+
+    const focusOptions: PosterFocusLayoutOptions = {
+      focalPreviewId: context.focalPreviewId,
+      ancestorDepth: state.focus.ancestorDepth,
+      descendantDepth: state.focus.descendantDepth,
+      includeFocalSpouses: state.focus.includeSpouses,
+      includeFocalSiblings: state.focus.includeSiblings,
+    };
+
+    const content: PosterContentSpec & { readonly scope: 'selected-root-focus' } = {
+      definitionId: context?.definitionId || 'classic-ancestor-poster',
+      language: context?.language || 'ar',
+      title: context?.title || state.shared.headerText || 'لوحة حول الشخص المحوري',
+      subtitle: context?.subtitle || state.shared.subheaderText,
+      scope: 'selected-root-focus',
+      generationCount: 4,
+      privacyMode: state.shared.privacyMode,
+    };
+
+    return {
+      supported: true,
+      capability,
+      posterOptions: {
+        ...baseOptions,
+        engineId: 'focus-family',
+        content,
+        focusOptions,
+      },
+    };
+  }
+
+  // Tiered layout mode
+  const tieredEngineId =
+    state.productMode === 'full-tree-overview'
+      ? 'full-tree-overview'
+      : state.scope === 'descendants'
+      ? 'descendant-tiered'
+      : 'ancestor-tiered';
+
+  const tieredScope =
+    state.scope === 'descendants'
+      ? 'selected-root-descendants'
+      : state.scope === 'full-tree'
+      ? 'full-tree'
+      : 'selected-root-ancestors';
+
+  const content: PosterContentSpec = {
+    definitionId: context?.definitionId || 'classic-ancestor-poster',
+    language: context?.language || 'ar',
+    title: context?.title || state.shared.headerText || 'لوحة العائلة',
+    subtitle: context?.subtitle || state.shared.subheaderText,
+    scope: tieredScope,
+    generationCount: typeof state.tiered.generationDepth === 'number' ? state.tiered.generationDepth : 4,
+    privacyMode: state.shared.privacyMode,
+  };
+
   return {
     supported: true,
     capability,
-    posterOptions,
+    posterOptions: {
+      ...baseOptions,
+      engineId: tieredEngineId,
+      content,
+    },
   };
 }

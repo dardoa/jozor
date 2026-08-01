@@ -6,6 +6,7 @@ import type {
   RadialSettingsBucket,
   ProductModeSettingsBucket,
   PosterLayoutMode,
+  TieredTreeScope,
 } from './posterStateContracts';
 import {
   getPosterPresetDefinition,
@@ -30,6 +31,8 @@ export const DEFAULT_SHARED_POSTER_SETTINGS: SharedPosterSettings = {
   connectorStyle: 'classic',
   connectorPath: 'style-default',
   spacing: 'style-default',
+  headerText: '',
+  subheaderText: '',
   footerText: '',
   showJozorAttribution: true,
   colorPalette: 'style-default',
@@ -50,6 +53,7 @@ export const DEFAULT_SHARED_POSTER_SETTINGS: SharedPosterSettings = {
 
 export const DEFAULT_TIERED_SETTINGS_BUCKET: TieredSettingsBucket = {
   generationDepth: 4,
+  lastTieredScope: 'ancestors',
 };
 
 export const DEFAULT_FOCUS_SETTINGS_BUCKET: FocusSettingsBucket = {
@@ -156,12 +160,41 @@ export function updateSharedSetting<K extends keyof SharedPosterSettings>(
 }
 
 /**
- * Updates layout mode while strictly preserving each mode's previous bucket values.
+ * Updates layout mode while strictly preserving each mode's previous bucket values
+ * and atomically setting/restoring scopes between Focus and Tiered.
  */
 export function switchLayoutMode(
   state: PosterDesignState,
   newLayoutMode: PosterLayoutMode
 ): PosterDesignState {
+  if (newLayoutMode === state.layoutMode) return state;
+
+  if (newLayoutMode === 'focus-family') {
+    const lastScope: TieredTreeScope =
+      state.scope !== 'around-person'
+        ? (state.scope as TieredTreeScope)
+        : (state.tiered.lastTieredScope ?? 'ancestors');
+
+    return {
+      ...state,
+      layoutMode: newLayoutMode,
+      scope: 'around-person',
+      tiered: {
+        ...state.tiered,
+        lastTieredScope: lastScope,
+      },
+    };
+  }
+
+  if (newLayoutMode === 'tiered') {
+    const restoredScope = state.tiered.lastTieredScope ?? 'ancestors';
+    return {
+      ...state,
+      layoutMode: newLayoutMode,
+      scope: restoredScope,
+    };
+  }
+
   return {
     ...state,
     layoutMode: newLayoutMode,

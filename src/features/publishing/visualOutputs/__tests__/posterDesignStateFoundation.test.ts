@@ -48,8 +48,8 @@ describe('Phase 1A: Final Two-Issue Closure Pass', () => {
       'detailed-poster:tiered:selected-branch': 'planned',
 
       // detailed-poster x focus-family
-      'detailed-poster:focus-family:ancestors': 'planned',
-      'detailed-poster:focus-family:descendants': 'planned',
+      'detailed-poster:focus-family:ancestors': 'incompatible',
+      'detailed-poster:focus-family:descendants': 'incompatible',
       'detailed-poster:focus-family:full-tree': 'incompatible',
       'detailed-poster:focus-family:selected-branch': 'incompatible',
 
@@ -424,16 +424,23 @@ describe('Phase 1A: Final Two-Issue Closure Pass', () => {
       expect(isPresetModified(state)).toBe(false);
     });
 
-    it('verifies bucket value preservation during layout mode switching', () => {
+    it('verifies bucket value preservation and atomic scope switching during layout mode switching', () => {
       let state = createInitialPosterDesignState('classic-heritage');
+      expect(state.scope).toBe('ancestors');
 
       state = updateTieredBucket(state, { generationDepth: 3 });
       state = switchLayoutMode(state, 'focus-family');
+      expect(state.layoutMode).toBe('focus-family');
+      expect(state.scope).toBe('around-person');
+      expect(state.tiered.lastTieredScope).toBe('ancestors');
+
       state = updateFocusBucket(state, { ancestorDepth: 3, includeSpouses: false });
       state = switchLayoutMode(state, 'radial-generations');
       state = updateRadialBucket(state, { generationRings: 6 });
 
       state = switchLayoutMode(state, 'tiered');
+      expect(state.layoutMode).toBe('tiered');
+      expect(state.scope).toBe('ancestors'); // Restored from lastTieredScope!
       expect(state.tiered.generationDepth).toBe(3);
       expect(state.focus.ancestorDepth).toBe(3);
       expect(state.radial.generationRings).toBe(6);

@@ -7,6 +7,14 @@ import type {
   PosterSceneNode,
 } from './posterSceneTypes';
 
+export class FocusLayoutCapacityError extends Error {
+  readonly code = 'FOCUS_LAYOUT_CAPACITY_EXCEEDED';
+  constructor(message: string) {
+    super(message);
+    this.name = 'FocusLayoutCapacityError';
+  }
+}
+
 export function validateFocusDepth(depth: PosterFocusDepth): number {
   if (depth === 'all') {
     return Infinity;
@@ -264,7 +272,7 @@ export const focusFamilyPosterLayoutEngine: PosterLayoutEngine = {
 
     // Capacity Validation: Reject immediately if raw candidate geometry cannot fit minimum bounds
     if (rawCardWidth < minCardW || rawCardHeight < minCardH) {
-      throw new Error(
+      throw new FocusLayoutCapacityError(
         'Focus layout capacity exceeded: tree bounds cannot fit requested focus depth with minimum card geometry.'
       );
     }
@@ -417,7 +425,7 @@ export const focusFamilyPosterLayoutEngine: PosterLayoutEngine = {
         node.rect.x + node.rect.width > treeBounds.x + treeBounds.width + 0.5 ||
         node.rect.y + node.rect.height > treeBounds.y + treeBounds.height + 0.5
       ) {
-        throw new Error(
+        throw new FocusLayoutCapacityError(
           `Focus layout capacity exceeded: node '${node.displayName}' exceeds printable tree bounds.`
         );
       }
@@ -430,7 +438,7 @@ export const focusFamilyPosterLayoutEngine: PosterLayoutEngine = {
         const overlapX = r1.x < r2.x + r2.width - 0.5 && r1.x + r1.width > r2.x + 0.5;
         const overlapY = r1.y < r2.y + r2.height - 0.5 && r1.y + r1.height > r2.y + 0.5;
         if (overlapX && overlapY) {
-          throw new Error(
+          throw new FocusLayoutCapacityError(
             `Focus layout capacity exceeded: overlap detected between nodes '${sceneNodes[i]!.displayName}' and '${sceneNodes[j]!.displayName}'.`
           );
         }
