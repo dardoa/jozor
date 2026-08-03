@@ -62,7 +62,8 @@ const REQUIRED_SHARED_KEYS = new Set([
 const REQUIRED_TIERED_KEYS_V1 = new Set(['generationDepth']);
 const REQUIRED_TIERED_KEYS_V2 = new Set(['generationDepth', 'lastTieredScope']);
 const REQUIRED_FOCUS_KEYS = new Set(['focalPersonToken', 'ancestorDepth', 'descendantDepth', 'includeSpouses', 'includeSiblings', 'focalCardEmphasis']);
-const REQUIRED_RADIAL_KEYS = new Set(['radialSpan', 'generationRings', 'ringSpacing', 'centerCardScale', 'labelOrientation']);
+const REQUIRED_RADIAL_KEYS_V1 = new Set(['radialSpan', 'generationRings', 'ringSpacing', 'centerCardScale', 'labelOrientation']);
+const REQUIRED_RADIAL_KEYS_V3 = new Set(['radialSpan', 'generationRings', 'ringSpacing', 'centerCardScale', 'labelOrientation', 'lastRadialScope']);
 const REQUIRED_PRODUCT_BUCKET_KEYS = new Set(['tiledRows', 'tiledColumns', 'tiledSheetSize', 'tiledOverlapMm', 'branchCollectionIndexTitle']);
 
 const ALLOWED_COLOR_OVERRIDE_KEYS = new Set(['background', 'cardBackground', 'accent', 'connector']);
@@ -146,7 +147,7 @@ export function scanValueForSecurityViolations(val: unknown, path: string = ''):
 /**
  * Validates state safety and returns detailed error message if unsafe or structurally invalid.
  */
-export function validateStateSafety(state: unknown, schemaVersion: number = 2): { readonly safe: boolean; readonly error?: string } {
+export function validateStateSafety(state: unknown, schemaVersion: number = 3): { readonly safe: boolean; readonly error?: string } {
   if (typeof state !== 'object' || state === null) {
     return { safe: false, error: 'State must be a non-null object' };
   }
@@ -189,7 +190,8 @@ export function validateStateSafety(state: unknown, schemaVersion: number = 2): 
   const focusErr = checkExactKeys(focus, REQUIRED_FOCUS_KEYS, 'focus bucket');
   if (focusErr) return { safe: false, error: focusErr };
 
-  const radialErr = checkExactKeys(radial, REQUIRED_RADIAL_KEYS, 'radial bucket');
+  const radialKeys = schemaVersion >= 3 ? REQUIRED_RADIAL_KEYS_V3 : REQUIRED_RADIAL_KEYS_V1;
+  const radialErr = checkExactKeys(radial, radialKeys, 'radial bucket');
   if (radialErr) return { safe: false, error: radialErr };
 
   const prodErr = checkExactKeys(productBucket, REQUIRED_PRODUCT_BUCKET_KEYS, 'productBucket');
@@ -300,7 +302,7 @@ export function validateStateSafety(state: unknown, schemaVersion: number = 2): 
     }
   }
 
-  if (schemaVersion === 2) {
+  if (schemaVersion >= 2) {
     const lastScope = tiered.lastTieredScope;
     const validLastScopes = ['ancestors', 'descendants', 'full-tree'];
     if (!validLastScopes.includes(String(lastScope))) {
@@ -345,6 +347,14 @@ export function validateStateSafety(state: unknown, schemaVersion: number = 2): 
   const validLabelOrientations = ['straight-unwarped', 'curved'];
   if (!validLabelOrientations.includes(String(radial.labelOrientation))) return { safe: false, error: 'Invalid radial.labelOrientation' };
 
+  if (schemaVersion >= 3) {
+    const lastRadialScope = radial.lastRadialScope;
+    const validRadialScopes = ['ancestors', 'descendants'];
+    if (!validRadialScopes.includes(String(lastRadialScope))) {
+      return { safe: false, error: 'Invalid radial.lastRadialScope' };
+    }
+  }
+
   const rows = productBucket.tiledRows;
   if (typeof rows !== 'number' || !Number.isInteger(rows) || rows < 2 || rows > 6) {
     return { safe: false, error: 'tiledRows must be integer 2..6' };
@@ -386,7 +396,7 @@ export function validateStateSafety(state: unknown, schemaVersion: number = 2): 
 /**
  * Safely checks if an unknown input is a valid PosterDesignState shape without casting prematurely.
  */
-export function validateStateShape(state: unknown, schemaVersion: number = 2): state is PosterDesignState {
+export function validateStateShape(state: unknown, schemaVersion: number = 3): state is PosterDesignState {
   return validateStateSafety(state, schemaVersion).safe;
 }
 
@@ -394,7 +404,7 @@ export function validateStateShape(state: unknown, schemaVersion: number = 2): s
  * Migrates a PosterDesignDocument from Schema Version 1 to Schema Version 2.
  */
 export function migratePosterDesignDocumentV1ToV2(doc: PosterDesignDocument): PosterDesignDocument {
-  if (doc.metadata.schemaVersion === 2) {
+  if (doc.metadata.schemaVersion >= 2) {
     return doc;
   }
 
@@ -421,13 +431,45 @@ export function migratePosterDesignDocumentV1ToV2(doc: PosterDesignDocument): Po
 }
 
 /**
- * Serializes a PosterDesignState into a versioned PosterDesignDocument JSON string.
+ * Migrates a PosterDesignDocument to Schema Version 3.
+ */
+export function migratePosterDesignDocumentToV3(doc: PosterDesignDocument): PosterDesignDocument {
+  if (doc.metadata.schemaVersion === 3) {
+    return doc;
+  }
+
+  const v2Doc = doc.metadata.schemaVersion === 1 ? migratePosterDesignDocumentV1ToV2(doc) : doc;
+
+  const lastRadialScope =
+    v2Doc.state.scope === 'ancestors' || v2Doc.state.scope === 'descendants'
+      ? v2Doc.state.scope
+      : 'ancestors';
+
+  return {
+    ...v2Doc,
+    metadata: {
+      ...v2Doc.metadata,
+      schemaVersion: 3,
+      updatedAtIso: new Date().toISOString(),
+    },
+    state: {
+      ...v2Doc.state,
+      radial: {
+        ...v2Doc.state.radial,
+        lastRadialScope: v2Doc.state.radial.lastRadialScope ?? lastRadialScope,
+      },
+    },
+  };
+}
+
+/**
+ * Serializes a PosterDesignState into a versioned PosterDesignDocument JSON string (Schema Version 3).
  */
 export function serializePosterDesignDocument(
   state: PosterDesignState,
   title?: string
 ): string {
-  const safety = validateStateSafety(state, 2);
+  const safety = validateStateSafety(state, 3);
   if (!safety.safe) {
     throw new Error(`Serialization security violation: ${safety.error}`);
   }
@@ -440,7 +482,7 @@ export function serializePosterDesignDocument(
   const document: PosterDesignDocument = {
     version: '1.0',
     metadata: {
-      schemaVersion: 2,
+      schemaVersion: 3,
       createdAtIso: new Date().toISOString(),
       updatedAtIso: new Date().toISOString(),
       title: cleanTitle,
@@ -453,7 +495,7 @@ export function serializePosterDesignDocument(
 }
 
 /**
- * Safely parses and validates a JSON string into a PosterDesignDocument.
+ * Safely parses and validates a JSON string into a PosterDesignDocument (migrates v1/v2 -> v3).
  * Throws controlled Error on invalid JSON or unsafe content. NEVER throws TypeError.
  */
 export function deserializePosterDesignDocument(jsonString: string): PosterDesignDocument {
@@ -468,11 +510,12 @@ export function deserializePosterDesignDocument(jsonString: string): PosterDesig
     throw new Error(`Deserialization error: Invalid JSON format (${err instanceof Error ? err.message : String(err)})`);
   }
 
-  if (!validatePosterDesignDocument(parsed)) {
-    throw new Error('Deserialization error: Document failed structural or security validation');
+  const schemaResult = validatePosterDesignDocumentSchema(parsed);
+  if (!schemaResult.valid || !schemaResult.migratedDocument) {
+    throw new Error(`Deserialization error: ${schemaResult.error || 'Document failed structural or security validation'}`);
   }
 
-  return migratePosterDesignDocumentV1ToV2(parsed);
+  return schemaResult.migratedDocument;
 }
 
 /**
@@ -495,7 +538,7 @@ export function validatePosterDesignDocument(doc: unknown): doc is PosterDesignD
     if (metaKeyErr) return false;
 
     const version = meta.schemaVersion;
-    if (version !== 1 && version !== 2) return false;
+    if (version !== 1 && version !== 2 && version !== 3) return false;
     if (typeof meta.createdAtIso !== 'string' || isNaN(Date.parse(meta.createdAtIso))) return false;
     if (typeof meta.updatedAtIso !== 'string' || isNaN(Date.parse(meta.updatedAtIso))) return false;
     if (typeof meta.authorApp !== 'string' || !meta.authorApp) return false;
@@ -520,7 +563,7 @@ export interface PosterDocumentSchemaValidationResult {
 }
 
 /**
- * Validates document schema version with explicit v1 migration, strict v2 completeness,
+ * Validates document schema version with explicit v1/v2 migration, strict v3 completeness,
  * and controlled rejection of unknown schema versions.
  */
 export function validatePosterDesignDocumentSchema(doc: unknown): PosterDocumentSchemaValidationResult {
@@ -532,7 +575,7 @@ export function validatePosterDesignDocumentSchema(doc: unknown): PosterDocument
   const meta = d.metadata as Record<string, unknown> | undefined;
   const version = meta?.schemaVersion;
 
-  if (typeof version !== 'number' || (version !== 1 && version !== 2)) {
+  if (typeof version !== 'number' || (version !== 1 && version !== 2 && version !== 3)) {
     return { valid: false, error: `Unsupported or unknown document schemaVersion: ${String(version)}` };
   }
 
@@ -540,9 +583,9 @@ export function validatePosterDesignDocumentSchema(doc: unknown): PosterDocument
     return { valid: false, error: 'Document failed structural or security validation' };
   }
 
-  const migratedDocument = migratePosterDesignDocumentV1ToV2(doc as PosterDesignDocument);
-  if (!validatePosterDesignDocument(migratedDocument) || migratedDocument.metadata.schemaVersion !== 2) {
-    return { valid: false, error: 'Migrated document failed strict v2 schema validation' };
+  const migratedDocument = migratePosterDesignDocumentToV3(doc as PosterDesignDocument);
+  if (!validatePosterDesignDocument(migratedDocument) || migratedDocument.metadata.schemaVersion !== 3) {
+    return { valid: false, error: 'Migrated document failed strict v3 schema validation' };
   }
 
   return { valid: true, migratedDocument };

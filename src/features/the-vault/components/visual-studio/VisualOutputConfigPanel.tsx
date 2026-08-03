@@ -19,6 +19,7 @@ import type {
   SharedPosterSettings,
   TieredSettingsBucket,
   FocusSettingsBucket,
+  RadialSettingsBucket,
   TiledWallPosterPlan,
   VisualOutputDefinition,
 } from '../../../publishing';
@@ -51,6 +52,7 @@ export interface VisualOutputConfigPanelProps {
   onSwitchLayoutMode?: (mode: PosterLayoutMode) => void;
   onSwitchScope?: (scope: PosterTreeScope) => void;
   onUpdateFocus?: (updates: Partial<FocusSettingsBucket>) => void;
+  onUpdateRadial?: (updates: Partial<RadialSettingsBucket>) => void;
   onResetSection?: (sectionId: 'content' | 'layout' | 'cards' | 'appearance' | 'print') => void;
   onResetPoster?: (presetId?: string) => void;
   onUndo?: () => void;
@@ -351,6 +353,7 @@ export const VisualOutputConfigPanel: React.FC<VisualOutputConfigPanelProps> = (
   onSwitchLayoutMode,
   onSwitchScope,
   onUpdateFocus,
+  onUpdateRadial,
   onResetSection,
   onResetPoster,
   onUndo,
@@ -775,18 +778,18 @@ export const VisualOutputConfigPanel: React.FC<VisualOutputConfigPanelProps> = (
 
         {activeSection === 'layout' && (
           <div className="space-y-4">
-            {/* Layout Mode Selector (Tiered vs Focus Family) */}
+            {/* Layout Mode Selector (Tiered vs Focus Family vs Radial Generations) */}
             {currentState.productMode === 'detailed-poster' && (
               <fieldset className="space-y-1.5" role="group" aria-label="Layout Engine">
                 <legend className="text-xs font-medium text-stone-400 mb-1">
                   {isAr ? 'نمط التخطيط' : 'Layout Engine'}
                 </legend>
-                <div className="grid grid-cols-2 gap-2" data-testid="poster-layout-engine-control">
+                <div className="grid grid-cols-3 gap-2" data-testid="poster-layout-engine-control">
                   <button
                     type="button"
                     aria-pressed={currentState.layoutMode === 'tiered'}
                     onClick={() => onSwitchLayoutMode?.('tiered')}
-                    className={`px-3 py-2 rounded-lg border text-xs text-center transition-colors ${
+                    className={`px-2 py-2 rounded-lg border text-xs text-center transition-colors ${
                       currentState.layoutMode === 'tiered'
                         ? 'border-amber-500 bg-amber-500/10 text-amber-300 font-medium'
                         : 'border-stone-800 bg-stone-950/40 text-stone-400 hover:border-stone-700'
@@ -798,7 +801,7 @@ export const VisualOutputConfigPanel: React.FC<VisualOutputConfigPanelProps> = (
                     type="button"
                     aria-pressed={currentState.layoutMode === 'focus-family'}
                     onClick={() => onSwitchLayoutMode?.('focus-family')}
-                    className={`px-3 py-2 rounded-lg border text-xs text-center transition-colors ${
+                    className={`px-2 py-2 rounded-lg border text-xs text-center transition-colors ${
                       currentState.layoutMode === 'focus-family'
                         ? 'border-amber-500 bg-amber-500/10 text-amber-300 font-medium'
                         : 'border-stone-800 bg-stone-950/40 text-stone-400 hover:border-stone-700'
@@ -806,8 +809,217 @@ export const VisualOutputConfigPanel: React.FC<VisualOutputConfigPanelProps> = (
                   >
                     {isAr ? 'حول شخص' : 'Focus Family'}
                   </button>
+                  <button
+                    type="button"
+                    aria-pressed={currentState.layoutMode === 'radial-generations'}
+                    onClick={() => onSwitchLayoutMode?.('radial-generations')}
+                    className={`px-2 py-2 rounded-lg border text-xs text-center transition-colors ${
+                      currentState.layoutMode === 'radial-generations'
+                        ? 'border-amber-500 bg-amber-500/10 text-amber-300 font-medium'
+                        : 'border-stone-800 bg-stone-950/40 text-stone-400 hover:border-stone-700'
+                    }`}
+                  >
+                    {isAr ? 'دائري / مروحي' : 'Radial / Fan'}
+                  </button>
                 </div>
               </fieldset>
+            )}
+
+            {/* Radial Generations Controls */}
+            {currentState.layoutMode === 'radial-generations' && (
+              <div className="space-y-4 border-t border-stone-800 pt-3" data-testid="radial-controls-section">
+                {/* Radial Root Person Selector */}
+                {posterRootOptions.length > 0 && (
+                  <div>
+                    <label htmlFor="radial-root-select" className="block text-xs font-medium text-stone-400 mb-1.5">
+                      {t.selectedRoot}
+                    </label>
+                    <select
+                      id="radial-root-select"
+                      aria-label={t.selectedRoot}
+                      value={effectivePosterRootToken || posterRootOptions[0]?.token}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (onSelectPosterRoot) {
+                          onSelectPosterRoot(val);
+                        } else {
+                          onUpdateContent?.({ selectedPosterRootToken: val });
+                        }
+                      }}
+                      className="w-full px-3 py-2 bg-stone-950 border border-stone-800 rounded-lg text-xs text-stone-200 focus:outline-none focus:border-amber-500"
+                    >
+                      {posterRootOptions.map((opt) => (
+                        <option key={opt.token} value={opt.token}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* Radial Scope (Ancestors / Descendants) */}
+                <fieldset className="space-y-1.5" role="group" aria-label={t.treeScope}>
+                  <legend className="text-xs font-medium text-stone-400 mb-1">{t.treeScope}</legend>
+                  <div className="grid grid-cols-2 gap-2" data-testid="radial-scope-control">
+                    {[
+                      { scope: 'ancestors' as const, label: t.ancestors },
+                      { scope: 'descendants' as const, label: t.descendants },
+                    ].map(({ scope, label }) => {
+                      const isSelected = currentState.scope === scope;
+                      return (
+                        <button
+                          key={scope}
+                          type="button"
+                          aria-pressed={isSelected}
+                          onClick={() => {
+                            onSwitchScope?.(scope);
+                            onUpdateRadial?.({ lastRadialScope: scope });
+                          }}
+                          className={`px-3 py-2 rounded-lg border text-xs text-center transition-colors ${
+                            isSelected
+                              ? 'border-amber-500 bg-amber-500/10 text-amber-300 font-medium'
+                              : 'border-stone-800 bg-stone-950/40 text-stone-400 hover:border-stone-700'
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </fieldset>
+
+                {/* Radial Geometry Span (360 vs 180) */}
+                <fieldset className="space-y-1.5" role="group" aria-label={isAr ? 'نطاق الدائرة' : 'Radial Geometry Span'}>
+                  <legend className="text-xs font-medium text-stone-400 mb-1">
+                    {isAr ? 'نطاق الدائرة' : 'Radial Geometry Span'}
+                  </legend>
+                  <div className="grid grid-cols-2 gap-2" data-testid="radial-span-control">
+                    {[
+                      { span: '360-full-circle' as const, label: isAr ? '360° دائرة كاملة' : '360° Full Circle' },
+                      { span: '180-half-fan' as const, label: isAr ? '180° مروحة نصف دائرة' : '180° Half Fan' },
+                    ].map(({ span, label }) => {
+                      const isSelected = currentState.radial.radialSpan === span;
+                      return (
+                        <button
+                          key={span}
+                          type="button"
+                          aria-pressed={isSelected}
+                          onClick={() => onUpdateRadial?.({ radialSpan: span })}
+                          className={`px-2 py-2 rounded-lg border text-xs text-center transition-colors ${
+                            isSelected
+                              ? 'border-amber-500 bg-amber-500/10 text-amber-300 font-medium'
+                              : 'border-stone-800 bg-stone-950/40 text-stone-400 hover:border-stone-700'
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </fieldset>
+
+                {/* Generation Rings (3..6) */}
+                <fieldset className="space-y-1.5" role="group" aria-label={isAr ? 'عدد الحلقات' : 'Generation Rings'}>
+                  <legend className="text-xs font-medium text-stone-400 mb-1">
+                    {isAr ? 'عدد الحلقات (الأجيال)' : 'Generation Rings'}
+                  </legend>
+                  <div className="grid grid-cols-4 gap-1.5" data-testid="radial-rings-control">
+                    {[3, 4, 5, 6].map((rings) => {
+                      const isSelected = currentState.radial.generationRings === rings;
+                      return (
+                        <button
+                          key={rings}
+                          type="button"
+                          aria-pressed={isSelected}
+                          onClick={() => onUpdateRadial?.({ generationRings: rings as 3 | 4 | 5 | 6 })}
+                          className={`py-2 rounded-lg border text-xs font-medium text-center transition-colors ${
+                            isSelected
+                              ? 'border-amber-500 bg-amber-500/10 text-amber-300'
+                              : 'border-stone-800 bg-stone-950/40 text-stone-400 hover:border-stone-700'
+                          }`}
+                        >
+                          {rings}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </fieldset>
+
+                {/* Ring Spacing */}
+                <fieldset className="space-y-1.5" role="group" aria-label={isAr ? 'المسافة بين الحلقات' : 'Ring Spacing'}>
+                  <legend className="text-xs font-medium text-stone-400 mb-1">
+                    {isAr ? 'المسافة بين الحلقات' : 'Ring Spacing'}
+                  </legend>
+                  <div className="grid grid-cols-3 gap-2" data-testid="radial-spacing-control">
+                    {[
+                      { spacing: 'compact' as const, label: isAr ? 'مدمجة' : 'Compact' },
+                      { spacing: 'balanced' as const, label: isAr ? 'متوازنة' : 'Balanced' },
+                      { spacing: 'spacious' as const, label: isAr ? 'واسعة' : 'Spacious' },
+                    ].map(({ spacing, label }) => {
+                      const isSelected = currentState.radial.ringSpacing === spacing;
+                      return (
+                        <button
+                          key={spacing}
+                          type="button"
+                          aria-pressed={isSelected}
+                          onClick={() => onUpdateRadial?.({ ringSpacing: spacing })}
+                          className={`px-2 py-2 rounded-lg border text-xs text-center transition-colors ${
+                            isSelected
+                              ? 'border-amber-500 bg-amber-500/10 text-amber-300 font-medium'
+                              : 'border-stone-800 bg-stone-950/40 text-stone-400 hover:border-stone-700'
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </fieldset>
+
+                {/* Center Card Scale */}
+                <fieldset className="space-y-1.5" role="group" aria-label={isAr ? 'حجم البطاقة المركزية' : 'Center Card Scale'}>
+                  <legend className="text-xs font-medium text-stone-400 mb-1">
+                    {isAr ? 'حجم البطاقة المركزية' : 'Center Card Scale'}
+                  </legend>
+                  <div className="grid grid-cols-3 gap-2" data-testid="radial-card-scale-control">
+                    {[
+                      { scale: 'compact' as const, label: isAr ? 'صغيرة' : 'Compact' },
+                      { scale: 'standard' as const, label: isAr ? 'قياسية' : 'Standard' },
+                      { scale: 'large' as const, label: isAr ? 'كبيرة' : 'Large' },
+                    ].map(({ scale, label }) => {
+                      const isSelected = currentState.radial.centerCardScale === scale;
+                      return (
+                        <button
+                          key={scale}
+                          type="button"
+                          aria-pressed={isSelected}
+                          onClick={() => onUpdateRadial?.({ centerCardScale: scale })}
+                          className={`px-2 py-2 rounded-lg border text-xs text-center transition-colors ${
+                            isSelected
+                              ? 'border-amber-500 bg-amber-500/10 text-amber-300 font-medium'
+                              : 'border-stone-800 bg-stone-950/40 text-stone-400 hover:border-stone-700'
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </fieldset>
+
+                {/* Label Orientation (Read-only Arabic Strategy) */}
+                <div>
+                  <label className="block text-xs font-medium text-stone-400 mb-1">
+                    {isAr ? 'توجيه الأسماء' : 'Label Orientation'}
+                  </label>
+                  <input
+                    type="text"
+                    readOnly
+                    value={isAr ? 'مستقيمة غير مشوهة (عربي قياسي)' : 'Straight Unwarped (Standard)'}
+                    className="w-full px-3 py-2 bg-stone-950/60 border border-stone-800 rounded-lg text-xs text-stone-400 cursor-not-allowed"
+                  />
+                </div>
+              </div>
             )}
 
             {/* Direction */}

@@ -51,11 +51,11 @@ function createInitials(displayName: string): string {
 
 function fitNameFontSize(displayName: string, cardWidth: number, preferredSize: number): number {
   const characterCount = Math.max(1, Array.from(displayName.trim()).length);
-  let size = Math.min(preferredSize, Math.max(9, cardWidth / 7));
-  while (size > 8) {
-    const charactersPerLine = Math.max(4, Math.floor((cardWidth - 24) / (size * 0.58)));
-    if (characterCount <= charactersPerLine * 3) break;
-    size -= 1;
+  let size = Math.min(preferredSize, 17);
+  while (size > 15.5) {
+    const charactersPerLine = Math.max(4, Math.floor((cardWidth - 10) / (size * 0.52)));
+    if (characterCount <= charactersPerLine * 2) break;
+    size -= 0.5;
   }
   return Math.round(size * 10) / 10;
 }
@@ -271,28 +271,29 @@ export const radialGenerationsPosterLayoutEngine: PosterLayoutEngine = {
     const maxAssignedRing = Math.max(0, ...Array.from(nodeRingMap.values()));
 
     // Genuinely Adaptive Radial Spacing Formula
-    const activeRingDivisor = Math.max(1, maxAssignedRing);
+    const requestedSteps = Math.max(1, radialOptions.generationRings - 1);
+    const activeRingDivisor = Math.max(requestedSteps, maxAssignedRing);
     const minSafeStep = ringCardH + 20; // 32 + 20 = 52px min step for safe card gap
     const spacingScale = ringSpacing === 'spacious' ? 1.0 : ringSpacing === 'compact' ? 0.65 : 0.85;
 
     const remainingSpan = Math.max(0, maxAvailRadius - innerRadius - ringCardW / 2);
 
-    const minimumRequiredSpan = maxAssignedRing * minSafeStep;
-    if (maxAssignedRing > 0 && minimumRequiredSpan > remainingSpan) {
+    const minimumRequiredSpan = requestedSteps * minSafeStep;
+    if (requestedSteps > 0 && minimumRequiredSpan > remainingSpan) {
       throw new RadialLayoutCapacityError(
-        `Radial layout capacity exceeded: ${maxAssignedRing} rings require minimum span ${minimumRequiredSpan}px, exceeding available span ${Math.round(remainingSpan)}px.`
+        `Radial layout capacity exceeded: ${requestedSteps} rings require minimum span ${minimumRequiredSpan}px, exceeding available span ${Math.round(remainingSpan)}px.`
       );
     }
 
     const proportionalStep = (remainingSpan / activeRingDivisor) * spacingScale;
     const spacingStep = Math.max(minSafeStep, proportionalStep);
 
-    const requiredMaxRadius = innerRadius + maxAssignedRing * spacingStep + ringCardW / 2;
+    const requiredMaxRadius = innerRadius + requestedSteps * spacingStep + ringCardW / 2;
 
     // Capacity Validation before node placement
     if (requiredMaxRadius > maxAvailRadius) {
       throw new RadialLayoutCapacityError(
-        `Radial layout capacity exceeded: requested ${maxAssignedRing} generation rings require radius ${Math.round(requiredMaxRadius)}px (step ${Math.round(spacingStep)}px), exceeding available bounds ${Math.round(maxAvailRadius)}px.`
+        `Radial layout capacity exceeded: requested ${radialOptions.generationRings} generation rings require radius ${Math.round(requiredMaxRadius)}px (step ${Math.round(spacingStep)}px), exceeding available bounds ${Math.round(maxAvailRadius)}px.`
       );
     }
 

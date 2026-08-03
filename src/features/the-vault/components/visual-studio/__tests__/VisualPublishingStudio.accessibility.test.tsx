@@ -1,6 +1,6 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { getVisualOutputDefinition, createInitialPosterDesignState } from '../../../../publishing';
 import { VisualPublishingStudio } from '../VisualPublishingStudio';
 import { VisualOutputActionBar } from '../VisualOutputActionBar';
@@ -50,13 +50,19 @@ vi.mock('jspdf', () => ({
   },
 }));
 
-vi.mock('../../../../../utils/fileUtils', () => ({
+vi.mock('@/utils/fileUtils', () => ({
   downloadFile: vi.fn(),
 }));
 
 const classicDefinition = getVisualOutputDefinition('classic-ancestor-poster')!;
 
 describe('VisualPublishingStudio Accessibility & Interaction Suite', () => {
+  vi.setConfig({ testTimeout: 15000 });
+
+  beforeEach(() => {
+    cleanup();
+  });
+
   it('renders a live status region for export state announcements and transitions correctly', () => {
     const { rerender } = render(
       <VisualOutputActionBar

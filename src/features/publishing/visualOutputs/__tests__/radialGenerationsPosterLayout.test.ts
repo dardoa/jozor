@@ -1186,11 +1186,11 @@ describe('Radial/Fan Poster Layout Engine (Phase 3A Foundation Evidence & Adapti
     expect(exportArtifact.blob.size).toBeGreaterThan(0);
   });
 
-  it('21. EXPLICIT REGRESSION: proves Radial remains hidden in Studio UI and runtime-rejected', () => {
+  it('21. EXPLICIT PHASE 3B ACTIVATION: proves Radial is now active in Studio UI and runtime-supported', () => {
     const capability = getPosterLayoutCombinationCapability('detailed-poster', 'radial-generations', 'ancestors');
-    expect(capability.isRuntimeSupported).toBe(false);
-    expect(capability.isPlanned).toBe(true);
-    expect(capability.status).toBe('planned');
+    expect(capability.isRuntimeSupported).toBe(true);
+    expect(capability.isPlanned).toBe(false);
+    expect(capability.status).toBe('runtime-supported-and-reachable');
 
     const state = createInitialPosterDesignState();
     const radialState = {
@@ -1200,7 +1200,7 @@ describe('Radial/Fan Poster Layout Engine (Phase 3A Foundation Evidence & Adapti
 
     const mapped = mapPosterDesignStateToRuntimeOptions(radialState);
     expect(mapped.supported).toBe(false);
-    expect(mapped.reason).toBeDefined();
+    expect(mapped.reason).toContain('Missing or unresolvable root person selection');
     expect(mapped.posterOptions).toBeUndefined();
   });
 });

@@ -14,7 +14,6 @@ import {
 
 export interface VisualStudioStorePreviewInput {
   readonly source: PreviewLiveTreeSource;
-  readonly rootPersonId?: string;
   readonly resolvePosterImageSource: (personId: string) => string | undefined;
 }
 
@@ -77,10 +76,11 @@ export function useVisualStudioStorePreviewSource(): VisualStudioStorePreviewInp
     return {
       source: mapPreviewStoreSourceToLiveTreeSource({
         sourceKind: 'store',
+        sourceSessionKey: currentTreeId || 'preview-tree',
+        defaultRootRawId: focusId && people[focusId] ? focusId : Object.keys(people)[0],
         people: personInputs,
         relationships: relationshipInputs,
       }),
-      rootPersonId: focusId && people[focusId] ? focusId : Object.keys(people)[0],
       resolvePosterImageSource: (personId: string) => getPersonPhoto(people[personId]) ?? undefined,
     };
   }, [currentTreeId, focusId, people]);

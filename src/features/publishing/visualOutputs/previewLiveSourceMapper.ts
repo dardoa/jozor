@@ -30,6 +30,8 @@ export interface PreviewStoreSourceInput {
   readonly people: readonly PreviewStorePersonInput[];
   readonly relationships: readonly PreviewStoreRelationshipInput[];
   readonly sourceKind?: PreviewLiveTreeSource['sourceKind'];
+  readonly sourceSessionKey?: string;
+  readonly defaultRootRawId?: string;
 }
 
 const toDisplayName = (person: PreviewStorePersonInput): string =>
@@ -68,6 +70,8 @@ export function mapPreviewStoreSourceToLiveTreeSource(
 
   return {
     sourceKind: source.sourceKind || 'unknown',
+    sourceSessionKey: source.sourceSessionKey,
+    defaultRootRawId: source.defaultRootRawId,
     people,
     relationships: source.relationships.map((relationship) => ({
       fromRawId: relationship.fromPersonId,

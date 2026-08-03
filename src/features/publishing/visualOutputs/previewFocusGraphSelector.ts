@@ -1,9 +1,8 @@
-import type { PosterPrivacyMode } from './posterStateContracts';
 import type {
   PosterFocusDepth,
-  PosterPersonTokenCatalog,
-  PosterPersonTokenOption,
 } from './posterSceneTypes';
+import type { PosterPrivacyMode } from './posterStateContracts';
+import type { PosterPersonTokenCatalogBoundary } from './posterPersonTokenCatalog';
 import type {
   SanitizedPreviewGraph,
   SanitizedPreviewNode,
@@ -58,51 +57,16 @@ export interface RawEdge {
 export interface RawGraph {
   readonly nodes: readonly RawPersonNode[];
   readonly edges: readonly RawEdge[];
+  readonly defaultRawId?: string;
 }
 
 /**
  * The resolver deliberately stays behind the publishing boundary. UI callers may read
  * token options, but never receive or reconstruct the corresponding raw identifier.
  */
-export interface FocusTokenCatalogBoundary extends PosterPersonTokenCatalog {
-  readonly hasToken: (token: string) => boolean;
-  readonly resolveTokenInsideBoundary: (token: string) => string | undefined;
-}
-
-let tokenCatalogSequence = 0;
-
-const createSessionNonce = (): string => {
-  tokenCatalogSequence += 1;
-  return `${Date.now().toString(36)}-${tokenCatalogSequence.toString(36)}`;
-};
-
-export function createFocusTokenCatalog(
-  nodes: readonly RawPersonNode[],
-  policy: Pick<FocusSelectionBoundaryRequest, 'language' | 'privacyMode'>
-): FocusTokenCatalogBoundary {
-  const tokenToRawId = new Map<string, string>();
-  const sessionNonce = createSessionNonce();
-  const tokens: PosterPersonTokenOption[] = nodes.map((node, index) => {
-    const token = `session-token-${sessionNonce}-${(index + 1).toString(36)}`;
-    tokenToRawId.set(token, node.rawId);
-    const shouldMask = Boolean(node.isPrivate || (policy.privacyMode === 'masked' && node.isLiving));
-    return {
-      token,
-      label: shouldMask
-        ? policy.language === 'ar' ? 'شخص مخفي' : 'Masked person'
-        : node.displayName || (policy.language === 'ar' ? `شخص ${index + 1}` : `Person ${index + 1}`),
-    };
-  });
-
-  return {
-    tokens,
-    defaultToken: tokens[0]?.token,
-    hasToken: (token) => tokenToRawId.has(token),
-    resolveTokenInsideBoundary: (token) => tokenToRawId.get(token),
-  };
-}
-
-export function createRawGraphFromLiveSource(source: PreviewLiveTreeSource): RawGraph {
+export function createRawGraphFromLiveSource(
+  source: PreviewLiveTreeSource
+): RawGraph {
   const nodes: RawPersonNode[] = Object.values(source.people).map((person) => ({
     rawId: person.rawId,
     displayName: person.displayName,
@@ -132,7 +96,10 @@ export function createRawGraphFromLiveSource(source: PreviewLiveTreeSource): Raw
     }
     return [];
   });
-  return { nodes, edges };
+  const resolvedDefaultRawId = (source.defaultRootRawId && source.people[source.defaultRootRawId])
+    ? source.defaultRootRawId
+    : Object.keys(source.people)[0];
+  return { nodes, edges, defaultRawId: resolvedDefaultRawId };
 }
 
 export function createRawGraphFromFixtureSource(source: FixturePreviewSource): RawGraph {
@@ -154,12 +121,13 @@ export function createRawGraphFromFixtureSource(source: FixturePreviewSource): R
     }
     return [];
   });
-  return { nodes, edges };
+  const defaultRawId = source.nodes[0]?.fixtureId;
+  return { nodes, edges, defaultRawId };
 }
 
 export function selectFocusGraphBoundary(
   rawGraph: RawGraph,
-  tokenCatalog: FocusTokenCatalogBoundary,
+  tokenCatalog: PosterPersonTokenCatalogBoundary,
   request: FocusSelectionBoundaryRequest
 ): FocusSelectionBoundaryResult {
   const effectiveMaxNodes = Math.max(1, Math.min(50, request.maxNodes ?? 50));

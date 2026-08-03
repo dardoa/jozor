@@ -19,6 +19,7 @@ import type {
   PosterFontFamily,
   PosterContentSpec,
   PosterFocusLayoutOptions,
+  PosterRadialLayoutOptions,
   PosterProductMode,
   PosterTreeScope,
   PosterPaperSize,
@@ -83,7 +84,13 @@ export interface FocusPosterOptions extends BaseStudioPosterOptions {
   readonly focusOptions: PosterFocusLayoutOptions;
 }
 
-export type VisualStudioPosterOptions = TieredPosterOptions | FocusPosterOptions;
+export interface RadialPosterOptions extends BaseStudioPosterOptions {
+  readonly engineId: 'radial-generations';
+  readonly content: PosterContentSpec;
+  readonly radialOptions: PosterRadialLayoutOptions;
+}
+
+export type VisualStudioPosterOptions = TieredPosterOptions | FocusPosterOptions | RadialPosterOptions;
 
 export interface VisualStudioPosterRootOption {
   readonly token: string;

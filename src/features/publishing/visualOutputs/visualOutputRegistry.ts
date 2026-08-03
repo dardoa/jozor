@@ -33,7 +33,7 @@ export const VISUAL_OUTPUT_DEFINITIONS: VisualOutputDefinition[] = [
       photoModes: ['none', 'available-profile-photos', 'circle'],
       stylePresets: ['classic'],
       readingStrategies: ['ancestor', 'descendant', 'network'],
-      layoutEngines: ['ancestor-tiered', 'descendant-tiered', 'focus-family', 'full-tree-overview'],
+      layoutEngines: ['ancestor-tiered', 'descendant-tiered', 'focus-family', 'full-tree-overview', 'radial-generations'],
       generationDepths: [1, 2, 3, 4, 'all'],
     },
     plannedCapabilities: {
@@ -79,7 +79,7 @@ export const VISUAL_OUTPUT_DEFINITIONS: VisualOutputDefinition[] = [
       photoModes: ['none', 'available-profile-photos', 'circle'],
       stylePresets: ['modern-gallery'],
       readingStrategies: ['ancestor', 'descendant', 'network'],
-      layoutEngines: ['ancestor-tiered', 'descendant-tiered', 'focus-family', 'full-tree-overview'],
+      layoutEngines: ['ancestor-tiered', 'descendant-tiered', 'focus-family', 'full-tree-overview', 'radial-generations'],
       generationDepths: [1, 2, 3, 4, 'all'],
     },
     plannedCapabilities: {

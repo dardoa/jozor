@@ -22,6 +22,7 @@ export type VisualOutputLayoutEngine =
   | 'full-tree-overview'
   | 'focus-family'
   | 'radial-layout'
+  | 'radial-generations'
   | 'timeline-layout'
   | 'map-layout'
   | 'network-layout'

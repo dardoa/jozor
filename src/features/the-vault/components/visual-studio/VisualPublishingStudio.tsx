@@ -10,11 +10,12 @@ import {
   getVisualStudioPosterNodeLimit,
   type BaseStudioPosterOptions,
 } from './visualStudioPosterOptions';
-import { downloadFile } from '../../../../utils/fileUtils';
+import { downloadFile } from "@/utils/fileUtils";
 import { toast } from 'sonner';
+import { createStudioPosterBrowserPngRuntime } from '../../../publishing/visualOutputs/studioPosterBrowserPngRuntime';
+import { createStudioPosterBrowserPdfRuntime } from '../../../publishing/visualOutputs/studioPosterBrowserPdfRuntime';
+import { exportStudioPoster } from '../../../publishing/visualOutputs/studioPosterExportAdapter';
 import {
-  createStudioPosterBrowserPngRuntime,
-  createStudioPosterBrowserPdfRuntime,
   defaultPosterFontAssetResolver,
   defaultPosterImageAssetResolver,
   createPosterDocumentSpec,
@@ -24,7 +25,6 @@ import {
   exportBranchPosterCollectionArchive,
   createTiledWallPosterPlan,
   exportTiledWallPosterArchive,
-  exportStudioPoster,
   getPosterSvgFontResources,
   normalizePosterFooterText,
   getVisualOutputDefinition,
@@ -39,10 +39,12 @@ import {
   descendantFixturePreviewGraphSelector,
   fullTreeFixturePreviewGraphSelector,
   selectFocusGraphBoundary,
-  createFocusTokenCatalog,
+  selectRadialGraphBoundary,
+  createPosterPersonTokenCatalogSession,
   createRawGraphFromLiveSource,
   createRawGraphFromFixtureSource,
   FocusLayoutCapacityError,
+  RadialLayoutCapacityError,
   type FixturePreviewSource,
   type PreviewLiveTreeSource,
   type PosterContentSpec,
@@ -60,15 +62,17 @@ interface VisualPublishingStudioProps {
   language: 'ar' | 'en';
   isPreviewOnly?: boolean;
   previewSourceMode?: 'fixture' | 'store';
+  storePreviewSource?: PreviewLiveTreeSource;
   posterFontAssetResolver?: PosterFontAssetResolver;
   posterImageAssetResolver?: PosterImageAssetResolver;
   posterImageSourceResolver?: (personId: string) => string | undefined;
   posterSvgResources?: StudioPosterSvgResources;
+  pngExportRuntime?: StudioPosterExportRuntime;
+  pdfExportRuntime?: StudioPosterExportRuntime;
 }
 
 interface VisualPublishingStudioInnerProps extends VisualPublishingStudioProps {
   storePreviewSource?: PreviewLiveTreeSource;
-  storeRootPersonId?: string;
 }
 
 const STUDIO_PREVIEW_FIXTURE_SOURCE: FixturePreviewSource = {
@@ -174,15 +178,24 @@ const isFocusCapacityError = (error: unknown): boolean => {
     || (typeof candidate.message === 'string' && candidate.message.startsWith('Focus layout capacity exceeded:'));
 };
 
+const isRadialCapacityError = (error: unknown): boolean => {
+  if (error instanceof RadialLayoutCapacityError) return true;
+  if (!error || typeof error !== 'object') return false;
+  const candidate = error as { code?: unknown; message?: unknown };
+  return candidate.code === 'RADIAL_LAYOUT_CAPACITY_EXCEEDED'
+    || (typeof candidate.message === 'string' && candidate.message.startsWith('Radial layout capacity exceeded:'));
+};
+
 const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = ({
   language,
   previewSourceMode = 'fixture',
   storePreviewSource,
-  storeRootPersonId,
   posterFontAssetResolver = defaultPosterFontAssetResolver,
   posterImageAssetResolver = defaultPosterImageAssetResolver,
   posterImageSourceResolver,
   posterSvgResources: suppliedPosterSvgResources,
+  pngExportRuntime,
+  pdfExportRuntime,
 }) => {
   const isAr = language === 'ar';
   const definitions = listVisualOutputDefinitions();
@@ -219,10 +232,43 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
     );
   }, [studioDesign.state.scope, studioDesign.state.tiered.generationDepth]);
 
-  const storeNodeIds = useMemo(
-    () => (storePreviewSource ? Object.keys(storePreviewSource.people) : []),
-    [storePreviewSource]
+  const completeRawSourceGraph = useMemo(() => {
+    return previewSourceMode === 'store' && storePreviewSource
+      ? createRawGraphFromLiveSource(storePreviewSource)
+      : createRawGraphFromFixtureSource(STUDIO_PREVIEW_FIXTURE_SOURCE);
+  }, [previewSourceMode, storePreviewSource]);
+
+  const tokenCatalogSessionKey = previewSourceMode === 'store'
+    ? (storePreviewSource?.sourceSessionKey ?? storePreviewSource)
+    : STUDIO_PREVIEW_FIXTURE_SOURCE;
+  const posterTokenCatalogSession = useMemo(
+    () => {
+      void tokenCatalogSessionKey;
+      return createPosterPersonTokenCatalogSession();
+    },
+    [tokenCatalogSessionKey]
   );
+
+  useEffect(() => () => posterTokenCatalogSession.dispose(), [posterTokenCatalogSession]);
+
+  const posterTokenCatalog = useMemo(() => {
+    if (!completeRawSourceGraph?.nodes?.length) return undefined;
+    return posterTokenCatalogSession.createCatalog(
+      completeRawSourceGraph.nodes,
+      {
+        language,
+        privacyMode: studioDesign.state.shared.privacyMode,
+      },
+      completeRawSourceGraph.defaultRawId
+    );
+  }, [completeRawSourceGraph, language, posterTokenCatalogSession, studioDesign.state.shared.privacyMode]);
+
+  const selectedPosterRootToken = useMemo(() => {
+    const currentToken = studioDesign.state.shared.selectedPosterRootToken;
+    return posterTokenCatalog?.hasToken(currentToken)
+      ? currentToken
+      : posterTokenCatalog?.defaultToken ?? '';
+  }, [posterTokenCatalog, studioDesign.state.shared.selectedPosterRootToken]);
 
   const rawGraphData = useMemo(() => {
     const selectorProduct = (selectedDefinition.productType === 'snapshot' ? 'snapshot' : 'poster') as 'poster' | 'snapshot';
@@ -244,8 +290,8 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
           {
             productType: selectorProduct,
             definitionId: selectedDefinition.id,
-            rootPersonId: storeRootPersonId ?? storeNodeIds[0],
-            visibleNodeIds: storeNodeIds.slice(0, maxNodes),
+            rootPersonToken: selectedPosterRootToken,
+            tokenCatalog: posterTokenCatalog,
             maxDepth: selectorProduct === 'poster'
               ? (isFullTreeScope ? 'all' : studioDesign.state.tiered.generationDepth ?? 4)
               : 3,
@@ -261,7 +307,6 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
           productType: selectorProduct,
           definitionId: selectedDefinition.id,
           rootPersonId: 'fixture-root',
-          visibleNodeIds: STUDIO_PREVIEW_FIXTURE_SOURCE.nodes.map((node) => node.fixtureId).slice(0, maxNodes),
           maxDepth: selectorProduct === 'poster'
             ? (isFullTreeScope ? 'all' : studioDesign.state.tiered.generationDepth ?? 4)
             : 3,
@@ -273,43 +318,33 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
     isDescendantScope,
     isFullTreeScope,
     language,
+    posterTokenCatalog,
     previewSourceMode,
     selectedDefinition,
-    storeNodeIds,
+    selectedPosterRootToken,
     storePreviewSource,
-    storeRootPersonId,
     studioDesign.state.tiered.generationDepth,
   ]);
 
-  const completeRawSourceGraph = useMemo(() => {
-    return previewSourceMode === 'store' && storePreviewSource
-      ? createRawGraphFromLiveSource(storePreviewSource)
-      : createRawGraphFromFixtureSource(STUDIO_PREVIEW_FIXTURE_SOURCE);
-  }, [previewSourceMode, storePreviewSource]);
-
-  const focusTokenCatalog = useMemo(() => {
-    if (!completeRawSourceGraph?.nodes?.length) return undefined;
-    return createFocusTokenCatalog(completeRawSourceGraph.nodes, {
-      language,
-      privacyMode: studioDesign.state.shared.privacyMode,
-    });
-  }, [completeRawSourceGraph, language, studioDesign.state.shared.privacyMode]);
-
   const selectedFocalPersonToken = useMemo(() => {
     const currentToken = studioDesign.state.focus.focalPersonToken;
-    return focusTokenCatalog?.hasToken(currentToken)
+    return posterTokenCatalog?.hasToken(currentToken)
       ? currentToken
-      : focusTokenCatalog?.defaultToken;
-  }, [focusTokenCatalog, studioDesign.state.focus.focalPersonToken]);
+      : posterTokenCatalog?.defaultToken ?? '';
+  }, [posterTokenCatalog, studioDesign.state.focus.focalPersonToken]);
+
+  const posterRootOptions = useMemo(() => {
+    return posterTokenCatalog?.tokens ?? [];
+  }, [posterTokenCatalog]);
 
   const focusSelectionResult = useMemo(() => {
     if (studioDesign.state.layoutMode !== 'focus-family' || !completeRawSourceGraph?.nodes?.length) {
       return undefined;
     }
-    if (!focusTokenCatalog || !selectedFocalPersonToken) return undefined;
+    if (!posterTokenCatalog || !selectedFocalPersonToken) return undefined;
 
     try {
-      const selection = selectFocusGraphBoundary(completeRawSourceGraph, focusTokenCatalog, {
+      const selection = selectFocusGraphBoundary(completeRawSourceGraph, posterTokenCatalog, {
         focalPersonToken: selectedFocalPersonToken,
         ancestorDepth: studioDesign.state.focus.ancestorDepth,
         descendantDepth: studioDesign.state.focus.descendantDepth,
@@ -331,34 +366,41 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
       }
       throw err;
     }
-  }, [completeRawSourceGraph, focusTokenCatalog, language, selectedFocalPersonToken, studioDesign.state.focus, studioDesign.state.layoutMode, studioDesign.state.shared]);
+  }, [completeRawSourceGraph, language, posterTokenCatalog, selectedFocalPersonToken, studioDesign.state.focus, studioDesign.state.layoutMode, studioDesign.state.shared]);
 
-  const rootPeople = useMemo(() => {
-    return (rawGraphData?.nodes ?? []).map((node, index) => ({
-      sessionToken: `preview-root-${index + 1}`,
-      displayName: node.displayName || '',
-    }));
-  }, [rawGraphData]);
-
-  const posterRootOptions = useMemo(() => {
-    if (studioDesign.state.layoutMode === 'focus-family' && focusTokenCatalog) {
-      return focusTokenCatalog.tokens;
+  const radialSelectionResult = useMemo(() => {
+    if (studioDesign.state.layoutMode !== 'radial-generations' || !completeRawSourceGraph?.nodes?.length) {
+      return undefined;
     }
-    return rootPeople.map((person) => ({
-      token: person.sessionToken,
-      label: person.displayName,
-    }));
-  }, [focusTokenCatalog, rootPeople, studioDesign.state.layoutMode]);
+    if (!posterTokenCatalog || !selectedPosterRootToken) return undefined;
 
-  const selectedPosterRootToken = useMemo(() => {
-    if (previewSourceMode === 'store' && storeRootPersonId && storeNodeIds.length) {
-      const matchIndex = storeNodeIds.indexOf(storeRootPersonId);
-      if (matchIndex >= 0) {
-        return `preview-root-${matchIndex + 1}`;
+    const radialScope = studioDesign.state.scope === 'descendants' ? 'descendants' : 'ancestors';
+
+    try {
+      const selection = selectRadialGraphBoundary(completeRawSourceGraph, posterTokenCatalog, {
+        rootPersonToken: selectedPosterRootToken,
+        scope: radialScope,
+        generationRings: studioDesign.state.radial.generationRings,
+        privacyMode: studioDesign.state.shared.privacyMode,
+        language,
+        includePhotos: studioDesign.state.shared.includePhotos,
+        hideLivingPhotos: studioDesign.state.shared.hideLivingPhotos,
+        includeYears: studioDesign.state.shared.showYears,
+        includeBirthPlace: studioDesign.state.shared.showBirthPlace,
+        includeOccupation: studioDesign.state.shared.showOccupation,
+        includeDescription: studioDesign.state.shared.showDescription,
+      });
+      return { selection, error: undefined };
+    } catch (err) {
+      if (isRadialCapacityError(err)) {
+        return {
+          selection: undefined,
+          error: err instanceof RadialLayoutCapacityError ? err : new RadialLayoutCapacityError('Exceeded radial capacity.'),
+        };
       }
+      throw err;
     }
-    return studioDesign.state.shared.selectedPosterRootToken || 'preview-root-1';
-  }, [previewSourceMode, storeNodeIds, storeRootPersonId, studioDesign.state.shared.selectedPosterRootToken]);
+  }, [completeRawSourceGraph, language, posterTokenCatalog, selectedPosterRootToken, studioDesign.state.layoutMode, studioDesign.state.radial, studioDesign.state.scope, studioDesign.state.shared]);
 
   const [userPosterTitle, setUserPosterTitle] = useState('');
   const [userPosterSubtitle, setUserPosterSubtitle] = useState('');
@@ -374,15 +416,20 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
   const posterTitle = userPosterTitle.trim() || defaultPosterTitle;
   const posterSubtitle = userPosterSubtitle.trim() || defaultPosterSubtitle;
 
+  const focalPreviewId =
+    studioDesign.state.layoutMode === 'radial-generations'
+      ? radialSelectionResult?.selection?.focalPreviewId
+      : focusSelectionResult?.selection?.focalPreviewId;
+
   const mappingResult = useMemo(() => {
     return mapPosterDesignStateToRuntimeOptions(studioDesign.state, {
-      focalPreviewId: focusSelectionResult?.selection?.focalPreviewId,
+      focalPreviewId,
       definitionId: selectedDefinition.id,
       language,
       title: posterTitle,
       subtitle: posterSubtitle,
     });
-  }, [focusSelectionResult?.selection?.focalPreviewId, language, posterSubtitle, posterTitle, selectedDefinition.id, studioDesign.state]);
+  }, [focalPreviewId, language, posterSubtitle, posterTitle, selectedDefinition.id, studioDesign.state]);
 
   const posterOptions = mappingResult.posterOptions;
 
@@ -437,7 +484,9 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
     const maxNodes = selectorProduct === 'poster' ? (isFullTreeScope ? 150 : configuredPosterLimit) : 12;
     const privacyMode = selectorProduct === 'poster' ? (studioDesign.state.shared.privacyMode ?? 'masked') : 'masked';
 
-    const sanitizedGraph = focusSelectionResult?.selection
+    const sanitizedGraph = radialSelectionResult?.selection
+      ? radialSelectionResult.selection.sanitizedGraph
+      : focusSelectionResult?.selection
       ? focusSelectionResult.selection.sanitizedGraph
       : productionPreviewSanitizer.sanitize(rawGraphData, {
           privacyMode,
@@ -458,7 +507,7 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
 
     return {
       graph: sanitizedGraph,
-      focalPreviewId: focusSelectionResult?.selection?.focalPreviewId,
+      focalPreviewId,
       previewModel,
       definition: selectedDefinition,
       language,
@@ -466,9 +515,11 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
   }, [
     adapter,
     configuredPosterLimit,
+    focalPreviewId,
     focusSelectionResult?.selection,
     isFullTreeScope,
     language,
+    radialSelectionResult?.selection,
     rawGraphData,
     selectedDefinition,
     studioDesign.state.shared.includePhotos,
@@ -496,6 +547,9 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
   }, [mappingResult.posterOptions, selectedDefinition.productType, studioDesign.state.shared]);
 
   const posterSceneEvaluation = useMemo(() => {
+    if (radialSelectionResult?.error) {
+      return { scene: undefined, capacityError: radialSelectionResult.error };
+    }
     if (focusSelectionResult?.error) {
       return { scene: undefined, capacityError: focusSelectionResult.error };
     }
@@ -505,6 +559,46 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
 
     const opt = <T extends string>(val: T | undefined): Exclude<T, 'style-default'> | undefined =>
       val && val !== 'style-default' ? (val as Exclude<T, 'style-default'>) : undefined;
+
+    if (mappingResult.posterOptions.engineId === 'radial-generations' && radialSelectionResult?.selection) {
+      try {
+        const scene = createPosterScene({
+          graph: radialSelectionResult.selection.sanitizedGraph,
+          document: posterDocumentSpec,
+          content: mappingResult.posterOptions.content,
+          engineId: 'radial-generations',
+          radialOptions: mappingResult.posterOptions.radialOptions,
+          stylePreset: selectedPosterStyle,
+          photoShape: studioDesign.state.shared.photoShape,
+          connectorStyle: studioDesign.state.shared.connectorStyle,
+          connectorPathStyle: opt(studioDesign.state.shared.connectorPath),
+          colorPalette: opt(studioDesign.state.shared.colorPalette),
+          colorOverrides: studioDesign.state.shared.colorOverrides,
+          decoration: opt(studioDesign.state.shared.decoration),
+          ornament: opt(studioDesign.state.shared.ornament),
+          typographyPreset: studioDesign.state.shared.typography,
+          fontFamily: opt(studioDesign.state.shared.fontFamily),
+          cardScalePreset: studioDesign.state.shared.cardScale,
+          cardEffectPreset: opt(studioDesign.state.shared.cardEffect),
+          cardFramePreset: opt(studioDesign.state.shared.cardFrame),
+          cardCornerPreset: opt(studioDesign.state.shared.cardCorner),
+          cardLayoutPreset: opt(studioDesign.state.shared.cardLayout),
+          pageFramePreset: opt(studioDesign.state.shared.pageFrame),
+          headerPreset: opt(studioDesign.state.shared.header),
+          spacingPreset: opt(studioDesign.state.shared.spacing),
+          direction: studioDesign.state.shared.direction,
+        });
+        return { scene, capacityError: undefined };
+      } catch (err) {
+        if (isRadialCapacityError(err)) {
+          return {
+            scene: undefined,
+            capacityError: err instanceof RadialLayoutCapacityError ? err : new RadialLayoutCapacityError('Exceeded radial capacity.'),
+          };
+        }
+        throw err;
+      }
+    }
 
     if (mappingResult.posterOptions.engineId === 'focus-family' && focusSelectionResult?.selection) {
       try {
@@ -597,7 +691,7 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
       }),
       capacityError: undefined,
     };
-  }, [focusSelectionResult, mappingResult.posterOptions, posterDocumentSpec, previewData?.graph, selectedDefinition.id, language, posterTitle, posterSubtitle, selectedPosterStyle, studioDesign.state]);
+  }, [radialSelectionResult, focusSelectionResult, mappingResult.posterOptions, posterDocumentSpec, previewData?.graph, selectedDefinition.id, language, posterTitle, posterSubtitle, selectedPosterStyle, studioDesign.state]);
 
   const posterScene = posterSceneEvaluation.scene;
 
@@ -721,7 +815,9 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
         downloadFile(result.blob, result.fileName, result.mimeType);
         toast.success(isAr ? 'تم تنزيل ملف SVG بنجاح' : 'SVG file downloaded successfully');
       } else if (format === 'png') {
-        const runtime = createStudioPosterBrowserPngRuntime();
+        const runtime = (pngExportRuntime && typeof pngExportRuntime.renderPng === 'function')
+          ? pngExportRuntime
+          : createStudioPosterBrowserPngRuntime();
         const result = await exportStudioPoster(
           {
             scene: posterScene,
@@ -733,7 +829,9 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
         downloadFile(result.blob, result.fileName, result.mimeType);
         toast.success(isAr ? 'تم تنزيل صورة PNG بنجاح' : 'PNG image downloaded successfully');
       } else if (format === 'pdf') {
-        const runtime = createStudioPosterBrowserPdfRuntime({});
+        const runtime = (pdfExportRuntime && typeof pdfExportRuntime.renderPdf === 'function')
+          ? pdfExportRuntime
+          : createStudioPosterBrowserPdfRuntime({});
         const result = await exportStudioPoster(
           {
             scene: posterScene,
@@ -869,6 +967,7 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
             )}
             onSwitchScope={studioDesign.switchScope}
             onUpdateFocus={studioDesign.updateFocus}
+            onUpdateRadial={studioDesign.updateRadial}
             onResetSection={studioDesign.resetSection}
             onResetPoster={studioDesign.resetPoster}
             onUndo={studioDesign.undo}
@@ -930,8 +1029,7 @@ const VisualPublishingStudioWithStore: React.FC<Omit<VisualPublishingStudioProps
     <VisualPublishingStudioInner
       {...props}
       previewSourceMode="store"
-      storePreviewSource={storePreviewInput.source}
-      storeRootPersonId={storePreviewInput.rootPersonId}
+      storePreviewSource={props.storePreviewSource ?? storePreviewInput.source}
       posterImageSourceResolver={props.posterImageSourceResolver ?? storePreviewInput.resolvePosterImageSource}
     />
   );

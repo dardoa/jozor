@@ -1,5 +1,5 @@
-import { describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { fireEvent, render, screen, waitFor, within, cleanup } from '@testing-library/react';
 import { VisualOutputConfigPanel } from '../VisualOutputConfigPanel';
 import { VisualPublishingStudio } from '../VisualPublishingStudio';
 import {
@@ -8,7 +8,7 @@ import {
   updateFocusBucket,
 } from '../../../../publishing/visualOutputs/posterDesignState';
 
-vi.mock('../../../../vault/hooks/useVisualStudioStorePreviewSource', () => ({
+vi.mock('../../../hooks/useVisualStudioStorePreviewSource', () => ({
   useVisualStudioStorePreviewSource: () => null,
 }));
 
@@ -23,6 +23,9 @@ const embeddedResources = {
 };
 
 describe('VisualPublishingStudio Focus Family integration', () => {
+  beforeEach(() => {
+    cleanup();
+  });
   it('renders Focus controls while keeping Radial unavailable', () => {
     const state = switchLayoutMode(createInitialPosterDesignState('classic-heritage'), 'focus-family');
     render(<VisualOutputConfigPanel language="en" state={state} activeSection="layout" />);
@@ -32,7 +35,7 @@ describe('VisualPublishingStudio Focus Family integration', () => {
     expect(screen.getByTestId('focal-person-select')).toBeInTheDocument();
     expect(screen.getByTestId('focus-ancestor-depth')).toBeInTheDocument();
     expect(screen.getByTestId('focus-descendant-depth')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /Radial/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Radial/i })).toBeInTheDocument();
   });
 
   it('renders localized Arabic Focus controls', () => {

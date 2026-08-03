@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
-  createFocusTokenCatalog,
   selectFocusGraphBoundary,
   type RawGraph,
 } from '../previewFocusGraphSelector';
+import { createPosterPersonTokenCatalogSession } from '../posterPersonTokenCatalog';
 
 function createRawGraph(): RawGraph {
   return {
@@ -35,9 +35,14 @@ const request = {
 };
 
 describe('previewFocusGraphSelector boundary', () => {
+  const createTokenCatalog = (
+    nodes: RawGraph['nodes'],
+    policy: { language: 'ar' | 'en'; privacyMode: 'masked' | 'owner-full' }
+  ) => createPosterPersonTokenCatalogSession('focus-selector-test').createCatalog(nodes, policy);
+
   it('selects the complete family neighborhood through an opaque session catalog', () => {
     const rawGraph = createRawGraph();
-    const catalog = createFocusTokenCatalog(rawGraph.nodes, request);
+    const catalog = createTokenCatalog(rawGraph.nodes, request);
     const result = selectFocusGraphBoundary(rawGraph, catalog, {
       ...request,
       focalPersonToken: catalog.defaultToken!,
@@ -53,7 +58,7 @@ describe('previewFocusGraphSelector boundary', () => {
 
   it('never exposes raw IDs through token options or sanitized output', () => {
     const rawGraph = createRawGraph();
-    const catalog = createFocusTokenCatalog(rawGraph.nodes, request);
+    const catalog = createTokenCatalog(rawGraph.nodes, request);
     const result = selectFocusGraphBoundary(rawGraph, catalog, {
       ...request,
       focalPersonToken: catalog.defaultToken!,
@@ -68,7 +73,7 @@ describe('previewFocusGraphSelector boundary', () => {
 
   it('rejects raw IDs and legacy raw-compatible token formats', () => {
     const rawGraph = createRawGraph();
-    const catalog = createFocusTokenCatalog(rawGraph.nodes, request);
+    const catalog = createTokenCatalog(rawGraph.nodes, request);
 
     for (const focalPersonToken of [
       'db-root-100',
@@ -82,7 +87,7 @@ describe('previewFocusGraphSelector boundary', () => {
 
   it('filters spouse and sibling companions independently', () => {
     const rawGraph = createRawGraph();
-    const catalog = createFocusTokenCatalog(rawGraph.nodes, request);
+    const catalog = createTokenCatalog(rawGraph.nodes, request);
     const result = selectFocusGraphBoundary(rawGraph, catalog, {
       ...request,
       focalPersonToken: catalog.defaultToken!,
@@ -106,7 +111,7 @@ describe('previewFocusGraphSelector boundary', () => {
       relationshipType: 'parent-child' as const,
     }));
     const rawGraph: RawGraph = { nodes, edges };
-    const catalog = createFocusTokenCatalog(nodes, request);
+    const catalog = createTokenCatalog(nodes, request);
     const result = selectFocusGraphBoundary(rawGraph, catalog, {
       ...request,
       focalPersonToken: catalog.defaultToken!,
@@ -125,7 +130,7 @@ describe('previewFocusGraphSelector boundary', () => {
 
   it('localizes masked catalog labels without leaking living names', () => {
     const rawGraph = createRawGraph();
-    const catalog = createFocusTokenCatalog(rawGraph.nodes, {
+    const catalog = createTokenCatalog(rawGraph.nodes, {
       language: 'ar',
       privacyMode: 'masked',
     });

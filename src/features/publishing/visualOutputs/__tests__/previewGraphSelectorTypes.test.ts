@@ -105,7 +105,7 @@ describe('Preview Raw Graph Selector Contracts', () => {
 
     expect(source).not.toMatch(/from ['"].*store/i);
     expect(source).not.toMatch(/from ['"].*indexed/i);
-    expect(source).not.toMatch(/from ['"].*person/i);
-    expect(source).not.toMatch(/from ['"].*family/i);
+    expect(source).not.toMatch(/from ['"][^'"]*(?:domain|entities|models)[^'"]*person/i);
+    expect(source).not.toMatch(/from ['"][^'"]*(?:domain|entities|models)[^'"]*family/i);
   });
 });

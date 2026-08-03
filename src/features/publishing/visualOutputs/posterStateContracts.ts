@@ -50,6 +50,7 @@ export type PosterTreeScope =
   | 'around-person';
 
 export type TieredTreeScope = Exclude<PosterTreeScope, 'around-person'>;
+export type PosterRadialTreeScope = 'ancestors' | 'descendants';
 
 export type PosterPaperSize = 'A4' | 'A3' | 'A2' | 'A1' | 'A0';
 export type PosterPageOrientation = 'portrait' | 'landscape';
@@ -127,6 +128,7 @@ export interface RadialSettingsBucket {
   readonly ringSpacing: 'compact' | 'balanced' | 'spacious';
   readonly centerCardScale: 'compact' | 'standard' | 'large';
   readonly labelOrientation: 'straight-unwarped' | 'curved';
+  readonly lastRadialScope: PosterRadialTreeScope;
 }
 
 /**

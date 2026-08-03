@@ -59,4 +59,6 @@ export * from './visualOutputs/posterDesignState';
 export * from './visualOutputs/posterDesignDocument';
 export * from './visualOutputs/focusFamilyPosterLayout';
 export * from './visualOutputs/previewFocusGraphSelector';
+export * from './visualOutputs/posterPersonTokenCatalog';
 export * from './visualOutputs/radialGenerationsPosterLayout';
+export * from './visualOutputs/previewRadialGraphSelector';

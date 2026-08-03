@@ -668,7 +668,7 @@ test.describe('Visual Publishing Studio Accessibility QA Final Evidence Closure 
     }
   });
 
-  test('5. Selected, pressed, checked, enabled, Focus-active, and Radial-rejected states verification', async ({ page }) => {
+  test('5. Selected, pressed, checked, enabled, Focus-active, and Radial-active states verification', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 720 });
     await seedSanitizedScenario(page, 'ar');
     await navigateToStudioForKeyboardTest(page, 1280);
@@ -704,15 +704,20 @@ test.describe('Visual Publishing Studio Accessibility QA Final Evidence Closure 
 
     await studio.locator('#tab-layout').click();
     const layoutChoices = studio.getByTestId('poster-layout-engine-control').getByRole('button');
-    await expect(layoutChoices).toHaveCount(2);
+    await expect(layoutChoices).toHaveCount(3);
     const focusModeOption = layoutChoices.nth(1);
-    const radialModeOption = studio.locator('[data-product-mode="radial"]');
+    const radialModeOption = layoutChoices.nth(2);
 
     await expect(focusModeOption).toBeVisible();
     await expect(focusModeOption).toHaveAccessibleName(/\S+/);
     await focusModeOption.click();
     await expect(focusModeOption).toHaveAttribute('aria-pressed', 'true');
     await expect(studio.getByTestId('focus-family-controls')).toBeVisible();
-    expect(await radialModeOption.count()).toBe(0);
+
+    await expect(radialModeOption).toBeVisible();
+    await expect(radialModeOption).toHaveAccessibleName(/Radial|Fan|دائري|مروحي/i);
+    await radialModeOption.click();
+    await expect(radialModeOption).toHaveAttribute('aria-pressed', 'true');
+    await expect(studio.getByTestId('radial-controls-section')).toBeVisible();
   });
 });

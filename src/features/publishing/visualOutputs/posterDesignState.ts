@@ -7,6 +7,7 @@ import type {
   ProductModeSettingsBucket,
   PosterLayoutMode,
   TieredTreeScope,
+  PosterRadialTreeScope,
 } from './posterStateContracts';
 import {
   getPosterPresetDefinition,
@@ -67,10 +68,11 @@ export const DEFAULT_FOCUS_SETTINGS_BUCKET: FocusSettingsBucket = {
 
 export const DEFAULT_RADIAL_SETTINGS_BUCKET: RadialSettingsBucket = {
   radialSpan: '360-full-circle',
-  generationRings: 5,
+  generationRings: 3,
   ringSpacing: 'balanced',
   centerCardScale: 'standard',
   labelOrientation: 'straight-unwarped',
+  lastRadialScope: 'ancestors',
 };
 
 export const DEFAULT_PRODUCT_MODE_SETTINGS_BUCKET: ProductModeSettingsBucket = {
@@ -161,19 +163,25 @@ export function updateSharedSetting<K extends keyof SharedPosterSettings>(
 
 /**
  * Updates layout mode while strictly preserving each mode's previous bucket values
- * and atomically setting/restoring scopes between Focus and Tiered.
+ * and atomically setting/restoring scopes between Focus, Tiered, and Radial.
  */
 export function switchLayoutMode(
   state: PosterDesignState,
   newLayoutMode: PosterLayoutMode
 ): PosterDesignState {
-  if (newLayoutMode === state.layoutMode) return state;
+  if (state.layoutMode === newLayoutMode) return state;
 
   if (newLayoutMode === 'focus-family') {
-    const lastScope: TieredTreeScope =
-      state.scope !== 'around-person'
-        ? (state.scope as TieredTreeScope)
-        : (state.tiered.lastTieredScope ?? 'ancestors');
+    const isFromTiered = state.layoutMode === 'tiered';
+    const isFromRadial = state.layoutMode === 'radial-generations';
+
+    const lastTieredScope: TieredTreeScope = isFromTiered && state.scope !== 'around-person'
+      ? (state.scope as TieredTreeScope)
+      : (state.tiered.lastTieredScope ?? 'ancestors');
+
+    const lastRadialScope: PosterRadialTreeScope = isFromRadial && (state.scope === 'ancestors' || state.scope === 'descendants')
+      ? state.scope
+      : (state.radial.lastRadialScope ?? 'ancestors');
 
     return {
       ...state,
@@ -181,17 +189,48 @@ export function switchLayoutMode(
       scope: 'around-person',
       tiered: {
         ...state.tiered,
-        lastTieredScope: lastScope,
+        lastTieredScope,
+      },
+      radial: {
+        ...state.radial,
+        lastRadialScope,
       },
     };
   }
 
   if (newLayoutMode === 'tiered') {
+    const isFromRadial = state.layoutMode === 'radial-generations';
+    const lastRadialScope: PosterRadialTreeScope = isFromRadial && (state.scope === 'ancestors' || state.scope === 'descendants')
+      ? state.scope
+      : (state.radial.lastRadialScope ?? 'ancestors');
+
     const restoredScope = state.tiered.lastTieredScope ?? 'ancestors';
     return {
       ...state,
       layoutMode: newLayoutMode,
       scope: restoredScope,
+      radial: {
+        ...state.radial,
+        lastRadialScope,
+      },
+    };
+  }
+
+  if (newLayoutMode === 'radial-generations') {
+    const isFromTiered = state.layoutMode === 'tiered';
+    const lastTieredScope: TieredTreeScope = isFromTiered && state.scope !== 'around-person'
+      ? (state.scope as TieredTreeScope)
+      : (state.tiered.lastTieredScope ?? 'ancestors');
+
+    const restoredScope = state.radial.lastRadialScope ?? 'ancestors';
+    return {
+      ...state,
+      layoutMode: newLayoutMode,
+      scope: restoredScope,
+      tiered: {
+        ...state.tiered,
+        lastTieredScope,
+      },
     };
   }
 

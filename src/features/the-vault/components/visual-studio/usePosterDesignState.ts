@@ -6,6 +6,7 @@ import {
   updateSharedSetting,
   updateTieredBucket,
   updateFocusBucket,
+  updateRadialBucket,
   updateProductBucket,
   switchLayoutMode as switchLayoutModeState,
   resetSection as resetSectionState,
@@ -21,6 +22,7 @@ import type {
   SharedPosterSettings,
   TieredSettingsBucket,
   FocusSettingsBucket,
+  RadialSettingsBucket,
   ProductModeSettingsBucket,
 } from '../../../publishing';
 
@@ -39,6 +41,7 @@ export interface UsePosterDesignStateReturn {
   readonly switchLayoutMode: (mode: PosterLayoutMode, focalPersonToken?: string) => void;
   readonly switchScope: (scope: PosterTreeScope) => void;
   readonly updateFocus: (updates: Partial<FocusSettingsBucket>) => void;
+  readonly updateRadial: (updates: Partial<RadialSettingsBucket>) => void;
   readonly resetSection: (sectionId: 'content' | 'layout' | 'cards' | 'appearance' | 'print') => void;
   readonly resetPoster: (presetId?: string) => void;
   readonly undo: () => void;
@@ -245,6 +248,13 @@ export function usePosterDesignState(initialPresetId: string = 'classic-heritage
     [applyStateUpdate]
   );
 
+  const updateRadial = useCallback(
+    (updates: Partial<RadialSettingsBucket>) => {
+      applyStateUpdate((current) => updateRadialBucket(current, updates));
+    },
+    [applyStateUpdate]
+  );
+
   const resetSection = useCallback(
     (sectionId: 'content' | 'layout' | 'cards' | 'appearance' | 'print') => {
       applyStateUpdate((current) => resetSectionState(current, sectionId));
@@ -294,6 +304,7 @@ export function usePosterDesignState(initialPresetId: string = 'classic-heritage
     switchLayoutMode,
     switchScope,
     updateFocus,
+    updateRadial,
     resetSection,
     resetPoster,
     undo,

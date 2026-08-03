@@ -260,7 +260,7 @@ test.describe('Visual Studio Phase 2B Focus runtime evidence', () => {
     await focusButton.click();
     await expect(focusButton).toHaveAttribute('aria-pressed', 'true');
 
-    await expect(page.getByTestId('focus-capacity-error-guidance')).toBeVisible();
+    await expect(page.getByTestId('poster-capacity-error-guidance')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Download SVG' })).toBeDisabled();
     await expect(page.getByRole('button', { name: 'Download PNG' })).toBeDisabled();
     await expect(page.getByRole('button', { name: 'Download PDF' })).toBeDisabled();

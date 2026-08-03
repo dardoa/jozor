@@ -30,6 +30,8 @@ export interface PreviewLiveRelationshipRecord {
 }
 
 export interface PreviewLiveTreeSource extends PreviewLiveSourceBoundary {
+  readonly sourceSessionKey?: string;
+  readonly defaultRootRawId?: string;
   readonly people: Record<string, PreviewLivePersonRecord>;
   readonly relationships: readonly PreviewLiveRelationshipRecord[];
 }
@@ -61,14 +63,25 @@ const toRawNode = (
 const isParentRelationship = (relationship: PreviewLiveRelationshipRecord): boolean =>
   relationship.relationshipType === 'parent-child' || relationship.relationshipType === 'ancestor';
 
+const resolveRootInsideBoundary = (
+  source: PreviewLiveTreeSource,
+  context: Parameters<VisualPreviewGraphSelector<PreviewLiveTreeSource>['selectRawGraph']>[1]
+): string | undefined => (
+  context.tokenCatalog && context.rootPersonToken
+    ? context.tokenCatalog.resolveTokenInsideBoundary(context.rootPersonToken)
+    : undefined
+) ?? context.rootPersonId ?? source.defaultRootRawId ?? Object.keys(source.people)[0];
+
 function selectDirectionalPosterGraph(
   source: PreviewLiveTreeSource,
   context: Parameters<VisualPreviewGraphSelector<PreviewLiveTreeSource>['selectRawGraph']>[1],
   direction: 'ancestor' | 'descendant'
 ): PreviewSanitizerRawGraph {
-  if (!context.rootPersonId) return EMPTY_PREVIEW_GRAPH;
+  const resolvedRootId = resolveRootInsideBoundary(source, context);
 
-  const root = source.people[context.rootPersonId];
+  if (!resolvedRootId) return EMPTY_PREVIEW_GRAPH;
+
+  const root = source.people[resolvedRootId];
   if (!root) return EMPTY_PREVIEW_GRAPH;
 
   const maxDepth = context.maxDepth === 'all'
@@ -154,7 +167,8 @@ export const selectDescendantPosterPreviewGraph: VisualPreviewGraphSelector<Prev
 export const selectFullTreePosterPreviewGraph: VisualPreviewGraphSelector<PreviewLiveTreeSource> = {
   productType: 'poster',
   selectRawGraph(source, context): PreviewSanitizerRawGraph {
-    if (!context.rootPersonId || !source.people[context.rootPersonId]) return EMPTY_PREVIEW_GRAPH;
+    const resolvedRootId = resolveRootInsideBoundary(source, context);
+    if (!resolvedRootId || !source.people[resolvedRootId]) return EMPTY_PREVIEW_GRAPH;
 
     const maxNodes = Math.max(1, context.maxNodes);
     const selectionLimit = maxNodes + 1;
@@ -162,7 +176,7 @@ export const selectFullTreePosterPreviewGraph: VisualPreviewGraphSelector<Previe
       rawId: string;
       level: number;
       relationshipHint: VisualPreviewRelationshipHint;
-    }> = [{ rawId: context.rootPersonId, level: 0, relationshipHint: 'root' }];
+    }> = [{ rawId: resolvedRootId, level: 0, relationshipHint: 'root' }];
     const visited = new Set<string>();
     const selected: Array<{
       person: PreviewLivePersonRecord;

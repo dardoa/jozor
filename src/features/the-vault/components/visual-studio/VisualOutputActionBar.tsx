@@ -105,7 +105,7 @@ export const VisualOutputActionBar: React.FC<VisualOutputActionBarProps> = ({
         {capacityErrorGuidance && (
           <span
             className="text-[10px] font-semibold text-rose-600 dark:text-rose-400 whitespace-normal break-words"
-            data-testid="focus-capacity-error-guidance"
+            data-testid="poster-capacity-error-guidance"
           >
             {capacityErrorGuidance}
           </span>

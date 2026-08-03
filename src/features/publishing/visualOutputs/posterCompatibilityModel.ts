@@ -97,7 +97,7 @@ export function getPosterLayoutCombinationCapability(
           requiresQualityGate: false,
           description: {
             en: 'Focus family layout is supported in the Studio runtime.',
-            ar: 'تخطيط العائلة حول شخص منفذ، لكنه محجوب حتى اكتمال أدلة التشغيل.',
+            ar: 'تخطيط العائلة حول شخص مدعوم بالكامل في الاستوديو.',
           },
         };
       }
@@ -116,13 +116,13 @@ export function getPosterLayoutCombinationCapability(
     if (layoutMode === 'radial-generations') {
       if (scope === 'ancestors' || scope === 'descendants') {
         return {
-          status: 'planned',
-          isRuntimeSupported: false,
-          isPlanned: true,
+          status: 'runtime-supported-and-reachable',
+          isRuntimeSupported: true,
+          isPlanned: false,
           requiresQualityGate: false,
           description: {
-            en: 'Radial generations layout is planned for Phase 1 geometry.',
-            ar: 'التخطيط الشعاعي المروحي محوّل ومخطط للتنفيذ الهندسي.',
+            en: 'Radial generations layout is supported in the Studio runtime.',
+            ar: 'التخطيط الشعاعي المروحي مدعوم في الاستوديو.',
           },
         };
       }

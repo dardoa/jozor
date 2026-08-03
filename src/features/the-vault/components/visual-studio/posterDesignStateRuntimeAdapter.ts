@@ -4,7 +4,7 @@ import type {
 } from '../../../publishing';
 import { getPosterLayoutCombinationCapability } from '../../../publishing';
 import type { VisualStudioPosterOptions, VisualStudioPosterScope } from './visualStudioPosterOptions';
-import type { PosterContentSpec, PosterFocusLayoutOptions } from '../../../publishing/visualOutputs/posterSceneTypes';
+import type { PosterContentSpec, PosterFocusLayoutOptions, PosterRadialLayoutOptions } from '../../../publishing/visualOutputs/posterSceneTypes';
 
 export interface PosterRuntimeContext {
   readonly focalPreviewId?: string;
@@ -118,6 +118,50 @@ export function mapPosterDesignStateToRuntimeOptions(
         engineId: 'focus-family',
         content,
         focusOptions,
+      },
+    };
+  }
+
+  // Radial Generations layout mode
+  if (state.layoutMode === 'radial-generations') {
+    if (!context?.focalPreviewId) {
+      return {
+        supported: false,
+        capability,
+        reason: 'Missing or unresolvable root person selection for Radial layout.',
+      };
+    }
+
+    const radialScope = state.scope === 'descendants' ? 'descendants' : 'ancestors';
+    const contentScope = radialScope === 'descendants' ? 'selected-root-descendants' : 'selected-root-ancestors';
+
+    const radialOptions: PosterRadialLayoutOptions = {
+      focalPreviewId: context.focalPreviewId,
+      radialSpan: state.radial.radialSpan,
+      generationRings: state.radial.generationRings,
+      ringSpacing: state.radial.ringSpacing,
+      centerCardScale: state.radial.centerCardScale,
+      labelOrientation: 'straight-unwarped',
+    };
+
+    const content: PosterContentSpec = {
+      definitionId: context?.definitionId || 'classic-ancestor-poster',
+      language: context?.language || 'ar',
+      title: context?.title || state.shared.headerText || 'لوحة العائلة الشعاعية',
+      subtitle: context?.subtitle || state.shared.subheaderText,
+      scope: contentScope,
+      generationCount: state.radial.generationRings,
+      privacyMode: state.shared.privacyMode,
+    };
+
+    return {
+      supported: true,
+      capability,
+      posterOptions: {
+        ...baseOptions,
+        engineId: 'radial-generations',
+        content,
+        radialOptions,
       },
     };
   }

@@ -54,8 +54,8 @@ describe('Phase 1A: Final Two-Issue Closure Pass', () => {
       'detailed-poster:focus-family:selected-branch': 'incompatible',
 
       // detailed-poster x radial-generations
-      'detailed-poster:radial-generations:ancestors': 'planned',
-      'detailed-poster:radial-generations:descendants': 'planned',
+      'detailed-poster:radial-generations:ancestors': 'runtime-supported-and-reachable',
+      'detailed-poster:radial-generations:descendants': 'runtime-supported-and-reachable',
       'detailed-poster:radial-generations:full-tree': 'unassessed',
       'detailed-poster:radial-generations:selected-branch': 'incompatible',
 

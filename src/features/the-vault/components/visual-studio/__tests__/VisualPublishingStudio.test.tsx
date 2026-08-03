@@ -1,11 +1,13 @@
-import { render, screen, fireEvent, within, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, within, waitFor, cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import type { ComponentProps } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { VisualPublishingStudio } from '../VisualPublishingStudio';
-import { downloadFile } from '../../../../../utils/fileUtils';
+import { downloadFile } from '@/utils/fileUtils';
 import { useAppStore } from '../../../../../store/useAppStore';
 import type { Person } from '../../../../../types';
+
+import type { PosterFontFamily } from '../../../../publishing';
 
 const posterCanvasContext = {
   drawImage: vi.fn(),
@@ -33,7 +35,7 @@ Object.defineProperty(URL, 'revokeObjectURL', {
 class MockPosterImage {
   decoding = 'sync';
   onload: (() => void) | null = null;
-  onerror: (() => void) | null = null;
+  onerror: ((err: unknown) => void) | null = null;
 
   set src(_value: string) {
     this.onload?.();
@@ -45,14 +47,13 @@ vi.stubGlobal('Image', MockPosterImage);
 vi.mock('jspdf', () => ({
   jsPDF: class MockJsPdf {
     addImage() {}
-
     output() {
       return new Blob(['studio-pdf'], { type: 'application/pdf' });
     }
   },
 }));
 
-vi.mock('../../../../../utils/fileUtils', () => ({
+vi.mock('@/utils/fileUtils', () => ({
   downloadFile: vi.fn(),
 }));
 
@@ -64,8 +65,8 @@ vi.mock('sonner', () => ({
 }));
 
 const testPosterFontAssetResolver = {
-  resolveArabicFont: vi.fn(async () => ({
-    id: 'amiri' as const,
+  resolveArabicFont: vi.fn(async (fontFamily: PosterFontFamily = 'amiri') => ({
+    id: fontFamily,
     familyName: 'JozorPosterArabic' as const,
     format: 'truetype' as const,
     dataUri: 'data:font/ttf;base64,AAEAAEFCQ0Q=',
@@ -114,17 +115,34 @@ const testPosterImageAssetResolver = {
   })),
 };
 
+const createTestPngExportRuntime = () => ({
+  renderPng: vi.fn(async () => new Blob(['studio-png'], { type: 'image/png' })),
+});
+const createTestPdfExportRuntime = () => ({
+  renderPdf: vi.fn(async () => new Blob(['studio-pdf'], { type: 'application/pdf' })),
+});
+
 const renderStudio = (
   props: Partial<ComponentProps<typeof VisualPublishingStudio>> = {}
-) => render(
-  <VisualPublishingStudio
-    language="en"
-    posterFontAssetResolver={testPosterFontAssetResolver}
-    posterImageAssetResolver={testPosterImageAssetResolver}
-    posterSvgResources={testPosterSvgResources}
-    {...props}
-  />
-);
+) => {
+  const {
+    pngExportRuntime = createTestPngExportRuntime(),
+    pdfExportRuntime = createTestPdfExportRuntime(),
+    ...restProps
+  } = props;
+
+  return render(
+    <VisualPublishingStudio
+      language="en"
+      posterFontAssetResolver={testPosterFontAssetResolver}
+      posterImageAssetResolver={testPosterImageAssetResolver}
+      posterSvgResources={testPosterSvgResources}
+      pngExportRuntime={pngExportRuntime}
+      pdfExportRuntime={pdfExportRuntime}
+      {...restProps}
+    />
+  );
+};
 
 const selectTab = (name: string | RegExp) => {
   const matcher = typeof name === 'string' && name === 'Print' ? /Print/i : name;
@@ -133,7 +151,13 @@ const selectTab = (name: string | RegExp) => {
 
 describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
   beforeEach(() => {
+    cleanup();
     vi.clearAllMocks();
+    useAppStore.setState({
+      currentTreeId: undefined,
+      focusId: undefined,
+      people: {},
+    });
   });
 
   it('renders visual studio preview pane and preset-first workspace header', () => {
@@ -623,11 +647,14 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
     renderStudio();
 
     selectTab('Content & Scope');
-    const rootSelect = screen.getByRole('combobox', { name: 'Focal Person (Root)' });
-    expect(rootSelect).toHaveValue('preview-root-1');
+    const rootSelect = screen.getByRole('combobox', { name: 'Focal Person (Root)' }) as HTMLSelectElement;
+    const options = Array.from(rootSelect.options);
+    const token1 = options[0].value;
+    const token2 = options[1].value;
+    expect(rootSelect).toHaveValue(token1);
 
-    fireEvent.change(rootSelect, { target: { value: 'preview-root-2' } });
-    expect(rootSelect).toHaveValue('preview-root-2');
+    fireEvent.change(rootSelect, { target: { value: token2 } });
+    expect(rootSelect).toHaveValue(token2);
   });
 
   it('renders Arabic owner-review copy and localized preview summary', () => {
@@ -753,6 +780,10 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
   it('downloads a PNG owner-review artifact from the Studio renderer', async () => {
     renderStudio();
 
+    await waitFor(() => {
+      expect(screen.getByTestId('studio-poster-renderer-preview')).toBeInTheDocument();
+    });
+
     fireEvent.click(screen.getByRole('button', { name: 'Download PNG' }));
 
     await waitFor(() => {
@@ -767,6 +798,10 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
   it('downloads the canonical SVG poster without a raster runtime', async () => {
     renderStudio();
 
+    await waitFor(() => {
+      expect(screen.getByTestId('studio-poster-renderer-preview')).toBeInTheDocument();
+    });
+
     fireEvent.click(screen.getByRole('button', { name: 'Download SVG' }));
 
     await waitFor(() => {
@@ -780,6 +815,10 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
 
   it('downloads a one-page PDF artifact from the Studio renderer', async () => {
     renderStudio();
+
+    await waitFor(() => {
+      expect(screen.getByTestId('studio-poster-renderer-preview')).toBeInTheDocument();
+    });
 
     fireEvent.click(screen.getByRole('button', { name: 'Download PDF' }));
 
@@ -874,8 +913,8 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
     expect(serializedStudio).not.toContain('store-root');
 
     selectTab('Content & Scope');
-    const rootSelector = screen.getByRole('combobox', { name: 'Focal Person (Root)' });
-    expect(rootSelector).toHaveValue('preview-root-2');
+    const rootSelector = screen.getByRole('combobox', { name: 'Focal Person (Root)' }) as HTMLSelectElement;
+    expect(rootSelector.value).toContain('session-token-');
   });
 
   // Phase 1B New Tests
@@ -896,23 +935,26 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
     renderStudio();
 
     selectTab('Content & Scope');
-    const rootSelect = screen.getByRole('combobox', { name: 'Focal Person (Root)' });
+    const rootSelect = screen.getByRole('combobox', { name: 'Focal Person (Root)' }) as HTMLSelectElement;
+    const options = Array.from(rootSelect.options);
+    const token1 = options[0].value;
+    const token2 = options[1].value;
 
-    expect(rootSelect).toHaveValue('preview-root-1');
+    expect(rootSelect).toHaveValue(token1);
 
-    fireEvent.change(rootSelect, { target: { value: 'preview-root-2' } });
-    expect(rootSelect).toHaveValue('preview-root-2');
+    fireEvent.change(rootSelect, { target: { value: token2 } });
+    expect(rootSelect).toHaveValue(token2);
 
     const undoBtn = screen.getByRole('button', { name: 'Undo' });
     fireEvent.click(undoBtn);
-    expect(rootSelect).toHaveValue('preview-root-1');
+    expect(rootSelect).toHaveValue(token1);
 
     const redoBtn = screen.getByRole('button', { name: 'Redo' });
     fireEvent.click(redoBtn);
-    expect(rootSelect).toHaveValue('preview-root-2');
+    expect(rootSelect).toHaveValue(token2);
 
     const resetContentBtn = screen.getByRole('button', { name: 'Reset Section' });
     fireEvent.click(resetContentBtn);
-    expect(rootSelect).toHaveValue('preview-root-1');
+    expect(rootSelect).toHaveValue(token1);
   });
 });
