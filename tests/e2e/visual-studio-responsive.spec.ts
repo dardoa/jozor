@@ -649,6 +649,8 @@ test.describe('Visual Publishing Studio Responsive QA Evidence Pass', () => {
       // Screenshots
       await page.screenshot({ path: path.join(OUTPUT_DIR, `vault-full-${name}.png`), fullPage: false });
       await studio.screenshot({ path: path.join(OUTPUT_DIR, `studio-${name}.png`) });
+      await printDock.evaluate((element) => element.scrollIntoView({ block: 'center' }));
+      await page.waitForTimeout(150);
       await printDock.screenshot({ path: path.join(OUTPUT_DIR, `print-dock-${name}.png`) });
 
       // 1. Assert Studio container overflow (scrollWidth <= clientWidth)
@@ -665,6 +667,19 @@ test.describe('Visual Publishing Studio Responsive QA Evidence Pass', () => {
           previewWorkspaceBox!.width,
           `Preview workspace should dominate settings width at ${name}`
         ).toBeGreaterThan(configPanelBox!.width * 1.5);
+
+        if (width >= 1280) {
+          expect(
+            studioDims.clientWidth,
+            `Visual Outputs should use the wide Vault workspace at ${name}`
+          ).toBeGreaterThanOrEqual(900);
+          expect(
+            previewWorkspaceBox!.width,
+            `Poster preview should remain useful at ${name}`
+          ).toBeGreaterThanOrEqual(620);
+          expect(configPanelBox!.width).toBeGreaterThanOrEqual(280);
+          expect(configPanelBox!.width).toBeLessThanOrEqual(320);
+        }
       }
 
       // 2. Assert Document body overflow (scrollWidth <= clientWidth + 1)

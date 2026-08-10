@@ -300,6 +300,10 @@ export const TheVaultDrawer: React.FC<TheVaultDrawerProps> = ({
     onDeleteTree: setDeleteTreeId,
   };
 
+  const desktopDrawerSize = vaultTab === 'cloud'
+    ? 'sm:w-[calc(100vw-2rem)] sm:max-w-[1320px]'
+    : 'sm:w-[960px] sm:max-w-[calc(100vw-2rem)]';
+
   return (
     <>
       <style>{TRANSITION_STYLE}</style>
@@ -309,7 +313,7 @@ export const TheVaultDrawer: React.FC<TheVaultDrawerProps> = ({
           className="fixed inset-0 z-[var(--z-index-drawer)] bg-[color:rgba(24,16,12,0.18)] backdrop-blur-[2px] transition-opacity"
           onClick={() => setVaultOpen(false)}
         />
-        <div className={`fixed z-[calc(var(--z-index-drawer)+1)] flex flex-col overflow-hidden border border-[var(--border-main)] bg-[var(--theme-bg)] shadow-[0_30px_90px_rgba(44,24,16,0.18)] ${isMobile ? 'inset-0 h-[100dvh] w-full rounded-none border-0' : 'inset-x-4 top-[5vh] bottom-[5vh] rounded-[24px] sm:inset-x-auto sm:left-1/2 sm:w-[960px] sm:max-w-[calc(100vw-2rem)] sm:-translate-x-1/2'}`}>
+        <div className={`fixed z-[calc(var(--z-index-drawer)+1)] flex flex-col overflow-hidden border border-[var(--border-main)] bg-[var(--theme-bg)] shadow-[0_30px_90px_rgba(44,24,16,0.18)] ${isMobile ? 'inset-0 h-[100dvh] w-full rounded-none border-0' : `inset-x-4 top-[5vh] bottom-[5vh] rounded-[24px] sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 ${desktopDrawerSize}`}`}>
           <div className={`ds-drawer-header flex shrink-0 items-center justify-between border-b border-[var(--border-soft)] ${isMobile ? 'px-4 py-4' : 'px-6 py-4'}`}>
             <div className="flex items-center gap-3">
               <div className="rounded-xl bg-[var(--surface-subtle)] p-2 text-[var(--primary-500)]"><ShieldCheck className="h-5 w-5" /></div>

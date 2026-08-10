@@ -53,6 +53,8 @@ interface ExportCloudPanelProps {
   isRefreshing?: boolean;
   isSaving?: boolean;
   isDeleting?: boolean;
+  activeSection?: ExportPanelSection;
+  onActiveSectionChange?: (section: ExportPanelSection) => void;
 }
 
 type ExportLabelKey =
@@ -86,7 +88,7 @@ const TREE_SNAPSHOT_ACTIONS: Array<{
 
 const SHOW_LEGACY_POSTER_EXPORT_CARDS = false;
 
-type ExportPanelSection = 'family-book' | 'visuals' | 'data-export' | 'history' | 'cloud-backup';
+export type ExportPanelSection = 'family-book' | 'visuals' | 'data-export' | 'history' | 'cloud-backup';
 
 const EXPORT_PANEL_SECTIONS: Array<{
   id: ExportPanelSection;
@@ -289,6 +291,8 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
   isRefreshing = false,
   isSaving = false,
   isDeleting = false,
+  activeSection: controlledActiveSection,
+  onActiveSectionChange,
 }) => {
   const [newFileName, setNewFileName] = useState('');
   const [confirmOverwriteId, setConfirmOverwriteId] = useState<string | null>(null);
@@ -312,9 +316,16 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
   const [rootSearchText, setRootSearchText] = useState('');
   const [generationsDepth, setGenerationsDepth] = useState<number | 'all'>(3);
   const [confirmClearHistory, setConfirmClearHistory] = useState(false);
-  const [activeSection, setActiveSection] = useState<ExportPanelSection>('family-book');
+  const [uncontrolledActiveSection, setUncontrolledActiveSection] = useState<ExportPanelSection>('family-book');
   const [expandedHistoryId, setExpandedHistoryId] = useState<number | string | null>(null);
   const { status: controlledPdfStatus, refresh: checkControlledPdfReadiness } = useControlledPdfReadiness();
+  const activeSection = controlledActiveSection ?? uncontrolledActiveSection;
+  const setActiveSection = useCallback((section: ExportPanelSection) => {
+    if (controlledActiveSection === undefined) {
+      setUncontrolledActiveSection(section);
+    }
+    onActiveSectionChange?.(section);
+  }, [controlledActiveSection, onActiveSectionChange]);
 
   const posterVisualOutputs = useMemo(() => listVisualOutputDefinitionsByProduct('poster'), []);
   const snapshotVisualOutputs = useMemo(() => listVisualOutputDefinitionsByProduct('snapshot'), []);

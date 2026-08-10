@@ -2,6 +2,7 @@ import { lazy, Suspense, useState } from 'react';
 import { VaultTabLoader } from './VaultTabLoader';
 import { VaultTreesPanel } from './VaultTreesPanel';
 import type { VaultRenderContext } from '../types';
+import type { ExportPanelSection } from './ExportCloudPanel';
 
 const CollaborationPanel = lazy(() =>
   import('./CollaborationPanel').then((module) => ({ default: module.CollaborationPanel }))
@@ -62,6 +63,7 @@ export const VaultInsightsContent = ({ context }: { context: VaultRenderContext 
 export const VaultBackupsContent = ({ context }: { context: VaultRenderContext }) => {
   const [isBackingUp, setIsBackingUp] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [activeSection, setActiveSection] = useState<ExportPanelSection>('family-book');
 
   const runWithLoading = async (task: () => Promise<void> | void, setLoading: (value: boolean) => void) => {
     setLoading(true);
@@ -97,6 +99,8 @@ export const VaultBackupsContent = ({ context }: { context: VaultRenderContext }
         isRefreshing={isRefreshing}
         isSaving={context.auth.isSavingDriveFile}
         isDeleting={context.auth.isDeletingDriveFile}
+        activeSection={activeSection}
+        onActiveSectionChange={setActiveSection}
       />
     </Suspense>
   );

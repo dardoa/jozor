@@ -2,7 +2,7 @@ import React from 'react';
 
 import type { DriveFile, ExportType, PublishingExportOptions, PublishingPreviewResult } from '../../../types';
 import type { TranslationSchema } from '../../../utils/translationLoader';
-import { ExportCloudPanel } from './ExportCloudPanel';
+import { ExportCloudPanel, type ExportPanelSection } from './ExportCloudPanel';
 
 interface VaultBackupsTabProps {
   canManageCloud: boolean;
@@ -27,6 +27,8 @@ interface VaultBackupsTabProps {
   isRefreshing?: boolean;
   isSaving?: boolean;
   isDeleting?: boolean;
+  activeSection?: ExportPanelSection;
+  onActiveSectionChange?: (section: ExportPanelSection) => void;
 }
 
 const VaultBackupsTab: React.FC<VaultBackupsTabProps> = (props) => (

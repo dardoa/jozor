@@ -937,10 +937,10 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
       />
 
       <div className="overflow-hidden rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)]">
-        <div className="grid min-h-[68vh] items-stretch lg:grid-cols-12" dir="ltr">
+        <div className="grid min-h-[68vh] items-stretch lg:grid-cols-[minmax(0,1fr)_300px]" dir="ltr">
         {/* Preview Workspace Area - sticky on desktop, expandable on mobile */}
         <div
-          className="min-w-0 bg-[var(--surface-subtle)] lg:col-span-8"
+          className="min-w-0 bg-[var(--surface-subtle)]"
           data-testid="visual-studio-preview-workspace"
           dir={isAr ? 'rtl' : 'ltr'}
         >
@@ -986,7 +986,7 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
 
         {/* Settings Workspace Panel */}
         <aside
-          className="min-w-0 border-l border-[var(--border-soft)] lg:col-span-4"
+          className="min-w-0 border-l border-[var(--border-soft)]"
           dir={isAr ? 'rtl' : 'ltr'}
         >
           <VisualOutputConfigPanel

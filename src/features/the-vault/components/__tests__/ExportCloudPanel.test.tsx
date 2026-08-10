@@ -497,11 +497,11 @@ describe('ExportCloudPanel manuscript preview', () => {
 
     expect(screen.getByRole('tab', { name: /Visual Outputs/i })).toHaveAttribute('aria-selected', 'true');
 
-    // Verify Studio metadata rendered from registry
+    // Verify the preset-first Studio and current output metadata.
     expect(screen.getAllByText('Classic Ancestor Poster').length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Warm print-first family poster/i).length).toBeGreaterThan(0);
-    expect(screen.getByRole('button', { name: 'Modern Gallery Poster' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Dense Genealogy Poster' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Modern Gallery/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Dense Genealogy Poster/i })).not.toBeInTheDocument();
     expect(screen.getAllByText('Current Tree Snapshot').length).toBeGreaterThan(0);
 
     // Verify preview placeholders
