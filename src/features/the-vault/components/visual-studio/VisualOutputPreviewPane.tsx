@@ -1,4 +1,5 @@
 import React from 'react';
+import { AlertTriangle, Maximize2, ZoomIn, ZoomOut } from 'lucide-react';
 import {
   renderPosterSceneToSvg,
   type PosterScene,
@@ -13,6 +14,7 @@ interface VisualOutputPreviewPaneProps {
   previewModel?: VisualPreviewModel;
   posterScene?: PosterScene;
   posterSvgResources?: StudioPosterSvgResources;
+  unavailableReason?: string;
 }
 
 const ar = {
@@ -27,8 +29,10 @@ export const VisualOutputPreviewPane: React.FC<VisualOutputPreviewPaneProps> = (
   previewModel,
   posterScene,
   posterSvgResources,
+  unavailableReason,
 }) => {
   const isAr = language === 'ar';
+  const [previewZoom, setPreviewZoom] = React.useState(1);
   const displayName = selectedDefinition?.displayName[language] || '';
   const description = selectedDefinition?.description[language] || '';
   const previewAlt = selectedDefinition?.previewAsset?.alt[language] || '';
@@ -44,25 +48,67 @@ export const VisualOutputPreviewPane: React.FC<VisualOutputPreviewPaneProps> = (
   const previewAspectRatio = posterRender
     ? `${posterRender.metadata.width} / ${posterRender.metadata.height}`
     : undefined;
-  const previewMaxWidth = posterOrientation === 'portrait' ? 460 : 760;
+  const previewMaxWidth = posterOrientation === 'portrait' ? 640 : 980;
 
   return (
     <div
-      className="flex flex-col items-center gap-4 rounded-lg border border-[var(--border-soft)] bg-[var(--surface-subtle)] p-4 text-center select-none"
+      className="flex h-full min-h-[68vh] flex-col items-center gap-3 bg-[var(--surface-subtle)] p-3 text-center select-none sm:p-5"
       data-testid="visual-studio-preview-pane"
     >
       <div
-        className="flex min-h-[360px] w-full items-center justify-center rounded-lg border border-[var(--border-soft)]/60 bg-[var(--surface-panel)] p-3 md:min-h-[440px]"
+        className="relative flex min-h-[430px] w-full flex-1 items-center justify-center overflow-auto bg-[var(--surface-panel)] p-3 md:min-h-[560px] lg:min-h-[620px] lg:p-6"
         data-testid="visual-preview-frame"
         aria-label={previewAlt}
       >
+        {productType === 'poster' && posterRender && (
+          <div
+            className="absolute start-3 top-3 z-10 flex gap-1 rounded-md border border-[var(--border-soft)] bg-[var(--surface-panel)]/95 p-1 shadow-sm backdrop-blur"
+            role="group"
+            aria-label={isAr ? 'أدوات تكبير المعاينة' : 'Preview zoom controls'}
+            data-testid="poster-preview-zoom-controls"
+          >
+            <button
+              type="button"
+              aria-label={isAr ? 'تصغير المعاينة' : 'Zoom out preview'}
+              title={isAr ? 'تصغير' : 'Zoom out'}
+              disabled={previewZoom <= 0.75}
+              onClick={() => setPreviewZoom((value) => Math.max(0.75, value - 0.25))}
+              className="inline-flex h-8 w-8 items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-main)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary-500)] disabled:opacity-35"
+            >
+              <ZoomOut className="h-4 w-4" aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              aria-label={isAr ? 'ملاءمة الورقة داخل المعاينة' : 'Fit poster in preview'}
+              title={isAr ? 'ملاءمة' : 'Fit'}
+              onClick={() => setPreviewZoom(1)}
+              className="inline-flex h-8 w-8 items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-main)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary-500)]"
+            >
+              <Maximize2 className="h-4 w-4" aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              aria-label={isAr ? 'تكبير المعاينة' : 'Zoom in preview'}
+              title={isAr ? 'تكبير' : 'Zoom in'}
+              disabled={previewZoom >= 1.5}
+              onClick={() => setPreviewZoom((value) => Math.min(1.5, value + 0.25))}
+              className="inline-flex h-8 w-8 items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-main)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary-500)] disabled:opacity-35"
+            >
+              <ZoomIn className="h-4 w-4" aria-hidden="true" />
+            </button>
+          </div>
+        )}
         {productType === 'poster' && posterRender ? (
           <div
             dir="ltr"
-            className="w-full shrink-0 overflow-hidden border border-[var(--border-soft)] bg-white shadow-md transition-[max-width,aspect-ratio] duration-200"
+            className="max-h-full w-full shrink-0 overflow-hidden border border-[var(--border-soft)] bg-white shadow-md transition-[max-width,aspect-ratio] duration-200"
             data-testid="studio-poster-page-frame"
             data-poster-scene-version={posterScene?.version}
-            style={{ maxWidth: previewMaxWidth, aspectRatio: previewAspectRatio }}
+            style={{
+              width: `${previewZoom * 100}%`,
+              maxWidth: previewMaxWidth * previewZoom,
+              aspectRatio: previewAspectRatio,
+            }}
           >
             <div
               role="img"
@@ -72,6 +118,18 @@ export const VisualOutputPreviewPane: React.FC<VisualOutputPreviewPaneProps> = (
               data-poster-renderer="svg-v1"
               dangerouslySetInnerHTML={{ __html: posterRender.svg }}
             />
+          </div>
+        ) : productType === 'poster' && unavailableReason ? (
+          <div
+            className="mx-auto flex max-w-md flex-col items-center gap-3 rounded-lg border border-amber-300 bg-amber-50 px-5 py-6 text-amber-950"
+            role="alert"
+            data-testid="poster-preview-unavailable"
+          >
+            <AlertTriangle className="h-6 w-6 text-amber-700" aria-hidden="true" />
+            <strong className="text-sm font-bold">
+              {isAr ? 'تحتاج المعاينة إلى تعديل' : 'Preview needs adjustment'}
+            </strong>
+            <p className="text-xs font-medium leading-relaxed">{unavailableReason}</p>
           </div>
         ) : (
           <div
@@ -103,7 +161,7 @@ export const VisualOutputPreviewPane: React.FC<VisualOutputPreviewPaneProps> = (
         )}
       </div>
 
-      <div className="flex flex-col gap-1 text-center">
+      <div className="flex shrink-0 flex-col gap-1 text-center">
         <h5 className="text-sm font-bold text-[var(--text-main)]">
           {displayName}
         </h5>

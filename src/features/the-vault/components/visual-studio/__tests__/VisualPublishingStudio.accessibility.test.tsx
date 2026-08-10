@@ -159,7 +159,7 @@ describe('VisualPublishingStudio Accessibility & Interaction Suite', () => {
     expect(ancestorsBtn).toHaveAttribute('aria-pressed', 'true');
     expect(descendantsBtn).toHaveAttribute('aria-pressed', 'false');
 
-    const contentTab = screen.getByRole('tab', { name: 'المحتوى والنطاق' });
+    const contentTab = screen.getByRole('tab', { name: 'الشجرة والتخطيط' });
     fireEvent.click(contentTab);
 
     const yearsCheckbox = screen.getByRole('checkbox', { name: 'عرض سنوات الميلاد والوفاة' });

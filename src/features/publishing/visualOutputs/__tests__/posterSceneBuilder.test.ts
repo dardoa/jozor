@@ -812,8 +812,8 @@ describe('PosterScene foundation', () => {
     expect(longNameNode.nameFontSize).toBeLessThanOrEqual(scene.cardPreset.typography.nameSize);
     expect(longNameNode.nameFontSize).toBeGreaterThanOrEqual(9);
     expect(longNameNode.initials).toBe('عا');
-    expect(result.svg).toContain('عبد الرحمن بن سليم بن');
-    expect(result.svg).toContain('ياسر النور الدمشقي');
+    expect(result.svg).toContain('عبد الرحمن بن سليم بن ياسر');
+    expect(result.svg).toContain('النور الدمشقي الكبير');
     expect(result.svg).not.toContain('@font-face');
     expect(result.svg).not.toContain('/fonts/Amiri-Regular.ttf');
     expect(result.svg).toContain('font-variant-ligatures:common-ligatures contextual');
@@ -841,7 +841,7 @@ describe('PosterScene foundation', () => {
     expect(result.metadata.hasArabicText).toBe(true);
     expect(result.svg).toContain('شجرة أسلاف سليم النور');
     expect(result.svg).toContain('شخص مخفي');
-    expect(result.svg).toContain('محجوب');
+    expect(result.svg).toContain('محمي بموجب الخصوصية');
     expect(serialized).not.toContain('rawId');
     expect(serialized).not.toContain('email');
     expect(serialized).not.toContain('phone');

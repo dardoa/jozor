@@ -35,6 +35,8 @@ type MeasuredViewport = {
   studioScrollWidth: number;
   actionBarClientWidth: number;
   actionBarScrollWidth: number;
+  printDockClientWidth: number;
+  printDockScrollWidth: number;
   configPanelClientWidth: number;
   configPanelScrollWidth: number;
 };
@@ -587,6 +589,7 @@ test.describe('Visual Publishing Studio Responsive QA Evidence Pass', () => {
       await expect(studio).toBeVisible();
 
       const actionBar = page.getByTestId('visual-studio-action-bar');
+      const printDock = page.getByTestId('visual-studio-print-dock');
       const configPanel = page.getByTestId('visual-studio-config-panel');
       if (width < 1024) {
         const toggleBtn = page.getByTestId('visual-studio-mobile-preview-toggle');
@@ -597,6 +600,7 @@ test.describe('Visual Publishing Studio Responsive QA Evidence Pass', () => {
       const previewPane = page.locator('[data-testid="visual-studio-preview-pane"]:visible');
 
       await expect(actionBar).toBeVisible({ timeout: 15000 });
+      await expect(printDock).toBeVisible({ timeout: 15000 });
       await expect(configPanel).toBeVisible({ timeout: 15000 });
       await expect(previewPane).toBeVisible({ timeout: 15000 });
 
@@ -607,6 +611,11 @@ test.describe('Visual Publishing Studio Responsive QA Evidence Pass', () => {
       }));
 
       const actionBarDims = await actionBar.evaluate((el) => ({
+        clientWidth: el.clientWidth,
+        scrollWidth: el.scrollWidth,
+      }));
+
+      const printDockDims = await printDock.evaluate((el) => ({
         clientWidth: el.clientWidth,
         scrollWidth: el.scrollWidth,
       }));
@@ -631,6 +640,8 @@ test.describe('Visual Publishing Studio Responsive QA Evidence Pass', () => {
         studioScrollWidth: studioDims.scrollWidth,
         actionBarClientWidth: actionBarDims.clientWidth,
         actionBarScrollWidth: actionBarDims.scrollWidth,
+        printDockClientWidth: printDockDims.clientWidth,
+        printDockScrollWidth: printDockDims.scrollWidth,
         configPanelClientWidth: configPanelDims.clientWidth,
         configPanelScrollWidth: configPanelDims.scrollWidth,
       });
@@ -638,9 +649,23 @@ test.describe('Visual Publishing Studio Responsive QA Evidence Pass', () => {
       // Screenshots
       await page.screenshot({ path: path.join(OUTPUT_DIR, `vault-full-${name}.png`), fullPage: false });
       await studio.screenshot({ path: path.join(OUTPUT_DIR, `studio-${name}.png`) });
+      await printDock.screenshot({ path: path.join(OUTPUT_DIR, `print-dock-${name}.png`) });
 
       // 1. Assert Studio container overflow (scrollWidth <= clientWidth)
       expect(studioDims.scrollWidth, `Studio scrollWidth (${studioDims.scrollWidth}) > clientWidth (${studioDims.clientWidth}) at ${name}`).toBeLessThanOrEqual(studioDims.clientWidth);
+      expect(printDockDims.scrollWidth, `Print dock scrollWidth (${printDockDims.scrollWidth}) > clientWidth (${printDockDims.clientWidth}) at ${name}`).toBeLessThanOrEqual(printDockDims.clientWidth);
+
+      if (width >= 1024) {
+        const previewWorkspace = page.getByTestId('visual-studio-preview-workspace');
+        const previewWorkspaceBox = await previewWorkspace.boundingBox();
+        const configPanelBox = await configPanel.boundingBox();
+        expect(previewWorkspaceBox).not.toBeNull();
+        expect(configPanelBox).not.toBeNull();
+        expect(
+          previewWorkspaceBox!.width,
+          `Preview workspace should dominate settings width at ${name}`
+        ).toBeGreaterThan(configPanelBox!.width * 1.5);
+      }
 
       // 2. Assert Document body overflow (scrollWidth <= clientWidth + 1)
       const docDims = await page.evaluate(() => ({

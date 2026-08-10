@@ -500,7 +500,7 @@ test.describe('Visual Publishing Studio Accessibility QA Final Evidence Closure 
       await assertUnclippedFocusRing(segmentedBtn, studio, 0);
 
       // 3. Select control focus sample
-      const contentTab = tablist.getByRole('tab', { name: /المحتوى والنطاق|Content & Scope/i }).first();
+      const contentTab = tablist.getByRole('tab', { name: /الشجرة والتخطيط|Tree & Layout/i }).first();
       await expect(contentTab).toBeVisible();
       await contentTab.click();
       const selectCtrl = studio.locator('select:visible').first();
@@ -631,13 +631,13 @@ test.describe('Visual Publishing Studio Accessibility QA Final Evidence Closure 
       await expect(tablist).toBeVisible();
 
       const tabs = tablist.getByRole('tab');
-      expect(await tabs.count()).toBe(6);
+      expect(await tabs.count()).toBe(4);
 
       const expectedTabNames = lang === 'ar'
-        ? [/إعداد سريع/i, /المحتوى والنطاق/i, /التخطيط/i, /البطاقات/i, /المظهر/i, /الطباعة/i]
-        : [/Quick Setup/i, /Content & Scope/i, /Layout/i, /Cards/i, /Appearance/i, /Print/i];
+        ? [/إعداد سريع/i, /الشجرة والتخطيط/i, /البطاقات/i, /المظهر/i]
+        : [/Quick Setup/i, /Tree & Layout/i, /Cards/i, /Appearance/i];
 
-      for (let i = 0; i < 6; i += 1) {
+      for (let i = 0; i < 4; i += 1) {
         const tab = tabs.nth(i);
         await expect(tab).toHaveAccessibleName(expectedTabNames[i]);
 
@@ -684,7 +684,7 @@ test.describe('Visual Publishing Studio Accessibility QA Final Evidence Closure 
     await expect(segmentedBtn).toBeVisible();
     await expect(segmentedBtn).toHaveAttribute('aria-pressed');
 
-    const contentTab = tablist.getByRole('tab', { name: /المحتوى والنطاق|Content & Scope/i }).first();
+    const contentTab = tablist.getByRole('tab', { name: /الشجرة والتخطيط|Tree & Layout/i }).first();
     await expect(contentTab).toBeVisible();
     await contentTab.click();
     await page.waitForTimeout(100);
@@ -702,7 +702,7 @@ test.describe('Visual Publishing Studio Accessibility QA Final Evidence Closure 
     await expect(downloadPng).toBeEnabled();
     await expect(downloadPdf).toBeEnabled();
 
-    await studio.locator('#tab-layout').click();
+    await studio.locator('#tab-tree-layout').click();
     const layoutChoices = studio.getByTestId('poster-layout-engine-control').getByRole('button');
     await expect(layoutChoices).toHaveCount(3);
     const focusModeOption = layoutChoices.nth(1);

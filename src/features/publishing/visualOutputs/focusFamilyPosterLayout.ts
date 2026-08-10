@@ -279,6 +279,46 @@ export const focusFamilyPosterLayoutEngine: PosterLayoutEngine = {
 
     const cardWidth = Math.min(maxCardW, rawCardWidth);
     const cardHeight = Math.min(baseCardH, rawCardHeight);
+    const focalCardWidth = cardWidth;
+    const regularCardWidth = Math.max(minCardW, cardWidth * 0.86);
+
+    const negativeTierStep = (() => {
+      if (maxNegDepth === 0) return 0;
+
+      const availableTravel = isVertical
+        ? treeCenterY - treeBounds.y - cardHeight / 2
+        : (isAr
+            ? treeBounds.x + treeBounds.width - treeCenterX
+            : treeCenterX - treeBounds.x) -
+          regularCardWidth / 2;
+
+      return availableTravel / maxNegDepth;
+    })();
+
+    const positiveTierStep = (() => {
+      if (maxPosDepth === 0) return 0;
+
+      const availableTravel = isVertical
+        ? treeBounds.y + treeBounds.height - treeCenterY - cardHeight / 2
+        : (isAr
+            ? treeCenterX - treeBounds.x
+            : treeBounds.x + treeBounds.width - treeCenterX) -
+          regularCardWidth / 2;
+
+      return availableTravel / maxPosDepth;
+    })();
+
+    const minimumTierStep = isVertical
+      ? cardHeight + gap
+      : (focalCardWidth + regularCardWidth) / 2 + gap;
+    if (
+      (maxNegDepth > 0 && negativeTierStep < minimumTierStep - 0.1) ||
+      (maxPosDepth > 0 && positiveTierStep < minimumTierStep - 0.1)
+    ) {
+      throw new FocusLayoutCapacityError(
+        'Focus layout capacity exceeded: tree bounds cannot separate focus tiers without overlap.'
+      );
+    }
 
     const sceneNodes: PosterSceneNode[] = [];
 
@@ -307,11 +347,15 @@ export const focusFamilyPosterLayoutEngine: PosterLayoutEngine = {
       occupationLabel: focalNode.occupationLabel,
       descriptionLabel: focalNode.descriptionLabel,
       initials: createInitials(focalNode.displayName),
-      nameFontSize: fitNameFontSize(focalNode.displayName, cardWidth, cardPreset.typography.nameSize),
+      nameFontSize: fitNameFontSize(
+        focalNode.displayName,
+        focalCardWidth,
+        cardPreset.typography.nameSize * 1.12
+      ),
       rect: {
-        x: Math.round((treeCenterX - cardWidth / 2) * 10) / 10,
+        x: Math.round((treeCenterX - focalCardWidth / 2) * 10) / 10,
         y: Math.round((treeCenterY - cardHeight / 2) * 10) / 10,
-        width: Math.round(cardWidth * 10) / 10,
+        width: Math.round(focalCardWidth * 10) / 10,
         height: Math.round(cardHeight * 10) / 10,
       },
     });
@@ -324,10 +368,11 @@ export const focusFamilyPosterLayoutEngine: PosterLayoutEngine = {
       let y: number;
 
       if (isVertical) {
-        x = treeCenterX + slotIndex * (cardWidth + gap) - cardWidth / 2;
+        const companionStep = (focalCardWidth + regularCardWidth) / 2 + gap;
+        x = treeCenterX + slotIndex * companionStep - regularCardWidth / 2;
         y = treeCenterY - cardHeight / 2;
       } else {
-        x = treeCenterX - cardWidth / 2;
+        x = treeCenterX - regularCardWidth / 2;
         y = treeCenterY + slotIndex * (cardHeight + gap) - cardHeight / 2;
       }
 
@@ -345,11 +390,15 @@ export const focusFamilyPosterLayoutEngine: PosterLayoutEngine = {
         occupationLabel: compNode.occupationLabel,
         descriptionLabel: compNode.descriptionLabel,
         initials: createInitials(compNode.displayName),
-        nameFontSize: fitNameFontSize(compNode.displayName, cardWidth, cardPreset.typography.nameSize),
+        nameFontSize: fitNameFontSize(
+          compNode.displayName,
+          regularCardWidth,
+          cardPreset.typography.nameSize
+        ),
         rect: {
           x: Math.round(x * 10) / 10,
           y: Math.round(y * 10) / 10,
-          width: Math.round(cardWidth * 10) / 10,
+          width: Math.round(regularCardWidth * 10) / 10,
           height: Math.round(cardHeight * 10) / 10,
         },
       });
@@ -364,13 +413,15 @@ export const focusFamilyPosterLayoutEngine: PosterLayoutEngine = {
 
       let groupCenterX: number;
       let groupCenterY: number;
+      const tierStep = tier < 0 ? negativeTierStep : positiveTierStep;
 
       if (isVertical) {
-        groupCenterY = treeCenterY + tier * (cardHeight + gap);
+        groupCenterY = treeCenterY + Math.sign(tier) * Math.abs(tier) * tierStep;
         groupCenterX = treeCenterX;
       } else {
         const sideMultiplier = isAr ? -1 : 1;
-        groupCenterX = treeCenterX + tier * (cardWidth + gap) * sideMultiplier;
+        groupCenterX =
+          treeCenterX + Math.sign(tier) * Math.abs(tier) * tierStep * sideMultiplier;
         groupCenterY = treeCenterY;
       }
 
@@ -379,16 +430,16 @@ export const focusFamilyPosterLayoutEngine: PosterLayoutEngine = {
         let y: number;
 
         if (isVertical) {
-          const groupWidth = groupCount * cardWidth + (groupCount - 1) * gap;
-          const startX = groupCenterX - groupWidth / 2 + cardWidth / 2;
-          const nodeCenterX = startX + nodeIdx * (cardWidth + gap);
-          x = nodeCenterX - cardWidth / 2;
+          const groupWidth = groupCount * regularCardWidth + (groupCount - 1) * gap;
+          const startX = groupCenterX - groupWidth / 2 + regularCardWidth / 2;
+          const nodeCenterX = startX + nodeIdx * (regularCardWidth + gap);
+          x = nodeCenterX - regularCardWidth / 2;
           y = groupCenterY - cardHeight / 2;
         } else {
           const groupHeight = groupCount * cardHeight + (groupCount - 1) * gap;
           const startY = groupCenterY - groupHeight / 2 + cardHeight / 2;
           const nodeCenterY = startY + nodeIdx * (cardHeight + gap);
-          x = groupCenterX - cardWidth / 2;
+          x = groupCenterX - regularCardWidth / 2;
           y = nodeCenterY - cardHeight / 2;
         }
 
@@ -406,11 +457,15 @@ export const focusFamilyPosterLayoutEngine: PosterLayoutEngine = {
           occupationLabel: node.occupationLabel,
           descriptionLabel: node.descriptionLabel,
           initials: createInitials(node.displayName),
-          nameFontSize: fitNameFontSize(node.displayName, cardWidth, cardPreset.typography.nameSize),
+          nameFontSize: fitNameFontSize(
+            node.displayName,
+            regularCardWidth,
+            cardPreset.typography.nameSize
+          ),
           rect: {
             x: Math.round(x * 10) / 10,
             y: Math.round(y * 10) / 10,
-            width: Math.round(cardWidth * 10) / 10,
+            width: Math.round(regularCardWidth * 10) / 10,
             height: Math.round(cardHeight * 10) / 10,
           },
         });

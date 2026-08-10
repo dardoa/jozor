@@ -5,6 +5,7 @@ import type {
   PosterSceneNode,
   PosterSceneTheme,
 } from './posterSceneTypes';
+import { computeCardContentLayout } from './posterCardContentLayout';
 
 interface PosterPaletteTokens {
   readonly background: string;
@@ -239,7 +240,7 @@ function assertSafeEmbeddedImage(node: PosterSceneNode, image?: PosterImageAsset
 }
 
 function getRelationshipLabel(node: PosterSceneNode, scene: PosterScene): string {
-  const labels = scene.content.language === 'ar'
+  const labels: Record<string, string> = scene.content.language === 'ar'
     ? {
         root: '\u0627\u0644\u062c\u0630\u0631',
         parent: '\u0645\u0646 \u0627\u0644\u0648\u0627\u0644\u062f\u064a\u0646',
@@ -260,8 +261,13 @@ function getRelationshipLabel(node: PosterSceneNode, scene: PosterScene): string
         relative: 'Relative',
         unknown: 'Relationship not specified',
       };
-  return labels[node.relationshipHint];
+  const key = typeof node.relationshipHint === 'string'
+    ? node.relationshipHint
+    : String((node.relationshipHint as Record<string, unknown> | undefined)?.type ?? 'unknown');
+
+  return labels[key] ?? labels.unknown;
 }
+
 
 function renderNode(
   node: PosterSceneNode,
@@ -271,74 +277,26 @@ function renderNode(
   const { x, y, width, height } = node.rect;
   const centerX = x + (width / 2);
   const isRoot = node.isRoot;
-  const isDense = scene.cardPreset.visualStyle === 'dense-genealogy';
-  const preferredRadius = scene.cardPreset.photo.preferredDiameter / 2;
-  const avatarRadius = Math.min(
-    isRoot ? preferredRadius : preferredRadius * 0.86,
-    width * 0.2,
-    height * 0.24
-  );
-  const lifeYears = scene.content.showYears === false ? '' : node.birthYear && node.deathYear
-    ? `${node.birthYear} - ${node.deathYear}`
-    : String(node.birthYear ?? node.deathYear ?? '');
-  const relationshipLabel = scene.content.showRelationship
-    ? getRelationshipLabel(node, scene)
-    : '';
-  const birthPlaceDetail = scene.content.showBirthPlace ? node.birthPlaceLabel : undefined;
-  const occupationDetail = scene.content.showOccupation ? node.occupationLabel : undefined;
-  const descriptionDetail = scene.content.showDescription ? node.descriptionLabel : undefined;
-  const rawCardDetailLabel = birthPlaceDetail && occupationDetail
-    ? `${birthPlaceDetail} \u00b7 ${occupationDetail}`
-    : birthPlaceDetail
-      ? `${scene.content.language === 'ar' ? '\u0627\u0644\u0645\u064a\u0644\u0627\u062f' : 'Born'}: ${birthPlaceDetail}`
-      : occupationDetail
-        ? `${scene.content.language === 'ar' ? '\u0627\u0644\u0645\u0647\u0646\u0629' : 'Occupation'}: ${occupationDetail}`
-        : '';
-  const cardDetailLabel = rawCardDetailLabel
-    ? splitTextLines(
-        rawCardDetailLabel,
-        Math.max(10, Math.floor((width - 18) / Math.max(4, scene.cardPreset.typography.statusSize * 0.52))),
-        1
-      )[0]
-    : '';
-  const descriptionLabel = descriptionDetail
-    ? splitTextLines(
-        descriptionDetail,
-        Math.max(10, Math.floor((width - 18) / Math.max(4, scene.cardPreset.typography.statusSize * 0.52))),
-        1
-      )[0]
-    : '';
-  const expectedDetailRows = Number(Boolean(node.isMasked || lifeYears))
-    + Number(Boolean(relationshipLabel))
-    + Number(Boolean(cardDetailLabel))
-    + Number(Boolean(descriptionLabel));
-  const hasDenseDetailPressure = isDense && expectedDetailRows >= 4;
-  const renderedNameFontSize = hasDenseDetailPressure
-    ? Math.min(node.nameFontSize, 16)
-    : node.nameFontSize;
-  const lineHeight = renderedNameFontSize * 1.22;
-  const nameLines = splitTextLines(
-    node.displayName,
-    Math.max(8, Math.floor((width - 24) / Math.max(5, renderedNameFontSize * 0.56))),
-    expectedDetailRows >= 3 ? 1 : isDense && expectedDetailRows >= 2 ? 1 : isDense ? 2 : 3
-  );
-  const maskedLabel = scene.content.language === 'ar' ? '\u0645\u062d\u062c\u0648\u0628' : 'Masked';
-  const textDirection = scene.content.language === 'ar' ? 'rtl' : 'ltr';
-  const image = node.hasPhoto ? resources?.embeddedImages?.[node.previewId] : undefined;
-  assertSafeEmbeddedImage(node, image);
+  const isFocusRoot = isRoot && scene.layout.engineId === 'focus-family';
   const isOverview = scene.cardPreset.visualStyle === 'dense-overview';
   const isBranchIndex = scene.cardPreset.visualStyle === 'branch-index';
+  const textDirection = scene.content.language === 'ar' ? 'rtl' : 'ltr';
+
+
   if (isOverview) {
+    const lifeYearsOverview = scene.content.showYears === false ? '' : node.birthYear && node.deathYear
+      ? `${node.birthYear} - ${node.deathYear}`
+      : String(node.birthYear ?? node.deathYear ?? '');
     const overviewNameLines = splitTextLines(
       node.displayName,
       Math.max(7, Math.floor((width - 12) / Math.max(4, node.nameFontSize * 0.52))),
       2
     );
-    const overviewNameY = y + (lifeYears ? 23 : 29);
+    const overviewNameY = y + (lifeYearsOverview ? 23 : 29);
     return `<g class="poster-node poster-overview-node${isRoot ? ' is-root' : ''}${node.isMasked ? ' is-masked' : ''}" data-preview-node="${escapeXml(node.previewId)}" data-generation="${node.generation}" data-scene-x="${x.toFixed(2)}" data-scene-y="${y.toFixed(2)}" data-scene-width="${width.toFixed(2)}" data-scene-height="${height.toFixed(2)}">
       <rect class="poster-card" x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${width.toFixed(2)}" height="${height.toFixed(2)}" rx="${scene.cardPreset.geometry.borderRadius}" />
       <text class="poster-name" direction="${textDirection}" unicode-bidi="plaintext" text-anchor="middle" font-size="${node.nameFontSize}">${renderTextLines(overviewNameLines, centerX, overviewNameY, node.nameFontSize * 1.12)}</text>
-      ${lifeYears && !node.isMasked ? `<text class="poster-years" x="${centerX.toFixed(2)}" y="${(y + height - 7).toFixed(2)}">${escapeXml(lifeYears)}</text>` : ''}
+      ${lifeYearsOverview && !node.isMasked ? `<text class="poster-years" x="${centerX.toFixed(2)}" y="${(y + height - 7).toFixed(2)}">${escapeXml(lifeYearsOverview)}</text>` : ''}
     </g>`;
   }
   if (isBranchIndex) {
@@ -355,8 +313,36 @@ function renderNode(
       <text class="poster-name" direction="${textDirection}" unicode-bidi="plaintext" text-anchor="middle" font-size="${node.nameFontSize}">${renderTextLines(indexLines, centerX, indexNameY, indexLineHeight)}</text>
     </g>`;
   }
-  const hasAvatar = scene.cardPreset.photo.preferredDiameter > 0;
-  const avatarCenterY = scene.cardPreset.photo.overlapsCard ? y + 5 : y + avatarRadius + 8;
+
+  const sceneUnitsToPoints = (scene.document.physicalSizeMm.height / scene.document.sceneSize.height) * (72 / 25.4);
+  const minReadableFontSize = Math.max(8.5, Math.ceil((8.0 / sceneUnitsToPoints) * 10) / 10);
+
+  const layoutResult = computeCardContentLayout({
+    node: {
+      ...node,
+      birthPlaceLabel: scene.content.showBirthPlace ? node.birthPlaceLabel : undefined,
+      occupationLabel: scene.content.showOccupation ? node.occupationLabel : undefined,
+      descriptionLabel: scene.content.showDescription ? node.descriptionLabel : undefined,
+      birthYear: scene.content.showYears === false ? undefined : node.birthYear,
+      deathYear: scene.content.showYears === false ? undefined : node.deathYear,
+    },
+    cardWidth: width,
+    cardHeight: height,
+    cardPreset: scene.cardPreset,
+    language: scene.content.language === 'ar' ? 'ar' : 'en',
+    relationshipLabel: (scene.layout.engineId === 'radial-generations' && !isRoot) ? '' : (scene.content.showRelationship ? getRelationshipLabel(node, scene) : undefined),
+    minReadableFontSize,
+    cardX: x,
+    cardY: y,
+  });
+
+
+  const image = node.hasPhoto ? resources?.embeddedImages?.[node.previewId] : undefined;
+  assertSafeEmbeddedImage(node, image);
+
+  const hasAvatar = Boolean(layoutResult.avatarBounds);
+  const avatarRadius = layoutResult.avatarRadius;
+  const avatarCenterY = layoutResult.avatarCenterY;
   const clipId = `poster-avatar-${escapeXml(node.previewId)}`;
   const ringRadius = avatarRadius + scene.cardPreset.photo.borderWidth;
   const photoShape = scene.cardPreset.photo.shape;
@@ -377,11 +363,8 @@ function renderNode(
   const avatarShape = photoShape === 'circle'
     ? `<circle class="poster-avatar" cx="${centerX.toFixed(2)}" cy="${avatarCenterY.toFixed(2)}" r="${avatarRadius.toFixed(2)}" />`
     : `<rect class="poster-avatar" x="${avatarX.toFixed(2)}" y="${avatarY.toFixed(2)}" width="${avatarSize.toFixed(2)}" height="${avatarSize.toFixed(2)}" rx="${avatarCornerRadius.toFixed(2)}" />`;
-  const nameStartY = !hasAvatar
-    ? y + Math.max(renderedNameFontSize * 1.5, height * 0.34)
-    : scene.cardPreset.photo.overlapsCard
-      ? y + Math.max(50, avatarRadius + 30)
-      : avatarCenterY + ringRadius + (renderedNameFontSize * (hasDenseDetailPressure ? 0.35 : 0.8));
+
+  const initialsFontSize = Math.min(11, Math.max(7, Math.floor(avatarRadius * 0.75)));
   const avatarVisual = !hasAvatar
     ? ''
     : image
@@ -391,43 +374,34 @@ function renderNode(
     <image class="poster-photo" data-preview-photo="${escapeXml(node.previewId)}" href="${image.dataUri}" x="${avatarX.toFixed(2)}" y="${avatarY.toFixed(2)}" width="${avatarSize.toFixed(2)}" height="${avatarSize.toFixed(2)}" preserveAspectRatio="xMidYMid slice" clip-path="url(#${clipId})" />`
     : `${ringShape}
     ${avatarShape}
-    <text class="poster-initials" x="${centerX.toFixed(2)}" y="${avatarCenterY.toFixed(2)}">${escapeXml(node.initials)}</text>`;
+    <text class="poster-initials" x="${centerX.toFixed(2)}" y="${avatarCenterY.toFixed(2)}" font-size="${initialsFontSize}" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle">${escapeXml(node.initials)}</text>`;
 
-  const detailRows = [
-    node.isMasked
-      ? { className: 'poster-status', field: 'privacy', label: maskedLabel }
-      : lifeYears
-        ? { className: 'poster-years', field: 'years', label: lifeYears }
-        : undefined,
-    relationshipLabel
-      ? { className: 'poster-relationship', field: 'relationship', label: relationshipLabel }
-      : undefined,
-    cardDetailLabel
-      ? { className: 'poster-person-detail', field: 'person-detail', label: cardDetailLabel }
-      : undefined,
-    descriptionLabel
-      ? { className: 'poster-description', field: 'description', label: descriptionLabel }
-      : undefined,
-  ].filter((row): row is { className: string; field: string; label: string } => Boolean(row));
-  const detailLineHeight = scene.cardPreset.typography.statusSize + 4;
-  const detailStartY = y + height - 14 - ((detailRows.length - 1) * detailLineHeight);
-  const details = detailRows.map((row, index) => (
-    `<text class="${row.className}" data-card-field="${row.field}" x="${centerX.toFixed(2)}" y="${(detailStartY + (index * detailLineHeight)).toFixed(2)}">${escapeXml(row.label)}</text>`
+
+  const details = layoutResult.detailRows.map((row) => (
+    `<text class="${row.className}" data-card-field="${row.field}" x="${centerX.toFixed(2)}" y="${row.yBaseline.toFixed(2)}" text-anchor="middle">${escapeXml(row.label)}</text>`
   )).join('');
+
+
   const innerFrameInset = 6;
   const innerFrame = scene.cardFramePreset === 'ornate'
     ? `<rect class="poster-card-inner-frame" x="${(x + innerFrameInset).toFixed(2)}" y="${(y + innerFrameInset).toFixed(2)}" width="${Math.max(0, width - (innerFrameInset * 2)).toFixed(2)}" height="${Math.max(0, height - (innerFrameInset * 2)).toFixed(2)}" rx="${Math.max(0, scene.cardPreset.geometry.borderRadius - 2).toFixed(2)}" />`
     : '';
 
-  return `<g class="poster-node${isRoot ? ' is-root' : ''}${node.isMasked ? ' is-masked' : ''}" data-preview-node="${escapeXml(node.previewId)}" data-generation="${node.generation}" data-scene-x="${x.toFixed(2)}" data-scene-y="${y.toFixed(2)}" data-scene-width="${width.toFixed(2)}" data-scene-height="${height.toFixed(2)}">
+  const focusRootEmphasis = isFocusRoot
+    ? `<rect class="poster-focus-root-emphasis" x="${(x - 7).toFixed(2)}" y="${(y - 7).toFixed(2)}" width="${(width + 14).toFixed(2)}" height="${(height + 14).toFixed(2)}" rx="${scene.cardPreset.geometry.borderRadius + 5}" />`
+    : '';
+
+  return `<g class="poster-node${isRoot ? ' is-root' : ''}${isFocusRoot ? ' is-focus-root' : ''}${node.isMasked ? ' is-masked' : ''}" data-preview-node="${escapeXml(node.previewId)}" data-generation="${node.generation}" data-scene-x="${x.toFixed(2)}" data-scene-y="${y.toFixed(2)}" data-scene-width="${width.toFixed(2)}" data-scene-height="${height.toFixed(2)}">
+    ${focusRootEmphasis}
     <rect class="poster-card-shadow" x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${width.toFixed(2)}" height="${height.toFixed(2)}" rx="${scene.cardPreset.geometry.borderRadius}" />
     <rect class="poster-card" x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${width.toFixed(2)}" height="${height.toFixed(2)}" rx="${scene.cardPreset.geometry.borderRadius}" />
     ${innerFrame}
     <line class="poster-card-accent" x1="${(x + 16).toFixed(2)}" y1="${(y + 12).toFixed(2)}" x2="${(x + width - 16).toFixed(2)}" y2="${(y + 12).toFixed(2)}" />
     ${avatarVisual}
-    <text class="poster-name" direction="${textDirection}" unicode-bidi="plaintext" text-anchor="middle" font-size="${renderedNameFontSize}">${renderTextLines(nameLines, centerX, nameStartY, lineHeight)}</text>
+    <text class="poster-name" direction="${layoutResult.textDirection}" unicode-bidi="plaintext" text-anchor="middle" font-size="${layoutResult.nameFontSize}">${renderTextLines(layoutResult.nameLines, centerX, layoutResult.nameStartY, layoutResult.nameLineHeight)}</text>
     ${details}
   </g>`;
+
 }
 
 function createEmbeddedFontCss(resources?: StudioPosterSvgResources): string {
@@ -688,6 +662,10 @@ export function renderPosterSceneToSvg(
     .poster-card-accent{stroke:${bronze};stroke-width:${cardFrameAppearance.accentWidth};opacity:${isDense ? Math.min(0.35, cardFrameAppearance.accentOpacity) : cardFrameAppearance.accentOpacity};}
     .poster-node.is-root .poster-card{stroke:${bronze};stroke-width:3;}
     .poster-node.is-root .poster-card-accent{stroke-width:2.5;opacity:1;}
+    .poster-focus-root-emphasis{fill:none;stroke:${bronze};stroke-width:2;opacity:.42;}
+    .poster-node.is-focus-root .poster-card{fill:${branchRootCard};stroke-width:4;}
+    .poster-node.is-focus-root .poster-card-shadow{opacity:${Math.min(0.3, cardEffectAppearance.opacity + 0.1)};}
+    .poster-node.is-focus-root .poster-name{font-weight:800;}
     .poster-node.is-masked{opacity:.82;}
     .poster-overview-node .poster-card{fill:${overviewCard};stroke-width:1;}
     .poster-overview-node.is-root .poster-card{stroke-width:2.5;}
@@ -728,10 +706,11 @@ export function renderPosterSceneToSvg(
     ${viewport?.printSheet ? renderPrintSheetOverlay(renderRect, viewport.printSheet.cropRect, viewport.printSheet.pageLabel) : ''}
   </g>
 </svg>`;
+  const normalizedSvg = svg.replace(/[ \t]+$/gm, '');
 
   return {
     format: 'svg',
-    svg,
+    svg: normalizedSvg,
     scene,
     metadata: {
       rendererId: 'poster-scene-svg',

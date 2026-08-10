@@ -33,10 +33,15 @@ export function mapPosterDesignStateToRuntimeOptions(
 
   // Rejects unsupported combinations
   if (!capability.isRuntimeSupported) {
+    const language = context?.language ?? 'en';
     return {
       supported: false,
       capability,
-      reason: capability.description.en || 'Selected layout combination is not supported by the current runtime.',
+      reason: capability.description[language] || (
+        language === 'ar'
+          ? 'تركيبة المخرج والتخطيط المحددة غير مدعومة حاليًا.'
+          : 'Selected layout combination is not supported by the current runtime.'
+      ),
     };
   }
 

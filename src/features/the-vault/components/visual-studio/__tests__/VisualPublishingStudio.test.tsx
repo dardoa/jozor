@@ -172,17 +172,32 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
     expect(screen.getByTestId('visual-studio-config-panel')).toBeInTheDocument();
   });
 
+  it('zooms the review surface without changing the canonical poster SVG', () => {
+    renderStudio();
+
+    const pageFrame = screen.getByTestId('studio-poster-page-frame');
+    const svgBeforeZoom = screen.getByTestId('studio-poster-renderer-preview').innerHTML;
+
+    fireEvent.click(screen.getByRole('button', { name: 'Zoom in preview' }));
+    expect(pageFrame).toHaveStyle({ width: '125%' });
+    expect(screen.getByTestId('studio-poster-renderer-preview').innerHTML).toBe(svgBeforeZoom);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Fit poster in preview' }));
+    expect(pageFrame).toHaveStyle({ width: '100%' });
+    expect(screen.getByTestId('studio-poster-renderer-preview').innerHTML).toBe(svgBeforeZoom);
+  });
+
   it('switches section tabs cleanly and exposes controlled settings', () => {
     renderStudio();
 
     expect(screen.getByRole('tab', { name: 'Quick Setup' })).toHaveAttribute('aria-selected', 'true');
     expect(screen.getByRole('button', { name: /Classic Heritage/i })).toBeInTheDocument();
 
-    selectTab('Content & Scope');
-    expect(screen.getByRole('tab', { name: 'Content & Scope' })).toHaveAttribute('aria-selected', 'true');
+    selectTab('Tree & Layout');
+    expect(screen.getByRole('tab', { name: 'Tree & Layout' })).toHaveAttribute('aria-selected', 'true');
     expect(screen.getByRole('group', { name: 'Privacy Filter' })).toBeInTheDocument();
 
-    selectTab('Layout');
+    selectTab('Tree & Layout');
     expect(screen.getByRole('group', { name: 'Tree Flow Direction' })).toBeInTheDocument();
 
     selectTab('Cards');
@@ -191,7 +206,7 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
     selectTab('Appearance');
     expect(screen.getByRole('group', { name: 'Color Palette' })).toBeInTheDocument();
 
-    selectTab('Print');
+    expect(screen.getByTestId('visual-studio-print-dock')).toBeInTheDocument();
     expect(screen.getByRole('group', { name: 'Paper Size' })).toBeInTheDocument();
   });
 
@@ -420,7 +435,7 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
   it('updates safe card content without exposing technical relationship values', async () => {
     renderStudio();
 
-    selectTab('Content & Scope');
+    selectTab('Tree & Layout');
     const relCheckbox = screen.getByRole('checkbox', { name: 'Show Relationship Hint' });
     fireEvent.click(relCheckbox);
 
@@ -584,8 +599,10 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
   it('reflows the canonical scene through owner-selected print margins', async () => {
     renderStudio();
 
-    selectTab('Print');
-    fireEvent.click(screen.getByRole('button', { name: 'Generous' }));
+    expect(screen.getByTestId('visual-studio-print-dock')).toBeInTheDocument();
+    fireEvent.change(screen.getByRole('combobox', { name: 'Print margins' }), {
+      target: { value: 'generous' },
+    });
 
     await waitFor(() => {
       const posterSvg = screen.getByTestId('studio-poster-renderer-preview').innerHTML;
@@ -596,7 +613,7 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
   it('changes tree spacing density through the canonical layout engine', async () => {
     renderStudio();
 
-    selectTab('Layout');
+    selectTab('Tree & Layout');
     fireEvent.click(screen.getByRole('button', { name: 'Airy' }));
 
     await waitFor(() => {
@@ -620,7 +637,7 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
   it('changes title composition without creating a second preview renderer', async () => {
     renderStudio();
 
-    selectTab('Content & Scope');
+    selectTab('Tree & Layout');
     const titleInput = screen.getByRole('textbox', { name: 'Poster Title' });
     fireEvent.change(titleInput, { target: { value: 'Custom Family Tree' } });
 
@@ -633,7 +650,7 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
   it('composes a safe owner footer and can hide Jozor attribution', async () => {
     renderStudio();
 
-    selectTab('Content & Scope');
+    selectTab('Tree & Layout');
     const attributionCheckbox = screen.getByRole('checkbox', { name: 'Show Jozor Branding' });
     fireEvent.click(attributionCheckbox);
 
@@ -646,7 +663,7 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
   it('changes the poster root through session tokens without exposing source ids', () => {
     renderStudio();
 
-    selectTab('Content & Scope');
+    selectTab('Tree & Layout');
     const rootSelect = screen.getByRole('combobox', { name: 'Focal Person (Root)' }) as HTMLSelectElement;
     const options = Array.from(rootSelect.options);
     const token1 = options[0].value;
@@ -667,7 +684,7 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
   it('exposes three poster directions and keeps Snapshot as a separate product', () => {
     renderStudio();
 
-    selectTab('Layout');
+    selectTab('Tree & Layout');
     expect(screen.getByRole('button', { name: 'Vertical (Top to Bottom)' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Horizontal (Right to Left)' })).toBeInTheDocument();
   });
@@ -675,7 +692,7 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
   it('applies poster depth, tree direction, page orientation, privacy, and page size to preview and PNG export', async () => {
     renderStudio();
 
-    selectTab('Print');
+    expect(screen.getByTestId('visual-studio-print-dock')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Portrait' }));
     fireEvent.click(screen.getByRole('button', { name: 'A2' }));
 
@@ -693,7 +710,7 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
   it('offers all available ancestor generations through the sanitized selector path', () => {
     renderStudio();
 
-    selectTab('Layout');
+    selectTab('Tree & Layout');
     const allBtn = screen.getByRole('button', { name: 'All' });
     fireEvent.click(allBtn);
     expect(allBtn).toHaveAttribute('aria-pressed', 'true');
@@ -729,7 +746,7 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
   it('routes a blocked single sheet into the large-tree product setup without downloading', () => {
     renderStudio();
 
-    selectTab('Print');
+    expect(screen.getByTestId('visual-studio-print-dock')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'A4' }));
 
     expect(screen.getByTestId('visual-studio-action-bar')).toBeInTheDocument();
@@ -739,7 +756,7 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
     renderStudio();
 
     fireEvent.click(screen.getByRole('button', { name: /Branch Collection/i }));
-    selectTab('Print');
+    expect(screen.getByTestId('visual-studio-print-dock')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'A0' }));
 
     const actionBar = screen.getByTestId('visual-studio-action-bar');
@@ -770,7 +787,7 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
     renderStudio();
 
     fireEvent.click(screen.getByRole('button', { name: /Tiled Wall Poster/i }));
-    selectTab('Print');
+    expect(screen.getByTestId('visual-studio-print-dock')).toBeInTheDocument();
 
     const rowsSelect = screen.getByRole('combobox', { name: 'Grid Rows (Sheets)' });
     fireEvent.change(rowsSelect, { target: { value: '6' } });
@@ -834,7 +851,7 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
   it('uses the owner-edited title and description in preview and download naming', async () => {
     renderStudio();
 
-    selectTab('Content & Scope');
+    selectTab('Tree & Layout');
     const titleInput = screen.getByRole('textbox', { name: 'Poster Title' });
     fireEvent.change(titleInput, { target: { value: 'Ramadan Family Ancestors' } });
 
@@ -912,7 +929,7 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
     const serializedStudio = screen.getByTestId('visual-publishing-studio').textContent || '';
     expect(serializedStudio).not.toContain('store-root');
 
-    selectTab('Content & Scope');
+    selectTab('Tree & Layout');
     const rootSelector = screen.getByRole('combobox', { name: 'Focal Person (Root)' }) as HTMLSelectElement;
     expect(rootSelector.value).toContain('session-token-');
   });
@@ -934,7 +951,7 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
   it('[1B New] single-owned selectedPosterRootToken responds to Undo, Redo, and Reset Content', () => {
     renderStudio();
 
-    selectTab('Content & Scope');
+    selectTab('Tree & Layout');
     const rootSelect = screen.getByRole('combobox', { name: 'Focal Person (Root)' }) as HTMLSelectElement;
     const options = Array.from(rootSelect.options);
     const token1 = options[0].value;
@@ -953,7 +970,7 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
     fireEvent.click(redoBtn);
     expect(rootSelect).toHaveValue(token2);
 
-    const resetContentBtn = screen.getByRole('button', { name: 'Reset Section' });
+    const resetContentBtn = screen.getByRole('button', { name: 'Reset Content' });
     fireEvent.click(resetContentBtn);
     expect(rootSelect).toHaveValue(token1);
   });

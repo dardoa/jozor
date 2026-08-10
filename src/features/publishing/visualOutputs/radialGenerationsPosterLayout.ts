@@ -1,10 +1,12 @@
 import type {
+  PosterCardPreset,
   PosterLayoutEngine,
   PosterLayoutEngineRequest,
   PosterLayoutEngineResult,
   PosterSceneConnector,
   PosterSceneNode,
 } from './posterSceneTypes';
+import { computeCardContentLayout } from './posterCardContentLayout';
 
 export class RadialLayoutCapacityError extends Error {
   readonly code = 'RADIAL_LAYOUT_CAPACITY_EXCEEDED';
@@ -47,17 +49,6 @@ function createInitials(displayName: string): string {
   const first = parts[0] ? Array.from(parts[0])[0] ?? '' : '';
   const last = parts.length > 1 ? Array.from(parts[parts.length - 1])[0] ?? '' : '';
   return `${first}${last}`;
-}
-
-function fitNameFontSize(displayName: string, cardWidth: number, preferredSize: number): number {
-  const characterCount = Math.max(1, Array.from(displayName.trim()).length);
-  let size = Math.min(preferredSize, 17);
-  while (size > 15.5) {
-    const charactersPerLine = Math.max(4, Math.floor((cardWidth - 10) / (size * 0.52)));
-    if (characterCount <= charactersPerLine * 2) break;
-    size -= 0.5;
-  }
-  return Math.round(size * 10) / 10;
 }
 
 interface BranchTreeNode {
@@ -243,57 +234,117 @@ export const radialGenerationsPosterLayoutEngine: PosterLayoutEngine = {
     const treeCenterX = treeBounds.x + treeBounds.width / 2;
 
     let treeCenterY: number;
-    let maxAvailRadius: number;
 
     if (isHalfFan) {
       treeCenterY = treeBounds.y + treeBounds.height - 60;
-      maxAvailRadius = Math.min(
-        treeBounds.width / 2 - 20,
-        treeCenterY - treeBounds.y - 40
-      );
     } else {
       treeCenterY = treeBounds.y + treeBounds.height / 2;
-      maxAvailRadius = Math.min(
-        treeBounds.width / 2 - 20,
-        treeBounds.height / 2 - 20
-      );
     }
+
+    const ringCardH = Math.round(
+      (radialOptions.generationRings >= 5)
+        ? 64
+        : document.pageSize === 'A2'
+          ? 96
+          : document.pageSize === 'A3'
+            ? 96
+            : 82
+    );
+    const maxCardExtent = Math.ceil(ringCardH / 2) + 6;
+
+    const availRadiusX = treeBounds.width / 2 - 20;
+    const availRadiusY = isHalfFan ? treeCenterY - treeBounds.y - 40 : treeBounds.height / 2 - 20;
+    const maxAvailRadius = Math.min(availRadiusX, availRadiusY);
+    const aspectX = (availRadiusX - maxCardExtent) / Math.max(1, availRadiusY - maxCardExtent);
+    const scaleXMult = (!isHalfFan && document.pageSize === 'A2') ? 1.12 : 1.0;
+    const scaleX = isHalfFan ? 1.0 : Math.max(1.0, Math.min(1.85, aspectX * scaleXMult));
+
+    // Physical Font Scale
+    const sceneUnitsToPoints = (document.physicalSizeMm.height / document.sceneSize.height) * (72 / 25.4);
+    const minReadableNamePt = 8.0;
+    const minReadableFontSize = Math.max(8.5, Math.ceil((minReadableNamePt / sceneUnitsToPoints) * 10) / 10);
 
     // Card sizes in Scene Units (pixels)
+    const isDeepRadial = radialOptions.generationRings >= 5;
     const centerScaleMult = centerCardScale === 'large' ? 1.25 : centerCardScale === 'compact' ? 0.85 : 1.0;
-    const baseCardW = Math.round(cardPreset.geometry.minWidth * centerScaleMult);
-    const baseCardH = Math.round(Math.max(48, cardPreset.geometry.height * 0.65) * centerScaleMult);
 
-    const ringCardW = Math.round(Math.max(60, Math.min(baseCardW, 68)));
-    const ringCardH = Math.round(Math.max(32, Math.min(baseCardH, 38)));
+    const baseCardW = Math.round(
+      (isDeepRadial
+        ? 98
+        : document.pageSize === 'A2'
+          ? 170
+          : document.pageSize === 'A3'
+            ? 180
+            : 138) * centerScaleMult
+    );
 
-    const innerRadius = Math.max(60, baseCardH) / 2 + 35;
+    const baseCardH = Math.round(
+      (isDeepRadial
+        ? 72
+        : document.pageSize === 'A2'
+          ? 104
+          : document.pageSize === 'A3'
+            ? 120
+            : 90) * centerScaleMult
+    );
+
+    const ringCardW = Math.round(
+      isDeepRadial
+        ? 86
+        : document.pageSize === 'A2'
+          ? 152
+          : document.pageSize === 'A3'
+            ? 168
+            : 120
+    );
+
+    const innerRadius = Math.max(50, Math.ceil(baseCardH / 2)) + 36;
     const maxAssignedRing = Math.max(0, ...Array.from(nodeRingMap.values()));
+    const activeSteps = Math.max(1, maxAssignedRing);
 
-    // Genuinely Adaptive Radial Spacing Formula
-    const requestedSteps = Math.max(1, radialOptions.generationRings - 1);
-    const activeRingDivisor = Math.max(requestedSteps, maxAssignedRing);
-    const minSafeStep = ringCardH + 20; // 32 + 20 = 52px min step for safe card gap
-    const spacingScale = ringSpacing === 'spacious' ? 1.0 : ringSpacing === 'compact' ? 0.65 : 0.85;
+    const availableSpan = Math.max(20, maxAvailRadius - innerRadius - maxCardExtent);
+    const spacingStep = availableSpan / activeSteps;
 
-    const remainingSpan = Math.max(0, maxAvailRadius - innerRadius - ringCardW / 2);
-
-    const minimumRequiredSpan = requestedSteps * minSafeStep;
-    if (requestedSteps > 0 && minimumRequiredSpan > remainingSpan) {
+    const minSpacingStep = ringCardH + 4;
+    if (activeSteps > 1 && spacingStep < minSpacingStep) {
       throw new RadialLayoutCapacityError(
-        `Radial layout capacity exceeded: ${requestedSteps} rings require minimum span ${minimumRequiredSpan}px, exceeding available span ${Math.round(remainingSpan)}px.`
+        `Radial layout capacity exceeded: available page radius is insufficient for ${activeSteps} generation rings.`
       );
     }
 
-    const proportionalStep = (remainingSpan / activeRingDivisor) * spacingScale;
-    const spacingStep = Math.max(minSafeStep, proportionalStep);
+    const outerRadius = maxAssignedRing > 0 ? innerRadius + maxAssignedRing * spacingStep : innerRadius;
+    const outerRadiusUtilization = Math.round(((outerRadius * scaleX + maxCardExtent) / availRadiusX) * 1000) / 1000;
 
-    const requiredMaxRadius = innerRadius + requestedSteps * spacingStep + ringCardW / 2;
-
-    // Capacity Validation before node placement
-    if (requiredMaxRadius > maxAvailRadius) {
+    if (!isHalfFan && document.pageSize === 'A2' && outerRadiusUtilization < 0.75) {
       throw new RadialLayoutCapacityError(
-        `Radial layout capacity exceeded: requested ${radialOptions.generationRings} generation rings require radius ${Math.round(requiredMaxRadius)}px (step ${Math.round(spacingStep)}px), exceeding available bounds ${Math.round(maxAvailRadius)}px.`
+        `Radial page utilization insufficient: outer radius utilization ${outerRadiusUtilization} is below required 0.75 for 360° A2 composition.`
+      );
+    }
+
+    const radialCardPreset: PosterCardPreset = {
+      ...cardPreset,
+      photo: {
+        ...cardPreset.photo,
+        preferredDiameter: 0,
+        borderWidth: 0,
+        overlapsCard: false,
+      },
+    };
+
+    // Validate content fit for focal node
+    const focalLayoutCheck = computeCardContentLayout({
+      node: focalNode,
+      cardWidth: baseCardW,
+      cardHeight: baseCardH,
+      cardPreset: radialCardPreset,
+      language: content.language === 'ar' ? 'ar' : 'en',
+      relationshipLabel: '',
+      minReadableFontSize,
+    });
+
+    if (!focalLayoutCheck.fitsInCard || focalLayoutCheck.nameFontSize * sceneUnitsToPoints < 8.0) {
+      throw new RadialLayoutCapacityError(
+        `Radial layout capacity exceeded: focal node '${focalNode.displayName}' content cannot fit in center card at minimum 8pt readable font size.`
       );
     }
 
@@ -314,7 +365,7 @@ export const radialGenerationsPosterLayoutEngine: PosterLayoutEngine = {
       occupationLabel: focalNode.occupationLabel,
       descriptionLabel: focalNode.descriptionLabel,
       initials: createInitials(focalNode.displayName),
-      nameFontSize: fitNameFontSize(focalNode.displayName, baseCardW, cardPreset.typography.nameSize),
+      nameFontSize: focalLayoutCheck.nameFontSize,
       rect: {
         x: Math.round((treeCenterX - baseCardW / 2) * 10) / 10,
         y: Math.round((treeCenterY - baseCardH / 2) * 10) / 10,
@@ -331,11 +382,27 @@ export const radialGenerationsPosterLayoutEngine: PosterLayoutEngine = {
       const angle = nodeAngleMap.get(nodeId) ?? startAngle;
       const radius = innerRadius + ring * spacingStep;
 
-      const nodeCx = treeCenterX + radius * Math.cos(angle);
+      const nodeCx = treeCenterX + radius * scaleX * Math.cos(angle);
       const nodeCy = treeCenterY + radius * Math.sin(angle);
 
       const rectX = Math.round((nodeCx - ringCardW / 2) * 10) / 10;
       const rectY = Math.round((nodeCy - ringCardH / 2) * 10) / 10;
+
+      const ringLayoutCheck = computeCardContentLayout({
+        node,
+        cardWidth: ringCardW,
+        cardHeight: ringCardH,
+        cardPreset: radialCardPreset,
+        language: content.language === 'ar' ? 'ar' : 'en',
+        relationshipLabel: '',
+        minReadableFontSize,
+      });
+
+      if (!ringLayoutCheck.fitsInCard || ringLayoutCheck.nameFontSize * sceneUnitsToPoints < 8.0) {
+        throw new RadialLayoutCapacityError(
+          `Radial layout capacity exceeded: node '${node.displayName}' content cannot fit in ring card at minimum 8pt readable font size.`
+        );
+      }
 
       sceneNodes.push({
         previewId: node.previewId,
@@ -351,7 +418,7 @@ export const radialGenerationsPosterLayoutEngine: PosterLayoutEngine = {
         occupationLabel: node.occupationLabel,
         descriptionLabel: node.descriptionLabel,
         initials: createInitials(node.displayName),
-        nameFontSize: fitNameFontSize(node.displayName, ringCardW, cardPreset.typography.nameSize),
+        nameFontSize: ringLayoutCheck.nameFontSize,
         rect: {
           x: rectX,
           y: rectY,

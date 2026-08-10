@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import type { PrintQualityReport, VisualOutputDefinition } from '../../../publishing';
 
-interface VisualOutputActionBarProps {
+export interface VisualOutputActionBarProps {
   language: 'ar' | 'en';
   selectedDefinition?: VisualOutputDefinition;
   exportingFormat?: 'svg' | 'png' | 'pdf' | 'branch-collection' | 'tiled-wall';

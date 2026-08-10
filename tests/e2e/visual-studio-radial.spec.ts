@@ -191,7 +191,7 @@ async function navigateToStudio(page: Page, viewportWidth = 1280) {
 }
 
 async function activateRadial(page: Page) {
-  await page.getByRole('tab', { name: 'Layout' }).click();
+  await page.getByRole('tab', { name: 'Tree & Layout' }).click();
   const radialButton = page.getByRole('button', { name: /Radial \/ Fan/i });
   await expect(radialButton).toBeVisible();
   await radialButton.click();
@@ -359,19 +359,29 @@ test.describe('Visual Publishing Studio — Phase 3B Radial Mandatory E2E Suite'
     await navigateToStudio(page);
     await activateRadial(page);
 
+    // Select Descendants scope so 6-level chain occupies 6 rings
+    const descBtn = page.getByTestId('radial-scope-control').getByRole('button', { name: 'Descendants' });
+    await expect(descBtn).toBeVisible();
+    await descBtn.click();
+    await expect(descBtn).toHaveAttribute('aria-pressed', 'true');
+
+
     // Select 6 rings on small paper (A4) to force capacity failure
-    await page.getByRole('tab', { name: 'Print Quality' }).click();
+
+    await expect(page.getByTestId('visual-studio-print-dock')).toBeVisible();
     const a4Btn = page.getByRole('button', { name: 'A4' });
     await expect(a4Btn).toBeVisible();
     await a4Btn.click();
 
-    await page.getByRole('tab', { name: 'Layout' }).click();
+    await page.getByRole('tab', { name: 'Tree & Layout' }).click();
     const rings6Btn = page.getByTestId('radial-rings-control').getByRole('button', { name: '6' });
     await expect(rings6Btn).toBeVisible();
     await rings6Btn.click();
     await expect(rings6Btn).toHaveAttribute('aria-pressed', 'true');
 
     await expect(page.getByTestId('poster-capacity-error-guidance')).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByTestId('poster-preview-unavailable')).toBeVisible();
+    await expect(page.getByTestId('poster-print-readiness-summary')).toContainText('Print blocked');
 
     // Export buttons should be disabled or blocked when in capacity error state
     const svgButton = page.getByRole('button', { name: 'Download SVG' });

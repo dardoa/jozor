@@ -4,12 +4,9 @@ import {
   RotateCw,
   RefreshCw,
   Sparkles,
-  Sliders,
-  FileText,
   CreditCard,
   Palette,
-  Printer,
-  AlertTriangle,
+  Network,
 } from 'lucide-react';
 import type {
   PosterDesignState,
@@ -20,13 +17,10 @@ import type {
   TieredSettingsBucket,
   FocusSettingsBucket,
   RadialSettingsBucket,
-  TiledWallPosterPlan,
   VisualOutputDefinition,
 } from '../../../publishing';
 import {
   getPosterPresetDefinition,
-  requiresPrintQualityGate,
-  requiresDedicatedTileQualityEvaluation,
   INITIAL_POSTER_PRESETS,
   createInitialPosterDesignState,
 } from '../../../publishing';
@@ -34,7 +28,7 @@ import type {
   VisualStudioPosterRootOption,
 } from './visualStudioPosterOptions';
 
-export type StudioWorkspaceSectionId = 'quick-setup' | 'content' | 'layout' | 'cards' | 'appearance' | 'print';
+export type StudioWorkspaceSectionId = 'quick-setup' | 'tree-layout' | 'cards' | 'appearance';
 
 export interface VisualOutputConfigPanelProps {
   language: 'ar' | 'en';
@@ -47,7 +41,6 @@ export interface VisualOutputConfigPanelProps {
   onUpdateLayout?: (updates: Partial<SharedPosterSettings> & Partial<TieredSettingsBucket>) => void;
   onUpdateCards?: (updates: Partial<SharedPosterSettings>) => void;
   onUpdateAppearance?: (updates: Partial<SharedPosterSettings>) => void;
-  onUpdatePrint?: (updates: Partial<SharedPosterSettings> & Record<string, unknown>) => void;
   onSwitchProductMode?: (mode: PosterProductMode) => void;
   onSwitchLayoutMode?: (mode: PosterLayoutMode) => void;
   onSwitchScope?: (scope: PosterTreeScope) => void;
@@ -69,7 +62,6 @@ export interface VisualOutputConfigPanelProps {
   posterSubtitle?: string;
   onPosterTitleChange?: (value: string) => void;
   onPosterSubtitleChange?: (value: string) => void;
-  tiledWallPlan?: TiledWallPosterPlan;
   activeSection?: StudioWorkspaceSectionId;
 }
 
@@ -348,7 +340,6 @@ export const VisualOutputConfigPanel: React.FC<VisualOutputConfigPanelProps> = (
   onUpdateLayout,
   onUpdateCards,
   onUpdateAppearance,
-  onUpdatePrint,
   onSwitchProductMode,
   onSwitchLayoutMode,
   onSwitchScope,
@@ -380,26 +371,11 @@ export const VisualOutputConfigPanel: React.FC<VisualOutputConfigPanelProps> = (
   const [activeSection, setActiveSection] = useState<StudioWorkspaceSectionId>(propActiveSection || 'quick-setup');
 
   const currentPresetDef = getPosterPresetDefinition(currentState.activePresetId);
-  const showQualityWarning = requiresPrintQualityGate(
-    currentState.productMode,
-    currentState.layoutMode,
-    currentState.scope,
-    currentState.shared.size,
-    120
-  );
-  const showTiledWallTileNotice = requiresDedicatedTileQualityEvaluation(
-    currentState.productMode,
-    currentState.layoutMode,
-    currentState.scope
-  );
-
   const sections: Array<{ id: StudioWorkspaceSectionId; label: string; icon: React.ComponentType<{ className?: string }> }> = [
     { id: 'quick-setup', label: t.quickSetup, icon: Sparkles },
-    { id: 'content', label: t.contentAndScope, icon: FileText },
-    { id: 'layout', label: t.layout, icon: Sliders },
+    { id: 'tree-layout', label: isAr ? 'الشجرة والتخطيط' : 'Tree & Layout', icon: Network },
     { id: 'cards', label: t.cards, icon: CreditCard },
     { id: 'appearance', label: t.appearance, icon: Palette },
-    { id: 'print', label: t.print, icon: Printer },
   ];
 
   const handleTabKeyDown = (e: React.KeyboardEvent, idx: number) => {
@@ -422,6 +398,38 @@ export const VisualOutputConfigPanel: React.FC<VisualOutputConfigPanelProps> = (
       document.getElementById(`tab-${nextSec.id}`)?.focus();
     }, 0);
   };
+
+  const layoutModeSelector = currentState.productMode === 'detailed-poster' ? (
+    <fieldset className="space-y-1.5" role="group" aria-label={isAr ? 'طريقة عرض الشجرة' : 'Tree layout'}>
+      <legend className="mb-1 text-xs font-medium text-stone-400">
+        {isAr ? 'طريقة عرض الشجرة' : 'Tree Layout'}
+      </legend>
+      <div className="grid grid-cols-3 gap-2" data-testid="poster-layout-engine-control">
+        {[
+          { mode: 'tiered' as const, label: isAr ? 'متدرج' : 'Tiered Generations' },
+          { mode: 'focus-family' as const, label: isAr ? 'حول شخص' : 'Focus Family' },
+          { mode: 'radial-generations' as const, label: isAr ? 'دائري / مروحي' : 'Radial / Fan' },
+        ].map(({ mode, label }) => {
+          const isSelected = currentState.layoutMode === mode;
+          return (
+            <button
+              key={mode}
+              type="button"
+              aria-pressed={isSelected}
+              onClick={() => onSwitchLayoutMode?.(mode)}
+              className={`min-h-11 rounded-lg border px-2 py-2 text-center text-xs leading-tight transition-colors ${
+                isSelected
+                  ? 'border-amber-500 bg-amber-500/10 font-medium text-amber-300'
+                  : 'border-stone-800 bg-stone-950/40 text-stone-400 hover:border-stone-700 hover:text-stone-200'
+              }`}
+            >
+              {label}
+            </button>
+          );
+        })}
+      </div>
+    </fieldset>
+  ) : null;
 
   return (
     <div
@@ -476,7 +484,7 @@ export const VisualOutputConfigPanel: React.FC<VisualOutputConfigPanelProps> = (
 
       {/* Section Navigator (Tabs) */}
       <div
-        className="flex items-center border-b border-stone-800 bg-stone-950/60 overflow-x-auto no-scrollbar px-2"
+        className="grid grid-cols-2 border-b border-stone-800 bg-stone-950/60 px-2"
         role="tablist"
         aria-label={t.presetFirstWorkspace}
       >
@@ -494,7 +502,7 @@ export const VisualOutputConfigPanel: React.FC<VisualOutputConfigPanelProps> = (
               tabIndex={isActive ? 0 : -1}
               onClick={() => setActiveSection(sec.id)}
               onKeyDown={(e) => handleTabKeyDown(e, idx)}
-              className={`flex items-center gap-2 px-3.5 py-2.5 text-xs font-medium border-b-2 whitespace-nowrap transition-colors focus:ring-2 focus:ring-amber-500 focus-visible:ring-2 focus-visible:ring-amber-500 ${
+              className={`flex min-h-11 min-w-0 items-center gap-2 border-b-2 px-3 py-2.5 text-start text-xs font-medium leading-tight transition-colors focus:ring-2 focus:ring-amber-500 focus-visible:ring-2 focus-visible:ring-amber-500 ${
                 isActive
                   ? 'border-amber-500 text-amber-400 bg-amber-500/10'
                   : 'border-transparent text-stone-400 hover:text-stone-200 hover:bg-stone-800/40'
@@ -566,6 +574,7 @@ export const VisualOutputConfigPanel: React.FC<VisualOutputConfigPanelProps> = (
                     <button
                       key={mode}
                       type="button"
+                      aria-pressed={isSelected}
                       onClick={() => onSwitchProductMode?.(mode)}
                       className={`px-3 py-2 rounded-lg border text-xs font-medium text-center transition-colors ${
                         isSelected
@@ -579,6 +588,9 @@ export const VisualOutputConfigPanel: React.FC<VisualOutputConfigPanelProps> = (
                 })}
               </div>
             </fieldset>
+
+            {/* Keep the primary visual choice reachable without discovering another tab. */}
+            {layoutModeSelector}
 
             {/* Tree Scope Selection */}
             <fieldset
@@ -630,10 +642,13 @@ export const VisualOutputConfigPanel: React.FC<VisualOutputConfigPanelProps> = (
           </div>
         )}
 
-        {activeSection === 'content' && (
+        {activeSection === 'tree-layout' && (
           <div className="space-y-4">
             {/* Focal Root Selection */}
-            {posterRootOptions.length > 0 && currentState.scope !== 'full-tree' && (
+            {posterRootOptions.length > 0
+              && currentState.scope !== 'full-tree'
+              && currentState.layoutMode === 'tiered'
+              && (
               <div>
                 <label htmlFor="poster-root-select" className="block text-xs font-medium text-stone-400 mb-1.5">{t.selectedRoot}</label>
                 <select
@@ -670,6 +685,7 @@ export const VisualOutputConfigPanel: React.FC<VisualOutputConfigPanelProps> = (
                   <button
                     key={mode}
                     type="button"
+                    aria-pressed={currentState.shared.privacyMode === mode}
                     onClick={() => onUpdateContent?.({ privacyMode: mode })}
                     className={`px-3 py-2 rounded-lg border text-xs text-center transition-colors ${
                       currentState.shared.privacyMode === mode
@@ -767,6 +783,7 @@ export const VisualOutputConfigPanel: React.FC<VisualOutputConfigPanelProps> = (
             <div className="pt-2 flex justify-end">
               <button
                 type="button"
+                aria-label={language === 'ar' ? 'إعادة ضبط المحتوى' : 'Reset Content'}
                 onClick={() => onResetSection?.('content')}
                 className="text-xs text-stone-400 hover:text-amber-400 transition-colors"
               >
@@ -776,57 +793,13 @@ export const VisualOutputConfigPanel: React.FC<VisualOutputConfigPanelProps> = (
           </div>
         )}
 
-        {activeSection === 'layout' && (
-          <div className="space-y-4">
+        {activeSection === 'tree-layout' && (
+          <div className="space-y-4 border-t border-stone-800 pt-5">
             {/* Layout Mode Selector (Tiered vs Focus Family vs Radial Generations) */}
-            {currentState.productMode === 'detailed-poster' && (
-              <fieldset className="space-y-1.5" role="group" aria-label="Layout Engine">
-                <legend className="text-xs font-medium text-stone-400 mb-1">
-                  {isAr ? 'نمط التخطيط' : 'Layout Engine'}
-                </legend>
-                <div className="grid grid-cols-3 gap-2" data-testid="poster-layout-engine-control">
-                  <button
-                    type="button"
-                    aria-pressed={currentState.layoutMode === 'tiered'}
-                    onClick={() => onSwitchLayoutMode?.('tiered')}
-                    className={`px-2 py-2 rounded-lg border text-xs text-center transition-colors ${
-                      currentState.layoutMode === 'tiered'
-                        ? 'border-amber-500 bg-amber-500/10 text-amber-300 font-medium'
-                        : 'border-stone-800 bg-stone-950/40 text-stone-400 hover:border-stone-700'
-                    }`}
-                  >
-                    {isAr ? 'متدرج' : 'Tiered Generations'}
-                  </button>
-                  <button
-                    type="button"
-                    aria-pressed={currentState.layoutMode === 'focus-family'}
-                    onClick={() => onSwitchLayoutMode?.('focus-family')}
-                    className={`px-2 py-2 rounded-lg border text-xs text-center transition-colors ${
-                      currentState.layoutMode === 'focus-family'
-                        ? 'border-amber-500 bg-amber-500/10 text-amber-300 font-medium'
-                        : 'border-stone-800 bg-stone-950/40 text-stone-400 hover:border-stone-700'
-                    }`}
-                  >
-                    {isAr ? 'حول شخص' : 'Focus Family'}
-                  </button>
-                  <button
-                    type="button"
-                    aria-pressed={currentState.layoutMode === 'radial-generations'}
-                    onClick={() => onSwitchLayoutMode?.('radial-generations')}
-                    className={`px-2 py-2 rounded-lg border text-xs text-center transition-colors ${
-                      currentState.layoutMode === 'radial-generations'
-                        ? 'border-amber-500 bg-amber-500/10 text-amber-300 font-medium'
-                        : 'border-stone-800 bg-stone-950/40 text-stone-400 hover:border-stone-700'
-                    }`}
-                  >
-                    {isAr ? 'دائري / مروحي' : 'Radial / Fan'}
-                  </button>
-                </div>
-              </fieldset>
-            )}
+            {layoutModeSelector}
 
             {/* Radial Generations Controls */}
-            {currentState.layoutMode === 'radial-generations' && (
+            {currentState.productMode === 'detailed-poster' && currentState.layoutMode === 'radial-generations' && (
               <div className="space-y-4 border-t border-stone-800 pt-3" data-testid="radial-controls-section">
                 {/* Radial Root Person Selector */}
                 {posterRootOptions.length > 0 && (
@@ -1072,7 +1045,7 @@ export const VisualOutputConfigPanel: React.FC<VisualOutputConfigPanelProps> = (
             )}
 
             {/* Focus Family Contextual Controls */}
-            {currentState.layoutMode === 'focus-family' && (
+            {currentState.productMode === 'detailed-poster' && currentState.layoutMode === 'focus-family' && (
               <div className="space-y-3 border-t border-stone-800/80 pt-3" data-testid="focus-family-controls">
                 {/* Focal Person Token Selector */}
                 <div>
@@ -1206,6 +1179,7 @@ export const VisualOutputConfigPanel: React.FC<VisualOutputConfigPanelProps> = (
             <div className="pt-2 flex justify-end">
               <button
                 type="button"
+                aria-label={language === 'ar' ? 'إعادة ضبط التخطيط' : 'Reset Layout'}
                 onClick={() => onResetSection?.('layout')}
                 className="text-xs text-stone-400 hover:text-amber-400 transition-colors"
               >
@@ -1668,148 +1642,6 @@ export const VisualOutputConfigPanel: React.FC<VisualOutputConfigPanelProps> = (
           </div>
         )}
 
-        {activeSection === 'print' && (
-          <div className="space-y-4">
-            {/* Paper Size */}
-            <fieldset className="space-y-1.5" role="group" aria-label={t.pageSize}>
-              <legend className="text-xs font-medium text-stone-400 mb-1">{t.pageSize}</legend>
-              <div className="grid grid-cols-5 gap-1.5">
-                {(['A4', 'A3', 'A2', 'A1', 'A0'] as const).map((sz) => (
-                  <button
-                    key={sz}
-                    type="button"
-                    aria-pressed={currentState.shared.size === sz}
-                    onClick={() => onUpdatePrint?.({ size: sz })}
-                    className={`px-2.5 py-2 rounded-lg border text-xs text-center transition-colors ${
-                      currentState.shared.size === sz
-                        ? 'border-amber-500 bg-amber-500/10 text-amber-300 font-medium'
-                        : 'border-stone-800 bg-stone-950/40 text-stone-400 hover:border-stone-700'
-                    }`}
-                  >
-                    {sz}
-                  </button>
-                ))}
-              </div>
-            </fieldset>
-
-            {/* Orientation */}
-            <fieldset className="space-y-1.5 border-t border-stone-800 pt-3" role="group" aria-label={t.orientation}>
-              <legend className="text-xs font-medium text-stone-400 mb-1">{t.orientation}</legend>
-              <div className="grid grid-cols-2 gap-2">
-                {[
-                  { val: 'landscape' as const, label: t.landscape },
-                  { val: 'portrait' as const, label: t.portrait },
-                ].map(({ val, label }) => (
-                  <button
-                    key={val}
-                    type="button"
-                    aria-pressed={currentState.shared.orientation === val}
-                    onClick={() => onUpdatePrint?.({ orientation: val })}
-                    className={`px-2.5 py-2 rounded-lg border text-xs text-center transition-colors ${
-                      currentState.shared.orientation === val
-                        ? 'border-amber-500 bg-amber-500/10 text-amber-300 font-medium'
-                        : 'border-stone-800 bg-stone-950/40 text-stone-400 hover:border-stone-700'
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </fieldset>
-
-            {/* Print Margins */}
-            <fieldset className="space-y-1.5 border-t border-stone-800 pt-3">
-              <legend className="text-xs font-medium text-stone-400 mb-1">{t.margins}</legend>
-              <div className="grid grid-cols-3 gap-2">
-                {[
-                  { mp: 'compact' as const, label: t.marginCompact },
-                  { mp: 'balanced' as const, label: t.marginBalanced },
-                  { mp: 'generous' as const, label: t.marginGenerous },
-                ].map(({ mp, label }) => (
-                  <button
-                    key={mp}
-                    type="button"
-                    aria-pressed={currentState.shared.marginPreset === mp}
-                    onClick={() => onUpdatePrint?.({ marginPreset: mp })}
-                    className={`px-2.5 py-2 rounded-lg border text-xs text-center transition-colors ${
-                      currentState.shared.marginPreset === mp
-                        ? 'border-amber-500 bg-amber-500/10 text-amber-300 font-medium'
-                        : 'border-stone-800 bg-stone-950/40 text-stone-400 hover:border-stone-700'
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </fieldset>
-
-            {/* Tiled Wall Options */}
-            {currentState.productMode === 'tiled-wall' && (
-              <div className="space-y-3 border-t border-stone-800 pt-3">
-                <div>
-                  <label htmlFor="tiled-rows-select" className="block text-xs font-medium text-stone-400 mb-1">{t.tiledRows}</label>
-                  <select
-                    id="tiled-rows-select"
-                    aria-label={t.tiledRows}
-                    value={currentState.productBucket?.tiledRows ?? 3}
-                    onChange={(e) => onUpdatePrint?.({ tiledRows: Number(e.target.value) })}
-                    className="w-full px-2.5 py-2 bg-stone-950 border border-stone-800 rounded-lg text-xs text-stone-200"
-                  >
-                    {[2, 3, 4, 5, 6, 7, 8].map((num) => (
-                      <option key={num} value={num}>{num}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label htmlFor="tiled-cols-select" className="block text-xs font-medium text-stone-400 mb-1">{t.tiledColumns}</label>
-                  <select
-                    id="tiled-cols-select"
-                    aria-label={t.tiledColumns}
-                    value={currentState.productBucket?.tiledColumns ?? 3}
-                    onChange={(e) => onUpdatePrint?.({ tiledColumns: Number(e.target.value) })}
-                    className="w-full px-2.5 py-2 bg-stone-950 border border-stone-800 rounded-lg text-xs text-stone-200"
-                  >
-                    {[2, 3, 4, 5, 6, 7, 8].map((num) => (
-                      <option key={num} value={num}>{num}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            )}
-
-            {/* Print Quality Gate Alert Notice */}
-            {showQualityWarning && (
-              <div className="p-3.5 rounded-xl border border-amber-500/40 bg-amber-500/10 text-amber-200 text-xs flex gap-2.5 items-start">
-                <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-                <div className="space-y-1">
-                  <strong className="font-semibold block text-amber-300">{t.printQualityGateTitle}</strong>
-                  <p className="text-[11px] text-amber-200/90 leading-relaxed">{t.printQualityGateWarning}</p>
-                </div>
-              </div>
-            )}
-
-            {/* Tiled Wall Notice */}
-            {showTiledWallTileNotice && (
-              <div className="p-3.5 rounded-xl border border-blue-500/40 bg-blue-500/10 text-blue-200 text-xs flex gap-2.5 items-start">
-                <AlertTriangle className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
-                <div className="space-y-1">
-                  <strong className="font-semibold block text-blue-300">{t.tiledWall}</strong>
-                  <p className="text-[11px] text-blue-200/90 leading-relaxed">{t.tiledWallGuidance}</p>
-                </div>
-              </div>
-            )}
-
-            <div className="pt-2 flex justify-end">
-              <button
-                type="button"
-                onClick={() => onResetSection?.('print')}
-                className="text-xs text-stone-400 hover:text-amber-400 transition-colors"
-              >
-                {t.resetSection}
-              </button>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

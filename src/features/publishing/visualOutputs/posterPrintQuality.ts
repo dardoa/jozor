@@ -10,7 +10,12 @@ import type {
 const MM_PER_INCH = 25.4;
 const POINTS_PER_INCH = 72;
 const DEFAULT_RASTER_SCALE = 2;
-const MINIMUM_PRINT_FONT_PT = 8;
+const MINIMUM_PRINT_FONT_PT = 8.0;
+
+
+
+
+
 const PREFERRED_PRINT_FONT_PT = 9;
 const MINIMUM_RASTER_DPI = 120;
 const PREFERRED_RASTER_DPI = 240;

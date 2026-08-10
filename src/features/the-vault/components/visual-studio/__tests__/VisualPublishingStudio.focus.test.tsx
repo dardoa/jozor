@@ -28,7 +28,7 @@ describe('VisualPublishingStudio Focus Family integration', () => {
   });
   it('renders Focus controls while keeping Radial unavailable', () => {
     const state = switchLayoutMode(createInitialPosterDesignState('classic-heritage'), 'focus-family');
-    render(<VisualOutputConfigPanel language="en" state={state} activeSection="layout" />);
+    render(<VisualOutputConfigPanel language="en" state={state} activeSection="tree-layout" />);
 
     expect(screen.getByRole('button', { name: 'Focus Family' })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByTestId('focus-family-controls')).toBeInTheDocument();
@@ -40,7 +40,7 @@ describe('VisualPublishingStudio Focus Family integration', () => {
 
   it('renders localized Arabic Focus controls', () => {
     const state = switchLayoutMode(createInitialPosterDesignState('classic-heritage'), 'focus-family');
-    render(<VisualOutputConfigPanel language="ar" state={state} activeSection="layout" />);
+    render(<VisualOutputConfigPanel language="ar" state={state} activeSection="tree-layout" />);
 
     expect(screen.getByTestId('focus-family-controls')).toBeInTheDocument();
     expect(screen.getByTestId('focal-person-select')).toHaveAccessibleName();
@@ -66,7 +66,7 @@ describe('VisualPublishingStudio Focus Family integration', () => {
   it('clicks Focus, selects a focal person, changes controls, updates the scene, and restores Tiered', async () => {
     render(<VisualPublishingStudio language="en" posterSvgResources={embeddedResources} />);
 
-    fireEvent.click(screen.getByRole('tab', { name: 'Layout' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Tree & Layout' }));
     fireEvent.click(screen.getByRole('button', { name: 'Focus Family' }));
     expect(screen.getByTestId('focus-family-controls')).toBeInTheDocument();
 

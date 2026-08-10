@@ -126,4 +126,42 @@ describe('Phase 1B: usePosterDesignState React Hook', () => {
     expect(result.current.state.productBucket.tiledColumns).toBe(4);
     expect(result.current.state.productBucket.branchCollectionIndexTitle).toBe('My Family Index');
   });
+
+  it('normalizes Radial to Tiered when switching to a full-tree product or scope', () => {
+    const { result } = renderHook(() => usePosterDesignState('classic-heritage'));
+
+    act(() => {
+      result.current.switchLayoutMode('radial-generations');
+      result.current.switchScope('descendants');
+    });
+
+    expect(result.current.state.layoutMode).toBe('radial-generations');
+    expect(result.current.state.scope).toBe('descendants');
+
+    act(() => {
+      result.current.switchProductMode('full-tree-overview');
+    });
+
+    expect(result.current.state.productMode).toBe('full-tree-overview');
+    expect(result.current.state.layoutMode).toBe('tiered');
+    expect(result.current.state.scope).toBe('full-tree');
+    expect(result.current.state.radial.lastRadialScope).toBe('descendants');
+
+    act(() => {
+      result.current.switchProductMode('detailed-poster');
+      result.current.switchLayoutMode('radial-generations');
+    });
+
+    expect(result.current.state.productMode).toBe('detailed-poster');
+    expect(result.current.state.layoutMode).toBe('radial-generations');
+    expect(result.current.state.scope).toBe('descendants');
+
+    act(() => {
+      result.current.switchScope('full-tree');
+    });
+
+    expect(result.current.state.productMode).toBe('full-tree-overview');
+    expect(result.current.state.layoutMode).toBe('tiered');
+    expect(result.current.state.scope).toBe('full-tree');
+  });
 });

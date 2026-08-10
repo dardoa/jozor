@@ -1001,9 +1001,11 @@ describe('Radial/Fan Poster Layout Engine (Phase 3A Foundation Evidence & Adapti
       []
     );
 
+    const a3Doc = createPosterDocumentSpec('A3', 'landscape', 'balanced');
+
     const scene = createPosterScene({
       graph,
-      document: documentSpec,
+      document: a3Doc,
       content: {
         definitionId: 'classic-ancestor-poster',
         language: 'ar',

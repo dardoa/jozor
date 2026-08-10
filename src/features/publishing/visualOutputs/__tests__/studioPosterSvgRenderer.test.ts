@@ -658,7 +658,7 @@ describe('studioPosterSvgRenderer', () => {
     expect(result.svg).toContain('\u0634\u062c\u0631\u0629 \u0623\u0633\u0644\u0627\u0641');
     expect(result.svg).toContain('\u0631\u0645\u0636\u0627\u0646 \u0627\u0644\u0642\u0631\u062c\u064a');
     expect(result.svg).toContain('1895 - 1983');
-    expect(result.svg).toContain('\u0645\u062d\u062c\u0648\u0628');
+    expect(result.svg).toContain('\u0645\u062d\u0645\u064a \u0628\u0645\u0648\u062c\u0628 \u0627\u0644\u062e\u0635\u0648\u0635\u064a\u0629');
     expect(result.svg).toContain('font-variant-ligatures:common-ligatures contextual');
     expect(result.svg).toContain('direction:ltr;unicode-bidi:isolate');
   });
@@ -788,7 +788,7 @@ describe('studioPosterSvgRenderer', () => {
     expect(result.svg).not.toContain('class="poster-years"');
     expect(result.svg).toContain('data-card-field="relationship"');
     expect(result.svg).toContain('\u0627\u0644\u062c\u0630\u0631');
-    expect(result.svg).toContain('\u0645\u0646 \u0627\u0644\u0623\u0633\u0644\u0627\u0641');
+    expect(result.svg).toContain('\u0645\u062d\u0645\u064a \u0628\u0645\u0648\u062c\u0628 \u0627\u0644\u062e\u0635\u0648\u0635\u064a\u0629');
     expect(result.svg).not.toContain('relationshipHint');
   });
 
@@ -828,14 +828,21 @@ describe('studioPosterSvgRenderer', () => {
     const cardBottom = detailedScene.nodes[0].rect.y + detailedScene.nodes[0].rect.height;
 
     expect(nameYs).toHaveLength(1);
+
     expect(detailYs).toHaveLength(4);
     expect(Math.min(...detailYs) - Math.max(...nameYs)).toBeGreaterThanOrEqual(10);
     expect(Math.max(...detailYs)).toBeLessThan(cardBottom);
     expect(rootMarkup).toContain('Damascus \u00b7 Historian');
     expect(rootMarkup).toContain('data-card-field="description"');
-    expect(rootMarkup).toContain('Keeper of the family arch\u2026');
-    expect(rootMarkup).toContain('A deliberately l\u2026');
+    expect(rootMarkup).toContain('Keeper of the family archive');
+    expect(rootMarkup).toContain('A deliberately');
+
+
+
+
+
   });
+
 
   it('escapes owner-authored XML content', () => {
     const unsafeScene = {

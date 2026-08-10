@@ -2,6 +2,7 @@ import { render, screen, within, waitFor, cleanup } from '@testing-library/react
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { StrictMode } from 'react';
 import { VisualPublishingStudio } from '../VisualPublishingStudio';
 
 const posterCanvasContext = {
@@ -59,19 +60,68 @@ vi.mock('sonner', () => ({
   },
 }));
 
+const embeddedResources = {
+  embeddedArabicFontDataUri: 'data:font/ttf;base64,AAEAAEFCQ0Q=',
+  embeddedArabicFontFormat: 'truetype' as const,
+  embeddedImages: {},
+};
+
 describe('VisualPublishingStudio Radial Integration Suite', () => {
   beforeEach(() => {
     cleanup();
   });
   vi.setConfig({ testTimeout: 15000 });
 
+  it('makes Radial directly reachable from Quick Setup after leaving Full-tree Overview', async () => {
+    const user = userEvent.setup();
+    render(
+      <VisualPublishingStudio language="en" previewSourceMode="fixture" posterSvgResources={embeddedResources} />
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Full-tree Overview' }));
+    expect(screen.getByRole('button', { name: 'Full-tree Overview' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.queryByRole('button', { name: 'Radial / Fan' })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Detailed Poster' }));
+    const radialButton = screen.getByRole('button', { name: 'Radial / Fan' });
+    expect(radialButton).toBeVisible();
+
+    await user.click(radialButton);
+
+    await waitFor(() => {
+      expect(radialButton).toHaveAttribute('aria-pressed', 'true');
+      expect(document.querySelector('svg[data-poster-layout-engine="radial-generations"]')).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Full Family Tree' }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Full-tree Overview' })).toHaveAttribute('aria-pressed', 'true');
+      expect(screen.queryByRole('button', { name: 'Radial / Fan' })).not.toBeInTheDocument();
+      expect(document.querySelector('svg[data-poster-layout-engine="full-tree-overview"]')).toBeInTheDocument();
+      expect(screen.queryByTestId('visual-studio-unsupported-notice')).not.toBeInTheDocument();
+    });
+
+    expect(screen.getAllByRole('tab')).toHaveLength(4);
+  });
+
   it('executes complete Radial integration workflow with token stability, geometry updates, and raw ID exclusion', async () => {
     const user = userEvent.setup();
-    const { rerender } = render(<VisualPublishingStudio language="ar" previewSourceMode="fixture" />);
+    const { rerender } = render(
+      <VisualPublishingStudio language="ar" previewSourceMode="fixture" posterSvgResources={embeddedResources} />
+    );
+
+
+    // 0. Select Ancestor Poster product if present
+    const posterProductCard = screen.queryByTestId('product-card-ancestor-poster');
+    if (posterProductCard) {
+      await user.click(posterProductCard);
+    }
 
     // 1. Navigate to Layout tab & activate Radial
-    const layoutTab = screen.getByRole('tab', { name: /التخطيط/i });
+    const layoutTab = screen.getByRole('tab', { name: /الشجرة والتخطيط/i });
     await user.click(layoutTab);
+
 
     const radialBtn = screen.getByRole('button', { name: /دائري \/ مروحي/i });
     expect(radialBtn).toBeInTheDocument();
@@ -79,11 +129,9 @@ describe('VisualPublishingStudio Radial Integration Suite', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('radial-controls-section')).toBeInTheDocument();
+      expect(document.querySelector('svg[data-poster-layout-engine="radial-generations"]')).toBeInTheDocument();
     });
 
-    // 2. Assert SVG exists in DOM
-    const svgElement = document.querySelector('svg[data-poster-layout-engine="radial-generations"]');
-    expect(svgElement).toBeInTheDocument();
 
     const readGeometry = () => Array.from(
       document.querySelectorAll('svg[data-poster-layout-engine="radial-generations"] .poster-node')
@@ -93,7 +141,7 @@ describe('VisualPublishingStudio Radial Integration Suite', () => {
       node.getAttribute('data-scene-y'),
     ]);
     // 3. Choose root token from select
-    const contentTab = screen.getByRole('tab', { name: /المحتوى/i });
+    const contentTab = screen.getByRole('tab', { name: /الشجرة والتخطيط/i });
     await user.click(contentTab);
 
     const rootSelect = screen.getByRole('combobox', { name: /الشخص الرئيسي/i });
@@ -130,17 +178,17 @@ describe('VisualPublishingStudio Radial Integration Suite', () => {
     rerender(<VisualPublishingStudio language="en" previewSourceMode="fixture" />);
 
     await waitFor(() => {
-      const enContentTab = screen.getByRole('tab', { name: /Content/ });
+      const enContentTab = screen.getByRole('tab', { name: /Tree & Layout/ });
       expect(enContentTab).toBeInTheDocument();
     });
 
-    const enContentTab = screen.getByRole('tab', { name: /Content/ });
+    const enContentTab = screen.getByRole('tab', { name: /Tree & Layout/ });
     await user.click(enContentTab);
     const englishRootSelect = screen.getByRole('combobox', { name: /Focal Person/i });
     expect(englishRootSelect).toHaveValue(selectedToken);
 
     // 6. Switch Radial -> Focus -> Tiered and prove scope/bucket restoration
-    const enLayoutTab = screen.getByRole('tab', { name: 'Layout' });
+    const enLayoutTab = screen.getByRole('tab', { name: 'Tree & Layout' });
     await user.click(enLayoutTab);
 
     const focusBtn = screen.getByRole('button', { name: /Focus Family/i });
@@ -169,7 +217,7 @@ describe('VisualPublishingStudio Radial Integration Suite', () => {
     const user = userEvent.setup();
     render(<VisualPublishingStudio language="ar" previewSourceMode="fixture" />);
 
-    const layoutTab = screen.getByRole('tab', { name: /التخطيط/i });
+    const layoutTab = screen.getByRole('tab', { name: /الشجرة والتخطيط/i });
     await user.click(layoutTab);
 
     const radialBtn = screen.getByRole('button', { name: /دائري \/ مروحي/i });
@@ -189,5 +237,22 @@ describe('VisualPublishingStudio Radial Integration Suite', () => {
       const activeDescBtn = within(screen.getByTestId('radial-scope-control')).getByRole('button', { name: /الأحفاد/i });
       expect(activeDescBtn).toHaveAttribute('aria-pressed', 'true');
     });
+  });
+
+  it('keeps the active person token catalog alive through the Strict Mode effect cycle', async () => {
+    const user = userEvent.setup();
+    render(
+      <StrictMode>
+        <VisualPublishingStudio language="en" previewSourceMode="fixture" />
+      </StrictMode>
+    );
+
+    await user.click(screen.getByRole('tab', { name: /Tree & Layout/ }));
+    await user.click(screen.getByRole('button', { name: /Show Full Recorded Data/i }));
+
+    await waitFor(() => {
+      expect(document.querySelector('svg[data-poster-renderer="svg-v1"]')).toBeInTheDocument();
+    });
+    expect(document.body.textContent).not.toMatch(/token catalog session has been disposed/i);
   });
 });

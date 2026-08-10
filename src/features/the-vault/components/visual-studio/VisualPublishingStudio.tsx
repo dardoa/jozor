@@ -1,8 +1,8 @@
-import React, { useEffect, useMemo, useState, startTransition } from 'react';
+import React, { useEffect, useMemo, useRef, useState, startTransition } from 'react';
 import { VisualOutputReadinessNotice } from './VisualOutputReadinessNotice';
 import { VisualOutputPreviewPane } from './VisualOutputPreviewPane';
 import { VisualOutputConfigPanel } from './VisualOutputConfigPanel';
-import { VisualOutputActionBar } from './VisualOutputActionBar';
+import { VisualOutputPrintDock } from './VisualOutputPrintDock';
 import { useVisualStudioStorePreviewSource } from './useVisualStudioStorePreviewSource';
 import { usePosterDesignState } from './usePosterDesignState';
 import { mapPosterDesignStateToRuntimeOptions } from './posterDesignStateRuntimeAdapter';
@@ -249,7 +249,28 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
     [tokenCatalogSessionKey]
   );
 
-  useEffect(() => () => posterTokenCatalogSession.dispose(), [posterTokenCatalogSession]);
+  const tokenCatalogLifecycleRef = useRef<{
+    session: typeof posterTokenCatalogSession;
+    epoch: number;
+  } | undefined>(undefined);
+  useEffect(() => {
+    const previousSession = tokenCatalogLifecycleRef.current?.session;
+    if (previousSession && previousSession !== posterTokenCatalogSession) {
+      previousSession.dispose();
+    }
+
+    const epoch = (tokenCatalogLifecycleRef.current?.epoch ?? 0) + 1;
+    tokenCatalogLifecycleRef.current = { session: posterTokenCatalogSession, epoch };
+
+    return () => {
+      queueMicrotask(() => {
+        const active = tokenCatalogLifecycleRef.current;
+        if (active?.session === posterTokenCatalogSession && active.epoch === epoch) {
+          posterTokenCatalogSession.dispose();
+        }
+      });
+    };
+  }, [posterTokenCatalogSession]);
 
   const posterTokenCatalog = useMemo(() => {
     if (!completeRawSourceGraph?.nodes?.length) return undefined;
@@ -547,10 +568,10 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
   }, [mappingResult.posterOptions, selectedDefinition.productType, studioDesign.state.shared]);
 
   const posterSceneEvaluation = useMemo(() => {
-    if (radialSelectionResult?.error) {
+    if (studioDesign.state.layoutMode === 'radial-generations' && radialSelectionResult?.error) {
       return { scene: undefined, capacityError: radialSelectionResult.error };
     }
-    if (focusSelectionResult?.error) {
+    if (studioDesign.state.layoutMode === 'focus-family' && focusSelectionResult?.error) {
       return { scene: undefined, capacityError: focusSelectionResult.error };
     }
     if (!mappingResult.posterOptions || !posterDocumentSpec || !previewData?.graph) {
@@ -886,6 +907,16 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
     }
   };
 
+  const capacityErrorGuidance = posterSceneEvaluation.capacityError
+    ? (isAr
+        ? (studioDesign.state.layoutMode === 'radial-generations'
+            ? 'تجاوز التخطيط الشعاعي سعة الصفحة. قلّل عدد الحلقات أو اختر مقاسًا أكبر.'
+            : 'تجاوز تخطيط العائلة حول شخص سعة الصفحة. قلّل العمق أو اختر مقاسًا أكبر.')
+        : (studioDesign.state.layoutMode === 'radial-generations'
+            ? 'Radial layout capacity exceeded. Reduce generation rings or choose a larger page.'
+            : 'Focus layout capacity exceeded. Reduce depth or choose a larger page.'))
+    : undefined;
+
   return (
     <div className="space-y-4" data-testid="visual-publishing-studio">
       <div className="flex flex-col gap-1 text-start min-w-0">
@@ -905,9 +936,14 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
         reason={mappingResult.reason}
       />
 
-      <div className="grid gap-4 lg:grid-cols-12 items-start">
+      <div className="overflow-hidden rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)]">
+        <div className="grid min-h-[68vh] items-stretch lg:grid-cols-12" dir="ltr">
         {/* Preview Workspace Area - sticky on desktop, expandable on mobile */}
-        <div className="min-w-0 lg:col-span-7 xl:col-span-8 lg:sticky lg:top-4" data-testid="visual-studio-preview-workspace">
+        <div
+          className="min-w-0 bg-[var(--surface-subtle)] lg:col-span-8"
+          data-testid="visual-studio-preview-workspace"
+          dir={isAr ? 'rtl' : 'ltr'}
+        >
           {/* Mobile Expandable Toggle */}
           <div className="block lg:hidden mb-3">
             <button
@@ -922,32 +958,37 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
               <span className="text-amber-400 font-bold">{isMobilePreviewExpanded ? '▲' : '▼'}</span>
             </button>
             {isMobilePreviewExpanded && (
-              <div id="mobile-preview-container" className="mt-2 max-h-80 overflow-y-auto rounded-xl border border-stone-800">
+              <div id="mobile-preview-container" className="mt-2 max-h-[70vh] overflow-y-auto rounded-lg border border-stone-800">
                 <VisualOutputPreviewPane
                   language={language}
                   selectedDefinition={selectedDefinition}
                   previewModel={previewModel as unknown as VisualPreviewModel}
                   posterScene={posterScene}
                   posterSvgResources={posterSvgResources}
+                  unavailableReason={capacityErrorGuidance}
                 />
               </div>
             )}
           </div>
 
           {/* Desktop Always-Visible Preview */}
-          <div className="hidden lg:block">
+          <div className="hidden h-full lg:block">
             <VisualOutputPreviewPane
               language={language}
               selectedDefinition={selectedDefinition}
               previewModel={previewModel as unknown as VisualPreviewModel}
               posterScene={posterScene}
               posterSvgResources={posterSvgResources}
+              unavailableReason={capacityErrorGuidance}
             />
           </div>
         </div>
 
         {/* Settings Workspace Panel */}
-        <div className="min-w-0 lg:col-span-5 xl:col-span-4 h-full max-h-[calc(100vh-6rem)] overflow-y-auto">
+        <aside
+          className="min-w-0 border-l border-[var(--border-soft)] lg:col-span-4"
+          dir={isAr ? 'rtl' : 'ltr'}
+        >
           <VisualOutputConfigPanel
             language={language}
             state={studioDesign.state}
@@ -959,7 +1000,6 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
             onUpdateLayout={studioDesign.updateLayout}
             onUpdateCards={studioDesign.updateCards}
             onUpdateAppearance={studioDesign.updateAppearance}
-            onUpdatePrint={studioDesign.updatePrint}
             onSwitchProductMode={studioDesign.switchProductMode}
             onSwitchLayoutMode={(mode) => studioDesign.switchLayoutMode(
               mode,
@@ -981,13 +1021,14 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
             onPosterTitleChange={setUserPosterTitle}
             posterSubtitle={userPosterSubtitle}
             onPosterSubtitleChange={setUserPosterSubtitle}
-            tiledWallPlan={tiledWallPosterPlan}
           />
+        </aside>
         </div>
-      </div>
 
-      <VisualOutputActionBar
+      <VisualOutputPrintDock
         language={language}
+        state={studioDesign.state}
+        onUpdatePrint={studioDesign.updatePrint}
         selectedDefinition={mappingResult.supported ? selectedDefinition : undefined}
         exportingFormat={exportingFormat}
         quality={posterScene?.quality}
@@ -995,11 +1036,7 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
         branchCollectionBlocked={Boolean(branchPosterCollection?.itemCount && branchCollectionBlockingWarnings.length > 0)}
         tiledWallAvailable={Boolean(tiledWallPosterPlan && tiledWallPosterPlan.quality.status !== 'blocked')}
         isBlocked={Boolean(posterSceneEvaluation.capacityError)}
-        capacityErrorGuidance={
-          posterSceneEvaluation.capacityError
-            ? (isAr ? 'عذرًا، تجاوز عدد الأشخاص المحيطين سعة الصفحات. يرجى تقليل العمق.' : 'Exceeded layout node capacity for Focus layout. Please reduce depth.')
-            : undefined
-        }
+        capacityErrorGuidance={capacityErrorGuidance}
         onExportSvg={mappingResult.supported ? () => void handleExport('svg') : undefined}
         onExportPng={mappingResult.supported ? () => void handleExport('png') : undefined}
         onExportPdf={mappingResult.supported ? () => void handleExport('pdf') : undefined}
@@ -1018,6 +1055,7 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
               studioDesign.updatePrint({ size: 'A0', orientation: 'landscape' });
             }}
       />
+      </div>
     </div>
   );
 };

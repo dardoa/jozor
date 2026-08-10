@@ -538,6 +538,67 @@ describe('Focus Family Layout Engine (Phase 2A Test Completeness & Capacity Guar
     expect(sceneA4.nodes[0]!.rect).not.toEqual(sceneA3.nodes[0]!.rect);
   });
 
+  it('distributes focus tiers across the printable main axis on large-format pages', () => {
+    const graph = createMockGraph();
+
+    const createLargeFormatScene = (
+      pageSize: 'A3' | 'A0',
+      direction: 'vertical' | 'horizontal'
+    ) =>
+      createPosterScene({
+        graph,
+        document: createPosterDocumentSpec(pageSize, 'landscape', 'balanced'),
+        content: {
+          definitionId: 'classic-ancestor-poster',
+          language: 'ar',
+          title: `Focus ${pageSize} ${direction}`,
+          scope: 'selected-root-focus',
+          generationCount: 4,
+          privacyMode: 'owner-full',
+        },
+        engineId: 'focus-family',
+        direction,
+        focusOptions: {
+          focalPreviewId: 'preview-node-g2-focal',
+          ancestorDepth: 2,
+          descendantDepth: 2,
+          includeFocalSpouses: true,
+          includeFocalSiblings: true,
+        },
+      });
+
+    (['A3', 'A0'] as const).forEach((pageSize) => {
+      (['vertical', 'horizontal'] as const).forEach((direction) => {
+        const scene = createLargeFormatScene(pageSize, direction);
+        const focalNode = scene.nodes.find((node) => node.isRoot)!;
+        const surroundingNode = scene.nodes.find((node) => !node.isRoot)!;
+        const mainAxisStart = Math.min(
+          ...scene.nodes.map((node) => (direction === 'vertical' ? node.rect.y : node.rect.x))
+        );
+        const mainAxisEnd = Math.max(
+          ...scene.nodes.map((node) =>
+            direction === 'vertical'
+              ? node.rect.y + node.rect.height
+              : node.rect.x + node.rect.width
+          )
+        );
+        const mainAxisLength =
+          direction === 'vertical' ? scene.bounds.tree.height : scene.bounds.tree.width;
+
+        expect((mainAxisEnd - mainAxisStart) / mainAxisLength).toBeGreaterThan(0.95);
+        expect(focalNode.rect.width).toBeGreaterThan(surroundingNode.rect.width);
+
+        if (pageSize === 'A0' && direction === 'horizontal') {
+          const renderedSvg = renderPosterSceneToSvg({ scene }).svg;
+          expect(renderedSvg).toContain('is-focus-root');
+          expect(renderedSvg).toContain('poster-focus-root-emphasis');
+          expect(renderedSvg).toContain('.poster-node.is-focus-root .poster-card{fill:');
+          expect(renderedSvg).toContain(`data-scene-width="${focalNode.rect.width.toFixed(2)}"`);
+        }
+      });
+    });
+  });
+
   // Test 10: Focal center with companions
   it('keeps focal card geometrically centered across all companion combinations in vertical and horizontal modes', () => {
     const graph = createMockGraph();

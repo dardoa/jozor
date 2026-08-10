@@ -147,7 +147,7 @@ async function navigateToStudio(page: Page) {
 }
 
 async function activateFocus(page: Page) {
-  await page.getByRole('tab', { name: 'Layout' }).click();
+  await page.getByRole('tab', { name: 'Tree & Layout' }).click();
   const focusButton = page.getByRole('button', { name: 'Focus Family' });
   await expect(focusButton).toBeVisible();
   await focusButton.click();
@@ -211,7 +211,7 @@ test.describe('Visual Studio Phase 2B Focus runtime evidence', () => {
 
   test('masks living people and excludes raw identifiers from the Focus SVG', async ({ page }) => {
     await activateFocus(page);
-    await page.getByRole('tab', { name: 'Content & Scope' }).click();
+    await page.getByRole('tab', { name: 'Tree & Layout' }).click();
     const maskedMode = page.getByRole('button', { name: 'Mask Living & Private Data' });
     await maskedMode.click();
 
@@ -223,7 +223,7 @@ test.describe('Visual Studio Phase 2B Focus runtime evidence', () => {
   });
 
   test('supports keyboard activation and remains within the mobile viewport', async ({ page }) => {
-    await page.getByRole('tab', { name: 'Layout' }).focus();
+    await page.getByRole('tab', { name: 'Tree & Layout' }).focus();
     await page.keyboard.press('Enter');
     const focusButton = page.getByRole('button', { name: 'Focus Family' });
     await focusButton.focus();
@@ -245,7 +245,7 @@ test.describe('Visual Studio Phase 2B Focus runtime evidence', () => {
       scrollWidth: element.scrollWidth,
     }));
     expect(overflow.scrollWidth).toBeLessThanOrEqual(overflow.clientWidth);
-    await page.getByRole('tab', { name: 'Layout' }).click();
+    await page.getByRole('tab', { name: 'Tree & Layout' }).click();
     await page.getByRole('button', { name: 'Focus Family' }).click();
     await expect(page.getByTestId('focus-family-controls')).toBeVisible();
   });
@@ -253,14 +253,16 @@ test.describe('Visual Studio Phase 2B Focus runtime evidence', () => {
   test('blocks exports when dense Focus geometry exceeds A4 capacity', async ({ page }) => {
     await seedTreeScenario(page, createDensePeople(), 'dense-root-raw-sentinel');
     await navigateToStudio(page);
-    await page.getByRole('tab', { name: /Print/i }).click();
+    await expect(page.getByTestId('visual-studio-print-dock')).toBeVisible();
     await page.getByRole('group', { name: 'Paper Size' }).getByRole('button', { name: 'A4' }).click();
-    await page.getByRole('tab', { name: 'Layout' }).click();
+    await page.getByRole('tab', { name: 'Tree & Layout' }).click();
     const focusButton = page.getByRole('button', { name: 'Focus Family' });
     await focusButton.click();
     await expect(focusButton).toHaveAttribute('aria-pressed', 'true');
 
     await expect(page.getByTestId('poster-capacity-error-guidance')).toBeVisible();
+    await expect(page.getByTestId('poster-preview-unavailable')).toBeVisible();
+    await expect(page.getByTestId('poster-print-readiness-summary')).toContainText('Print blocked');
     await expect(page.getByRole('button', { name: 'Download SVG' })).toBeDisabled();
     await expect(page.getByRole('button', { name: 'Download PNG' })).toBeDisabled();
     await expect(page.getByRole('button', { name: 'Download PDF' })).toBeDisabled();

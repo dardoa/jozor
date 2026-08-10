@@ -188,17 +188,27 @@ export function usePosterDesignState(initialPresetId: string = 'classic-heritage
   const switchProductMode = useCallback(
     (mode: PosterProductMode) => {
       applyStateUpdate((current) => {
-        if (current.productMode === mode) return current;
+        const normalizedState = mode !== 'detailed-poster' && current.layoutMode !== 'tiered'
+          ? switchLayoutModeState(current, 'tiered')
+          : current;
 
-        let nextScope = current.scope;
+        let nextScope = normalizedState.scope;
         if (mode === 'full-tree-overview' || mode === 'tiled-wall' || mode === 'branch-collection') {
           nextScope = 'full-tree';
         } else if (mode === 'detailed-poster' && nextScope === 'full-tree') {
           nextScope = 'ancestors';
         }
 
+        if (
+          normalizedState === current &&
+          current.productMode === mode &&
+          current.scope === nextScope
+        ) {
+          return current;
+        }
+
         return {
-          ...current,
+          ...normalizedState,
           productMode: mode,
           scope: nextScope,
         };
@@ -210,17 +220,27 @@ export function usePosterDesignState(initialPresetId: string = 'classic-heritage
   const switchScope = useCallback(
     (scope: PosterTreeScope) => {
       applyStateUpdate((current) => {
-        if (current.scope === scope) return current;
+        const normalizedState = scope === 'full-tree' && current.layoutMode !== 'tiered'
+          ? switchLayoutModeState(current, 'tiered')
+          : current;
 
-        let nextProductMode = current.productMode;
-        if (scope !== 'full-tree' && current.productMode !== 'detailed-poster') {
+        let nextProductMode = normalizedState.productMode;
+        if (scope !== 'full-tree' && normalizedState.productMode !== 'detailed-poster') {
           nextProductMode = 'detailed-poster';
-        } else if (scope === 'full-tree' && current.productMode === 'detailed-poster') {
+        } else if (scope === 'full-tree') {
           nextProductMode = 'full-tree-overview';
         }
 
+        if (
+          normalizedState === current &&
+          current.scope === scope &&
+          current.productMode === nextProductMode
+        ) {
+          return current;
+        }
+
         return {
-          ...current,
+          ...normalizedState,
           productMode: nextProductMode,
           scope,
         };
