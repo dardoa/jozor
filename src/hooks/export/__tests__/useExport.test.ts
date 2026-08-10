@@ -1,7 +1,7 @@
 import { renderHook, act } from '@testing-library/react';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { useExport } from '../useExport';
-import { downloadFile } from '../../../utils/fileUtils';
+import { downloadFile } from '@/utils/fileUtils';
 import type { Person } from '../../../types';
 import { generateICS } from '../../../utils/calendarLogic';
 import { exportToGEDCOM } from '../../../utils/gedcomLogic';
@@ -21,7 +21,7 @@ const { mockPdfSave } = vi.hoisted(() => ({
   mockPdfSave: vi.fn(),
 }));
 
-vi.mock('../../../utils/fileUtils', () => ({
+vi.mock('@/utils/fileUtils', () => ({
   downloadFile: vi.fn(),
 }));
 

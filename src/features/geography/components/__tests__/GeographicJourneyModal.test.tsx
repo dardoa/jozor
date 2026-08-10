@@ -101,7 +101,7 @@ vi.mock('../../../../utils/showToast', () => ({
   },
 }));
 
-vi.mock('../../../../utils/fileUtils', () => ({
+vi.mock('@/utils/fileUtils', () => ({
   downloadFile: vi.fn(),
 }));
 

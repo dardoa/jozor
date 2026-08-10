@@ -5,7 +5,7 @@ import { toPng } from 'html-to-image';
 
 import { useTranslation } from '../../../context/TranslationContext';
 import { useAppStore } from '../../../store/useAppStore';
-import { downloadFile } from '../../../utils/fileUtils';
+import { downloadFile } from '@/utils/fileUtils';
 import { showToast } from '../../../utils/showToast';
 import { OverlayPrimitive } from '../../../context/OverlayContext';
 import type { Language, GeographicJourneyMode } from '../../../types/common';

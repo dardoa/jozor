@@ -7,7 +7,7 @@ import {
     PublishingPreviewResult,
 } from '../../types';
 import { generateICS } from '../../utils/calendarLogic';
-import { downloadFile } from '../../utils/fileUtils';
+import { downloadFile } from '@/utils/fileUtils';
 import { showToast } from '../../utils/showToast';
 import { useAppStore } from '../../store/useAppStore';
 import { logError, logInfo, logWarn } from '../../utils/errorLogger';
