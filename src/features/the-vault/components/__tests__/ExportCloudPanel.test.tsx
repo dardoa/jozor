@@ -504,29 +504,29 @@ describe('ExportCloudPanel manuscript preview', () => {
     expect(screen.queryByRole('button', { name: /Dense Genealogy Poster/i })).not.toBeInTheDocument();
     expect(screen.getAllByText('Current Tree Snapshot').length).toBeGreaterThan(0);
 
-    // Verify preview placeholders
+    // Verify the Studio poster preview remains canonical.
     expect(screen.getAllByLabelText('Preview of Classic Ancestor Poster').length).toBeGreaterThan(0);
-    expect(screen.getAllByLabelText('Preview of Current Tree Snapshot').length).toBeGreaterThan(0);
+    expect(screen.queryByLabelText('Preview of Current Tree Snapshot')).not.toBeInTheDocument();
 
-    // Verify the active export area no longer exposes legacy poster downloads
+    // Verify the snapshot area remains separate from the Studio poster downloads.
     const actualExportSection = screen.getByTestId('visual-actual-export-section');
-    expect(within(actualExportSection).getByText(/legacy poster PDF path remains paused/i)).toBeInTheDocument();
+    expect(within(actualExportSection).getByText('Current view capture')).toBeInTheDocument();
+    expect(within(actualExportSection).getByText(/separate from the poster design above/i)).toBeInTheDocument();
+    expect(within(actualExportSection).queryByText(/legacy poster/i)).not.toBeInTheDocument();
     expect(within(actualExportSection).queryByRole('button', { name: /Download PNG/i })).not.toBeInTheDocument();
     expect(within(actualExportSection).queryByRole('button', { name: /Download PDF/i })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Download PNG/i })).toBeEnabled();
     expect(screen.getByRole('button', { name: /Download PDF/i })).toBeEnabled();
     expect(onRunPublishingExport).not.toHaveBeenCalled();
 
-    // Verify the tree snapshot card remains the current downloadable visual output
-    expect(screen.getByText('Quick sharing')).toBeInTheDocument();
-    expect(screen.getByText('Documentation')).toBeInTheDocument();
-    expect(screen.getByText('Current view')).toBeInTheDocument();
+    // Verify the compact tree snapshot strip remains downloadable.
+    expect(screen.getByTestId('tree-snapshot-export-card')).toBeInTheDocument();
     expect(screen.getByText('Snapshot')).toBeInTheDocument();
-    expect(screen.getByText('Structural beta pass')).toBeInTheDocument();
-    expect(screen.getByText(/Export is structurally verified. Review the result visually on your own tree before sharing./i)).toBeInTheDocument();
+    expect(screen.queryByText('Structural beta pass')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Export is structurally verified/i)).not.toBeInTheDocument();
 
-    // Verify format tags and hints
-    expect(screen.getByText('Supported formats:')).toBeInTheDocument();
+    // The actions themselves communicate the available formats.
+    expect(screen.queryByText('Supported formats:')).not.toBeInTheDocument();
     expect(screen.getByText('Uses the current tree view')).toBeInTheDocument();
 
     // Click Snapshot buttons
@@ -554,9 +554,9 @@ describe('ExportCloudPanel manuscript preview', () => {
     });
     expect(screen.getByText('Visual outputs preview')).toBeInTheDocument();
     expect(screen.getByText(/Choose an output type and customize the poster/i)).toBeInTheDocument();
-    expect(screen.getByText('Additional outputs')).toBeInTheDocument();
-    expect(screen.getByText(/Use the following card to download a Tree Snapshot/i)).toBeInTheDocument();
-    expect(screen.getByText(/legacy poster PDF path remains paused/i)).toBeInTheDocument();
+    expect(screen.getByText('Current view capture')).toBeInTheDocument();
+    expect(screen.getByText(/Download an image of the tree exactly as it appears/i)).toBeInTheDocument();
+    expect(screen.queryByText(/legacy poster PDF path remains paused/i)).not.toBeInTheDocument();
     expect(screen.queryByText('sanitized-data')).not.toBeInTheDocument();
     expect(screen.getByTestId('visual-studio-action-bar')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Download PNG/i })).toBeEnabled();
