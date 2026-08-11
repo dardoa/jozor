@@ -917,8 +917,8 @@ test.describe('Visual Publishing Studio Responsive QA Evidence Pass', () => {
     await expect(mobileHubNav).toBeVisible();
   });
 
-  test('large-tree full scope actions, branch collection, tiled wall, and quality guidance at 768px and 390px', async ({ page }) => {
-    for (const targetWidth of [768, 390]) {
+  ([768, 390] as const).forEach((targetWidth) => {
+    test(`large-tree full scope actions and quality guidance at ${targetWidth}px`, async ({ page }) => {
       await page.setViewportSize({ width: targetWidth, height: targetWidth === 768 ? 1024 : 844 });
       await page.addInitScript(() => {
         localStorage.setItem('language', 'ar');
@@ -1002,6 +1002,6 @@ test.describe('Visual Publishing Studio Responsive QA Evidence Pass', () => {
           expect(overlapX * overlapY, `Buttons "${visibleButtons[i].name}" and "${visibleButtons[j].name}" overlap at ${targetWidth}px`).toBe(0);
         }
       }
-    }
+    });
   });
 });
