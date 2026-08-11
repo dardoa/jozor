@@ -187,6 +187,23 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
     expect(screen.getByTestId('studio-poster-renderer-preview').innerHTML).toBe(svgBeforeZoom);
   });
 
+  it('opens a large review surface from the canonical poster SVG and closes with Escape', () => {
+    renderStudio();
+
+    const canonicalSvg = screen.getByTestId('studio-poster-renderer-preview').innerHTML;
+    const expandButton = screen.getByRole('button', { name: 'Open large poster preview' });
+    fireEvent.click(expandButton);
+
+    const dialog = screen.getByRole('dialog', { name: 'Large poster preview' });
+    expect(dialog).toBeInTheDocument();
+    expect(screen.getByTestId('poster-preview-expanded-svg').innerHTML).toBe(canonicalSvg);
+    expect(screen.getByRole('button', { name: 'Close large poster preview' })).toHaveFocus();
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(screen.queryByRole('dialog', { name: 'Large poster preview' })).not.toBeInTheDocument();
+    expect(expandButton).toHaveFocus();
+  });
+
   it('switches section tabs cleanly and exposes controlled settings', () => {
     renderStudio();
 

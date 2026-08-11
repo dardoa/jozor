@@ -1,5 +1,6 @@
 import React from 'react';
-import { AlertTriangle, Maximize2, ZoomIn, ZoomOut } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { AlertTriangle, Maximize2, Scan, X, ZoomIn, ZoomOut } from 'lucide-react';
 import {
   renderPosterSceneToSvg,
   type PosterScene,
@@ -33,6 +34,9 @@ export const VisualOutputPreviewPane: React.FC<VisualOutputPreviewPaneProps> = (
 }) => {
   const isAr = language === 'ar';
   const [previewZoom, setPreviewZoom] = React.useState(1);
+  const [isPreviewExpanded, setIsPreviewExpanded] = React.useState(false);
+  const expandButtonRef = React.useRef<HTMLButtonElement>(null);
+  const expandedCloseButtonRef = React.useRef<HTMLButtonElement>(null);
   const displayName = selectedDefinition?.displayName[language] || '';
   const description = selectedDefinition?.description[language] || '';
   const previewAlt = selectedDefinition?.previewAsset?.alt[language] || '';
@@ -50,7 +54,24 @@ export const VisualOutputPreviewPane: React.FC<VisualOutputPreviewPaneProps> = (
     : undefined;
   const previewMaxWidth = posterOrientation === 'portrait' ? 640 : 980;
 
+  React.useEffect(() => {
+    if (!isPreviewExpanded) return undefined;
+
+    const triggerButton = expandButtonRef.current;
+    expandedCloseButtonRef.current?.focus();
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsPreviewExpanded(false);
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      triggerButton?.focus();
+    };
+  }, [isPreviewExpanded]);
+
   return (
+    <>
     <div
       className="flex h-full min-h-[68vh] flex-col items-center gap-3 bg-[var(--surface-subtle)] p-3 text-center select-none sm:p-5"
       data-testid="visual-studio-preview-pane"
@@ -84,7 +105,7 @@ export const VisualOutputPreviewPane: React.FC<VisualOutputPreviewPaneProps> = (
               onClick={() => setPreviewZoom(1)}
               className="inline-flex h-8 w-8 items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-main)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary-500)]"
             >
-              <Maximize2 className="h-4 w-4" aria-hidden="true" />
+              <Scan className="h-4 w-4" aria-hidden="true" />
             </button>
             <button
               type="button"
@@ -95,6 +116,17 @@ export const VisualOutputPreviewPane: React.FC<VisualOutputPreviewPaneProps> = (
               className="inline-flex h-8 w-8 items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-main)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary-500)] disabled:opacity-35"
             >
               <ZoomIn className="h-4 w-4" aria-hidden="true" />
+            </button>
+            <button
+              ref={expandButtonRef}
+              type="button"
+              aria-label={isAr ? 'فتح معاينة كبيرة' : 'Open large poster preview'}
+              title={isAr ? 'معاينة كبيرة' : 'Large preview'}
+              onClick={() => setIsPreviewExpanded(true)}
+              className="inline-flex h-8 w-8 items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-main)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary-500)]"
+              data-testid="poster-preview-expand"
+            >
+              <Maximize2 className="h-4 w-4" aria-hidden="true" />
             </button>
           </div>
         )}
@@ -185,5 +217,56 @@ export const VisualOutputPreviewPane: React.FC<VisualOutputPreviewPaneProps> = (
         )}
       </div>
     </div>
+    {isPreviewExpanded && posterRender && createPortal(
+      <div
+        className="fixed inset-0 z-[calc(var(--z-index-drawer)+10)] flex items-center justify-center bg-black/55 p-3 backdrop-blur-sm sm:p-6"
+        data-testid="poster-preview-expanded-backdrop"
+      >
+        <section
+          role="dialog"
+          aria-modal="true"
+          aria-label={isAr ? 'معاينة البوستر بالحجم الكبير' : 'Large poster preview'}
+          className="flex h-full w-full max-w-[1600px] flex-col overflow-hidden rounded-lg border border-white/20 bg-[var(--surface-panel)] shadow-2xl"
+          data-testid="poster-preview-expanded-dialog"
+        >
+          <header className="flex shrink-0 items-center justify-between gap-3 border-b border-[var(--border-soft)] px-4 py-3">
+            <div className="min-w-0 text-start">
+              <h5 className="truncate text-sm font-bold text-[var(--text-main)]">
+                {displayName}
+              </h5>
+              <p className="text-[10px] font-medium text-[var(--text-muted)]">
+                {isAr ? 'مراجعة بصرية موسعة لنفس ملف SVG' : 'Expanded review of the same SVG output'}
+              </p>
+            </div>
+            <button
+              ref={expandedCloseButtonRef}
+              type="button"
+              aria-label={isAr ? 'إغلاق المعاينة الكبيرة' : 'Close large poster preview'}
+              onClick={() => setIsPreviewExpanded(false)}
+              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-[var(--border-soft)] text-[var(--text-secondary)] hover:bg-[var(--surface-subtle)] hover:text-[var(--text-main)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary-500)]"
+            >
+              <X className="h-5 w-5" aria-hidden="true" />
+            </button>
+          </header>
+          <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto bg-[var(--surface-subtle)] p-4 sm:p-6">
+            <div
+              dir="ltr"
+              role="img"
+              aria-label={previewAlt || displayName}
+              className={`flex max-h-full max-w-full items-center justify-center overflow-hidden border border-[var(--border-soft)] bg-white shadow-xl [&>svg]:block [&>svg]:max-h-full [&>svg]:max-w-full ${
+                posterOrientation === 'portrait'
+                  ? 'h-full w-auto [&>svg]:h-full [&>svg]:w-auto'
+                  : 'h-auto w-full [&>svg]:h-auto [&>svg]:w-full'
+              }`}
+              style={{ aspectRatio: previewAspectRatio }}
+              dangerouslySetInnerHTML={{ __html: posterRender.svg }}
+              data-testid="poster-preview-expanded-svg"
+            />
+          </div>
+        </section>
+      </div>,
+      document.body
+    )}
+    </>
   );
 };
