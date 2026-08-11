@@ -197,9 +197,18 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
     const dialog = screen.getByRole('dialog', { name: 'Large poster preview' });
     expect(dialog).toBeInTheDocument();
     expect(screen.getByTestId('poster-preview-expanded-svg').innerHTML).toBe(canonicalSvg);
-    expect(screen.getByRole('button', { name: 'Close large poster preview' })).toHaveFocus();
+    const closeButton = screen.getByRole('button', { name: 'Close large poster preview' });
+    expect(closeButton).toHaveFocus();
+
+    fireEvent.keyDown(document, { key: 'Tab' });
+    expect(closeButton).toHaveFocus();
 
     fireEvent.keyDown(document, { key: 'Escape' });
+    expect(screen.queryByRole('dialog', { name: 'Large poster preview' })).not.toBeInTheDocument();
+    expect(expandButton).toHaveFocus();
+
+    fireEvent.click(expandButton);
+    fireEvent.mouseDown(screen.getByTestId('poster-preview-expanded-backdrop'));
     expect(screen.queryByRole('dialog', { name: 'Large poster preview' })).not.toBeInTheDocument();
     expect(expandButton).toHaveFocus();
   });

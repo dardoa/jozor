@@ -36,6 +36,7 @@ export const VisualOutputPreviewPane: React.FC<VisualOutputPreviewPaneProps> = (
   const [previewZoom, setPreviewZoom] = React.useState(1);
   const [isPreviewExpanded, setIsPreviewExpanded] = React.useState(false);
   const expandButtonRef = React.useRef<HTMLButtonElement>(null);
+  const expandedDialogRef = React.useRef<HTMLElement>(null);
   const expandedCloseButtonRef = React.useRef<HTMLButtonElement>(null);
   const displayName = selectedDefinition?.displayName[language] || '';
   const description = selectedDefinition?.description[language] || '';
@@ -60,12 +61,42 @@ export const VisualOutputPreviewPane: React.FC<VisualOutputPreviewPaneProps> = (
     const triggerButton = expandButtonRef.current;
     expandedCloseButtonRef.current?.focus();
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setIsPreviewExpanded(false);
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        setIsPreviewExpanded(false);
+        return;
+      }
+
+      if (event.key !== 'Tab') return;
+
+      const focusableElements = Array.from(
+        expandedDialogRef.current?.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        ) ?? []
+      ).filter((element) => element.offsetParent !== null || element === expandedCloseButtonRef.current);
+
+      if (focusableElements.length === 0) {
+        event.preventDefault();
+        expandedCloseButtonRef.current?.focus();
+        return;
+      }
+
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
+      const activeElement = document.activeElement;
+      const shouldWrapBackward = event.shiftKey && activeElement === firstElement;
+      const shouldWrapForward = !event.shiftKey && activeElement === lastElement;
+
+      if (shouldWrapBackward || shouldWrapForward) {
+        event.preventDefault();
+        (shouldWrapBackward ? lastElement : firstElement).focus();
+      }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown, true);
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keydown', handleKeyDown, true);
       triggerButton?.focus();
     };
   }, [isPreviewExpanded]);
@@ -221,8 +252,12 @@ export const VisualOutputPreviewPane: React.FC<VisualOutputPreviewPaneProps> = (
       <div
         className="fixed inset-0 z-[calc(var(--z-index-drawer)+10)] flex items-center justify-center bg-black/55 p-3 backdrop-blur-sm sm:p-6"
         data-testid="poster-preview-expanded-backdrop"
+        onMouseDown={(event) => {
+          if (event.target === event.currentTarget) setIsPreviewExpanded(false);
+        }}
       >
         <section
+          ref={expandedDialogRef}
           role="dialog"
           aria-modal="true"
           aria-label={isAr ? 'معاينة البوستر بالحجم الكبير' : 'Large poster preview'}

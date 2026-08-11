@@ -812,6 +812,63 @@ test.describe('Visual Publishing Studio Responsive QA Evidence Pass', () => {
     });
   });
 
+  [
+    { width: 1280, height: 720, name: 'desktop' },
+    { width: 390, height: 844, name: 'mobile' },
+  ].forEach((viewport) => {
+    test(`expanded poster review stays bounded and keyboard-contained on ${viewport.name}`, async ({ page }) => {
+      await page.setViewportSize({ width: viewport.width, height: viewport.height });
+      await page.addInitScript(() => {
+        localStorage.setItem('language', 'ar');
+      });
+
+      await seedSanitizedScenario(page, 'Poster review fixture', 'father');
+      await openVaultAndNavigateToStudio(page, viewport.width);
+
+      if (viewport.width < 1024) {
+        const previewToggle = page.getByTestId('visual-studio-mobile-preview-toggle');
+        await expect(previewToggle).toBeVisible();
+        if ((await previewToggle.getAttribute('aria-expanded')) !== 'true') {
+          await previewToggle.click();
+        }
+      }
+
+      const expandButton = page.locator('[data-testid="poster-preview-expand"]:visible').first();
+      await expect(expandButton).toBeVisible();
+      await expandButton.click();
+
+      const dialog = page.getByTestId('poster-preview-expanded-dialog');
+      const expandedSurface = page.getByTestId('poster-preview-expanded-svg');
+      const expandedSvg = expandedSurface.locator(':scope > svg');
+      const closeButton = page.getByRole('button', { name: /Close large poster preview|\u0625\u063a\u0644\u0627\u0642 \u0627\u0644\u0645\u0639\u0627\u064a\u0646\u0629 \u0627\u0644\u0643\u0628\u064a\u0631\u0629/i });
+
+      await expect(dialog).toBeVisible();
+      await expect(expandedSurface).toBeVisible();
+      await expect(expandedSvg).toBeVisible();
+      await expect(expandedSvg).toHaveAttribute('viewBox', /\d/);
+      await expect(closeButton).toBeFocused();
+
+      const dialogBox = await dialog.boundingBox();
+      const surfaceBox = await expandedSurface.boundingBox();
+      expect(dialogBox, `Expanded dialog bounds missing at ${viewport.name}`).not.toBeNull();
+      expect(surfaceBox, `Expanded preview surface bounds missing at ${viewport.name}`).not.toBeNull();
+
+      expect(dialogBox!.x).toBeGreaterThanOrEqual(0);
+      expect(dialogBox!.y).toBeGreaterThanOrEqual(0);
+      expect(dialogBox!.x + dialogBox!.width).toBeLessThanOrEqual(viewport.width + 1);
+      expect(dialogBox!.y + dialogBox!.height).toBeLessThanOrEqual(viewport.height + 1);
+      expect(surfaceBox!.width).toBeGreaterThan(viewport.width < 1024 ? 180 : 500);
+      expect(surfaceBox!.height).toBeGreaterThan(viewport.width < 1024 ? 180 : 300);
+
+      await page.keyboard.press('Tab');
+      await expect(closeButton).toBeFocused();
+
+      await page.keyboard.press('Escape');
+      await expect(dialog).toBeHidden();
+      await expect(expandButton).toBeFocused();
+    });
+  });
+
   test('isolated desktop 768px vs mobile 767px Vault navigation mode transition', async ({ page }) => {
     // 768px Desktop check (fresh page)
     await page.setViewportSize({ width: 768, height: 1024 });
