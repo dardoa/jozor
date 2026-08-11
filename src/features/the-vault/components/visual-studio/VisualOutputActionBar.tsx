@@ -62,6 +62,15 @@ export const VisualOutputActionBar: React.FC<VisualOutputActionBarProps> = ({
   const hasGuidedRecovery = Boolean(
     onUseDensePreset || onUseLargestPage || onSetUpLargeTreeProducts
   );
+  const exportStatusAnnouncement = isExporting
+    ? (isAr ? `جاري تصدير ${exportingFormat}...` : `Exporting ${exportingFormat}...`)
+    : isPrintBlocked
+      ? (isAr
+          ? 'تصدير البوستر متوقف حتى معالجة مشكلة جودة الطباعة'
+          : 'Poster export is blocked until the print quality issue is resolved')
+      : hasPrintWarning
+        ? (isAr ? 'راجع جودة الطباعة قبل تصدير البوستر' : 'Review print quality before exporting the poster')
+        : (isAr ? 'الاستوديو جاهز للتصدير' : 'Studio ready for export');
 
   if (selectedDefinition?.productType !== 'poster' || (!supportsSvg && !supportsPng && !supportsPdf)) {
     return null;
@@ -79,9 +88,7 @@ export const VisualOutputActionBar: React.FC<VisualOutputActionBarProps> = ({
         className="sr-only"
         data-testid="visual-studio-export-status-live-region"
       >
-        {isExporting
-          ? (isAr ? `جاري تصدير ${exportingFormat}...` : `Exporting ${exportingFormat}...`)
-          : (isAr ? 'الاستوديو جاهز للتصدير' : 'Studio ready for export')}
+        {exportStatusAnnouncement}
       </div>
 
       <div className="flex flex-col gap-0.5 text-start min-w-0 w-full lg:max-w-md">

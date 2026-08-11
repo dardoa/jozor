@@ -39,6 +39,9 @@ describe('VisualOutputActionBar print-quality gate', () => {
       'poster-format-guidance'
     );
     expect(screen.queryByTestId('poster-print-quality-notice')).not.toBeInTheDocument();
+    expect(screen.getByTestId('visual-studio-export-status-live-region')).toHaveTextContent(
+      'Studio ready for export'
+    );
   });
 
   it('explains the three formats in Arabic without presenting the PDF as vector', () => {
@@ -119,6 +122,12 @@ describe('VisualOutputActionBar print-quality gate', () => {
       'Reduce generations or choose a larger page'
     );
     expect(screen.getByTestId('poster-print-quality-notice')).not.toHaveTextContent('poster.quality');
+    expect(screen.getByTestId('visual-studio-export-status-live-region')).toHaveTextContent(
+      'Poster export is blocked until the print quality issue is resolved'
+    );
+    expect(screen.getByTestId('visual-studio-export-status-live-region')).not.toHaveTextContent(
+      'Studio ready for export'
+    );
   });
 
   it('offers reversible preview routes without starting an export', () => {
