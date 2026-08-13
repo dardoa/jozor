@@ -1,7 +1,7 @@
 # Visual Publishing Studio Phase 0A: Capability and Compatibility Model Audit
 
 **Date:** July 27, 2026  
-**Status:** Completed (Evidence Correction Pass — Documentation Only)  
+**Status:** Completed; runtime status aligned on August 13, 2026
 **Author:** AI Agent (Antigravity Studio Architecture Audit)  
 **Target Document:** `docs/reviews/visual-publishing-studio-capability-model-2026-07-27.md`  
 
@@ -9,7 +9,7 @@
 
 ## 1. Executive Summary
 
-This document presents the Phase 0A architectural capability and compatibility audit for the **Visual Publishing Studio** prior to the Phase 0B UX restructure (Quick Setup, Content, Layout, Cards, Appearance, Print, Focus Mode, and Radial Mode).
+This document presents the Phase 0A architectural capability and compatibility audit for the **Visual Publishing Studio**. Runtime status statements were updated on August 13, 2026 after Focus, Radial, and Selected Branch activation; historical Phase 0A design findings remain identified as such.
 
 ### Key Audit Findings & Evidence Corrections
 1. **Zero Runtime Modifications:** No code changes were made to runtime UI, `PosterScene`, renderers, export handlers, sanitizers, or file formats during Phase 0A.
@@ -30,12 +30,12 @@ This document presents the Phase 0A architectural capability and compatibility a
    - **Advanced (1):** `colorOverrides`.
    - **Contextual-Only (5):** `selectedPosterRootToken` (primary contextual Content control), `tiledRows`, `tiledColumns`, `tiledSheetSize`, `tiledOverlapMm`.
 4. **Engine Reachability Audit:**
-   - `ancestor-tiered`, `descendant-tiered`, `full-tree-overview`, and `branch-index-grid` are `runtime-supported-and-reachable`.
+   - `ancestor-tiered`, `descendant-tiered`, `full-tree-overview`, `branch-index-grid`, `focus-family`, and `radial-generations` are `runtime-supported-and-reachable` for their supported scopes.
    - `family-network-tiered` is `implemented-but-not-Studio-reachable` (engine code exists in `familyNetworkPosterLayout.ts`, but `createPosterScene` layout resolution never selects it from current Studio scope choices).
-   - `focus-family` and `radial-generations` are `planned` poster layout engines.
 5. **Radial & Focus Status:**
-   - **Focus:** No dedicated `focus-family` poster layout engine exists in `PosterScene`. Reusable building blocks exist in interactive canvas and graph selectors.
-   - **Radial:** Real Radial POSTER engine does not exist in `PosterScene`. Radial poster outputs are **NOT advertised to users** in `VISUAL_OUTPUT_DEFINITIONS` (confirming compliance with non-advertisement guidelines). Radial is preserved as a committed production milestone (not a discarded option or teaser). Full-tree Radial and Radial Tiled Wall are classified as `planned`/`unassessed` pending prototype evidence.
+   - **Focus:** `focusFamilyPosterLayout.ts` is registered in `PosterScene`, selectable in the Studio, and exports through the canonical SVG/PNG/PDF path for `around-person` scope.
+   - **Radial:** `radialGenerationsPosterLayout.ts` is registered in `PosterScene`, selectable in the Studio, and exports through the canonical SVG/PNG/PDF path for ancestor and descendant scopes. Full-tree Radial and Radial Tiled Wall remain `unassessed`.
+   - **Selected Branch:** The Studio exposes `selected-branch`; it uses the selected opaque root token, includes descendants and in-branch spouses, and renders with `descendant-tiered`.
 6. **Export Runtime Correction:**
    - `studioPosterBrowserPngRuntime` allocates **a single HTML5 Canvas element** for rasterization. It does NOT perform transparent chunked PNG rasterization.
    - `posterPrintQuality` evaluates DPI and estimated memory footprint, issuing warnings or blocking high-DPI allocations.
@@ -50,7 +50,7 @@ Every setting currently defined in `VisualOutputConfigPanel.tsx`, `visualStudioP
 | # | Setting Key | Data Type / Options | Source File | IA Section / Category | Description & Reclassification |
 |---|---|---|---|---|---|
 | 1 | `selectedDefinitionId` | `classic-ancestor-poster`, `modern-ancestor-poster`, `dense-genealogy-poster`, `current-tree-snapshot` | `VisualPublishingStudio.tsx` | **Quick Setup / Template & Mode** | Primary visual output template selector |
-| 2 | `scope` | `ancestors`, `descendants`, `full-tree` | `visualStudioPosterOptions.ts` | **Content & Scope** | Tree scope strategy (Reclassified under Content & Scope) |
+| 2 | `scope` | `ancestors`, `descendants`, `selected-branch`, `full-tree`, `around-person` | `posterStateContracts.ts` | **Content & Scope** | Tree scope strategy; `around-person` is selected atomically by Focus mode |
 | 3 | `generationDepth` | `1`, `2`, `3`, `4`, `'all'` | `visualStudioPosterOptions.ts` | **Content & Scope** | Depth of generations rendered |
 | 4 | `privacyMode` | `masked`, `owner-full` | `visualStudioPosterOptions.ts` | **Content & Scope** | Masking living/private individuals |
 | 5 | `showYears` | `boolean` | `visualStudioPosterOptions.ts` | **Content & Scope** | Birth and death years display toggle |
@@ -64,7 +64,7 @@ Every setting currently defined in `VisualOutputConfigPanel.tsx`, `visualStudioP
 | 13 | `showJozorAttribution` | `boolean` | `visualStudioPosterOptions.ts` | **Content & Scope** | "Created in Jozor" branding toggle |
 | 14 | `direction` | `vertical`, `horizontal` | `visualStudioPosterOptions.ts` | **Layout** | Primary flow direction of tree layout |
 | 15 | `spacing` | `style-default`, `compact`, `balanced`, `airy` | `visualStudioPosterOptions.ts` | **Layout** | Node spacing density |
-| 16 | `layoutEngine` | `ancestor-tiered`, `descendant-tiered`, `full-tree-overview`, `branch-index-grid` | `visualOutputTypes.ts` | **Derived runtime capability** | Resolved from scope/product mode; documented for compatibility analysis but not counted as a user-owned setting |
+| 16 | `layoutEngine` | `ancestor-tiered`, `descendant-tiered`, `full-tree-overview`, `branch-index-grid`, `focus-family`, `radial-generations` | `posterSceneTypes.ts` | **Derived runtime capability** | Resolved from scope/product mode; documented for compatibility analysis but not counted as a user-owned setting |
 | 17 | `includePhotos` | `boolean` | `visualStudioPosterOptions.ts` | **Cards** | Master toggle for profile photo visibility |
 | 18 | `hideLivingPhotos` | `boolean` | `visualStudioPosterOptions.ts` | **Cards** | Selective photo hiding for living individuals |
 | 19 | `photoShape` | `circle`, `square`, `rounded` | `visualStudioPosterOptions.ts` | **Cards** | Profile photo crop geometry |
@@ -86,7 +86,7 @@ Every setting currently defined in `VisualOutputConfigPanel.tsx`, `visualStudioP
 | 35 | `orientation` | `portrait`, `landscape` | `visualStudioPosterOptions.ts` | **Print** | Page orientation |
 | 36 | `marginPreset` | `compact`, `balanced`, `generous` | `visualStudioPosterOptions.ts` | **Print** | Print margin width preset |
 | 37 | `colorOverrides` | `{ background?, cardBackground?, accent?, connector? }` | `visualStudioPosterOptions.ts` | **Advanced** | Custom hex color overrides |
-| 38 | `selectedPosterRootToken` | `string` (`preview-root-N`) | `VisualOutputConfigPanel.tsx` | **Contextual-only** | Primary contextual Content control for Root/Anchor person selection |
+| 38 | `selectedPosterRootToken` | opaque session token | `VisualOutputConfigPanel.tsx` | **Contextual-only** | Session-owned Root/Anchor selection; raw person IDs never enter React controls or PosterScene |
 | 39 | `tiledRows` | `number` (2..6) | `visualStudioPosterOptions.ts` | **Contextual-only** | Vertical tile count (Active when `scope === 'full-tree'`) |
 | 40 | `tiledColumns` | `number` (2..6) | `visualStudioPosterOptions.ts` | **Contextual-only** | Horizontal tile count (Active when `scope === 'full-tree'`) |
 | 41 | `tiledSheetSize` | `A4`, `A3`, `A2` | `visualStudioPosterOptions.ts` | **Contextual-only** | Physical tile sheet size (Active when `scope === 'full-tree'`) |
@@ -124,15 +124,14 @@ Architecturally, three distinct concepts must be decoupled. Invented placeholder
 |  - family-network-tiered    (implemented-but-not-Studio-reachable)               |
 |  - full-tree-overview       (runtime-supported-and-reachable)                    |
 |  - branch-index-grid        (runtime-supported-and-reachable via collection)     |
-|  - focus-family             (planned)                                            |
-|  - radial-generations       (planned)                                            |
+|  - focus-family             (runtime-supported-and-reachable)                    |
+|  - radial-generations       (runtime-supported-and-reachable)                    |
 +------------------------------------------+----------------------------------------+
                                            |
                                            v
 +-----------------------------------------------------------------------------------+
 |                                  TREE SCOPES                                      |
-|  (Studio UI Choices: ancestors | descendants | full-tree)                         |
-|  (Data Layer Only: selected-branch -- not selectable in current Studio UI)         |
+|  (Studio UI: ancestors | descendants | selected-branch | full-tree | around-person)|
 +-----------------------------------------------------------------------------------+
 ```
 
@@ -148,14 +147,14 @@ Architecturally, three distinct concepts must be decoupled. Invented placeholder
    - `family-network-tiered`: Multi-generational network layout in aligned generation rows.
    - `full-tree-overview`: Compact grid layout for full-tree overview posters.
    - `branch-index-grid`: Grid layout engine for index/overview pages in branch collections.
-   - `focus-family` *(PLANNED)*: Bi-directional layout centered on a focal person.
-   - `radial-generations` *(PLANNED)*: Concentric polar generation ring layout.
+   - `focus-family`: Bi-directional runtime layout centered on a focal person.
+   - `radial-generations`: Runtime concentric polar generation ring layout for ancestor and descendant scopes.
 
 3. **Tree Scopes (Sub-graph Data Extraction):**
    - `ancestors`: Direct parent lines going backward from root. Selectable in Studio UI.
    - `descendants`: Direct child lines going forward from root. Selectable in Studio UI.
    - `full-tree`: Complete connected family graph. Selectable in Studio UI (resolves to `full-tree-overview` engine).
-   - `selected-branch`: Sub-tree rooted at a designated person. *Implemented in data/collection layer, but NOT selectable as an independent scope in current Studio UI.*
+   - `selected-branch`: Selectable sub-tree rooted at an opaque session token. Includes descendants and spouses attached to people in the selected lineage.
 
 ---
 
@@ -174,8 +173,8 @@ Detailed verification of actual code execution paths across definitions, layout 
 | **`family-network-tiered` Engine** | `familyNetworkPosterLayout.ts` | `implemented-but-not-Studio-reachable` | Code exists and is unit-tested. However, `posterSceneBuilder.ts` (`createLayoutSpec`) never selects `family-network-tiered` from Studio UI scope choices. |
 | **`full-tree-overview` Engine** | `fullTreeOverviewPosterLayout.ts` | `runtime-supported-and-reachable` | Selected when `scope === 'full-tree'`. Renders condensed micro-cards (`dense-overview`). |
 | **`branch-index-grid` Engine** | `branchIndexPosterLayout.ts` | `runtime-supported-and-reachable` | Executed internally during `branch-collection` export to build the collection index poster. |
-| **`focus-family` Engine** | *None* | `planned` | No `focusFamilyPosterLayout.ts` exists in `visualOutputs`. Interactive canvas has focus mode, but PosterScene does not. |
-| **`radial-generations` Engine** | *None* | `planned` | No radial poster engine exists in `visualOutputs`. Interactive canvas has `radialLayout.ts` for FanArc, but PosterScene does not. |
+| **`focus-family` Engine** | `focusFamilyPosterLayout.ts` | `runtime-supported-and-reachable` | Active for `around-person`; consumes a sanitized focus graph and emits canonical PosterScene geometry. |
+| **`radial-generations` Engine** | `radialGenerationsPosterLayout.ts` | `runtime-supported-and-reachable` | Active for ancestor/descendant scopes with 180-degree and 360-degree compositions; capacity failures block export. |
 | **Branch Collection Export** | `branchPosterCollectionExport.ts` | `runtime-supported-and-reachable` | Assembles ZIP containing overview poster + individual branch posters. |
 | **Tiled Wall Export** | `tiledWallPosterExport.ts` | `quality-gated` | Assembles ZIP of multi-sheet grid tiles; quality gate checks tile utilization and minimum text size. |
 
@@ -194,12 +193,12 @@ Legend of Standardized Statuses:
 | Product Mode | Layout Engine ID | Scope | Page Size | Detail Preset | Capability Status | Rationale, Discrepancies & Quality Gate Conditions |
 |---|---|---|---|---|---|---|
 | `detailed-poster` | `ancestor-tiered` | `ancestors` | A4, A3, A2, A1, A0 | Classic Heritage | `runtime-supported-and-reachable` | Fully active ancestor poster pipeline. |
-| `detailed-poster` | `ancestor-tiered` | `ancestors` | A4, A3 | Modern Gallery | `runtime-supported-and-reachable` | Modern Gallery active in Studio. *Registry Discrepancy:* Registry `supportedSizes` lists `['A4', 'A3']`, but `capabilities.sizes` lists A4..A0, and Studio UI dropdown allows selecting A4..A0. |
+| `detailed-poster` | `ancestor-tiered` | `ancestors` | A4, A3, A2, A1, A0 | Modern Gallery | `runtime-supported-and-reachable` | Modern Gallery registry and Studio both expose the same page-size range. |
 | `detailed-poster` | `descendant-tiered` | `descendants` | A4, A3, A2, A1, A0 | Classic Heritage | `runtime-supported-and-reachable` | Fully active descendant poster pipeline. |
-| `detailed-poster` | `descendant-tiered` | `descendants` | A4, A3 | Modern Gallery | `runtime-supported-and-reachable` | Modern Gallery is active; the same registry/UI size discrepancy documented for ancestor posters applies here. |
-| `detailed-poster` | `family-network-tiered` | `selected-branch` | A4, A3, A2, A1, A0 | Classic Heritage, Modern Gallery, Dense Genealogy | `implemented-but-not-Studio-reachable` | Engine exists in `familyNetworkPosterLayout.ts`, but `selected-branch` is not selectable in Studio UI, and `createLayoutSpec` never assigns `family-network-tiered`. |
-| `detailed-poster` | `focus-family` | `ancestors`, `descendants` | A3, A2, A1 | Classic Heritage, Modern Gallery | `planned` | Committed production engine; shipping order is decided only after Phase 0B Owner Mockup Review. |
-| `detailed-poster` | `radial-generations` | `ancestors`, `descendants` | A3, A2, A1, A0 | Classic Heritage, Modern Gallery | `planned` | Committed production engine; shipping order is decided only after Phase 0B Owner Mockup Review. |
+| `detailed-poster` | `descendant-tiered` | `descendants` | A4, A3, A2, A1, A0 | Modern Gallery | `runtime-supported-and-reachable` | Modern Gallery is active across the declared page-size range. |
+| `detailed-poster` | `descendant-tiered` | `selected-branch` | A4, A3, A2, A1, A0 | Classic Heritage, Modern Gallery, Dense Genealogy | `runtime-supported-and-reachable` | Active Studio scope using opaque root tokens, descendants, and in-branch spouses. |
+| `detailed-poster` | `focus-family` | `around-person` | A4, A3, A2, A1, A0 | Classic Heritage, Modern Gallery | `runtime-supported-and-reachable` | Active Focus runtime with independent ancestor/descendant depth and relation toggles. |
+| `detailed-poster` | `radial-generations` | `ancestors`, `descendants` | A4, A3, A2, A1, A0 | Classic Heritage, Modern Gallery | `runtime-supported-and-reachable` | Active Radial runtime; print quality and geometric capacity can block invalid combinations. |
 | `detailed-poster` | `ancestor-tiered` / `descendant-tiered` | `ancestors`, `descendants` | A4 | Classic Heritage, Modern Gallery | `quality-gated` | Large tree on A4 sheet drops font below 6pt; triggers quality gate warning/block. |
 | `full-tree-overview` | `full-tree-overview` | `full-tree` | A3, A2, A1, A0 | Dense Genealogy | `runtime-supported-and-reachable` | `scope === 'full-tree'` in Studio resolves directly to `full-tree-overview` engine with micro-cards (`dense-overview`). |
 | `full-tree-overview` | `radial-generations` | `full-tree` | A2, A1, A0 | Modern Gallery | `unassessed` | Requires prototype evidence to assess whether non-directional full-tree graphs can be mapped into radial sectors without arc collision. |
@@ -208,18 +207,12 @@ Legend of Standardized Statuses:
 | `tiled-wall` | `full-tree-overview` / `ancestor-tiered` | `full-tree` | A4, A3, A2 (per sheet) | Classic Heritage, Modern Gallery, Dense Genealogy | `quality-gated` | Active ZIP export of sliced printable tile sheets. Quality gate evaluates edge sheet utilization & minimum text size. |
 | `tiled-wall` | `radial-generations` | `full-tree` | A4, A3 (per sheet) | Modern Gallery | `unassessed` | Requires prototype evidence to assess seam alignment and trimming precision when radial curved arcs cross rectangular page tile boundaries. |
 
-### Registry Declarations vs. Actual Studio Runtime Discrepancies
-1. **Modern Gallery Supported Page Sizes:**
-   - **Registry `supportedSizes`:** `['A4', 'A3']` (in `modern-ancestor-poster` definition).
-   - **Registry `capabilities.sizes`:** `['A4', 'A3', 'A2', 'A1', 'A0']`.
-   - **Studio UI Behavior:** `VisualOutputConfigPanel.tsx` hardcodes A4, A3, A2, A1, A0 options for all posters regardless of definition.
-   - **Impact:** User can select A0 for Modern Gallery in Studio UI even though top-level `supportedSizes` declared A4/A3.
+### Registry Declarations vs. Actual Studio Runtime Notes
+1. **Modern Gallery Supported Page Sizes:** Registry `supportedSizes` and `capabilities.sizes` are aligned to A4 through A0.
 2. **`family-network-tiered` Engine Reachability:**
    - **Registry `layoutEngine`:** Listed in `capabilities.layoutEngines`.
    - **Studio UI / Builder Behavior:** `posterSceneBuilder.ts` `createLayoutSpec` only assigns `full-tree-overview`, `descendant-tiered`, or `ancestor-tiered`. `family-network-tiered` is unreachable from current Studio UI options.
-3. **`selected-branch` Scope:**
-   - **Registry `capabilities.scopes`:** Lists `selected-root`, `ancestor-line`, `descendant-line`, `full-tree`.
-   - **Studio UI Options:** Hardcodes `ancestors`, `descendants`, `full-tree`. `selected-branch` is not selectable as an independent scope in the UI.
+3. **`selected-branch` Scope:** Registry definitions declare `selected-branch`, the Studio exposes it, and runtime mapping resolves it to a sanitized `descendant-tiered` scene.
 
 ---
 
@@ -239,34 +232,16 @@ A thorough audit of `studioPosterBrowserPngRuntime.ts` and `posterPrintQuality.t
 ## 7. Focus and Radial Specific Audit Findings
 
 ### Focus Engine Audit Findings
-1. **Current Code Status:** A real `focus-family` poster layout engine DOES NOT currently exist in `src/features/publishing/visualOutputs/`.
-2. **Interactive vs. Publishing Gap:** The interactive tree canvas (`useFamilyTreeLayoutController.ts`, `layout.worker.ts`) supports `chartModel === 'focus'`, rendering focal person + immediate relations. However, `PosterScene` has no `focusFamilyPosterLayout.ts`.
-3. **Existing Foundation & Reusable Controls:**
-   - **Graph Selectors:** `selectPosterPreviewGraph` and `selectDescendantPosterPreviewGraph` in `previewLiveGraphSelectors.ts` provide sub-graph extraction patterns. A new `selectFocusPosterPreviewGraph` selector can easily be created.
-   - **UI Controls:** `selectedPosterRootToken` (Primary Contextual Content Control), `generationDepth`, `showYears`, and card toggles are functional in `VisualOutputConfigPanel.tsx`.
-4. **Required Data & Contracts for Focus Poster Engine:**
-   - **Context Contract:** `FocusPosterGraphSelectorContext`:
-     ```typescript
-     export interface FocusPosterGraphSelectorContext {
-       rootPersonId: string;
-       ancestorDepth: number; // 1..3
-       descendantDepth: number; // 1..3
-       includeSpouses: boolean;
-       includeSiblings: boolean;
-     }
-     ```
-   - **Layout Engine Contract:** `focusFamilyPosterLayoutEngine` implementing `PosterLayoutEngine`:
-     - Places focal card at center anchor $(X_c, Y_c)$.
-     - Places parents/grandparents at $Y < Y_c$.
-     - Places children/grandchildren at $Y > Y_c$.
-     - Places current spouse(s) adjacent at $X = X_c \pm \Delta X$.
-     - Places siblings flanking parents/focal card.
+1. **Current Code Status:** `focusFamilyPosterLayout.ts` implements the production Focus engine and is registered by `posterSceneBuilder.ts`.
+2. **Data Boundary:** `previewFocusGraphSelector.ts` selects from the complete source graph behind the opaque person-token catalog, then sanitizes before layout.
+3. **Studio Controls:** Focal person, independent ancestor/descendant depths, spouses, and siblings are active. Switching modes preserves scoped settings.
+4. **Geometry and Export:** The focal card remains centered; capacity errors are controlled; Preview, SVG, PNG, and PDF consume the same PosterScene.
 
 ### Radial Engine Audit Findings
-1. **Current Code Status:** A real `radial-generations` poster layout engine DOES NOT exist in `PosterScene`.
-2. **Verification of Non-Advertisement:** Checked `visualOutputRegistry.ts`. NO active or experimental `VisualOutputDefinition` advertises a Radial poster option to users. Type definitions (`visualOutputTypes.ts`) include `'radial-layout'` and `'radial'` in type unions, but NO user-facing UI or poster definition exposes them. **Compliance with non-advertisement guidelines is 100% verified.**
-3. **Preservation as Production Milestone:** Radial is preserved as a committed production milestone (not a discarded option or teaser).
-4. **Open Questions Requiring Prototype Evidence:**
+1. **Current Code Status:** `radialGenerationsPosterLayout.ts` implements the production Radial engine and is registered by `posterSceneBuilder.ts`.
+2. **Runtime Reachability:** The Studio exposes Radial/Fan for ancestor and descendant scopes, with 180-degree and 360-degree compositions and radial-specific controls.
+3. **Evidence:** Runtime, accessibility, responsive, artifact, privacy, and owner-review evidence covers supported radial scenarios. Capacity guidance blocks unsupported density.
+4. **Open Questions Outside the Supported Runtime:**
    - **Full-Tree Radial Mapping:** How non-directional full-tree graphs map into concentric polar sectors without arc collisions.
    - **Tiled Wall Seam Alignment:** How curved radial arc sectors slice across rectangular page tile boundaries and align when printed and trimmed.
    - **Arabic Label Orientation:** Prototype straight, tangential, and curved placement; do not require SVG `<textPath>` unless Arabic shaping and print readability remain reliable.

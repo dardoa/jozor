@@ -1,0 +1,220 @@
+import { readFile } from 'node:fs/promises';
+import { expect, test, type Download, type Page } from '@playwright/test';
+
+type DebugUser = { uid: string; displayName: string; email: string; photoURL: string };
+type DebugWindow = Window & {
+  jozorDebug?: {
+    seedTreeScenario: (payload: {
+      people: Record<string, unknown>;
+      focusId: string;
+      role: 'owner';
+      treeName: string;
+      user: DebugUser;
+    }) => void;
+  };
+};
+
+const person = (
+  id: string,
+  firstName: string,
+  relationships: { parents?: string[]; spouses?: string[]; children?: string[] } = {},
+  overrides: Record<string, unknown> = {}
+) => ({
+  id,
+  title: '',
+  firstName,
+  middleName: '',
+  lastName: 'Selected Branch QA',
+  birthName: '',
+  nickName: '',
+  suffix: '',
+  gender: 'male',
+  birthDate: '1980',
+  birthPlace: '',
+  birthSource: '',
+  deathDate: '',
+  deathPlace: '',
+  deathSource: '',
+  burialPlace: '',
+  residence: '',
+  isDeceased: false,
+  profession: '',
+  company: '',
+  interests: '',
+  bio: '',
+  gallery: [],
+  voiceNotes: [],
+  sources: [],
+  events: [],
+  email: 'private-branch-person@example.test',
+  website: '',
+  blog: '',
+  address: '',
+  parents: relationships.parents ?? [],
+  spouses: relationships.spouses ?? [],
+  children: relationships.children ?? [],
+  partnerDetails: {},
+  isPrivate: false,
+  ...overrides,
+});
+
+const PEOPLE = {
+  'raw-branch-root-sentinel': person('raw-branch-root-sentinel', 'Branch Root', {
+    parents: ['raw-branch-parent-sentinel'],
+    spouses: ['raw-branch-spouse-sentinel'],
+    children: ['raw-branch-child-sentinel'],
+  }, {
+    website: 'https://private-storage-sentinel.supabase.co/root.jpg',
+    bio: 'Bearer private-branch-auth-token',
+  }),
+  'raw-branch-spouse-sentinel': person('raw-branch-spouse-sentinel', 'Branch Spouse', {
+    spouses: ['raw-branch-root-sentinel'],
+    children: ['raw-branch-child-sentinel'],
+  }, { gender: 'female' }),
+  'raw-branch-child-sentinel': person('raw-branch-child-sentinel', 'Branch Child', {
+    parents: ['raw-branch-root-sentinel', 'raw-branch-spouse-sentinel'],
+    children: ['raw-branch-grandchild-sentinel'],
+  }),
+  'raw-branch-grandchild-sentinel': person('raw-branch-grandchild-sentinel', 'Branch Grandchild', {
+    parents: ['raw-branch-child-sentinel'],
+  }),
+  'raw-branch-parent-sentinel': person('raw-branch-parent-sentinel', 'Excluded Parent', {
+    children: ['raw-branch-root-sentinel', 'raw-sibling-branch-sentinel'],
+  }),
+  'raw-sibling-branch-sentinel': person('raw-sibling-branch-sentinel', 'Excluded Sibling Branch', {
+    parents: ['raw-branch-parent-sentinel'],
+  }),
+};
+
+const OWNER: DebugUser = {
+  uid: 'selected-branch-e2e-owner',
+  displayName: 'Selected Branch E2E Owner',
+  email: 'selected-branch-owner@example.test',
+  photoURL: '',
+};
+
+const PRIVATE_SENTINELS = [
+  'raw-branch-',
+  'raw-sibling-branch-sentinel',
+  'private-branch-person@example.test',
+  'private-storage-sentinel.supabase.co',
+  'private-branch-auth-token',
+  OWNER.email,
+];
+
+async function seedTreeScenario(page: Page) {
+  await page.addInitScript(() => localStorage.setItem('language', 'en'));
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+  await page.waitForFunction(() => typeof (window as DebugWindow).jozorDebug?.seedTreeScenario === 'function');
+  await page.evaluate(({ people, owner }) => {
+    const debug = (window as DebugWindow).jozorDebug;
+    if (!debug) throw new Error('jozorDebug seed API is unavailable');
+    debug.seedTreeScenario({
+      people,
+      focusId: 'raw-branch-root-sentinel',
+      role: 'owner',
+      treeName: 'Selected Branch Runtime Evidence Tree',
+      user: owner,
+    });
+  }, { people: PEOPLE, owner: OWNER });
+}
+
+async function navigateToStudio(page: Page) {
+  const accountTrigger = page.getByTestId('account-menu-trigger');
+  await expect(accountTrigger).toBeVisible({ timeout: 15_000 });
+  await accountTrigger.click();
+
+  const vaultEntry = page.locator('button:visible').filter({ hasText: /The Vault/i }).last();
+  await expect(vaultEntry).toBeVisible({ timeout: 10_000 });
+  await vaultEntry.click();
+  await expect(page.getByRole('heading', { name: /The Vault/i })).toBeVisible({ timeout: 15_000 });
+
+  const exportNav = page.locator('button:visible').filter({ hasText: /Cloud|Export/i }).first();
+  await expect(exportNav).toBeVisible({ timeout: 10_000 });
+  await exportNav.click({ force: true });
+
+  const visualOutputs = page.getByRole('tab', { name: /Visual Outputs/i });
+  await expect(visualOutputs).toBeVisible({ timeout: 15_000 });
+  await visualOutputs.click({ force: true });
+  await expect(visualOutputs).toHaveAttribute('aria-selected', 'true');
+  await expect(page.getByTestId('visual-publishing-studio')).toBeVisible({ timeout: 15_000 });
+}
+
+async function readDownload(download: Download): Promise<Buffer> {
+  const filePath = await download.path();
+  if (!filePath) throw new Error('Playwright did not expose a local download path.');
+  return readFile(filePath);
+}
+
+test.describe('Visual Publishing Studio selected branch runtime', () => {
+  test.setTimeout(120_000);
+
+  test('selects one store-backed branch and exports private-safe SVG, PNG, and PDF artifacts', async ({ page }) => {
+    await seedTreeScenario(page);
+    await navigateToStudio(page);
+
+    const selectedBranch = page.getByRole('button', { name: 'Selected Branch' });
+    await expect(selectedBranch).toBeVisible();
+    await selectedBranch.focus();
+    await expect(selectedBranch).toBeFocused();
+    await page.keyboard.press('Enter');
+    await expect(selectedBranch).toHaveAttribute('aria-pressed', 'true');
+
+    await page.getByRole('tab', { name: 'Tree & Layout' }).click();
+    await page.getByRole('button', { name: 'Show Full Recorded Data' }).click();
+
+    const rootSelector = page.getByRole('combobox', { name: 'Focal Person (Root)' });
+    await expect(rootSelector).toBeVisible();
+    const selectedRootToken = await rootSelector.inputValue();
+    expect(selectedRootToken).toMatch(/^session-token-/);
+    const optionValues = await rootSelector.locator('option').evaluateAll((options) =>
+      options.map((option) => (option as HTMLOptionElement).value)
+    );
+    expect(optionValues.length).toBe(Object.keys(PEOPLE).length);
+    expect(optionValues.every((value) => /^session-token-/.test(value))).toBe(true);
+
+    const preview = page.getByTestId('visual-studio-preview-pane');
+    await expect(preview).toContainText('People visible: 4');
+    const svg = page.locator('[data-poster-layout-engine="descendant-tiered"]');
+    await expect(svg).toBeVisible();
+    const previewMarkup = await svg.evaluate((element) => element.outerHTML);
+    expect(previewMarkup).toContain('Branch Root');
+    expect(previewMarkup).toContain('Branch Spouse');
+    expect(previewMarkup).toContain('Branch Child');
+    expect(previewMarkup).toContain('Branch Grandchild');
+    expect(previewMarkup).not.toContain('Excluded Parent');
+    expect(previewMarkup).not.toContain('Excluded Sibling Branch');
+    for (const sentinel of PRIVATE_SENTINELS) expect(previewMarkup).not.toContain(sentinel);
+
+    const downloads: Download[] = [];
+    for (const format of ['SVG', 'PNG', 'PDF'] as const) {
+      const button = page.getByRole('button', { name: `Download ${format}` });
+      await expect(button).toBeEnabled({ timeout: 15_000 });
+      const [download] = await Promise.all([
+        page.waitForEvent('download', { timeout: 30_000 }),
+        button.click(),
+      ]);
+      downloads.push(download);
+    }
+
+    const fileNames = downloads.map((download) => download.suggestedFilename());
+    expect(fileNames[0]).toMatch(/\.svg$/i);
+    expect(fileNames[1]).toMatch(/\.png$/i);
+    expect(fileNames[2]).toMatch(/\.pdf$/i);
+    expect(new Set(fileNames.map((name) => name.replace(/\.(svg|png|pdf)$/i, ''))).size).toBe(1);
+    for (const fileName of fileNames) {
+      for (const sentinel of PRIVATE_SENTINELS) expect(fileName).not.toContain(sentinel);
+      expect(fileName).not.toMatch(/session-token|preview-node|descendant-tiered/i);
+    }
+
+    const exportedSvg = (await readDownload(downloads[0])).toString('utf8');
+    expect(exportedSvg).toContain('data-poster-layout-engine="descendant-tiered"');
+    expect(exportedSvg).not.toContain('Excluded Sibling Branch');
+    for (const sentinel of PRIVATE_SENTINELS) expect(exportedSvg).not.toContain(sentinel);
+
+    const png = await readDownload(downloads[1]);
+    expect(png.subarray(0, 8)).toEqual(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
+    const pdf = await readDownload(downloads[2]);
+    expect(pdf.subarray(0, 5).toString('ascii')).toBe('%PDF-');
+  });
+});
