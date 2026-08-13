@@ -1035,6 +1035,103 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
     expect(rootSelector.value).toContain('session-token-');
   });
 
+  it('builds and exports a selected branch from the store boundary without sibling branches or raw identifiers', async () => {
+    useAppStore.setState({
+      currentTreeId: 'selected-branch-store-tree',
+      focusId: 'raw-owner-root',
+      people: {
+        'raw-owner-root': makePerson({
+          id: 'raw-owner-root',
+          firstName: 'Owner',
+          lastName: 'Root',
+          spouses: ['raw-owner-spouse'],
+          children: ['raw-owner-child'],
+          photoUrl: 'https://private-storage.example.com/root.jpg',
+        }),
+        'raw-owner-spouse': makePerson({
+          id: 'raw-owner-spouse',
+          firstName: 'Owner',
+          lastName: 'Spouse',
+          spouses: ['raw-owner-root'],
+          children: ['raw-owner-child'],
+        }),
+        'raw-owner-child': makePerson({
+          id: 'raw-owner-child',
+          firstName: 'Branch',
+          lastName: 'Child',
+          parents: ['raw-owner-root', 'raw-owner-spouse'],
+          children: ['raw-owner-grandchild'],
+        }),
+        'raw-owner-grandchild': makePerson({
+          id: 'raw-owner-grandchild',
+          firstName: 'Branch',
+          lastName: 'Grandchild',
+          parents: ['raw-owner-child'],
+        }),
+        'raw-sibling-branch': makePerson({
+          id: 'raw-sibling-branch',
+          firstName: 'Excluded',
+          lastName: 'Sibling Branch',
+          parents: ['raw-shared-parent'],
+        }),
+        'raw-shared-parent': makePerson({
+          id: 'raw-shared-parent',
+          firstName: 'Excluded',
+          lastName: 'Ancestor',
+          children: ['raw-owner-root', 'raw-sibling-branch'],
+        }),
+      },
+    });
+
+    renderStudio({ previewSourceMode: 'store' });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Selected Branch' }));
+    selectTab('Tree & Layout');
+    fireEvent.click(screen.getByRole('button', { name: 'Show Full Recorded Data' }));
+
+    const previewPane = screen.getByTestId('visual-studio-preview-pane');
+    await waitFor(() => {
+      expect(within(previewPane).getByText(/People visible: 4/i)).toBeInTheDocument();
+    });
+
+    const posterSvg = screen.getByTestId('studio-poster-renderer-preview').innerHTML;
+    expect(posterSvg).toContain('Owner Root');
+    expect(posterSvg).toContain('Owner Spouse');
+    expect(posterSvg).toContain('Branch Child');
+    expect(posterSvg).toContain('Branch Grandchild');
+    expect(posterSvg).not.toContain('Excluded Sibling Branch');
+    expect(posterSvg).not.toContain('Excluded Ancestor');
+    expect(posterSvg).not.toContain('raw-owner-');
+    expect(posterSvg).not.toContain('raw-sibling-branch');
+    expect(posterSvg).not.toContain('private-storage.example.com');
+
+    const rootSelector = screen.getByRole('combobox', { name: 'Focal Person (Root)' }) as HTMLSelectElement;
+    expect(rootSelector.value).toMatch(/^session-token-/);
+    expect(Array.from(rootSelector.options).map((option) => option.value)).toEqual(
+      expect.arrayContaining([expect.stringMatching(/^session-token-/)])
+    );
+    expect(rootSelector.innerHTML).not.toContain('raw-owner-');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Download SVG' }));
+    await waitFor(() => {
+      expect(downloadFile).toHaveBeenCalledWith(
+        expect.any(Blob),
+        'Selected Family Branch.svg',
+        'image/svg+xml'
+      );
+    });
+
+    const [exportedBlob] = vi.mocked(downloadFile).mock.calls.at(-1)!;
+    if (!(exportedBlob instanceof Blob)) {
+      throw new Error('Store-backed selected branch SVG export must produce a Blob artifact.');
+    }
+    const exportedSvg = await readBlobAsText(exportedBlob);
+    expect(exportedSvg).toContain('data-poster-layout-engine="descendant-tiered"');
+    expect(exportedSvg).not.toContain('raw-owner-');
+    expect(exportedSvg).not.toContain('raw-sibling-branch');
+    expect(exportedSvg).not.toContain('private-storage.example.com');
+  });
+
   // Phase 1B New Tests
   it('[1B New] maps Modern Gallery preset to modern-ancestor-poster definition and modern styling', async () => {
     renderStudio();
