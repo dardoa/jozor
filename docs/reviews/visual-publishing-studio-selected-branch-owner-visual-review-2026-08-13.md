@@ -57,3 +57,5 @@ Sparse branches currently use the same broad page distribution strategy as large
 Selected Branch is technically and visually ready for owner confirmation. The current evidence receives **Pass with Polish** as an internal recommendation. Final owner approval remains pending until the owner reviews the promoted screenshots and poster files.
 
 Evidence is stored in `docs/reviews/evidence/visual-publishing-studio-selected-branch-owner-review-2026-08-13/` with SHA-256 hashes in `evidence-manifest.json`.
+
+Evidence regeneration is explicit: run the Chromium review spec with `UPDATE_VISUAL_EVIDENCE=1`. Normal multi-browser test runs inspect temporary downloads and do not mutate promoted evidence.

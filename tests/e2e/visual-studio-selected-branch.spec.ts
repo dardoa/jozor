@@ -97,6 +97,7 @@ const OWNER: DebugUser = {
 const EVIDENCE_DIR = path.resolve(
   'docs/reviews/evidence/visual-publishing-studio-selected-branch-owner-review-2026-08-13'
 );
+const UPDATE_VISUAL_EVIDENCE = process.env.UPDATE_VISUAL_EVIDENCE === '1';
 
 const PRIVATE_SENTINELS = [
   'raw-branch-',
@@ -157,17 +158,28 @@ async function navigateToStudio(page: Page, mobile = false) {
   await expect(page.getByTestId('visual-publishing-studio')).toBeVisible({ timeout: 15_000 });
 }
 
-async function saveAndReadDownload(download: Download, fileName: string): Promise<Buffer> {
-  await mkdir(EVIDENCE_DIR, { recursive: true });
-  const filePath = path.join(EVIDENCE_DIR, fileName);
-  await download.saveAs(filePath);
-  return readFile(filePath);
+async function readDownload(
+  download: Download,
+  evidenceFileName: string,
+  writeEvidence: boolean
+): Promise<Buffer> {
+  if (writeEvidence) {
+    await mkdir(EVIDENCE_DIR, { recursive: true });
+    const evidencePath = path.join(EVIDENCE_DIR, evidenceFileName);
+    await download.saveAs(evidencePath);
+    return readFile(evidencePath);
+  }
+
+  const temporaryPath = await download.path();
+  if (!temporaryPath) throw new Error('Playwright did not expose a local download path.');
+  return readFile(temporaryPath);
 }
 
 test.describe('Visual Publishing Studio selected branch runtime', () => {
   test.setTimeout(120_000);
 
-  test('selects one store-backed branch and exports private-safe SVG, PNG, and PDF artifacts', async ({ page }) => {
+  test('selects one store-backed branch and exports private-safe SVG, PNG, and PDF artifacts', async ({ page, browserName }) => {
+    const writeEvidence = UPDATE_VISUAL_EVIDENCE && browserName === 'chromium';
     await page.setViewportSize({ width: 1440, height: 900 });
     await seedTreeScenario(page);
     await navigateToStudio(page);
@@ -207,13 +219,15 @@ test.describe('Visual Publishing Studio selected branch runtime', () => {
     expect(previewMarkup).not.toContain('data-card-field="relationship"');
     for (const sentinel of PRIVATE_SENTINELS) expect(previewMarkup).not.toContain(sentinel);
 
-    await mkdir(EVIDENCE_DIR, { recursive: true });
     const studio = page.getByTestId('visual-publishing-studio');
-    await studio.evaluate((element) => element.scrollIntoView({ block: 'start' }));
-    await page.screenshot({
-      path: path.join(EVIDENCE_DIR, 'selected-branch-desktop-1440x900.png'),
-      fullPage: false,
-    });
+    if (writeEvidence) {
+      await mkdir(EVIDENCE_DIR, { recursive: true });
+      await studio.evaluate((element) => element.scrollIntoView({ block: 'start' }));
+      await page.screenshot({
+        path: path.join(EVIDENCE_DIR, 'selected-branch-desktop-1440x900.png'),
+        fullPage: false,
+      });
+    }
 
     const downloads: Download[] = [];
     for (const format of ['SVG', 'PNG', 'PDF'] as const) {
@@ -236,20 +250,20 @@ test.describe('Visual Publishing Studio selected branch runtime', () => {
       expect(fileName).not.toMatch(/session-token|preview-node|descendant-tiered/i);
     }
 
-    const exportedSvg = (await saveAndReadDownload(downloads[0], 'selected-branch.svg')).toString('utf8');
+    const exportedSvg = (await readDownload(downloads[0], 'selected-branch.svg', writeEvidence)).toString('utf8');
     expect(exportedSvg).toContain('data-poster-layout-engine="descendant-tiered"');
     expect(exportedSvg).not.toContain('Excluded Sibling Branch');
     expect(exportedSvg).toContain('Scope: selected branch');
     expect(exportedSvg).not.toContain('data-card-field="relationship"');
     for (const sentinel of PRIVATE_SENTINELS) expect(exportedSvg).not.toContain(sentinel);
 
-    const png = await saveAndReadDownload(downloads[1], 'selected-branch.png');
+    const png = await readDownload(downloads[1], 'selected-branch.png', writeEvidence);
     expect(png.subarray(0, 8)).toEqual(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
-    const pdf = await saveAndReadDownload(downloads[2], 'selected-branch.pdf');
+    const pdf = await readDownload(downloads[2], 'selected-branch.pdf', writeEvidence);
     expect(pdf.subarray(0, 5).toString('ascii')).toBe('%PDF-');
   });
 
-  test('keeps the selected branch preview usable at the mobile review viewport', async ({ page }) => {
+  test('keeps the selected branch preview usable at the mobile review viewport', async ({ page, browserName }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await seedTreeScenario(page);
     await navigateToStudio(page, true);
@@ -274,11 +288,13 @@ test.describe('Visual Publishing Studio selected branch runtime', () => {
     await expect(
       page.locator('#mobile-preview-container').getByTestId('visual-studio-preview-pane')
     ).toContainText('People visible: 4');
-    await studio.evaluate((element) => element.scrollIntoView({ block: 'start' }));
-    await mkdir(EVIDENCE_DIR, { recursive: true });
-    await page.screenshot({
-      path: path.join(EVIDENCE_DIR, 'selected-branch-mobile-390x844.png'),
-      fullPage: false,
-    });
+    if (UPDATE_VISUAL_EVIDENCE && browserName === 'chromium') {
+      await studio.evaluate((element) => element.scrollIntoView({ block: 'start' }));
+      await mkdir(EVIDENCE_DIR, { recursive: true });
+      await page.screenshot({
+        path: path.join(EVIDENCE_DIR, 'selected-branch-mobile-390x844.png'),
+        fullPage: false,
+      });
+    }
   });
 });
