@@ -76,13 +76,13 @@ export function getPosterLayoutCombinationCapability(
       }
       if (scope === 'selected-branch') {
         return {
-          status: 'planned',
-          isRuntimeSupported: false,
-          isPlanned: true,
+          status: 'runtime-supported-and-reachable',
+          isRuntimeSupported: true,
+          isPlanned: false,
           requiresQualityGate: false,
           description: {
-            en: 'Selected branch scope is planned for future studio update.',
-            ar: 'نطاق الفرع المختار مخطط للتحديث القادم.',
+            en: 'Selected branch poster is supported with descendants and in-branch spouses.',
+            ar: 'بوستر الفرع المحدد مدعوم مع الذرية وأزواج أفراد الفرع.',
           },
         };
       }

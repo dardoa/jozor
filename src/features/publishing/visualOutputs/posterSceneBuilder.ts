@@ -393,7 +393,7 @@ function createLayoutSpec(
   const resolvedEngineId = requestedEngineId
     ?? (scope === 'full-tree'
       ? 'full-tree-overview'
-      : scope === 'selected-root-descendants'
+      : scope === 'selected-root-descendants' || scope === 'selected-branch'
         ? 'descendant-tiered'
         : scope === 'selected-root-focus'
           ? 'focus-family'

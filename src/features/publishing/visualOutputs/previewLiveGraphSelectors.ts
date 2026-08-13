@@ -72,6 +72,14 @@ const resolveRootInsideBoundary = (
     : undefined
 ) ?? context.rootPersonId ?? source.defaultRootRawId ?? Object.keys(source.people)[0];
 
+const resolveOpaqueRootInsideBoundary = (
+  context: Parameters<VisualPreviewGraphSelector<PreviewLiveTreeSource>['selectRawGraph']>[1]
+): string | undefined => (
+  context.tokenCatalog && context.rootPersonToken
+    ? context.tokenCatalog.resolveTokenInsideBoundary(context.rootPersonToken)
+    : undefined
+);
+
 function selectDirectionalPosterGraph(
   source: PreviewLiveTreeSource,
   context: Parameters<VisualPreviewGraphSelector<PreviewLiveTreeSource>['selectRawGraph']>[1],
@@ -161,6 +169,80 @@ export const selectDescendantPosterPreviewGraph: VisualPreviewGraphSelector<Prev
   productType: 'poster',
   selectRawGraph(source, context): PreviewSanitizerRawGraph {
     return selectDirectionalPosterGraph(source, context, 'descendant');
+  },
+};
+
+export const selectBranchPosterPreviewGraph: VisualPreviewGraphSelector<PreviewLiveTreeSource> = {
+  productType: 'poster',
+  selectRawGraph(source, context): PreviewSanitizerRawGraph {
+    const resolvedRootId = resolveOpaqueRootInsideBoundary(context);
+    if (!resolvedRootId || !source.people[resolvedRootId]) return EMPTY_PREVIEW_GRAPH;
+
+    const maxDepth = context.maxDepth === 'all'
+      ? Number.POSITIVE_INFINITY
+      : context.maxDepth ?? 4;
+    const selectionLimit = Math.max(1, context.maxNodes) + 1;
+    const queue: Array<{ rawId: string; generation: number }> = [
+      { rawId: resolvedRootId, generation: 1 },
+    ];
+    const visitedLineage = new Set<string>();
+    const selectedNodes: PreviewSanitizerRawNode[] = [];
+    const selectedIds = new Set<string>();
+
+    const addNode = (
+      rawId: string,
+      generation: number,
+      relationshipHint: VisualPreviewRelationshipHint
+    ): void => {
+      if (selectedIds.has(rawId) || selectedNodes.length >= selectionLimit) return;
+      const person = source.people[rawId];
+      if (!person) return;
+      selectedIds.add(rawId);
+      selectedNodes.push(toRawNode(person, generation, relationshipHint));
+    };
+
+    while (queue.length > 0 && selectedNodes.length < selectionLimit) {
+      const current = queue.shift()!;
+      if (visitedLineage.has(current.rawId)) continue;
+      visitedLineage.add(current.rawId);
+
+      addNode(
+        current.rawId,
+        current.generation,
+        current.rawId === resolvedRootId ? 'root' : 'descendant'
+      );
+
+      source.relationships
+        .filter((relationship) => relationship.relationshipType === 'spouse'
+          && (relationship.fromRawId === current.rawId || relationship.toRawId === current.rawId))
+        .forEach((relationship) => {
+          const spouseRawId = relationship.fromRawId === current.rawId
+            ? relationship.toRawId
+            : relationship.fromRawId;
+          addNode(spouseRawId, current.generation, 'spouse');
+        });
+
+      if (current.generation >= maxDepth) continue;
+      source.relationships
+        .filter((relationship) => isParentRelationship(relationship)
+          && relationship.fromRawId === current.rawId)
+        .forEach((relationship) => {
+          if (!visitedLineage.has(relationship.toRawId) && source.people[relationship.toRawId]) {
+            queue.push({ rawId: relationship.toRawId, generation: current.generation + 1 });
+          }
+        });
+    }
+
+    const keptIds = new Set(selectedNodes.map((node) => node.rawId));
+    const selectedEdges: PreviewSanitizerRawEdge[] = source.relationships
+      .filter((relationship) => keptIds.has(relationship.fromRawId) && keptIds.has(relationship.toRawId))
+      .map((relationship) => ({
+        fromRawId: relationship.fromRawId,
+        toRawId: relationship.toRawId,
+        relationshipType: relationship.relationshipType === 'spouse' ? 'spouse' : 'parent-child',
+      }));
+
+    return { nodes: selectedNodes, edges: selectedEdges };
   },
 };
 

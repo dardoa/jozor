@@ -29,7 +29,7 @@ import type {
   PosterTiledSheetSize,
 } from '../../../publishing';
 
-export type VisualStudioPosterScope = Extract<PosterTreeScope, 'ancestors' | 'descendants' | 'full-tree'>;
+export type VisualStudioPosterScope = Extract<PosterTreeScope, 'ancestors' | 'descendants' | 'selected-branch' | 'full-tree'>;
 
 export interface BaseStudioPosterOptions {
   readonly scope: VisualStudioPosterScope;

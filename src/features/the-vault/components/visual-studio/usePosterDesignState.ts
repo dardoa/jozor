@@ -220,7 +220,8 @@ export function usePosterDesignState(initialPresetId: string = 'classic-heritage
   const switchScope = useCallback(
     (scope: PosterTreeScope) => {
       applyStateUpdate((current) => {
-        const normalizedState = scope === 'full-tree' && current.layoutMode !== 'tiered'
+        const requiresTieredLayout = scope === 'full-tree' || scope === 'selected-branch';
+        const normalizedState = requiresTieredLayout && current.layoutMode !== 'tiered'
           ? switchLayoutModeState(current, 'tiered')
           : current;
 

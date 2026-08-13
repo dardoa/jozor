@@ -58,6 +58,28 @@ describe('Phase 1B: posterDesignStateRuntimeAdapter', () => {
     expect(opts.cardCorner).toBe('rounded');
   });
 
+  it('maps a selected branch to the descendant-tiered runtime without changing product mode', () => {
+    const initialState = createInitialPosterDesignState('classic-heritage');
+    const state = { ...initialState, scope: 'selected-branch' as const };
+    const result = mapPosterDesignStateToRuntimeOptions(state, {
+      definitionId: 'classic-descendant-poster',
+      language: 'en',
+      title: 'Selected Family Branch',
+    });
+
+    expect(result.supported).toBe(true);
+    expect(result.posterOptions).toMatchObject({
+      productMode: 'detailed-poster',
+      scope: 'selected-branch',
+      engineId: 'descendant-tiered',
+      content: {
+        definitionId: 'classic-descendant-poster',
+        scope: 'selected-branch',
+        title: 'Selected Family Branch',
+      },
+    });
+  });
+
   it('rejects Focus Family mapping when the resolved focal preview ID is missing', () => {
     let state = createInitialPosterDesignState('classic-heritage');
     state = switchLayoutMode(state, 'focus-family');

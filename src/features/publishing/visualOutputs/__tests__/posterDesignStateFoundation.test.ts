@@ -45,7 +45,7 @@ describe('Phase 1A: Final Two-Issue Closure Pass', () => {
       'detailed-poster:tiered:ancestors': 'runtime-supported-and-reachable',
       'detailed-poster:tiered:descendants': 'runtime-supported-and-reachable',
       'detailed-poster:tiered:full-tree': 'quality-gated',
-      'detailed-poster:tiered:selected-branch': 'planned',
+      'detailed-poster:tiered:selected-branch': 'runtime-supported-and-reachable',
 
       // detailed-poster x focus-family
       'detailed-poster:focus-family:ancestors': 'incompatible',

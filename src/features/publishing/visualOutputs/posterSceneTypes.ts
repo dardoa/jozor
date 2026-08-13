@@ -100,6 +100,7 @@ export interface PosterContentSpec {
   readonly scope:
     | 'selected-root-ancestors'
     | 'selected-root-descendants'
+    | 'selected-branch'
     | 'full-tree'
     | 'selected-root-focus';
   readonly rootPreviewId?: string;

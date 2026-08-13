@@ -34,9 +34,11 @@ import {
   productionPreviewSanitizer,
   selectPosterPreviewGraph,
   selectDescendantPosterPreviewGraph,
+  selectBranchPosterPreviewGraph,
   selectFullTreePosterPreviewGraph,
   selectSnapshotPreviewGraph,
   descendantFixturePreviewGraphSelector,
+  branchFixturePreviewGraphSelector,
   fullTreeFixturePreviewGraphSelector,
   selectFocusGraphBoundary,
   selectRadialGraphBoundary,
@@ -206,7 +208,8 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
   const [isMobilePreviewExpanded, setIsMobilePreviewExpanded] = useState(false);
 
   const selectedDefinition = useMemo(() => {
-    const isDescendant = studioDesign.state.scope === 'descendants';
+    const isDescendant = studioDesign.state.scope === 'descendants'
+      || studioDesign.state.scope === 'selected-branch';
     if (studioDesign.state.activePresetId === 'dense-genealogy') {
       return getVisualOutputDefinition('dense-genealogy-poster')
         || getVisualOutputDefinition('classic-ancestor-poster')
@@ -229,6 +232,7 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
       : 'classic-heritage';
 
   const isDescendantScope = studioDesign.state.scope === 'descendants';
+  const isSelectedBranchScope = studioDesign.state.scope === 'selected-branch';
   const isFullTreeScope = studioDesign.state.scope === 'full-tree';
 
   const configuredPosterLimit = useMemo(() => {
@@ -311,6 +315,8 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
           ? selectSnapshotPreviewGraph
           : isFullTreeScope
             ? selectFullTreePosterPreviewGraph
+            : isSelectedBranchScope
+            ? selectBranchPosterPreviewGraph
             : isDescendantScope
             ? selectDescendantPosterPreviewGraph
             : selectPosterPreviewGraph).selectRawGraph(
@@ -329,12 +335,16 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
         )
       : (selectorProduct === 'poster' && isFullTreeScope
           ? fullTreeFixturePreviewGraphSelector
+          : selectorProduct === 'poster' && isSelectedBranchScope
+            ? branchFixturePreviewGraphSelector
           : selectorProduct === 'poster' && isDescendantScope
             ? descendantFixturePreviewGraphSelector
           : getFixtureVisualPreviewGraphSelector(selectorProduct)).selectRawGraph(STUDIO_PREVIEW_FIXTURE_SOURCE, {
           productType: selectorProduct,
           definitionId: selectedDefinition.id,
-          rootPersonId: 'fixture-root',
+          rootPersonId: isSelectedBranchScope ? undefined : 'fixture-root',
+          rootPersonToken: isSelectedBranchScope ? selectedPosterRootToken : undefined,
+          tokenCatalog: isSelectedBranchScope ? posterTokenCatalog : undefined,
           maxDepth: selectorProduct === 'poster'
             ? (isFullTreeScope ? 'all' : studioDesign.state.tiered.generationDepth ?? 4)
             : 3,
@@ -345,6 +355,7 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
     configuredPosterLimit,
     isDescendantScope,
     isFullTreeScope,
+    isSelectedBranchScope,
     language,
     posterTokenCatalog,
     previewSourceMode,
@@ -433,7 +444,9 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
   const [userPosterTitle, setUserPosterTitle] = useState('');
   const [userPosterSubtitle, setUserPosterSubtitle] = useState('');
 
-  const defaultPosterTitle = isAr
+  const defaultPosterTitle = isSelectedBranchScope
+    ? (isAr ? 'فرع العائلة' : 'Selected Family Branch')
+    : isAr
     ? (isFullTreeScope ? 'الشجرة العائلية الكاملة' : 'لوحة العائلة')
     : (isFullTreeScope ? 'Full Family Tree' : 'Ancestor Tree');
 
@@ -684,6 +697,8 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
         ? 'selected-root-ancestors'
         : studioDesign.state.scope === 'descendants'
           ? 'selected-root-descendants'
+          : studioDesign.state.scope === 'selected-branch'
+            ? 'selected-branch'
           : 'full-tree',
       showYears: studioDesign.state.shared.showYears,
       showRelationship: studioDesign.state.shared.showRelationship,

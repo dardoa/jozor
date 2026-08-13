@@ -66,6 +66,7 @@ export interface VisualOutputConfigPanelProps {
 }
 
 const ar = {
+  selectedBranch: 'فرع محدد',
   presetFirstWorkspace: 'إعدادات البوستر',
   quickSetup: 'إعداد سريع',
   contentAndScope: 'المحتوى والنطاق',
@@ -198,6 +199,7 @@ const ar = {
 };
 
 const en = {
+  selectedBranch: 'Selected Branch',
   presetFirstWorkspace: 'Poster Settings',
   quickSetup: 'Quick Setup',
   contentAndScope: 'Content & Scope',
@@ -600,10 +602,11 @@ export const VisualOutputConfigPanel: React.FC<VisualOutputConfigPanelProps> = (
               data-testid="poster-scope-group"
             >
               <legend className="text-xs font-medium text-stone-400 mb-1">{t.treeScope}</legend>
-              <div className="grid grid-cols-3 gap-2" data-testid="poster-scope-control">
+              <div className="grid grid-cols-2 gap-2" data-testid="poster-scope-control">
                 {[
                   { scope: 'ancestors' as const, label: t.ancestors },
                   { scope: 'descendants' as const, label: t.descendants },
+                  { scope: 'selected-branch' as const, label: t.selectedBranch },
                   { scope: 'full-tree' as const, label: t.fullTree },
                 ].map(({ scope, label }) => {
                   const isSelected = currentState.scope === scope;

@@ -156,6 +156,80 @@ export const descendantFixturePreviewGraphSelector: VisualPreviewGraphSelector<F
   },
 };
 
+const resolveOpaqueFixtureRootId = (
+  context: Parameters<VisualPreviewGraphSelector<FixturePreviewSource>['selectRawGraph']>[1]
+): string | undefined => (
+  context.tokenCatalog && context.rootPersonToken
+    ? context.tokenCatalog.resolveTokenInsideBoundary(context.rootPersonToken)
+    : undefined
+);
+
+export const branchFixturePreviewGraphSelector: VisualPreviewGraphSelector<FixturePreviewSource> = {
+  productType: 'poster',
+  selectRawGraph(source, context): PreviewSanitizerRawGraph {
+    const rootId = resolveOpaqueFixtureRootId(context);
+    const root = source.nodes.find((node) => node.fixtureId === rootId);
+    if (!root) return { nodes: [], edges: [] };
+
+    const nodeById = new Map(source.nodes.map((node) => [node.fixtureId, node]));
+    const maxDepth = context.maxDepth === 'all'
+      ? Number.POSITIVE_INFINITY
+      : context.maxDepth ?? 4;
+    const selectionLimit = Math.max(1, context.maxNodes) + 1;
+    const queue: Array<{ fixtureId: string; generation: number }> = [
+      { fixtureId: root.fixtureId, generation: 1 },
+    ];
+    const visitedLineage = new Set<string>();
+    const selected = new Map<string, FixturePreviewNode>();
+
+    const addNode = (
+      fixtureId: string,
+      generation: number,
+      relationshipHint: VisualPreviewRelationshipHint
+    ): void => {
+      if (selected.has(fixtureId) || selected.size >= selectionLimit) return;
+      const node = nodeById.get(fixtureId);
+      if (node) selected.set(fixtureId, { ...node, generation, relationshipHint });
+    };
+
+    while (queue.length > 0 && selected.size < selectionLimit) {
+      const current = queue.shift()!;
+      if (visitedLineage.has(current.fixtureId)) continue;
+      visitedLineage.add(current.fixtureId);
+      addNode(
+        current.fixtureId,
+        current.generation,
+        current.fixtureId === root.fixtureId ? 'root' : 'descendant'
+      );
+
+      source.edges
+        .filter((edge) => edge.relationshipType === 'spouse'
+          && (edge.fromFixtureId === current.fixtureId || edge.toFixtureId === current.fixtureId))
+        .forEach((edge) => addNode(
+          edge.fromFixtureId === current.fixtureId ? edge.toFixtureId : edge.fromFixtureId,
+          current.generation,
+          'spouse'
+        ));
+
+      if (current.generation >= maxDepth) continue;
+      source.edges
+        .filter((edge) => edge.relationshipType !== 'spouse' && edge.fromFixtureId === current.fixtureId)
+        .forEach((edge) => {
+          if (!visitedLineage.has(edge.toFixtureId) && nodeById.has(edge.toFixtureId)) {
+            queue.push({ fixtureId: edge.toFixtureId, generation: current.generation + 1 });
+          }
+        });
+    }
+
+    const nodes = Array.from(selected.values());
+    const keptNodeIds = new Set(selected.keys());
+    return {
+      nodes: nodes.map(toRawNode),
+      edges: filterEdgesForNodes(source.edges, keptNodeIds),
+    };
+  },
+};
+
 export const fullTreeFixturePreviewGraphSelector: VisualPreviewGraphSelector<FixturePreviewSource> = {
   productType: 'poster',
   selectRawGraph(source, context): PreviewSanitizerRawGraph {

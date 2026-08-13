@@ -46,7 +46,7 @@ export function mapPosterDesignStateToRuntimeOptions(
   }
 
   const baseOptions = {
-    scope: (state.scope === 'around-person' || state.scope === 'selected-branch' ? 'ancestors' : state.scope) as VisualStudioPosterScope,
+    scope: (state.scope === 'around-person' ? 'ancestors' : state.scope) as VisualStudioPosterScope,
     generationDepth: state.tiered.generationDepth,
     size: state.shared.size,
     orientation: state.shared.orientation,
@@ -175,13 +175,15 @@ export function mapPosterDesignStateToRuntimeOptions(
   const tieredEngineId =
     state.productMode === 'full-tree-overview'
       ? 'full-tree-overview'
-      : state.scope === 'descendants'
+      : state.scope === 'descendants' || state.scope === 'selected-branch'
       ? 'descendant-tiered'
       : 'ancestor-tiered';
 
   const tieredScope =
     state.scope === 'descendants'
       ? 'selected-root-descendants'
+      : state.scope === 'selected-branch'
+      ? 'selected-branch'
       : state.scope === 'full-tree'
       ? 'full-tree'
       : 'selected-root-ancestors';

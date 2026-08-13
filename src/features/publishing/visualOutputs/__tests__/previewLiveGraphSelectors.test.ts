@@ -7,6 +7,8 @@ import {
   livePreviewGraphSelectorSkeletons,
   listVisualPreviewGraphSelectors,
   productionPreviewSanitizer,
+  createPosterPersonTokenCatalogSession,
+  selectBranchPosterPreviewGraph,
   selectDescendantPosterPreviewGraph,
   selectFullTreePosterPreviewGraph,
   selectPosterPreviewGraph,
@@ -119,6 +121,91 @@ describe('Preview Live Graph Selector Skeletons', () => {
       'descendant',
       'descendant',
     ]);
+  });
+
+  it('selects an opaque-token branch with descendants and in-branch spouses only', () => {
+    const source: PreviewLiveTreeSource = {
+      people: {
+        parent: { rawId: 'parent', displayName: 'Parent', isLiving: false },
+        branch: { rawId: 'branch', displayName: 'Branch Root', isLiving: false },
+        spouse: { rawId: 'spouse', displayName: 'Branch Spouse', isLiving: true },
+        child: { rawId: 'child', displayName: 'Branch Child', isLiving: true },
+        'child-spouse': { rawId: 'child-spouse', displayName: 'Child Spouse', isLiving: true },
+        grandchild: { rawId: 'grandchild', displayName: 'Grandchild', isLiving: true },
+        siblingBranch: { rawId: 'sibling-branch', displayName: 'Other Branch', isLiving: true },
+      },
+      relationships: [
+        { fromRawId: 'parent', toRawId: 'branch', relationshipType: 'parent-child' },
+        { fromRawId: 'parent', toRawId: 'sibling-branch', relationshipType: 'parent-child' },
+        { fromRawId: 'branch', toRawId: 'spouse', relationshipType: 'spouse' },
+        { fromRawId: 'branch', toRawId: 'child', relationshipType: 'parent-child' },
+        { fromRawId: 'child', toRawId: 'child-spouse', relationshipType: 'spouse' },
+        { fromRawId: 'child', toRawId: 'grandchild', relationshipType: 'parent-child' },
+      ],
+    };
+    const session = createPosterPersonTokenCatalogSession('branch-test');
+    const catalog = session.createCatalog(
+      Object.values(source.people),
+      { language: 'en', privacyMode: 'owner-full' },
+      'branch'
+    );
+
+    const rawGraph = selectBranchPosterPreviewGraph.selectRawGraph(source, {
+      productType: 'poster',
+      definitionId: 'classic-descendant-poster',
+      rootPersonToken: catalog.defaultToken,
+      tokenCatalog: catalog,
+      maxDepth: 3,
+      maxNodes: 20,
+      language: 'en',
+    });
+
+    expect(rawGraph.nodes.map((node) => node.rawId)).toEqual([
+      'branch',
+      'spouse',
+      'child',
+      'child-spouse',
+      'grandchild',
+    ]);
+    expect(rawGraph.nodes.map((node) => node.generation)).toEqual([1, 1, 2, 2, 3]);
+    expect(rawGraph.nodes.map((node) => node.relationshipHint)).toEqual([
+      'root',
+      'spouse',
+      'descendant',
+      'spouse',
+      'descendant',
+    ]);
+    const selectedRawIds = rawGraph.nodes.map((node) => node.rawId);
+    expect(selectedRawIds).not.toContain('sibling-branch');
+    expect(selectedRawIds).not.toContain('parent');
+
+    const sanitizedGraph = productionPreviewSanitizer.sanitize(rawGraph, {
+      privacyMode: 'masked',
+      includePhotos: false,
+      includeYears: false,
+      maxNodes: 20,
+      language: 'en',
+    });
+    const serialized = JSON.stringify(sanitizedGraph);
+    expect(serialized).not.toContain('"rawId"');
+    expect(serialized).not.toContain('child-spouse');
+    expect(serialized).not.toContain('sibling-branch');
+    expect(sanitizedGraph.nodes.every((node) => /^preview-node-\d+$/.test(node.previewId))).toBe(true);
+    expect(sanitizedGraph.nodes).toHaveLength(5);
+    session.dispose();
+  });
+
+  it('rejects selected branch requests that bypass the opaque token catalog', () => {
+    const rawGraph = selectBranchPosterPreviewGraph.selectRawGraph(liveSource, {
+      productType: 'poster',
+      definitionId: 'classic-descendant-poster',
+      rootPersonId: 'raw-root-001',
+      maxDepth: 3,
+      maxNodes: 20,
+      language: 'en',
+    });
+
+    expect(rawGraph).toEqual({ nodes: [], edges: [] });
   });
 
   it('selects the complete tree with every relationship type and disconnected records', () => {

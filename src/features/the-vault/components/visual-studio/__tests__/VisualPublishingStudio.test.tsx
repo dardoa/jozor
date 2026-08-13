@@ -768,6 +768,38 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
     expect(within(previewPane).getByText(/People visible:/i)).toBeInTheDocument();
   });
 
+  it('builds a selected branch scene from an opaque root token and updates when the root changes', async () => {
+    renderStudio();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Selected Branch' }));
+    selectTab('Tree & Layout');
+
+    const previewPane = screen.getByTestId('visual-studio-preview-pane');
+    const rootSelector = screen.getByRole('combobox', { name: 'Focal Person (Root)' }) as HTMLSelectElement;
+    expect(rootSelector.value).toMatch(/^session-token-/);
+
+    await waitFor(() => {
+      const posterSvg = screen.getByTestId('studio-poster-renderer-preview').innerHTML;
+      expect(within(previewPane).getByText(/People visible: 3/i)).toBeInTheDocument();
+      expect(posterSvg).toContain('data-poster-layout-engine="descendant-tiered"');
+      expect(posterSvg).not.toContain('fixture-root');
+      expect(posterSvg).not.toContain('fixture-child');
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Show Full Recorded Data' }));
+    const childOption = Array.from(rootSelector.options).find((option) => option.textContent === 'Preview Child');
+    expect(childOption?.value).toMatch(/^session-token-/);
+    fireEvent.change(rootSelector, { target: { value: childOption!.value } });
+
+    await waitFor(() => {
+      expect(within(previewPane).getByText(/People visible: 1/i)).toBeInTheDocument();
+    });
+
+    const serializedStudio = screen.getByTestId('visual-publishing-studio').innerHTML;
+    expect(serializedStudio).not.toContain('fixture-root');
+    expect(serializedStudio).not.toContain('fixture-child');
+  });
+
   it('does not apply the binary ancestor cap to descendant branches', () => {
     renderStudio();
 

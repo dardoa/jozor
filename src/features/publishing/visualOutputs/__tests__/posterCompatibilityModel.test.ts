@@ -36,6 +36,23 @@ describe('posterCompatibilityModel — 60 Product x Layout x Scope Matrix', () =
     expect(result.isPlanned).toBe(false);
   });
 
+  it('exposes selected branch only through the detailed tiered runtime', () => {
+    const supported = getPosterLayoutCombinationCapability(
+      'detailed-poster',
+      'tiered',
+      'selected-branch'
+    );
+    expect(supported.status).toBe('runtime-supported-and-reachable');
+    expect(supported.isRuntimeSupported).toBe(true);
+    expect(supported.isPlanned).toBe(false);
+
+    expect(getPosterLayoutCombinationCapability(
+      'detailed-poster',
+      'radial-generations',
+      'selected-branch'
+    ).status).toBe('incompatible');
+  });
+
   it('verifies all 60 matrix combinations are evaluated', () => {
     expect(totalEvaluated).toBe(60);
   });

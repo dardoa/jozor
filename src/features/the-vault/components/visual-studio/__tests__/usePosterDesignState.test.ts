@@ -164,4 +164,17 @@ describe('Phase 1B: usePosterDesignState React Hook', () => {
     expect(result.current.state.layoutMode).toBe('tiered');
     expect(result.current.state.scope).toBe('full-tree');
   });
+
+  it('normalizes Radial to Tiered when selecting an individual family branch', () => {
+    const { result } = renderHook(() => usePosterDesignState());
+
+    act(() => {
+      result.current.switchLayoutMode('radial-generations');
+      result.current.switchScope('selected-branch');
+    });
+
+    expect(result.current.state.layoutMode).toBe('tiered');
+    expect(result.current.state.productMode).toBe('detailed-poster');
+    expect(result.current.state.scope).toBe('selected-branch');
+  });
 });
