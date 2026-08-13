@@ -149,6 +149,13 @@ const selectTab = (name: string | RegExp) => {
   fireEvent.click(screen.getByRole('tab', { name: matcher }));
 };
 
+const readBlobAsText = (blob: Blob): Promise<string> => new Promise((resolve, reject) => {
+  const reader = new FileReader();
+  reader.onload = () => resolve(String(reader.result ?? ''));
+  reader.onerror = () => reject(reader.error);
+  reader.readAsText(blob);
+});
+
 describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
   beforeEach(() => {
     cleanup();
@@ -798,6 +805,25 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
     const serializedStudio = screen.getByTestId('visual-publishing-studio').innerHTML;
     expect(serializedStudio).not.toContain('fixture-root');
     expect(serializedStudio).not.toContain('fixture-child');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Download SVG' }));
+
+    await waitFor(() => {
+      expect(downloadFile).toHaveBeenCalledWith(
+        expect.any(Blob),
+        'Selected Family Branch.svg',
+        'image/svg+xml'
+      );
+    });
+
+    const [exportedBlob] = vi.mocked(downloadFile).mock.calls.at(-1)!;
+    if (!(exportedBlob instanceof Blob)) {
+      throw new Error('Selected branch SVG export must produce a Blob artifact.');
+    }
+    const exportedSvg = await readBlobAsText(exportedBlob);
+    expect(exportedSvg).toContain('data-poster-layout-engine="descendant-tiered"');
+    expect(exportedSvg).not.toContain('fixture-');
+    expect(exportedSvg).not.toContain('session-token-');
   });
 
   it('does not apply the binary ancestor cap to descendant branches', () => {
