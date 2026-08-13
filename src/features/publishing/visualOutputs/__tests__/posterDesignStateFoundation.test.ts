@@ -424,6 +424,22 @@ describe('Phase 1A: Final Two-Issue Closure Pass', () => {
       expect(isPresetModified(state)).toBe(false);
     });
 
+    it('applies the registered Dense Genealogy baseline as a real design preset', () => {
+      const state = applyPreset(
+        createInitialPosterDesignState('classic-heritage'),
+        'dense-genealogy'
+      );
+
+      expect(state.activePresetId).toBe('dense-genealogy');
+      expect(state.shared.colorPalette).toBe('evergreen');
+      expect(state.shared.spacing).toBe('compact');
+      expect(state.shared.connectorPath).toBe('orthogonal');
+      expect(state.shared.cardFrame).toBe('minimal');
+      expect(state.shared.cardCorner).toBe('square');
+      expect(state.shared.header).toBe('registry');
+      expect(isPresetModified(state)).toBe(false);
+    });
+
     it('verifies bucket value preservation and atomic scope switching during layout mode switching', () => {
       let state = createInitialPosterDesignState('classic-heritage');
       expect(state.scope).toBe('ancestors');

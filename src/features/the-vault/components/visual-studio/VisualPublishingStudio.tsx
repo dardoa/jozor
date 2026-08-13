@@ -207,6 +207,11 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
 
   const selectedDefinition = useMemo(() => {
     const isDescendant = studioDesign.state.scope === 'descendants';
+    if (studioDesign.state.activePresetId === 'dense-genealogy') {
+      return getVisualOutputDefinition('dense-genealogy-poster')
+        || getVisualOutputDefinition('classic-ancestor-poster')
+        || definitions[0];
+    }
     if (studioDesign.state.activePresetId === 'modern-gallery') {
       return getVisualOutputDefinition(isDescendant ? 'modern-descendant-poster' : 'modern-ancestor-poster')
         || getVisualOutputDefinition('modern-ancestor-poster')
@@ -217,9 +222,11 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
       || definitions[0];
   }, [studioDesign.state.activePresetId, studioDesign.state.scope, definitions]);
 
-  const selectedPosterStyle: PosterVisualStylePreset = selectedDefinition.id.startsWith('modern')
-    ? 'modern-gallery'
-    : 'classic-heritage';
+  const selectedPosterStyle: PosterVisualStylePreset = studioDesign.state.activePresetId === 'dense-genealogy'
+    ? 'dense-genealogy'
+    : studioDesign.state.activePresetId === 'modern-gallery'
+      ? 'modern-gallery'
+      : 'classic-heritage';
 
   const isDescendantScope = studioDesign.state.scope === 'descendants';
   const isFullTreeScope = studioDesign.state.scope === 'full-tree';
@@ -1044,7 +1051,7 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
         onExportTiledWall={mappingResult.supported ? () => void handleTiledWallExport() : undefined}
         onUseDensePreset={selectedDefinition.id === 'dense-genealogy-poster'
           ? undefined
-          : () => studioDesign.selectPreset('classic-heritage')}
+          : () => studioDesign.selectPreset('dense-genealogy')}
         onUseLargestPage={mappingResult.posterOptions?.size === 'A0'
           ? undefined
           : () => studioDesign.updatePrint({ size: 'A0', orientation: 'landscape' })}

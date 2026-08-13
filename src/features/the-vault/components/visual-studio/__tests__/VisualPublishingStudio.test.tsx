@@ -974,6 +974,20 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
     });
   });
 
+  it('maps Dense Genealogy to its dedicated output definition and PosterScene style', async () => {
+    renderStudio();
+
+    fireEvent.click(screen.getByRole('button', { name: /Dense Genealogy/i }));
+
+    await waitFor(() => {
+      const previewPane = screen.getByTestId('visual-studio-preview-pane');
+      const posterSvg = screen.getByTestId('studio-poster-renderer-preview').innerHTML;
+      expect(within(previewPane).getByText('Dense Genealogy Poster')).toBeInTheDocument();
+      expect(posterSvg).toContain('data-poster-theme="dense-genealogy"');
+      expect(posterSvg).not.toContain('data-poster-theme="classic-heritage"');
+    });
+  });
+
   it('[1B New] single-owned selectedPosterRootToken responds to Undo, Redo, and Reset Content', () => {
     renderStudio();
 

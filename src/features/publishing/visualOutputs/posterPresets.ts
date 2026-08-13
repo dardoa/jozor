@@ -62,9 +62,41 @@ export const MODERN_GALLERY_PRESET: PosterPresetDefinition = {
   },
 };
 
+export const DENSE_GENEALOGY_PRESET: PosterPresetDefinition = {
+  id: 'dense-genealogy',
+  displayName: {
+    en: 'Dense Genealogy',
+    ar: 'الأنساب الكثيفة',
+  },
+  description: {
+    en: 'Compact, restrained cards and connectors for larger family trees that need more printable capacity.',
+    ar: 'بطاقات وخطوط مدمجة وهادئة للأشجار العائلية الأكبر التي تحتاج مساحة طباعة أكبر.',
+  },
+  baselineSettings: {
+    colorPalette: 'evergreen',
+    typography: 'balanced',
+    fontFamily: 'noto-sans-arabic',
+    cardScale: 'standard',
+    cardEffect: 'flat',
+    cardFrame: 'minimal',
+    cardCorner: 'square',
+    cardLayout: 'standard',
+    photoShape: 'circle',
+    pageFrame: 'minimal',
+    header: 'registry',
+    ornament: 'none',
+    decoration: 'clean',
+    connectorStyle: 'subtle',
+    connectorPath: 'orthogonal',
+    spacing: 'compact',
+    marginPreset: 'compact',
+  },
+};
+
 export const INITIAL_POSTER_PRESETS: readonly PosterPresetDefinition[] = [
   CLASSIC_HERITAGE_PRESET,
   MODERN_GALLERY_PRESET,
+  DENSE_GENEALOGY_PRESET,
 ];
 
 export function getPosterPresetDefinition(presetId: string): PosterPresetDefinition | undefined {
