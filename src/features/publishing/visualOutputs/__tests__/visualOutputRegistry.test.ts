@@ -96,6 +96,11 @@ describe('Visual Output Product Contract Registry', () => {
         expect(visualOutputSupportsSize('dense-genealogy-poster', size)).toBe(true);
       });
 
+      for (const id of ['classic-ancestor-poster', 'modern-ancestor-poster', 'dense-genealogy-poster']) {
+        const definition = getVisualOutputDefinition(id);
+        expect(definition?.supportedSizes).toEqual(definition?.capabilities.sizes);
+      }
+
       expect(getVisualOutputDefinition('classic-ancestor-poster')?.plannedCapabilities?.sizes)
         .toBeUndefined();
       expect(getVisualOutputDefinition('modern-ancestor-poster')?.plannedCapabilities?.sizes)
@@ -113,10 +118,12 @@ describe('Visual Output Product Contract Registry', () => {
 
     it('verifies poster products support selected-root and ancestor-line scopes', () => {
       expect(visualOutputSupportsScope('classic-ancestor-poster', 'selected-root')).toBe(true);
+      expect(visualOutputSupportsScope('classic-ancestor-poster', 'selected-branch')).toBe(true);
       expect(visualOutputSupportsScope('classic-ancestor-poster', 'ancestor-line')).toBe(true);
       expect(visualOutputSupportsScope('classic-ancestor-poster', 'full-tree')).toBe(true);
 
       expect(visualOutputSupportsScope('modern-ancestor-poster', 'selected-root')).toBe(true);
+      expect(visualOutputSupportsScope('modern-ancestor-poster', 'selected-branch')).toBe(true);
       expect(visualOutputSupportsScope('modern-ancestor-poster', 'ancestor-line')).toBe(true);
       expect(visualOutputSupportsScope('modern-ancestor-poster', 'branch')).toBe(false);
     });
@@ -166,11 +173,11 @@ describe('Visual Output Product Contract Registry', () => {
       expect(visualOutputSupportsScope('unknown-id', 'selected-root')).toBe(false);
     });
 
-    it('verifies all registered visual outputs have previewAsset and recommendedFor metadata', () => {
+    it('marks Studio poster previews as generated while Snapshot retains its placeholder asset', () => {
       const list = listVisualOutputDefinitions();
       list.forEach((def) => {
         expect(def).toHaveProperty('previewAsset');
-        expect(def.previewAsset.type).toBe('placeholder');
+        expect(def.previewAsset.type).toBe(def.productType === 'poster' ? 'generated' : 'placeholder');
         expect(def.previewAsset.alt.en).toBeTypeOf('string');
         expect(def.previewAsset.alt.ar).toBeTypeOf('string');
         expect(def.previewAsset.aspectRatio).toBeTypeOf('string');

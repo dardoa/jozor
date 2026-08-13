@@ -28,7 +28,7 @@ export const VISUAL_OUTPUT_DEFINITIONS: VisualOutputDefinition[] = [
     capabilities: {
       sizes: ['A4', 'A3', 'A2', 'A1', 'A0'],
       orientations: ['portrait', 'landscape'],
-      scopes: ['selected-root', 'ancestor-line', 'descendant-line', 'full-tree'],
+      scopes: ['selected-root', 'selected-branch', 'ancestor-line', 'descendant-line', 'full-tree'],
       rendererTargets: ['svg', 'png', 'pdf'],
       photoModes: ['none', 'available-profile-photos', 'circle'],
       stylePresets: ['classic'],
@@ -40,7 +40,7 @@ export const VISUAL_OUTPUT_DEFINITIONS: VisualOutputDefinition[] = [
       stylePresets: ['warm', 'vintage'],
     },
     previewAsset: {
-      type: 'placeholder',
+      type: 'generated',
       aspectRatio: 'poster',
       alt: {
         en: 'Preview of Classic Ancestor Poster',
@@ -68,13 +68,13 @@ export const VISUAL_OUTPUT_DEFINITIONS: VisualOutputDefinition[] = [
     rendererTargets: ['svg', 'png', 'pdf'],
     layoutEngine: 'ancestor-tiered',
     readingStrategy: 'ancestor',
-    supportedSizes: ['A4', 'A3'],
+    supportedSizes: ['A4', 'A3', 'A2', 'A1', 'A0'],
     supportedOrientations: ['portrait', 'landscape'],
     status: 'active',
     capabilities: {
       sizes: ['A4', 'A3', 'A2', 'A1', 'A0'],
       orientations: ['portrait', 'landscape'],
-      scopes: ['selected-root', 'ancestor-line', 'descendant-line', 'full-tree'],
+      scopes: ['selected-root', 'selected-branch', 'ancestor-line', 'descendant-line', 'full-tree'],
       rendererTargets: ['svg', 'png', 'pdf'],
       photoModes: ['none', 'available-profile-photos', 'circle'],
       stylePresets: ['modern-gallery'],
@@ -86,7 +86,7 @@ export const VISUAL_OUTPUT_DEFINITIONS: VisualOutputDefinition[] = [
       stylePresets: ['minimal'],
     },
     previewAsset: {
-      type: 'placeholder',
+      type: 'generated',
       aspectRatio: 'poster',
       alt: {
         en: 'Preview of Modern Gallery Poster',
@@ -120,7 +120,7 @@ export const VISUAL_OUTPUT_DEFINITIONS: VisualOutputDefinition[] = [
     capabilities: {
       sizes: ['A4', 'A3', 'A2', 'A1', 'A0'],
       orientations: ['portrait', 'landscape'],
-      scopes: ['selected-root', 'ancestor-line', 'descendant-line', 'full-tree'],
+      scopes: ['selected-root', 'selected-branch', 'ancestor-line', 'descendant-line', 'full-tree'],
       rendererTargets: ['svg', 'png', 'pdf'],
       photoModes: ['none', 'available-profile-photos', 'circle'],
       stylePresets: ['minimal'],
@@ -129,7 +129,7 @@ export const VISUAL_OUTPUT_DEFINITIONS: VisualOutputDefinition[] = [
       generationDepths: [1, 2, 3, 4, 'all'],
     },
     previewAsset: {
-      type: 'placeholder',
+      type: 'generated',
       aspectRatio: 'poster',
       alt: {
         en: 'Preview of Dense Genealogy Poster',

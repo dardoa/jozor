@@ -57,6 +57,7 @@ export type VisualOutputOrientation =
 export type VisualOutputScope =
   | 'current-tree'
   | 'selected-root'
+  | 'selected-branch'
   | 'ancestor-line'
   | 'descendant-line'
   | 'branch'

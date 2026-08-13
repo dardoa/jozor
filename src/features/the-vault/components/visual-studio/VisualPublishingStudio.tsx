@@ -208,22 +208,18 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
   const [isMobilePreviewExpanded, setIsMobilePreviewExpanded] = useState(false);
 
   const selectedDefinition = useMemo(() => {
-    const isDescendant = studioDesign.state.scope === 'descendants'
-      || studioDesign.state.scope === 'selected-branch';
     if (studioDesign.state.activePresetId === 'dense-genealogy') {
       return getVisualOutputDefinition('dense-genealogy-poster')
         || getVisualOutputDefinition('classic-ancestor-poster')
         || definitions[0];
     }
     if (studioDesign.state.activePresetId === 'modern-gallery') {
-      return getVisualOutputDefinition(isDescendant ? 'modern-descendant-poster' : 'modern-ancestor-poster')
-        || getVisualOutputDefinition('modern-ancestor-poster')
+      return getVisualOutputDefinition('modern-ancestor-poster')
         || definitions[0];
     }
-    return getVisualOutputDefinition(isDescendant ? 'classic-descendant-poster' : 'classic-ancestor-poster')
-      || getVisualOutputDefinition('classic-ancestor-poster')
+    return getVisualOutputDefinition('classic-ancestor-poster')
       || definitions[0];
-  }, [studioDesign.state.activePresetId, studioDesign.state.scope, definitions]);
+  }, [studioDesign.state.activePresetId, definitions]);
 
   const selectedPosterStyle: PosterVisualStylePreset = studioDesign.state.activePresetId === 'dense-genealogy'
     ? 'dense-genealogy'
@@ -478,7 +474,7 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
   const [resolvedPosterImages, setResolvedPosterImages] = useState<StudioPosterSvgResources['embeddedImages']>();
 
   const resolvedPosterFontFamily = !posterOptions || posterOptions.fontFamily === 'style-default'
-    ? selectedDefinition.id === 'modern-ancestor-poster' || selectedDefinition.id === 'modern-descendant-poster'
+    ? selectedDefinition.id === 'modern-ancestor-poster'
       ? 'noto-sans-arabic'
       : 'amiri'
     : posterOptions.fontFamily;
