@@ -330,7 +330,10 @@ function renderNode(
     cardHeight: height,
     cardPreset: scene.cardPreset,
     language: scene.content.language === 'ar' ? 'ar' : 'en',
-    relationshipLabel: (scene.layout.engineId === 'radial-generations' && !isRoot) ? '' : (scene.content.showRelationship ? getRelationshipLabel(node, scene) : undefined),
+    relationshipLabel: scene.content.showRelationship
+      && !(scene.layout.engineId === 'radial-generations' && !isRoot)
+      ? getRelationshipLabel(node, scene)
+      : '',
     minReadableFontSize,
     cardX: x,
     cardY: y,
@@ -577,13 +580,14 @@ export function renderPosterSceneToSvg(
     || hasArabicText(content.subtitle ?? '')
     || scene.nodes.some((node) => hasArabicText(node.displayName));
   const isDescendantScope = content.scope === 'selected-root-descendants';
+  const isSelectedBranchScope = content.scope === 'selected-branch';
   const isFullTreeScope = content.scope === 'full-tree';
   const treeLabel = content.language === 'ar'
-    ? (isFullTreeScope ? '\u0627\u0644\u0634\u062c\u0631\u0629 \u0627\u0644\u0639\u0627\u0626\u0644\u064a\u0629 \u0627\u0644\u0643\u0627\u0645\u0644\u0629' : isDescendantScope ? '\u0634\u062c\u0631\u0629 \u0627\u0644\u0623\u062d\u0641\u0627\u062f' : '\u0634\u062c\u0631\u0629 \u0627\u0644\u0623\u0633\u0644\u0627\u0641')
-    : (isFullTreeScope ? 'Full family tree' : isDescendantScope ? 'Descendant tree' : 'Ancestor tree');
+    ? (isFullTreeScope ? '\u0627\u0644\u0634\u062c\u0631\u0629 \u0627\u0644\u0639\u0627\u0626\u0644\u064a\u0629 \u0627\u0644\u0643\u0627\u0645\u0644\u0629' : isSelectedBranchScope ? '\u0627\u0644\u0641\u0631\u0639 \u0627\u0644\u0639\u0627\u0626\u0644\u064a \u0627\u0644\u0645\u062d\u062f\u062f' : isDescendantScope ? '\u0634\u062c\u0631\u0629 \u0627\u0644\u0623\u062d\u0641\u0627\u062f' : '\u0634\u062c\u0631\u0629 \u0627\u0644\u0623\u0633\u0644\u0627\u0641')
+    : (isFullTreeScope ? 'Full family tree' : isSelectedBranchScope ? 'Selected family branch' : isDescendantScope ? 'Descendant tree' : 'Ancestor tree');
   const scopeLabel = content.language === 'ar'
-    ? (isFullTreeScope ? '\u0627\u0644\u0646\u0637\u0627\u0642: \u0643\u0644 \u0627\u0644\u0639\u0644\u0627\u0642\u0627\u062a' : isDescendantScope ? '\u0627\u0644\u0646\u0637\u0627\u0642: \u0627\u0644\u0623\u062d\u0641\u0627\u062f' : '\u0627\u0644\u0646\u0637\u0627\u0642: \u0627\u0644\u0623\u0633\u0644\u0627\u0641 \u0627\u0644\u0645\u0628\u0627\u0634\u0631\u0648\u0646')
-    : (isFullTreeScope ? 'Scope: all relationships' : isDescendantScope ? 'Scope: descendants' : 'Scope: direct ancestors');
+    ? (isFullTreeScope ? '\u0627\u0644\u0646\u0637\u0627\u0642: \u0643\u0644 \u0627\u0644\u0639\u0644\u0627\u0642\u0627\u062a' : isSelectedBranchScope ? '\u0627\u0644\u0646\u0637\u0627\u0642: \u0627\u0644\u0641\u0631\u0639 \u0627\u0644\u0645\u062d\u062f\u062f' : isDescendantScope ? '\u0627\u0644\u0646\u0637\u0627\u0642: \u0627\u0644\u0623\u062d\u0641\u0627\u062f' : '\u0627\u0644\u0646\u0637\u0627\u0642: \u0627\u0644\u0623\u0633\u0644\u0627\u0641 \u0627\u0644\u0645\u0628\u0627\u0634\u0631\u0648\u0646')
+    : (isFullTreeScope ? 'Scope: all relationships' : isSelectedBranchScope ? 'Scope: selected branch' : isDescendantScope ? 'Scope: descendants' : 'Scope: direct ancestors');
   const appLabel = content.language === 'ar' ? '\u0623\u064f\u0646\u0634\u0626\u062a \u0647\u0630\u0647 \u0627\u0644\u0644\u0648\u062d\u0629 \u0641\u064a \u062c\u0630\u0648\u0631' : 'Created in Jozor';
   const showAttribution = content.showJozorAttribution !== false;
   const footerText = content.footerText?.trim();

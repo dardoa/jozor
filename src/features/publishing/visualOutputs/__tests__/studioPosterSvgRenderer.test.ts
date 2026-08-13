@@ -792,6 +792,39 @@ describe('studioPosterSvgRenderer', () => {
     expect(result.svg).not.toContain('relationshipHint');
   });
 
+  it('labels selected branch output accurately and omits disabled relationship details', () => {
+    const englishScene = createTestPosterScene({
+      model,
+      language: 'en',
+      title: 'Selected Family Branch',
+    });
+    const selectedBranchScene = {
+      ...englishScene,
+      content: {
+        ...englishScene.content,
+        scope: 'selected-branch' as const,
+        showRelationship: false,
+      },
+    };
+    const englishResult = renderPosterSceneToSvg({ scene: selectedBranchScene });
+
+    expect(englishResult.svg).toContain('aria-label="Selected family branch"');
+    expect(englishResult.svg).toContain('Scope: selected branch');
+    expect(englishResult.svg).not.toContain('data-card-field="relationship"');
+
+    const arabicResult = renderPosterSceneToSvg({
+      scene: {
+        ...selectedBranchScene,
+        content: {
+          ...selectedBranchScene.content,
+          language: 'ar',
+        },
+      },
+    });
+    expect(arabicResult.svg).toContain('\u0627\u0644\u0641\u0631\u0639 \u0627\u0644\u0639\u0627\u0626\u0644\u064a \u0627\u0644\u0645\u062d\u062f\u062f');
+    expect(arabicResult.svg).toContain('\u0627\u0644\u0646\u0637\u0627\u0642: \u0627\u0644\u0641\u0631\u0639 \u0627\u0644\u0645\u062d\u062f\u062f');
+  });
+
   it('fits the complete optional detail set inside Dense Genealogy cards', () => {
     const denseScene = createTestPosterScene({
       model,

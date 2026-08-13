@@ -1,4 +1,5 @@
-import { readFile } from 'node:fs/promises';
+import { mkdir, readFile } from 'node:fs/promises';
+import path from 'node:path';
 import { expect, test, type Download, type Page } from '@playwright/test';
 
 type DebugUser = { uid: string; displayName: string; email: string; photoURL: string };
@@ -93,6 +94,10 @@ const OWNER: DebugUser = {
   photoURL: '',
 };
 
+const EVIDENCE_DIR = path.resolve(
+  'docs/reviews/evidence/visual-publishing-studio-selected-branch-owner-review-2026-08-13'
+);
+
 const PRIVATE_SENTINELS = [
   'raw-branch-',
   'raw-sibling-branch-sentinel',
@@ -119,19 +124,31 @@ async function seedTreeScenario(page: Page) {
   }, { people: PEOPLE, owner: OWNER });
 }
 
-async function navigateToStudio(page: Page) {
-  const accountTrigger = page.getByTestId('account-menu-trigger');
-  await expect(accountTrigger).toBeVisible({ timeout: 15_000 });
-  await accountTrigger.click();
+async function navigateToStudio(page: Page, mobile = false) {
+  if (mobile) {
+    const mobileActions = page.getByRole('navigation', { name: /Mobile actions/i });
+    const vaultButton = mobileActions.getByRole('button', { name: /The Vault/i });
+    await expect(vaultButton).toBeVisible({ timeout: 15_000 });
+    await vaultButton.click();
+    await expect(page.getByRole('heading', { name: /The Vault/i })).toBeVisible({ timeout: 15_000 });
 
-  const vaultEntry = page.locator('button:visible').filter({ hasText: /The Vault/i }).last();
-  await expect(vaultEntry).toBeVisible({ timeout: 10_000 });
-  await vaultEntry.click();
-  await expect(page.getByRole('heading', { name: /The Vault/i })).toBeVisible({ timeout: 15_000 });
+    const toolsButton = page.getByRole('button', { name: /Tools/i }).first();
+    await expect(toolsButton).toBeVisible({ timeout: 10_000 });
+    await toolsButton.click();
+  } else {
+    const accountTrigger = page.getByTestId('account-menu-trigger');
+    await expect(accountTrigger).toBeVisible({ timeout: 15_000 });
+    await accountTrigger.click();
 
-  const exportNav = page.locator('button:visible').filter({ hasText: /Cloud|Export/i }).first();
-  await expect(exportNav).toBeVisible({ timeout: 10_000 });
-  await exportNav.click({ force: true });
+    const vaultEntry = page.locator('button:visible').filter({ hasText: /The Vault/i }).last();
+    await expect(vaultEntry).toBeVisible({ timeout: 10_000 });
+    await vaultEntry.click();
+    await expect(page.getByRole('heading', { name: /The Vault/i })).toBeVisible({ timeout: 15_000 });
+
+    const exportNav = page.locator('button:visible').filter({ hasText: /Cloud|Export/i }).first();
+    await expect(exportNav).toBeVisible({ timeout: 10_000 });
+    await exportNav.click({ force: true });
+  }
 
   const visualOutputs = page.getByRole('tab', { name: /Visual Outputs/i });
   await expect(visualOutputs).toBeVisible({ timeout: 15_000 });
@@ -140,9 +157,10 @@ async function navigateToStudio(page: Page) {
   await expect(page.getByTestId('visual-publishing-studio')).toBeVisible({ timeout: 15_000 });
 }
 
-async function readDownload(download: Download): Promise<Buffer> {
-  const filePath = await download.path();
-  if (!filePath) throw new Error('Playwright did not expose a local download path.');
+async function saveAndReadDownload(download: Download, fileName: string): Promise<Buffer> {
+  await mkdir(EVIDENCE_DIR, { recursive: true });
+  const filePath = path.join(EVIDENCE_DIR, fileName);
+  await download.saveAs(filePath);
   return readFile(filePath);
 }
 
@@ -150,6 +168,7 @@ test.describe('Visual Publishing Studio selected branch runtime', () => {
   test.setTimeout(120_000);
 
   test('selects one store-backed branch and exports private-safe SVG, PNG, and PDF artifacts', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
     await seedTreeScenario(page);
     await navigateToStudio(page);
 
@@ -184,7 +203,17 @@ test.describe('Visual Publishing Studio selected branch runtime', () => {
     expect(previewMarkup).toContain('Branch Grandchild');
     expect(previewMarkup).not.toContain('Excluded Parent');
     expect(previewMarkup).not.toContain('Excluded Sibling Branch');
+    expect(previewMarkup).toContain('Scope: selected branch');
+    expect(previewMarkup).not.toContain('data-card-field="relationship"');
     for (const sentinel of PRIVATE_SENTINELS) expect(previewMarkup).not.toContain(sentinel);
+
+    await mkdir(EVIDENCE_DIR, { recursive: true });
+    const studio = page.getByTestId('visual-publishing-studio');
+    await studio.evaluate((element) => element.scrollIntoView({ block: 'start' }));
+    await page.screenshot({
+      path: path.join(EVIDENCE_DIR, 'selected-branch-desktop-1440x900.png'),
+      fullPage: false,
+    });
 
     const downloads: Download[] = [];
     for (const format of ['SVG', 'PNG', 'PDF'] as const) {
@@ -207,14 +236,49 @@ test.describe('Visual Publishing Studio selected branch runtime', () => {
       expect(fileName).not.toMatch(/session-token|preview-node|descendant-tiered/i);
     }
 
-    const exportedSvg = (await readDownload(downloads[0])).toString('utf8');
+    const exportedSvg = (await saveAndReadDownload(downloads[0], 'selected-branch.svg')).toString('utf8');
     expect(exportedSvg).toContain('data-poster-layout-engine="descendant-tiered"');
     expect(exportedSvg).not.toContain('Excluded Sibling Branch');
+    expect(exportedSvg).toContain('Scope: selected branch');
+    expect(exportedSvg).not.toContain('data-card-field="relationship"');
     for (const sentinel of PRIVATE_SENTINELS) expect(exportedSvg).not.toContain(sentinel);
 
-    const png = await readDownload(downloads[1]);
+    const png = await saveAndReadDownload(downloads[1], 'selected-branch.png');
     expect(png.subarray(0, 8)).toEqual(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
-    const pdf = await readDownload(downloads[2]);
+    const pdf = await saveAndReadDownload(downloads[2], 'selected-branch.pdf');
     expect(pdf.subarray(0, 5).toString('ascii')).toBe('%PDF-');
+  });
+
+  test('keeps the selected branch preview usable at the mobile review viewport', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await seedTreeScenario(page);
+    await navigateToStudio(page, true);
+
+    const selectedBranch = page.getByRole('button', { name: 'Selected Branch' });
+    await selectedBranch.click();
+    await page.getByRole('tab', { name: 'Tree & Layout' }).click();
+    await page.getByRole('button', { name: 'Show Full Recorded Data' }).click();
+
+    const studio = page.getByTestId('visual-publishing-studio');
+    await expect(studio).toBeVisible();
+    const overflow = await studio.evaluate((element) => ({
+      clientWidth: element.clientWidth,
+      scrollWidth: element.scrollWidth,
+    }));
+    expect(overflow.scrollWidth).toBeLessThanOrEqual(overflow.clientWidth);
+
+    const previewToggle = page.getByTestId('visual-studio-mobile-preview-toggle');
+    await expect(previewToggle).toBeVisible();
+    await previewToggle.click();
+    await expect(previewToggle).toHaveAttribute('aria-expanded', 'true');
+    await expect(
+      page.locator('#mobile-preview-container').getByTestId('visual-studio-preview-pane')
+    ).toContainText('People visible: 4');
+    await studio.evaluate((element) => element.scrollIntoView({ block: 'start' }));
+    await mkdir(EVIDENCE_DIR, { recursive: true });
+    await page.screenshot({
+      path: path.join(EVIDENCE_DIR, 'selected-branch-mobile-390x844.png'),
+      fullPage: false,
+    });
   });
 });

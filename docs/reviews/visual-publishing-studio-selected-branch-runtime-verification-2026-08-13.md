@@ -2,7 +2,7 @@
 
 **Date:** August 13, 2026
 **Technical status:** Pass on Chromium and WebKit
-**Owner visual status:** Pending Owner Review
+**Owner visual status:** Internal review complete; pending owner confirmation
 **Production approval:** No independent approval recorded by this verification pass
 
 ## Scope
@@ -62,6 +62,6 @@ The mandatory Playwright scenario in `tests/e2e/visual-studio-selected-branch.sp
 
 Firefox did not reach application code in this environment. Playwright failed while creating the page with `browserContext.newPage: Cannot read properties of undefined (reading '_page')` on two consecutive runs. This is recorded as a browser-runner infrastructure issue, not as a Firefox product pass or product failure.
 
-## Remaining Gate
+## Visual Review Handoff
 
-Run an owner visual review on a real family branch at desktop and mobile widths. The review should confirm branch comprehension, poster composition, root selection ergonomics, Arabic long-name behavior, and visual parity across preview and exported files.
+The deterministic desktop/mobile and export review is recorded in `visual-publishing-studio-selected-branch-owner-visual-review-2026-08-13.md`. Its internal recommendation is Pass with Polish. Owner confirmation on a real family branch remains the final product gate.

@@ -1,0 +1,51 @@
+{
+  "generatedAt": "2026-08-13T23:13:18.0339128+03:00",
+  "scenario": "selected-branch-owner-review",
+  "technicalStatus": "pass",
+  "visualRecommendation": "pass-with-polish",
+  "ownerApproval": "pending",
+  "poster": {
+    "scope": "selected-branch",
+    "layoutEngine": "descendant-tiered",
+    "peopleVisible": 4,
+    "excludedSiblingBranches": true,
+    "relationshipLabelsEnabled": false,
+    "pageSize": "A3",
+    "orientation": "landscape",
+    "pdfPageCount": 1,
+    "pdfMediaBoxPoints": [0, 0, 1190.55118, 841.889764]
+  },
+  "files": [
+    {
+      "name": "selected-branch.svg",
+      "bytes": 587713,
+      "sha256": "bdbe9fd4e0035a6dd021f79c76175f791024186d9e33b05ae919705eb98b27a3"
+    },
+    {
+      "name": "selected-branch.png",
+      "bytes": 611449,
+      "width": 4526,
+      "height": 3200,
+      "sha256": "42e8cdc0d2c9692a155bffd790415cde53b5d349b4783b45afe02c97598d263c"
+    },
+    {
+      "name": "selected-branch.pdf",
+      "bytes": 499068,
+      "sha256": "acc3993cf16c4ca5f9b01b1abecff46e6ea917ca04a7e655a94ae8d6fbcf8315"
+    },
+    {
+      "name": "selected-branch-desktop-1440x900.png",
+      "bytes": 182295,
+      "width": 1440,
+      "height": 900,
+      "sha256": "32c5728b8bb03ad6c62d0867664635069b83a02ce247c583601d84da5c98f644"
+    },
+    {
+      "name": "selected-branch-mobile-390x844.png",
+      "bytes": 55103,
+      "width": 390,
+      "height": 844,
+      "sha256": "41eb156027fb98da84a408e405e39eb0b4ef3ac65b7fcc4b8645febe0aba9ffa"
+    }
+  ]
+}
