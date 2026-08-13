@@ -491,7 +491,7 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
 
     await waitFor(() => {
       const posterSvg = screen.getByTestId('studio-poster-renderer-preview').innerHTML;
-      expect(posterSvg).toBeTruthy();
+      expect(posterSvg).toContain('data-poster-connector-path="straight"');
     });
   });
 
@@ -503,7 +503,7 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
 
     await waitFor(() => {
       const posterSvg = screen.getByTestId('studio-poster-renderer-preview').innerHTML;
-      expect(posterSvg).toBeTruthy();
+      expect(posterSvg).toContain('data-poster-color-palette="evergreen"');
     });
   });
 
@@ -582,7 +582,7 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
 
     await waitFor(() => {
       const posterSvg = screen.getByTestId('studio-poster-renderer-preview').innerHTML;
-      expect(posterSvg).toBeTruthy();
+      expect(posterSvg).toContain('data-poster-card-layout="photo-focused"');
     });
   });
 
@@ -595,6 +595,23 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
     await waitFor(() => {
       const posterSvg = screen.getByTestId('studio-poster-renderer-preview').innerHTML;
       expect(posterSvg).toBeTruthy();
+    });
+  });
+
+  it('maps flat and elevated card depth controls to valid PosterScene values', async () => {
+    renderStudio();
+
+    selectTab('Cards');
+    fireEvent.click(screen.getByRole('button', { name: 'Flat' }));
+    await waitFor(() => {
+      expect(screen.getByTestId('studio-poster-renderer-preview').innerHTML)
+        .toContain('data-poster-card-effect="flat"');
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Elevated' }));
+    await waitFor(() => {
+      expect(screen.getByTestId('studio-poster-renderer-preview').innerHTML)
+        .toContain('data-poster-card-effect="elevated"');
     });
   });
 

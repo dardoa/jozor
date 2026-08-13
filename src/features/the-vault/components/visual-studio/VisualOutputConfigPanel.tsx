@@ -130,9 +130,9 @@ const ar = {
   cardLayoutTextMinimal: 'نص مختصر',
   cardEffect: 'تأثير البطاقة',
   cardEffectDefault: 'حسب التصميم',
-  cardEffectNone: 'بدون',
+  cardEffectNone: 'مسطح',
   cardEffectSoft: 'ظل ناعم',
-  cardEffectHard: 'ظل حاد',
+  cardEffectHard: 'بارز',
   cardFrame: 'إطار البطاقة',
   cardFrameDefault: 'حسب التصميم',
   cardFrameMinimal: 'بسيط',
@@ -262,9 +262,9 @@ const en = {
   cardLayoutTextMinimal: 'Text Minimal',
   cardEffect: 'Card Depth Effect',
   cardEffectDefault: 'Preset Default',
-  cardEffectNone: 'None',
+  cardEffectNone: 'Flat',
   cardEffectSoft: 'Soft Drop Shadow',
-  cardEffectHard: 'Hard Shadow',
+  cardEffectHard: 'Elevated',
   cardFrame: 'Card Border Frame',
   cardFrameDefault: 'Preset Default',
   cardFrameMinimal: 'Minimal',
@@ -1275,16 +1275,16 @@ export const VisualOutputConfigPanel: React.FC<VisualOutputConfigPanelProps> = (
               <div className="grid grid-cols-3 gap-2">
                 {[
                   { cl: 'standard' as const, label: t.cardLayoutStandard },
-                  { cl: 'photo-hero' as const, label: t.cardLayoutPhotoHero },
+                  { cl: 'photo-focused' as const, label: t.cardLayoutPhotoHero },
                   { cl: 'text-minimal' as const, label: t.cardLayoutTextMinimal },
                 ].map(({ cl, label }) => (
                   <button
                     key={cl}
                     type="button"
                     aria-pressed={currentState.shared.cardLayout === cl}
-                    onClick={() => onUpdateCards?.({ cardLayout: cl as unknown as SharedPosterSettings['cardLayout'] })}
+                    onClick={() => onUpdateCards?.({ cardLayout: cl })}
                     className={`px-2.5 py-2 rounded-lg border text-xs text-center transition-colors ${
-                      String(currentState.shared.cardLayout) === String(cl)
+                      currentState.shared.cardLayout === cl
                         ? 'border-amber-500 bg-amber-500/10 text-amber-300 font-medium'
                         : 'border-stone-800 bg-stone-950/40 text-stone-400 hover:border-stone-700'
                     }`}
@@ -1301,17 +1301,17 @@ export const VisualOutputConfigPanel: React.FC<VisualOutputConfigPanelProps> = (
               <div className="grid grid-cols-2 gap-2">
                 {[
                   { ce: 'style-default' as const, label: t.cardEffectDefault },
-                  { ce: 'none' as const, label: t.cardEffectNone },
+                  { ce: 'flat' as const, label: t.cardEffectNone },
                   { ce: 'soft' as const, label: t.cardEffectSoft },
-                  { ce: 'hard' as const, label: t.cardEffectHard },
+                  { ce: 'elevated' as const, label: t.cardEffectHard },
                 ].map(({ ce, label }) => (
                   <button
                     key={ce}
                     type="button"
-                    aria-pressed={String(currentState.shared.cardEffect) === String(ce)}
-                    onClick={() => onUpdateCards?.({ cardEffect: ce as unknown as SharedPosterSettings['cardEffect'] })}
+                    aria-pressed={currentState.shared.cardEffect === ce}
+                    onClick={() => onUpdateCards?.({ cardEffect: ce })}
                     className={`px-2.5 py-2 rounded-lg border text-xs text-center transition-colors ${
-                      String(currentState.shared.cardEffect) === String(ce)
+                      currentState.shared.cardEffect === ce
                         ? 'border-amber-500 bg-amber-500/10 text-amber-300 font-medium'
                         : 'border-stone-800 bg-stone-950/40 text-stone-400 hover:border-stone-700'
                     }`}
