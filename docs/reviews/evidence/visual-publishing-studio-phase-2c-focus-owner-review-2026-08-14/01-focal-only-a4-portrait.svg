@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ancestor Tree" data-poster-renderer="svg-v1" data-poster-scene-version="1" data-poster-layout-engine="focus-family" data-poster-layout-direction="vertical" data-poster-connector-style="classic" data-poster-connector-path="curved" data-poster-spacing="balanced" data-poster-color-palette="heritage-warm" data-poster-custom-colors="false" data-poster-decoration="lineage-grid" data-poster-ornament="corner-branches" data-poster-header="ceremonial" data-poster-typography="prominent" data-poster-font-family="amiri" data-poster-card-scale="standard" data-poster-card-effect="soft" data-poster-card-frame="classic" data-poster-card-corner="soft" data-poster-card-layout="standard" data-poster-page-frame="heritage" data-poster-margin-preset="balanced" data-poster-theme="classic-heritage" data-poster-photo-shape="circle" data-physical-width-mm="210" data-physical-height-mm="297" width="1200" height="1697" viewBox="0 0 1200 1697" preserveAspectRatio="xMidYMid meet">
-  <title>Ancestor Tree</title>
+<svg xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Family Focus" data-poster-renderer="svg-v1" data-poster-scene-version="1" data-poster-layout-engine="focus-family" data-poster-layout-direction="vertical" data-poster-connector-style="classic" data-poster-connector-path="curved" data-poster-spacing="balanced" data-poster-color-palette="heritage-warm" data-poster-custom-colors="false" data-poster-decoration="lineage-grid" data-poster-ornament="corner-branches" data-poster-header="ceremonial" data-poster-typography="prominent" data-poster-font-family="amiri" data-poster-card-scale="standard" data-poster-card-effect="soft" data-poster-card-frame="classic" data-poster-card-corner="soft" data-poster-card-layout="standard" data-poster-page-frame="heritage" data-poster-margin-preset="balanced" data-poster-theme="classic-heritage" data-poster-photo-shape="circle" data-physical-width-mm="210" data-physical-height-mm="297" width="1200" height="1697" viewBox="0 0 1200 1697" preserveAspectRatio="xMidYMid meet">
+  <title>Family Focus</title>
   <desc>Family Record</desc>
   <defs>
     <filter id="poster-card-shadow" x="-25%" y="-30%" width="150%" height="170%"><feDropShadow dx="0" dy="7" stdDeviation="8" flood-color="#4b2f1c" flood-opacity="0.14" /></filter>
@@ -75,11 +75,11 @@
     <path class="poster-corner" d="M 1115 1660 L 1163 1660 L 1163 1612" />
   </g>
     <g class="poster-header poster-header-ceremonial" data-header-composition="ceremonial">
-      <text class="poster-header-title" x="600.00" y="128.00" text-anchor="middle" font-size="60" font-weight="800" direction="ltr">Ancestor Tree</text>
+      <text class="poster-header-title" x="600.00" y="128.00" text-anchor="middle" font-size="60" font-weight="800" direction="ltr">Family Focus</text>
       <text class="poster-header-subtitle poster-subtitle" x="600.00" y="206.00" text-anchor="middle" font-size="25" direction="ltr">Family Record</text>
       <line class="poster-header-rule" x1="492.00" y1="281.19" x2="708.00" y2="281.19" />
     </g>
-    <g aria-label="Ancestor tree"><g class="poster-node is-root is-focus-root" data-preview-node="preview-node-1" data-generation="1" data-scene-x="420.50" data-scene-y="818.70" data-scene-width="359.00" data-scene-height="195.30">
+    <g aria-label="Family around the focal person"><g class="poster-node is-root is-focus-root" data-preview-node="preview-node-1" data-generation="1" data-scene-x="420.50" data-scene-y="818.70" data-scene-width="359.00" data-scene-height="195.30">
     <rect class="poster-focus-root-emphasis" x="413.50" y="811.70" width="373.00" height="209.30" rx="13" />
     <rect class="poster-card-shadow" x="420.50" y="818.70" width="359.00" height="195.30" rx="8" />
     <rect class="poster-card" x="420.50" y="818.70" width="359.00" height="195.30" rx="8" />
@@ -94,7 +94,7 @@
     <line x1="72.00" y1="1583.00" x2="1128.00" y2="1583.00" stroke="#a86f35" stroke-width="1.5" opacity=".72" />
 
     <text class="poster-footer poster-attribution" x="300.00" y="1611.00" font-size="14" direction="ltr" text-anchor="middle">Created in Jozor</text>
-    <text class="poster-footer poster-scope" x="900.00" y="1611.00" font-size="14" direction="ltr" text-anchor="middle">Scope: direct ancestors</text>
+    <text class="poster-footer poster-scope" x="900.00" y="1611.00" font-size="14" direction="ltr" text-anchor="middle">Scope: family around focal person</text>
 
   </g>
 </svg>

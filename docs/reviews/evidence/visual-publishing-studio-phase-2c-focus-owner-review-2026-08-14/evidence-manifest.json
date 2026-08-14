@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-14T16:20:42.659Z",
+  "generatedAt": "2026-08-14T16:43:10.055Z",
   "phase": "2C",
   "engine": "focus-family",
   "technicalStatus": "pass",
@@ -24,9 +24,9 @@
       "pngWidth": 2400,
       "pngHeight": 3394,
       "hashes": {
-        "svg": "5de32ecf7d800ce9f348302fde4023ee02ae09ae38f09ad69ebed45da7962c66",
-        "png": "ce85b47dc967665cb066fffcc32c00dc317ab31c55c8d76a231fc496887493fc",
-        "pdf": "bcf4a19bec1f1f458fe458732ab6f0da628cd6414c414b9e0464458f28e0e113"
+        "svg": "5f8fdfc980884f7846f173701b9f26a5a0e602574189698f54e48c68f4af166a",
+        "png": "c2c544358580dfb98d7bd0d7d4fc46339270fa5f02193c0688828812fd4e5406",
+        "pdf": "63c3ea6bbad1e311ba2844224efa131a5ee69c945eea5874296ddffd5240049d"
       }
     },
     {
@@ -47,9 +47,9 @@
       "pngWidth": 3200,
       "pngHeight": 4526,
       "hashes": {
-        "svg": "b5c579ff5216a5ea76b6e6d297ead9659e02a355c13d8d6cfc8db3e9f0447ee6",
-        "png": "bc1701c4cf8abe87636e7da64f961815730283b20e74b8015a215ae27936844c",
-        "pdf": "f726e91076399e8ede83ceb9b131753f61cd750866206f74e2f1f66c3fb1cc64"
+        "svg": "4d626742711c8f3046b0a832fd22a404589a943943b9df2f1c931655541c3143",
+        "png": "5b52fc9cbfe2e0cff971f94b111a3054ddfeb02eb9c8836e7a17913a387ea558",
+        "pdf": "8a0fd8a5f8cc7e747eefa9a0b5e0c0fc1080c4abc9f8c5bce9ed17fe00f5eb23"
       }
     },
     {
@@ -70,9 +70,9 @@
       "pngWidth": 4526,
       "pngHeight": 3200,
       "hashes": {
-        "svg": "1a5aa4a53fda9a4fc745c2483201a823b0b885716b4635ea34f0137b9eddc0d6",
-        "png": "3a1f79d9b84f169a5b7f0962502e84b5b64168796ffb9996840623309d5108b9",
-        "pdf": "f077b1c0c59031af5e52b385f964a1f35412cee0161f365cbf145fc2a708c375"
+        "svg": "ff32e3df0c3f326a629df9ac893c331727efde65daf79bacc9ed936cb13832ab",
+        "png": "6b5b348c435e207fb677c2331fbd297c2fe779087d252fcaaf18bf69a9f7677c",
+        "pdf": "21c2403cc8c769198a985c2cb39b535ed16c0bbe96b20716e6ce906a10e35875"
       }
     },
     {
@@ -93,9 +93,9 @@
       "pngWidth": 6400,
       "pngHeight": 4526,
       "hashes": {
-        "svg": "fa26c97226382fa4133347ea5de11a8485c440518a1f176b974c026e8f16ea8a",
-        "png": "21c245c93d9c4f0698d86e8610e6ad4c056f2a9fbcf240b91671bd1622a653c5",
-        "pdf": "4cc62ae91889ba2ca8547fa3f395e68c05ab59310017b839999d7118778422b8"
+        "svg": "43c64237e06547b71dd694997cc44b3b91ddadfa5694f3ee4ff54a903b34942d",
+        "png": "67a1ffa1c3943434ffb2c5108bff5c33310721cb21a99d3f8367c089641da2bb",
+        "pdf": "61336f76d5f1fc37dff9ecef7131114c2c5041f06f09d766fd4c66a20f019a96"
       }
     },
     {
@@ -116,9 +116,9 @@
       "pngWidth": 3200,
       "pngHeight": 4526,
       "hashes": {
-        "svg": "9b0cbc8540b81876d6c0fb5281f1df4d8c0a6574323bb7e4a9dfdc1c478178ea",
-        "png": "b991cdb1b41d39fd1f8945c53059aa2fe794286d61aeead8ee28df8c841f0982",
-        "pdf": "7fc0d04b5d23697f4d52ebe5b10db42792082b40c51405806443076bbf0883d2"
+        "svg": "dd99db477084298e049cb3de8bc794ab2a34f42f1ebfa7e9ff27e5d5ff48067a",
+        "png": "ef56b744eb915fa404ec3518ee609d6d44aa1006d9aaef60e96d2a8aeb9fadb0",
+        "pdf": "644ebcfbd798a8e3cf3909d504e802ea1152fad76bbb7ab67d7180e2585bd4e6"
       }
     },
     {
@@ -139,9 +139,9 @@
       "pngWidth": 4526,
       "pngHeight": 6400,
       "hashes": {
-        "svg": "4543a19e398e72ce284ec811d48ea45eff0f9a70c6aa69a1b804f52592406045",
-        "png": "c318bcbd651c6f8c1cc410fe2edb43aa8bdf03bcb2c09fcef6a95a375234fd39",
-        "pdf": "84a900f3a7f1f4ac8c0ace2f798d2071c74a74d36bd8feffd27ebe63aac865c2"
+        "svg": "5c505a9f91522be750d3d2e7f4f5c9bd5b064ac608875826706f903326ad35db",
+        "png": "d7979be156f433bc62eaef347c61fa9356d17d642d4a73d00086871eed6433d1",
+        "pdf": "b09c62cc73a70f6d3f28726a250fb7dba7a506b068c69d19023edb1142ad2637"
       }
     },
     {
@@ -162,9 +162,9 @@
       "pngWidth": 6400,
       "pngHeight": 4526,
       "hashes": {
-        "svg": "72c0dcb0944b22f8b286a70019f8022482ac318aee1cacae049876ba61c5aeda",
-        "png": "c6a06640dc54abf6cbacb1a4f2f94a0426aa8e1e040ecc93f9575e4cdbab8536",
-        "pdf": "be55eb13736078d1e364b3b08d533dbffe63d5403eb8a3fc55b92b7b23c79830"
+        "svg": "161a8ccc4cf9444f5d625bb0835a477c0e5dd9ffa50be0b0195743a04d883481",
+        "png": "39ddf7c6fd7ecfe188c31b05995c4ef040a8975d8bbbea99c391009504a4787b",
+        "pdf": "57827ff6c7fca2d2bbf27b7fd2996f165f85bcd4b0186a7d1403b1b8079e91a0"
       }
     },
     {

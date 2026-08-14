@@ -149,6 +149,40 @@ describe('studioPosterSvgRenderer', () => {
     expect(curved).toMatch(/data-preview-edge="preview-node-2:preview-node-1"[^>]+d="M [^"]+ C [^"]+"/);
   });
 
+  it.each([
+    {
+      language: 'en' as const,
+      title: 'Family Focus',
+      treeLabel: 'Family around the focal person',
+      scopeLabel: 'Scope: family around focal person',
+    },
+    {
+      language: 'ar' as const,
+      title: 'لوحة العائلة حول شخص',
+      treeLabel: 'العائلة حول الشخص المحوري',
+      scopeLabel: 'النطاق: حول الشخص المحوري',
+    },
+  ])('renders Focus-specific tree and scope semantics in $language', ({ language, title, treeLabel, scopeLabel }) => {
+    const focusScene = {
+      ...scene,
+      content: {
+        ...scene.content,
+        language,
+        title,
+        scope: 'selected-root-focus' as const,
+      },
+      layout: {
+        ...scene.layout,
+        engineId: 'focus-family' as const,
+      },
+    };
+
+    const result = renderPosterSceneToSvg({ scene: focusScene });
+
+    expect(result.svg).toContain(`<g aria-label="${treeLabel}">`);
+    expect(result.svg).toContain(`>${scopeLabel}</text>`);
+  });
+
   it('applies print palettes without changing canonical geometry', () => {
     const warmScene = createTestPosterScene({
       model,

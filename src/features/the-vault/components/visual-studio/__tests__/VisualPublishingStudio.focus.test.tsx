@@ -48,6 +48,24 @@ describe('VisualPublishingStudio Focus Family integration', () => {
     expect(screen.getByTestId('focus-include-siblings')).toBeInTheDocument();
   });
 
+  it.each([
+    { language: 'en' as const, title: 'Family Focus', scope: 'Scope: family around focal person' },
+    { language: 'ar' as const, title: 'لوحة العائلة حول شخص', scope: 'النطاق: حول الشخص المحوري' },
+  ])('uses Focus-specific default poster semantics in $language', async ({ language, title, scope }) => {
+    render(<VisualPublishingStudio language={language} posterSvgResources={embeddedResources} />);
+
+    fireEvent.click(screen.getByRole('tab', { name: language === 'ar' ? 'الشجرة والتخطيط' : 'Tree & Layout' }));
+    fireEvent.click(screen.getByRole('button', { name: language === 'ar' ? 'حول شخص' : 'Focus Family' }));
+
+    const preview = screen.getByTestId('studio-poster-renderer-preview');
+    await waitFor(() => expect(preview.querySelector('svg title')).toHaveTextContent(title));
+    expect(preview.querySelector('.poster-scope')).toHaveTextContent(scope);
+    expect(preview.querySelector('g[aria-label]')).toHaveAttribute(
+      'aria-label',
+      language === 'ar' ? 'العائلة حول الشخص المحوري' : 'Family around the focal person'
+    );
+  });
+
   it('preserves Focus values and restores the previous Tiered scope in pure state', () => {
     let state = createInitialPosterDesignState('classic-heritage');
     state = switchLayoutMode(state, 'focus-family');

@@ -65,6 +65,12 @@ Every successful scenario uses the same `PosterScene` geometry through the canon
 - Spouse and peer relationships remain direct so they are visually distinct from generational relationships.
 - The balanced vertical and horizontal evidence now avoids the previous central curve crossings and keeps dense relationship areas traceable.
 
+### Focus Copy Closure
+
+- Empty owner title fields now resolve to `Family Focus` / `لوحة العائلة حول شخص` while owner-authored titles remain unchanged.
+- The SVG tree group and footer identify the scene as family around the focal person instead of direct ancestors.
+- The semantic wording is shared by Studio preview, SVG, PNG, and PDF because it is emitted by the canonical SVG renderer.
+
 ### Arabic and Privacy
 
 - Long Arabic names render as valid joined Arabic text with no replacement characters or mojibake.
@@ -77,11 +83,9 @@ Every successful scenario uses the same `PosterScene` geometry through the canon
 - A dense Focus request on A4 fails as a controlled print-capacity state rather than producing overlapping or unreadable cards.
 - The Studio keeps download actions disabled and offers larger paper, a denser product, or large-tree product routes.
 
-## Non-Blocking Polish Backlog
+## Remaining Review Status
 
-1. **Default wording:** fixture outputs retain the generic `Ancestor Tree` title and direct-ancestor footer unless the owner customizes them. Product copy can later adapt automatically to Focus scope without changing the layout engine.
-
-None of these findings causes clipping, overlap, privacy leakage, format divergence, or an invalid print artifact.
+No Focus-specific technical or visual blocker remains in this review pack. Final production approval still requires the owner's visual confirmation of the promoted artifacts.
 
 ## Evidence
 

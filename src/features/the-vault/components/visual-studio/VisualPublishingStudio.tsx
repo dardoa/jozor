@@ -440,7 +440,9 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
   const [userPosterTitle, setUserPosterTitle] = useState('');
   const [userPosterSubtitle, setUserPosterSubtitle] = useState('');
 
-  const defaultPosterTitle = isSelectedBranchScope
+  const defaultPosterTitle = studioDesign.state.layoutMode === 'focus-family'
+    ? (isAr ? 'لوحة العائلة حول شخص' : 'Family Focus')
+    : isSelectedBranchScope
     ? (isAr ? 'فرع العائلة' : 'Selected Family Branch')
     : isAr
     ? (isFullTreeScope ? 'الشجرة العائلية الكاملة' : 'لوحة العائلة')
