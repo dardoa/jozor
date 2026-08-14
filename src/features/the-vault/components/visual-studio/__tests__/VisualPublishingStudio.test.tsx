@@ -772,6 +772,8 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Descendants' }));
 
     const previewPane = screen.getByTestId('visual-studio-preview-pane');
+    expect(within(previewPane).getByRole('heading', { name: 'Descendant Tree' })).toBeInTheDocument();
+    expect(within(previewPane).getByRole('img', { name: 'Descendant Tree preview' })).toBeInTheDocument();
     expect(within(previewPane).getByText(/People visible:/i)).toBeInTheDocument();
   });
 

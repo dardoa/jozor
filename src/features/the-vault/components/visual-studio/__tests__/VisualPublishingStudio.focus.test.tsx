@@ -59,6 +59,7 @@ describe('VisualPublishingStudio Focus Family integration', () => {
 
     const preview = screen.getByTestId('studio-poster-renderer-preview');
     await waitFor(() => expect(preview.querySelector('svg title')).toHaveTextContent(title));
+    expect(within(screen.getByTestId('visual-studio-preview-pane')).getByRole('heading', { name: title })).toBeInTheDocument();
     expect(preview.querySelector('.poster-scope')).toHaveTextContent(scope);
     expect(preview.querySelector('g[aria-label]')).toHaveAttribute(
       'aria-label',

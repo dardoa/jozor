@@ -442,10 +442,16 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
 
   const defaultPosterTitle = studioDesign.state.layoutMode === 'focus-family'
     ? (isAr ? 'لوحة العائلة حول شخص' : 'Family Focus')
+    : studioDesign.state.layoutMode === 'radial-generations'
+    ? (studioDesign.state.scope === 'descendants'
+        ? (isAr ? 'شجرة الأحفاد الشعاعية' : 'Radial Descendant Tree')
+        : (isAr ? 'شجرة الأسلاف الشعاعية' : 'Radial Ancestor Tree'))
     : isSelectedBranchScope
     ? (isAr ? 'فرع العائلة' : 'Selected Family Branch')
+    : studioDesign.state.scope === 'descendants'
+    ? (isAr ? 'شجرة الأحفاد' : 'Descendant Tree')
     : isAr
-    ? (isFullTreeScope ? 'الشجرة العائلية الكاملة' : 'لوحة العائلة')
+    ? (isFullTreeScope ? 'الشجرة العائلية الكاملة' : 'شجرة الأسلاف')
     : (isFullTreeScope ? 'Full Family Tree' : 'Ancestor Tree');
 
   const defaultPosterSubtitle = isAr
@@ -454,6 +460,11 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
 
   const posterTitle = userPosterTitle.trim() || defaultPosterTitle;
   const posterSubtitle = userPosterSubtitle.trim() || defaultPosterSubtitle;
+  const previewPresentationTitle = studioDesign.state.layoutMode === 'focus-family'
+    || studioDesign.state.layoutMode === 'radial-generations'
+    || studioDesign.state.scope !== 'ancestors'
+    ? posterTitle
+    : undefined;
 
   const focalPreviewId =
     studioDesign.state.layoutMode === 'radial-generations'
@@ -986,6 +997,7 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
                   posterScene={posterScene}
                   posterSvgResources={posterSvgResources}
                   unavailableReason={capacityErrorGuidance}
+                  presentationTitle={previewPresentationTitle}
                 />
               </div>
             )}
@@ -1000,6 +1012,7 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
               posterScene={posterScene}
               posterSvgResources={posterSvgResources}
               unavailableReason={capacityErrorGuidance}
+              presentationTitle={previewPresentationTitle}
             />
           </div>
         </div>

@@ -131,6 +131,11 @@ describe('VisualPublishingStudio Radial Integration Suite', () => {
       expect(screen.getByTestId('radial-controls-section')).toBeInTheDocument();
       expect(document.querySelector('svg[data-poster-layout-engine="radial-generations"]')).toBeInTheDocument();
     });
+    expect(
+      within(screen.getByTestId('visual-studio-preview-pane')).getByRole('heading', {
+        name: 'شجرة الأسلاف الشعاعية',
+      })
+    ).toBeInTheDocument();
 
 
     const readGeometry = () => Array.from(
@@ -226,6 +231,11 @@ describe('VisualPublishingStudio Radial Integration Suite', () => {
     // Switch Radial scope to Descendants
     const descBtn = within(screen.getByTestId('radial-scope-control')).getByRole('button', { name: /الأحفاد/i });
     await user.click(descBtn);
+    expect(
+      within(screen.getByTestId('visual-studio-preview-pane')).getByRole('heading', {
+        name: 'شجرة الأحفاد الشعاعية',
+      })
+    ).toBeInTheDocument();
 
     // Switch back to Tiered layout
     const tieredBtn = screen.getByRole('button', { name: /متدرج/i });

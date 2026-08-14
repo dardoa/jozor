@@ -16,6 +16,7 @@ interface VisualOutputPreviewPaneProps {
   posterScene?: PosterScene;
   posterSvgResources?: StudioPosterSvgResources;
   unavailableReason?: string;
+  presentationTitle?: string;
 }
 
 const ar = {
@@ -31,6 +32,7 @@ export const VisualOutputPreviewPane: React.FC<VisualOutputPreviewPaneProps> = (
   posterScene,
   posterSvgResources,
   unavailableReason,
+  presentationTitle,
 }) => {
   const isAr = language === 'ar';
   const [previewZoom, setPreviewZoom] = React.useState(1);
@@ -38,9 +40,21 @@ export const VisualOutputPreviewPane: React.FC<VisualOutputPreviewPaneProps> = (
   const expandButtonRef = React.useRef<HTMLButtonElement>(null);
   const expandedDialogRef = React.useRef<HTMLElement>(null);
   const expandedCloseButtonRef = React.useRef<HTMLButtonElement>(null);
-  const displayName = selectedDefinition?.displayName[language] || '';
+  const usesScenePresentation = Boolean(
+    presentationTitle
+    || (posterScene && (
+      posterScene.content.scope !== 'selected-root-ancestors'
+      || posterScene.layout.engineId === 'focus-family'
+      || posterScene.layout.engineId === 'radial-generations'
+    ))
+  );
+  const displayName = usesScenePresentation
+    ? presentationTitle || posterScene?.content.title || ''
+    : selectedDefinition?.displayName[language] || posterScene?.content.title || '';
   const description = selectedDefinition?.description[language] || '';
-  const previewAlt = selectedDefinition?.previewAsset?.alt[language] || '';
+  const previewAlt = usesScenePresentation && displayName
+    ? (isAr ? `معاينة ${displayName}` : `${displayName} preview`)
+    : selectedDefinition?.previewAsset?.alt[language] || '';
   const productType = selectedDefinition?.productType || 'poster';
   const posterOrientation = posterScene?.document.orientation ?? 'portrait';
 
