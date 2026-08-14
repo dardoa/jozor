@@ -217,19 +217,26 @@ function renderTextLines(
 function renderConnector(connector: PosterSceneConnector, scene: PosterScene): string {
   const { start, end } = connector;
   const isPeerRelationship = connector.relationshipType === 'spouse' || connector.relationshipType === 'relative';
+  const route = connector.route?.length === 2 ? connector.route : undefined;
   const path = isPeerRelationship
     ? `M ${start.x.toFixed(2)} ${start.y.toFixed(2)} L ${end.x.toFixed(2)} ${end.y.toFixed(2)}`
     : scene.connectorPathStyle === 'straight'
       ? `M ${start.x.toFixed(2)} ${start.y.toFixed(2)} L ${end.x.toFixed(2)} ${end.y.toFixed(2)}`
       : scene.connectorPathStyle === 'orthogonal'
-        ? scene.layout.direction === 'vertical'
+        ? route
+          ? `M ${start.x.toFixed(2)} ${start.y.toFixed(2)} L ${route[0]!.x.toFixed(2)} ${route[0]!.y.toFixed(2)} L ${route[1]!.x.toFixed(2)} ${route[1]!.y.toFixed(2)} L ${end.x.toFixed(2)} ${end.y.toFixed(2)}`
+          : scene.layout.direction === 'vertical'
           ? `M ${start.x.toFixed(2)} ${start.y.toFixed(2)} L ${start.x.toFixed(2)} ${((start.y + end.y) / 2).toFixed(2)} L ${end.x.toFixed(2)} ${((start.y + end.y) / 2).toFixed(2)} L ${end.x.toFixed(2)} ${end.y.toFixed(2)}`
           : `M ${start.x.toFixed(2)} ${start.y.toFixed(2)} L ${((start.x + end.x) / 2).toFixed(2)} ${start.y.toFixed(2)} L ${((start.x + end.x) / 2).toFixed(2)} ${end.y.toFixed(2)} L ${end.x.toFixed(2)} ${end.y.toFixed(2)}`
-        : scene.layout.direction === 'vertical'
+        : route
+          ? scene.layout.direction === 'vertical'
+            ? `M ${start.x.toFixed(2)} ${start.y.toFixed(2)} C ${start.x.toFixed(2)} ${route[0]!.y.toFixed(2)}, ${route[0]!.x.toFixed(2)} ${route[0]!.y.toFixed(2)}, ${route[0]!.x.toFixed(2)} ${route[0]!.y.toFixed(2)} L ${route[1]!.x.toFixed(2)} ${route[1]!.y.toFixed(2)} C ${route[1]!.x.toFixed(2)} ${route[1]!.y.toFixed(2)}, ${end.x.toFixed(2)} ${route[1]!.y.toFixed(2)}, ${end.x.toFixed(2)} ${end.y.toFixed(2)}`
+            : `M ${start.x.toFixed(2)} ${start.y.toFixed(2)} C ${route[0]!.x.toFixed(2)} ${start.y.toFixed(2)}, ${route[0]!.x.toFixed(2)} ${route[0]!.y.toFixed(2)}, ${route[0]!.x.toFixed(2)} ${route[0]!.y.toFixed(2)} L ${route[1]!.x.toFixed(2)} ${route[1]!.y.toFixed(2)} C ${route[1]!.x.toFixed(2)} ${route[1]!.y.toFixed(2)}, ${route[1]!.x.toFixed(2)} ${end.y.toFixed(2)}, ${end.x.toFixed(2)} ${end.y.toFixed(2)}`
+          : scene.layout.direction === 'vertical'
           ? `M ${start.x.toFixed(2)} ${start.y.toFixed(2)} C ${start.x.toFixed(2)} ${((start.y + end.y) / 2).toFixed(2)}, ${end.x.toFixed(2)} ${((start.y + end.y) / 2).toFixed(2)}, ${end.x.toFixed(2)} ${end.y.toFixed(2)}`
           : `M ${start.x.toFixed(2)} ${start.y.toFixed(2)} C ${((start.x + end.x) / 2).toFixed(2)} ${start.y.toFixed(2)}, ${((start.x + end.x) / 2).toFixed(2)} ${end.y.toFixed(2)}, ${end.x.toFixed(2)} ${end.y.toFixed(2)}`;
 
-  return `<path class="poster-connector relationship-${connector.relationshipType}" data-relationship-type="${connector.relationshipType}" data-preview-edge="${escapeXml(`${connector.fromPreviewId}:${connector.toPreviewId}`)}" data-start-x="${start.x.toFixed(2)}" data-start-y="${start.y.toFixed(2)}" data-end-x="${end.x.toFixed(2)}" data-end-y="${end.y.toFixed(2)}" d="${path}" />`;
+  return `<path class="poster-connector relationship-${connector.relationshipType}" data-relationship-type="${connector.relationshipType}" data-preview-edge="${escapeXml(`${connector.fromPreviewId}:${connector.toPreviewId}`)}" data-start-x="${start.x.toFixed(2)}" data-start-y="${start.y.toFixed(2)}" data-end-x="${end.x.toFixed(2)}" data-end-y="${end.y.toFixed(2)}" data-route-points="${route?.length ?? 0}" d="${path}" />`;
 }
 
 function assertSafeEmbeddedImage(node: PosterSceneNode, image?: PosterImageAsset): void {

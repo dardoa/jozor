@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-14T12:46:36.271Z",
+  "generatedAt": "2026-08-14T16:20:42.659Z",
   "phase": "2C",
   "engine": "focus-family",
   "technicalStatus": "pass",
@@ -26,7 +26,7 @@
       "hashes": {
         "svg": "5de32ecf7d800ce9f348302fde4023ee02ae09ae38f09ad69ebed45da7962c66",
         "png": "ce85b47dc967665cb066fffcc32c00dc317ab31c55c8d76a231fc496887493fc",
-        "pdf": "1612007595da68dfafb886b6745002fa54fd86e75caf5574632cd157b44a3380"
+        "pdf": "bcf4a19bec1f1f458fe458732ab6f0da628cd6414c414b9e0464458f28e0e113"
       }
     },
     {
@@ -47,9 +47,9 @@
       "pngWidth": 3200,
       "pngHeight": 4526,
       "hashes": {
-        "svg": "aeb2835496c720cdb90809bf0aa692233300331833c1ce9f4bd6605ca0463c3d",
-        "png": "3a43634ee80df37b5bf6c7ee2883d239ae05547ce1ee4724f5cd370d49500551",
-        "pdf": "d75a521b8c8047726143807c20d0447363a39d7288c4743c05330ecea1921d92"
+        "svg": "b5c579ff5216a5ea76b6e6d297ead9659e02a355c13d8d6cfc8db3e9f0447ee6",
+        "png": "bc1701c4cf8abe87636e7da64f961815730283b20e74b8015a215ae27936844c",
+        "pdf": "f726e91076399e8ede83ceb9b131753f61cd750866206f74e2f1f66c3fb1cc64"
       }
     },
     {
@@ -70,9 +70,9 @@
       "pngWidth": 4526,
       "pngHeight": 3200,
       "hashes": {
-        "svg": "9219067a4081422dfd2a1aaa0e8c23329fc1ebf38a317b19b47227069fa9423e",
-        "png": "996494ef31eba7964e0ecd0879a204ce98c01ee1b1d00c85255b0f1972cc5e05",
-        "pdf": "d06f654414ebf4f5d87d76290726182d9f32ed101f1202a8f2cc21fdab5f7f0a"
+        "svg": "1a5aa4a53fda9a4fc745c2483201a823b0b885716b4635ea34f0137b9eddc0d6",
+        "png": "3a1f79d9b84f169a5b7f0962502e84b5b64168796ffb9996840623309d5108b9",
+        "pdf": "f077b1c0c59031af5e52b385f964a1f35412cee0161f365cbf145fc2a708c375"
       }
     },
     {
@@ -93,9 +93,9 @@
       "pngWidth": 6400,
       "pngHeight": 4526,
       "hashes": {
-        "svg": "21c8ab6473f74c9e0fa74e19444a7be00fac6b44a46f5570a106335c6f32d212",
-        "png": "711b94f436e2e8b1beaa70c04ee26dfe07ced202031431494ef130cf2f0cf0c2",
-        "pdf": "2a979bf99528e2fdbb3094882ee15deb862727db973a55d9412483b40883b30e"
+        "svg": "fa26c97226382fa4133347ea5de11a8485c440518a1f176b974c026e8f16ea8a",
+        "png": "21c245c93d9c4f0698d86e8610e6ad4c056f2a9fbcf240b91671bd1622a653c5",
+        "pdf": "4cc62ae91889ba2ca8547fa3f395e68c05ab59310017b839999d7118778422b8"
       }
     },
     {
@@ -116,9 +116,9 @@
       "pngWidth": 3200,
       "pngHeight": 4526,
       "hashes": {
-        "svg": "17690d7e5933b2f34d7d46161240f82ef9242cc3f6d8f8f0aa48d175b6eb9435",
-        "png": "fb88986a25b68f54c472ab21da2ed32ccecf1936ece3ef878e4be61914155dc5",
-        "pdf": "65334257ef3fbc0c23d99618c2e40aba73423b61b5b46ed1c1440ed9e695f113"
+        "svg": "9b0cbc8540b81876d6c0fb5281f1df4d8c0a6574323bb7e4a9dfdc1c478178ea",
+        "png": "b991cdb1b41d39fd1f8945c53059aa2fe794286d61aeead8ee28df8c841f0982",
+        "pdf": "7fc0d04b5d23697f4d52ebe5b10db42792082b40c51405806443076bbf0883d2"
       }
     },
     {
@@ -139,9 +139,9 @@
       "pngWidth": 4526,
       "pngHeight": 6400,
       "hashes": {
-        "svg": "394b7be0044dbace04fe9d0378b1905cf9ec7292d49cef12e1a9057889625ea6",
+        "svg": "4543a19e398e72ce284ec811d48ea45eff0f9a70c6aa69a1b804f52592406045",
         "png": "c318bcbd651c6f8c1cc410fe2edb43aa8bdf03bcb2c09fcef6a95a375234fd39",
-        "pdf": "419f5d2dbbecc59fd4832ec7b4612164a1bac88db4555684666eebbafe68c690"
+        "pdf": "84a900f3a7f1f4ac8c0ace2f798d2071c74a74d36bd8feffd27ebe63aac865c2"
       }
     },
     {
@@ -162,9 +162,9 @@
       "pngWidth": 6400,
       "pngHeight": 4526,
       "hashes": {
-        "svg": "2e2ecd6ae940e6ee8385207b71ad04c6a8923f37b647cae0439b6e0d7a4f86c6",
+        "svg": "72c0dcb0944b22f8b286a70019f8022482ac318aee1cacae049876ba61c5aeda",
         "png": "c6a06640dc54abf6cbacb1a4f2f94a0426aa8e1e040ecc93f9575e4cdbab8536",
-        "pdf": "80cb55521d96e914697d4b76de4023bc2774c85d82534af4346490aa9f81c86f"
+        "pdf": "be55eb13736078d1e364b3b08d533dbffe63d5403eb8a3fc55b92b7b23c79830"
       }
     },
     {

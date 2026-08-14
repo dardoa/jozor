@@ -928,6 +928,14 @@ describe('Focus Family Layout Engine (Phase 2A Test Completeness & Capacity Guar
 
       expect(isPointOnPerimeter(conn.start, fromNode.rect)).toBe(true);
       expect(isPointOnPerimeter(conn.end, toNode.rect)).toBe(true);
+
+      if (conn.relationshipType === 'parent-child') {
+        expect(conn.route).toHaveLength(2);
+        const [routeStart, routeEnd] = conn.route!;
+        expect(routeStart!.y).toBe(routeEnd!.y);
+        expect(routeStart!.y).toBeGreaterThanOrEqual(Math.min(conn.start.y, conn.end.y));
+        expect(routeStart!.y).toBeLessThanOrEqual(Math.max(conn.start.y, conn.end.y));
+      }
     });
 
     const spouseConnectors = scene.connectors.filter(
@@ -936,9 +944,82 @@ describe('Focus Family Layout Engine (Phase 2A Test Completeness & Capacity Guar
         (c.fromPreviewId === 'preview-node-g2-spouse1' && c.toPreviewId === 'preview-node-g2-focal')
     );
     expect(spouseConnectors).toHaveLength(1);
+    expect(spouseConnectors[0]!.route).toBeUndefined();
   });
 
-  // Test 16: Two-way builder validation
+  it('routes generation connectors through direction-aware corridors without changing canonical endpoints', () => {
+    const graph = createMockGraph();
+    const document = createPosterDocumentSpec('A3', 'landscape', 'balanced');
+    const createScene = (direction: 'vertical' | 'horizontal') =>
+      createPosterScene({
+        graph,
+        document,
+        content: {
+          definitionId: 'classic-ancestor-poster',
+          language: 'ar',
+          title: `مسارات فوكس ${direction}`,
+          scope: 'selected-root-focus',
+          generationCount: 4,
+          privacyMode: 'owner-full',
+        },
+        engineId: 'focus-family',
+        direction,
+        focusOptions: {
+          focalPreviewId: 'preview-node-g2-focal',
+          ancestorDepth: 2,
+          descendantDepth: 2,
+          includeFocalSpouses: true,
+          includeFocalSiblings: true,
+        },
+      });
+
+    const verticalScene = createScene('vertical');
+    const horizontalScene = createScene('horizontal');
+
+    verticalScene.connectors
+      .filter((connector) => connector.relationshipType === 'parent-child')
+      .forEach((connector) => {
+        expect(connector.route).toHaveLength(2);
+        const [routeStart, routeEnd] = connector.route!;
+        expect(routeStart!.y).toBe(routeEnd!.y);
+      });
+
+    horizontalScene.connectors
+      .filter((connector) => connector.relationshipType === 'parent-child')
+      .forEach((connector) => {
+        expect(connector.route).toHaveLength(2);
+        const [routeStart, routeEnd] = connector.route!;
+        expect(routeStart!.x).toBe(routeEnd!.x);
+        expect(routeStart!.x).toBeGreaterThanOrEqual(
+          Math.min(connector.start.x, connector.end.x)
+        );
+        expect(routeStart!.x).toBeLessThanOrEqual(
+          Math.max(connector.start.x, connector.end.x)
+        );
+      });
+
+    const sampleConnector = verticalScene.connectors.find(
+      (connector) => connector.relationshipType === 'parent-child'
+    )!;
+    const renderWithPath = (connectorPathStyle: 'straight' | 'orthogonal' | 'curved') =>
+      renderPosterSceneToSvg({
+        scene: { ...verticalScene, connectorPathStyle },
+      }).svg;
+    const edgePattern = new RegExp(
+      `data-preview-edge="${sampleConnector.fromPreviewId}:${sampleConnector.toPreviewId}"[^>]+d="([^"]+)"`
+    );
+    const straightPath = renderWithPath('straight').match(edgePattern)![1]!;
+    const orthogonalPath = renderWithPath('orthogonal').match(edgePattern)![1]!;
+    const curvedPath = renderWithPath('curved').match(edgePattern)![1]!;
+
+    expect(straightPath).toMatch(/^M [\d.]+ [\d.]+ L [\d.]+ [\d.]+$/);
+    expect(orthogonalPath.match(/ L /g)).toHaveLength(3);
+    expect(curvedPath.match(/ C /g)).toHaveLength(2);
+    expect(curvedPath.match(/ L /g)).toHaveLength(1);
+    expect(renderWithPath('curved')).toContain('data-route-points="2"');
+  });
+
+  // Test 17: Two-way builder validation
   it('enforces strict two-way builder validation rules', () => {
     const graph = createMockGraph();
     const docSpec = createPosterDocumentSpec('A4', 'portrait', 'balanced');
@@ -1045,7 +1126,7 @@ describe('Focus Family Layout Engine (Phase 2A Test Completeness & Capacity Guar
     ).toThrow(/not found in graph/);
   });
 
-  // Test 17: Real same-scene SVG / Export adapter parity
+  // Test 18: Real same-scene SVG / Export adapter parity
   it('proves real same-scene SVG and export-adapter parity without mutating scene geometry', async () => {
     const graph = createMockGraph();
     const docSpec = createPosterDocumentSpec('A4', 'portrait', 'balanced');

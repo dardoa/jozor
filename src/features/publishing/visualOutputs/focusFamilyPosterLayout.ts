@@ -543,6 +543,17 @@ export const focusFamilyPosterLayoutEngine: PosterLayoutEngine = {
 
       const startPt = getCardPerimeterPoint(fromNode.rect, toCenter);
       const endPt = getCardPerimeterPoint(toNode.rect, fromCenter);
+      const route = edge.relationshipType === 'parent-child'
+        ? isVertical
+          ? [
+              { x: startPt.x, y: Math.round(((startPt.y + endPt.y) / 2) * 10) / 10 },
+              { x: endPt.x, y: Math.round(((startPt.y + endPt.y) / 2) * 10) / 10 },
+            ]
+          : [
+              { x: Math.round(((startPt.x + endPt.x) / 2) * 10) / 10, y: startPt.y },
+              { x: Math.round(((startPt.x + endPt.x) / 2) * 10) / 10, y: endPt.y },
+            ]
+        : undefined;
 
       sceneConnectors.push({
         fromPreviewId: edge.fromPreviewId,
@@ -550,6 +561,7 @@ export const focusFamilyPosterLayoutEngine: PosterLayoutEngine = {
         relationshipType: edge.relationshipType,
         start: startPt,
         end: endPt,
+        route,
       });
     });
 

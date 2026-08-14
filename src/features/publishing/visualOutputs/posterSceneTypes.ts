@@ -189,6 +189,7 @@ export interface PosterSceneConnector {
   readonly relationshipType: 'parent-child' | 'spouse' | 'ancestor' | 'descendant' | 'relative';
   readonly start: { readonly x: number; readonly y: number };
   readonly end: { readonly x: number; readonly y: number };
+  readonly route?: readonly { readonly x: number; readonly y: number }[];
 }
 
 export interface PrintQualityReport {

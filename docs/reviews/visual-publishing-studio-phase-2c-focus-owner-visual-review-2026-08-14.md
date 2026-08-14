@@ -20,6 +20,8 @@ Every successful scenario uses the same `PosterScene` geometry through the canon
 - The focal card remains at the exact printable tree center.
 - Ancestor and descendant depths are independent.
 - Vertical and horizontal directions preserve the same relationship model.
+- Parent-child connectors use deterministic, direction-aware corridors between tiers.
+- Straight, orthogonal, and curved connector styles consume the same canonical endpoints.
 - Spouses and siblings remain contextual companions around the focal person.
 - No card overlaps or printable-boundary escapes occur.
 - Person names remain at or above the 8pt print threshold.
@@ -53,7 +55,15 @@ Every successful scenario uses the same `PosterScene` geometry through the canon
 
 - A one-person Focus scene now enlarges only the focal card to a restrained proportion of the printable tree area.
 - The card remains locked to the canonical tree center and stays inside the same `PosterScene` bounds.
-- Multi-person Focus scenes retain their previous SVG and PNG hashes, proving that the adaptive rule does not alter established family layouts.
+- Multi-person Focus scenes retain their established card geometry. Their SVG, PNG, and PDF hashes change intentionally only where the canonical connector routing is now encoded and rendered.
+
+### Connector Routing Closure
+
+- Parent-child connectors now carry optional canonical route points from the Focus engine without changing card positions or perimeter endpoints.
+- Vertical scenes share horizontal corridors between generations; horizontal scenes share vertical corridors.
+- Curved and orthogonal styles consume those corridors, while the explicit straight style remains a direct endpoint-to-endpoint line.
+- Spouse and peer relationships remain direct so they are visually distinct from generational relationships.
+- The balanced vertical and horizontal evidence now avoids the previous central curve crossings and keeps dense relationship areas traceable.
 
 ### Arabic and Privacy
 
@@ -69,8 +79,7 @@ Every successful scenario uses the same `PosterScene` geometry through the canon
 
 ## Non-Blocking Polish Backlog
 
-1. **Central connector density:** spouse, sibling, ancestor, and child connectors can cross near the focal card in balanced scenes. A later routing pass may assign connector lanes while preserving card geometry and relationship correctness.
-2. **Default wording:** fixture outputs retain the generic `Ancestor Tree` title and direct-ancestor footer unless the owner customizes them. Product copy can later adapt automatically to Focus scope without changing the layout engine.
+1. **Default wording:** fixture outputs retain the generic `Ancestor Tree` title and direct-ancestor footer unless the owner customizes them. Product copy can later adapt automatically to Focus scope without changing the layout engine.
 
 None of these findings causes clipping, overlap, privacy leakage, format divergence, or an invalid print artifact.
 
