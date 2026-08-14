@@ -79,27 +79,27 @@
       <text class="poster-header-subtitle poster-subtitle" x="1131.50" y="214.82" text-anchor="middle" font-size="25" direction="ltr">Family Record</text>
       <line class="poster-header-rule" x1="927.83" y1="276.62" x2="1335.17" y2="276.62" />
     </g>
-    <g aria-label="Selected family branch"><path class="poster-connector relationship-spouse" data-relationship-type="spouse" data-preview-edge="preview-node-1:preview-node-2" data-start-x="370.82" data-start-y="662.81" data-end-x="90.82" data-end-y="1065.19" d="M 370.82 662.81 L 90.82 1065.19" /><path class="poster-connector relationship-parent-child" data-relationship-type="parent-child" data-preview-edge="preview-node-1:preview-node-3" data-start-x="370.82" data-start-y="582.81" data-end-x="991.50" data-end-y="864.00" d="M 370.82 582.81 C 681.16 582.81, 681.16 864.00, 991.50 864.00" /><path class="poster-connector relationship-parent-child" data-relationship-type="parent-child" data-preview-edge="preview-node-2:preview-node-3" data-start-x="370.82" data-start-y="1145.19" data-end-x="991.50" data-end-y="864.00" d="M 370.82 1145.19 C 681.16 1145.19, 681.16 864.00, 991.50 864.00" /><path class="poster-connector relationship-parent-child" data-relationship-type="parent-child" data-preview-edge="preview-node-3:preview-node-4" data-start-x="1271.50" data-start-y="864.00" data-end-x="1892.18" data-end-y="864.00" d="M 1271.50 864.00 C 1581.84 864.00, 1581.84 864.00, 1892.18 864.00" /><g class="poster-node is-root" data-preview-node="preview-node-1" data-generation="1" data-scene-x="90.82" data-scene-y="502.81" data-scene-width="280.00" data-scene-height="160.00">
+    <g aria-label="Selected family branch"><path class="poster-connector relationship-spouse" data-relationship-type="spouse" data-preview-edge="preview-node-1:preview-node-2" data-start-x="871.50" data-start-y="843.00" data-end-x="591.50" data-end-y="885.00" d="M 871.50 843.00 L 591.50 885.00" /><path class="poster-connector relationship-parent-child" data-relationship-type="parent-child" data-preview-edge="preview-node-1:preview-node-3" data-start-x="871.50" data-start-y="763.00" data-end-x="991.50" data-end-y="864.00" d="M 871.50 763.00 C 931.50 763.00, 931.50 864.00, 991.50 864.00" /><path class="poster-connector relationship-parent-child" data-relationship-type="parent-child" data-preview-edge="preview-node-2:preview-node-3" data-start-x="871.50" data-start-y="965.00" data-end-x="991.50" data-end-y="864.00" d="M 871.50 965.00 C 931.50 965.00, 931.50 864.00, 991.50 864.00" /><path class="poster-connector relationship-parent-child" data-relationship-type="parent-child" data-preview-edge="preview-node-3:preview-node-4" data-start-x="1271.50" data-start-y="864.00" data-end-x="1391.50" data-end-y="864.00" d="M 1271.50 864.00 C 1331.50 864.00, 1331.50 864.00, 1391.50 864.00" /><g class="poster-node is-root" data-preview-node="preview-node-1" data-generation="1" data-scene-x="591.50" data-scene-y="683.00" data-scene-width="280.00" data-scene-height="160.00">
 
-    <rect class="poster-card-shadow" x="90.82" y="502.81" width="280.00" height="160.00" rx="8" />
-    <rect class="poster-card" x="90.82" y="502.81" width="280.00" height="160.00" rx="8" />
+    <rect class="poster-card-shadow" x="591.50" y="683.00" width="280.00" height="160.00" rx="8" />
+    <rect class="poster-card" x="591.50" y="683.00" width="280.00" height="160.00" rx="8" />
 
-    <line class="poster-card-accent" x1="106.82" y1="514.81" x2="354.82" y2="514.81" />
-    <circle class="poster-avatar-ring" cx="230.82" cy="507.81" r="43.00" />
-    <circle class="poster-avatar" cx="230.82" cy="507.81" r="39.00" />
-    <text class="poster-initials" x="230.82" y="507.81" font-size="11" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle">BQ</text>
-    <text class="poster-name" direction="ltr" unicode-bidi="plaintext" text-anchor="middle" font-size="17.3"><tspan x="230.82" y="609.05">Branch Root Selected Branch QA</tspan></text>
+    <line class="poster-card-accent" x1="607.50" y1="695.00" x2="855.50" y2="695.00" />
+    <circle class="poster-avatar-ring" cx="731.50" cy="688.00" r="43.00" />
+    <circle class="poster-avatar" cx="731.50" cy="688.00" r="39.00" />
+    <text class="poster-initials" x="731.50" y="688.00" font-size="11" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle">BQ</text>
+    <text class="poster-name" direction="ltr" unicode-bidi="plaintext" text-anchor="middle" font-size="17.3"><tspan x="731.50" y="789.24">Branch Root Selected Branch QA</tspan></text>
 
-  </g><g class="poster-node" data-preview-node="preview-node-2" data-generation="1" data-scene-x="90.82" data-scene-y="1065.19" data-scene-width="280.00" data-scene-height="160.00">
+  </g><g class="poster-node" data-preview-node="preview-node-2" data-generation="1" data-scene-x="591.50" data-scene-y="885.00" data-scene-width="280.00" data-scene-height="160.00">
 
-    <rect class="poster-card-shadow" x="90.82" y="1065.19" width="280.00" height="160.00" rx="8" />
-    <rect class="poster-card" x="90.82" y="1065.19" width="280.00" height="160.00" rx="8" />
+    <rect class="poster-card-shadow" x="591.50" y="885.00" width="280.00" height="160.00" rx="8" />
+    <rect class="poster-card" x="591.50" y="885.00" width="280.00" height="160.00" rx="8" />
 
-    <line class="poster-card-accent" x1="106.82" y1="1077.19" x2="354.82" y2="1077.19" />
-    <circle class="poster-avatar-ring" cx="230.82" cy="1070.19" r="43.00" />
-    <circle class="poster-avatar" cx="230.82" cy="1070.19" r="39.00" />
-    <text class="poster-initials" x="230.82" y="1070.19" font-size="11" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle">BQ</text>
-    <text class="poster-name" direction="ltr" unicode-bidi="plaintext" text-anchor="middle" font-size="16.3"><tspan x="230.82" y="1171.18">Branch Spouse Selected Branch QA</tspan></text>
+    <line class="poster-card-accent" x1="607.50" y1="897.00" x2="855.50" y2="897.00" />
+    <circle class="poster-avatar-ring" cx="731.50" cy="890.00" r="43.00" />
+    <circle class="poster-avatar" cx="731.50" cy="890.00" r="39.00" />
+    <text class="poster-initials" x="731.50" y="890.00" font-size="11" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle">BQ</text>
+    <text class="poster-name" direction="ltr" unicode-bidi="plaintext" text-anchor="middle" font-size="16.3"><tspan x="731.50" y="990.99">Branch Spouse Selected Branch QA</tspan></text>
 
   </g><g class="poster-node" data-preview-node="preview-node-3" data-generation="2" data-scene-x="991.50" data-scene-y="784.00" data-scene-width="280.00" data-scene-height="160.00">
 
@@ -112,16 +112,16 @@
     <text class="poster-initials" x="1131.50" y="789.00" font-size="11" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle">BQ</text>
     <text class="poster-name" direction="ltr" unicode-bidi="plaintext" text-anchor="middle" font-size="16.8"><tspan x="1131.50" y="890.12">Branch Child Selected Branch QA</tspan></text>
 
-  </g><g class="poster-node" data-preview-node="preview-node-4" data-generation="3" data-scene-x="1892.18" data-scene-y="784.00" data-scene-width="280.00" data-scene-height="160.00">
+  </g><g class="poster-node" data-preview-node="preview-node-4" data-generation="3" data-scene-x="1391.50" data-scene-y="784.00" data-scene-width="280.00" data-scene-height="160.00">
 
-    <rect class="poster-card-shadow" x="1892.18" y="784.00" width="280.00" height="160.00" rx="8" />
-    <rect class="poster-card" x="1892.18" y="784.00" width="280.00" height="160.00" rx="8" />
+    <rect class="poster-card-shadow" x="1391.50" y="784.00" width="280.00" height="160.00" rx="8" />
+    <rect class="poster-card" x="1391.50" y="784.00" width="280.00" height="160.00" rx="8" />
 
-    <line class="poster-card-accent" x1="1908.18" y1="796.00" x2="2156.18" y2="796.00" />
-    <circle class="poster-avatar-ring" cx="2032.18" cy="789.00" r="43.00" />
-    <circle class="poster-avatar" cx="2032.18" cy="789.00" r="39.00" />
-    <text class="poster-initials" x="2032.18" y="789.00" font-size="11" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle">BQ</text>
-    <text class="poster-name" direction="ltr" unicode-bidi="plaintext" text-anchor="middle" font-size="21.3"><tspan x="2032.18" y="878.97">Branch Grandchild</tspan><tspan x="2032.18" y="903.47">Selected Branch QA</tspan></text>
+    <line class="poster-card-accent" x1="1407.50" y1="796.00" x2="1655.50" y2="796.00" />
+    <circle class="poster-avatar-ring" cx="1531.50" cy="789.00" r="43.00" />
+    <circle class="poster-avatar" cx="1531.50" cy="789.00" r="39.00" />
+    <text class="poster-initials" x="1531.50" y="789.00" font-size="11" text-anchor="middle" dominant-baseline="central" alignment-baseline="middle">BQ</text>
+    <text class="poster-name" direction="ltr" unicode-bidi="plaintext" text-anchor="middle" font-size="21.3"><tspan x="1531.50" y="878.97">Branch Grandchild</tspan><tspan x="1531.50" y="903.47">Selected Branch QA</tspan></text>
 
   </g></g>
     <line x1="80.82" y1="1477.18" x2="2182.18" y2="1477.18" stroke="#a86f35" stroke-width="1.5" opacity=".72" />

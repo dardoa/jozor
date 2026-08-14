@@ -81,6 +81,42 @@ function createDescendantGraph(generationCount: number): SanitizedPreviewGraph {
   };
 }
 
+function createSelectedBranchGraph(): SanitizedPreviewGraph {
+  return {
+    nodes: [
+      { previewId: 'preview-node-1', displayName: 'Branch Root', generation: 1, relationshipHint: 'root', lifeStatus: 'living', isMasked: false, hasPhoto: false },
+      { previewId: 'preview-node-2', displayName: 'Branch Spouse', generation: 1, relationshipHint: 'spouse', lifeStatus: 'living', isMasked: false, hasPhoto: false },
+      { previewId: 'preview-node-3', displayName: 'Branch Child', generation: 2, relationshipHint: 'descendant', lifeStatus: 'living', isMasked: false, hasPhoto: false },
+      { previewId: 'preview-node-4', displayName: 'Branch Grandchild', generation: 3, relationshipHint: 'descendant', lifeStatus: 'living', isMasked: false, hasPhoto: false },
+    ],
+    edges: [
+      { fromPreviewId: 'preview-node-1', toPreviewId: 'preview-node-2', relationshipType: 'spouse' },
+      { fromPreviewId: 'preview-node-1', toPreviewId: 'preview-node-3', relationshipType: 'parent-child' },
+      { fromPreviewId: 'preview-node-3', toPreviewId: 'preview-node-4', relationshipType: 'parent-child' },
+    ],
+    warnings: [],
+    metadata: {
+      truncated: false,
+      sanitizedNodeCount: 4,
+      policy: {
+        privacyMode: 'owner-full',
+        includePhotos: false,
+        includeYears: true,
+        maxNodes: 20,
+        language: 'en',
+      },
+    },
+  };
+}
+
+function getNodeBounds(scene: ReturnType<typeof createPosterScene>) {
+  const minX = Math.min(...scene.nodes.map((node) => node.rect.x));
+  const minY = Math.min(...scene.nodes.map((node) => node.rect.y));
+  const maxX = Math.max(...scene.nodes.map((node) => node.rect.x + node.rect.width));
+  const maxY = Math.max(...scene.nodes.map((node) => node.rect.y + node.rect.height));
+  return { minX, minY, maxX, maxY, width: maxX - minX, height: maxY - minY };
+}
+
 function createFamilyNetworkGraph(): SanitizedPreviewGraph {
   return {
     nodes: [
@@ -572,6 +608,79 @@ describe('PosterScene foundation', () => {
     const svg = renderPosterSceneToSvg({ scene }).svg;
     expect(svg).toContain('data-poster-layout-engine="descendant-tiered"');
     expect(svg).toContain('النطاق: الأحفاد');
+  });
+
+  it.each(['horizontal', 'vertical'] as const)(
+    'centers a compact %s selected branch composition without changing printable tree bounds',
+    (direction) => {
+      const document = createPosterDocumentSpec('A3', 'landscape');
+      const request = {
+        graph: createSelectedBranchGraph(),
+        document,
+        content: {
+          ...createContent(3),
+          language: 'en' as const,
+          title: 'Selected Family Branch',
+          scope: 'selected-branch' as const,
+        },
+        direction,
+      };
+      const scene = createPosterScene(request);
+      const repeatedScene = createPosterScene(request);
+      const occupied = getNodeBounds(scene);
+      const treeCenterX = scene.bounds.tree.x + (scene.bounds.tree.width / 2);
+      const treeCenterY = scene.bounds.tree.y + (scene.bounds.tree.height / 2);
+      const occupiedCenterX = occupied.minX + (occupied.width / 2);
+      const occupiedCenterY = occupied.minY + (occupied.height / 2);
+
+      expect(scene.nodes).toEqual(repeatedScene.nodes);
+      expect(scene.bounds.tree).toEqual(scene.layout.treeBounds);
+      expect(occupied.width / scene.bounds.tree.width).toBeLessThan(0.7);
+      expect(occupied.height / scene.bounds.tree.height).toBeLessThan(0.7);
+      expect(Math.abs(occupiedCenterX - treeCenterX)).toBeLessThan(0.1);
+      expect(Math.abs(occupiedCenterY - treeCenterY)).toBeLessThan(0.1);
+      scene.nodes.forEach((node) => {
+        expect(node.rect.x).toBeGreaterThanOrEqual(scene.bounds.tree.x);
+        expect(node.rect.y).toBeGreaterThanOrEqual(scene.bounds.tree.y);
+        expect(node.rect.x + node.rect.width).toBeLessThanOrEqual(scene.bounds.tree.x + scene.bounds.tree.width);
+        expect(node.rect.y + node.rect.height).toBeLessThanOrEqual(scene.bounds.tree.y + scene.bounds.tree.height);
+      });
+      scene.nodes.forEach((node, index) => {
+        scene.nodes.slice(index + 1).forEach((other) => {
+          const overlaps = node.rect.x < other.rect.x + other.rect.width
+            && node.rect.x + node.rect.width > other.rect.x
+            && node.rect.y < other.rect.y + other.rect.height
+            && node.rect.y + node.rect.height > other.rect.y;
+          expect(overlaps).toBe(false);
+        });
+      });
+    }
+  );
+
+  it('keeps the regular descendant scope on the established broad page distribution', () => {
+    const graph = createSelectedBranchGraph();
+    const document = createPosterDocumentSpec('A3', 'landscape');
+    const baseContent = {
+      ...createContent(3),
+      language: 'en' as const,
+      title: 'Family Descendants',
+    };
+    const branchScene = createPosterScene({
+      graph,
+      document,
+      content: { ...baseContent, scope: 'selected-branch' },
+      direction: 'horizontal',
+    });
+    const descendantScene = createPosterScene({
+      graph,
+      document,
+      content: { ...baseContent, scope: 'selected-root-descendants' },
+      direction: 'horizontal',
+    });
+
+    expect(getNodeBounds(branchScene).width).toBeLessThan(getNodeBounds(descendantScene).width * 0.75);
+    expect(descendantScene.nodes).toHaveLength(branchScene.nodes.length);
+    expect(descendantScene.connectors).toHaveLength(branchScene.connectors.length);
   });
 
   it('uses full-tree overview geometry and preserves every relationship type', () => {

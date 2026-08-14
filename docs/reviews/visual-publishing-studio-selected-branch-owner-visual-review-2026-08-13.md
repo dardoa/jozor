@@ -1,7 +1,7 @@
 # Visual Publishing Studio Selected Branch Owner Visual Review
 
 **Date:** August 13, 2026
-**Internal visual recommendation:** Pass with Polish
+**Internal visual recommendation:** Pass
 **Owner visual status:** Pending Owner Confirmation
 **Production approval:** No independent owner approval recorded
 
@@ -48,13 +48,15 @@ Both defects were corrected in the canonical SVG renderer. The regenerated previ
 - PNG and the raster image embedded in the one-page PDF are visually equivalent.
 - No mojibake, empty pages, raw identifiers, technical tokens, or storage URLs are visible.
 
-## Remaining Polish
+## Adaptive Composition Closure
 
-Sparse branches currently use the same broad page distribution strategy as larger descendant trees. A future adaptive composition option could cluster two-to-five-person branches more tightly or recommend portrait orientation. This is a visual refinement, not a correctness or export blocker.
+The initial review used the broad descendant-tree distribution for a four-person branch. The layout now applies a centered compact composition only to selected branches containing no more than five visible people. Its intrinsic bounds are derived from generation count, card geometry, and the active spacing preset; the printable `treeBounds` remain unchanged. Larger selected branches and the regular descendant scope retain the established broad distribution.
+
+The regenerated A3 landscape output keeps the four cards in a coherent central group, shortens connector travel, and improves fit-to-page inspection on desktop and mobile without changing export geometry or formats.
 
 ## Verdict
 
-Selected Branch is technically and visually ready for owner confirmation. The current evidence receives **Pass with Polish** as an internal recommendation. Final owner approval remains pending until the owner reviews the promoted screenshots and poster files.
+Selected Branch is technically and visually ready for owner confirmation. The current evidence receives **Pass** as an internal recommendation. Final owner approval remains pending until the owner reviews the promoted screenshots and poster files.
 
 Evidence is stored in `docs/reviews/evidence/visual-publishing-studio-selected-branch-owner-review-2026-08-13/` with SHA-256 hashes in `evidence-manifest.json`.
 

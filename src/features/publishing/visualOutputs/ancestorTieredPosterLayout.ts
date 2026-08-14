@@ -14,6 +14,43 @@ interface AncestorPosition {
 
 type TieredPosterFlow = 'ancestor' | 'descendant';
 
+const SELECTED_BRANCH_COMPACT_NODE_LIMIT = 5;
+
+function createCenteredPlacementBounds(
+  request: PosterLayoutEngineRequest,
+  nodeCount: number,
+  generationCount: number,
+  largestGeneration: number,
+  cardWidth: number,
+  cardHeight: number
+) {
+  const { layout, content } = request;
+  if (content.scope !== 'selected-branch' || nodeCount > SELECTED_BRANCH_COMPACT_NODE_LIMIT) {
+    return layout.treeBounds;
+  }
+
+  const vertical = layout.direction === 'vertical';
+  const generationGap = layout.spacingPreset === 'compact' ? 72 : layout.spacingPreset === 'airy' ? 170 : 120;
+  const siblingGap = layout.spacingPreset === 'compact' ? 36 : layout.spacingPreset === 'airy' ? 92 : 64;
+  const mainCardSize = vertical ? cardHeight : cardWidth;
+  const crossCardSize = vertical ? cardWidth : cardHeight;
+  const desiredMainSpan = (generationCount * mainCardSize)
+    + (Math.max(0, generationCount - 1) * generationGap)
+    + 20;
+  const desiredCrossSpan = (largestGeneration * crossCardSize)
+    + (Math.max(0, largestGeneration - 1) * siblingGap)
+    + 20;
+  const width = Math.min(layout.treeBounds.width, vertical ? desiredCrossSpan : desiredMainSpan);
+  const height = Math.min(layout.treeBounds.height, vertical ? desiredMainSpan : desiredCrossSpan);
+
+  return {
+    x: layout.treeBounds.x + ((layout.treeBounds.width - width) / 2),
+    y: layout.treeBounds.y + ((layout.treeBounds.height - height) / 2),
+    width,
+    height,
+  };
+}
+
 function collectReachablePeople(
   request: PosterLayoutEngineRequest,
   flow: TieredPosterFlow
@@ -149,6 +186,14 @@ function createPositionedNodes(
   const cardHeight = !vertical
     ? Math.min(cardPreset.geometry.height, Math.max(72, (availableCardSpan / largestGeneration) - gap))
     : cardPreset.geometry.height;
+  const placementBounds = createCenteredPlacementBounds(
+    request,
+    ancestors.length,
+    actualGenerationCount,
+    largestGeneration,
+    cardWidth,
+    cardHeight
+  );
   const xMargin = (cardWidth / 2) + 10;
   const yMargin = (cardHeight / 2) + 10;
 
@@ -159,25 +204,25 @@ function createPositionedNodes(
     let centerY: number;
 
     if (vertical) {
-      centerX = layout.treeBounds.x + (((groupIndex + 0.5) / group.length) * layout.treeBounds.width);
+      centerX = placementBounds.x + (((groupIndex + 0.5) / group.length) * placementBounds.width);
       centerY = actualGenerationCount === 1
-        ? layout.treeBounds.y + (layout.treeBounds.height / 2)
-        : layout.treeBounds.y + yMargin + ((
+        ? placementBounds.y + (placementBounds.height / 2)
+        : placementBounds.y + yMargin + ((
             flow === 'ancestor'
               ? (actualGenerationCount - position.generation) / (actualGenerationCount - 1)
               : (position.generation - 1) / (actualGenerationCount - 1)
-          ) * (layout.treeBounds.height - (yMargin * 2)));
+          ) * (placementBounds.height - (yMargin * 2)));
     } else {
       const generationProgress = actualGenerationCount === 1
         ? 0.5
         : (position.generation - 1) / (actualGenerationCount - 1);
-      const leftToRightX = layout.treeBounds.x
+      const leftToRightX = placementBounds.x
         + xMargin
-        + (generationProgress * (layout.treeBounds.width - (xMargin * 2)));
+        + (generationProgress * (placementBounds.width - (xMargin * 2)));
       centerX = content.language === 'ar'
-        ? layout.treeBounds.x + layout.treeBounds.width - (leftToRightX - layout.treeBounds.x)
+        ? placementBounds.x + placementBounds.width - (leftToRightX - placementBounds.x)
         : leftToRightX;
-      centerY = layout.treeBounds.y + (((groupIndex + 0.5) / group.length) * layout.treeBounds.height);
+      centerY = placementBounds.y + (((groupIndex + 0.5) / group.length) * placementBounds.height);
     }
 
     return {
