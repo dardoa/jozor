@@ -31,7 +31,7 @@ Every successful scenario uses the same `PosterScene` geometry through the canon
 
 | Scenario | Measured result | Technical gate | Visual recommendation |
 |---|---|---|---|
-| 1. Focal only, A4 portrait | 1 node, 0 connectors, focal offset 0.02 units, minimum name font 11.86pt, PNG 2400 x 3394 | Pass | Pass with polish |
+| 1. Focal only, A4 portrait | 1 node, 0 connectors, focal offset 0.03 units, adaptive centered card, minimum name font 14.78pt, PNG 2400 x 3394 | Pass | Pass |
 | 2. Balanced family, A3 portrait, vertical | 12 nodes, 13 connectors, no overlaps or escapes, minimum name font 11.21pt | Pass | Pass |
 | 3. Balanced family, A3 landscape, horizontal | 12 nodes, 13 connectors, exact focal center, no overlaps or escapes, minimum name font 11.21pt | Pass | Pass |
 | 4. Arabic long names, A2 landscape | 12 nodes, 13 connectors, valid Arabic shaping, no mojibake or clipping, minimum name font 8.36pt | Pass | Pass |
@@ -49,6 +49,12 @@ Every successful scenario uses the same `PosterScene` geometry through the canon
 - The A2 asymmetric fixtures demonstrate that a deep side does not displace the focal person from the scene center.
 - Page frames, titles, ornaments, cards, and footer remain aligned across all exported formats.
 
+### Adaptive Solo Composition
+
+- A one-person Focus scene now enlarges only the focal card to a restrained proportion of the printable tree area.
+- The card remains locked to the canonical tree center and stays inside the same `PosterScene` bounds.
+- Multi-person Focus scenes retain their previous SVG and PNG hashes, proving that the adaptive rule does not alter established family layouts.
+
 ### Arabic and Privacy
 
 - Long Arabic names render as valid joined Arabic text with no replacement characters or mojibake.
@@ -63,9 +69,8 @@ Every successful scenario uses the same `PosterScene` geometry through the canon
 
 ## Non-Blocking Polish Backlog
 
-1. **Single-person utilization:** a focal-only poster is geometrically correct but visually sparse. A later adaptive Focus composition may enlarge the single card or introduce a dedicated portrait treatment without moving the canonical focal center.
-2. **Central connector density:** spouse, sibling, ancestor, and child connectors can cross near the focal card in balanced scenes. A later routing pass may assign connector lanes while preserving card geometry and relationship correctness.
-3. **Default wording:** fixture outputs retain the generic `Ancestor Tree` title and direct-ancestor footer unless the owner customizes them. Product copy can later adapt automatically to Focus scope without changing the layout engine.
+1. **Central connector density:** spouse, sibling, ancestor, and child connectors can cross near the focal card in balanced scenes. A later routing pass may assign connector lanes while preserving card geometry and relationship correctness.
+2. **Default wording:** fixture outputs retain the generic `Ancestor Tree` title and direct-ancestor footer unless the owner customizes them. Product copy can later adapt automatically to Focus scope without changing the layout engine.
 
 None of these findings causes clipping, overlap, privacy leakage, format divergence, or an invalid print artifact.
 

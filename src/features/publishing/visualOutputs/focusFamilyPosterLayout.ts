@@ -279,7 +279,13 @@ export const focusFamilyPosterLayoutEngine: PosterLayoutEngine = {
 
     const cardWidth = Math.min(maxCardW, rawCardWidth);
     const cardHeight = Math.min(baseCardH, rawCardHeight);
-    const focalCardWidth = cardWidth;
+    const isSoloFocus = includedNodes.length === 1;
+    const focalCardWidth = isSoloFocus
+      ? Math.min(treeBounds.width * 0.34, maxCardW * 1.5)
+      : cardWidth;
+    const focalCardHeight = isSoloFocus
+      ? Math.min(treeBounds.height * 0.16, baseCardH * 1.4)
+      : cardHeight;
     const regularCardWidth = Math.max(minCardW, cardWidth * 0.86);
 
     const negativeTierStep = (() => {
@@ -350,13 +356,13 @@ export const focusFamilyPosterLayoutEngine: PosterLayoutEngine = {
       nameFontSize: fitNameFontSize(
         focalNode.displayName,
         focalCardWidth,
-        cardPreset.typography.nameSize * 1.12
+        cardPreset.typography.nameSize * (isSoloFocus ? 1.4 : 1.12)
       ),
       rect: {
         x: Math.round((treeCenterX - focalCardWidth / 2) * 10) / 10,
-        y: Math.round((treeCenterY - cardHeight / 2) * 10) / 10,
+        y: Math.round((treeCenterY - focalCardHeight / 2) * 10) / 10,
         width: Math.round(focalCardWidth * 10) / 10,
-        height: Math.round(cardHeight * 10) / 10,
+        height: Math.round(focalCardHeight * 10) / 10,
       },
     });
 

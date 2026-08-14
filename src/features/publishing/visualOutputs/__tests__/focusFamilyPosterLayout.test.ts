@@ -255,6 +255,14 @@ describe('Focus Family Layout Engine (Phase 2A Test Completeness & Capacity Guar
     expect(scene.nodes[0]!.isRoot).toBe(true);
     expect(scene.nodes[0]!.generation).toBe(1);
     expect(scene.connectors).toHaveLength(0);
+
+    const focalCard = scene.nodes[0]!.rect;
+    const treeCenterX = scene.bounds.tree.x + scene.bounds.tree.width / 2;
+    const treeCenterY = scene.bounds.tree.y + scene.bounds.tree.height / 2;
+    expect(focalCard.width / scene.bounds.tree.width).toBeGreaterThan(0.25);
+    expect(focalCard.height / scene.bounds.tree.height).toBeGreaterThan(0.1);
+    expect(focalCard.x + focalCard.width / 2).toBeCloseTo(treeCenterX, 1);
+    expect(focalCard.y + focalCard.height / 2).toBeCloseTo(treeCenterY, 1);
   });
 
   // Test 3: Missing one or both parents
