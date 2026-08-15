@@ -293,7 +293,7 @@ async function openTreeLayout(page: Page, language: 'ar' | 'en') {
 
 async function activateFocus(page: Page, language: 'ar' | 'en') {
   await openTreeLayout(page, language);
-  const button = page.getByRole('button', { name: language === 'ar' ? /حول شخص/ : 'Focus Family' });
+  const button = page.getByRole('button', { name: language === 'ar' ? /حول شخص/ : 'Around a Person' });
   await expect(button).toBeVisible();
   await button.click();
   await expect(button).toHaveAttribute('aria-pressed', 'true');

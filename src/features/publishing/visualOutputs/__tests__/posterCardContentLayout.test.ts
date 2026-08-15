@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { computeCardContentLayout, rectsIntersect, splitTextLines } from '../posterCardContentLayout';
+import {
+  computeCardContentLayout,
+  getPosterCardVerticalOverflow,
+  rectsIntersect,
+  splitTextLines,
+} from '../posterCardContentLayout';
 
 import type { PosterCardPreset, PosterSceneNode } from '../posterSceneTypes';
 
@@ -44,6 +49,33 @@ const MOCK_NODE: PosterSceneNode = {
 
 
 describe('posterCardContentLayout', () => {
+  it('reports the complete top overflow of an overlapping avatar ring', () => {
+    const overlappingPhotoPreset: PosterCardPreset = {
+      ...MOCK_CARD_PRESET,
+      photo: {
+        ...MOCK_CARD_PRESET.photo,
+        preferredDiameter: 92,
+        borderWidth: 2,
+        overlapsCard: true,
+      },
+    };
+    const overflow = getPosterCardVerticalOverflow(100, overlappingPhotoPreset);
+    const layout = computeCardContentLayout({
+      node: MOCK_NODE,
+      cardWidth: 160,
+      cardHeight: 100,
+      cardPreset: overlappingPhotoPreset,
+      language: 'ar',
+      cardX: 20,
+      cardY: 40,
+    });
+
+    expect(overflow.top).toBeGreaterThan(0);
+    expect(overflow.bottom).toBe(0);
+    expect(layout.avatarBounds).not.toBeNull();
+    expect(40 - (layout.avatarBounds!.y - overlappingPhotoPreset.photo.borderWidth)).toBe(overflow.top);
+  });
+
   it('computes non-intersecting regions for name and years', () => {
     const layout = computeCardContentLayout({
       node: MOCK_NODE,

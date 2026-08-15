@@ -38,6 +38,10 @@ export interface UsePosterDesignStateReturn {
   readonly updateAppearance: (updates: Partial<SharedPosterSettings>) => void;
   readonly updatePrint: (updates: Partial<SharedPosterSettings> & Partial<ProductModeSettingsBucket>) => void;
   readonly switchProductMode: (mode: PosterProductMode) => void;
+  readonly selectDiagramType: (
+    type: PosterLayoutMode | 'full-tree',
+    focalPersonToken?: string
+  ) => void;
   readonly switchLayoutMode: (mode: PosterLayoutMode, focalPersonToken?: string) => void;
   readonly switchScope: (scope: PosterTreeScope) => void;
   readonly updateFocus: (updates: Partial<FocusSettingsBucket>) => void;
@@ -217,6 +221,48 @@ export function usePosterDesignState(initialPresetId: string = 'classic-heritage
     [applyStateUpdate]
   );
 
+  const selectDiagramType = useCallback(
+    (type: PosterLayoutMode | 'full-tree', focalPersonToken?: string) => {
+      applyStateUpdate((current) => {
+        if (type === 'full-tree') {
+          const tieredState = current.layoutMode === 'tiered'
+            ? current
+            : switchLayoutModeState(current, 'tiered');
+
+          if (
+            tieredState.productMode === 'full-tree-overview'
+            && tieredState.scope === 'full-tree'
+          ) {
+            return tieredState;
+          }
+
+          return {
+            ...tieredState,
+            productMode: 'full-tree-overview',
+            scope: 'full-tree',
+          };
+        }
+
+        const restoredTieredScope = current.tiered.lastTieredScope === 'full-tree'
+          ? 'ancestors'
+          : current.tiered.lastTieredScope;
+        const detailedState: PosterDesignState = {
+          ...current,
+          productMode: 'detailed-poster',
+          scope: current.scope === 'full-tree'
+            ? (restoredTieredScope ?? 'ancestors')
+            : current.scope,
+        };
+        const switched = switchLayoutModeState(detailedState, type);
+
+        return type === 'focus-family' && focalPersonToken
+          ? updateFocusBucket(switched, { focalPersonToken })
+          : switched;
+      });
+    },
+    [applyStateUpdate]
+  );
+
   const switchScope = useCallback(
     (scope: PosterTreeScope) => {
       applyStateUpdate((current) => {
@@ -322,6 +368,7 @@ export function usePosterDesignState(initialPresetId: string = 'classic-heritage
     updateAppearance,
     updatePrint,
     switchProductMode,
+    selectDiagramType,
     switchLayoutMode,
     switchScope,
     updateFocus,

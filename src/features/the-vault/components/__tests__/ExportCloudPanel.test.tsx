@@ -497,21 +497,20 @@ describe('ExportCloudPanel manuscript preview', () => {
 
     expect(screen.getByRole('tab', { name: /Visual Outputs/i })).toHaveAttribute('aria-selected', 'true');
 
-    // Verify the preset-first Studio and current output metadata.
-    expect(screen.getAllByText('Classic Ancestor Poster').length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/Warm print-first family poster/i).length).toBeGreaterThan(0);
+    // Verify the diagram-first Studio and current output metadata.
+    expect(screen.getByRole('group', { name: 'How do you want to show your family?' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Generation Tree' })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByRole('button', { name: /Modern Gallery/i })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Dense Genealogy Poster/i })).not.toBeInTheDocument();
     expect(screen.getAllByText('Current Tree Snapshot').length).toBeGreaterThan(0);
 
     // Verify the Studio poster preview remains canonical.
-    expect(screen.getAllByLabelText('Preview of Classic Ancestor Poster').length).toBeGreaterThan(0);
+    expect(screen.getByTestId('visual-preview-frame')).toHaveAccessibleName(/Classic Ancestor Poster/i);
     expect(screen.queryByLabelText('Preview of Current Tree Snapshot')).not.toBeInTheDocument();
 
     // Verify the snapshot area remains separate from the Studio poster downloads.
     const actualExportSection = screen.getByTestId('visual-actual-export-section');
-    expect(within(actualExportSection).getByText('Current view capture')).toBeInTheDocument();
-    expect(within(actualExportSection).getByText(/separate from the poster design above/i)).toBeInTheDocument();
+    expect(actualExportSection).toBeEmptyDOMElement();
     expect(within(actualExportSection).queryByText(/legacy poster/i)).not.toBeInTheDocument();
     expect(within(actualExportSection).queryByRole('button', { name: /Download PNG/i })).not.toBeInTheDocument();
     expect(within(actualExportSection).queryByRole('button', { name: /Download PDF/i })).not.toBeInTheDocument();
@@ -527,7 +526,7 @@ describe('ExportCloudPanel manuscript preview', () => {
 
     // The actions themselves communicate the available formats.
     expect(screen.queryByText('Supported formats:')).not.toBeInTheDocument();
-    expect(screen.getByText('Uses the current tree view')).toBeInTheDocument();
+    expect(screen.getByText(/high-fidelity export of your current workspace viewport/i)).toBeInTheDocument();
 
     // Click Snapshot buttons
     const snapshotPngBtn = screen.getByRole('button', { name: /^PNG$/i });
@@ -552,10 +551,9 @@ describe('ExportCloudPanel manuscript preview', () => {
         'svg-v1'
       );
     });
-    expect(screen.getByText('Visual outputs preview')).toBeInTheDocument();
-    expect(screen.getByText(/Choose an output type and customize the poster/i)).toBeInTheDocument();
-    expect(screen.getByText('Current view capture')).toBeInTheDocument();
-    expect(screen.getByText(/Download an image of the tree exactly as it appears/i)).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: 'How do you want to show your family?' })).toBeInTheDocument();
+    expect(screen.getByTestId('tree-snapshot-export-card')).toBeInTheDocument();
+    expect(screen.getByText(/high-fidelity export of your current workspace viewport/i)).toBeInTheDocument();
     expect(screen.queryByText(/legacy poster PDF path remains paused/i)).not.toBeInTheDocument();
     expect(screen.queryByText('sanitized-data')).not.toBeInTheDocument();
     expect(screen.getByTestId('visual-studio-action-bar')).toBeInTheDocument();

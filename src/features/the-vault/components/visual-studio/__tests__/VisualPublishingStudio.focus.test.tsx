@@ -26,16 +26,15 @@ describe('VisualPublishingStudio Focus Family integration', () => {
   beforeEach(() => {
     cleanup();
   });
-  it('renders Focus controls while keeping Radial unavailable', () => {
+  it('renders only the contextual Focus controls in the settings panel', () => {
     const state = switchLayoutMode(createInitialPosterDesignState('classic-heritage'), 'focus-family');
     render(<VisualOutputConfigPanel language="en" state={state} activeSection="tree-layout" />);
 
-    expect(screen.getByRole('button', { name: 'Focus Family' })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByTestId('focus-family-controls')).toBeInTheDocument();
     expect(screen.getByTestId('focal-person-select')).toBeInTheDocument();
     expect(screen.getByTestId('focus-ancestor-depth')).toBeInTheDocument();
     expect(screen.getByTestId('focus-descendant-depth')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Radial/i })).toBeInTheDocument();
+    expect(screen.queryByTestId('radial-controls-section')).not.toBeInTheDocument();
   });
 
   it('renders localized Arabic Focus controls', () => {
@@ -55,11 +54,13 @@ describe('VisualPublishingStudio Focus Family integration', () => {
     render(<VisualPublishingStudio language={language} posterSvgResources={embeddedResources} />);
 
     fireEvent.click(screen.getByRole('tab', { name: language === 'ar' ? 'الشجرة والتخطيط' : 'Tree & Layout' }));
-    fireEvent.click(screen.getByRole('button', { name: language === 'ar' ? 'حول شخص' : 'Focus Family' }));
+    fireEvent.click(screen.getByRole('button', { name: language === 'ar' ? 'حول شخص' : 'Around a Person' }));
 
     const preview = screen.getByTestId('studio-poster-renderer-preview');
     await waitFor(() => expect(preview.querySelector('svg title')).toHaveTextContent(title));
-    expect(within(screen.getByTestId('visual-studio-preview-pane')).getByRole('heading', { name: title })).toBeInTheDocument();
+    expect(within(screen.getByTestId('visual-studio-preview-pane')).getByRole('img', {
+      name: language === 'ar' ? `معاينة ${title}` : `${title} preview`,
+    })).toBeInTheDocument();
     expect(preview.querySelector('.poster-scope')).toHaveTextContent(scope);
     expect(preview.querySelector('g[aria-label]')).toHaveAttribute(
       'aria-label',
@@ -86,7 +87,7 @@ describe('VisualPublishingStudio Focus Family integration', () => {
     render(<VisualPublishingStudio language="en" posterSvgResources={embeddedResources} />);
 
     fireEvent.click(screen.getByRole('tab', { name: 'Tree & Layout' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Focus Family' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Around a Person' }));
     expect(screen.getByTestId('focus-family-controls')).toBeInTheDocument();
 
     const preview = screen.getByTestId('studio-poster-renderer-preview');
@@ -114,7 +115,7 @@ describe('VisualPublishingStudio Focus Family integration', () => {
     });
     expect(preview.querySelectorAll('g.poster-node.is-root')).toHaveLength(1);
 
-    const tiered = screen.getByRole('button', { name: 'Tiered Generations' });
+    const tiered = screen.getByRole('button', { name: 'Generation Tree' });
     fireEvent.click(tiered);
     expect(screen.queryByTestId('focus-family-controls')).not.toBeInTheDocument();
     expect(tiered).toHaveAttribute('aria-pressed', 'true');

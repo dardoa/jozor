@@ -6,6 +6,7 @@ import type {
   PosterSceneConnector,
   PosterSceneNode,
 } from './posterSceneTypes';
+import { getPosterCardVerticalOverflow } from './posterCardContentLayout';
 
 export class FocusLayoutCapacityError extends Error {
   readonly code = 'FOCUS_LAYOUT_CAPACITY_EXCEEDED';
@@ -236,6 +237,8 @@ export const focusFamilyPosterLayoutEngine: PosterLayoutEngine = {
     const baseCardH = cardPreset.geometry.height;
 
     const gap = layout.spacingPreset === 'compact' ? 10 : layout.spacingPreset === 'airy' ? 24 : 16;
+    const maximumCardOverflow = getPosterCardVerticalOverflow(baseCardH, cardPreset);
+    const maximumVerticalVisualOverflow = maximumCardOverflow.top + maximumCardOverflow.bottom;
 
     const negTiers = sortedTiers.filter((t) => t < 0);
     const posTiers = sortedTiers.filter((t) => t > 0);
@@ -266,7 +269,8 @@ export const focusFamilyPosterLayoutEngine: PosterLayoutEngine = {
       const maxSideDepth = Math.max(maxNegDepth, maxPosDepth);
       rawCardWidth = maxSideDepth > 0 ? (availMainHalf - gap * maxSideDepth) / (maxSideDepth + 0.5) : maxCardW;
 
-      const availCross = treeBounds.height - gap * (maxTierNodeCount - 1);
+      const visualCrossGap = gap + maximumVerticalVisualOverflow;
+      const availCross = treeBounds.height - visualCrossGap * (maxTierNodeCount - 1) - maximumVerticalVisualOverflow;
       rawCardHeight = availCross / maxTierNodeCount;
     }
 
@@ -287,12 +291,15 @@ export const focusFamilyPosterLayoutEngine: PosterLayoutEngine = {
       ? Math.min(treeBounds.height * 0.16, baseCardH * 1.4)
       : cardHeight;
     const regularCardWidth = Math.max(minCardW, cardWidth * 0.86);
+    const cardOverflow = getPosterCardVerticalOverflow(cardHeight, cardPreset);
+    const verticalVisualOverflow = cardOverflow.top + cardOverflow.bottom;
+    const horizontalCrossStep = cardHeight + gap + verticalVisualOverflow;
 
     const negativeTierStep = (() => {
       if (maxNegDepth === 0) return 0;
 
       const availableTravel = isVertical
-        ? treeCenterY - treeBounds.y - cardHeight / 2
+        ? treeCenterY - treeBounds.y - cardHeight / 2 - cardOverflow.top
         : (isAr
             ? treeBounds.x + treeBounds.width - treeCenterX
             : treeCenterX - treeBounds.x) -
@@ -305,7 +312,7 @@ export const focusFamilyPosterLayoutEngine: PosterLayoutEngine = {
       if (maxPosDepth === 0) return 0;
 
       const availableTravel = isVertical
-        ? treeBounds.y + treeBounds.height - treeCenterY - cardHeight / 2
+        ? treeBounds.y + treeBounds.height - treeCenterY - cardHeight / 2 - cardOverflow.bottom
         : (isAr
             ? treeCenterX - treeBounds.x
             : treeBounds.x + treeBounds.width - treeCenterX) -
@@ -379,7 +386,7 @@ export const focusFamilyPosterLayoutEngine: PosterLayoutEngine = {
         y = treeCenterY - cardHeight / 2;
       } else {
         x = treeCenterX - regularCardWidth / 2;
-        y = treeCenterY + slotIndex * (cardHeight + gap) - cardHeight / 2;
+        y = treeCenterY + slotIndex * horizontalCrossStep - cardHeight / 2;
       }
 
       sceneNodes.push({
@@ -442,11 +449,10 @@ export const focusFamilyPosterLayoutEngine: PosterLayoutEngine = {
           x = nodeCenterX - regularCardWidth / 2;
           y = groupCenterY - cardHeight / 2;
         } else {
-          const groupHeight = groupCount * cardHeight + (groupCount - 1) * gap;
-          const startY = groupCenterY - groupHeight / 2 + cardHeight / 2;
-          const nodeCenterY = startY + nodeIdx * (cardHeight + gap);
+          const groupVisualHeight = groupCount * (cardHeight + verticalVisualOverflow) + (groupCount - 1) * gap;
+          const firstCardY = groupCenterY - groupVisualHeight / 2 + cardOverflow.top;
           x = groupCenterX - regularCardWidth / 2;
-          y = nodeCenterY - cardHeight / 2;
+          y = firstCardY + nodeIdx * horizontalCrossStep;
         }
 
         sceneNodes.push({
@@ -478,13 +484,21 @@ export const focusFamilyPosterLayoutEngine: PosterLayoutEngine = {
       });
     });
 
-    // Defensive Invariants: Check bounds & overlaps across all nodes
+    const getNodeVisualRect = (node: PosterSceneNode) => ({
+      x: node.rect.x,
+      y: node.rect.y - cardOverflow.top,
+      width: node.rect.width,
+      height: node.rect.height + verticalVisualOverflow,
+    });
+
+    // Defensive Invariants: Check complete rendered bounds, including overlapping avatars.
     sceneNodes.forEach((node) => {
+      const visualRect = getNodeVisualRect(node);
       if (
-        node.rect.x < treeBounds.x - 0.5 ||
-        node.rect.y < treeBounds.y - 0.5 ||
-        node.rect.x + node.rect.width > treeBounds.x + treeBounds.width + 0.5 ||
-        node.rect.y + node.rect.height > treeBounds.y + treeBounds.height + 0.5
+        visualRect.x < treeBounds.x - 0.5 ||
+        visualRect.y < treeBounds.y - 0.5 ||
+        visualRect.x + visualRect.width > treeBounds.x + treeBounds.width + 0.5 ||
+        visualRect.y + visualRect.height > treeBounds.y + treeBounds.height + 0.5
       ) {
         throw new FocusLayoutCapacityError(
           `Focus layout capacity exceeded: node '${node.displayName}' exceeds printable tree bounds.`
@@ -494,8 +508,8 @@ export const focusFamilyPosterLayoutEngine: PosterLayoutEngine = {
 
     for (let i = 0; i < sceneNodes.length; i += 1) {
       for (let j = i + 1; j < sceneNodes.length; j += 1) {
-        const r1 = sceneNodes[i]!.rect;
-        const r2 = sceneNodes[j]!.rect;
+        const r1 = getNodeVisualRect(sceneNodes[i]!);
+        const r2 = getNodeVisualRect(sceneNodes[j]!);
         const overlapX = r1.x < r2.x + r2.width - 0.5 && r1.x + r1.width > r2.x + 0.5;
         const overlapY = r1.y < r2.y + r2.height - 0.5 && r1.y + r1.height > r2.y + 0.5;
         if (overlapX && overlapY) {

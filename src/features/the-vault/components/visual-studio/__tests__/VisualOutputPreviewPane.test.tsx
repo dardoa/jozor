@@ -12,8 +12,8 @@ describe('VisualOutputPreviewPane presentation semantics', () => {
       />
     );
 
-    expect(screen.getByRole('heading', { name: 'شجرة الأحفاد الشعاعية' })).toBeInTheDocument();
     expect(screen.getByTestId('visual-preview-frame')).toHaveAccessibleName('معاينة شجرة الأحفاد الشعاعية');
     expect(screen.getByTestId('poster-preview-unavailable')).toBeInTheDocument();
+    expect(screen.getByText('تجاوز التخطيط سعة الصفحة.')).toBeInTheDocument();
   });
 });

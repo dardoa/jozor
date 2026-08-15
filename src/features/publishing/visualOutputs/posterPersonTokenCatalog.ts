@@ -9,11 +9,14 @@ export interface PosterPersonTokenSource {
   readonly displayName?: string;
   readonly isLiving?: boolean;
   readonly isPrivate?: boolean;
+  readonly birthDate?: string;
+  readonly deathDate?: string;
 }
 
 export interface PosterPersonTokenLabelPolicy {
   readonly language: 'ar' | 'en';
   readonly privacyMode: PosterPrivacyMode;
+  readonly audience?: 'poster-content' | 'owner-control';
 }
 
 export interface PosterPersonTokenCatalogBoundary extends PosterPersonTokenCatalog {
@@ -35,6 +38,22 @@ let catalogSessionSequence = 0;
 const createSessionNonce = (): string => {
   catalogSessionSequence += 1;
   return `${Date.now().toString(36)}-${catalogSessionSequence.toString(36)}`;
+};
+
+const extractYear = (value?: string): string | undefined => {
+  const match = value?.match(/^\s*(\d{4})/);
+  return match?.[1];
+};
+
+const getOwnerControlLabel = (
+  node: PosterPersonTokenSource,
+  fallback: string
+): string => {
+  const displayName = node.displayName || fallback;
+  const birthYear = extractYear(node.birthDate);
+  const deathYear = extractYear(node.deathDate);
+  if (!birthYear && !deathYear) return displayName;
+  return `${displayName} (${birthYear ?? ''}\u2013${deathYear ?? ''})`;
 };
 
 /**
@@ -64,12 +83,17 @@ export function createPosterPersonTokenCatalogSession(
         tokenToRawId.set(token, node.rawId);
         if (defaultRawId === node.rawId) defaultToken = token;
 
-        const shouldMask = Boolean(
+        const shouldMask = policy.audience !== 'owner-control' && Boolean(
           node.isPrivate || (policy.privacyMode === 'masked' && node.isLiving)
         );
         return {
           token,
-          label: shouldMask
+          label: policy.audience === 'owner-control'
+            ? getOwnerControlLabel(
+                node,
+                policy.language === 'ar' ? `شخص ${index + 1}` : `Person ${index + 1}`
+              )
+            : shouldMask
             ? policy.language === 'ar' ? 'شخص مخفي' : 'Masked person'
             : node.displayName || (policy.language === 'ar' ? `شخص ${index + 1}` : `Person ${index + 1}`),
         };

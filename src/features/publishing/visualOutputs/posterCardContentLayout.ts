@@ -48,6 +48,65 @@ export interface ComputeCardContentLayoutOptions {
   readonly cardY?: number; // Default: 0
 }
 
+export interface PosterCardVerticalOverflow {
+  readonly top: number;
+  readonly bottom: number;
+}
+
+interface PosterAvatarLayoutMetrics {
+  readonly bounds: BoundingBox | null;
+  readonly centerY: number;
+  readonly radius: number;
+}
+
+function computePosterAvatarLayout(
+  cardY: number,
+  cardHeight: number,
+  cardWidth: number,
+  cardPreset: PosterCardPreset,
+  minPadding: number
+): PosterAvatarLayoutMetrics {
+  if (cardPreset.photo.preferredDiameter <= 0) {
+    return { bounds: null, centerY: cardY, radius: 0 };
+  }
+
+  const rawRadius = cardPreset.photo.preferredDiameter / 2;
+  const maxAllowedRadius = cardHeight < 110
+    ? Math.max(0, Math.floor((cardHeight - 20) * 0.20))
+    : Math.max(0, Math.floor((cardHeight - 20) * 0.28));
+  const radius = Math.min(rawRadius, maxAllowedRadius);
+  const centerX = cardWidth / 2;
+  const centerY = cardPreset.photo.overlapsCard
+    ? cardY + 5
+    : cardY + radius + minPadding + 1;
+
+  return {
+    bounds: {
+      x: centerX - radius,
+      y: centerY - radius,
+      width: radius * 2,
+      height: radius * 2,
+    },
+    centerY,
+    radius,
+  };
+}
+
+export function getPosterCardVerticalOverflow(
+  cardHeight: number,
+  cardPreset: PosterCardPreset,
+  minPadding = 4
+): PosterCardVerticalOverflow {
+  const avatar = computePosterAvatarLayout(0, cardHeight, cardPreset.geometry.maxWidth, cardPreset, minPadding);
+  if (!avatar.bounds) return { top: 0, bottom: 0 };
+
+  const ringInset = cardPreset.photo.borderWidth;
+  return {
+    top: Math.max(0, -(avatar.bounds.y - ringInset)),
+    bottom: Math.max(0, avatar.bounds.y + avatar.bounds.height + ringInset - cardHeight),
+  };
+}
+
 
 export function splitTextLines(value: string, maxCharacters: number, maxLines: number): string[] {
   const trimmed = value.trim();
@@ -127,27 +186,14 @@ export function computeCardContentLayout(options: ComputeCardContentLayoutOption
 
   const isAr = language === 'ar';
   const textDirection = isAr ? 'rtl' : 'ltr';
-  const centerX = cardX + cardWidth / 2;
-
   // 1. Avatar Region
   const hasAvatar = cardPreset.photo.preferredDiameter > 0;
-  const rawRadius = hasAvatar ? cardPreset.photo.preferredDiameter / 2 : 0;
-  const maxAllowedRadius = cardHeight < 110
-    ? Math.max(0, Math.floor((cardHeight - 20) * 0.20))
-    : Math.max(0, Math.floor((cardHeight - 20) * 0.28));
-  const avatarRadius = hasAvatar ? Math.min(rawRadius, maxAllowedRadius) : 0;
-  let avatarBounds: BoundingBox | null = null;
-  let avatarCenterY = cardY;
-
-  if (hasAvatar) {
-    avatarCenterY = cardPreset.photo.overlapsCard ? cardY + 5 : cardY + avatarRadius + minPadding + 1;
-    avatarBounds = {
-      x: centerX - avatarRadius,
-      y: avatarCenterY - avatarRadius,
-      width: avatarRadius * 2,
-      height: avatarRadius * 2,
-    };
-  }
+  const avatarLayout = computePosterAvatarLayout(cardY, cardHeight, cardWidth, cardPreset, minPadding);
+  const avatarRadius = avatarLayout.radius;
+  const avatarCenterY = avatarLayout.centerY;
+  const avatarBounds = avatarLayout.bounds
+    ? { ...avatarLayout.bounds, x: cardX + avatarLayout.bounds.x }
+    : null;
 
   // 2. Detail Rows Region (Bottom)
   const isMasked = Boolean(node.isMasked);

@@ -655,7 +655,7 @@ test.describe('Visual Publishing Studio Accessibility QA Final Evidence Closure 
         await expect(panel).toHaveAttribute('role', 'tabpanel');
         await expect(panel).toHaveAttribute('aria-labelledby', tabId!);
 
-        const groups = panel.locator('[role="group"]');
+        const groups = panel.locator('[role="group"]:visible');
         const groupCount = await groups.count();
         expect(groupCount, `No accessible groups found in section tab ${i} (${lang})`).toBeGreaterThan(0);
 
@@ -704,7 +704,7 @@ test.describe('Visual Publishing Studio Accessibility QA Final Evidence Closure 
 
     await studio.locator('#tab-tree-layout').click();
     const layoutChoices = studio.getByTestId('poster-layout-engine-control').getByRole('button');
-    await expect(layoutChoices).toHaveCount(3);
+    await expect(layoutChoices).toHaveCount(4);
     const focusModeOption = layoutChoices.nth(1);
     const radialModeOption = layoutChoices.nth(2);
 

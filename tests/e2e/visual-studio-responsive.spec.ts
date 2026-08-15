@@ -593,7 +593,8 @@ test.describe('Visual Publishing Studio Responsive QA Evidence Pass', () => {
       const configPanel = page.getByTestId('visual-studio-config-panel');
       if (width < 1024) {
         const toggleBtn = page.getByTestId('visual-studio-mobile-preview-toggle');
-        if (await toggleBtn.isVisible()) {
+        await expect(toggleBtn).toBeVisible();
+        if ((await toggleBtn.getAttribute('aria-expanded')) !== 'true') {
           await toggleBtn.click();
         }
       }
@@ -646,13 +647,6 @@ test.describe('Visual Publishing Studio Responsive QA Evidence Pass', () => {
         configPanelScrollWidth: configPanelDims.scrollWidth,
       });
 
-      // Screenshots
-      await page.screenshot({ path: path.join(OUTPUT_DIR, `vault-full-${name}.png`), fullPage: false });
-      await studio.screenshot({ path: path.join(OUTPUT_DIR, `studio-${name}.png`) });
-      await printDock.evaluate((element) => element.scrollIntoView({ block: 'center' }));
-      await page.waitForTimeout(150);
-      await printDock.screenshot({ path: path.join(OUTPUT_DIR, `print-dock-${name}.png`) });
-
       // 1. Assert Studio container overflow (scrollWidth <= clientWidth)
       expect(studioDims.scrollWidth, `Studio scrollWidth (${studioDims.scrollWidth}) > clientWidth (${studioDims.clientWidth}) at ${name}`).toBeLessThanOrEqual(studioDims.clientWidth);
       expect(printDockDims.scrollWidth, `Print dock scrollWidth (${printDockDims.scrollWidth}) > clientWidth (${printDockDims.clientWidth}) at ${name}`).toBeLessThanOrEqual(printDockDims.clientWidth);
@@ -691,10 +685,8 @@ test.describe('Visual Publishing Studio Responsive QA Evidence Pass', () => {
 
       // 3. Per-Element Arabic Text Clipping Assertions (Display elements)
       const formatGuidance = page.getByTestId('poster-format-guidance');
-      if (await formatGuidance.isVisible().catch(() => false)) {
-        const guidanceClip = await formatGuidance.evaluate((el) => el.scrollWidth <= el.clientWidth + 2);
-        expect(guidanceClip, `Format guidance text clipped at ${name}`).toBe(true);
-      }
+      await expect(formatGuidance).toBeAttached();
+      await expect(formatGuidance).toHaveClass(/sr-only/);
 
       const qualityNotice = page.getByTestId('poster-print-quality-notice');
       if (await qualityNotice.isVisible().catch(() => false)) {
@@ -751,7 +743,6 @@ test.describe('Visual Publishing Studio Responsive QA Evidence Pass', () => {
 
       // 5. Config Panel Reachability & Operability Verification
       await configPanel.scrollIntoViewIfNeeded();
-      await page.screenshot({ path: path.join(OUTPUT_DIR, `config-panel-${name}.png`) });
 
       const formControls = await configPanel.locator('button, select, input').all();
       expect(formControls.length).toBeGreaterThan(0);
@@ -809,6 +800,26 @@ test.describe('Visual Publishing Studio Responsive QA Evidence Pass', () => {
         const aspectDiff = Math.abs(svgAspect - viewBoxAspect);
         expect(aspectDiff, `SVG aspect ratio (${svgAspect.toFixed(3)}) differs from viewBox aspect ratio (${viewBoxAspect.toFixed(3)}) at ${name}`).toBeLessThan(0.05);
       }
+
+      // Capture evidence in memory before writing under the watched project tree.
+      // Mid-test file writes can trigger a development-server reload and reset Vault state.
+      await printDock.evaluate((element) => element.scrollIntoView({ block: 'center' }));
+      await page.waitForTimeout(150);
+      const printDockScreenshot = await printDock.screenshot();
+
+      await configPanel.scrollIntoViewIfNeeded();
+      const configPanelScreenshot = await configPanel.screenshot();
+
+      await studio.scrollIntoViewIfNeeded();
+      const studioScreenshot = await studio.screenshot();
+      const vaultScreenshot = await page.screenshot({ fullPage: false });
+
+      await Promise.all([
+        writeFile(path.join(OUTPUT_DIR, `print-dock-${name}.png`), printDockScreenshot),
+        writeFile(path.join(OUTPUT_DIR, `config-panel-${name}.png`), configPanelScreenshot),
+        writeFile(path.join(OUTPUT_DIR, `studio-${name}.png`), studioScreenshot),
+        writeFile(path.join(OUTPUT_DIR, `vault-full-${name}.png`), vaultScreenshot),
+      ]);
     });
   });
 
@@ -930,10 +941,12 @@ test.describe('Visual Publishing Studio Responsive QA Evidence Pass', () => {
       const studio = page.getByTestId('visual-publishing-studio');
       await expect(studio).toBeVisible();
 
-      // Select full-tree scope button inside poster-scope-control
-      const fullTreeScopeBtn = page.getByTestId('poster-scope-control').getByRole('button', { name: /الشجرة الكاملة|Full tree/i });
-      await expect(fullTreeScopeBtn).toBeVisible();
-      await fullTreeScopeBtn.click();
+      // Select the full-tree diagram from the persistent diagram-first control.
+      const fullTreeDiagramBtn = page
+        .getByTestId('poster-layout-engine-control')
+        .getByRole('button', { name: /الشجرة الكاملة|Full Family Tree/i });
+      await expect(fullTreeDiagramBtn).toBeVisible();
+      await fullTreeDiagramBtn.click();
       await page.waitForTimeout(600);
 
       const actionBar = page.getByTestId('visual-studio-action-bar');
@@ -964,9 +977,7 @@ test.describe('Visual Publishing Studio Responsive QA Evidence Pass', () => {
 
       // Check guidance notice & per-element clipping
       const guidance = page.getByTestId('poster-format-guidance');
-      await expect(guidance).toBeVisible();
-      const guidanceClip = await guidance.evaluate((el) => el.scrollWidth <= el.clientWidth + 2);
-      expect(guidanceClip, `Guidance text clipped at ${targetWidth}px`).toBe(true);
+      await expect(guidance).toBeAttached();
 
       // Measure action bar overflow
       const barDims = await actionBar.evaluate((el) => ({

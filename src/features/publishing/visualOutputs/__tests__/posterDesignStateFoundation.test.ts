@@ -30,6 +30,13 @@ import type {
 } from '../posterStateContracts';
 
 describe('Phase 1A: Final Two-Issue Closure Pass', () => {
+  it('starts Focus with a conservative one-generation neighborhood', () => {
+    const state = createInitialPosterDesignState('classic-heritage');
+
+    expect(state.focus.ancestorDepth).toBe(1);
+    expect(state.focus.descendantDepth).toBe(1);
+  });
+
   describe('1. Table-Driven Matrix: All 48 Product × Layout × Scope Combinations', () => {
     const productModes: PosterProductMode[] = [
       'detailed-poster',

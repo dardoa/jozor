@@ -148,7 +148,7 @@ async function navigateToStudio(page: Page) {
 
 async function activateFocus(page: Page) {
   await page.getByRole('tab', { name: 'Tree & Layout' }).click();
-  const focusButton = page.getByRole('button', { name: 'Focus Family' });
+  const focusButton = page.getByRole('button', { name: 'Around a Person' });
   await expect(focusButton).toBeVisible();
   await focusButton.click();
   await expect(focusButton).toHaveAttribute('aria-pressed', 'true');
@@ -225,7 +225,7 @@ test.describe('Visual Studio Phase 2B Focus runtime evidence', () => {
   test('supports keyboard activation and remains within the mobile viewport', async ({ page }) => {
     await page.getByRole('tab', { name: 'Tree & Layout' }).focus();
     await page.keyboard.press('Enter');
-    const focusButton = page.getByRole('button', { name: 'Focus Family' });
+    const focusButton = page.getByRole('button', { name: 'Around a Person' });
     await focusButton.focus();
     await expect(focusButton).toBeFocused();
     await page.keyboard.press('Enter');
@@ -246,7 +246,7 @@ test.describe('Visual Studio Phase 2B Focus runtime evidence', () => {
     }));
     expect(overflow.scrollWidth).toBeLessThanOrEqual(overflow.clientWidth);
     await page.getByRole('tab', { name: 'Tree & Layout' }).click();
-    await page.getByRole('button', { name: 'Focus Family' }).click();
+    await page.getByRole('button', { name: 'Around a Person' }).click();
     await expect(page.getByTestId('focus-family-controls')).toBeVisible();
   });
 
@@ -256,7 +256,7 @@ test.describe('Visual Studio Phase 2B Focus runtime evidence', () => {
     await expect(page.getByTestId('visual-studio-print-dock')).toBeVisible();
     await page.getByRole('group', { name: 'Paper Size' }).getByRole('button', { name: 'A4' }).click();
     await page.getByRole('tab', { name: 'Tree & Layout' }).click();
-    const focusButton = page.getByRole('button', { name: 'Focus Family' });
+    const focusButton = page.getByRole('button', { name: 'Around a Person' });
     await focusButton.click();
     await expect(focusButton).toHaveAttribute('aria-pressed', 'true');
 

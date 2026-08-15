@@ -7,11 +7,10 @@ import {
   CreditCard,
   Palette,
   Network,
+  ChevronDown,
 } from 'lucide-react';
 import type {
   PosterDesignState,
-  PosterProductMode,
-  PosterLayoutMode,
   PosterTreeScope,
   SharedPosterSettings,
   TieredSettingsBucket,
@@ -20,7 +19,6 @@ import type {
   VisualOutputDefinition,
 } from '../../../publishing';
 import {
-  getPosterPresetDefinition,
   INITIAL_POSTER_PRESETS,
   createInitialPosterDesignState,
 } from '../../../publishing';
@@ -41,9 +39,6 @@ export interface VisualOutputConfigPanelProps {
   onUpdateLayout?: (updates: Partial<SharedPosterSettings> & Partial<TieredSettingsBucket>) => void;
   onUpdateCards?: (updates: Partial<SharedPosterSettings>) => void;
   onUpdateAppearance?: (updates: Partial<SharedPosterSettings>) => void;
-  onSwitchProductMode?: (mode: PosterProductMode) => void;
-  onSwitchLayoutMode?: (mode: PosterLayoutMode) => void;
-  onSwitchScope?: (scope: PosterTreeScope) => void;
   onUpdateFocus?: (updates: Partial<FocusSettingsBucket>) => void;
   onUpdateRadial?: (updates: Partial<RadialSettingsBucket>) => void;
   onResetSection?: (sectionId: 'content' | 'layout' | 'cards' | 'appearance' | 'print') => void;
@@ -63,6 +58,7 @@ export interface VisualOutputConfigPanelProps {
   onPosterTitleChange?: (value: string) => void;
   onPosterSubtitleChange?: (value: string) => void;
   activeSection?: StudioWorkspaceSectionId;
+  onActiveSectionChange?: (section: StudioWorkspaceSectionId) => void;
 }
 
 const ar = {
@@ -83,6 +79,10 @@ const ar = {
   resetSection: 'إعادة ضبط القسم',
   resetPoster: 'إعادة ضبط البوستر',
   productMode: 'اختر نوع المخرج',
+  diagramType: 'كيف تريد عرض عائلتك؟',
+  tieredDiagram: 'شجرة أجيال',
+  focusDiagram: 'حول شخص',
+  radialDiagram: 'دائري / مروحي',
   detailedPoster: 'بوستر تفصيلي',
   fullTreeOverview: 'لوحة الشجرة الكاملة',
   branchCollection: 'مجموعة الفروع',
@@ -216,6 +216,10 @@ const en = {
   resetSection: 'Reset Section',
   resetPoster: 'Reset Poster',
   productMode: 'Visual Output Mode',
+  diagramType: 'How do you want to show your family?',
+  tieredDiagram: 'Generation Tree',
+  focusDiagram: 'Around a Person',
+  radialDiagram: 'Radial / Fan',
   detailedPoster: 'Detailed Poster',
   fullTreeOverview: 'Full-tree Overview',
   branchCollection: 'Branch Collection Archive',
@@ -342,9 +346,6 @@ export const VisualOutputConfigPanel: React.FC<VisualOutputConfigPanelProps> = (
   onUpdateLayout,
   onUpdateCards,
   onUpdateAppearance,
-  onSwitchProductMode,
-  onSwitchLayoutMode,
-  onSwitchScope,
   onUpdateFocus,
   onUpdateRadial,
   onResetSection,
@@ -360,6 +361,7 @@ export const VisualOutputConfigPanel: React.FC<VisualOutputConfigPanelProps> = (
   onPosterTitleChange,
   onPosterSubtitleChange,
   activeSection: propActiveSection,
+  onActiveSectionChange,
 }) => {
   const isAr = language === 'ar';
   const t = isAr ? ar : en;
@@ -370,9 +372,15 @@ export const VisualOutputConfigPanel: React.FC<VisualOutputConfigPanelProps> = (
 
   const effectivePosterRootToken = selectedPosterRootToken || currentState.shared.selectedPosterRootToken;
 
-  const [activeSection, setActiveSection] = useState<StudioWorkspaceSectionId>(propActiveSection || 'quick-setup');
+  const [internalActiveSection, setInternalActiveSection] = useState<StudioWorkspaceSectionId>('quick-setup');
+  const activeSection = propActiveSection ?? internalActiveSection;
+  const setActiveSection = (section: StudioWorkspaceSectionId) => {
+    if (propActiveSection === undefined) {
+      setInternalActiveSection(section);
+    }
+    onActiveSectionChange?.(section);
+  };
 
-  const currentPresetDef = getPosterPresetDefinition(currentState.activePresetId);
   const sections: Array<{ id: StudioWorkspaceSectionId; label: string; icon: React.ComponentType<{ className?: string }> }> = [
     { id: 'quick-setup', label: t.quickSetup, icon: Sparkles },
     { id: 'tree-layout', label: isAr ? 'الشجرة والتخطيط' : 'Tree & Layout', icon: Network },
@@ -401,41 +409,9 @@ export const VisualOutputConfigPanel: React.FC<VisualOutputConfigPanelProps> = (
     }, 0);
   };
 
-  const layoutModeSelector = currentState.productMode === 'detailed-poster' ? (
-    <fieldset className="space-y-1.5" role="group" aria-label={isAr ? 'طريقة عرض الشجرة' : 'Tree layout'}>
-      <legend className="mb-1 text-xs font-medium text-stone-400">
-        {isAr ? 'طريقة عرض الشجرة' : 'Tree Layout'}
-      </legend>
-      <div className="grid grid-cols-3 gap-2" data-testid="poster-layout-engine-control">
-        {[
-          { mode: 'tiered' as const, label: isAr ? 'متدرج' : 'Tiered Generations' },
-          { mode: 'focus-family' as const, label: isAr ? 'حول شخص' : 'Focus Family' },
-          { mode: 'radial-generations' as const, label: isAr ? 'دائري / مروحي' : 'Radial / Fan' },
-        ].map(({ mode, label }) => {
-          const isSelected = currentState.layoutMode === mode;
-          return (
-            <button
-              key={mode}
-              type="button"
-              aria-pressed={isSelected}
-              onClick={() => onSwitchLayoutMode?.(mode)}
-              className={`min-h-11 rounded-lg border px-2 py-2 text-center text-xs leading-tight transition-colors ${
-                isSelected
-                  ? 'border-amber-500 bg-amber-500/10 font-medium text-amber-300'
-                  : 'border-stone-800 bg-stone-950/40 text-stone-400 hover:border-stone-700 hover:text-stone-200'
-              }`}
-            >
-              {label}
-            </button>
-          );
-        })}
-      </div>
-    </fieldset>
-  ) : null;
-
   return (
     <div
-      className="w-full flex flex-col h-full bg-stone-900 border border-stone-800 text-stone-100 rounded-xl shadow-xl overflow-hidden"
+      className="flex w-full flex-col overflow-hidden rounded-xl border border-stone-800 bg-stone-900 text-stone-100 shadow-xl lg:max-h-[72vh]"
       dir={isAr ? 'rtl' : 'ltr'}
       data-testid="visual-studio-config-panel"
     >
@@ -522,12 +498,14 @@ export const VisualOutputConfigPanel: React.FC<VisualOutputConfigPanelProps> = (
         id={`panel-${activeSection}`}
         role="tabpanel"
         aria-labelledby={`tab-${activeSection}`}
-        className="flex-1 overflow-y-auto p-4 space-y-5"
+        className={`min-h-0 flex-1 overflow-y-auto p-4 ${
+          activeSection === 'tree-layout' ? 'flex flex-col gap-5' : 'space-y-5'
+        }`}
       >
         {activeSection === 'quick-setup' && (
           <div className="space-y-5">
             {/* Presets Selection Grid */}
-            <fieldset className="space-y-2">
+            <fieldset className="space-y-2" role="group" aria-label={t.presetsTitle}>
               <legend className="text-xs font-medium text-stone-400 mb-1">{t.presetsTitle}</legend>
               <div className="grid grid-cols-2 gap-3">
                 {INITIAL_POSTER_PRESETS.map((preset) => {
@@ -537,116 +515,27 @@ export const VisualOutputConfigPanel: React.FC<VisualOutputConfigPanelProps> = (
                       key={preset.id}
                       type="button"
                       onClick={() => onSelectPreset?.(preset.id)}
-                      className={`p-3 rounded-xl border text-right transition-all flex flex-col justify-between ${
+                    className={`flex min-h-11 items-center justify-between rounded-lg border px-3 py-2 text-start transition-all ${
                         isSelected
                           ? 'border-amber-500 bg-amber-500/10 text-white ring-1 ring-amber-500/50'
                           : 'border-stone-800 bg-stone-950/40 text-stone-300 hover:border-stone-700 hover:bg-stone-800/40'
                       }`}
                     >
-                      <div className="flex items-center justify-between w-full mb-1">
+                      <div className="flex w-full items-center justify-between gap-2">
                         <span className="font-semibold text-xs">{preset.displayName[isAr ? 'ar' : 'en']}</span>
                         {isSelected && <span className="w-2 h-2 rounded-full bg-amber-400" />}
                       </div>
-                      <span className="text-[11px] text-stone-400 leading-relaxed line-clamp-2">
-                        {preset.description[isAr ? 'ar' : 'en']}
-                      </span>
                     </button>
                   );
                 })}
               </div>
             </fieldset>
 
-            {/* Product Mode Selection */}
-            <fieldset
-              className="space-y-2"
-              role="group"
-              aria-label={t.productMode}
-              data-testid="visual-studio-template-group"
-            >
-              <legend className="text-xs font-medium text-stone-400 mb-1">{t.productMode}</legend>
-              <div className="grid grid-cols-2 gap-2">
-                {[
-                  { mode: 'detailed-poster' as const, label: t.detailedPoster },
-                  { mode: 'full-tree-overview' as const, label: t.fullTreeOverview },
-                  { mode: 'branch-collection' as const, label: t.branchCollection },
-                  { mode: 'tiled-wall' as const, label: t.tiledWall },
-                ].map(({ mode, label }) => {
-                  const isSelected = currentState.productMode === mode;
-                  return (
-                    <button
-                      key={mode}
-                      type="button"
-                      aria-pressed={isSelected}
-                      onClick={() => onSwitchProductMode?.(mode)}
-                      className={`px-3 py-2 rounded-lg border text-xs font-medium text-center transition-colors ${
-                        isSelected
-                          ? 'border-amber-500 bg-amber-500/10 text-amber-300'
-                          : 'border-stone-800 bg-stone-950/40 text-stone-400 hover:border-stone-700 hover:text-stone-200'
-                      }`}
-                    >
-                      {label}
-                    </button>
-                  );
-                })}
-              </div>
-            </fieldset>
-
-            {/* Keep the primary visual choice reachable without discovering another tab. */}
-            {layoutModeSelector}
-
-            {/* Tree Scope Selection */}
-            <fieldset
-              className="space-y-2"
-              role="group"
-              aria-label={t.treeScope}
-              data-testid="poster-scope-group"
-            >
-              <legend className="text-xs font-medium text-stone-400 mb-1">{t.treeScope}</legend>
-              <div className="grid grid-cols-2 gap-2" data-testid="poster-scope-control">
-                {[
-                  { scope: 'ancestors' as const, label: t.ancestors },
-                  { scope: 'descendants' as const, label: t.descendants },
-                  { scope: 'selected-branch' as const, label: t.selectedBranch },
-                  { scope: 'full-tree' as const, label: t.fullTree },
-                ].map(({ scope, label }) => {
-                  const isSelected = currentState.scope === scope;
-                  return (
-                    <button
-                      key={scope}
-                      type="button"
-                      aria-pressed={isSelected}
-                      onClick={() => onSwitchScope?.(scope)}
-                      className={`px-2.5 py-2 rounded-lg border text-xs font-medium text-center transition-colors ${
-                        isSelected
-                          ? 'border-amber-500 bg-amber-500/10 text-amber-300'
-                          : 'border-stone-800 bg-stone-950/40 text-stone-400 hover:border-stone-700 hover:text-stone-200'
-                      }`}
-                    >
-                      {label}
-                    </button>
-                  );
-                })}
-              </div>
-            </fieldset>
-
-            {/* Active Preset Summary */}
-            <div className="p-3 rounded-xl border border-stone-800 bg-stone-950/40 flex items-center justify-between text-xs">
-              <span className="text-stone-400">
-                {isAr ? 'النمط الحالي:' : 'Active Preset:'} <strong className="text-amber-300 font-medium">{currentPresetDef?.displayName[isAr ? 'ar' : 'en']}</strong>
-              </span>
-              <button
-                type="button"
-                onClick={() => onResetPoster?.(currentState.activePresetId)}
-                className="text-amber-400 hover:underline font-medium text-xs"
-              >
-                {t.resetPoster}
-              </button>
-            </div>
           </div>
         )}
 
         {activeSection === 'tree-layout' && (
-          <div className="space-y-4">
+          <div className="order-2 space-y-4 border-t border-stone-800 pt-5">
             {/* Focal Root Selection */}
             {posterRootOptions.length > 0
               && currentState.scope !== 'full-tree'
@@ -797,13 +686,10 @@ export const VisualOutputConfigPanel: React.FC<VisualOutputConfigPanelProps> = (
         )}
 
         {activeSection === 'tree-layout' && (
-          <div className="space-y-4 border-t border-stone-800 pt-5">
-            {/* Layout Mode Selector (Tiered vs Focus Family vs Radial Generations) */}
-            {layoutModeSelector}
-
+          <div className="order-1 space-y-4">
             {/* Radial Generations Controls */}
             {currentState.productMode === 'detailed-poster' && currentState.layoutMode === 'radial-generations' && (
-              <div className="space-y-4 border-t border-stone-800 pt-3" data-testid="radial-controls-section">
+              <div className="space-y-4" data-testid="radial-controls-section">
                 {/* Radial Root Person Selector */}
                 {posterRootOptions.length > 0 && (
                   <div>
@@ -832,37 +718,6 @@ export const VisualOutputConfigPanel: React.FC<VisualOutputConfigPanelProps> = (
                     </select>
                   </div>
                 )}
-
-                {/* Radial Scope (Ancestors / Descendants) */}
-                <fieldset className="space-y-1.5" role="group" aria-label={t.treeScope}>
-                  <legend className="text-xs font-medium text-stone-400 mb-1">{t.treeScope}</legend>
-                  <div className="grid grid-cols-2 gap-2" data-testid="radial-scope-control">
-                    {[
-                      { scope: 'ancestors' as const, label: t.ancestors },
-                      { scope: 'descendants' as const, label: t.descendants },
-                    ].map(({ scope, label }) => {
-                      const isSelected = currentState.scope === scope;
-                      return (
-                        <button
-                          key={scope}
-                          type="button"
-                          aria-pressed={isSelected}
-                          onClick={() => {
-                            onSwitchScope?.(scope);
-                            onUpdateRadial?.({ lastRadialScope: scope });
-                          }}
-                          className={`px-3 py-2 rounded-lg border text-xs text-center transition-colors ${
-                            isSelected
-                              ? 'border-amber-500 bg-amber-500/10 text-amber-300 font-medium'
-                              : 'border-stone-800 bg-stone-950/40 text-stone-400 hover:border-stone-700'
-                          }`}
-                        >
-                          {label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </fieldset>
 
                 {/* Radial Geometry Span (360 vs 180) */}
                 <fieldset className="space-y-1.5" role="group" aria-label={isAr ? 'نطاق الدائرة' : 'Radial Geometry Span'}>
@@ -983,22 +838,11 @@ export const VisualOutputConfigPanel: React.FC<VisualOutputConfigPanelProps> = (
                   </div>
                 </fieldset>
 
-                {/* Label Orientation (Read-only Arabic Strategy) */}
-                <div>
-                  <label className="block text-xs font-medium text-stone-400 mb-1">
-                    {isAr ? 'توجيه الأسماء' : 'Label Orientation'}
-                  </label>
-                  <input
-                    type="text"
-                    readOnly
-                    value={isAr ? 'مستقيمة غير مشوهة (عربي قياسي)' : 'Straight Unwarped (Standard)'}
-                    className="w-full px-3 py-2 bg-stone-950/60 border border-stone-800 rounded-lg text-xs text-stone-400 cursor-not-allowed"
-                  />
-                </div>
               </div>
             )}
 
             {/* Direction */}
+            {currentState.layoutMode !== 'radial-generations' && (
             <fieldset className="space-y-1.5" role="group" aria-label={t.treeDirection}>
               <legend className="text-xs font-medium text-stone-400 mb-1">{t.treeDirection}</legend>
               <div className="grid grid-cols-2 gap-2" data-testid="poster-direction-control">
@@ -1022,6 +866,7 @@ export const VisualOutputConfigPanel: React.FC<VisualOutputConfigPanelProps> = (
                 ))}
               </div>
             </fieldset>
+            )}
 
             {/* Depth (Tiered Ancestors/Descendants) */}
             {currentState.layoutMode === 'tiered' && currentState.scope !== 'full-tree' && (
@@ -1154,6 +999,7 @@ export const VisualOutputConfigPanel: React.FC<VisualOutputConfigPanelProps> = (
             )}
 
             {/* Spacing Density */}
+            {currentState.layoutMode !== 'radial-generations' && (
             <fieldset className="space-y-1.5" role="group" aria-label={t.treeSpacing}>
               <legend className="text-xs font-medium text-stone-400 mb-1">{t.treeSpacing}</legend>
               <div className="grid grid-cols-2 gap-2">
@@ -1178,6 +1024,7 @@ export const VisualOutputConfigPanel: React.FC<VisualOutputConfigPanelProps> = (
                 ))}
               </div>
             </fieldset>
+            )}
 
             <div className="pt-2 flex justify-end">
               <button
@@ -1247,6 +1094,12 @@ export const VisualOutputConfigPanel: React.FC<VisualOutputConfigPanelProps> = (
               </fieldset>
             )}
 
+            <details className="group rounded-lg border border-stone-800 bg-stone-950/30">
+              <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between px-3 text-xs font-semibold text-stone-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500">
+                <span>{isAr ? 'تخصيص البطاقة' : 'Customize card'}</span>
+                <ChevronDown className="h-4 w-4 text-stone-500 transition-transform group-open:rotate-180" aria-hidden="true" />
+              </summary>
+              <div className="space-y-4 border-t border-stone-800 p-3">
             {/* Card Scale */}
             <fieldset className="space-y-1.5 border-t border-stone-800 pt-3" role="group" aria-label={t.cardScale}>
               <legend className="text-xs font-medium text-stone-400 mb-1">{t.cardScale}</legend>
@@ -1257,8 +1110,9 @@ export const VisualOutputConfigPanel: React.FC<VisualOutputConfigPanelProps> = (
                   { sc: 'large' as const, label: t.cardScaleLarge },
                 ].map(({ sc, label }) => (
                   <button
-                    key={sc}
-                    type="button"
+                      key={sc}
+                      type="button"
+                      aria-pressed={currentState.shared.cardScale === sc}
                     onClick={() => onUpdateCards?.({ cardScale: sc })}
                     className={`px-2.5 py-2 rounded-lg border text-xs text-center transition-colors ${
                       currentState.shared.cardScale === sc
@@ -1275,8 +1129,9 @@ export const VisualOutputConfigPanel: React.FC<VisualOutputConfigPanelProps> = (
             {/* Card Layout */}
             <fieldset className="space-y-1.5 border-t border-stone-800 pt-3" role="group" aria-label={t.cardLayout}>
               <legend className="text-xs font-medium text-stone-400 mb-1">{t.cardLayout}</legend>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 {[
+                  { cl: 'style-default' as const, label: isAr ? 'حسب التصميم' : 'Style default' },
                   { cl: 'standard' as const, label: t.cardLayoutStandard },
                   { cl: 'photo-focused' as const, label: t.cardLayoutPhotoHero },
                   { cl: 'text-minimal' as const, label: t.cardLayoutTextMinimal },
@@ -1379,6 +1234,9 @@ export const VisualOutputConfigPanel: React.FC<VisualOutputConfigPanelProps> = (
               </div>
             </fieldset>
 
+              </div>
+            </details>
+
             <div className="pt-2 flex justify-end">
               <button
                 type="button"
@@ -1421,6 +1279,12 @@ export const VisualOutputConfigPanel: React.FC<VisualOutputConfigPanelProps> = (
               </div>
             </fieldset>
 
+            <details className="group rounded-lg border border-stone-800 bg-stone-950/30">
+              <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between px-3 text-xs font-semibold text-stone-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500">
+                <span>{isAr ? 'تخصيص التصميم المتقدم' : 'Advanced design customization'}</span>
+                <ChevronDown className="h-4 w-4 text-stone-500 transition-transform group-open:rotate-180" aria-hidden="true" />
+              </summary>
+              <div className="space-y-4 border-t border-stone-800 p-3">
             {/* Connector Style */}
             <fieldset className="space-y-1.5 border-t border-stone-800 pt-3" role="group" aria-label={t.connectors} data-testid="poster-connector-style-controls">
               <legend className="text-xs font-medium text-stone-400 mb-1">{t.connectors}</legend>
@@ -1452,6 +1316,7 @@ export const VisualOutputConfigPanel: React.FC<VisualOutputConfigPanelProps> = (
               <legend className="text-xs font-medium text-stone-400 mb-1">{t.connectorPath}</legend>
               <div className="grid grid-cols-3 gap-2">
                 {[
+                  { cp: 'style-default' as const, label: isAr ? 'حسب التصميم' : 'Style default' },
                   { cp: 'curved' as const, label: t.connPathCurved },
                   { cp: 'straight' as const, label: t.connPathStraight },
                   { cp: 'angular' as const, label: t.connPathAngular },
@@ -1632,6 +1497,9 @@ export const VisualOutputConfigPanel: React.FC<VisualOutputConfigPanelProps> = (
                 ))}
               </div>
             </fieldset>
+
+              </div>
+            </details>
 
             <div className="pt-2 flex justify-end">
               <button

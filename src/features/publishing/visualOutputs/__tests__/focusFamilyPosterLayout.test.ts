@@ -7,10 +7,21 @@ import {
   validateFocusDepth,
 } from '../focusFamilyPosterLayout';
 import { createPosterDocumentSpec } from '../posterDocumentSpecs';
+import { getPosterCardVerticalOverflow } from '../posterCardContentLayout';
 import { renderPosterSceneToSvg } from '../studioPosterSvgRenderer';
 import { exportStudioPoster } from '../studioPosterExportAdapter';
 import type { SanitizedPreviewGraph } from '../previewSanitizerTypes';
 import type { PosterFocusDepth } from '../posterSceneTypes';
+
+function rectsOverlap(
+  a: { x: number; y: number; width: number; height: number },
+  b: { x: number; y: number; width: number; height: number }
+): boolean {
+  return a.x < b.x + b.width - 0.1
+    && a.x + a.width > b.x + 0.1
+    && a.y < b.y + b.height - 0.1
+    && a.y + a.height > b.y + 0.1;
+}
 
 function createMockGraph(): SanitizedPreviewGraph {
   return {
@@ -544,6 +555,50 @@ describe('Focus Family Layout Engine (Phase 2A Test Completeness & Capacity Guar
 
     expect(sceneA4.bounds.tree).not.toEqual(sceneA3.bounds.tree);
     expect(sceneA4.nodes[0]!.rect).not.toEqual(sceneA3.nodes[0]!.rect);
+  });
+
+  it('reserves overlapping avatar bounds in horizontal stacks and printable bounds', () => {
+    const scene = createPosterScene({
+      graph: createMockGraph(),
+      document: createPosterDocumentSpec('A3', 'landscape', 'balanced'),
+      content: {
+        definitionId: 'classic-ancestor-poster',
+        language: 'ar',
+        title: 'حدود الصورة المرئية',
+        scope: 'selected-root-focus',
+        generationCount: 3,
+        privacyMode: 'owner-full',
+      },
+      engineId: 'focus-family',
+      direction: 'horizontal',
+      focusOptions: {
+        focalPreviewId: 'preview-node-g2-focal',
+        ancestorDepth: 2,
+        descendantDepth: 2,
+        includeFocalSpouses: true,
+        includeFocalSiblings: true,
+      },
+    });
+    const overflow = getPosterCardVerticalOverflow(scene.nodes[0]!.rect.height, scene.cardPreset);
+    const visualRects = scene.nodes.map((node) => ({
+      x: node.rect.x,
+      y: node.rect.y - overflow.top,
+      width: node.rect.width,
+      height: node.rect.height + overflow.top + overflow.bottom,
+    }));
+
+    expect(overflow.top).toBeGreaterThan(0);
+    visualRects.forEach((rect) => {
+      expect(rect.y).toBeGreaterThanOrEqual(scene.bounds.tree.y - 0.1);
+      expect(rect.y + rect.height).toBeLessThanOrEqual(
+        scene.bounds.tree.y + scene.bounds.tree.height + 0.1
+      );
+    });
+    for (let i = 0; i < visualRects.length; i += 1) {
+      for (let j = i + 1; j < visualRects.length; j += 1) {
+        expect(rectsOverlap(visualRects[i]!, visualRects[j]!)).toBe(false);
+      }
+    }
   });
 
   it('distributes focus tiers across the printable main axis on large-format pages', () => {

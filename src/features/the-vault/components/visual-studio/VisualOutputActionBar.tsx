@@ -91,24 +91,18 @@ export const VisualOutputActionBar: React.FC<VisualOutputActionBarProps> = ({
         {exportStatusAnnouncement}
       </div>
 
-      <div className="flex flex-col gap-0.5 text-start min-w-0 w-full lg:max-w-md">
-        <span className="text-xs font-bold text-[var(--text-main)]">
-          {isAr ? 'تنزيل البوستر' : 'Download poster'}
-        </span>
-        <span className="text-[10px] font-medium text-[var(--text-muted)] whitespace-normal break-words">
-          {isAr
-            ? 'ملفات SVG وPNG وPDF من محرك الاستوديو بنفس التخطيط.'
-            : 'SVG, PNG, and PDF from the same Studio renderer and layout.'}
-        </span>
-        <span
-          id="poster-format-guidance"
-          className="text-[10px] font-semibold leading-relaxed text-emerald-700 dark:text-emerald-300 whitespace-normal break-words"
-          data-testid="poster-format-guidance"
-        >
-          {isAr
-            ? 'اختر SVG للطباعة الكبيرة والدقة المتجهة؛ PDF نسخة نقطية من نفس التصميم، وPNG صورة عالية الدقة.'
-            : 'Choose SVG for large-format vector printing; PDF is a raster copy of the same design, and PNG is a high-resolution image.'}
-        </span>
+      <span
+        id="poster-format-guidance"
+        className="sr-only"
+        data-testid="poster-format-guidance"
+      >
+        {isAr
+          ? 'SVG للطباعة المتجهة، PNG للصورة عالية الدقة، وPDF للطباعة المباشرة.'
+          : 'SVG for vector printing, PNG for a high-resolution image, and PDF for direct printing.'}
+      </span>
+
+      {(capacityErrorGuidance || isPrintBlocked || hasPrintWarning) && (
+      <div className="flex min-w-0 w-full flex-col gap-1 text-start lg:max-w-md">
         {capacityErrorGuidance && (
           <span
             className="text-[10px] font-semibold text-rose-600 dark:text-rose-400 whitespace-normal break-words"
@@ -189,6 +183,7 @@ export const VisualOutputActionBar: React.FC<VisualOutputActionBarProps> = ({
           </div>
         )}
       </div>
+      )}
       <div role="group" aria-label={isAr ? 'إجراءات التنزيل والتصدير' : 'Download and export actions'} className="grid w-full grid-cols-2 gap-2 sm:grid-cols-2 lg:flex lg:flex-wrap lg:justify-end min-w-0 max-w-full" data-testid="visual-studio-action-group">
         {branchCollectionBlocked && (
           <span

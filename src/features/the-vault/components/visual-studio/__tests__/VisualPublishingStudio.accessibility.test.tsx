@@ -5,6 +5,7 @@ import { getVisualOutputDefinition, createInitialPosterDesignState } from '../..
 import { VisualPublishingStudio } from '../VisualPublishingStudio';
 import { VisualOutputActionBar } from '../VisualOutputActionBar';
 import { VisualOutputConfigPanel } from '../VisualOutputConfigPanel';
+import { VisualOutputDiagramSelector } from '../VisualOutputDiagramSelector';
 
 const posterCanvasContext = {
   drawImage: vi.fn(),
@@ -141,16 +142,26 @@ describe('VisualPublishingStudio Accessibility & Interaction Suite', () => {
   });
 
   it('declares toggle, segmented button, and checkbox states using aria-pressed and checked', () => {
+    const state = createInitialPosterDesignState('classic-heritage');
     render(
-      <VisualOutputConfigPanel
-        language="ar"
-        selectedDefinitionId="classic-ancestor-poster"
-        selectedDefinition={classicDefinition}
-        definitions={[classicDefinition]}
-        state={createInitialPosterDesignState('classic-heritage')}
-        posterRootOptions={[{ token: 'father', label: 'محمد بن علي' }]}
-        selectedPosterRootToken="father"
-      />
+      <>
+        <VisualOutputDiagramSelector
+          language="ar"
+          state={state}
+          onSelectDiagramType={vi.fn()}
+          onSwitchScope={vi.fn()}
+          onUpdateRadial={vi.fn()}
+        />
+        <VisualOutputConfigPanel
+          language="ar"
+          selectedDefinitionId="classic-ancestor-poster"
+          selectedDefinition={classicDefinition}
+          definitions={[classicDefinition]}
+          state={state}
+          posterRootOptions={[{ token: 'father', label: 'محمد بن علي' }]}
+          selectedPosterRootToken="father"
+        />
+      </>
     );
 
     const ancestorsBtn = screen.getByRole('button', { name: 'الأسلاف' });
@@ -184,9 +195,8 @@ describe('VisualPublishingStudio Accessibility & Interaction Suite', () => {
       />
     );
 
-    const templateGroup = screen.getByTestId('visual-studio-template-group');
-    expect(templateGroup).toHaveAttribute('role', 'group');
-    expect(templateGroup).toHaveAccessibleName(/اختر نوع المخرج/i);
+    const diagramGroup = screen.getByRole('group', { name: /كيف تريد عرض عائلتك/i });
+    expect(diagramGroup).toBeInTheDocument();
 
     const scopeGroup = screen.getByTestId('poster-scope-group');
     expect(scopeGroup).toHaveAttribute('role', 'group');

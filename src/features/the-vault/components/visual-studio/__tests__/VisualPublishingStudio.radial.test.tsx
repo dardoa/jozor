@@ -72,17 +72,14 @@ describe('VisualPublishingStudio Radial Integration Suite', () => {
   });
   vi.setConfig({ testTimeout: 15000 });
 
-  it('makes Radial directly reachable from Quick Setup after leaving Full-tree Overview', async () => {
+  it('keeps every diagram type directly reachable from the persistent diagram selector', async () => {
     const user = userEvent.setup();
     render(
       <VisualPublishingStudio language="en" previewSourceMode="fixture" posterSvgResources={embeddedResources} />
     );
 
-    await user.click(screen.getByRole('button', { name: 'Full-tree Overview' }));
-    expect(screen.getByRole('button', { name: 'Full-tree Overview' })).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.queryByRole('button', { name: 'Radial / Fan' })).not.toBeInTheDocument();
-
-    await user.click(screen.getByRole('button', { name: 'Detailed Poster' }));
+    await user.click(screen.getByRole('button', { name: 'Full Family Tree' }));
+    expect(screen.getByRole('button', { name: 'Full Family Tree' })).toHaveAttribute('aria-pressed', 'true');
     const radialButton = screen.getByRole('button', { name: 'Radial / Fan' });
     expect(radialButton).toBeVisible();
 
@@ -96,8 +93,8 @@ describe('VisualPublishingStudio Radial Integration Suite', () => {
     await user.click(screen.getByRole('button', { name: 'Full Family Tree' }));
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Full-tree Overview' })).toHaveAttribute('aria-pressed', 'true');
-      expect(screen.queryByRole('button', { name: 'Radial / Fan' })).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Full Family Tree' })).toHaveAttribute('aria-pressed', 'true');
+      expect(screen.getByRole('button', { name: 'Radial / Fan' })).toBeVisible();
       expect(document.querySelector('svg[data-poster-layout-engine="full-tree-overview"]')).toBeInTheDocument();
       expect(screen.queryByTestId('visual-studio-unsupported-notice')).not.toBeInTheDocument();
     });
@@ -132,8 +129,8 @@ describe('VisualPublishingStudio Radial Integration Suite', () => {
       expect(document.querySelector('svg[data-poster-layout-engine="radial-generations"]')).toBeInTheDocument();
     });
     expect(
-      within(screen.getByTestId('visual-studio-preview-pane')).getByRole('heading', {
-        name: 'شجرة الأسلاف الشعاعية',
+      within(screen.getByTestId('visual-studio-preview-pane')).getByRole('img', {
+        name: 'معاينة شجرة الأسلاف الشعاعية',
       })
     ).toBeInTheDocument();
 
@@ -153,7 +150,7 @@ describe('VisualPublishingStudio Radial Integration Suite', () => {
     expect(rootSelect).toBeInTheDocument();
 
     // Verify token values in select are opaque tokens (session-token-...)
-    const options = screen.getAllByRole('option') as HTMLOptionElement[];
+    const options = within(rootSelect).getAllByRole('option') as HTMLOptionElement[];
     expect(options.length).toBeGreaterThan(0);
     expect(options[0].value).toMatch(/^session-token-[a-z0-9-]+$/i);
     const selectedToken = options[1]?.value ?? options[0].value;
@@ -196,10 +193,10 @@ describe('VisualPublishingStudio Radial Integration Suite', () => {
     const enLayoutTab = screen.getByRole('tab', { name: 'Tree & Layout' });
     await user.click(enLayoutTab);
 
-    const focusBtn = screen.getByRole('button', { name: /Focus Family/i });
+    const focusBtn = screen.getByRole('button', { name: /Around a Person/i });
     await user.click(focusBtn);
 
-    const tieredBtn = screen.getByRole('button', { name: /Tiered/i });
+    const tieredBtn = screen.getByRole('button', { name: /Generation Tree/i });
     await user.click(tieredBtn);
 
     // Return to Radial
@@ -232,13 +229,13 @@ describe('VisualPublishingStudio Radial Integration Suite', () => {
     const descBtn = within(screen.getByTestId('radial-scope-control')).getByRole('button', { name: /الأحفاد/i });
     await user.click(descBtn);
     expect(
-      within(screen.getByTestId('visual-studio-preview-pane')).getByRole('heading', {
-        name: 'شجرة الأحفاد الشعاعية',
+      within(screen.getByTestId('visual-studio-preview-pane')).getByRole('img', {
+        name: 'معاينة شجرة الأحفاد الشعاعية',
       })
     ).toBeInTheDocument();
 
     // Switch back to Tiered layout
-    const tieredBtn = screen.getByRole('button', { name: /متدرج/i });
+    const tieredBtn = screen.getByRole('button', { name: /شجرة أجيال/i });
     await user.click(tieredBtn);
 
     // Switch back to Radial layout and assert scope restored to Descendants

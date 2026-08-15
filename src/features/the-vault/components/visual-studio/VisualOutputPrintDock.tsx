@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import type {
   PosterDesignState,
+  PosterProductMode,
   ProductModeSettingsBucket,
   SharedPosterSettings,
 } from '../../../publishing';
@@ -19,6 +20,7 @@ import {
 
 interface VisualOutputPrintDockProps extends VisualOutputActionBarProps {
   state: PosterDesignState;
+  onSwitchProductMode?: (mode: PosterProductMode) => void;
   onUpdatePrint: (
     updates: Partial<SharedPosterSettings> & Partial<ProductModeSettingsBucket>
   ) => void;
@@ -28,6 +30,7 @@ const PAGE_SIZES = ['A4', 'A3', 'A2', 'A1', 'A0'] as const;
 
 export const VisualOutputPrintDock: React.FC<VisualOutputPrintDockProps> = ({
   state,
+  onSwitchProductMode,
   onUpdatePrint,
   quality,
   ...actionBarProps
@@ -152,6 +155,49 @@ export const VisualOutputPrintDock: React.FC<VisualOutputPrintDockProps> = ({
                 </label>
               ))}
             </div>
+          )}
+
+          {state.scope === 'full-tree' && onSwitchProductMode && (
+            <fieldset
+              className="min-w-0"
+              role="group"
+              aria-label={isAr ? 'طريقة إخراج الشجرة الكاملة' : 'Full-tree output method'}
+              data-testid="poster-output-assembly-controls"
+            >
+              <legend className="mb-1 text-[10px] font-semibold text-[var(--text-muted)]">
+                {isAr ? 'طريقة الإخراج' : 'Output method'}
+              </legend>
+              <div className="flex flex-wrap gap-1">
+                {([
+                  {
+                    value: 'full-tree-overview' as const,
+                    label: isAr ? 'لوحة واحدة' : 'Single poster',
+                  },
+                  {
+                    value: 'branch-collection' as const,
+                    label: isAr ? 'مجموعة الفروع' : 'Branch collection',
+                  },
+                  {
+                    value: 'tiled-wall' as const,
+                    label: isAr ? 'لوحة مقسمة' : 'Tiled wall',
+                  },
+                ] satisfies ReadonlyArray<{ value: PosterProductMode; label: string }>).map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    aria-pressed={state.productMode === option.value}
+                    onClick={() => onSwitchProductMode(option.value)}
+                    className={`min-h-8 rounded-md border px-2.5 text-[11px] font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary-500)] ${
+                      state.productMode === option.value
+                        ? 'border-[var(--primary-600)] bg-[var(--primary-600)] text-white'
+                        : 'border-[var(--border-soft)] bg-[var(--surface-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-main)]'
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
           )}
         </div>
 

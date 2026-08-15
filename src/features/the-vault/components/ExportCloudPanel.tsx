@@ -874,16 +874,7 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
           <div className="mb-6">
             <VisualPublishingStudio language={language} previewSourceMode="store" />
           </div>
-          <div data-testid="visual-actual-export-section" className="pt-2 border-t border-[var(--border-soft)]/60">
-            <h5 className="text-sm font-bold text-[var(--text-main)]">
-              {language === 'ar' ? '\u0644\u0642\u0637\u0629 \u0627\u0644\u0639\u0631\u0636 \u0627\u0644\u062d\u0627\u0644\u064a' : 'Current view capture'}
-            </h5>
-            <p className="mt-1 text-[11px] leading-relaxed text-[var(--text-muted)]">
-              {language === 'ar'
-                ? '\u0646\u0632\u0651\u0644 \u0635\u0648\u0631\u0629 \u0644\u0644\u0634\u062c\u0631\u0629 \u0643\u0645\u0627 \u062a\u0638\u0647\u0631 \u0627\u0644\u0622\u0646 \u0641\u064a \u0645\u0633\u0627\u062d\u0629 \u0627\u0644\u0639\u0645\u0644. \u0647\u0630\u0647 \u0627\u0644\u0644\u0642\u0637\u0629 \u0645\u0633\u062a\u0642\u0644\u0629 \u0639\u0646 \u062a\u0635\u0645\u064a\u0645 \u0627\u0644\u0628\u0648\u0633\u062a\u0631 \u0623\u0639\u0644\u0627\u0647.'
-                : 'Download an image of the tree exactly as it appears in the current workspace. This capture is separate from the poster design above.'}
-            </p>
-          </div>
+          <div data-testid="visual-actual-export-section" className="pt-2 border-t border-[var(--border-soft)]/60" />
 
           {SHOW_LEGACY_POSTER_EXPORT_CARDS && (
           <>
@@ -1102,9 +1093,6 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                   {treeSnapshotDef?.description[language] || (language === 'ar'
                     ? 'تصدير لقطة عالية الدقة للمساحة المعروضة حالياً.'
                     : 'A high-fidelity export of your current workspace viewport.')}
-                </p>
-                <p className="mt-1 text-[10px] font-medium text-[var(--text-secondary)]">
-                  {language === 'ar' ? 'يعتمد على عرض الشجرة الحالي' : 'Uses the current tree view'}
                 </p>
               </div>
             </div>

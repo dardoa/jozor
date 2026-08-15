@@ -51,7 +51,6 @@ export const VisualOutputPreviewPane: React.FC<VisualOutputPreviewPaneProps> = (
   const displayName = usesScenePresentation
     ? presentationTitle || posterScene?.content.title || ''
     : selectedDefinition?.displayName[language] || posterScene?.content.title || '';
-  const description = selectedDefinition?.description[language] || '';
   const previewAlt = usesScenePresentation && displayName
     ? (isAr ? `معاينة ${displayName}` : `${displayName} preview`)
     : selectedDefinition?.previewAsset?.alt[language] || '';
@@ -118,11 +117,11 @@ export const VisualOutputPreviewPane: React.FC<VisualOutputPreviewPaneProps> = (
   return (
     <>
     <div
-      className="flex h-full min-h-[68vh] flex-col items-center gap-3 bg-[var(--surface-subtle)] p-3 text-center select-none sm:p-5"
+      className="flex h-full min-h-[46vh] flex-col items-center gap-2 bg-[var(--surface-subtle)] p-3 text-center select-none sm:min-h-[58vh] sm:p-4 lg:min-h-[62vh]"
       data-testid="visual-studio-preview-pane"
     >
       <div
-        className="relative flex min-h-[430px] w-full flex-1 items-center justify-center overflow-auto bg-[var(--surface-panel)] p-3 md:min-h-[560px] lg:min-h-[620px] lg:p-6"
+        className="relative flex min-h-[300px] w-full flex-1 items-center justify-center overflow-auto bg-[var(--surface-panel)] p-3 md:min-h-[480px] lg:min-h-[560px] lg:p-5"
         data-testid="visual-preview-frame"
         aria-label={previewAlt}
       >
@@ -239,13 +238,6 @@ export const VisualOutputPreviewPane: React.FC<VisualOutputPreviewPaneProps> = (
       </div>
 
       <div className="flex shrink-0 flex-col gap-1 text-center">
-        <h5 className="text-sm font-bold text-[var(--text-main)]">
-          {displayName}
-        </h5>
-        <p className="text-[11px] text-[var(--text-secondary)] max-w-[360px] leading-normal font-medium mx-auto">
-          {description}
-        </p>
-
         {previewModel && (
           <div className="mt-2 flex flex-col items-center gap-1.5">
             <span className="text-[10px] font-semibold text-[var(--text-muted)] select-none">

@@ -1,7 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState, startTransition } from 'react';
 import { VisualOutputReadinessNotice } from './VisualOutputReadinessNotice';
 import { VisualOutputPreviewPane } from './VisualOutputPreviewPane';
-import { VisualOutputConfigPanel } from './VisualOutputConfigPanel';
+import {
+  VisualOutputConfigPanel,
+  type StudioWorkspaceSectionId,
+} from './VisualOutputConfigPanel';
+import { VisualOutputDiagramSelector } from './VisualOutputDiagramSelector';
 import { VisualOutputPrintDock } from './VisualOutputPrintDock';
 import { useVisualStudioStorePreviewSource } from './useVisualStudioStorePreviewSource';
 import { usePosterDesignState } from './usePosterDesignState';
@@ -205,7 +209,8 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
   const studioDesign = usePosterDesignState('classic-heritage');
 
   const [exportingFormat, setExportingFormat] = useState<StudioPosterExportFormat | 'branch-collection' | 'tiled-wall' | undefined>(undefined);
-  const [isMobilePreviewExpanded, setIsMobilePreviewExpanded] = useState(false);
+  const [isMobilePreviewExpanded, setIsMobilePreviewExpanded] = useState(true);
+  const [activeConfigSection, setActiveConfigSection] = useState<StudioWorkspaceSectionId>('quick-setup');
 
   const selectedDefinition = useMemo(() => {
     if (studioDesign.state.activePresetId === 'dense-genealogy') {
@@ -291,6 +296,19 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
     );
   }, [completeRawSourceGraph, language, posterTokenCatalogSession, studioDesign.state.shared.privacyMode]);
 
+  const ownerSelectionTokenCatalog = useMemo(() => {
+    if (!completeRawSourceGraph?.nodes?.length) return undefined;
+    return posterTokenCatalogSession.createCatalog(
+      completeRawSourceGraph.nodes,
+      {
+        language,
+        privacyMode: 'owner-full',
+        audience: 'owner-control',
+      },
+      completeRawSourceGraph.defaultRawId
+    );
+  }, [completeRawSourceGraph, language, posterTokenCatalogSession]);
+
   const selectedPosterRootToken = useMemo(() => {
     const currentToken = studioDesign.state.shared.selectedPosterRootToken;
     return posterTokenCatalog?.hasToken(currentToken)
@@ -369,8 +387,8 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
   }, [posterTokenCatalog, studioDesign.state.focus.focalPersonToken]);
 
   const posterRootOptions = useMemo(() => {
-    return posterTokenCatalog?.tokens ?? [];
-  }, [posterTokenCatalog]);
+    return ownerSelectionTokenCatalog?.tokens ?? [];
+  }, [ownerSelectionTokenCatalog]);
 
   const focusSelectionResult = useMemo(() => {
     if (studioDesign.state.layoutMode !== 'focus-family' || !completeRawSourceGraph?.nodes?.length) {
@@ -948,63 +966,89 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
             : 'Focus layout capacity exceeded. Reduce depth or choose a larger page.'))
     : undefined;
 
+  const printDock = (
+    <VisualOutputPrintDock
+      language={language}
+      state={studioDesign.state}
+      onSwitchProductMode={studioDesign.switchProductMode}
+      onUpdatePrint={studioDesign.updatePrint}
+      selectedDefinition={mappingResult.supported ? selectedDefinition : undefined}
+      exportingFormat={exportingFormat}
+      quality={posterScene?.quality}
+      branchCollectionAvailable={Boolean(branchPosterCollection?.itemCount && branchCollectionBlockingWarnings.length === 0)}
+      branchCollectionBlocked={Boolean(branchPosterCollection?.itemCount && branchCollectionBlockingWarnings.length > 0)}
+      tiledWallAvailable={Boolean(tiledWallPosterPlan && tiledWallPosterPlan.quality.status !== 'blocked')}
+      isBlocked={Boolean(posterSceneEvaluation.capacityError)}
+      capacityErrorGuidance={capacityErrorGuidance}
+      onExportSvg={mappingResult.supported ? () => void handleExport('svg') : undefined}
+      onExportPng={mappingResult.supported ? () => void handleExport('png') : undefined}
+      onExportPdf={mappingResult.supported ? () => void handleExport('pdf') : undefined}
+      onExportBranchCollection={mappingResult.supported ? () => void handleBranchCollectionExport() : undefined}
+      onExportTiledWall={mappingResult.supported ? () => void handleTiledWallExport() : undefined}
+      onUseDensePreset={selectedDefinition.id === 'dense-genealogy-poster'
+        ? undefined
+        : () => studioDesign.selectPreset('dense-genealogy')}
+      onUseLargestPage={mappingResult.posterOptions?.size === 'A0'
+        ? undefined
+        : () => studioDesign.updatePrint({ size: 'A0', orientation: 'landscape' })}
+      onSetUpLargeTreeProducts={isFullTreeScope
+        ? undefined
+        : () => {
+            studioDesign.switchProductMode('full-tree-overview');
+            studioDesign.updatePrint({ size: 'A0', orientation: 'landscape' });
+          }}
+    />
+  );
+
   return (
     <div className="space-y-4" data-testid="visual-publishing-studio">
-      <div className="flex flex-col gap-1 text-start min-w-0">
-        <h4 className="text-[16px] font-bold tracking-tight text-[var(--text-main)]">
-          {isAr ? 'معاينة المخرجات البصرية' : 'Visual outputs preview'}
-        </h4>
-        <p className="text-[11px] text-[var(--text-muted)] leading-relaxed">
-          {isAr
-            ? 'اختر نوع المخرج وخصص البوستر قبل تنزيله بصيغ SVG أو PNG أو PDF. تبقى الإجراءات الحالية أدناه للمخرجات الأخرى.'
-            : 'Choose an output type and customize the poster before downloading SVG, PNG, or PDF. Current actions below remain available for other outputs.'}
-        </p>
-      </div>
-
       <VisualOutputReadinessNotice
         language={language}
         status={mappingResult.supported ? 'supported' : 'unsupported'}
         reason={mappingResult.reason}
       />
 
+      <VisualOutputDiagramSelector
+        language={language}
+        state={studioDesign.state}
+        onSelectDiagramType={(mode) => {
+          studioDesign.selectDiagramType(
+            mode,
+            mode === 'focus-family' ? selectedFocalPersonToken : undefined
+          );
+          setActiveConfigSection('tree-layout');
+        }}
+        onSwitchScope={studioDesign.switchScope}
+        onUpdateRadial={studioDesign.updateRadial}
+      />
+
       <div className="overflow-hidden rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)]">
-        <div className="grid min-h-[68vh] items-stretch lg:grid-cols-[minmax(0,1fr)_300px]" dir="ltr">
+        <div className="grid min-h-[68vh] items-stretch lg:grid-cols-[minmax(0,1fr)_320px]" dir="ltr">
         {/* Preview Workspace Area - sticky on desktop, expandable on mobile */}
         <div
-          className="min-w-0 bg-[var(--surface-subtle)]"
+          className="flex min-w-0 flex-col bg-[var(--surface-subtle)]"
           data-testid="visual-studio-preview-workspace"
           dir={isAr ? 'rtl' : 'ltr'}
         >
-          {/* Mobile Expandable Toggle */}
-          <div className="block lg:hidden mb-3">
+          {/* Mobile preview toggle controls the same canonical preview used on desktop. */}
+          <div className="block border-b border-[var(--border-soft)] p-2 lg:hidden">
             <button
               type="button"
               data-testid="visual-studio-mobile-preview-toggle"
               aria-expanded={isMobilePreviewExpanded}
               aria-controls="mobile-preview-container"
               onClick={() => setIsMobilePreviewExpanded(!isMobilePreviewExpanded)}
-              className="w-full flex items-center justify-between px-3.5 py-2 bg-stone-900 border border-stone-800 rounded-xl text-xs font-medium text-stone-200 hover:bg-stone-800/60"
+              className="flex w-full items-center justify-between rounded-md border border-stone-800 bg-stone-900 px-3.5 py-2 text-xs font-medium text-stone-200 hover:bg-stone-800/60"
             >
               <span>{isAr ? 'معاينة البوستر' : 'Poster Preview'}</span>
               <span className="text-amber-400 font-bold">{isMobilePreviewExpanded ? '▲' : '▼'}</span>
             </button>
-            {isMobilePreviewExpanded && (
-              <div id="mobile-preview-container" className="mt-2 max-h-[70vh] overflow-y-auto rounded-lg border border-stone-800">
-                <VisualOutputPreviewPane
-                  language={language}
-                  selectedDefinition={selectedDefinition}
-                  previewModel={previewModel as unknown as VisualPreviewModel}
-                  posterScene={posterScene}
-                  posterSvgResources={posterSvgResources}
-                  unavailableReason={capacityErrorGuidance}
-                  presentationTitle={previewPresentationTitle}
-                />
-              </div>
-            )}
           </div>
 
-          {/* Desktop Always-Visible Preview */}
-          <div className="hidden h-full lg:block">
+          <div
+            id="mobile-preview-container"
+            className={`${isMobilePreviewExpanded ? 'block' : 'hidden'} max-h-[70vh] flex-1 overflow-y-auto lg:block lg:max-h-none lg:overflow-visible`}
+          >
             <VisualOutputPreviewPane
               language={language}
               selectedDefinition={selectedDefinition}
@@ -1015,11 +1059,12 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
               presentationTitle={previewPresentationTitle}
             />
           </div>
+          {printDock}
         </div>
 
         {/* Settings Workspace Panel */}
         <aside
-          className="min-w-0 border-l border-[var(--border-soft)]"
+          className="min-w-0 self-start border-l border-[var(--border-soft)]"
           dir={isAr ? 'rtl' : 'ltr'}
         >
           <VisualOutputConfigPanel
@@ -1033,12 +1078,6 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
             onUpdateLayout={studioDesign.updateLayout}
             onUpdateCards={studioDesign.updateCards}
             onUpdateAppearance={studioDesign.updateAppearance}
-            onSwitchProductMode={studioDesign.switchProductMode}
-            onSwitchLayoutMode={(mode) => studioDesign.switchLayoutMode(
-              mode,
-              mode === 'focus-family' ? selectedFocalPersonToken : undefined
-            )}
-            onSwitchScope={studioDesign.switchScope}
             onUpdateFocus={studioDesign.updateFocus}
             onUpdateRadial={studioDesign.updateRadial}
             onResetSection={studioDesign.resetSection}
@@ -1054,40 +1093,12 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
             onPosterTitleChange={setUserPosterTitle}
             posterSubtitle={userPosterSubtitle}
             onPosterSubtitleChange={setUserPosterSubtitle}
+            activeSection={activeConfigSection}
+            onActiveSectionChange={setActiveConfigSection}
           />
         </aside>
         </div>
 
-      <VisualOutputPrintDock
-        language={language}
-        state={studioDesign.state}
-        onUpdatePrint={studioDesign.updatePrint}
-        selectedDefinition={mappingResult.supported ? selectedDefinition : undefined}
-        exportingFormat={exportingFormat}
-        quality={posterScene?.quality}
-        branchCollectionAvailable={Boolean(branchPosterCollection?.itemCount && branchCollectionBlockingWarnings.length === 0)}
-        branchCollectionBlocked={Boolean(branchPosterCollection?.itemCount && branchCollectionBlockingWarnings.length > 0)}
-        tiledWallAvailable={Boolean(tiledWallPosterPlan && tiledWallPosterPlan.quality.status !== 'blocked')}
-        isBlocked={Boolean(posterSceneEvaluation.capacityError)}
-        capacityErrorGuidance={capacityErrorGuidance}
-        onExportSvg={mappingResult.supported ? () => void handleExport('svg') : undefined}
-        onExportPng={mappingResult.supported ? () => void handleExport('png') : undefined}
-        onExportPdf={mappingResult.supported ? () => void handleExport('pdf') : undefined}
-        onExportBranchCollection={mappingResult.supported ? () => void handleBranchCollectionExport() : undefined}
-        onExportTiledWall={mappingResult.supported ? () => void handleTiledWallExport() : undefined}
-        onUseDensePreset={selectedDefinition.id === 'dense-genealogy-poster'
-          ? undefined
-          : () => studioDesign.selectPreset('dense-genealogy')}
-        onUseLargestPage={mappingResult.posterOptions?.size === 'A0'
-          ? undefined
-          : () => studioDesign.updatePrint({ size: 'A0', orientation: 'landscape' })}
-        onSetUpLargeTreeProducts={isFullTreeScope
-          ? undefined
-          : () => {
-              studioDesign.switchProductMode('full-tree-overview');
-              studioDesign.updatePrint({ size: 'A0', orientation: 'landscape' });
-            }}
-      />
       </div>
     </div>
   );

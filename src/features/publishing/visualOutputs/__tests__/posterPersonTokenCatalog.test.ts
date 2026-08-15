@@ -18,6 +18,45 @@ describe('posterPersonTokenCatalog', () => {
     expect(fullEnglish.tokens[0].label).toBe('Root Person');
   });
 
+  it('reveals private names only for the owner selection control while preserving opaque tokens', () => {
+    const session = createPosterPersonTokenCatalogSession('owner-control');
+    const source = [
+      { rawId: 'private-person', displayName: 'Private Person', isPrivate: true },
+    ] as const;
+    const ownerCatalog = session.createCatalog(
+      source,
+      { language: 'en', privacyMode: 'masked', audience: 'owner-control' }
+    );
+    const posterCatalog = session.createCatalog(
+      source,
+      { language: 'en', privacyMode: 'masked' }
+    );
+
+    expect(ownerCatalog.tokens[0]).toEqual({
+      token: expect.stringMatching(/^session-token-/),
+      label: 'Private Person',
+    });
+    expect(posterCatalog.tokens[0]).toEqual({
+      token: ownerCatalog.tokens[0].token,
+      label: 'Masked person',
+    });
+  });
+
+  it('adds available life years to owner-control labels to distinguish duplicate names', () => {
+    const catalog = createPosterPersonTokenCatalogSession('owner-years').createCatalog(
+      [
+        { rawId: 'person-a', displayName: 'Same Name', birthDate: '1950-05-02', deathDate: '2020-01-01' },
+        { rawId: 'person-b', displayName: 'Same Name', birthDate: '1980-03-04', isLiving: true },
+      ],
+      { language: 'en', privacyMode: 'masked', audience: 'owner-control' }
+    );
+
+    expect(catalog.tokens.map(({ label }) => label)).toEqual([
+      'Same Name (1950\u20132020)',
+      'Same Name (1980\u2013)',
+    ]);
+  });
+
   it('isolates identical raw IDs across separate tree sessions', () => {
     const first = createPosterPersonTokenCatalogSession('tree-a').createCatalog(
       PEOPLE,

@@ -147,6 +147,16 @@ const renderStudio = (
 const selectTab = (name: string | RegExp) => {
   const matcher = typeof name === 'string' && name === 'Print' ? /Print/i : name;
   fireEvent.click(screen.getByRole('tab', { name: matcher }));
+
+  const advancedSummary = typeof name === 'string' && name === 'Cards'
+    ? screen.queryByText('Customize card')
+    : typeof name === 'string' && name === 'Appearance'
+      ? screen.queryByText('Advanced design customization')
+      : null;
+  const details = advancedSummary?.closest('details');
+  if (details && !details.open) {
+    fireEvent.click(advancedSummary!);
+  }
 };
 
 const readBlobAsText = (blob: Blob): Promise<string> => new Promise((resolve, reject) => {
@@ -170,8 +180,8 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
   it('renders visual studio preview pane and preset-first workspace header', () => {
     renderStudio();
 
-    expect(screen.getByText('Visual outputs preview')).toBeInTheDocument();
-    expect(screen.getByText(/Choose an output type and customize the poster/i)).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: 'How do you want to show your family?' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Generation Tree' })).toHaveAttribute('aria-pressed', 'true');
 
     const previewPane = screen.getByTestId('visual-studio-preview-pane');
     expect(previewPane).toBeInTheDocument();
@@ -727,8 +737,7 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
   it('renders Arabic owner-review copy and localized preview summary', () => {
     renderStudio({ language: 'ar' });
 
-    expect(screen.getByText('معاينة المخرجات البصرية')).toBeInTheDocument();
-    expect(screen.getByTestId('visual-studio-readiness-notice')).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: 'كيف تريد عرض عائلتك؟' })).toBeInTheDocument();
   });
 
   it('exposes three poster directions and keeps Snapshot as a separate product', () => {
@@ -772,7 +781,6 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Descendants' }));
 
     const previewPane = screen.getByTestId('visual-studio-preview-pane');
-    expect(within(previewPane).getByRole('heading', { name: 'Descendant Tree' })).toBeInTheDocument();
     expect(within(previewPane).getByRole('img', { name: 'Descendant Tree preview' })).toBeInTheDocument();
     expect(within(previewPane).getByText(/People visible:/i)).toBeInTheDocument();
   });
@@ -840,10 +848,11 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
   it('switches to the full-tree overview scene and removes the generation limiter', () => {
     renderStudio();
 
-    fireEvent.click(screen.getByRole('button', { name: /Full-tree Overview/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Full Family Tree' }));
 
     const previewPane = screen.getByTestId('visual-studio-preview-pane');
     expect(within(previewPane).getByText(/People visible:/i)).toBeInTheDocument();
+    expect(screen.getByTestId('poster-output-assembly-controls')).toBeInTheDocument();
   });
 
   it('routes a blocked single sheet into the large-tree product setup without downloading', () => {
@@ -858,6 +867,7 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
   it('offers a downloadable branch collection only for the full-tree scope', async () => {
     renderStudio();
 
+    fireEvent.click(screen.getByRole('button', { name: 'Full Family Tree' }));
     fireEvent.click(screen.getByRole('button', { name: /Branch Collection/i }));
     expect(screen.getByTestId('visual-studio-print-dock')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'A0' }));
@@ -869,7 +879,8 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
   it('configures and downloads a tiled wall poster only for the full-tree scope', async () => {
     renderStudio();
 
-    fireEvent.click(screen.getByRole('button', { name: /Tiled Wall Poster/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Full Family Tree' }));
+    fireEvent.click(screen.getByRole('button', { name: /Tiled wall/i }));
 
     const actionBar = screen.getByTestId('visual-studio-action-bar');
     const tiledBtn = within(actionBar).getByRole('button', { name: /Download tiled wall poster/i });
@@ -889,7 +900,8 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
   it('applies an optional lower-cost tiled grid without changing other poster settings', () => {
     renderStudio();
 
-    fireEvent.click(screen.getByRole('button', { name: /Tiled Wall Poster/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Full Family Tree' }));
+    fireEvent.click(screen.getByRole('button', { name: /Tiled wall/i }));
     expect(screen.getByTestId('visual-studio-print-dock')).toBeInTheDocument();
 
     const rowsSelect = screen.getByRole('combobox', { name: 'Grid Rows (Sheets)' });
@@ -1035,6 +1047,19 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
     selectTab('Tree & Layout');
     const rootSelector = screen.getByRole('combobox', { name: 'Focal Person (Root)' }) as HTMLSelectElement;
     expect(rootSelector.value).toContain('session-token-');
+    expect(Array.from(rootSelector.options).map((option) => option.textContent)).toEqual(
+      expect.arrayContaining([
+        'Living Root (1980\u2013)',
+        'Public Father (1950\u20132020)',
+        'Private Mother (1952\u20132018)',
+      ])
+    );
+    expect(Array.from(rootSelector.options).every((option) => option.value.startsWith('session-token-'))).toBe(true);
+
+    const posterSvg = screen.getByTestId('studio-poster-renderer-preview').innerHTML;
+    expect(posterSvg).not.toContain('Living Root');
+    expect(posterSvg).not.toContain('Private Mother');
+    expect(posterSvg).not.toContain('store-root');
   });
 
   it('builds and exports a selected branch from the store boundary without sibling branches or raw identifiers', async () => {
@@ -1156,7 +1181,9 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
     await waitFor(() => {
       const previewPane = screen.getByTestId('visual-studio-preview-pane');
       const posterSvg = screen.getByTestId('studio-poster-renderer-preview').innerHTML;
-      expect(within(previewPane).getByText('Dense Genealogy Poster')).toBeInTheDocument();
+      expect(within(previewPane).getByRole('img', {
+        name: 'Preview of Dense Genealogy Poster',
+      })).toBeInTheDocument();
       expect(posterSvg).toContain('data-poster-theme="dense-genealogy"');
       expect(posterSvg).not.toContain('data-poster-theme="classic-heritage"');
     });

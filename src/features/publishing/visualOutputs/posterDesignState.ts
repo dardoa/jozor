@@ -59,8 +59,8 @@ export const DEFAULT_TIERED_SETTINGS_BUCKET: TieredSettingsBucket = {
 
 export const DEFAULT_FOCUS_SETTINGS_BUCKET: FocusSettingsBucket = {
   focalPersonToken: 'preview-root-1',
-  ancestorDepth: 2,
-  descendantDepth: 2,
+  ancestorDepth: 1,
+  descendantDepth: 1,
   includeSpouses: true,
   includeSiblings: true,
   focalCardEmphasis: 'bolder-border',

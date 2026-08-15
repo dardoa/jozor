@@ -32,7 +32,7 @@ describe('VisualOutputActionBar print-quality gate', () => {
     expect(screen.getByRole('button', { name: 'Download PNG' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Download PDF' })).toBeEnabled();
     expect(screen.getByTestId('poster-format-guidance')).toHaveTextContent(
-      'Choose SVG for large-format vector printing'
+      'SVG for vector printing, PNG for a high-resolution image, and PDF for direct printing.'
     );
     expect(screen.getByRole('button', { name: 'Download SVG' })).toHaveAttribute(
       'aria-describedby',
@@ -57,10 +57,7 @@ describe('VisualOutputActionBar print-quality gate', () => {
     );
 
     expect(screen.getByTestId('poster-format-guidance')).toHaveTextContent(
-      'اختر SVG للطباعة الكبيرة والدقة المتجهة'
-    );
-    expect(screen.getByTestId('poster-format-guidance')).toHaveTextContent(
-      'PDF نسخة نقطية من نفس التصميم'
+      'SVG للطباعة المتجهة، PNG للصورة عالية الدقة، وPDF للطباعة المباشرة.'
     );
     expect(screen.getByRole('button', { name: 'تنزيل SVG' })).toHaveAttribute(
       'title',
