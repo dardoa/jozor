@@ -36,12 +36,28 @@ export const VisualOutputPrintDock: React.FC<VisualOutputPrintDockProps> = ({
   ...actionBarProps
 }) => {
   const isAr = actionBarProps.language === 'ar';
-  const qualityStatus = actionBarProps.isBlocked ? 'blocked' : (quality?.status ?? 'pass');
+  const isBranchCollection = state.productMode === 'branch-collection';
+  const isTiledWall = state.productMode === 'tiled-wall';
+  const qualityStatus = isBranchCollection
+    ? (actionBarProps.branchCollectionBlocked || !actionBarProps.branchCollectionAvailable ? 'blocked' : 'pass')
+    : isTiledWall
+      ? (actionBarProps.tiledWallAvailable ? 'pass' : 'blocked')
+      : actionBarProps.isBlocked
+        ? 'blocked'
+        : (quality?.status ?? 'pass');
   const qualityLabel = qualityStatus === 'blocked'
-    ? (isAr ? 'غير جاهز للطباعة' : 'Print blocked')
+    ? (isBranchCollection
+        ? (isAr ? 'مجموعة الفروع غير جاهزة' : 'Branch collection unavailable')
+        : isTiledWall
+          ? (isAr ? 'اللوحة المقسمة غير جاهزة' : 'Tiled wall unavailable')
+          : (isAr ? 'غير جاهز للطباعة' : 'Print blocked'))
     : qualityStatus === 'warning'
       ? (isAr ? 'راجع جودة الطباعة' : 'Review print quality')
-      : (isAr ? 'جاهز للطباعة' : 'Ready to print');
+      : isBranchCollection
+        ? (isAr ? 'مجموعة الفروع جاهزة' : 'Branch collection ready')
+        : isTiledWall
+          ? (isAr ? 'اللوحة المقسمة جاهزة' : 'Tiled wall ready')
+          : (isAr ? 'جاهز للطباعة' : 'Ready to print');
   const QualityIcon = qualityStatus === 'blocked'
     ? XCircle
     : qualityStatus === 'warning'
@@ -217,7 +233,11 @@ export const VisualOutputPrintDock: React.FC<VisualOutputPrintDockProps> = ({
         </div>
       </div>
 
-      <VisualOutputActionBar quality={quality} {...actionBarProps} />
+      <VisualOutputActionBar
+        quality={quality}
+        outputMode={state.productMode}
+        {...actionBarProps}
+      />
     </section>
   );
 };

@@ -10,12 +10,17 @@ import {
   Maximize2,
   Network,
 } from 'lucide-react';
-import type { PrintQualityReport, VisualOutputDefinition } from '../../../publishing';
+import type {
+  PosterProductMode,
+  PrintQualityReport,
+  VisualOutputDefinition,
+} from '../../../publishing';
 
 export interface VisualOutputActionBarProps {
   language: 'ar' | 'en';
   selectedDefinition?: VisualOutputDefinition;
   exportingFormat?: 'svg' | 'png' | 'pdf' | 'branch-collection' | 'tiled-wall';
+  outputMode?: PosterProductMode;
   quality?: PrintQualityReport;
   branchCollectionAvailable?: boolean;
   branchCollectionBlocked?: boolean;
@@ -36,6 +41,7 @@ export const VisualOutputActionBar: React.FC<VisualOutputActionBarProps> = ({
   language,
   selectedDefinition,
   exportingFormat,
+  outputMode,
   quality,
   branchCollectionAvailable = false,
   branchCollectionBlocked = false,
@@ -56,8 +62,15 @@ export const VisualOutputActionBar: React.FC<VisualOutputActionBarProps> = ({
   const supportsPng = selectedDefinition?.capabilities.rendererTargets.includes('png') ?? false;
   const supportsPdf = selectedDefinition?.capabilities.rendererTargets.includes('pdf') ?? false;
   const isExporting = Boolean(exportingFormat);
-  const isPrintBlocked = isBlocked || quality?.status === 'blocked';
-  const hasPrintWarning = quality?.status === 'warning';
+  const isBranchCollection = outputMode === 'branch-collection';
+  const isTiledWall = outputMode === 'tiled-wall';
+  const isPackageOutput = isBranchCollection || isTiledWall;
+  const isPrintBlocked = isBranchCollection
+    ? branchCollectionBlocked || !branchCollectionAvailable
+    : isTiledWall
+      ? !tiledWallAvailable
+      : isBlocked || quality?.status === 'blocked';
+  const hasPrintWarning = !isPackageOutput && quality?.status === 'warning';
   const hasLargeTreeAlternative = branchCollectionAvailable || tiledWallAvailable;
   const hasGuidedRecovery = Boolean(
     onUseDensePreset || onUseLargestPage || onSetUpLargeTreeProducts
@@ -68,6 +81,10 @@ export const VisualOutputActionBar: React.FC<VisualOutputActionBarProps> = ({
       ? (isAr
           ? 'تصدير البوستر متوقف حتى معالجة مشكلة جودة الطباعة'
           : 'Poster export is blocked until the print quality issue is resolved')
+      : isBranchCollection
+        ? (isAr ? 'مجموعة الفروع جاهزة للتنزيل' : 'Branch collection ready to download')
+        : isTiledWall
+          ? (isAr ? 'اللوحة المقسمة جاهزة للتنزيل' : 'Tiled wall poster ready to download')
       : hasPrintWarning
         ? (isAr ? 'راجع جودة الطباعة قبل تصدير البوستر' : 'Review print quality before exporting the poster')
         : (isAr ? 'الاستوديو جاهز للتصدير' : 'Studio ready for export');
@@ -101,7 +118,7 @@ export const VisualOutputActionBar: React.FC<VisualOutputActionBarProps> = ({
           : 'SVG for vector printing, PNG for a high-resolution image, and PDF for direct printing.'}
       </span>
 
-      {(capacityErrorGuidance || isPrintBlocked || hasPrintWarning) && (
+      {!isPackageOutput && (capacityErrorGuidance || isPrintBlocked || hasPrintWarning) && (
       <div className="flex min-w-0 w-full flex-col gap-1 text-start lg:max-w-md">
         {capacityErrorGuidance && (
           <span
@@ -227,7 +244,7 @@ export const VisualOutputActionBar: React.FC<VisualOutputActionBarProps> = ({
               : (isAr ? 'تنزيل لوحة مقسمة' : 'Download tiled wall poster')}
           </button>
         )}
-        {supportsSvg && onExportSvg && (
+        {!isPackageOutput && supportsSvg && onExportSvg && (
           <button
             type="button"
             onClick={onExportSvg}
@@ -243,7 +260,7 @@ export const VisualOutputActionBar: React.FC<VisualOutputActionBarProps> = ({
               : (isAr ? 'تنزيل SVG' : 'Download SVG')}
           </button>
         )}
-        {supportsPng && onExportPng && (
+        {!isPackageOutput && supportsPng && onExportPng && (
           <button
             type="button"
             onClick={onExportPng}
@@ -259,7 +276,7 @@ export const VisualOutputActionBar: React.FC<VisualOutputActionBarProps> = ({
               : (isAr ? 'تنزيل PNG' : 'Download PNG')}
           </button>
         )}
-        {supportsPdf && onExportPdf && (
+        {!isPackageOutput && supportsPdf && onExportPdf && (
           <button
             type="button"
             onClick={onExportPdf}

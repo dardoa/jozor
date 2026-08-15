@@ -7,7 +7,7 @@ import { downloadFile } from '@/utils/fileUtils';
 import { useAppStore } from '../../../../../store/useAppStore';
 import type { Person } from '../../../../../types';
 
-import type { PosterFontFamily } from '../../../../publishing';
+import type { PosterFontAsset, PosterFontAssetResolver, PosterFontFamily } from '../../../../publishing';
 
 const posterCanvasContext = {
   drawImage: vi.fn(),
@@ -273,7 +273,35 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
   });
 
   it('does not pass a stale font resource to the renderer while switching poster styles', async () => {
-    renderStudio();
+    let resolveModernFont: ((asset: PosterFontAsset) => void) | undefined;
+    const delayedFontResolver: PosterFontAssetResolver = {
+      resolveArabicFont: vi.fn((fontFamily: PosterFontFamily = 'amiri') => {
+        const asset = {
+          id: fontFamily,
+          familyName: 'JozorPosterArabic' as const,
+          format: 'truetype' as const,
+          dataUri: `data:font/ttf;base64,${fontFamily === 'amiri' ? 'QU1JUkk=' : 'Tk9UTw=='}`,
+          byteLength: 8,
+          source: 'bundled' as const,
+        };
+
+        if (fontFamily === 'amiri') return Promise.resolve(asset);
+        return new Promise<PosterFontAsset>((resolve) => {
+          resolveModernFont = resolve;
+        });
+      }),
+    };
+
+    renderStudio({
+      posterSvgResources: undefined,
+      posterFontAssetResolver: delayedFontResolver,
+    });
+
+    await waitFor(() => {
+      const posterSvg = screen.getByTestId('studio-poster-renderer-preview').innerHTML;
+      expect(posterSvg).toContain('data-poster-font-family="amiri"');
+      expect(posterSvg).toContain('QU1JUkk=');
+    });
 
     fireEvent.click(screen.getByRole('button', { name: /Modern Gallery/i }));
 
@@ -281,6 +309,23 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
       const posterSvg = screen.getByTestId('studio-poster-renderer-preview').innerHTML;
       expect(posterSvg).toContain('data-poster-theme="modern-gallery"');
       expect(posterSvg).not.toContain('data-poster-theme="classic-heritage"');
+      expect(posterSvg).not.toContain('QU1JUkk=');
+    });
+
+    expect(resolveModernFont).toBeDefined();
+    resolveModernFont?.({
+      id: 'noto-sans-arabic',
+      familyName: 'JozorPosterArabic',
+      format: 'truetype',
+      dataUri: 'data:font/ttf;base64,Tk9UTw==',
+      byteLength: 8,
+      source: 'bundled',
+    });
+
+    await waitFor(() => {
+      const posterSvg = screen.getByTestId('studio-poster-renderer-preview').innerHTML;
+      expect(posterSvg).toContain('data-poster-font-family="noto-sans-arabic"');
+      expect(posterSvg).toContain('Tk9UTw==');
     });
   });
 
@@ -874,6 +919,10 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
 
     const actionBar = screen.getByTestId('visual-studio-action-bar');
     expect(await within(actionBar).findByRole('button', { name: /Download branch collection/i })).toBeInTheDocument();
+    expect(within(actionBar).queryByRole('button', { name: /Download SVG/i })).not.toBeInTheDocument();
+    expect(screen.getByTestId('poster-print-readiness-summary')).toHaveTextContent(
+      'Branch collection ready'
+    );
   });
 
   it('configures and downloads a tiled wall poster only for the full-tree scope', async () => {
@@ -885,6 +934,10 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
     const actionBar = screen.getByTestId('visual-studio-action-bar');
     const tiledBtn = within(actionBar).getByRole('button', { name: /Download tiled wall poster/i });
     expect(tiledBtn).toBeInTheDocument();
+    expect(within(actionBar).queryByRole('button', { name: /Download SVG/i })).not.toBeInTheDocument();
+    expect(screen.getByTestId('poster-print-readiness-summary')).toHaveTextContent(
+      'Tiled wall ready'
+    );
 
     fireEvent.click(tiledBtn);
 

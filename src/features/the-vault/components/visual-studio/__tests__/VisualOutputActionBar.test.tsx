@@ -127,6 +127,31 @@ describe('VisualOutputActionBar print-quality gate', () => {
     );
   });
 
+  it('shows only the selected package action and ignores single-sheet quality state', () => {
+    render(
+      <VisualOutputActionBar
+        language="en"
+        selectedDefinition={definition}
+        outputMode="branch-collection"
+        quality={quality('blocked')}
+        branchCollectionAvailable={true}
+        onExportSvg={vi.fn()}
+        onExportPng={vi.fn()}
+        onExportPdf={vi.fn()}
+        onExportBranchCollection={vi.fn()}
+      />
+    );
+
+    expect(screen.getByRole('button', { name: 'Download branch collection' })).toBeEnabled();
+    expect(screen.queryByRole('button', { name: 'Download SVG' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Download PNG' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Download PDF' })).not.toBeInTheDocument();
+    expect(screen.queryByTestId('poster-print-quality-notice')).not.toBeInTheDocument();
+    expect(screen.getByTestId('visual-studio-export-status-live-region')).toHaveTextContent(
+      'Branch collection ready to download'
+    );
+  });
+
   it('offers reversible preview routes without starting an export', () => {
     const onUseDensePreset = vi.fn();
     const onUseLargestPage = vi.fn();

@@ -512,6 +512,7 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
 
   const matchingResolvedPosterSvgResources =
     resolvedPosterSvgResources?.embeddedArabicFontDataUri
+      && resolvedPosterSvgResources.embeddedArabicFontFamily === resolvedPosterFontFamily
       ? resolvedPosterSvgResources
       : undefined;
 
