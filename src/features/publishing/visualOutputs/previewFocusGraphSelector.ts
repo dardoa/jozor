@@ -8,7 +8,7 @@ import type {
   SanitizedPreviewNode,
   VisualPreviewRelationshipHint,
 } from './previewSanitizerTypes';
-import { productionPreviewSanitizer } from './previewProductionSanitizer';
+import { sanitizeProductionPreviewGraphBoundary } from './previewProductionSanitizer';
 import type { PreviewLiveTreeSource } from './previewLiveGraphSelectors';
 import type { FixturePreviewSource } from './previewFixtureGraphSelectors';
 
@@ -33,6 +33,7 @@ export interface FocusSelectionBoundaryResult {
   readonly sanitizedGraph: SanitizedPreviewGraph;
   readonly focalPreviewId: string;
   readonly warnings: readonly string[];
+  readonly resolvePreviewIdInsideBoundary: (previewId: string) => string | undefined;
 }
 
 export interface RawPersonNode {
@@ -228,7 +229,7 @@ export function selectFocusGraphBoundary(
       relationshipType: edge.relationshipType,
     }));
 
-  const sanitized = productionPreviewSanitizer.sanitize(
+  const sanitizationBoundary = sanitizeProductionPreviewGraphBoundary(
     { nodes: sanitizerNodes, edges: sanitizerEdges },
     {
       privacyMode: request.privacyMode,
@@ -242,6 +243,7 @@ export function selectFocusGraphBoundary(
       includeDescription: request.includeDescription,
     }
   );
+  const sanitized = sanitizationBoundary.sanitizedGraph;
   const sanitizedNodes: SanitizedPreviewNode[] = sanitized.nodes.map((node, index) =>
     index === 0 ? { ...node, relationshipHint: 'root' } : node
   );
@@ -267,5 +269,10 @@ export function selectFocusGraphBoundary(
     },
   };
 
-  return { sanitizedGraph, focalPreviewId: rootNodes[0].previewId, warnings };
+  return {
+    sanitizedGraph,
+    focalPreviewId: rootNodes[0].previewId,
+    warnings,
+    resolvePreviewIdInsideBoundary: sanitizationBoundary.resolvePreviewIdInsideBoundary,
+  };
 }

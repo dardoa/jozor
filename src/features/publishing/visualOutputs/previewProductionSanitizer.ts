@@ -34,6 +34,11 @@ export interface PreviewSanitizerRawGraph {
   readonly edges: readonly PreviewSanitizerRawEdge[];
 }
 
+export interface ProductionPreviewSanitizationBoundary {
+  readonly sanitizedGraph: SanitizedPreviewGraph;
+  readonly resolvePreviewIdInsideBoundary: (previewId: string) => string | undefined;
+}
+
 const extractYearOnly = (dateStr?: string): number | undefined => {
   if (!dateStr) return undefined;
   const match = dateStr.match(/^\d{4}/);
@@ -169,3 +174,25 @@ export const productionPreviewSanitizer: VisualPreviewSanitizer<PreviewSanitizer
     };
   },
 };
+
+/**
+ * Keeps the reversible preview-to-source identity map inside the publishing
+ * boundary while exposing only the sanitized graph to renderers.
+ */
+export function sanitizeProductionPreviewGraphBoundary(
+  rawGraph: PreviewSanitizerRawGraph,
+  policy: VisualPreviewSanitizerPolicy
+): ProductionPreviewSanitizationBoundary {
+  const sanitizedGraph = productionPreviewSanitizer.sanitize(rawGraph, policy);
+  const previewIdToRawId = new Map<string, string>();
+
+  sanitizedGraph.nodes.forEach((node, index) => {
+    const rawNode = rawGraph.nodes[index];
+    if (rawNode) previewIdToRawId.set(node.previewId, rawNode.rawId);
+  });
+
+  return {
+    sanitizedGraph,
+    resolvePreviewIdInsideBoundary: (previewId) => previewIdToRawId.get(previewId),
+  };
+}

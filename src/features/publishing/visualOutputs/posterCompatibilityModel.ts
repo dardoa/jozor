@@ -11,7 +11,6 @@ export type CapabilityReachabilityStatus =
   | 'registry-advertised'
   | 'quality-gated'
   | 'planned'
-  | 'unassessed'
   | 'incompatible';
 
 export interface PosterCombinationCapability {
@@ -128,13 +127,13 @@ export function getPosterLayoutCombinationCapability(
       }
       if (scope === 'full-tree') {
         return {
-          status: 'unassessed',
+          status: 'planned',
           isRuntimeSupported: false,
-          isPlanned: false,
+          isPlanned: true,
           requiresQualityGate: false,
           description: {
-            en: 'Full-tree radial detailed poster is documented as unassessed pending evidence.',
-            ar: 'بوستر الشجرة الكاملة الشعاعي غير مقيم ويحتاج إلى نموذج إثبات.',
+            en: 'Full-tree radial detailed posters are deferred until a complete-family radial model is designed and verified.',
+            ar: 'بوستر الشجرة الكاملة الشعاعي مؤجل حتى تصميم نموذج شعاعي للعائلة الكاملة والتحقق منه.',
           },
         };
       }
@@ -181,13 +180,13 @@ export function getPosterLayoutCombinationCapability(
     if (layoutMode === 'radial-generations') {
       if (scope === 'full-tree') {
         return {
-          status: 'unassessed',
+          status: 'incompatible',
           isRuntimeSupported: false,
           isPlanned: false,
           requiresQualityGate: false,
           description: {
-            en: 'Full-tree radial overview is documented as unassessed.',
-            ar: 'عرض الشجرة الكاملة الشعاعي غير مقيم.',
+            en: 'The full-tree overview product uses its dedicated overview engine and is incompatible with radial layout.',
+            ar: 'منتج عرض الشجرة الكاملة يستخدم محرك العرض المخصص له ولا يتوافق مع التخطيط الشعاعي.',
           },
         };
       }
@@ -232,13 +231,13 @@ export function getPosterLayoutCombinationCapability(
       }
       if (scope === 'selected-branch') {
         return {
-          status: 'planned',
+          status: 'incompatible',
           isRuntimeSupported: false,
-          isPlanned: true,
+          isPlanned: false,
           requiresQualityGate: false,
           description: {
-            en: 'Selected branch scope is planned for branch collection.',
-            ar: 'نطاق الفرع المختار مخطط لمجموعة الفروع.',
+            en: 'A selected branch is exported as one detailed poster; wrapping it in a branch collection is redundant.',
+            ar: 'يُصدّر الفرع المحدد كبوستر تفصيلي واحد؛ وضعه داخل مجموعة فروع تكرار غير ضروري.',
           },
         };
       }
@@ -308,13 +307,13 @@ export function getPosterLayoutCombinationCapability(
 
     if (layoutMode === 'radial-generations' && scope === 'full-tree') {
       return {
-        status: 'unassessed',
+        status: 'planned',
         isRuntimeSupported: false,
-        isPlanned: false,
+        isPlanned: true,
         requiresQualityGate: false,
         description: {
-          en: 'Radial tiled wall poster is unassessed pending evidence.',
-          ar: 'اللوحة الشعاعية المقسمة غير مقيمة وتعتمد على إثبات النموذج.',
+          en: 'Radial tiled wall output is deferred until radial full-tree composition and tile seam evidence exist.',
+          ar: 'اللوحة الشعاعية المقسمة مؤجلة حتى يتوفر تكوين شعاعي للشجرة الكاملة وأدلة سلامة حدود الأوراق.',
         },
       };
     }

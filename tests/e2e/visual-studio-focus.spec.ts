@@ -211,7 +211,7 @@ test.describe('Visual Studio Phase 2B Focus runtime evidence', () => {
 
   test('masks living people and excludes raw identifiers from the Focus SVG', async ({ page }) => {
     await activateFocus(page);
-    await page.getByRole('tab', { name: 'Tree & Layout' }).click();
+    await page.getByRole('tab', { name: 'Quick Setup' }).click();
     const maskedMode = page.getByRole('button', { name: 'Mask Living & Private Data' });
     await maskedMode.click();
 

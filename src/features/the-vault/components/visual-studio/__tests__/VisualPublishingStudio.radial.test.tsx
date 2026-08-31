@@ -157,10 +157,12 @@ describe('VisualPublishingStudio Radial Integration Suite', () => {
     await user.selectOptions(rootSelect, selectedToken);
     expect(rootSelect).toHaveValue(selectedToken);
 
+    const quickSetupTab = screen.getByRole('tab', { name: /إعداد سريع/i });
+    await user.click(quickSetupTab);
     await user.click(screen.getByRole('button', { name: /عرض جميع البيانات/i }));
 
     // 4. Change 180° / 360° span and ring count
-    await user.click(layoutTab);
+    await user.click(screen.getByRole('tab', { name: /الشجرة والتخطيط/i }));
 
     const geometry360 = readGeometry();
     expect(geometry360.length).toBeGreaterThan(1);
@@ -254,7 +256,7 @@ describe('VisualPublishingStudio Radial Integration Suite', () => {
       </StrictMode>
     );
 
-    await user.click(screen.getByRole('tab', { name: /Tree & Layout/ }));
+    await user.click(screen.getByRole('tab', { name: /Quick Setup/ }));
     await user.click(screen.getByRole('button', { name: /Show Full Recorded Data/i }));
 
     await waitFor(() => {

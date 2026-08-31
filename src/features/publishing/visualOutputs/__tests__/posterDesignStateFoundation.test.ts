@@ -47,7 +47,7 @@ describe('Phase 1A: Final Two-Issue Closure Pass', () => {
     const layoutModes: PosterLayoutMode[] = ['tiered', 'focus-family', 'radial-generations'];
     const scopes: PosterTreeScope[] = ['full-tree', 'ancestors', 'descendants', 'selected-branch'];
 
-    const expectedMatrix: Record<string, 'runtime-supported-and-reachable' | 'quality-gated' | 'planned' | 'unassessed' | 'incompatible'> = {
+    const expectedMatrix: Record<string, 'runtime-supported-and-reachable' | 'quality-gated' | 'planned' | 'incompatible'> = {
       // detailed-poster x tiered
       'detailed-poster:tiered:ancestors': 'runtime-supported-and-reachable',
       'detailed-poster:tiered:descendants': 'runtime-supported-and-reachable',
@@ -63,7 +63,7 @@ describe('Phase 1A: Final Two-Issue Closure Pass', () => {
       // detailed-poster x radial-generations
       'detailed-poster:radial-generations:ancestors': 'runtime-supported-and-reachable',
       'detailed-poster:radial-generations:descendants': 'runtime-supported-and-reachable',
-      'detailed-poster:radial-generations:full-tree': 'unassessed',
+      'detailed-poster:radial-generations:full-tree': 'planned',
       'detailed-poster:radial-generations:selected-branch': 'incompatible',
 
       // full-tree-overview x tiered
@@ -79,7 +79,7 @@ describe('Phase 1A: Final Two-Issue Closure Pass', () => {
       'full-tree-overview:focus-family:selected-branch': 'incompatible',
 
       // full-tree-overview x radial-generations
-      'full-tree-overview:radial-generations:full-tree': 'unassessed',
+      'full-tree-overview:radial-generations:full-tree': 'incompatible',
       'full-tree-overview:radial-generations:ancestors': 'incompatible',
       'full-tree-overview:radial-generations:descendants': 'incompatible',
       'full-tree-overview:radial-generations:selected-branch': 'incompatible',
@@ -88,7 +88,7 @@ describe('Phase 1A: Final Two-Issue Closure Pass', () => {
       'branch-collection:tiered:full-tree': 'runtime-supported-and-reachable',
       'branch-collection:tiered:ancestors': 'incompatible',
       'branch-collection:tiered:descendants': 'incompatible',
-      'branch-collection:tiered:selected-branch': 'planned',
+      'branch-collection:tiered:selected-branch': 'incompatible',
 
       // branch-collection x focus-family
       'branch-collection:focus-family:full-tree': 'incompatible',
@@ -115,7 +115,7 @@ describe('Phase 1A: Final Two-Issue Closure Pass', () => {
       'tiled-wall:focus-family:selected-branch': 'incompatible',
 
       // tiled-wall x radial-generations
-      'tiled-wall:radial-generations:full-tree': 'unassessed',
+      'tiled-wall:radial-generations:full-tree': 'planned',
       'tiled-wall:radial-generations:ancestors': 'incompatible',
       'tiled-wall:radial-generations:descendants': 'incompatible',
       'tiled-wall:radial-generations:selected-branch': 'incompatible',

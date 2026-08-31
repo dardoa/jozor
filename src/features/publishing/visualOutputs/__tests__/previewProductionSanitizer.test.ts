@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   productionPreviewSanitizer,
+  sanitizeProductionPreviewGraphBoundary,
   type PreviewSanitizerRawGraph,
   type PreviewSanitizerRawNode,
 } from '../../index';
@@ -288,6 +289,21 @@ describe('Preview Production Sanitizer Skeleton Rules', () => {
     expect(res5.nodes[0].hasPhoto).toBe(false);
     expect(res5.nodes[1].hasPhoto).toBe(false);
     expect(res5.nodes[2].hasPhoto).toBe(false);
+  });
+
+  it('keeps reversible preview identity inside the sanitization boundary only', () => {
+    const boundary = sanitizeProductionPreviewGraphBoundary(sampleRawGraph, {
+      privacyMode: 'owner-full',
+      includePhotos: true,
+      includeYears: true,
+      maxNodes: 10,
+      language: 'en',
+    });
+
+    expect(boundary.resolvePreviewIdInsideBoundary('preview-node-1')).toBe('db-person-101');
+    expect(boundary.resolvePreviewIdInsideBoundary('missing-preview-node')).toBeUndefined();
+    expect(JSON.stringify(boundary.sanitizedGraph)).not.toContain('db-person-101');
+    expect(JSON.stringify(boundary)).not.toContain('db-person-101');
   });
 
   it('asserts compile-time types safety checks', () => {

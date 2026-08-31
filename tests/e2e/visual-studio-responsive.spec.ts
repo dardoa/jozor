@@ -744,7 +744,7 @@ test.describe('Visual Publishing Studio Responsive QA Evidence Pass', () => {
       // 5. Config Panel Reachability & Operability Verification
       await configPanel.scrollIntoViewIfNeeded();
 
-      const formControls = await configPanel.locator('button, select, input').all();
+      const formControls = await configPanel.locator('button:visible, select:visible, input:visible').all();
       expect(formControls.length).toBeGreaterThan(0);
 
       const firstControl = formControls[0];

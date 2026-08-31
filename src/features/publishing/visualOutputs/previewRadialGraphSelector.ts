@@ -4,7 +4,7 @@ import type {
   SanitizedPreviewNode,
   VisualPreviewRelationshipHint,
 } from './previewSanitizerTypes';
-import { productionPreviewSanitizer } from './previewProductionSanitizer';
+import { sanitizeProductionPreviewGraphBoundary } from './previewProductionSanitizer';
 import type { RawGraph } from './previewFocusGraphSelector';
 import type { PosterPersonTokenCatalogBoundary } from './posterPersonTokenCatalog';
 
@@ -27,6 +27,7 @@ export interface RadialSelectionBoundaryResult {
   readonly sanitizedGraph: SanitizedPreviewGraph;
   readonly focalPreviewId: string;
   readonly warnings: readonly string[];
+  readonly resolvePreviewIdInsideBoundary: (previewId: string) => string | undefined;
 }
 
 export function selectRadialGraphBoundary(
@@ -116,7 +117,7 @@ export function selectRadialGraphBoundary(
       relationshipType: 'parent-child' as const,
     }));
 
-  const sanitized = productionPreviewSanitizer.sanitize(
+  const sanitizationBoundary = sanitizeProductionPreviewGraphBoundary(
     { nodes: sanitizerNodes, edges: sanitizerEdges },
     {
       privacyMode: request.privacyMode,
@@ -130,6 +131,7 @@ export function selectRadialGraphBoundary(
       includeDescription: request.includeDescription,
     }
   );
+  const sanitized = sanitizationBoundary.sanitizedGraph;
 
   const sanitizedNodes: SanitizedPreviewNode[] = sanitized.nodes.map((node, index) =>
     index === 0 ? { ...node, relationshipHint: 'root' } : node
@@ -160,5 +162,10 @@ export function selectRadialGraphBoundary(
     },
   };
 
-  return { sanitizedGraph, focalPreviewId: rootNodes[0].previewId, warnings };
+  return {
+    sanitizedGraph,
+    focalPreviewId: rootNodes[0].previewId,
+    warnings,
+    resolvePreviewIdInsideBoundary: sanitizationBoundary.resolvePreviewIdInsideBoundary,
+  };
 }

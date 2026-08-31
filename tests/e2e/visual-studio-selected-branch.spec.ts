@@ -1,4 +1,4 @@
-import { mkdir, readFile } from 'node:fs/promises';
+import { mkdir, readFile, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { expect, test, type Download, type Page } from '@playwright/test';
 
@@ -13,6 +13,20 @@ type DebugWindow = Window & {
       user: DebugUser;
     }) => void;
   };
+};
+
+type PosterSvgGeometry = {
+  viewBox: string;
+  width: string;
+  height: string;
+  nodeBoxes: Array<{
+    id: string;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  }>;
+  connectorPaths: string[];
 };
 
 const person = (
@@ -97,6 +111,7 @@ const OWNER: DebugUser = {
 const EVIDENCE_DIR = path.resolve(
   'docs/reviews/evidence/visual-publishing-studio-selected-branch-owner-review-2026-08-13'
 );
+const RUN_OUTPUT_DIR = path.resolve('output/playwright/visual-studio-descendants-selected-branch');
 const UPDATE_VISUAL_EVIDENCE = process.env.UPDATE_VISUAL_EVIDENCE === '1';
 
 const PRIVATE_SENTINELS = [
@@ -163,20 +178,146 @@ async function readDownload(
   evidenceFileName: string,
   writeEvidence: boolean
 ): Promise<Buffer> {
-  if (writeEvidence) {
-    await mkdir(EVIDENCE_DIR, { recursive: true });
-    const evidencePath = path.join(EVIDENCE_DIR, evidenceFileName);
-    await download.saveAs(evidencePath);
-    return readFile(evidencePath);
-  }
-
-  const temporaryPath = await download.path();
-  if (!temporaryPath) throw new Error('Playwright did not expose a local download path.');
-  return readFile(temporaryPath);
+  const artifactDirectory = writeEvidence ? EVIDENCE_DIR : RUN_OUTPUT_DIR;
+  await mkdir(artifactDirectory, { recursive: true });
+  const artifactPath = path.join(artifactDirectory, evidenceFileName);
+  await download.saveAs(artifactPath);
+  return readFile(artifactPath);
 }
 
-test.describe('Visual Publishing Studio selected branch runtime', () => {
+async function extractSvgGeometry(page: Page, svgMarkup: string): Promise<PosterSvgGeometry> {
+  return page.evaluate((markup) => {
+    const document = new DOMParser().parseFromString(markup, 'image/svg+xml');
+    const svg = document.querySelector('svg');
+    if (!svg) throw new Error('Poster SVG root is missing.');
+
+    const nodeBoxes = Array.from(svg.querySelectorAll('g.poster-node[data-preview-node]'))
+      .map((node) => ({
+        id: node.getAttribute('data-preview-node') ?? '',
+        x: Number(node.getAttribute('data-scene-x')),
+        y: Number(node.getAttribute('data-scene-y')),
+        width: Number(node.getAttribute('data-scene-width')),
+        height: Number(node.getAttribute('data-scene-height')),
+      }))
+      .sort((left, right) => left.id.localeCompare(right.id));
+
+    return {
+      viewBox: svg.getAttribute('viewBox') ?? '',
+      width: svg.getAttribute('width') ?? '',
+      height: svg.getAttribute('height') ?? '',
+      nodeBoxes,
+      connectorPaths: Array.from(svg.querySelectorAll('path.poster-connector')).map(
+        (connector) => connector.getAttribute('d') ?? ''
+      ),
+    };
+  }, svgMarkup);
+}
+
+function expectPrivateSafeArtifact(value: string) {
+  for (const sentinel of PRIVATE_SENTINELS) expect(value).not.toContain(sentinel);
+  expect(value).not.toMatch(/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/i);
+}
+
+async function downloadPosterArtifacts(
+  page: Page,
+  evidencePrefix: string,
+  writeEvidence: boolean
+) {
+  const downloads: Download[] = [];
+  for (const format of ['SVG', 'PNG', 'PDF'] as const) {
+    const button = page.getByRole('button', { name: `Download ${format}` });
+    await expect(button).toBeEnabled({ timeout: 15_000 });
+    const [download] = await Promise.all([
+      page.waitForEvent('download', { timeout: 30_000 }),
+      button.click(),
+    ]);
+    downloads.push(download);
+  }
+
+  const fileNames = downloads.map((download) => download.suggestedFilename());
+  expect(fileNames[0]).toMatch(/\.svg$/i);
+  expect(fileNames[1]).toMatch(/\.png$/i);
+  expect(fileNames[2]).toMatch(/\.pdf$/i);
+  expect(new Set(fileNames.map((name) => name.replace(/\.(svg|png|pdf)$/i, ''))).size).toBe(1);
+  for (const fileName of fileNames) {
+    expectPrivateSafeArtifact(fileName);
+    expect(fileName).not.toMatch(/session-token|preview-node|descendant-tiered/i);
+  }
+
+  const svg = (await readDownload(downloads[0], `${evidencePrefix}.svg`, writeEvidence)).toString('utf8');
+  const png = await readDownload(downloads[1], `${evidencePrefix}.png`, writeEvidence);
+  const pdf = await readDownload(downloads[2], `${evidencePrefix}.pdf`, writeEvidence);
+
+  expect(png.subarray(0, 8)).toEqual(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
+  const pngWidth = png.readUInt32BE(16);
+  const pngHeight = png.readUInt32BE(20);
+  expect(pngWidth).toBeGreaterThan(pngHeight);
+  expect(pngHeight).toBeGreaterThan(1_000);
+
+  expect(pdf.subarray(0, 5).toString('ascii')).toBe('%PDF-');
+  const pdfSource = pdf.toString('latin1');
+  expect(pdfSource.match(/\/Type \/Page\b/g)).toHaveLength(1);
+  expect(pdfSource).toContain('/Count 1');
+  const mediaBox = pdfSource.match(/\/MediaBox \[0 0 ([\d.]+) ([\d.]+)\]/);
+  expect(mediaBox, 'PDF must expose its A3 landscape MediaBox').not.toBeNull();
+  expect(Number(mediaBox?.[1])).toBeCloseTo(1190.55, 1);
+  expect(Number(mediaBox?.[2])).toBeCloseTo(841.89, 1);
+
+  return { fileNames, svg, png, pdf };
+}
+
+test.describe('Visual Publishing Studio descendants and selected branch runtime', () => {
   test.setTimeout(120_000);
+
+  test.beforeAll(async () => {
+    await rm(RUN_OUTPUT_DIR, { recursive: true, force: true });
+    await mkdir(RUN_OUTPUT_DIR, { recursive: true });
+  });
+
+  test('exports descendant geometry from the same SVG scene used by preview', async ({ page, browserName }) => {
+    const writeEvidence = UPDATE_VISUAL_EVIDENCE && browserName === 'chromium';
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await seedTreeScenario(page);
+    await navigateToStudio(page);
+
+    const descendants = page.getByRole('button', { name: 'Descendants' });
+    await expect(descendants).toBeVisible();
+    await descendants.click();
+    await expect(descendants).toHaveAttribute('aria-pressed', 'true');
+
+    await page.getByRole('tab', { name: 'Quick Setup' }).click();
+    await page.getByRole('button', { name: 'Show Full Recorded Data' }).click();
+
+    const preview = page.getByTestId('visual-studio-preview-pane');
+    await expect(preview).toContainText('People visible: 3');
+    await expect(preview).toContainText('Relationships visible: 2');
+    const previewSvg = page.locator('[data-poster-layout-engine="descendant-tiered"]');
+    await expect(previewSvg).toBeVisible();
+    const previewMarkup = await previewSvg.evaluate((element) => element.outerHTML);
+    expect(previewMarkup).toContain('Scope: descendants');
+    expect(previewMarkup).toContain('Branch Root');
+    expect(previewMarkup).not.toContain('Branch Spouse');
+    expect(previewMarkup).toContain('Branch Child');
+    expect(previewMarkup).toContain('Branch Grandchild');
+    expect(previewMarkup).not.toContain('Excluded Parent');
+    expect(previewMarkup).not.toContain('Excluded Sibling Branch');
+    expectPrivateSafeArtifact(previewMarkup);
+
+    const artifacts = await downloadPosterArtifacts(page, 'descendants', writeEvidence);
+    expect(artifacts.svg).toContain('data-poster-layout-engine="descendant-tiered"');
+    expect(artifacts.svg).toContain('Scope: descendants');
+    expectPrivateSafeArtifact(artifacts.svg);
+
+    const previewGeometry = await extractSvgGeometry(page, previewMarkup);
+    const exportedGeometry = await extractSvgGeometry(page, artifacts.svg);
+    expect(previewGeometry.nodeBoxes.length).toBeGreaterThan(0);
+    expect(previewGeometry.connectorPaths.length).toBeGreaterThan(0);
+    for (const box of exportedGeometry.nodeBoxes) {
+      expect(box.width).toBeGreaterThan(0);
+      expect(box.height).toBeGreaterThan(0);
+    }
+    expect(exportedGeometry).toEqual(previewGeometry);
+  });
 
   test('selects one store-backed branch and exports private-safe SVG, PNG, and PDF artifacts', async ({ page, browserName }) => {
     const writeEvidence = UPDATE_VISUAL_EVIDENCE && browserName === 'chromium';
@@ -191,9 +332,10 @@ test.describe('Visual Publishing Studio selected branch runtime', () => {
     await page.keyboard.press('Enter');
     await expect(selectedBranch).toHaveAttribute('aria-pressed', 'true');
 
-    await page.getByRole('tab', { name: 'Tree & Layout' }).click();
+    await page.getByRole('tab', { name: 'Quick Setup' }).click();
     await page.getByRole('button', { name: 'Show Full Recorded Data' }).click();
 
+    await page.getByRole('tab', { name: 'Tree & Layout' }).click();
     const rootSelector = page.getByRole('combobox', { name: 'Focal Person (Root)' });
     await expect(rootSelector).toBeVisible();
     const selectedRootToken = await rootSelector.inputValue();
@@ -229,38 +371,17 @@ test.describe('Visual Publishing Studio selected branch runtime', () => {
       });
     }
 
-    const downloads: Download[] = [];
-    for (const format of ['SVG', 'PNG', 'PDF'] as const) {
-      const button = page.getByRole('button', { name: `Download ${format}` });
-      await expect(button).toBeEnabled({ timeout: 15_000 });
-      const [download] = await Promise.all([
-        page.waitForEvent('download', { timeout: 30_000 }),
-        button.click(),
-      ]);
-      downloads.push(download);
-    }
-
-    const fileNames = downloads.map((download) => download.suggestedFilename());
-    expect(fileNames[0]).toMatch(/\.svg$/i);
-    expect(fileNames[1]).toMatch(/\.png$/i);
-    expect(fileNames[2]).toMatch(/\.pdf$/i);
-    expect(new Set(fileNames.map((name) => name.replace(/\.(svg|png|pdf)$/i, ''))).size).toBe(1);
-    for (const fileName of fileNames) {
-      for (const sentinel of PRIVATE_SENTINELS) expect(fileName).not.toContain(sentinel);
-      expect(fileName).not.toMatch(/session-token|preview-node|descendant-tiered/i);
-    }
-
-    const exportedSvg = (await readDownload(downloads[0], 'selected-branch.svg', writeEvidence)).toString('utf8');
+    const artifacts = await downloadPosterArtifacts(page, 'selected-branch', writeEvidence);
+    const exportedSvg = artifacts.svg;
     expect(exportedSvg).toContain('data-poster-layout-engine="descendant-tiered"');
     expect(exportedSvg).not.toContain('Excluded Sibling Branch');
     expect(exportedSvg).toContain('Scope: selected branch');
     expect(exportedSvg).not.toContain('data-card-field="relationship"');
-    for (const sentinel of PRIVATE_SENTINELS) expect(exportedSvg).not.toContain(sentinel);
+    expectPrivateSafeArtifact(exportedSvg);
 
-    const png = await readDownload(downloads[1], 'selected-branch.png', writeEvidence);
-    expect(png.subarray(0, 8)).toEqual(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
-    const pdf = await readDownload(downloads[2], 'selected-branch.pdf', writeEvidence);
-    expect(pdf.subarray(0, 5).toString('ascii')).toBe('%PDF-');
+    const previewGeometry = await extractSvgGeometry(page, previewMarkup);
+    const exportedGeometry = await extractSvgGeometry(page, exportedSvg);
+    expect(exportedGeometry).toEqual(previewGeometry);
   });
 
   test('keeps the selected branch preview usable at the mobile review viewport', async ({ page, browserName }) => {
@@ -270,7 +391,7 @@ test.describe('Visual Publishing Studio selected branch runtime', () => {
 
     const selectedBranch = page.getByRole('button', { name: 'Selected Branch' });
     await selectedBranch.click();
-    await page.getByRole('tab', { name: 'Tree & Layout' }).click();
+    await page.getByRole('tab', { name: 'Quick Setup' }).click();
     await page.getByRole('button', { name: 'Show Full Recorded Data' }).click();
 
     const studio = page.getByTestId('visual-publishing-studio');
@@ -283,11 +404,14 @@ test.describe('Visual Publishing Studio selected branch runtime', () => {
 
     const previewToggle = page.getByTestId('visual-studio-mobile-preview-toggle');
     await expect(previewToggle).toBeVisible();
-    await previewToggle.click();
     await expect(previewToggle).toHaveAttribute('aria-expanded', 'true');
     await expect(
       page.locator('#mobile-preview-container').getByTestId('visual-studio-preview-pane')
     ).toContainText('People visible: 4');
+    await previewToggle.click();
+    await expect(previewToggle).toHaveAttribute('aria-expanded', 'false');
+    await previewToggle.click();
+    await expect(previewToggle).toHaveAttribute('aria-expanded', 'true');
     if (UPDATE_VISUAL_EVIDENCE && browserName === 'chromium') {
       await studio.evaluate((element) => element.scrollIntoView({ block: 'start' }));
       await mkdir(EVIDENCE_DIR, { recursive: true });

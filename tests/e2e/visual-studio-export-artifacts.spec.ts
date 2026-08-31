@@ -411,6 +411,41 @@ async function navigateToStudio(page: Page) {
   await expect(page.getByTestId('visual-publishing-studio')).toBeVisible({ timeout: 15000 });
 }
 
+async function openStudioConfigSection(page: Page, name: RegExp) {
+  const configPanel = page.getByTestId('visual-studio-config-panel');
+  const tab = configPanel.getByRole('tab', { name });
+  await expect(tab).toBeVisible();
+  if (await tab.getAttribute('aria-selected') !== 'true') {
+    await tab.click();
+  }
+  await expect(tab).toHaveAttribute('aria-selected', 'true');
+  return configPanel;
+}
+
+async function selectPressedButton(page: Page, button: ReturnType<Page['getByRole']>) {
+  await expect(button).toBeVisible();
+  if (await button.getAttribute('aria-pressed') !== 'true') {
+    await button.click();
+    await page.waitForTimeout(400);
+  }
+  await expect(button).toHaveAttribute('aria-pressed', 'true');
+}
+
+async function selectPaperAndOrientation(
+  page: Page,
+  size: 'A4' | 'A3',
+  orientationName: RegExp
+) {
+  const printDock = page.getByTestId('visual-studio-print-dock');
+  const sizeButton = printDock
+    .getByTestId('poster-page-size-controls')
+    .getByRole('button', { name: size, exact: true });
+  await selectPressedButton(page, sizeButton);
+
+  const orientationButton = printDock.getByRole('button', { name: orientationName }).first();
+  await selectPressedButton(page, orientationButton);
+}
+
 type GeometryMetrics = {
   viewBox: string;
   width: string;
@@ -652,32 +687,14 @@ test.describe('Visual Publishing Studio Export Artifact Parity & Print Technical
     const studio = page.getByTestId('visual-publishing-studio');
     await expect(studio).toBeVisible();
 
-    const configPanel = page.getByTestId('visual-studio-config-panel');
+    const scopeBtn = page.getByTestId('poster-scope-control').getByRole('button', { name: /الأسلاف|Ancestors/i });
+    await selectPressedButton(page, scopeBtn);
 
-    const scopeBtn = configPanel.getByTestId('poster-scope-control').getByRole('button', { name: /الأسلاف|Ancestors/i });
-    if (await scopeBtn.getAttribute('aria-pressed') !== 'true') {
-      await scopeBtn.click();
-      await page.waitForTimeout(400);
-    }
-    expect(await scopeBtn.getAttribute('aria-pressed')).toBe('true');
-
+    const configPanel = await openStudioConfigSection(page, /الشجرة والتخطيط|Tree & Layout/i);
     const depthBtn = configPanel.getByTestId('poster-depth-control').getByRole('button', { name: '3' });
-    if (await depthBtn.count() > 0 && await depthBtn.getAttribute('aria-pressed') !== 'true') {
-      await depthBtn.click();
-      await page.waitForTimeout(400);
-    }
+    await selectPressedButton(page, depthBtn);
 
-    const sizeSelect = configPanel.getByTestId('poster-size-orientation-group').getByRole('combobox');
-    await sizeSelect.selectOption('A4');
-    await page.waitForTimeout(400);
-    expect(await sizeSelect.inputValue()).toBe('A4');
-
-    const orientationPortraitBtn = configPanel.getByRole('button', { name: /عمودي|Portrait/i }).first();
-    if (await orientationPortraitBtn.getAttribute('aria-pressed') !== 'true') {
-      await orientationPortraitBtn.click();
-      await page.waitForTimeout(400);
-    }
-    expect(await orientationPortraitBtn.getAttribute('aria-pressed')).toBe('true');
+    await selectPaperAndOrientation(page, 'A4', /عمودي|Portrait/i);
 
     const previewSvgLocator = page.locator('[data-testid="studio-poster-renderer-preview"] > svg');
     await expect(previewSvgLocator).toBeVisible({ timeout: 15000 });
@@ -948,30 +965,14 @@ test.describe('Visual Publishing Studio Export Artifact Parity & Print Technical
     const studio = page.getByTestId('visual-publishing-studio');
     await expect(studio).toBeVisible();
 
-    const configPanel = page.getByTestId('visual-studio-config-panel');
+    const scopeBtn = page.getByTestId('poster-scope-control').getByRole('button', { name: /الأسلاف|Ancestors/i });
+    await selectPressedButton(page, scopeBtn);
 
-    const scopeBtn = configPanel.getByTestId('poster-scope-control').getByRole('button', { name: /الأسلاف|Ancestors/i });
-    if (await scopeBtn.getAttribute('aria-pressed') !== 'true') {
-      await scopeBtn.click();
-      await page.waitForTimeout(400);
-    }
-    expect(await scopeBtn.getAttribute('aria-pressed')).toBe('true');
-
+    const configPanel = await openStudioConfigSection(page, /الشجرة والتخطيط|Tree & Layout/i);
     const depthBtn = configPanel.getByTestId('poster-depth-control').getByRole('button', { name: '3' });
-    if (await depthBtn.count() > 0 && await depthBtn.getAttribute('aria-pressed') !== 'true') {
-      await depthBtn.click();
-      await page.waitForTimeout(400);
-    }
+    await selectPressedButton(page, depthBtn);
 
-    const sizeSelect = configPanel.getByTestId('poster-size-orientation-group').getByRole('combobox');
-    await sizeSelect.selectOption('A3');
-    await page.waitForTimeout(400);
-
-    const orientationLandscapeBtn = configPanel.getByRole('button', { name: /أفقي|Landscape/i }).first();
-    if (await orientationLandscapeBtn.getAttribute('aria-pressed') !== 'true') {
-      await orientationLandscapeBtn.click();
-      await page.waitForTimeout(400);
-    }
+    await selectPaperAndOrientation(page, 'A3', /أفقي|Landscape/i);
 
     const previewSvgLocator = page.locator('[data-testid="studio-poster-renderer-preview"] > svg');
     await expect(previewSvgLocator).toBeVisible({ timeout: 15000 });
@@ -1232,31 +1233,18 @@ test.describe('Visual Publishing Studio Export Artifact Parity & Print Technical
     const studio = page.getByTestId('visual-publishing-studio');
     await expect(studio).toBeVisible();
 
-    const configPanel = page.getByTestId('visual-studio-config-panel');
-
-    const templateSelectors = configPanel.getByTestId('visual-studio-template-selectors');
-    const denseTemplateBtn = templateSelectors.locator('button').filter({ hasText: /كثيف|Dense/i }).first();
-    if (await denseTemplateBtn.count() > 0) {
-      await denseTemplateBtn.click();
-      await page.waitForTimeout(400);
-    }
-
-    const scopeBtn = configPanel.getByTestId('poster-scope-control').getByRole('button', { name: /الشجرة الكاملة|Full Tree/i });
-    if (await scopeBtn.getAttribute('aria-pressed') !== 'true') {
-      await scopeBtn.click();
-      await page.waitForTimeout(400);
-    }
-    expect(await scopeBtn.getAttribute('aria-pressed')).toBe('true');
-
-    const sizeSelect = configPanel.getByTestId('poster-size-orientation-group').getByRole('combobox');
-    await sizeSelect.selectOption('A3');
+    const configPanel = await openStudioConfigSection(page, /إعداد سريع|Quick Setup/i);
+    const denseTemplateBtn = configPanel.getByRole('button', { name: /الأنساب الكثيفة|Dense Genealogy/i }).first();
+    await expect(denseTemplateBtn).toBeVisible();
+    await denseTemplateBtn.click();
     await page.waitForTimeout(400);
 
-    const orientationLandscapeBtn = configPanel.getByRole('button', { name: /أفقي|Landscape/i }).first();
-    if (await orientationLandscapeBtn.getAttribute('aria-pressed') !== 'true') {
-      await orientationLandscapeBtn.click();
-      await page.waitForTimeout(400);
-    }
+    const fullTreeButton = page
+      .getByTestId('poster-layout-engine-control')
+      .getByRole('button', { name: /الشجرة الكاملة|Full Family Tree/i });
+    await selectPressedButton(page, fullTreeButton);
+
+    await selectPaperAndOrientation(page, 'A3', /أفقي|Landscape/i);
     await page.waitForTimeout(600);
 
     // 1. Assert print quality notice is visible and contains font-too-small warning
@@ -1298,22 +1286,25 @@ test.describe('Visual Publishing Studio Export Artifact Parity & Print Technical
     const studio = page.getByTestId('visual-publishing-studio');
     await expect(studio).toBeVisible();
 
-    const configPanel = page.getByTestId('visual-studio-config-panel');
+    let configPanel = await openStudioConfigSection(page, /إعداد سريع|Quick Setup/i);
+    const templateCard = configPanel
+      .getByRole('button', { name: /المعرض العصري|Modern Gallery/i })
+      .first();
+    await expect(templateCard).toBeVisible();
+    await templateCard.click();
+    await page.waitForTimeout(400);
 
-    const templateCard = configPanel.getByRole('button', { name: /عصرية|Modern/i }).first();
-    if (await templateCard.count() > 0) {
-      await templateCard.click();
-      await page.waitForTimeout(400);
-    }
-
-    const showPhotosSwitch = configPanel.getByTestId('poster-show-photos-toggle').locator('input[type="checkbox"]');
-    if (await showPhotosSwitch.count() > 0 && !(await showPhotosSwitch.isChecked())) {
+    configPanel = await openStudioConfigSection(page, /البطاقات|Cards/i);
+    const showPhotosSwitch = configPanel.getByRole('checkbox', { name: /عرض صور الأشخاص|Show Profile Photos/i });
+    await expect(showPhotosSwitch).toBeVisible();
+    if (!(await showPhotosSwitch.isChecked())) {
       await showPhotosSwitch.check();
       await page.waitForTimeout(400);
     }
 
-    const hideLivingPhotosSwitch = configPanel.getByTestId('poster-hide-living-photos-toggle').locator('input[type="checkbox"]');
-    if (await hideLivingPhotosSwitch.count() > 0 && !(await hideLivingPhotosSwitch.isChecked())) {
+    const hideLivingPhotosSwitch = configPanel.getByRole('checkbox', { name: /إخفاء صور الأحياء|Hide Photos of Living People/i });
+    await expect(hideLivingPhotosSwitch).toBeVisible();
+    if (!(await hideLivingPhotosSwitch.isChecked())) {
       await hideLivingPhotosSwitch.check();
       await page.waitForTimeout(400);
     }
@@ -1594,13 +1585,9 @@ test.describe('Visual Publishing Studio Export Artifact Parity & Print Technical
     const studio = page.getByTestId('visual-publishing-studio');
     await expect(studio).toBeVisible();
 
-    const configPanel = page.getByTestId('visual-studio-config-panel');
-
-    const privacySelect = configPanel.getByTestId('poster-privacy-mode-control').getByRole('combobox');
-    if (await privacySelect.count() > 0) {
-      await privacySelect.selectOption('masked');
-      await page.waitForTimeout(400);
-    }
+    const configPanel = await openStudioConfigSection(page, /إعداد سريع|Quick Setup/i);
+    const privacyButton = configPanel.getByRole('button', { name: /إخفاء الأحياء والمعلومات الخاصة|Mask Living & Private Data/i });
+    await selectPressedButton(page, privacyButton);
 
     const previewSvgLocator = page.locator('[data-testid="studio-poster-renderer-preview"] > svg');
     await expect(previewSvgLocator).toBeVisible({ timeout: 15000 });

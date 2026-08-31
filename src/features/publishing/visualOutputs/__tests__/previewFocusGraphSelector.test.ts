@@ -54,6 +54,8 @@ describe('previewFocusGraphSelector boundary', () => {
     );
     expect(result.sanitizedGraph.nodes.filter((node) => node.relationshipHint === 'root')).toHaveLength(1);
     expect(result.sanitizedGraph.nodes[0].previewId).toBe(result.focalPreviewId);
+    expect(result.resolvePreviewIdInsideBoundary(result.focalPreviewId)).toBe('db-root-100');
+    expect(JSON.stringify(result)).not.toContain('db-root-100');
   });
 
   it('never exposes raw IDs through token options or sanitized output', () => {

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-10T18:45:21.728Z",
+  "generatedAt": "2026-08-31T16:41:05.207Z",
   "scenarios": [
     {
       "scenario": "scenario-1-ancestors-180-a3",
@@ -22,16 +22,16 @@
       "occupiedHeightRatio": 0.63,
       "centroidOffsetRatio": 0.163,
       "cardCountChecked": 7,
-      "textBBoxCheckCount": 15,
+      "textBBoxCheckCount": 14,
       "textBBoxFailureCount": 0,
-      "minimumObservedCardPadding": 5,
+      "minimumObservedCardPadding": 9,
       "pngWidth": 4526,
       "pngHeight": 3200,
       "derivedDpi": 273.7,
       "hashes": {
-        "svg": "7aa9ddeb4d9a364cac98a71f236a517631d23971fed46b3bf46e681ce4484bd4",
-        "png": "286bec93ddec021decc8449276131beed9c5ab40e659fb215dda5566d48a95f5",
-        "pdf": "a8075ade0ff80e5f8eff0b776bd57b742a30433bc258dfadb19769104b891387"
+        "svg": "cebe684822fa2bbe585da39fc551efde03336c936bffd249a3251220de771ef6",
+        "png": "d5d66effb6d6669f755bd8aee3768b2e0776c46cd0ac6a5352a989a501ee1b59",
+        "pdf": "3878f68e15fa4aaef0dde78e7256aab04c29ba0d34c332bc9dc00c19dc70c2f8"
       },
       "suggestedBasename": "Ancestor Family Fan"
     },
@@ -56,16 +56,16 @@
       "occupiedHeightRatio": 0.64,
       "centroidOffsetRatio": 0.081,
       "cardCountChecked": 15,
-      "textBBoxCheckCount": 31,
+      "textBBoxCheckCount": 30,
       "textBBoxFailureCount": 0,
-      "minimumObservedCardPadding": 5,
+      "minimumObservedCardPadding": 9,
       "pngWidth": 6400,
       "pngHeight": 4526,
       "derivedDpi": 273.7,
       "hashes": {
-        "svg": "d92a5d5812e6959bd69842dc62eeaea9dc7e3f3afa7cc71e92c0fd87232d20c2",
-        "png": "94500baadc9ee6dbb5baca39a584e14b696f6e60124913f5d51f93ee10a179e0",
-        "pdf": "f497ffe612cee9f57c422fbc5efd292542d938e9c136eb7a2658fcd3722f5394"
+        "svg": "a1c10ca4e0678e7a5dd1178dcf4060a834e2df25958f1256ee70f67e40eae18f",
+        "png": "d23063cc0bd543d51b4864157c4e7f7325faebf016616ceff9ef0a8490a0bbb3",
+        "pdf": "bfab3818aa5cf54384976958b3b7de8e1232aa0c913cedd2306880d117e270bd"
       },
       "suggestedBasename": "Complete Ancestor Circle"
     },
@@ -90,16 +90,16 @@
       "occupiedHeightRatio": 0.63,
       "centroidOffsetRatio": 0.163,
       "cardCountChecked": 7,
-      "textBBoxCheckCount": 11,
+      "textBBoxCheckCount": 10,
       "textBBoxFailureCount": 0,
-      "minimumObservedCardPadding": 5,
+      "minimumObservedCardPadding": 9,
       "pngWidth": 4526,
       "pngHeight": 3200,
       "derivedDpi": 273.7,
       "hashes": {
-        "svg": "896c0dc83ade3622aba5f8730df2fa4cf99b0d35bde1abfbcf465ac451a68447",
-        "png": "bac5a6814cc4116235c3f2f0fc51f24425320a861e4cf36b14f43463a7def0e0",
-        "pdf": "c0db78f90ec9cae14f45a8b91a0b8965f167930138ac3934dc1d09b1fc077514"
+        "svg": "d0bbac82cd6f66d433e2b142e04b6af608f9ec1e5c3de3037aec1a66c47c1c58",
+        "png": "8df56ff475e4dcd543cf2f43057e841b723b8d84dd23cafe0de664aaec190747",
+        "pdf": "f78ac71b6bd30f6b7dea1305b3a5f5b46b9c52ef25e6d6973947a300adc8507b"
       },
       "suggestedBasename": "Descendant Family Fan"
     },
@@ -117,23 +117,23 @@
       "nodeCount": 10,
       "connectorCount": 9,
       "angularCoverageDegrees": 266.2,
-      "minimumNameFontPt": 8.05,
+      "minimumNameFontPt": 9.1,
       "minimumDetailFontPt": 7.05,
       "radialExtentUtilization": 0.901,
       "occupiedWidthRatio": 0.89,
       "occupiedHeightRatio": 0.6,
       "centroidOffsetRatio": 0.081,
       "cardCountChecked": 10,
-      "textBBoxCheckCount": 15,
+      "textBBoxCheckCount": 14,
       "textBBoxFailureCount": 0,
-      "minimumObservedCardPadding": 5,
+      "minimumObservedCardPadding": 9,
       "pngWidth": 6400,
       "pngHeight": 4526,
       "derivedDpi": 273.7,
       "hashes": {
-        "svg": "8d1515541b8565c91f7e1d0b9ce0542ee9ed92c8660662d514aa1d5d33cea11b",
-        "png": "99f190f0892bdb8b4f6d15494de85400456faa9f3f105c331ba2bed125090c62",
-        "pdf": "7eb8d8c6b78f504b74b47d931748b6c04c46d967a5bd4abbee8ea1118380d10f"
+        "svg": "f9a4bf820399c23a678f5907c522dc47c6428cb2e44fd90909d68e81ead929e2",
+        "png": "ffda62af749c7a55a3d6147ed7127419b0598585373b3fe6f4b7fc31c098e77f",
+        "pdf": "3f96f398440c31ace27af0f563d7949f744b68d0181de50b0840fa70cc7dd496"
       },
       "suggestedBasename": "Complete Descendant Circle"
     },
@@ -158,16 +158,16 @@
       "occupiedHeightRatio": 0.63,
       "centroidOffsetRatio": 0.163,
       "cardCountChecked": 7,
-      "textBBoxCheckCount": 15,
+      "textBBoxCheckCount": 14,
       "textBBoxFailureCount": 0,
-      "minimumObservedCardPadding": 5,
+      "minimumObservedCardPadding": 9,
       "pngWidth": 4526,
       "pngHeight": 3200,
       "derivedDpi": 273.7,
       "hashes": {
-        "svg": "cf3e150deadb5998f3dac35877b2806a0f27d9c028313d2e4d6ad95d45f14445",
-        "png": "b33dd358ed886df720f52192c8b3d8a4a7f879417ab283e65e6d991d0c5ffcb7",
-        "pdf": "18ce3ab8d68af79c51f95ad1b4c0d6f6b2c41c3a4ebdaf619702e000a0f35ccc"
+        "svg": "2c517bdde8d8fd5fcd807f612af2f5787b26233d3b62a10b0b86f6c7e70993c8",
+        "png": "da26b3c678394b6b0bcf69ca29e633e79286c14839790ef15e01a9665bdc031c",
+        "pdf": "546cc79b2e8fe33a01acf0dff332690d4d6fa8b7d64542a5ac6e410619111469"
       },
       "suggestedBasename": "شجرة أسلاف آل رمضان المبارك"
     },
@@ -199,9 +199,9 @@
       "pngHeight": 3200,
       "derivedDpi": 273.7,
       "hashes": {
-        "svg": "cb967ffe0603a81c42582f1eb1b30ca2896576e196cbe85d1cf49de6f2eebeca",
+        "svg": "7cd5446fee7f329a0e09de85d0d0f505e671946b57ce30192d4671997cb1f100",
         "png": "07ab1e7d2722a43dc5b2909e36012b10e0f8cbecb3d2fc02b0bdaf9517cee0d9",
-        "pdf": "7ccef68b61868a2ca7dc0b7b04f8c9dd6e7c4b42e692886fab71b08bb93f1df0"
+        "pdf": "d56c54cf99bdf9f35ab31a392312a09a600fe3a3d1588c4e687b8fdfda834972"
       },
       "suggestedBasename": "Private Family Fan"
     },
@@ -226,16 +226,16 @@
       "occupiedHeightRatio": 0.5,
       "centroidOffsetRatio": 0.406,
       "cardCountChecked": 5,
-      "textBBoxCheckCount": 11,
+      "textBBoxCheckCount": 10,
       "textBBoxFailureCount": 0,
-      "minimumObservedCardPadding": 5,
+      "minimumObservedCardPadding": 9,
       "pngWidth": 4526,
       "pngHeight": 3200,
       "derivedDpi": 273.7,
       "hashes": {
-        "svg": "2d242468fa160a58911a6778d2d8bfab83d193c2157f5b95dcc1e6a0dde7fa30",
-        "png": "52c70c9d920347d7802de5a535621004a2e994d264a40ad236e9e1d824e8f84f",
-        "pdf": "ac5110de09a9efe7426b7440670c46b228548849250e1c33797e9799f140dfde"
+        "svg": "739df3a909d1224509c978d12ab71ae799f0d66b9608796444ccb69235a3c2de",
+        "png": "890f4b6bb9674544f95b06c193c0e379f220d4023c1e7f0f956e41273f9d7b61",
+        "pdf": "93f24e6e874de81b15aa73a1f5ea40ef6452114a12bbc84965927edf71571b8a"
       },
       "suggestedBasename": "Sparse Recorded Line"
     },

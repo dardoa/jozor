@@ -509,6 +509,9 @@ test.describe('Visual Publishing Studio Accessibility QA Final Evidence Closure 
       await assertUnclippedFocusRing(selectCtrl, studio, 0);
 
       // 4. Checkbox control focus sample
+      const cardsTab = tablist.getByRole('tab', { name: /البطاقات|Cards/i }).first();
+      await expect(cardsTab).toBeVisible();
+      await cardsTab.click();
       const checkboxCtrl = studio.locator('input[type="checkbox"]:visible').first();
       await expect(checkboxCtrl).toBeVisible();
       await assertVisibleFocusIndicator(checkboxCtrl, `checkbox-ctrl-${vp.name}`);
@@ -684,9 +687,9 @@ test.describe('Visual Publishing Studio Accessibility QA Final Evidence Closure 
     await expect(segmentedBtn).toBeVisible();
     await expect(segmentedBtn).toHaveAttribute('aria-pressed');
 
-    const contentTab = tablist.getByRole('tab', { name: /الشجرة والتخطيط|Tree & Layout/i }).first();
-    await expect(contentTab).toBeVisible();
-    await contentTab.click();
+    const cardsTab = tablist.getByRole('tab', { name: /البطاقات|Cards/i }).first();
+    await expect(cardsTab).toBeVisible();
+    await cardsTab.click();
     await page.waitForTimeout(100);
 
     const yearsCheckbox = studio.getByRole('checkbox', { name: /عرض سنوات الميلاد والوفاة|Show Birth & Death Years/i });

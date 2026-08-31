@@ -235,12 +235,10 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
 
     expect(screen.getByRole('tab', { name: 'Quick Setup' })).toHaveAttribute('aria-selected', 'true');
     expect(screen.getByRole('button', { name: /Classic Heritage/i })).toBeInTheDocument();
-
-    selectTab('Tree & Layout');
-    expect(screen.getByRole('tab', { name: 'Tree & Layout' })).toHaveAttribute('aria-selected', 'true');
     expect(screen.getByRole('group', { name: 'Privacy Filter' })).toBeInTheDocument();
 
     selectTab('Tree & Layout');
+    expect(screen.getByRole('tab', { name: 'Tree & Layout' })).toHaveAttribute('aria-selected', 'true');
     expect(screen.getByRole('group', { name: 'Tree Flow Direction' })).toBeInTheDocument();
 
     selectTab('Cards');
@@ -330,9 +328,12 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
   });
 
   it('embeds resolved person photos without exposing their private source', async () => {
+    const posterImageSourceResolver = vi.fn(
+      (personId: string) => `https://storage.example.com/photos/${personId}.jpg`
+    );
     renderStudio({
       posterSvgResources: undefined,
-      posterImageSourceResolver: (personId) => `https://storage.example.com/photos/${personId}.jpg`,
+      posterImageSourceResolver,
       posterImageAssetResolver: {
         resolveImages: async (requests) => ({
           assets: requests.reduce((acc, req) => ({
@@ -359,6 +360,9 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
       expect(posterSvg).toContain('data:image/');
       expect(posterSvg).not.toContain('https://storage.example.com');
     });
+
+    expect(posterImageSourceResolver).toHaveBeenCalledWith('fixture-father');
+    expect(posterImageSourceResolver.mock.calls.flat()).not.toContain('preview-node-2');
   });
 
   it('gives supplied embeddedImages precedence over resolver-derived images on rerender', async () => {
@@ -523,7 +527,7 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
   it('updates safe card content without exposing technical relationship values', async () => {
     renderStudio();
 
-    selectTab('Tree & Layout');
+    selectTab('Cards');
     const relCheckbox = screen.getByRole('checkbox', { name: 'Show Relationship Hint' });
     fireEvent.click(relCheckbox);
 
@@ -742,7 +746,6 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
   it('changes title composition without creating a second preview renderer', async () => {
     renderStudio();
 
-    selectTab('Tree & Layout');
     const titleInput = screen.getByRole('textbox', { name: 'Poster Title' });
     fireEvent.change(titleInput, { target: { value: 'Custom Family Tree' } });
 
@@ -755,7 +758,7 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
   it('composes a safe owner footer and can hide Jozor attribution', async () => {
     renderStudio();
 
-    selectTab('Tree & Layout');
+    fireEvent.click(screen.getByText('Poster details'));
     const attributionCheckbox = screen.getByRole('checkbox', { name: 'Show Jozor Branding' });
     fireEvent.click(attributionCheckbox);
 
@@ -848,10 +851,13 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
       expect(posterSvg).not.toContain('fixture-child');
     });
 
+    selectTab('Quick Setup');
     fireEvent.click(screen.getByRole('button', { name: 'Show Full Recorded Data' }));
-    const childOption = Array.from(rootSelector.options).find((option) => option.textContent === 'Preview Child');
+    selectTab('Tree & Layout');
+    const ownerFullRootSelector = screen.getByRole('combobox', { name: 'Focal Person (Root)' }) as HTMLSelectElement;
+    const childOption = Array.from(ownerFullRootSelector.options).find((option) => option.textContent === 'Preview Child');
     expect(childOption?.value).toMatch(/^session-token-/);
-    fireEvent.change(rootSelector, { target: { value: childOption!.value } });
+    fireEvent.change(ownerFullRootSelector, { target: { value: childOption!.value } });
 
     await waitFor(() => {
       expect(within(previewPane).getByText(/People visible: 1/i)).toBeInTheDocument();
@@ -1019,7 +1025,6 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
   it('uses the owner-edited title and description in preview and download naming', async () => {
     renderStudio();
 
-    selectTab('Tree & Layout');
     const titleInput = screen.getByRole('textbox', { name: 'Poster Title' });
     fireEvent.change(titleInput, { target: { value: 'Ramadan Family Ancestors' } });
 
@@ -1166,7 +1171,7 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
     renderStudio({ previewSourceMode: 'store' });
 
     fireEvent.click(screen.getByRole('button', { name: 'Selected Branch' }));
-    selectTab('Tree & Layout');
+    selectTab('Quick Setup');
     fireEvent.click(screen.getByRole('button', { name: 'Show Full Recorded Data' }));
 
     const previewPane = screen.getByTestId('visual-studio-preview-pane');
@@ -1185,6 +1190,7 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
     expect(posterSvg).not.toContain('raw-sibling-branch');
     expect(posterSvg).not.toContain('private-storage.example.com');
 
+    selectTab('Tree & Layout');
     const rootSelector = screen.getByRole('combobox', { name: 'Focal Person (Root)' }) as HTMLSelectElement;
     expect(rootSelector.value).toMatch(/^session-token-/);
     expect(Array.from(rootSelector.options).map((option) => option.value)).toEqual(
@@ -1242,7 +1248,7 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
     });
   });
 
-  it('[1B New] single-owned selectedPosterRootToken responds to Undo, Redo, and Reset Content', () => {
+  it('[1B New] single-owned selectedPosterRootToken responds to Undo, Redo, and Reset Poster', () => {
     renderStudio();
 
     selectTab('Tree & Layout');
@@ -1264,8 +1270,8 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
     fireEvent.click(redoBtn);
     expect(rootSelect).toHaveValue(token2);
 
-    const resetContentBtn = screen.getByRole('button', { name: 'Reset Content' });
-    fireEvent.click(resetContentBtn);
+    const resetPosterBtn = screen.getByRole('button', { name: 'Reset Poster' });
+    fireEvent.click(resetPosterBtn);
     expect(rootSelect).toHaveValue(token1);
   });
 });

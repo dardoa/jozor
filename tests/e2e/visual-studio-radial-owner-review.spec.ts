@@ -401,7 +401,7 @@ async function navigateToStudio(page: Page, language: 'ar' | 'en') {
 
 async function openSection(page: Page, section: 'content' | 'layout', language: 'ar' | 'en') {
   const names = {
-    content: language === 'ar' ? /الشجرة والتخطيط/ : 'Tree & Layout',
+    content: language === 'ar' ? /إعداد سريع/ : 'Quick Setup',
     layout: language === 'ar' ? /الشجرة والتخطيط/ : 'Tree & Layout',
   } as const;
   const tab = page.getByRole('tab', { name: names[section] });

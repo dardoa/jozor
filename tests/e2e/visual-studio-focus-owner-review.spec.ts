@@ -332,6 +332,9 @@ async function configureScenario(page: Page, scenario: FocusScenario) {
   const privacyName = scenario.privacy === 'masked'
     ? (scenario.language === 'ar' ? /إخفاء الأحياء/ : 'Mask Living & Private Data')
     : (scenario.language === 'ar' ? /عرض جميع البيانات/ : 'Show Full Recorded Data');
+  const quickSetup = page.getByRole('tab', { name: scenario.language === 'ar' ? /إعداد سريع/ : 'Quick Setup' });
+  await quickSetup.click();
+  await expect(quickSetup).toHaveAttribute('aria-selected', 'true');
   const privacy = page.getByRole('button', { name: privacyName });
   await privacy.click();
   await expect(privacy).toHaveAttribute('aria-pressed', 'true');

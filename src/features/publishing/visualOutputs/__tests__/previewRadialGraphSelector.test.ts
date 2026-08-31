@@ -51,6 +51,12 @@ describe('previewRadialGraphSelector', () => {
 
     expect(result.sanitizedGraph.nodes.length).toBeGreaterThan(1);
     expect(result.focalPreviewId).toBeDefined();
+    expect(result.resolvePreviewIdInsideBoundary(result.focalPreviewId)).toBe('root');
+    const fatherPreviewId = result.sanitizedGraph.nodes.find(
+      (node) => node.displayName === 'Father Person'
+    )?.previewId;
+    expect(result.resolvePreviewIdInsideBoundary(fatherPreviewId!)).toBe('father');
+    expect(JSON.stringify(result)).not.toContain('"father"');
 
     // Check ancestors are included, spouse and siblings excluded
     const names = result.sanitizedGraph.nodes.map((n) => n.displayName);
