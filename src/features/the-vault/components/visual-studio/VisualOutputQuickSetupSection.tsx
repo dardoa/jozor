@@ -19,6 +19,12 @@ interface VisualOutputQuickSetupSectionProps {
   onUpdateContent?: (updates: Partial<SharedPosterSettings>) => void;
 }
 
+const PRESET_SWATCHES: Record<string, readonly [string, string, string]> = {
+  'classic-heritage': ['#f7f0df', '#9b5a2e', '#3f6b4b'],
+  'modern-gallery': ['#18181b', '#f5f5f4', '#d19a35'],
+  'dense-genealogy': ['#f7faf7', '#315c43', '#9ca3af'],
+};
+
 export const VisualOutputQuickSetupSection: FC<VisualOutputQuickSetupSectionProps> = ({
   language,
   state,
@@ -51,9 +57,16 @@ export const VisualOutputQuickSetupSection: FC<VisualOutputQuickSetupSectionProp
                     : 'border-stone-800 bg-stone-950/40 text-stone-300 hover:border-stone-700 hover:bg-stone-800/40'
                 }`}
               >
-                <div className="flex w-full items-center justify-between gap-2">
-                  <span className="text-xs font-semibold">{preset.displayName[language]}</span>
-                  {isSelected && <span className="h-2 w-2 rounded-full bg-amber-400" />}
+                <div className="flex w-full items-center gap-2.5">
+                  <span className="flex shrink-0 overflow-hidden rounded-sm border border-white/10" aria-hidden="true">
+                    {(PRESET_SWATCHES[preset.id] ?? PRESET_SWATCHES['classic-heritage']).map((color) => (
+                      <span key={color} className="h-5 w-2.5" style={{ backgroundColor: color }} />
+                    ))}
+                  </span>
+                  <span className="min-w-0 flex-1 text-xs font-semibold leading-tight">
+                    {preset.displayName[language]}
+                  </span>
+                  {isSelected && <span className="h-2 w-2 shrink-0 rounded-full bg-amber-400" />}
                 </div>
               </button>
             );

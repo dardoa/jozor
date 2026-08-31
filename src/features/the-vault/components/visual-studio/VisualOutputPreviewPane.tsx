@@ -1,6 +1,6 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { AlertTriangle, Maximize2, Scan, X, ZoomIn, ZoomOut } from 'lucide-react';
+import { AlertTriangle, Grid3X3, Layers3, Maximize2, Scan, X, ZoomIn, ZoomOut } from 'lucide-react';
 import {
   renderPosterSceneToSvg,
   type PosterScene,
@@ -17,6 +17,14 @@ interface VisualOutputPreviewPaneProps {
   posterSvgResources?: StudioPosterSvgResources;
   unavailableReason?: string;
   presentationTitle?: string;
+  productPreview?:
+    | { readonly kind: 'branch-collection'; readonly itemCount: number }
+    | {
+        readonly kind: 'tiled-wall';
+        readonly rows: number;
+        readonly columns: number;
+        readonly sheetSize: string;
+      };
 }
 
 const ar = {
@@ -33,6 +41,7 @@ export const VisualOutputPreviewPane: React.FC<VisualOutputPreviewPaneProps> = (
   posterSvgResources,
   unavailableReason,
   presentationTitle,
+  productPreview,
 }) => {
   const isAr = language === 'ar';
   const [previewZoom, setPreviewZoom] = React.useState(1);
@@ -57,8 +66,8 @@ export const VisualOutputPreviewPane: React.FC<VisualOutputPreviewPaneProps> = (
   const productType = selectedDefinition?.productType || 'poster';
   const posterOrientation = posterScene?.document.orientation ?? 'portrait';
 
-  const nodeCount = previewModel?.nodes?.length ?? (previewModel as unknown as { data?: { graph?: { nodes?: unknown[] } } })?.data?.graph?.nodes?.length ?? 0;
-  const edgeCount = previewModel?.edges?.length ?? (previewModel as unknown as { data?: { graph?: { edges?: unknown[] } } })?.data?.graph?.edges?.length ?? 0;
+  const nodeCount = posterScene?.nodes.length ?? previewModel?.nodes?.length ?? 0;
+  const edgeCount = posterScene?.connectors.length ?? previewModel?.edges?.length ?? 0;
   const isTruncated = previewModel?.metadata?.truncated ?? false;
   const posterRender = productType === 'poster' && posterScene
     ? renderPosterSceneToSvg({ scene: posterScene, resources: posterSvgResources })
@@ -66,7 +75,6 @@ export const VisualOutputPreviewPane: React.FC<VisualOutputPreviewPaneProps> = (
   const previewAspectRatio = posterRender
     ? `${posterRender.metadata.width} / ${posterRender.metadata.height}`
     : undefined;
-  const previewMaxWidth = posterOrientation === 'portrait' ? 640 : 980;
 
   React.useEffect(() => {
     if (!isPreviewExpanded) return undefined;
@@ -117,11 +125,11 @@ export const VisualOutputPreviewPane: React.FC<VisualOutputPreviewPaneProps> = (
   return (
     <>
     <div
-      className="flex h-full min-h-[46vh] flex-col items-center gap-2 bg-[var(--surface-subtle)] p-3 text-center select-none sm:min-h-[58vh] sm:p-4 lg:min-h-[62vh]"
+      className="flex h-full min-h-[420px] flex-col items-center gap-2 bg-[var(--surface-subtle)] p-3 text-center select-none sm:min-h-[520px] sm:p-4 lg:min-h-0"
       data-testid="visual-studio-preview-pane"
     >
       <div
-        className="relative flex min-h-[300px] w-full flex-1 items-center justify-center overflow-auto bg-[var(--surface-panel)] p-3 md:min-h-[480px] lg:min-h-[560px] lg:p-5"
+        className="relative flex min-h-[300px] w-full flex-1 items-center justify-center overflow-auto bg-[var(--surface-panel)] p-3 md:min-h-[420px] lg:min-h-0 lg:p-5"
         data-testid="visual-preview-frame"
         aria-label={previewAlt}
       >
@@ -177,14 +185,13 @@ export const VisualOutputPreviewPane: React.FC<VisualOutputPreviewPaneProps> = (
         {productType === 'poster' && posterRender ? (
           <div
             dir="ltr"
-            className="max-h-full w-full shrink-0 overflow-hidden border border-[var(--border-soft)] bg-white shadow-md transition-[max-width,aspect-ratio] duration-200"
+            className="relative h-auto w-[var(--poster-preview-size)] shrink-0 overflow-hidden border border-[var(--border-soft)] bg-white shadow-md transition-[width,height,aspect-ratio] duration-200 lg:h-[var(--poster-preview-size)] lg:w-auto"
             data-testid="studio-poster-page-frame"
             data-poster-scene-version={posterScene?.version}
             style={{
-              width: `${previewZoom * 100}%`,
-              maxWidth: previewMaxWidth * previewZoom,
+              '--poster-preview-size': `${previewZoom * 100}%`,
               aspectRatio: previewAspectRatio,
-            }}
+            } as React.CSSProperties}
           >
             <div
               role="img"
@@ -194,6 +201,43 @@ export const VisualOutputPreviewPane: React.FC<VisualOutputPreviewPaneProps> = (
               data-poster-renderer="svg-v1"
               dangerouslySetInnerHTML={{ __html: posterRender.svg }}
             />
+            {productPreview?.kind === 'tiled-wall' && (
+              <div
+                className="pointer-events-none absolute inset-0 grid"
+                style={{
+                  gridTemplateRows: `repeat(${productPreview.rows}, minmax(0, 1fr))`,
+                  gridTemplateColumns: `repeat(${productPreview.columns}, minmax(0, 1fr))`,
+                }}
+                data-testid="tiled-wall-preview-grid"
+                aria-hidden="true"
+              >
+                {Array.from({ length: productPreview.rows * productPreview.columns }, (_, index) => (
+                  <span
+                    key={index}
+                    className="flex items-start justify-start border border-dashed border-sky-700/70 bg-sky-400/[0.03] p-1 text-[8px] font-bold text-sky-900"
+                  >
+                    {index + 1}
+                  </span>
+                ))}
+              </div>
+            )}
+            {productPreview && (
+              <div
+                className="pointer-events-none absolute bottom-2 end-2 inline-flex items-center gap-1.5 rounded-md bg-stone-950/85 px-2 py-1 text-[9px] font-bold text-white shadow"
+                data-testid="poster-product-preview-badge"
+              >
+                {productPreview.kind === 'tiled-wall'
+                  ? <Grid3X3 className="h-3 w-3" aria-hidden="true" />
+                  : <Layers3 className="h-3 w-3" aria-hidden="true" />}
+                {productPreview.kind === 'tiled-wall'
+                  ? (isAr
+                      ? `${productPreview.rows}×${productPreview.columns} · ورق ${productPreview.sheetSize}`
+                      : `${productPreview.rows}×${productPreview.columns} · ${productPreview.sheetSize} sheets`)
+                  : (isAr
+                      ? `فهرس ${productPreview.itemCount} فروع`
+                      : `${productPreview.itemCount} branch posters`)}
+              </div>
+            )}
           </div>
         ) : productType === 'poster' && unavailableReason ? (
           <div

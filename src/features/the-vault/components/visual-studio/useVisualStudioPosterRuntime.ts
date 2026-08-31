@@ -35,12 +35,12 @@ import {
   type PosterImageAssetResolver,
   type PosterVisualStylePreset,
   type PreviewLiveTreeSource,
+  type SanitizedPreviewGraph,
   type StudioPosterSvgResources,
 } from '../../../publishing';
 import { mapPosterDesignStateToRuntimeOptions } from './posterDesignStateRuntimeAdapter';
 import {
   getVisualStudioPosterNodeLimit,
-  type BaseStudioPosterOptions,
 } from './visualStudioPosterOptions';
 
 interface UseVisualStudioPosterRuntimeOptions {
@@ -164,6 +164,19 @@ const isRadialCapacityError = (error: unknown): boolean => {
   return candidate.code === 'RADIAL_LAYOUT_CAPACITY_EXCEEDED'
     || (typeof candidate.message === 'string' && candidate.message.startsWith('Radial layout capacity exceeded:'));
 };
+
+const getVisibleGenerationCount = (graph: SanitizedPreviewGraph): number => Math.max(
+  1,
+  ...graph.nodes.map((node) => node.generation ?? 1)
+);
+
+const getExplicitPresetValue = <T extends string>(
+  value: T | undefined
+): Exclude<T, 'style-default'> | undefined => (
+  value && value !== 'style-default'
+    ? value as Exclude<T, 'style-default'>
+    : undefined
+);
 
 export function useVisualStudioPosterRuntime({
   language,
@@ -421,8 +434,8 @@ export function useVisualStudioPosterRuntime({
     }
   }, [completeRawSourceGraph, language, posterTokenCatalog, selectedPosterRootToken, designState.layoutMode, designState.radial, designState.scope, designState.shared]);
 
-  const [userPosterTitle, setUserPosterTitle] = useState('');
-  const [userPosterSubtitle, setUserPosterSubtitle] = useState('');
+  const userPosterTitle = designState.shared.headerText;
+  const userPosterSubtitle = designState.shared.subheaderText;
 
   const defaultPosterTitle = designState.layoutMode === 'focus-family'
     ? (isAr ? 'لوحة العائلة حول شخص' : 'Family Focus')
@@ -570,14 +583,7 @@ export function useVisualStudioPosterRuntime({
     designState.shared.showYears,
   ]);
 
-  const previewModel = useMemo(
-    () => ({
-      data: previewData,
-      definition: selectedDefinition,
-      isLanguageRtl: isAr,
-    }),
-    [isAr, previewData, selectedDefinition]
-  );
+  const previewModel = previewData?.previewModel;
 
   const posterDocumentSpec = useMemo(() => {
     if (!mappingResult.posterOptions || selectedDefinition.productType === 'snapshot') return undefined;
@@ -600,35 +606,36 @@ export function useVisualStudioPosterRuntime({
       return { scene: undefined, capacityError: undefined };
     }
 
-    const opt = <T extends string>(val: T | undefined): Exclude<T, 'style-default'> | undefined =>
-      val && val !== 'style-default' ? (val as Exclude<T, 'style-default'>) : undefined;
-
     if (mappingResult.posterOptions.engineId === 'radial-generations' && radialSelectionResult?.selection) {
       try {
+        const radialGraph = radialSelectionResult.selection.sanitizedGraph;
         const scene = createPosterScene({
-          graph: radialSelectionResult.selection.sanitizedGraph,
+          graph: radialGraph,
           document: posterDocumentSpec,
-          content: mappingResult.posterOptions.content,
+          content: {
+            ...mappingResult.posterOptions.content,
+            generationCount: getVisibleGenerationCount(radialGraph),
+          },
           engineId: 'radial-generations',
           radialOptions: mappingResult.posterOptions.radialOptions,
           stylePreset: selectedPosterStyle,
           photoShape: designState.shared.photoShape,
           connectorStyle: designState.shared.connectorStyle,
-          connectorPathStyle: opt(designState.shared.connectorPath),
-          colorPalette: opt(designState.shared.colorPalette),
+          connectorPathStyle: getExplicitPresetValue(designState.shared.connectorPath),
+          colorPalette: getExplicitPresetValue(designState.shared.colorPalette),
           colorOverrides: designState.shared.colorOverrides,
-          decoration: opt(designState.shared.decoration),
-          ornament: opt(designState.shared.ornament),
+          decoration: getExplicitPresetValue(designState.shared.decoration),
+          ornament: getExplicitPresetValue(designState.shared.ornament),
           typographyPreset: designState.shared.typography,
-          fontFamily: opt(designState.shared.fontFamily),
+          fontFamily: getExplicitPresetValue(designState.shared.fontFamily),
           cardScalePreset: designState.shared.cardScale,
-          cardEffectPreset: opt(designState.shared.cardEffect),
-          cardFramePreset: opt(designState.shared.cardFrame),
-          cardCornerPreset: opt(designState.shared.cardCorner),
-          cardLayoutPreset: opt(designState.shared.cardLayout),
-          pageFramePreset: opt(designState.shared.pageFrame),
-          headerPreset: opt(designState.shared.header),
-          spacingPreset: opt(designState.shared.spacing),
+          cardEffectPreset: getExplicitPresetValue(designState.shared.cardEffect),
+          cardFramePreset: getExplicitPresetValue(designState.shared.cardFrame),
+          cardCornerPreset: getExplicitPresetValue(designState.shared.cardCorner),
+          cardLayoutPreset: getExplicitPresetValue(designState.shared.cardLayout),
+          pageFramePreset: getExplicitPresetValue(designState.shared.pageFrame),
+          headerPreset: getExplicitPresetValue(designState.shared.header),
+          spacingPreset: getExplicitPresetValue(designState.shared.spacing),
           direction: designState.shared.direction,
         });
         return { scene, capacityError: undefined };
@@ -645,33 +652,35 @@ export function useVisualStudioPosterRuntime({
 
     if (mappingResult.posterOptions.engineId === 'focus-family' && focusSelectionResult?.selection) {
       try {
+        const focusGraph = focusSelectionResult.selection.sanitizedGraph;
         const scene = createPosterScene({
-          graph: focusSelectionResult.selection.sanitizedGraph,
+          graph: focusGraph,
           document: posterDocumentSpec,
           content: {
             ...mappingResult.posterOptions.content,
             scope: 'selected-root-focus',
+            generationCount: getVisibleGenerationCount(focusGraph),
           },
           engineId: 'focus-family',
           focusOptions: mappingResult.posterOptions.focusOptions,
           stylePreset: selectedPosterStyle,
           photoShape: designState.shared.photoShape,
           connectorStyle: designState.shared.connectorStyle,
-          connectorPathStyle: opt(designState.shared.connectorPath),
-          colorPalette: opt(designState.shared.colorPalette),
+          connectorPathStyle: getExplicitPresetValue(designState.shared.connectorPath),
+          colorPalette: getExplicitPresetValue(designState.shared.colorPalette),
           colorOverrides: designState.shared.colorOverrides,
-          decoration: opt(designState.shared.decoration),
-          ornament: opt(designState.shared.ornament),
+          decoration: getExplicitPresetValue(designState.shared.decoration),
+          ornament: getExplicitPresetValue(designState.shared.ornament),
           typographyPreset: designState.shared.typography,
-          fontFamily: opt(designState.shared.fontFamily),
+          fontFamily: getExplicitPresetValue(designState.shared.fontFamily),
           cardScalePreset: designState.shared.cardScale,
-          cardEffectPreset: opt(designState.shared.cardEffect),
-          cardFramePreset: opt(designState.shared.cardFrame),
-          cardCornerPreset: opt(designState.shared.cardCorner),
-          cardLayoutPreset: opt(designState.shared.cardLayout),
-          pageFramePreset: opt(designState.shared.pageFrame),
-          headerPreset: opt(designState.shared.header),
-          spacingPreset: opt(designState.shared.spacing),
+          cardEffectPreset: getExplicitPresetValue(designState.shared.cardEffect),
+          cardFramePreset: getExplicitPresetValue(designState.shared.cardFrame),
+          cardCornerPreset: getExplicitPresetValue(designState.shared.cardCorner),
+          cardLayoutPreset: getExplicitPresetValue(designState.shared.cardLayout),
+          pageFramePreset: getExplicitPresetValue(designState.shared.pageFrame),
+          headerPreset: getExplicitPresetValue(designState.shared.header),
+          spacingPreset: getExplicitPresetValue(designState.shared.spacing),
           direction: designState.shared.direction,
         });
         return { scene, capacityError: undefined };
@@ -689,7 +698,7 @@ export function useVisualStudioPosterRuntime({
     const content: PosterContentSpec = {
       definitionId: selectedDefinition.id,
       language,
-      generationCount: typeof (mappingResult.posterOptions as BaseStudioPosterOptions)?.generationDepth === 'number' ? ((mappingResult.posterOptions as BaseStudioPosterOptions).generationDepth as number) : 4,
+      generationCount: getVisibleGenerationCount(previewData.graph),
       privacyMode: designState.shared.privacyMode,
       title: posterTitle,
       subtitle: posterSubtitle,
@@ -717,21 +726,21 @@ export function useVisualStudioPosterRuntime({
         stylePreset: selectedPosterStyle,
         photoShape: designState.shared.photoShape,
         connectorStyle: designState.shared.connectorStyle,
-        connectorPathStyle: opt(designState.shared.connectorPath),
-        colorPalette: opt(designState.shared.colorPalette),
+        connectorPathStyle: getExplicitPresetValue(designState.shared.connectorPath),
+        colorPalette: getExplicitPresetValue(designState.shared.colorPalette),
         colorOverrides: designState.shared.colorOverrides,
-        decoration: opt(designState.shared.decoration),
-        ornament: opt(designState.shared.ornament),
+        decoration: getExplicitPresetValue(designState.shared.decoration),
+        ornament: getExplicitPresetValue(designState.shared.ornament),
         typographyPreset: designState.shared.typography,
-        fontFamily: opt(designState.shared.fontFamily),
+        fontFamily: getExplicitPresetValue(designState.shared.fontFamily),
         cardScalePreset: designState.shared.cardScale,
-        cardEffectPreset: opt(designState.shared.cardEffect),
-        cardFramePreset: opt(designState.shared.cardFrame),
-        cardCornerPreset: opt(designState.shared.cardCorner),
-        cardLayoutPreset: opt(designState.shared.cardLayout),
-        pageFramePreset: opt(designState.shared.pageFrame),
-        headerPreset: opt(designState.shared.header),
-        spacingPreset: opt(designState.shared.spacing),
+        cardEffectPreset: getExplicitPresetValue(designState.shared.cardEffect),
+        cardFramePreset: getExplicitPresetValue(designState.shared.cardFrame),
+        cardCornerPreset: getExplicitPresetValue(designState.shared.cardCorner),
+        cardLayoutPreset: getExplicitPresetValue(designState.shared.cardLayout),
+        pageFramePreset: getExplicitPresetValue(designState.shared.pageFrame),
+        headerPreset: getExplicitPresetValue(designState.shared.header),
+        spacingPreset: getExplicitPresetValue(designState.shared.spacing),
         direction: designState.shared.direction,
       }),
       capacityError: undefined,
@@ -755,8 +764,43 @@ export function useVisualStudioPosterRuntime({
       collectionTitle: posterOptions.branchCollectionIndexTitle || posterTitle,
       language,
       document: posterDocumentSpec,
+      direction: designState.shared.direction,
+      stylePreset: selectedPosterStyle,
+      photoShape: designState.shared.photoShape,
+      showYears: designState.shared.showYears,
+      showRelationship: designState.shared.showRelationship,
+      showBirthPlace: designState.shared.showBirthPlace,
+      showOccupation: designState.shared.showOccupation,
+      showDescription: designState.shared.showDescription,
+      connectorStyle: designState.shared.connectorStyle,
+      connectorPathStyle: getExplicitPresetValue(designState.shared.connectorPath),
+      spacingPreset: getExplicitPresetValue(designState.shared.spacing),
+      colorPalette: getExplicitPresetValue(designState.shared.colorPalette),
+      colorOverrides: designState.shared.colorOverrides,
+      decoration: getExplicitPresetValue(designState.shared.decoration),
+      ornament: getExplicitPresetValue(designState.shared.ornament),
+      typographyPreset: designState.shared.typography,
+      fontFamily: resolvedPosterFontFamily,
+      cardScalePreset: designState.shared.cardScale,
+      cardEffectPreset: getExplicitPresetValue(designState.shared.cardEffect),
+      cardFramePreset: getExplicitPresetValue(designState.shared.cardFrame),
+      cardCornerPreset: getExplicitPresetValue(designState.shared.cardCorner),
+      cardLayoutPreset: getExplicitPresetValue(designState.shared.cardLayout),
+      pageFramePreset: getExplicitPresetValue(designState.shared.pageFrame),
+      headerPreset: getExplicitPresetValue(designState.shared.header),
+      footerText: normalizePosterFooterText(designState.shared.footerText || ''),
+      showJozorAttribution: designState.shared.showJozorAttribution,
     });
-  }, [language, posterDocumentSpec, posterOptions, posterTitle, previewData, designState.productMode]);
+  }, [
+    designState,
+    language,
+    posterDocumentSpec,
+    posterOptions,
+    posterTitle,
+    previewData,
+    resolvedPosterFontFamily,
+    selectedPosterStyle,
+  ]);
 
   const branchCollectionBlockingWarnings = useMemo(() => {
     if (!branchPosterCollection) return [];
@@ -768,9 +812,15 @@ export function useVisualStudioPosterRuntime({
       return undefined;
     }
 
+    const tiledSheetDocument = createPosterDocumentSpec(
+      posterOptions.tiledSheetSize,
+      posterOptions.orientation,
+      posterOptions.marginPreset
+    );
+
     return createTiledWallPosterPlan({
       scene: posterScene,
-      sheetDocument: posterDocumentSpec,
+      sheetDocument: tiledSheetDocument,
       rows: posterOptions.tiledRows,
       columns: posterOptions.tiledColumns,
       overlapMm: posterOptions.tiledOverlapMm,
@@ -854,9 +904,7 @@ export function useVisualStudioPosterRuntime({
     selectedFocalPersonToken,
     posterRootOptions,
     userPosterTitle,
-    setUserPosterTitle,
     userPosterSubtitle,
-    setUserPosterSubtitle,
     previewPresentationTitle,
     mappingResult,
     previewModel,

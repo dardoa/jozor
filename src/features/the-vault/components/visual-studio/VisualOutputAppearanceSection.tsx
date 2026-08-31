@@ -19,6 +19,59 @@ export const VisualOutputAppearanceSection: FC<VisualOutputAppearanceSectionProp
   onReset,
 }) => {
   const isAr = language === 'ar';
+  const colorPaletteOptions = [
+    { value: 'style-default', label: t.paletteDefault },
+    { value: 'heritage-warm', label: t.paletteWarm },
+    { value: 'gallery-dark', label: t.paletteGallery },
+    { value: 'evergreen', label: t.paletteEvergreen },
+    { value: 'monochrome-print', label: t.paletteMonochrome },
+  ] satisfies ReadonlyArray<{ value: SharedPosterSettings['colorPalette']; label: string }>;
+  const connectorStyleOptions = [
+    { value: 'subtle', label: t.connSubtle },
+    { value: 'classic', label: t.connClassic },
+    { value: 'bold', label: t.connBold },
+  ] satisfies ReadonlyArray<{ value: SharedPosterSettings['connectorStyle']; label: string }>;
+  const connectorPathOptions = [
+    { value: 'style-default', label: isAr ? 'حسب التصميم' : 'Style default' },
+    { value: 'curved', label: t.connPathCurved },
+    { value: 'straight', label: t.connPathStraight },
+    { value: 'orthogonal', label: t.connPathAngular },
+  ] satisfies ReadonlyArray<{ value: SharedPosterSettings['connectorPath']; label: string }>;
+  const decorationOptions = [
+    { value: 'style-default', label: t.spacingDefault },
+    { value: 'clean', label: t.cardEffectNone },
+    { value: 'paper-grain', label: t.decorWarmPaper },
+    { value: 'lineage-grid', label: t.decorLineageGrid },
+  ] satisfies ReadonlyArray<{ value: SharedPosterSettings['decoration']; label: string }>;
+  const ornamentOptions = [
+    { value: 'style-default', label: t.spacingDefault },
+    { value: 'none', label: t.cardEffectNone },
+    { value: 'lineage-medallion', label: t.ornCornerFiligree },
+    { value: 'gallery-marks', label: t.ornGallery },
+    { value: 'corner-branches', label: t.ornCornerBranches },
+  ] satisfies ReadonlyArray<{ value: SharedPosterSettings['ornament']; label: string }>;
+  const pageFrameOptions = [
+    { value: 'style-default', label: t.spacingDefault },
+    { value: 'none', label: t.cardEffectNone },
+    { value: 'minimal', label: t.ornMinimal },
+    { value: 'heritage', label: t.ornHeritage },
+    { value: 'gallery', label: t.ornGallery },
+  ] satisfies ReadonlyArray<{ value: SharedPosterSettings['pageFrame']; label: string }>;
+  const typographyOptions = [
+    { value: 'balanced', label: t.typoBalanced },
+    { value: 'prominent', label: t.typoProminent },
+    { value: 'compact', label: t.typoCompact },
+  ] satisfies ReadonlyArray<{ value: SharedPosterSettings['typography']; label: string }>;
+  const fontFamilyOptions = [
+    { value: 'amiri', label: t.fontAmiri },
+    { value: 'noto-sans-arabic', label: t.fontNotoSans },
+  ] satisfies ReadonlyArray<{ value: SharedPosterSettings['fontFamily']; label: string }>;
+  const headerOptions = [
+    { value: 'style-default', label: t.spacingDefault },
+    { value: 'ceremonial', label: t.headerCeremonial },
+    { value: 'gallery-rail', label: t.headerModernBanner },
+    { value: 'registry', label: t.headerMinimal },
+  ] satisfies ReadonlyArray<{ value: SharedPosterSettings['header']; label: string }>;
 
   return (
     <div className="space-y-4">
@@ -26,20 +79,14 @@ export const VisualOutputAppearanceSection: FC<VisualOutputAppearanceSectionProp
             <fieldset className="space-y-1.5" role="group" aria-label={t.colorPalette} data-testid="poster-color-palette-controls">
               <legend className="text-xs font-medium text-stone-400 mb-1">{t.colorPalette}</legend>
               <div className="grid grid-cols-2 gap-2">
-                {[
-                  { cp: 'style-default' as const, label: t.paletteDefault },
-                  { cp: 'heritage-warm' as const, label: t.paletteWarm },
-                  { cp: 'gallery-dark' as const, label: t.paletteGallery },
-                  { cp: 'evergreen' as const, label: t.paletteEvergreen },
-                  { cp: 'monochrome-print' as const, label: t.paletteMonochrome },
-                ].map(({ cp, label }) => (
+                {colorPaletteOptions.map(({ value, label }) => (
                   <button
-                    key={cp}
+                    key={value}
                     type="button"
-                    aria-pressed={currentState.shared.colorPalette === cp}
-                    onClick={() => onUpdate?.({ colorPalette: cp as SharedPosterSettings['colorPalette'] })}
+                    aria-pressed={currentState.shared.colorPalette === value}
+                    onClick={() => onUpdate?.({ colorPalette: value })}
                     className={`px-2.5 py-2 rounded-lg border text-xs text-center transition-colors ${
-                      currentState.shared.colorPalette === cp
+                      currentState.shared.colorPalette === value
                         ? 'border-amber-500 bg-amber-500/10 text-amber-300 font-medium'
                         : 'border-stone-800 bg-stone-950/40 text-stone-400 hover:border-stone-700'
                     }`}
@@ -60,18 +107,14 @@ export const VisualOutputAppearanceSection: FC<VisualOutputAppearanceSectionProp
             <fieldset className="space-y-1.5 border-t border-stone-800 pt-3" role="group" aria-label={t.connectors} data-testid="poster-connector-style-controls">
               <legend className="text-xs font-medium text-stone-400 mb-1">{t.connectors}</legend>
               <div className="grid grid-cols-3 gap-2">
-                {[
-                  { cs: 'subtle' as const, label: t.connSubtle },
-                  { cs: 'classic' as const, label: t.connClassic },
-                  { cs: 'bold' as const, label: t.connBold },
-                ].map(({ cs, label }) => (
+                {connectorStyleOptions.map(({ value, label }) => (
                   <button
-                    key={cs}
+                    key={value}
                     type="button"
-                    aria-pressed={currentState.shared.connectorStyle === cs}
-                    onClick={() => onUpdate?.({ connectorStyle: cs as SharedPosterSettings['connectorStyle'] })}
+                    aria-pressed={currentState.shared.connectorStyle === value}
+                    onClick={() => onUpdate?.({ connectorStyle: value })}
                     className={`px-2.5 py-2 rounded-lg border text-xs text-center transition-colors ${
-                      currentState.shared.connectorStyle === cs
+                      currentState.shared.connectorStyle === value
                         ? 'border-amber-500 bg-amber-500/10 text-amber-300 font-medium'
                         : 'border-stone-800 bg-stone-950/40 text-stone-400 hover:border-stone-700'
                     }`}
@@ -86,19 +129,14 @@ export const VisualOutputAppearanceSection: FC<VisualOutputAppearanceSectionProp
             <fieldset className="space-y-1.5 border-t border-stone-800 pt-3" role="group" aria-label={t.connectorPath} data-testid="poster-connector-path-controls">
               <legend className="text-xs font-medium text-stone-400 mb-1">{t.connectorPath}</legend>
               <div className="grid grid-cols-3 gap-2">
-                {[
-                  { cp: 'style-default' as const, label: isAr ? 'حسب التصميم' : 'Style default' },
-                  { cp: 'curved' as const, label: t.connPathCurved },
-                  { cp: 'straight' as const, label: t.connPathStraight },
-                  { cp: 'angular' as const, label: t.connPathAngular },
-                ].map(({ cp, label }) => (
+                {connectorPathOptions.map(({ value, label }) => (
                   <button
-                    key={cp}
+                    key={value}
                     type="button"
-                    aria-pressed={currentState.shared.connectorPath === cp}
-                    onClick={() => onUpdate?.({ connectorPath: cp as SharedPosterSettings['connectorPath'] })}
+                    aria-pressed={currentState.shared.connectorPath === value}
+                    onClick={() => onUpdate?.({ connectorPath: value })}
                     className={`px-2.5 py-2 rounded-lg border text-xs text-center transition-colors ${
-                      currentState.shared.connectorPath === cp
+                      currentState.shared.connectorPath === value
                         ? 'border-amber-500 bg-amber-500/10 text-amber-300 font-medium'
                         : 'border-stone-800 bg-stone-950/40 text-stone-400 hover:border-stone-700'
                     }`}
@@ -113,19 +151,14 @@ export const VisualOutputAppearanceSection: FC<VisualOutputAppearanceSectionProp
             <fieldset className="space-y-1.5 border-t border-stone-800 pt-3" role="group" aria-label={t.decoration}>
               <legend className="text-xs font-medium text-stone-400 mb-1">{t.decoration}</legend>
               <div className="grid grid-cols-2 gap-2">
-                {[
-                  { dec: 'style-default' as const, label: t.spacingDefault },
-                  { dec: 'none' as const, label: t.cardEffectNone },
-                  { dec: 'warm-paper' as const, label: t.decorWarmPaper },
-                  { dec: 'lineage-grid' as const, label: t.decorLineageGrid },
-                ].map(({ dec, label }) => (
+                {decorationOptions.map(({ value, label }) => (
                   <button
-                    key={dec}
+                    key={value}
                     type="button"
-                    aria-pressed={currentState.shared.decoration === dec}
-                    onClick={() => onUpdate?.({ decoration: dec as SharedPosterSettings['decoration'] })}
+                    aria-pressed={currentState.shared.decoration === value}
+                    onClick={() => onUpdate?.({ decoration: value })}
                     className={`px-2.5 py-2 rounded-lg border text-xs text-center transition-colors ${
-                      currentState.shared.decoration === dec
+                      currentState.shared.decoration === value
                         ? 'border-amber-500 bg-amber-500/10 text-amber-300 font-medium'
                         : 'border-stone-800 bg-stone-950/40 text-stone-400 hover:border-stone-700'
                     }`}
@@ -140,19 +173,14 @@ export const VisualOutputAppearanceSection: FC<VisualOutputAppearanceSectionProp
             <fieldset className="space-y-1.5 border-t border-stone-800 pt-3" role="group" aria-label={t.ornament}>
               <legend className="text-xs font-medium text-stone-400 mb-1">{t.ornament}</legend>
               <div className="grid grid-cols-2 gap-2">
-                {[
-                  { orn: 'style-default' as const, label: t.spacingDefault },
-                  { orn: 'none' as const, label: t.cardEffectNone },
-                  { orn: 'corner-filigree' as const, label: t.ornCornerFiligree },
-                  { orn: 'corner-branches' as const, label: t.ornCornerBranches },
-                ].map(({ orn, label }) => (
+                {ornamentOptions.map(({ value, label }) => (
                   <button
-                    key={orn}
+                    key={value}
                     type="button"
-                    aria-pressed={currentState.shared.ornament === orn}
-                    onClick={() => onUpdate?.({ ornament: orn as SharedPosterSettings['ornament'] })}
+                    aria-pressed={currentState.shared.ornament === value}
+                    onClick={() => onUpdate?.({ ornament: value })}
                     className={`px-2.5 py-2 rounded-lg border text-xs text-center transition-colors ${
-                      currentState.shared.ornament === orn
+                      currentState.shared.ornament === value
                         ? 'border-amber-500 bg-amber-500/10 text-amber-300 font-medium'
                         : 'border-stone-800 bg-stone-950/40 text-stone-400 hover:border-stone-700'
                     }`}
@@ -167,18 +195,14 @@ export const VisualOutputAppearanceSection: FC<VisualOutputAppearanceSectionProp
             <fieldset className="space-y-1.5 border-t border-stone-800 pt-3" role="group" aria-label={t.typography}>
               <legend className="text-xs font-medium text-stone-400 mb-1">{t.typography}</legend>
               <div className="grid grid-cols-3 gap-2">
-                {[
-                  { ty: 'balanced' as const, label: t.typoBalanced },
-                  { ty: 'prominent' as const, label: t.typoProminent },
-                  { ty: 'compact' as const, label: t.typoCompact },
-                ].map(({ ty, label }) => (
+                {typographyOptions.map(({ value, label }) => (
                   <button
-                    key={ty}
+                    key={value}
                     type="button"
-                    aria-pressed={currentState.shared.typography === ty}
-                    onClick={() => onUpdate?.({ typography: ty as SharedPosterSettings['typography'] })}
+                    aria-pressed={currentState.shared.typography === value}
+                    onClick={() => onUpdate?.({ typography: value })}
                     className={`px-2.5 py-2 rounded-lg border text-xs text-center transition-colors ${
-                      currentState.shared.typography === ty
+                      currentState.shared.typography === value
                         ? 'border-amber-500 bg-amber-500/10 text-amber-300 font-medium'
                         : 'border-stone-800 bg-stone-950/40 text-stone-400 hover:border-stone-700'
                     }`}
@@ -193,17 +217,14 @@ export const VisualOutputAppearanceSection: FC<VisualOutputAppearanceSectionProp
             <fieldset className="space-y-1.5 border-t border-stone-800 pt-3" role="group" aria-label={t.fontFamily}>
               <legend className="text-xs font-medium text-stone-400 mb-1">{t.fontFamily}</legend>
               <div className="grid grid-cols-2 gap-2">
-                {[
-                  { ff: 'amiri' as const, label: t.fontAmiri },
-                  { ff: 'noto-sans-arabic' as const, label: t.fontNotoSans },
-                ].map(({ ff, label }) => (
+                {fontFamilyOptions.map(({ value, label }) => (
                   <button
-                    key={ff}
+                    key={value}
                     type="button"
-                    aria-pressed={currentState.shared.fontFamily === ff}
-                    onClick={() => onUpdate?.({ fontFamily: ff as SharedPosterSettings['fontFamily'] })}
+                    aria-pressed={currentState.shared.fontFamily === value}
+                    onClick={() => onUpdate?.({ fontFamily: value })}
                     className={`px-2.5 py-2 rounded-lg border text-xs text-center transition-colors ${
-                      currentState.shared.fontFamily === ff
+                      currentState.shared.fontFamily === value
                         ? 'border-amber-500 bg-amber-500/10 text-amber-300 font-medium'
                         : 'border-stone-800 bg-stone-950/40 text-stone-400 hover:border-stone-700'
                     }`}
@@ -218,20 +239,14 @@ export const VisualOutputAppearanceSection: FC<VisualOutputAppearanceSectionProp
             <fieldset className="space-y-1.5 border-t border-stone-800 pt-3" role="group" aria-label={t.pageFrame}>
               <legend className="text-xs font-medium text-stone-400 mb-1">{t.pageFrame}</legend>
               <div className="grid grid-cols-2 gap-2">
-                {[
-                  { pf: 'style-default' as const, label: t.spacingDefault },
-                  { pf: 'heritage' as const, label: t.ornHeritage },
-                  { pf: 'gallery' as const, label: t.ornGallery },
-                  { pf: 'minimal' as const, label: t.ornMinimal },
-                  { pf: 'ornate-corner-filigree' as const, label: t.ornOrnateCornerFiligree },
-                ].map(({ pf, label }) => (
+                {pageFrameOptions.map(({ value, label }) => (
                   <button
-                    key={pf}
+                    key={value}
                     type="button"
-                    aria-pressed={currentState.shared.pageFrame === pf}
-                    onClick={() => onUpdate?.({ pageFrame: pf as SharedPosterSettings['pageFrame'] })}
+                    aria-pressed={currentState.shared.pageFrame === value}
+                    onClick={() => onUpdate?.({ pageFrame: value })}
                     className={`px-2.5 py-2 rounded-lg border text-xs text-center transition-colors ${
-                      currentState.shared.pageFrame === pf
+                      currentState.shared.pageFrame === value
                         ? 'border-amber-500 bg-amber-500/10 text-amber-300 font-medium'
                         : 'border-stone-800 bg-stone-950/40 text-stone-400 hover:border-stone-700'
                     }`}
@@ -246,19 +261,14 @@ export const VisualOutputAppearanceSection: FC<VisualOutputAppearanceSectionProp
             <fieldset className="space-y-1.5 border-t border-stone-800 pt-3" role="group" aria-label={t.headerStyle}>
               <legend className="text-xs font-medium text-stone-400 mb-1">{t.headerStyle}</legend>
               <div className="grid grid-cols-2 gap-2">
-                {[
-                  { hs: 'style-default' as const, label: t.spacingDefault },
-                  { hs: 'ceremonial' as const, label: t.headerCeremonial },
-                  { hs: 'modern-banner' as const, label: t.headerModernBanner },
-                  { hs: 'minimal' as const, label: t.headerMinimal },
-                ].map(({ hs, label }) => (
+                {headerOptions.map(({ value, label }) => (
                   <button
-                    key={hs}
+                    key={value}
                     type="button"
-                    aria-pressed={currentState.shared.header === hs}
-                    onClick={() => onUpdate?.({ header: hs as SharedPosterSettings['header'] })}
+                    aria-pressed={currentState.shared.header === value}
+                    onClick={() => onUpdate?.({ header: value })}
                     className={`px-2.5 py-2 rounded-lg border text-xs text-center transition-colors ${
-                      currentState.shared.header === hs
+                      currentState.shared.header === value
                         ? 'border-amber-500 bg-amber-500/10 text-amber-300 font-medium'
                         : 'border-stone-800 bg-stone-950/40 text-stone-400 hover:border-stone-700'
                     }`}

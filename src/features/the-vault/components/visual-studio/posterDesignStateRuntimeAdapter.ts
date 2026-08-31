@@ -105,13 +105,17 @@ export function mapPosterDesignStateToRuntimeOptions(
       includeFocalSiblings: state.focus.includeSiblings,
     };
 
+    const configuredFocusDepth = Math.max(
+      state.focus.ancestorDepth === 'all' ? 4 : state.focus.ancestorDepth,
+      state.focus.descendantDepth === 'all' ? 4 : state.focus.descendantDepth
+    );
     const content: PosterContentSpec & { readonly scope: 'selected-root-focus' } = {
       definitionId: context?.definitionId || 'classic-ancestor-poster',
       language: context?.language || 'ar',
       title: context?.title || state.shared.headerText || 'لوحة حول الشخص المحوري',
       subtitle: context?.subtitle || state.shared.subheaderText,
       scope: 'selected-root-focus',
-      generationCount: 4,
+      generationCount: configuredFocusDepth + 1,
       privacyMode: state.shared.privacyMode,
     };
 

@@ -169,7 +169,7 @@ const ar = {
   decorWarmPaper: 'ورق دافئ',
   decorLineageGrid: 'شبكة الأنساب',
   ornament: 'زخارف الأركان',
-  ornCornerFiligree: 'زخرفة ركنية',
+  ornCornerFiligree: 'ميدالية السلالة',
   ornCornerBranches: 'أغصان ركنية',
   pageFrame: 'إطار الصفحة',
   ornHeritage: 'تراثي',
@@ -179,7 +179,7 @@ const ar = {
   headerStyle: 'نمط العنوان الرئيسي',
   headerCeremonial: 'احتفالي',
   headerModernBanner: 'شريط عصري',
-  headerMinimal: 'بسيط',
+  headerMinimal: 'سجل عائلي',
   pageSize: 'حجم الورق',
   orientation: 'اتجاه الصفحة',
   portrait: 'عمودي',
@@ -306,7 +306,7 @@ const en = {
   decorWarmPaper: 'Warm Paper',
   decorLineageGrid: 'Lineage Grid',
   ornament: 'Corner Ornaments',
-  ornCornerFiligree: 'Corner Filigree',
+  ornCornerFiligree: 'Lineage Medallion',
   ornCornerBranches: 'Corner Branches',
   pageFrame: 'Page Border Frame',
   ornHeritage: 'Heritage',
@@ -316,7 +316,7 @@ const en = {
   headerStyle: 'Header Layout Style',
   headerCeremonial: 'Ceremonial',
   headerModernBanner: 'Modern Banner',
-  headerMinimal: 'Minimal',
+  headerMinimal: 'Family Registry',
   pageSize: 'Paper Size',
   orientation: 'Orientation',
   portrait: 'Portrait',
@@ -411,7 +411,7 @@ export const VisualOutputConfigPanel: React.FC<VisualOutputConfigPanelProps> = (
 
   return (
     <div
-      className="flex w-full flex-col overflow-hidden rounded-xl border border-stone-800 bg-stone-900 text-stone-100 shadow-xl lg:max-h-[72vh]"
+      className="flex h-full w-full flex-col overflow-hidden rounded-xl border border-stone-800 bg-stone-900 text-stone-100 shadow-xl lg:rounded-none lg:border-0 lg:shadow-none"
       dir={isAr ? 'rtl' : 'ltr'}
       data-testid="visual-studio-config-panel"
     >

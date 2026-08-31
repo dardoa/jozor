@@ -9,6 +9,7 @@ import type {
 } from '../../../publishing';
 import type { VisualOutputConfigCopy } from './VisualOutputConfigPanel';
 import type { VisualStudioPosterRootOption } from './visualStudioPosterOptions';
+import { VisualOutputPersonPicker } from './VisualOutputPersonPicker';
 
 interface VisualOutputTreeLayoutSectionProps {
   language: 'ar' | 'en';
@@ -49,60 +50,42 @@ export const VisualOutputTreeLayoutSection: FC<VisualOutputTreeLayoutSectionProp
               && currentState.scope !== 'full-tree'
               && currentState.layoutMode === 'tiered'
               && (
-              <div>
-                <label htmlFor="poster-root-select" className="block text-xs font-medium text-stone-400 mb-1.5">{t.selectedRoot}</label>
-                <select
-                  id="poster-root-select"
-                  aria-label={t.selectedRoot}
-                  value={effectivePosterRootToken || posterRootOptions[0]?.token}
-                  onChange={(e) => {
-                    const val = e.target.value;
+              <VisualOutputPersonPicker
+                language={language}
+                label={t.selectedRoot}
+                options={posterRootOptions}
+                value={effectivePosterRootToken || posterRootOptions[0]?.token || ''}
+                selectId="poster-root-select"
+                testId="poster-root-select"
+                onChange={(token) => {
                     if (onSelectPosterRoot) {
-                      onSelectPosterRoot(val);
+                      onSelectPosterRoot(token);
                     } else {
-                      onUpdateContent?.({ selectedPosterRootToken: val });
+                      onUpdateContent?.({ selectedPosterRootToken: token });
                     }
                   }}
-                  className="w-full px-3 py-2 bg-stone-950 border border-stone-800 rounded-lg text-xs text-stone-200 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500"
-                >
-                  {posterRootOptions.map((opt) => (
-                    <option key={opt.token} value={opt.token}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              />
             )}
             {/* Radial Generations Controls */}
             {currentState.productMode === 'detailed-poster' && currentState.layoutMode === 'radial-generations' && (
               <div className="space-y-4" data-testid="radial-controls-section">
                 {/* Radial Root Person Selector */}
                 {posterRootOptions.length > 0 && (
-                  <div>
-                    <label htmlFor="radial-root-select" className="block text-xs font-medium text-stone-400 mb-1.5">
-                      {t.selectedRoot}
-                    </label>
-                    <select
-                      id="radial-root-select"
-                      aria-label={t.selectedRoot}
-                      value={effectivePosterRootToken || posterRootOptions[0]?.token}
-                      onChange={(e) => {
-                        const val = e.target.value;
+                  <VisualOutputPersonPicker
+                    language={language}
+                    label={t.selectedRoot}
+                    options={posterRootOptions}
+                    value={effectivePosterRootToken || posterRootOptions[0]?.token || ''}
+                    selectId="radial-root-select"
+                    testId="radial-root-select"
+                    onChange={(token) => {
                         if (onSelectPosterRoot) {
-                          onSelectPosterRoot(val);
+                          onSelectPosterRoot(token);
                         } else {
-                          onUpdateContent?.({ selectedPosterRootToken: val });
+                          onUpdateContent?.({ selectedPosterRootToken: token });
                         }
                       }}
-                      className="w-full px-3 py-2 bg-stone-950 border border-stone-800 rounded-lg text-xs text-stone-200 focus:outline-none focus:border-amber-500"
-                    >
-                      {posterRootOptions.map((opt) => (
-                        <option key={opt.token} value={opt.token}>
-                          {opt.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  />
                 )}
 
                 {/* Radial Geometry Span (360 vs 180) */}
@@ -282,32 +265,15 @@ export const VisualOutputTreeLayoutSection: FC<VisualOutputTreeLayoutSectionProp
             {currentState.productMode === 'detailed-poster' && currentState.layoutMode === 'focus-family' && (
               <div className="space-y-3 border-t border-stone-800/80 pt-3" data-testid="focus-family-controls">
                 {/* Focal Person Token Selector */}
-                <div>
-                  <label className="block text-xs font-medium text-stone-400 mb-1.5">
-                    {isAr ? 'الشخص المحوري' : 'Focal Person'}
-                  </label>
-                  <select
-                    aria-label={isAr ? '\u0627\u0644\u0634\u062e\u0635 \u0627\u0644\u0645\u062d\u0648\u0631\u064a' : 'Focal Person'}
-                    value={selectedFocalPersonToken ?? currentState.focus.focalPersonToken}
-                    onChange={(e) => onUpdateFocus?.({ focalPersonToken: e.target.value })}
-                    className="w-full bg-stone-950 border border-stone-800 rounded-lg px-3 py-2 text-xs text-stone-200 focus:outline-none focus:border-amber-500"
-                    data-testid="focal-person-select"
-                  >
-                    {posterRootOptions.length > 0 ? (
-                      posterRootOptions.map((opt) => (
-                        <option key={opt.token} value={opt.token}>
-                          {opt.label}
-                        </option>
-                      ))
-                    ) : (
-                      <>
-                        <option value="focal-token-1">{isAr ? 'الجد الأول (افتراضي)' : 'Ancestor Root 1 (Default)'}</option>
-                        <option value="focal-token-2">{isAr ? 'الأب عبد الله' : 'Father Abdullah'}</option>
-                        <option value="focal-token-3">{isAr ? 'الابن محمد' : 'Son Mohammed'}</option>
-                      </>
-                    )}
-                  </select>
-                </div>
+                <VisualOutputPersonPicker
+                  language={language}
+                  label={isAr ? 'الشخص المحوري' : 'Focal Person'}
+                  options={posterRootOptions}
+                  value={selectedFocalPersonToken ?? currentState.focus.focalPersonToken}
+                  onChange={(token) => onUpdateFocus?.({ focalPersonToken: token })}
+                  selectId="focal-person-select"
+                  testId="focal-person-select"
+                />
 
                 {/* Ancestor Depth */}
                 <div>

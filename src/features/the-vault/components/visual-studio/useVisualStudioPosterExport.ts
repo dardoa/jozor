@@ -17,6 +17,30 @@ import { exportStudioPoster } from '../../../publishing/visualOutputs/studioPost
 
 export type VisualStudioExportingFormat = StudioPosterExportFormat | 'branch-collection' | 'tiled-wall';
 
+const getExportFailureMessage = (
+  error: unknown,
+  language: 'ar' | 'en',
+  fallback: { ar: string; en: string }
+): string => {
+  const message = error instanceof Error ? error.message.toLowerCase() : '';
+  if (message.includes('memory') || message.includes('canvas') || message.includes('allocation')) {
+    return language === 'ar'
+      ? 'تعذر إنشاء الملف بهذه الدقة. جرّب دقة أو مقاسًا أصغر.'
+      : 'This file exceeds the available rendering memory. Try a smaller size or resolution.';
+  }
+  if (message.includes('font')) {
+    return language === 'ar'
+      ? 'تعذر تجهيز الخط للطباعة. أعد المحاولة بعد اكتمال تحميل الخط.'
+      : 'The print font could not be prepared. Retry after the font finishes loading.';
+  }
+  if (message.includes('image') || message.includes('photo')) {
+    return language === 'ar'
+      ? 'تعذر تجهيز إحدى الصور. أخفِ الصور أو أعد المحاولة.'
+      : 'A poster image could not be prepared. Hide photos or retry.';
+  }
+  return language === 'ar' ? fallback.ar : fallback.en;
+};
+
 interface UseVisualStudioPosterExportOptions {
   language: 'ar' | 'en';
   posterScene?: PosterScene;
@@ -45,14 +69,11 @@ export function useVisualStudioPosterExport({
     setExportingFormat(format);
     try {
       if (format === 'svg') {
-        const result = await exportStudioPoster(
-          {
-            scene: posterScene,
-            resources: posterSvgResources,
-            format,
-          },
-          {} as StudioPosterExportRuntime
-        );
+        const result = await exportStudioPoster({
+          scene: posterScene,
+          resources: posterSvgResources,
+          format,
+        });
         downloadFile(result.blob, result.fileName, result.mimeType);
         toast.success(isAr ? 'تم تنزيل ملف SVG بنجاح' : 'SVG file downloaded successfully');
         return;
@@ -88,8 +109,11 @@ export function useVisualStudioPosterExport({
       );
       downloadFile(result.blob, result.fileName, result.mimeType);
       toast.success(isAr ? 'تم تنزيل ملف PDF بنجاح' : 'PDF file downloaded successfully');
-    } catch {
-      toast.error(isAr ? 'عذراً، تعذر تصدير الملف' : 'Sorry, failed to export file');
+    } catch (error) {
+      toast.error(getExportFailureMessage(error, language, {
+        ar: 'عذراً، تعذر تصدير الملف',
+        en: 'Sorry, failed to export file',
+      }));
     } finally {
       setExportingFormat(undefined);
     }
@@ -106,8 +130,11 @@ export function useVisualStudioPosterExport({
       });
       downloadFile(result.blob, result.fileName, result.mimeType);
       toast.success(isAr ? 'تم تصدير حزمة الفروع بنجاح' : 'Branch collection archive exported successfully');
-    } catch {
-      toast.error(isAr ? 'عذراً، تعذر تصدير حزمة الفروع' : 'Sorry, failed to export branch collection archive');
+    } catch (error) {
+      toast.error(getExportFailureMessage(error, language, {
+        ar: 'عذراً، تعذر تصدير حزمة الفروع',
+        en: 'Sorry, failed to export branch collection archive',
+      }));
     } finally {
       setExportingFormat(undefined);
     }
@@ -124,8 +151,11 @@ export function useVisualStudioPosterExport({
       });
       downloadFile(result.blob, result.fileName, result.mimeType);
       toast.success(isAr ? 'تم تصدير أوراق اللوحة المقسمة بنجاح' : 'Tiled wall archive exported successfully');
-    } catch {
-      toast.error(isAr ? 'عذراً، تعذر تصدير اللوحة المقسمة' : 'Sorry, failed to export tiled wall archive');
+    } catch (error) {
+      toast.error(getExportFailureMessage(error, language, {
+        ar: 'عذراً، تعذر تصدير اللوحة المقسمة',
+        en: 'Sorry, failed to export tiled wall archive',
+      }));
     } finally {
       setExportingFormat(undefined);
     }

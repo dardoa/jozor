@@ -3,6 +3,7 @@ import { CircleDot, Focus, Network, TreePine } from 'lucide-react';
 import type {
   PosterDesignState,
   PosterLayoutMode,
+  PosterProductMode,
   PosterTreeScope,
   RadialSettingsBucket,
 } from '../../../publishing';
@@ -11,6 +12,7 @@ interface VisualOutputDiagramSelectorProps {
   language: 'ar' | 'en';
   state: PosterDesignState;
   onSelectDiagramType: (mode: PosterLayoutMode | 'full-tree') => void;
+  onSwitchProductMode: (mode: PosterProductMode) => void;
   onSwitchScope: (scope: PosterTreeScope) => void;
   onUpdateRadial: (updates: Partial<RadialSettingsBucket>) => void;
 }
@@ -19,6 +21,7 @@ export const VisualOutputDiagramSelector: React.FC<VisualOutputDiagramSelectorPr
   language,
   state,
   onSelectDiagramType,
+  onSwitchProductMode,
   onSwitchScope,
   onUpdateRadial,
 }) => {
@@ -114,6 +117,62 @@ export const VisualOutputDiagramSelector: React.FC<VisualOutputDiagramSelectorPr
                   }`}
                 >
                   {label}
+                </button>
+              );
+            })}
+          </div>
+        </fieldset>
+      )}
+
+      {activeDiagramType === 'full-tree' && (
+        <fieldset
+          className="min-w-0 space-y-2 lg:col-span-2"
+          role="group"
+          aria-label={isAr ? 'طريقة إخراج الشجرة الكاملة' : 'Full-tree output method'}
+          data-testid="poster-output-assembly-controls"
+        >
+          <legend className="text-xs font-bold text-[var(--text-main)]">
+            {isAr ? 'كيف تريد استلام الشجرة الكاملة؟' : 'How should the full tree be delivered?'}
+          </legend>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+            {([
+              {
+                value: 'full-tree-overview' as const,
+                label: isAr ? 'لوحة واحدة' : 'Single poster',
+                description: isAr ? 'ملخص كامل في ورقة واحدة' : 'One-sheet overview',
+              },
+              {
+                value: 'branch-collection' as const,
+                label: isAr ? 'مجموعة الفروع' : 'Branch collection',
+                description: isAr ? 'ملصق مستقل لكل فرع' : 'A poster for each branch',
+              },
+              {
+                value: 'tiled-wall' as const,
+                label: isAr ? 'لوحة مقسمة' : 'Tiled wall',
+                description: isAr ? 'لوحة كبيرة على أوراق مترابطة' : 'One wall poster across sheets',
+              },
+            ] satisfies ReadonlyArray<{
+              value: Exclude<PosterProductMode, 'detailed-poster'>;
+              label: string;
+              description: string;
+            }>).map((option) => {
+              const isSelected = state.productMode === option.value;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  aria-pressed={isSelected}
+                  onClick={() => onSwitchProductMode(option.value)}
+                  className={`min-h-14 rounded-lg border px-3 py-2 text-start transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary-500)] ${
+                    isSelected
+                      ? 'border-[var(--primary-600)] bg-[var(--primary-500)]/10 text-[var(--primary-700)]'
+                      : 'border-[var(--border-soft)] bg-[var(--surface-subtle)] text-[var(--text-muted)] hover:border-[var(--primary-500)] hover:text-[var(--text-main)]'
+                  }`}
+                >
+                  <span className="block text-xs font-bold">{option.label}</span>
+                  <span className="mt-0.5 block text-[10px] font-medium leading-tight opacity-75">
+                    {option.description}
+                  </span>
                 </button>
               );
             })}

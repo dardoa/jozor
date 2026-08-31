@@ -1,6 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import { mapPosterDesignStateToRuntimeOptions } from '../posterDesignStateRuntimeAdapter';
-import { createInitialPosterDesignState, switchLayoutMode } from '../../../../publishing/visualOutputs/posterDesignState';
+import {
+  createInitialPosterDesignState,
+  switchLayoutMode,
+  updateFocusBucket,
+} from '../../../../publishing/visualOutputs/posterDesignState';
 
 describe('posterDesignStateRuntimeAdapter — Focus Family Integration', () => {
   it('returns supported: false when context.focalPreviewId is missing for Focus layout', () => {
@@ -20,5 +24,18 @@ describe('posterDesignStateRuntimeAdapter — Focus Family Integration', () => {
     const result = mapPosterDesignStateToRuntimeOptions(state, {});
     expect(result.supported).toBe(false);
     expect(result.posterOptions?.engineId).not.toBe('ancestor-tiered');
+  });
+
+  it('derives Focus generation metadata from the configured visible depth', () => {
+    let state = createInitialPosterDesignState('classic-heritage');
+    state = switchLayoutMode(state, 'focus-family');
+    state = updateFocusBucket(state, { ancestorDepth: 4, descendantDepth: 1 });
+
+    const result = mapPosterDesignStateToRuntimeOptions(state, {
+      focalPreviewId: 'preview-node-focus',
+    });
+
+    expect(result.supported).toBe(true);
+    expect(result.posterOptions?.content?.generationCount).toBe(5);
   });
 });

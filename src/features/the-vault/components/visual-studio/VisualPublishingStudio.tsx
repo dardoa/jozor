@@ -19,12 +19,10 @@ import {
   type PosterImageAssetResolver,
   type StudioPosterExportRuntime,
   type StudioPosterSvgResources,
-  type VisualPreviewModel,
 } from '../../../publishing';
 
 interface VisualPublishingStudioProps {
   language: 'ar' | 'en';
-  isPreviewOnly?: boolean;
   previewSourceMode?: 'fixture' | 'store';
   storePreviewSource?: PreviewLiveTreeSource;
   posterFontAssetResolver?: PosterFontAssetResolver;
@@ -65,9 +63,7 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
     selectedFocalPersonToken,
     posterRootOptions,
     userPosterTitle,
-    setUserPosterTitle,
     userPosterSubtitle,
-    setUserPosterSubtitle,
     previewPresentationTitle,
     mappingResult,
     previewModel,
@@ -87,6 +83,20 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
     posterImageSourceResolver,
     suppliedPosterSvgResources,
   });
+
+  const previewPosterScene = studioDesign.state.productMode === 'branch-collection'
+    ? branchPosterCollection?.overviewScene ?? posterScene
+    : posterScene;
+  const productPreview = studioDesign.state.productMode === 'branch-collection' && branchPosterCollection
+    ? { kind: 'branch-collection' as const, itemCount: branchPosterCollection.itemCount }
+    : studioDesign.state.productMode === 'tiled-wall'
+      ? {
+          kind: 'tiled-wall' as const,
+          rows: studioDesign.state.productBucket.tiledRows,
+          columns: studioDesign.state.productBucket.tiledColumns,
+          sheetSize: studioDesign.state.productBucket.tiledSheetSize,
+        }
+      : undefined;
 
   const {
     exportingFormat,
@@ -117,7 +127,6 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
     <VisualOutputPrintDock
       language={language}
       state={studioDesign.state}
-      onSwitchProductMode={studioDesign.switchProductMode}
       onUpdatePrint={studioDesign.updatePrint}
       selectedDefinition={mappingResult.supported ? selectedDefinition : undefined}
       exportingFormat={exportingFormat}
@@ -165,15 +174,16 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
           );
           setActiveConfigSection('tree-layout');
         }}
+        onSwitchProductMode={studioDesign.switchProductMode}
         onSwitchScope={studioDesign.switchScope}
         onUpdateRadial={studioDesign.updateRadial}
       />
 
       <div className="overflow-hidden rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)]">
-        <div className="grid min-h-[68vh] items-stretch lg:grid-cols-[minmax(0,1fr)_320px]" dir="ltr">
+        <div className="grid items-stretch lg:h-[clamp(420px,calc(100dvh-390px),640px)] lg:grid-cols-[minmax(0,1fr)_320px]" dir="ltr">
         {/* Preview Workspace Area - sticky on desktop, expandable on mobile */}
         <div
-          className="flex min-w-0 flex-col bg-[var(--surface-subtle)]"
+          className="flex min-h-0 min-w-0 flex-col bg-[var(--surface-subtle)]"
           data-testid="visual-studio-preview-workspace"
           dir={isAr ? 'rtl' : 'ltr'}
         >
@@ -194,16 +204,17 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
 
           <div
             id="mobile-preview-container"
-            className={`${isMobilePreviewExpanded ? 'block' : 'hidden'} max-h-[70vh] flex-1 overflow-y-auto lg:block lg:max-h-none lg:overflow-visible`}
+            className={`${isMobilePreviewExpanded ? 'block' : 'hidden'} min-h-0 flex-1 overflow-auto lg:block`}
           >
             <VisualOutputPreviewPane
               language={language}
               selectedDefinition={selectedDefinition}
-              previewModel={previewModel as unknown as VisualPreviewModel}
-              posterScene={posterScene}
+              previewModel={previewModel}
+              posterScene={previewPosterScene}
               posterSvgResources={posterSvgResources}
               unavailableReason={capacityErrorGuidance}
-              presentationTitle={previewPresentationTitle}
+              presentationTitle={branchPosterCollection?.title ?? previewPresentationTitle}
+              productPreview={productPreview}
             />
           </div>
           {printDock}
@@ -211,7 +222,7 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
 
         {/* Settings Workspace Panel */}
         <aside
-          className="min-w-0 self-start border-l border-[var(--border-soft)]"
+          className="min-h-0 min-w-0 self-stretch overflow-hidden border-l border-[var(--border-soft)]"
           dir={isAr ? 'rtl' : 'ltr'}
         >
           <VisualOutputConfigPanel
@@ -237,9 +248,9 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
             selectedFocalPersonToken={selectedFocalPersonToken}
             onSelectPosterRoot={(token) => studioDesign.updateContent({ selectedPosterRootToken: token })}
             posterTitle={userPosterTitle}
-            onPosterTitleChange={setUserPosterTitle}
+            onPosterTitleChange={(value) => studioDesign.updateContent({ headerText: value })}
             posterSubtitle={userPosterSubtitle}
-            onPosterSubtitleChange={setUserPosterSubtitle}
+            onPosterSubtitleChange={(value) => studioDesign.updateContent({ subheaderText: value })}
             activeSection={activeConfigSection}
             onActiveSectionChange={setActiveConfigSection}
           />

@@ -149,6 +149,7 @@ describe('VisualPublishingStudio Accessibility & Interaction Suite', () => {
           language="ar"
           state={state}
           onSelectDiagramType={vi.fn()}
+          onSwitchProductMode={vi.fn()}
           onSwitchScope={vi.fn()}
           onUpdateRadial={vi.fn()}
         />

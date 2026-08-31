@@ -196,11 +196,11 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
     const svgBeforeZoom = screen.getByTestId('studio-poster-renderer-preview').innerHTML;
 
     fireEvent.click(screen.getByRole('button', { name: 'Zoom in preview' }));
-    expect(pageFrame).toHaveStyle({ width: '125%' });
+    expect(pageFrame.style.getPropertyValue('--poster-preview-size')).toBe('125%');
     expect(screen.getByTestId('studio-poster-renderer-preview').innerHTML).toBe(svgBeforeZoom);
 
     fireEvent.click(screen.getByRole('button', { name: 'Fit poster in preview' }));
-    expect(pageFrame).toHaveStyle({ width: '100%' });
+    expect(pageFrame.style.getPropertyValue('--poster-preview-size')).toBe('100%');
     expect(screen.getByTestId('studio-poster-renderer-preview').innerHTML).toBe(svgBeforeZoom);
   });
 
@@ -561,6 +561,19 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
     });
   });
 
+  it('maps the Angular control to the supported orthogonal connector contract', async () => {
+    renderStudio();
+
+    selectTab('Appearance');
+    fireEvent.click(screen.getByRole('button', { name: 'Angular' }));
+
+    await waitFor(() => {
+      const preview = screen.getByTestId('studio-poster-renderer-preview');
+      expect(preview.innerHTML).toContain('data-poster-connector-path="orthogonal"');
+      expect(preview.querySelector('path.poster-connector')?.getAttribute('d')).toContain('L');
+    });
+  });
+
   it('applies an owner color palette through the shared SVG scene', async () => {
     renderStudio();
 
@@ -588,7 +601,8 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
 
     await waitFor(() => {
       const posterSvg = screen.getByTestId('studio-poster-renderer-preview').innerHTML;
-      expect(posterSvg).toBeTruthy();
+      expect(posterSvg).toContain('data-poster-decoration="paper-grain"');
+      expect(posterSvg).toContain('poster-decoration-paper');
     });
   });
 
@@ -596,11 +610,12 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
     renderStudio();
 
     selectTab('Appearance');
-    fireEvent.click(screen.getByRole('button', { name: 'Corner Filigree' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Lineage Medallion' }));
 
     await waitFor(() => {
       const posterSvg = screen.getByTestId('studio-poster-renderer-preview').innerHTML;
-      expect(posterSvg).toBeTruthy();
+      expect(posterSvg).toContain('data-poster-ornament="lineage-medallion"');
+      expect(posterSvg).toContain('poster-ornament-lineage');
     });
   });
 
@@ -735,11 +750,13 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
     renderStudio();
 
     selectTab('Appearance');
-    fireEvent.click(screen.getByRole('button', { name: 'Ornate Corner Filigree' }));
+    const pageFrameControls = screen.getByRole('group', { name: 'Page Border Frame' });
+    fireEvent.click(within(pageFrameControls).getByRole('button', { name: 'Gallery' }));
 
     await waitFor(() => {
       const posterSvg = screen.getByTestId('studio-poster-renderer-preview').innerHTML;
-      expect(posterSvg).toBeTruthy();
+      expect(posterSvg).toContain('data-poster-page-frame="gallery"');
+      expect(posterSvg).toContain('poster-frame-modern');
     });
   });
 
@@ -752,6 +769,12 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
     await waitFor(() => {
       const posterSvg = screen.getByTestId('studio-poster-renderer-preview').innerHTML;
       expect(posterSvg).toContain('Custom Family Tree');
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
+    await waitFor(() => {
+      expect(screen.getByRole('textbox', { name: 'Poster Title' })).toHaveValue('');
+      expect(screen.getByTestId('studio-poster-renderer-preview').innerHTML).not.toContain('Custom Family Tree');
     });
   });
 
@@ -921,6 +944,10 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Full Family Tree' }));
     fireEvent.click(screen.getByRole('button', { name: /Branch Collection/i }));
     expect(screen.getByTestId('visual-studio-print-dock')).toBeInTheDocument();
+    expect(screen.getByTestId('poster-product-preview-badge')).toHaveTextContent('branch posters');
+    expect(screen.getByTestId('studio-poster-renderer-preview').innerHTML).toContain(
+      'data-poster-layout-engine="branch-index-grid"'
+    );
     fireEvent.click(screen.getByRole('button', { name: 'A0' }));
 
     const actionBar = screen.getByTestId('visual-studio-action-bar');
@@ -931,11 +958,30 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
     );
   });
 
+  it('keeps branch collection scenes aligned with the embedded poster font resource', () => {
+    renderStudio({
+      posterSvgResources: {
+        ...testPosterSvgResources,
+        embeddedArabicFontFamily: 'amiri',
+      },
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Full Family Tree' }));
+    fireEvent.click(screen.getByRole('button', { name: /Branch Collection/i }));
+
+    expect(screen.getByTestId('studio-poster-renderer-preview').innerHTML).toContain(
+      'data-poster-font-family="amiri"'
+    );
+  });
+
   it('configures and downloads a tiled wall poster only for the full-tree scope', async () => {
     renderStudio();
 
     fireEvent.click(screen.getByRole('button', { name: 'Full Family Tree' }));
     fireEvent.click(screen.getByRole('button', { name: /Tiled wall/i }));
+
+    expect(screen.getByTestId('tiled-wall-preview-grid').children).toHaveLength(9);
+    expect(screen.getByTestId('poster-product-preview-badge')).toHaveTextContent('3×3');
 
     const actionBar = screen.getByTestId('visual-studio-action-bar');
     const tiledBtn = within(actionBar).getByRole('button', { name: /Download tiled wall poster/i });
@@ -966,6 +1012,15 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
     const rowsSelect = screen.getByRole('combobox', { name: 'Grid Rows (Sheets)' });
     fireEvent.change(rowsSelect, { target: { value: '6' } });
     expect(rowsSelect).toHaveValue('6');
+
+    const sheetSize = screen.getByRole('combobox', { name: 'Tile Sheet Size' });
+    fireEvent.change(sheetSize, { target: { value: 'A2' } });
+    expect(sheetSize).toHaveValue('A2');
+    expect(screen.getByTestId('poster-product-preview-badge')).toHaveTextContent('A2 sheets');
+
+    const overlap = screen.getByRole('combobox', { name: 'Tile Overlap (mm)' });
+    fireEvent.change(overlap, { target: { value: '10' } });
+    expect(overlap).toHaveValue('10');
   });
 
   it('downloads a PNG owner-review artifact from the Studio renderer', async () => {

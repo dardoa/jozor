@@ -80,7 +80,7 @@ export const DEFAULT_PRODUCT_MODE_SETTINGS_BUCKET: ProductModeSettingsBucket = {
   tiledColumns: 3,
   tiledSheetSize: 'A3',
   tiledOverlapMm: 8,
-  branchCollectionIndexTitle: 'فهرس فروع عائلة آل منصور',
+  branchCollectionIndexTitle: '',
 };
 
 export function createInitialPosterDesignState(presetId: string = 'classic-heritage'): PosterDesignState {
@@ -134,7 +134,11 @@ export function isPresetModified(state: PosterDesignState): boolean {
   const preset = getPosterPresetDefinition(state.activePresetId);
   if (!preset) return true;
 
-  const baseline = preset.baselineSettings;
+  const baseline: SharedPosterSettings = {
+    ...DEFAULT_SHARED_POSTER_SETTINGS,
+    ...preset.baselineSettings,
+    colorOverrides: undefined,
+  };
   for (const [key, value] of Object.entries(baseline)) {
     const currentVal = state.shared[key as keyof SharedPosterSettings];
     if (currentVal !== value) {
@@ -320,6 +324,8 @@ export function resetSection(
           showBirthPlace: DEFAULT_SHARED_POSTER_SETTINGS.showBirthPlace,
           showOccupation: DEFAULT_SHARED_POSTER_SETTINGS.showOccupation,
           showDescription: DEFAULT_SHARED_POSTER_SETTINGS.showDescription,
+          headerText: DEFAULT_SHARED_POSTER_SETTINGS.headerText,
+          subheaderText: DEFAULT_SHARED_POSTER_SETTINGS.subheaderText,
           footerText: DEFAULT_SHARED_POSTER_SETTINGS.footerText,
           showJozorAttribution: DEFAULT_SHARED_POSTER_SETTINGS.showJozorAttribution,
           selectedPosterRootToken: DEFAULT_SHARED_POSTER_SETTINGS.selectedPosterRootToken,

@@ -9,7 +9,6 @@ import {
 } from 'lucide-react';
 import type {
   PosterDesignState,
-  PosterProductMode,
   ProductModeSettingsBucket,
   SharedPosterSettings,
 } from '../../../publishing';
@@ -20,7 +19,6 @@ import {
 
 interface VisualOutputPrintDockProps extends VisualOutputActionBarProps {
   state: PosterDesignState;
-  onSwitchProductMode?: (mode: PosterProductMode) => void;
   onUpdatePrint: (
     updates: Partial<SharedPosterSettings> & Partial<ProductModeSettingsBucket>
   ) => void;
@@ -30,7 +28,6 @@ const PAGE_SIZES = ['A4', 'A3', 'A2', 'A1', 'A0'] as const;
 
 export const VisualOutputPrintDock: React.FC<VisualOutputPrintDockProps> = ({
   state,
-  onSwitchProductMode,
   onUpdatePrint,
   quality,
   ...actionBarProps
@@ -66,7 +63,7 @@ export const VisualOutputPrintDock: React.FC<VisualOutputPrintDockProps> = ({
 
   return (
     <section
-      className="border-t border-[var(--border-soft)] bg-[var(--surface-panel)] px-3 py-3 sm:px-4"
+      className="max-h-[44vh] shrink-0 overflow-y-auto border-t border-[var(--border-soft)] bg-[var(--surface-panel)] px-3 py-3 sm:px-4 lg:max-h-[38vh]"
       aria-label={isAr ? 'إعدادات الطباعة والتنزيل' : 'Print and download settings'}
       data-testid="visual-studio-print-dock"
     >
@@ -143,7 +140,7 @@ export const VisualOutputPrintDock: React.FC<VisualOutputPrintDockProps> = ({
           </label>
 
           {state.productMode === 'tiled-wall' && (
-            <div className="flex items-end gap-2" data-testid="tiled-wall-grid-controls">
+            <div className="flex flex-wrap items-end gap-2" data-testid="tiled-wall-grid-controls">
               {([
                 {
                   key: 'tiledRows' as const,
@@ -170,51 +167,52 @@ export const VisualOutputPrintDock: React.FC<VisualOutputPrintDockProps> = ({
                   </select>
                 </label>
               ))}
+              <label className="text-[10px] font-semibold text-[var(--text-muted)]">
+                <span className="mb-1 block">{isAr ? 'ورقة التقسيم' : 'Tile paper'}</span>
+                <select
+                  aria-label={isAr ? 'حجم ورقة التقسيم' : 'Tile Sheet Size'}
+                  value={state.productBucket.tiledSheetSize}
+                  onChange={(event) => onUpdatePrint({
+                    tiledSheetSize: event.target.value as ProductModeSettingsBucket['tiledSheetSize'],
+                  })}
+                  className="min-h-8 rounded-md border border-[var(--border-soft)] bg-[var(--surface-subtle)] px-2 text-[11px] font-semibold text-[var(--text-main)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary-500)]"
+                >
+                  {(['A4', 'A3', 'A2'] as const).map((size) => (
+                    <option key={size} value={size}>{size}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="text-[10px] font-semibold text-[var(--text-muted)]">
+                <span className="mb-1 block">{isAr ? 'التداخل' : 'Overlap'}</span>
+                <select
+                  aria-label={isAr ? 'مقدار تداخل الأوراق بالملم' : 'Tile Overlap (mm)'}
+                  value={state.productBucket.tiledOverlapMm}
+                  onChange={(event) => onUpdatePrint({ tiledOverlapMm: Number(event.target.value) })}
+                  className="min-h-8 rounded-md border border-[var(--border-soft)] bg-[var(--surface-subtle)] px-2 text-[11px] font-semibold text-[var(--text-main)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary-500)]"
+                >
+                  {[6, 7, 8, 9, 10, 11, 12].map((value) => (
+                    <option key={value} value={value}>{value} mm</option>
+                  ))}
+                </select>
+              </label>
             </div>
           )}
 
-          {state.scope === 'full-tree' && onSwitchProductMode && (
-            <fieldset
-              className="min-w-0"
-              role="group"
-              aria-label={isAr ? 'طريقة إخراج الشجرة الكاملة' : 'Full-tree output method'}
-              data-testid="poster-output-assembly-controls"
-            >
-              <legend className="mb-1 text-[10px] font-semibold text-[var(--text-muted)]">
-                {isAr ? 'طريقة الإخراج' : 'Output method'}
-              </legend>
-              <div className="flex flex-wrap gap-1">
-                {([
-                  {
-                    value: 'full-tree-overview' as const,
-                    label: isAr ? 'لوحة واحدة' : 'Single poster',
-                  },
-                  {
-                    value: 'branch-collection' as const,
-                    label: isAr ? 'مجموعة الفروع' : 'Branch collection',
-                  },
-                  {
-                    value: 'tiled-wall' as const,
-                    label: isAr ? 'لوحة مقسمة' : 'Tiled wall',
-                  },
-                ] satisfies ReadonlyArray<{ value: PosterProductMode; label: string }>).map((option) => (
-                  <button
-                    key={option.value}
-                    type="button"
-                    aria-pressed={state.productMode === option.value}
-                    onClick={() => onSwitchProductMode(option.value)}
-                    className={`min-h-8 rounded-md border px-2.5 text-[11px] font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary-500)] ${
-                      state.productMode === option.value
-                        ? 'border-[var(--primary-600)] bg-[var(--primary-600)] text-white'
-                        : 'border-[var(--border-soft)] bg-[var(--surface-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-main)]'
-                    }`}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-            </fieldset>
+          {state.productMode === 'branch-collection' && (
+            <label className="min-w-48 text-[10px] font-semibold text-[var(--text-muted)]">
+              <span className="mb-1 block">{isAr ? 'عنوان فهرس الفروع' : 'Branch index title'}</span>
+              <input
+                type="text"
+                aria-label={isAr ? 'عنوان فهرس مجموعة الفروع' : 'Branch Collection Index Title'}
+                value={state.productBucket.branchCollectionIndexTitle}
+                onChange={(event) => onUpdatePrint({ branchCollectionIndexTitle: event.target.value })}
+                placeholder={isAr ? 'عنوان اللوحة افتراضيًا' : 'Uses the poster title by default'}
+                maxLength={80}
+                className="min-h-8 w-full rounded-md border border-[var(--border-soft)] bg-[var(--surface-subtle)] px-2 text-[11px] font-semibold text-[var(--text-main)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary-500)]"
+              />
+            </label>
           )}
+
         </div>
 
         <div

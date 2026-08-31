@@ -429,6 +429,9 @@ describe('Phase 1A: Final Two-Issue Closure Pass', () => {
       state = applyPreset(state, 'classic-heritage');
       expect(state.shared.photoShape).toBe('circle');
       expect(isPresetModified(state)).toBe(false);
+
+      state = updateSharedSetting(state, 'headerText', 'A custom poster title');
+      expect(isPresetModified(state)).toBe(true);
     });
 
     it('applies the registered Dense Genealogy baseline as a real design preset', () => {

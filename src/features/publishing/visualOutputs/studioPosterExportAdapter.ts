@@ -65,7 +65,7 @@ function assertValidBlob(blob: Blob, expectedMime: StudioPosterExportResult['mim
 
 export async function exportStudioPoster(
   request: StudioPosterExportRequest,
-  runtime: StudioPosterExportRuntime
+  runtime?: StudioPosterExportRuntime
 ): Promise<StudioPosterExportResult> {
   const renderResult = renderPosterSceneToSvg(request);
   const fileName = buildDefaultFileName(request);
@@ -79,8 +79,8 @@ export async function exportStudioPoster(
 
   const render =
     request.format === 'png'
-      ? runtime.renderPng
-      : runtime.renderPdf;
+      ? runtime?.renderPng
+      : runtime?.renderPdf;
 
   if (!render) {
     throw new Error(`Studio poster ${request.format.toUpperCase()} export runtime is not configured`);
