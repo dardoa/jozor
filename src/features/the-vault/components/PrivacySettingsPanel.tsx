@@ -10,9 +10,7 @@ interface PrivacySettingsPanelProps {
   treeSettings: TreeSettings;
   treeIsPrivate: boolean;
   canManageSecurity: boolean;
-  onOpenCleanTree: () => void;
   onUpdateSetting: (key: keyof TreeSettings, value: boolean | string | number | null) => void;
-  section?: 'all' | 'privacy' | 'maintenance';
   t: TranslationSchema;
 }
 
@@ -21,98 +19,56 @@ export const PrivacySettingsPanel: React.FC<PrivacySettingsPanelProps> = ({
   treeSettings,
   treeIsPrivate,
   canManageSecurity,
-  onOpenCleanTree,
   onUpdateSetting,
-  section = 'all',
   t,
 }) => {
-  const showPrivacy = section === 'all' || section === 'privacy';
-  const showMaintenance = section === 'all' || section === 'maintenance';
+  const unavailableIcon = currentTreeId ? Lock : ShieldCheck;
+  const UnavailableIcon = unavailableIcon;
 
-  if (!currentTreeId) {
+  if (!currentTreeId || !canManageSecurity) {
     return (
-      <section className="rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-panel)] p-6 shadow-[var(--shadow-xs)]">
-        <div className="flex items-start gap-3">
-          <div className="rounded-2xl bg-[var(--surface-subtle)] p-2 text-[var(--text-muted)]">
-            <ShieldCheck className="h-5 w-5" />
-          </div>
-          <div>
-            <h3 className="text-[16px] font-bold tracking-tight text-[var(--text-main)]">{t.vaultSecurityPrivacyTitle}</h3>
-          </div>
-        </div>
-      </section>
-    );
-  }
-
-  if (!canManageSecurity) {
-    return (
-      <section className="rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-panel)] p-6 shadow-[var(--shadow-xs)]">
-        <div className="flex items-start gap-3">
-          <div className="rounded-2xl bg-[var(--surface-subtle)] p-2 text-[var(--text-muted)]">
-            <Lock className="h-5 w-5" />
-          </div>
-          <div>
-            <h3 className="text-[16px] font-bold tracking-tight text-[var(--text-main)]">{t.vaultSecurityPrivacyTitle}</h3>
-          </div>
+      <section className="rounded-[14px] border border-[var(--border-soft)] bg-[var(--surface-panel)] p-5">
+        <div className="flex items-center gap-3">
+          <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--surface-subtle)] text-[var(--text-muted)]">
+            <UnavailableIcon className="h-5 w-5" />
+          </span>
+          <h3 className="text-[16px] font-bold text-[var(--text-main)]">{t.vaultSecurityPrivacyTitle}</h3>
         </div>
       </section>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {showPrivacy && (
-      <section className="rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-panel)] p-6 shadow-[var(--shadow-xs)]">
-        <div className="space-y-6">
-          <div className="flex items-start gap-3">
-            <div className="rounded-2xl bg-[var(--surface-subtle)] p-2 text-[var(--primary-600)]">
-              <ShieldCheck className="h-5 w-5" />
-            </div>
-            <div>
-              <h3 className="text-[16px] font-bold tracking-tight text-[var(--text-main)]">{t.vaultSecurityPrivacyTitle}</h3>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap gap-2.5 gap-y-3">
-            <span className="inline-flex min-h-11 items-center rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-subtle)] px-4 py-2 text-sm font-semibold text-[var(--text-secondary)]">
-              {treeIsPrivate ? t.vaultPrivateTree : t.vaultSharedTree}
-            </span>
-          </div>
-        </div>
-      </section>
-      )}
-
-      {showPrivacy && (
-      <section className="rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-panel)] p-6 shadow-[var(--shadow-xs)]">
-        <h4 className="text-[16px] font-bold tracking-tight text-[var(--text-main)]">{t.vaultPrivacy}</h4>
-        <div className="mt-4 flex flex-wrap gap-2.5 gap-y-3">
-          <Checkbox
-            label={t.vaultPrivacyMode}
-            value={Boolean(treeSettings.privacyMode)}
-            onChange={(value) => onUpdateSetting('privacyMode', value)}
-            icon={EyeOff}
-          />
-          <span className="inline-flex min-h-11 items-center rounded-2xl bg-[var(--primary-600)]/10 px-4 py-2 text-sm font-semibold text-[var(--primary-600)]">
-            {treeSettings.privacyMode ? t.vaultPrivacyModeEnabled : t.vaultPrivacyModeOff}
+    <section className="rounded-[14px] border border-[var(--border-soft)] bg-[var(--surface-panel)] p-5">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--surface-subtle)] text-[var(--primary-600)]">
+            <ShieldCheck className="h-5 w-5" />
           </span>
+          <div className="min-w-0">
+            <h3 className="text-[16px] font-bold text-[var(--text-main)]">{t.vaultSecurityPrivacyTitle}</h3>
+          </div>
         </div>
-      </section>
-      )}
+        <span className="inline-flex w-fit items-center rounded-md bg-[var(--surface-subtle)] px-2.5 py-1 text-xs font-semibold text-[var(--text-secondary)]">
+          {treeIsPrivate ? t.vaultPrivateTree : t.vaultSharedTree}
+        </span>
+      </div>
 
-      {showMaintenance && (
-      <section className="rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-panel)] p-6 shadow-[var(--shadow-xs)]">
-        <h4 className="text-[16px] font-bold tracking-tight text-[var(--text-main)]">{t.vaultSecurityActions}</h4>
-        <div className="mt-4">
-          <button
-            type="button"
-            onClick={onOpenCleanTree}
-            className="min-h-11 rounded-xl border border-[var(--danger-500)]/30 bg-[var(--danger-500)]/10 px-4 py-2 text-sm font-semibold text-[var(--danger-600)] transition-all duration-200 ease-in-out hover:bg-[var(--danger-500)]/15"
-          >
-            {t.cleanTree}
-          </button>
+      <div className="mt-5 flex flex-col gap-4 border-t border-[var(--border-soft)] pt-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <h4 className="text-sm font-semibold text-[var(--text-main)]">{t.vaultPrivacyMode}</h4>
+          <p className="mt-1 max-w-xl text-xs leading-relaxed text-[var(--text-muted)]">{t.vaultPrivacyModeHint}</p>
+          <p className="mt-2 text-xs font-semibold text-[var(--primary-600)]">
+            {treeSettings.privacyMode ? t.vaultPrivacyModeEnabled : t.vaultPrivacyModeOff}
+          </p>
         </div>
-      </section>
-      )}
-    </div>
+        <Checkbox
+          label={t.vaultPrivacyMode}
+          value={Boolean(treeSettings.privacyMode)}
+          onChange={(value) => onUpdateSetting('privacyMode', value)}
+          icon={EyeOff}
+        />
+      </div>
+    </section>
   );
 };

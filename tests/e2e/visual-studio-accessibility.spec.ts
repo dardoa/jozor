@@ -289,11 +289,6 @@ async function navigateToStudioForKeyboardTest(page: Page, viewportWidth: number
 
     await expect(page.getByRole('heading', { name: /The Vault|الخزنة/i })).toBeVisible({ timeout: 15000 });
 
-    const toolsHubBtn = page.locator('button:visible').filter({ hasText: /الأدوات|Tools/i }).first();
-    if (await toolsHubBtn.isVisible().catch(() => false)) {
-      await toolsHubBtn.click();
-      await page.waitForTimeout(400);
-    }
   } else {
     const accountTrigger = page.getByTestId('account-menu-trigger');
     if (await accountTrigger.isVisible({ timeout: 10000 }).catch(() => false)) {
@@ -307,12 +302,14 @@ async function navigateToStudioForKeyboardTest(page: Page, viewportWidth: number
 
     await expect(page.getByRole('heading', { name: /The Vault|الخزنة/i })).toBeVisible({ timeout: 15000 });
 
-    const cloudExportNav = page.locator('button:visible').filter({ hasText: /التصدير & إدارة السحابة|Cloud|Export/i }).first();
-    if (await cloudExportNav.count()) {
-      await cloudExportNav.click();
-      await page.waitForTimeout(400);
-    }
   }
+
+  const publishingNav = page
+    .getByRole('button', { name: /النشر والنسخ الاحتياطي|Publishing & Backup/i })
+    .first();
+  await expect(publishingNav).toBeVisible({ timeout: 15000 });
+  await publishingNav.click();
+  await expect(publishingNav).toHaveAttribute('aria-current', 'page');
 
   const visualOutputsTab = page.locator('button[role="tab"]:visible').filter({ hasText: /المخرجات البصرية|Visual Outputs/i }).first();
   await expect(visualOutputsTab).toBeVisible({ timeout: 15000 });

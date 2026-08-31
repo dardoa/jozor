@@ -32,6 +32,8 @@ export interface UISlice {
     setVaultOpen: (open: boolean) => void;
     vaultTab: 'cloud' | 'security' | 'trees' | 'members' | 'stats';
     setVaultTab: (tab: 'cloud' | 'security' | 'trees' | 'members' | 'stats') => void;
+    vaultExportSection: 'family-book' | 'visuals' | 'data-export' | 'history' | 'cloud-backup';
+    setVaultExportSection: (section: 'family-book' | 'visuals' | 'data-export' | 'history' | 'cloud-backup') => void;
     // Notifications
     notifications: AppNotification[];
     enqueueNotification: (n: Omit<AppNotification, 'id' | 'timestamp' | 'read' | 'createdAt' | 'updatedAt'>) => void;
@@ -129,6 +131,8 @@ export const createUISlice: StateCreator<AppStore, [["zustand/devtools", never]]
     setVaultOpen: (open) => set({ isVaultOpen: open }),
     vaultTab: 'trees',
     setVaultTab: (tab) => set({ vaultTab: tab }),
+    vaultExportSection: 'family-book',
+    setVaultExportSection: (section) => set({ vaultExportSection: section }),
     pulseTargetId: null,
     triggerPulse: (id) => {
         set({ pulseTargetId: id });

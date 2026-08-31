@@ -65,7 +65,7 @@ export const TreeGridList: React.FC<TreeGridListProps> = ({
   return (
     <section className="space-y-4">
       {!hideTitle && <h4 className="px-1 text-[16px] font-bold tracking-tight text-[var(--text-main)]">{title}</h4>}
-      <div className={compact ? 'space-y-3' : 'grid grid-cols-2 gap-4'}>
+      <div className={compact ? 'space-y-3' : 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3'}>
         {items.map((tree) => {
           return (
             <TreeListItem

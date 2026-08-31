@@ -381,14 +381,17 @@ async function navigateToStudio(page: Page, language: 'ar' | 'en') {
   await expect(accountTrigger).toBeVisible({ timeout: 15_000 });
   await accountTrigger.click();
 
-  const vaultEntry = page.locator('button:visible').filter({ hasText: /The Vault|الخزينة/i }).last();
+  const vaultEntry = page.locator('button:visible').filter({ hasText: /The Vault|الخزنة/i }).last();
   await expect(vaultEntry).toBeVisible({ timeout: 10_000 });
   await vaultEntry.click();
-  await expect(page.getByRole('heading', { name: /The Vault|الخزينة/i })).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole('heading', { name: /The Vault|الخزنة/i })).toBeVisible({ timeout: 15_000 });
 
-  const exportNav = page.locator('button:visible').filter({ hasText: /Cloud|Export|التصدير|السحابة/i }).first();
-  await expect(exportNav).toBeVisible({ timeout: 10_000 });
-  await exportNav.click({ force: true });
+  const publishingNav = page
+    .getByRole('button', { name: /Publishing & Backup|النشر والنسخ الاحتياطي/i })
+    .first();
+  await expect(publishingNav).toBeVisible({ timeout: 10_000 });
+  await publishingNav.click({ force: true });
+  await expect(publishingNav).toHaveAttribute('aria-current', 'page');
 
   const visualOutputs = page.getByRole('tab', { name: /Visual Outputs|المخرجات البصرية/i });
   await expect(visualOutputs).toBeVisible({ timeout: 15_000 });

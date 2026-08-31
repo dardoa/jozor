@@ -1,6 +1,7 @@
 import { lazy, Suspense, useState } from 'react';
 import { VaultTabLoader } from './VaultTabLoader';
 import { VaultTreesPanel } from './VaultTreesPanel';
+import { useAppStore } from '../../../store/useAppStore';
 import type { VaultRenderContext } from '../types';
 import type { ExportPanelSection } from './ExportCloudPanel';
 
@@ -25,6 +26,11 @@ export const VaultTreesContent = ({ context, compact = false }: { context: Vault
     editingTreeId={context.editingTreeId}
     editTreeName={context.editTreeName}
     labels={context.treePanelLabels}
+    maintenanceLabels={{
+      title: context.t.vaultTreeMaintenanceTitle,
+      hint: context.t.vaultTreeMaintenanceHint,
+      action: context.t.vaultTreeMaintenanceAction,
+    }}
     compact={compact}
     onCreateTree={context.onCreateTree}
     onImportTree={context.onImportTree}
@@ -35,11 +41,12 @@ export const VaultTreesContent = ({ context, compact = false }: { context: Vault
     onCancelRename={context.onCancelRename}
     onEditTreeNameChange={context.onEditTreeNameChange}
     onDeleteTree={context.onDeleteTree}
+    onOpenMaintenance={context.onOpenCleanTree}
   />
 );
 
 export const VaultMembersContent = ({ context }: { context: VaultRenderContext }) => (
-  <Suspense fallback={<VaultTabLoader />}>
+  <Suspense fallback={<VaultTabLoader label={context.t.vaultLoading} />}>
     <CollaborationPanel
       treeId={context.currentTreeId}
       currentUser={context.currentUser}
@@ -49,7 +56,7 @@ export const VaultMembersContent = ({ context }: { context: VaultRenderContext }
 );
 
 export const VaultInsightsContent = ({ context }: { context: VaultRenderContext }) => (
-  <Suspense fallback={<VaultTabLoader />}>
+  <Suspense fallback={<VaultTabLoader label={context.t.vaultLoading} />}>
     <InsightsPanel
       treeName={context.treeName}
       healthScore={context.healthScore}
@@ -63,7 +70,8 @@ export const VaultInsightsContent = ({ context }: { context: VaultRenderContext 
 export const VaultBackupsContent = ({ context }: { context: VaultRenderContext }) => {
   const [isBackingUp, setIsBackingUp] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [activeSection, setActiveSection] = useState<ExportPanelSection>('family-book');
+  const activeSection = useAppStore((state) => state.vaultExportSection) as ExportPanelSection;
+  const setActiveSection = useAppStore((state) => state.setVaultExportSection);
 
   const runWithLoading = async (task: () => Promise<void> | void, setLoading: (value: boolean) => void) => {
     setLoading(true);
@@ -75,7 +83,7 @@ export const VaultBackupsContent = ({ context }: { context: VaultRenderContext }
   };
 
   return (
-    <Suspense fallback={<VaultTabLoader />}>
+    <Suspense fallback={<VaultTabLoader label={context.t.vaultLoading} />}>
       <VaultBackupsTab
         canManageCloud={context.canManageCloud}
         files={context.googleSync.driveFiles || []}
@@ -106,22 +114,14 @@ export const VaultBackupsContent = ({ context }: { context: VaultRenderContext }
   );
 };
 
-export const VaultSettingsContent = ({
-  context,
-  section = 'all',
-}: {
-  context: VaultRenderContext;
-  section?: 'all' | 'privacy' | 'maintenance';
-}) => (
-  <Suspense fallback={<VaultTabLoader />}>
+export const VaultSettingsContent = ({ context }: { context: VaultRenderContext }) => (
+  <Suspense fallback={<VaultTabLoader label={context.t.vaultLoading} />}>
     <VaultSettingsTab
       currentTreeId={context.currentTreeId}
       treeSettings={context.treeSettings}
       treeIsPrivate={context.treeIsPrivate}
       canManageSecurity={context.canManageSecurity}
-      onOpenCleanTree={context.onOpenCleanTree}
       onUpdateSetting={context.onUpdateVisibilitySetting}
-      section={section}
       t={context.t}
     />
   </Suspense>

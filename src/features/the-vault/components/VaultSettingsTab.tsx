@@ -9,9 +9,7 @@ interface VaultSettingsTabProps {
   treeSettings: TreeSettings;
   treeIsPrivate: boolean;
   canManageSecurity: boolean;
-  onOpenCleanTree: () => void;
   onUpdateSetting: (key: keyof TreeSettings, value: boolean | string | number | null) => void;
-  section?: 'all' | 'privacy' | 'maintenance';
   t: TranslationSchema;
 }
 

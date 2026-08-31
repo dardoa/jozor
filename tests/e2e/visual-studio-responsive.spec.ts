@@ -510,7 +510,7 @@ async function openVaultAndNavigateToStudio(page: Page, viewportWidth: number) {
       if (await accountTrigger.isVisible({ timeout: 10000 }).catch(() => false)) {
         await accountTrigger.click();
         await page.waitForTimeout(400);
-        const vaultEntry = page.locator('button:visible').filter({ hasText: 'The Vault' }).last();
+        const vaultEntry = page.locator('button:visible').filter({ hasText: /The Vault|الخزنة/i }).last();
         if (await vaultEntry.count()) {
           await vaultEntry.click();
         }
@@ -519,17 +519,12 @@ async function openVaultAndNavigateToStudio(page: Page, viewportWidth: number) {
 
     await expect(page.getByRole('heading', { name: /The Vault|الخزنة/i })).toBeVisible({ timeout: 15000 });
 
-    const toolsHubBtn = page.locator('button:visible').filter({ hasText: /الأدوات|Tools/i }).first();
-    if (await toolsHubBtn.isVisible().catch(() => false)) {
-      await toolsHubBtn.click();
-      await page.waitForTimeout(400);
-    }
   } else {
     const accountTrigger = page.getByTestId('account-menu-trigger');
     if (await accountTrigger.isVisible({ timeout: 10000 }).catch(() => false)) {
       await accountTrigger.click();
       await page.waitForTimeout(400);
-      const vaultEntry = page.locator('button:visible').filter({ hasText: 'The Vault' }).last();
+      const vaultEntry = page.locator('button:visible').filter({ hasText: /The Vault|الخزنة/i }).last();
       if (await vaultEntry.count()) {
         await vaultEntry.click();
       }
@@ -537,12 +532,14 @@ async function openVaultAndNavigateToStudio(page: Page, viewportWidth: number) {
 
     await expect(page.getByRole('heading', { name: /The Vault|الخزنة/i })).toBeVisible({ timeout: 15000 });
 
-    const cloudExportNav = page.locator('button:visible').filter({ hasText: /التصدير & إدارة السحابة|Cloud|Export/i }).first();
-    if (await cloudExportNav.count()) {
-      await cloudExportNav.click();
-      await page.waitForTimeout(400);
-    }
   }
+
+  const publishingNav = page
+    .getByRole('button', { name: /النشر والنسخ الاحتياطي|Publishing & Backup/i })
+    .first();
+  await expect(publishingNav).toBeVisible({ timeout: 15000 });
+  await publishingNav.click();
+  await expect(publishingNav).toHaveAttribute('aria-current', 'page');
 
   const visualOutputsTab = page.locator('button[role="tab"]:visible').filter({ hasText: /المخرجات البصرية|Visual Outputs/i }).first();
   await expect(visualOutputsTab).toBeVisible({ timeout: 15000 });
@@ -880,7 +877,7 @@ test.describe('Visual Publishing Studio Responsive QA Evidence Pass', () => {
     });
   });
 
-  test('isolated desktop 768px vs mobile 767px Vault navigation mode transition', async ({ page }) => {
+  test('preserves the same direct Vault destinations across the 768px navigation transition', async ({ page }) => {
     // 768px Desktop check (fresh page)
     await page.setViewportSize({ width: 768, height: 1024 });
     await page.addInitScript(() => {
@@ -892,15 +889,24 @@ test.describe('Visual Publishing Studio Responsive QA Evidence Pass', () => {
     if (await accountTrigger.isVisible().catch(() => false)) {
       await accountTrigger.click();
       await page.waitForTimeout(400);
-      const vaultEntry = page.locator('button:visible').filter({ hasText: 'The Vault' }).last();
+      const vaultEntry = page.locator('button:visible').filter({ hasText: /The Vault|الخزنة/i }).last();
       if (await vaultEntry.count()) {
         await vaultEntry.click();
       }
     }
     await expect(page.getByRole('heading', { name: /The Vault|الخزنة/i })).toBeVisible();
 
-    const desktopNav = page.locator('nav').filter({ has: page.getByRole('button', { name: /التصدير|إدارة السحابة|Cloud|Export/i }) });
+    const desktopNav = page.getByRole('navigation', { name: /الخزنة|The Vault/i });
     await expect(desktopNav).toBeVisible();
+    const desktopPublishing = desktopNav.getByRole('button', { name: /النشر والنسخ الاحتياطي|Publishing & Backup/i });
+    const desktopTrees = desktopNav.getByRole('button', { name: /الشجرات|Trees/i });
+    await expect(desktopPublishing).toBeVisible();
+    await expect(desktopTrees).toBeVisible();
+    const desktopTreesBox = await desktopTrees.boundingBox();
+    const desktopPublishingBox = await desktopPublishing.boundingBox();
+    expect(desktopTreesBox).not.toBeNull();
+    expect(desktopPublishingBox).not.toBeNull();
+    expect(desktopPublishingBox!.y).toBeGreaterThan(desktopTreesBox!.y);
 
     // 767px Mobile check (fresh reload)
     await page.setViewportSize({ width: 767, height: 1024 });
@@ -916,7 +922,7 @@ test.describe('Visual Publishing Studio Responsive QA Evidence Pass', () => {
       if (await accTrigger.isVisible().catch(() => false)) {
         await accTrigger.click();
         await page.waitForTimeout(400);
-        const vaultEntry = page.locator('button:visible').filter({ hasText: 'The Vault' }).last();
+        const vaultEntry = page.locator('button:visible').filter({ hasText: /The Vault|الخزنة/i }).last();
         if (await vaultEntry.count()) {
           await vaultEntry.click();
         }
@@ -924,8 +930,23 @@ test.describe('Visual Publishing Studio Responsive QA Evidence Pass', () => {
     }
     await expect(page.getByRole('heading', { name: /The Vault|الخزنة/i })).toBeVisible();
 
-    const mobileHubNav = page.locator('nav').filter({ has: page.getByRole('button', { name: /الأدوات|Tools|الإدارة|Management/i }) });
-    await expect(mobileHubNav).toBeVisible();
+    const mobileNav = page.getByRole('navigation', { name: /الخزنة|The Vault/i });
+    await expect(mobileNav).toBeVisible();
+    const mobilePublishing = mobileNav.getByRole('button', { name: /النشر والنسخ الاحتياطي|Publishing & Backup/i });
+    const mobileTrees = mobileNav.getByRole('button', { name: /الشجرات|Trees/i });
+    await expect(mobilePublishing).toBeVisible();
+    await expect(mobileTrees).toBeVisible();
+    const mobileTreesBox = await mobileTrees.boundingBox();
+    const mobilePublishingBox = await mobilePublishing.boundingBox();
+    expect(mobileTreesBox).not.toBeNull();
+    expect(mobilePublishingBox).not.toBeNull();
+    expect(Math.abs(mobilePublishingBox!.y - mobileTreesBox!.y)).toBeLessThan(2);
+    expect(mobilePublishingBox!.x).not.toBe(mobileTreesBox!.x);
+
+    await mobilePublishing.click();
+    await expect(mobilePublishing).toHaveAttribute('aria-current', 'page');
+    await expect(page.getByRole('tab', { name: /المخرجات البصرية|Visual Outputs/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /^(الأدوات|Tools|الإدارة|Management)$/i })).toHaveCount(0);
   });
 
   ([768, 390] as const).forEach((targetWidth) => {

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import {
-  X, Cloud, ShieldCheck, Users, BarChart3, Lock, FolderTree, ArrowLeft, Settings2, Wrench,
+  X, Cloud, ShieldCheck, Users, BarChart3, Lock, FolderTree, ArrowLeft,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -11,10 +11,10 @@ import type { AuthProps, ExportActionsProps, GoogleSyncStateAndActions, TreeSett
 import { useTreePermissions } from '../../../hooks/tree/useTreePermissions';
 import { useVaultTreeManagement } from '../hooks/useVaultTreeManagement';
 import { ConfirmationModal } from '../../../components/ConfirmationModal';
-import { VaultDesktopNavigation, VaultMobileHubNavigation } from './VaultNavigation';
+import { VaultDesktopNavigation, VaultMobileNavigation } from './VaultNavigation';
 import { VaultDesktopContent } from './VaultDesktopContent';
 import { VaultMobileContent } from './VaultMobileContent';
-import type { MobileManagementSection, MobileVaultHub, VaultRenderContext, VaultStats, VaultTab } from '../types';
+import type { VaultRenderContext, VaultStats, VaultTab } from '../types';
 
 interface TheVaultDrawerProps {
   googleSync: GoogleSyncStateAndActions;
@@ -68,8 +68,6 @@ export const TheVaultDrawer: React.FC<TheVaultDrawerProps> = ({
   const healthScore = useAppStore((state) => state.healthScore);
 
   const [isMobile, setIsMobile] = useState(false);
-  const [mobileHub, setMobileHub] = useState<MobileVaultHub>('management');
-  const [mobileManagementSection, setMobileManagementSection] = useState<MobileManagementSection>('trees');
 
   const {
     fileInputRef,
@@ -186,19 +184,19 @@ export const TheVaultDrawer: React.FC<TheVaultDrawerProps> = ({
     if (isGuest) {
       return [
         { id: 'stats', icon: BarChart3, label: insightsLabel },
-        { id: 'cloud', icon: Cloud, label: `${t.vaultExport} & ${t.vaultCloud}` },
+        { id: 'cloud', icon: Cloud, label: t.vaultPublishing },
       ];
     }
 
     const items: VaultDesktopNavItem[] = [
       { id: 'trees', icon: FolderTree, label: t.vaultTrees },
-      { id: 'stats', icon: BarChart3, label: insightsLabel },
-      { id: 'cloud', icon: Cloud, label: `${t.vaultExport} & ${t.vaultCloud}` },
     ];
 
     if (canManageMembers) {
       items.push({ id: 'members', icon: Users, label: t.vaultMembers });
     }
+    items.push({ id: 'stats', icon: BarChart3, label: insightsLabel });
+    items.push({ id: 'cloud', icon: Cloud, label: t.vaultPublishing });
     if (canManageSecurity) {
       items.push({ id: 'security', icon: Lock, label: t.vaultSecurity });
     }
@@ -209,19 +207,20 @@ export const TheVaultDrawer: React.FC<TheVaultDrawerProps> = ({
     canManageSecurity,
     insightsLabel,
     isGuest,
-    t.vaultCloud,
-    t.vaultExport,
     t.vaultMembers,
+    t.vaultPublishing,
     t.vaultSecurity,
     t.vaultTrees,
   ]);
 
+  useEffect(() => {
+    if (navItems.some((item) => item.id === vaultTab)) return;
+    const fallbackTab = navItems[0]?.id;
+    if (fallbackTab) setVaultTab(fallbackTab);
+  }, [navItems, setVaultTab, vaultTab]);
+
   if (!isVaultOpen) return null;
 
-  const managementLabel = t.vaultManagement;
-  const toolsLabel = t.vaultTools;
-  const treesLabel = t.vaultTrees;
-  const membersLabel = t.vaultMembers;
   const treeListLabels = {
     active: t.vaultTreeActive,
     openTree: t.vaultTreeOpen,
@@ -248,11 +247,6 @@ export const TheVaultDrawer: React.FC<TheVaultDrawerProps> = ({
     sharedEmpty: t.vaultTreeSharedEmpty,
     list: treeListLabels,
   };
-  const mobileHubItems = [
-    { id: 'management', icon: Settings2, label: managementLabel },
-    { id: 'insights', icon: BarChart3, label: t.vaultInsights },
-    { id: 'tools', icon: Wrench, label: toolsLabel },
-  ] as const;
   const renderContext: VaultRenderContext = {
     auth,
     googleSync,
@@ -300,9 +294,7 @@ export const TheVaultDrawer: React.FC<TheVaultDrawerProps> = ({
     onDeleteTree: setDeleteTreeId,
   };
 
-  const desktopDrawerSize = vaultTab === 'cloud'
-    ? 'sm:w-[calc(100vw-2rem)] sm:max-w-[1320px]'
-    : 'sm:w-[960px] sm:max-w-[calc(100vw-2rem)]';
+  const desktopDrawerSize = 'sm:w-[calc(100vw-2rem)] sm:max-w-[1320px]';
 
   return (
     <>
@@ -319,7 +311,7 @@ export const TheVaultDrawer: React.FC<TheVaultDrawerProps> = ({
               <div className="rounded-xl bg-[var(--surface-subtle)] p-2 text-[var(--primary-500)]"><ShieldCheck className="h-5 w-5" /></div>
               <div>
                 <h2 className="text-base font-bold text-[var(--text-main)]">{t.vaultTitle}</h2>
-                <p className="text-xs uppercase tracking-[0.16em] text-[var(--text-muted)]">{t.vaultSubtitle}</p>
+                <p className="text-[11px] text-[var(--text-muted)]">{t.vaultSubtitle}</p>
               </div>
             </div>
             <button
@@ -332,26 +324,25 @@ export const TheVaultDrawer: React.FC<TheVaultDrawerProps> = ({
           </div>
           <div className={`flex min-h-0 flex-1 overflow-hidden ${isMobile ? 'flex-col' : 'flex-row'}`}>
             {isMobile ? (
-              <VaultMobileHubNavigation
-                items={mobileHubItems}
-                activeHub={mobileHub}
-                onSelect={setMobileHub}
+              <VaultMobileNavigation
+                items={navItems}
+                activeTab={vaultTab}
+                onSelect={setVaultTab}
+                label={t.vaultTitle}
               />
             ) : (
               <VaultDesktopNavigation
                 items={navItems}
                 activeTab={vaultTab}
                 onSelect={setVaultTab}
+                label={t.vaultTitle}
               />
             )}
-            <div className={`flex-1 overflow-y-auto overscroll-contain bg-[var(--surface-app)] ${isMobile ? 'px-4 py-4' : 'p-6'}`} style={{ WebkitOverflowScrolling: 'touch' }}>
+            <div className={`flex-1 overflow-y-auto overscroll-contain bg-[var(--surface-app)] [scrollbar-gutter:stable] ${isMobile ? 'px-3 py-4' : 'p-6'}`} style={{ WebkitOverflowScrolling: 'touch' }}>
               {isMobile ? (
                 <VaultMobileContent
                   context={renderContext}
-                  hub={mobileHub}
-                  managementSection={mobileManagementSection}
-                  onManagementSectionChange={setMobileManagementSection}
-                  labels={{ management: managementLabel, trees: treesLabel, members: membersLabel }}
+                  tab={vaultTab}
                 />
               ) : (
                 <VaultDesktopContent context={renderContext} tab={vaultTab} />

@@ -105,6 +105,7 @@ export const TreeListItem: React.FC<TreeListItemProps> = ({
                 onClick={() => onConfirmRename?.(tree.id)}
                 className="min-h-11 min-w-11 rounded-xl bg-[var(--primary-600)] p-2 text-white"
                 title={labels.renameTree}
+                aria-label={labels.renameTree}
               >
                 <Check className="h-4 w-4" />
               </button>
@@ -140,6 +141,7 @@ export const TreeListItem: React.FC<TreeListItemProps> = ({
             disabled={isBusy || isActive}
             className={`min-h-11 min-w-11 ${compact ? 'rounded-xl' : 'rounded-2xl'} p-2 transition-all duration-300 ease-in-out disabled:cursor-not-allowed disabled:opacity-40 ${isActive ? 'text-white hover:bg-white/10' : 'text-[var(--primary-600)] hover:bg-[var(--surface-hover)]'}`}
             title={labels.openTree}
+            aria-label={labels.openTree}
           >
             {isBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
           </button>
@@ -149,6 +151,7 @@ export const TreeListItem: React.FC<TreeListItemProps> = ({
               onClick={() => onStartRename(tree)}
               className={`min-h-11 min-w-11 ${compact ? 'rounded-xl' : 'rounded-2xl'} p-2 transition-all duration-300 ease-in-out ${isActive ? 'text-white hover:bg-white/10' : 'text-[var(--text-muted)] hover:bg-[var(--surface-hover)]'}`}
               title={labels.renameTree}
+              aria-label={labels.renameTree}
             >
               <Edit2 className="h-4 w-4" />
             </button>
@@ -159,6 +162,7 @@ export const TreeListItem: React.FC<TreeListItemProps> = ({
               onClick={() => onDelete(tree.id)}
               className={`min-h-11 min-w-11 ${compact ? 'rounded-xl' : 'rounded-2xl'} p-2 transition-all duration-300 ease-in-out ${isActive ? 'text-white hover:bg-white/10' : 'text-[var(--danger-500)] hover:bg-[var(--danger-500)]/10'}`}
               title={labels.deleteTree}
+              aria-label={labels.deleteTree}
             >
               <Trash2 className="h-4 w-4" />
             </button>

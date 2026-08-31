@@ -12,8 +12,6 @@ import type { VaultTreesPanelLabels } from './components/VaultTreesPanel';
 import type { TreeRow } from './components/TreeListItem';
 
 export type VaultTab = 'cloud' | 'security' | 'trees' | 'members' | 'stats';
-export type MobileVaultHub = 'management' | 'insights' | 'tools';
-export type MobileManagementSection = 'trees' | 'members';
 
 export interface VaultStats {
   total: number;

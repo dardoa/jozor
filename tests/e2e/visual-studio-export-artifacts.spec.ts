@@ -398,11 +398,12 @@ async function navigateToStudio(page: Page) {
     }
   }
 
-  const exportTab = page.locator('button:visible').filter({ hasText: /التصدير & إدارة السحابة|التصدير|Export/i }).first();
-  if (await exportTab.isVisible({ timeout: 5000 }).catch(() => false)) {
-    await exportTab.click();
-    await page.waitForTimeout(400);
-  }
+  const publishingNav = page
+    .getByRole('button', { name: /النشر والنسخ الاحتياطي|Publishing & Backup/i })
+    .first();
+  await expect(publishingNav).toBeVisible({ timeout: 15000 });
+  await publishingNav.click();
+  await expect(publishingNav).toHaveAttribute('aria-current', 'page');
 
   const visualOutputsTab = page.locator('button[role="tab"]:visible').filter({ hasText: /المخرجات البصرية|Visual Outputs/i }).first();
   await expect(visualOutputsTab).toBeVisible({ timeout: 15000 });

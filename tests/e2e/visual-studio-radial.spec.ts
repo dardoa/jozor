@@ -165,23 +165,22 @@ async function navigateToStudio(page: Page, viewportWidth = 1280) {
     await vaultButton.click();
     await expect(page.getByRole('heading', { name: /The Vault/i })).toBeVisible({ timeout: 15_000 });
 
-    const toolsButton = page.getByRole('button', { name: /Tools/i }).first();
-    await expect(toolsButton).toBeVisible({ timeout: 10_000 });
-    await toolsButton.click();
   } else {
     const accountTrigger = page.getByTestId('account-menu-trigger');
     await expect(accountTrigger).toBeVisible({ timeout: 15_000 });
     await accountTrigger.click();
 
-    const vaultEntry = page.locator('button:visible').filter({ hasText: /The Vault/i }).last();
+    const vaultEntry = page.locator('button:visible').filter({ hasText: /The Vault|الخزنة/i }).last();
     await expect(vaultEntry).toBeVisible({ timeout: 10_000 });
     await vaultEntry.click();
     await expect(page.getByRole('heading', { name: /The Vault/i })).toBeVisible({ timeout: 15_000 });
 
-    const exportNav = page.locator('button:visible').filter({ hasText: /Cloud|Export/i }).first();
-    await expect(exportNav).toBeVisible({ timeout: 10_000 });
-    await exportNav.click({ force: true });
   }
+
+  const publishingNav = page.getByRole('button', { name: /Publishing & Backup/i }).first();
+  await expect(publishingNav).toBeVisible({ timeout: 10_000 });
+  await publishingNav.click({ force: true });
+  await expect(publishingNav).toHaveAttribute('aria-current', 'page');
 
   const visualOutputs = page.getByRole('tab', { name: /Visual Outputs/i });
   await expect(visualOutputs).toBeVisible({ timeout: 15_000 });

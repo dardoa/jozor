@@ -105,8 +105,8 @@ export const InsightsPanel: React.FC<InsightsPanelProps> = ({
         </>
       )}
 
-      <section className="rounded-[14px] border border-[var(--border-soft)] bg-[var(--surface-panel)] p-4 shadow-none">
-        <div className="grid grid-cols-2 gap-4">
+      <section>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           {TOOLS_REGISTRY.map((tool) => {
             const Icon = tool.icon;
             const tone = TOOL_TONE_CLASSES[tool.color] ?? TOOL_TONE_CLASSES.blue;
@@ -118,12 +118,12 @@ export const InsightsPanel: React.FC<InsightsPanelProps> = ({
                 key={tool.id}
                 type="button"
                 onClick={() => onOpenTool(tool.id)}
-                className="flex min-h-[116px] flex-col items-start justify-center gap-4 rounded-2xl border border-[var(--border-soft)] bg-transparent px-4 py-4 text-start transition-all duration-200 ease-in-out hover:bg-[var(--surface-hover)]"
+                className="flex min-h-[76px] items-center gap-3 rounded-xl border border-[var(--border-soft)] bg-transparent px-3 py-3 text-start transition-colors hover:bg-[var(--surface-hover)]"
               >
-                <div className={`rounded-2xl p-3 ${tone.iconBg} ${tone.iconText}`}>
-                  <Icon className="h-5 w-5" />
+                <div className={`shrink-0 rounded-lg p-2.5 ${tone.iconBg} ${tone.iconText}`}>
+                  <Icon className="h-4 w-4" />
                 </div>
-                <div className="text-sm font-semibold text-[var(--text-main)]">{label}</div>
+                <div className="min-w-0 text-sm font-semibold leading-snug text-[var(--text-main)]">{label}</div>
               </button>
             );
           })}

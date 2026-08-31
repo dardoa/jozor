@@ -1,4 +1,5 @@
 import React from 'react';
+import { RotateCcw } from 'lucide-react';
 import type { SharedTreeSummary, TreeSummary } from '../../../services/supabaseTreeTypes';
 import { ActiveTreeCard } from './ActiveTreeCard';
 import { TreeGridList } from './TreeGridList';
@@ -31,6 +32,11 @@ interface VaultTreesPanelProps {
   editTreeName: string;
   compact?: boolean;
   labels: VaultTreesPanelLabels;
+  maintenanceLabels: {
+    title: string;
+    hint: string;
+    action: string;
+  };
   onCreateTree: () => void;
   onImportTree: () => void;
   onRefreshTrees: () => void;
@@ -40,6 +46,7 @@ interface VaultTreesPanelProps {
   onCancelRename: () => void;
   onEditTreeNameChange: (value: string) => void;
   onDeleteTree: (treeId: string) => void;
+  onOpenMaintenance: () => void;
 }
 
 export const VaultTreesPanel: React.FC<VaultTreesPanelProps> = ({
@@ -54,6 +61,7 @@ export const VaultTreesPanel: React.FC<VaultTreesPanelProps> = ({
   editTreeName,
   compact = false,
   labels,
+  maintenanceLabels,
   onCreateTree,
   onImportTree,
   onRefreshTrees,
@@ -63,6 +71,7 @@ export const VaultTreesPanel: React.FC<VaultTreesPanelProps> = ({
   onCancelRename,
   onEditTreeNameChange,
   onDeleteTree,
+  onOpenMaintenance,
 }) => {
   const ownedTreeRows: TreeRow[] = ownedTrees.map((tree) => ({
     ...tree,
@@ -70,9 +79,9 @@ export const VaultTreesPanel: React.FC<VaultTreesPanelProps> = ({
   }));
 
   return (
-  <div className={compact ? 'mt-4 space-y-8 px-4' : 'space-y-6'}>
+  <div className={compact ? 'space-y-5' : 'space-y-6'}>
     {compact && (
-      <div className="mt-4 space-y-0.5">
+      <div className="space-y-0.5 px-1">
         <p className="text-xs font-medium text-[var(--text-muted)]">
           {`${labels.ownedCount}: ${ownedTrees.length} | ${labels.sharedCount}: ${sharedTrees.length}`}
         </p>
@@ -112,7 +121,7 @@ export const VaultTreesPanel: React.FC<VaultTreesPanelProps> = ({
       emptyText={labels.ownedEmpty}
       labels={labels.list}
       compact={compact}
-      hideTitle={compact}
+      hideTitle={false}
     />
     <TreeGridList
       title={labels.sharedTitle}
@@ -126,8 +135,22 @@ export const VaultTreesPanel: React.FC<VaultTreesPanelProps> = ({
       emptyText={labels.sharedEmpty}
       labels={labels.list}
       compact={compact}
-      hideTitle={compact}
+      hideTitle={false}
     />
+    <section className="flex flex-col gap-3 border-t border-[var(--border-soft)] px-1 pt-5 sm:flex-row sm:items-center sm:justify-between">
+      <div className="min-w-0">
+        <h4 className="text-sm font-semibold text-[var(--text-main)]">{maintenanceLabels.title}</h4>
+        <p className="mt-1 max-w-2xl text-xs leading-relaxed text-[var(--text-muted)]">{maintenanceLabels.hint}</p>
+      </div>
+      <button
+        type="button"
+        onClick={onOpenMaintenance}
+        className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-lg border border-[var(--danger-500)]/30 px-3 py-2 text-sm font-semibold text-[var(--danger-600)] transition-colors hover:bg-[var(--danger-500)]/10"
+      >
+        <RotateCcw className="h-4 w-4" />
+        {maintenanceLabels.action}
+      </button>
+    </section>
   </div>
   );
 };

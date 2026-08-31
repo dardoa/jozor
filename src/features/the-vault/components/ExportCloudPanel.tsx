@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AlertTriangle,
   Archive,
@@ -318,14 +318,25 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
   const [confirmClearHistory, setConfirmClearHistory] = useState(false);
   const [uncontrolledActiveSection, setUncontrolledActiveSection] = useState<ExportPanelSection>('family-book');
   const [expandedHistoryId, setExpandedHistoryId] = useState<number | string | null>(null);
+  const activeSectionTabRef = useRef<HTMLButtonElement>(null);
   const { status: controlledPdfStatus, refresh: checkControlledPdfReadiness } = useControlledPdfReadiness();
   const activeSection = controlledActiveSection ?? uncontrolledActiveSection;
+  const [hasOpenedVisualStudio, setHasOpenedVisualStudio] = useState(activeSection === 'visuals');
+  useEffect(() => {
+    if (activeSection === 'visuals') setHasOpenedVisualStudio(true);
+  }, [activeSection]);
   const setActiveSection = useCallback((section: ExportPanelSection) => {
     if (controlledActiveSection === undefined) {
       setUncontrolledActiveSection(section);
     }
     onActiveSectionChange?.(section);
   }, [controlledActiveSection, onActiveSectionChange]);
+
+  useEffect(() => {
+    if (typeof activeSectionTabRef.current?.scrollIntoView === 'function') {
+      activeSectionTabRef.current.scrollIntoView({ block: 'nearest', inline: 'center' });
+    }
+  }, [activeSection]);
 
   const posterVisualOutputs = useMemo(() => listVisualOutputDefinitionsByProduct('poster'), []);
   const snapshotVisualOutputs = useMemo(() => listVisualOutputDefinitionsByProduct('snapshot'), []);
@@ -582,18 +593,19 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
           </div>
         </div>
       )}
-      <div className="rounded-[16px] border border-[var(--border-soft)] bg-[var(--surface-panel)] p-2 shadow-none">
-        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-5" role="tablist" aria-label={language === 'ar' ? 'أقسام التصدير' : 'Export sections'}>
+      <div className="rounded-[14px] border border-[var(--border-soft)] bg-[var(--surface-panel)] p-1 shadow-none">
+        <div className="flex gap-1 overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" role="tablist" aria-label={language === 'ar' ? 'أقسام التصدير' : 'Export sections'}>
           {EXPORT_PANEL_SECTIONS.map((section) => {
             const isActive = activeSection === section.id;
             return (
               <button
+                ref={isActive ? activeSectionTabRef : undefined}
                 key={section.id}
                 type="button"
                 role="tab"
                 aria-selected={isActive}
                 onClick={() => setActiveSection(section.id)}
-                className={`min-h-10 rounded-xl px-3 py-2 text-xs font-bold transition-all ${
+                className={`min-h-10 min-w-[8rem] shrink-0 rounded-lg px-3 py-2 text-xs font-bold transition-all lg:min-w-0 lg:flex-1 ${
                   isActive
                     ? 'bg-[var(--primary-600)] text-white shadow-sm'
                     : 'text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]'
@@ -619,7 +631,9 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                   {t.vaultSessionExpired || 'Your session has expired.'}
                 </p>
                 <p className="mt-1 text-xs text-[var(--text-muted)] leading-relaxed">
-                  Please connect your Google account to manage backups and cloud files.
+                  {language === 'ar'
+                    ? 'أعد ربط حساب Google لإدارة النسخ الاحتياطية وملفات السحابة.'
+                    : 'Reconnect your Google account to manage backups and cloud files.'}
                 </p>
               </div>
             </div>
@@ -628,7 +642,7 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
               onClick={() => void handleGoogleLogin()}
               className="w-full rounded-lg bg-[var(--danger-600)] px-4 py-2 text-sm font-bold text-white transition-all shadow-sm hover:brightness-95 active:scale-[0.98]"
             >
-              Reconnect Google Account
+              {t.vaultCloudReconnect}
             </button>
           </div>
         )}
@@ -641,10 +655,10 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
               </div>
               <div className="flex-1">
                 <p className="text-sm font-bold text-[var(--text-main)]">
-                  Google Drive Disconnected
+                  {t.vaultCloudDisconnected}
                 </p>
                 <p className="mt-1 text-xs text-[var(--text-muted)] leading-relaxed">
-                  Connect your account to enable automatic cloud backups and cross-device synchronization.
+                  {t.vaultCloudDisconnectedHint}
                 </p>
               </div>
             </div>
@@ -653,7 +667,7 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
               onClick={() => void handleGoogleLogin()}
               className="w-full rounded-lg bg-[var(--color-info-500)] px-4 py-2 text-sm font-bold text-white transition-all shadow-sm hover:brightness-95 active:scale-[0.98]"
             >
-              Connect Google Drive
+              {t.vaultCloudConnect}
             </button>
           </div>
         )}
@@ -664,7 +678,7 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
             <button
               type="button"
               onClick={() => void onBackupNow()}
-              disabled={!canManageCloud || isBackingUp}
+              disabled={!canManageCloud || !isAuthorized || isBackingUp}
               className="min-h-11 rounded-xl bg-[var(--primary-600)] px-4 py-2 text-sm font-semibold text-white transition-all duration-200 ease-in-out hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <span className="inline-flex items-center gap-2">
@@ -684,8 +698,19 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
       </section>
       )}
 
+      {hasOpenedVisualStudio && (
+        <div
+          hidden={activeSection !== 'visuals'}
+          aria-hidden={activeSection !== 'visuals'}
+          className="mb-6"
+          data-testid="persistent-visual-publishing-studio"
+        >
+          <VisualPublishingStudio language={language} previewSourceMode="store" />
+        </div>
+      )}
+
       {(activeSection === 'family-book' || activeSection === 'visuals') && (
-      <section className="rounded-[20px] border border-[var(--primary-500)]/20 bg-gradient-to-br from-[var(--surface-panel)] via-[var(--surface-panel)] to-[var(--primary-500)]/5 p-5 shadow-sm relative overflow-hidden">
+      <section className="relative">
         <div className="space-y-4">
           {activeSection === 'family-book' && (
           <>
@@ -871,9 +896,6 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
 
           {activeSection === 'visuals' && (
           <>
-          <div className="mb-6">
-            <VisualPublishingStudio language={language} previewSourceMode="store" />
-          </div>
           <div data-testid="visual-actual-export-section" className="pt-2 border-t border-[var(--border-soft)]/60" />
 
           {SHOW_LEGACY_POSTER_EXPORT_CARDS && (
@@ -1121,16 +1143,13 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
       )}
 
       {activeSection === 'data-export' && (
-      <section className="rounded-[14px] border border-[var(--border-soft)] bg-[var(--surface-panel)] p-4 shadow-none">
-        <h4 className="text-[16px] font-bold tracking-tight text-[var(--text-main)]">{t.vaultExportDataTitle}</h4>
-        <div className="mt-4 space-y-4">
+      <section>
+        <h4 className="text-[16px] font-bold tracking-tight text-[var(--text-main)]">
+          {language === 'ar' ? 'بيانات قابلة للنقل' : 'Portable Data'}
+        </h4>
+        <div className="mt-3">
           {(['portable-data'] as const).map((group) => (
-            <div key={group} className="rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-subtle)] p-3">
-              <h5 className="mb-3 text-xs font-bold uppercase tracking-[0.08em] text-[var(--text-secondary)]">
-                {group === 'portable-data'
-                  ? (language === 'ar' ? 'بيانات قابلة للنقل' : 'Portable Data')
-                  : (language === 'ar' ? 'مخرجات مباشرة' : 'Direct Outputs')}
-              </h5>
+            <div key={group}>
               <div className="grid gap-2 sm:grid-cols-2">
                 {EXPORT_ACTIONS.filter((action) => action.group === group).map((action) => {
                   const Icon = action.icon;
@@ -1204,7 +1223,7 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
       )}
 
       {activeSection === 'history' && (
-      <section className="rounded-[14px] border border-[var(--border-soft)] bg-[var(--surface-panel)] p-4 shadow-none">
+      <section>
         <div className="flex items-center justify-between border-b border-[var(--border-soft)] pb-3 mb-4">
           <div className="flex items-center gap-2">
             <History className="h-5 w-5 text-[var(--primary-600)]" />
@@ -1436,7 +1455,7 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
             <button
               type="button"
               onClick={() => void onRefreshDriveFiles()}
-              disabled={isRefreshing}
+              disabled={!isAuthorized || isRefreshing}
               className="min-h-11 min-w-11 rounded-xl border border-[var(--border-soft)] bg-[var(--surface-subtle)] p-2 text-[var(--text-secondary)] transition-all duration-200 ease-in-out hover:bg-[var(--surface-hover)] disabled:cursor-not-allowed disabled:opacity-50"
               aria-label={t.vaultRefreshCloudFiles}
             >
@@ -1450,13 +1469,14 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
               value={newFileName}
               onChange={(event) => setNewFileName(event.target.value)}
               placeholder={t.googleDriveFileName}
-              disabled={!canManageCloud || isSaving}
+              aria-label={t.googleDriveFileName}
+              disabled={!canManageCloud || !isAuthorized || isSaving}
               className="min-h-11 rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3 text-sm text-[var(--text-main)] outline-none transition-all focus:border-[var(--primary-600)] disabled:cursor-not-allowed disabled:opacity-50"
             />
             <button
               type="button"
               onClick={() => void handleSaveAsNew()}
-              disabled={!canManageCloud || isSaving || !newFileName.trim()}
+              disabled={!canManageCloud || !isAuthorized || isSaving || !newFileName.trim()}
               className="min-h-11 rounded-xl bg-[var(--primary-600)] px-4 py-2 text-sm font-semibold text-white transition-all duration-200 ease-in-out hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <span className="inline-flex items-center gap-2">
@@ -1511,7 +1531,7 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                     <button
                       type="button"
                       onClick={() => setConfirmOverwriteId(file.id)}
-                      disabled={!canManageCloud || isSaving || isActive}
+                      disabled={!canManageCloud || !isAuthorized || isSaving || isActive}
                       className="min-h-11 rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3 py-2 text-xs font-semibold text-[var(--text-secondary)] transition-all hover:bg-[var(--surface-hover)] disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {t.overwrite}
@@ -1520,7 +1540,7 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                   <button
                     type="button"
                     onClick={() => void onOpenDriveFile(file.id)}
-                    disabled={isActive}
+                    disabled={!isAuthorized || isActive}
                     className="min-h-11 rounded-xl bg-[var(--primary-600)] px-3 py-2 text-xs font-semibold text-white transition-all duration-200 ease-in-out hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {t.vaultOpenCloudFile}
@@ -1541,7 +1561,7 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                     <button
                       type="button"
                       onClick={() => setConfirmDeleteId(file.id)}
-                      disabled={!canManageCloud || isDeleting || isActive}
+                      disabled={!canManageCloud || !isAuthorized || isDeleting || isActive}
                       className="min-h-11 rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3 py-2 text-xs font-semibold text-[var(--text-secondary)] transition-all hover:bg-[var(--surface-hover)] disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {t.delete}

@@ -743,8 +743,13 @@ test.describe('mobile shell', () => {
 
     await page.getByRole('navigation', { name: 'Mobile actions' }).getByRole('button', { name: 'The Vault' }).click();
     await expect(page.getByRole('heading', { name: 'The Vault' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Management', exact: true })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Tools', exact: true })).toBeVisible();
+    const vaultNavigation = page.getByRole('navigation', { name: 'The Vault' });
+    await expect(vaultNavigation.getByRole('button', { name: 'Trees', exact: true })).toBeVisible();
+    await expect(vaultNavigation.getByRole('button', { name: 'Insights & Tools', exact: true })).toBeVisible();
+    await expect(vaultNavigation.getByRole('button', { name: 'Publishing & Backup', exact: true })).toBeVisible();
+    await expect(vaultNavigation.getByRole('button', { name: 'Privacy', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Management', exact: true })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Tools', exact: true })).toHaveCount(0);
 
     const vaultHeadingBox = await page.getByRole('heading', { name: 'The Vault' }).boundingBox();
     expect(vaultHeadingBox).not.toBeNull();

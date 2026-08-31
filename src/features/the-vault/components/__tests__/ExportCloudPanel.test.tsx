@@ -43,6 +43,10 @@ vi.mock('../../../../utils/showToast', () => ({
 
 const t = {
   vaultSessionExpired: 'Your session has expired.',
+  vaultCloudDisconnected: 'Google Drive disconnected',
+  vaultCloudDisconnectedHint: 'Connect your account to enable cloud backups.',
+  vaultCloudConnect: 'Connect Google Drive',
+  vaultCloudReconnect: 'Reconnect Google Account',
   vaultCloudBackupTitle: 'Cloud backup',
   vaultBackupNow: 'Backup now',
   vaultActivityLog: 'Activity log',
@@ -561,12 +565,30 @@ describe('ExportCloudPanel manuscript preview', () => {
     expect(screen.getByRole('button', { name: /Download PDF/i })).toBeEnabled();
   });
 
+  it('preserves the active poster design while moving between Vault output sections', async () => {
+    render(<ExportCloudPanel {...baseProps} />);
+    switchToExportSection(/Visual Outputs/i);
+
+    const titleInput = await screen.findByRole('textbox', { name: 'Poster Title' });
+    fireEvent.change(titleInput, { target: { value: 'Persistent Family Poster' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Full Family Tree' }));
+    fireEvent.click(screen.getByRole('button', { name: 'A0' }));
+
+    switchToExportSection(/Family Book/i);
+    expect(screen.getByTestId('persistent-visual-publishing-studio')).not.toBeVisible();
+
+    switchToExportSection(/Visual Outputs/i);
+    expect(screen.getByRole('button', { name: 'Full Family Tree' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'A0' })).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.click(screen.getByRole('tab', { name: 'Quick Setup' }));
+    expect(screen.getByRole('textbox', { name: 'Poster Title' })).toHaveValue('Persistent Family Poster');
+  });
+
   it('switches to Portable Data and renders only portable utility exports', () => {
     render(<ExportCloudPanel {...baseProps} />);
 
     switchToExportSection(/Portable Data/i);
 
-    expect(screen.getByText('Export data')).toBeInTheDocument();
     expect(screen.getAllByText('Portable Data').length).toBeGreaterThan(0);
     expect(screen.getByRole('button', { name: /GEDCOM/i })).toBeInTheDocument();
     expect(screen.getByText(/Genealogy exchange format. Owner spot check passed./i)).toBeInTheDocument();
@@ -959,5 +981,17 @@ describe('ExportCloudPanel manuscript preview', () => {
       fireEvent.click(screen.getByRole('button', { name: /Confirm clear/i }));
       expect(mockClearExportHistory).toHaveBeenCalled();
     });
+  });
+});
+
+describe('ExportCloudPanel cloud readiness', () => {
+  it('disables cloud mutations until Google Drive is connected', () => {
+    render(<ExportCloudPanel {...baseProps} isAuthorized={false} />);
+    switchToExportSection(/Cloud Backup/i);
+
+    expect(screen.getByText('Google Drive disconnected')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Backup now' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Refresh files' })).toBeDisabled();
+    expect(screen.getByRole('textbox', { name: 'File name' })).toBeDisabled();
   });
 });

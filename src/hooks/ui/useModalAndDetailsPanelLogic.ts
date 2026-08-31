@@ -15,6 +15,7 @@ interface UseModalAndDetailsPanelLogicProps {
 export const useModalAndDetailsPanelLogic = ({ canUndo, canRedo }: UseModalAndDetailsPanelLogicProps) => {
   const setVaultOpen = useAppStore((state) => state.setVaultOpen);
   const setVaultTab = useAppStore((state) => state.setVaultTab);
+  const setVaultExportSection = useAppStore((state) => state.setVaultExportSection);
 
   const [detailsPanelOpen, setDetailsPanelOpen] = useState(false);
   const [activeModal, setActiveModal] = useState<'none' | ModalType>('none');
@@ -59,8 +60,9 @@ export const useModalAndDetailsPanelLogic = ({ canUndo, canRedo }: UseModalAndDe
 
   const onOpenCloudBackups = useCallback(() => {
     setVaultTab('cloud');
+    setVaultExportSection('cloud-backup');
     setVaultOpen(true);
-  }, [setVaultOpen, setVaultTab]);
+  }, [setVaultExportSection, setVaultOpen, setVaultTab]);
 
   const onOpenTreeManager = useCallback(() => {
     setVaultTab('trees');

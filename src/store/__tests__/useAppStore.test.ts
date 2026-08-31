@@ -46,6 +46,18 @@ describe('loadFullState', () => {
     expect(useAppStore.getState().treeName).toBe('Shared Oak');
   });
 
+  it('stores the requested Vault publishing subsection for deep links', () => {
+    act(() => {
+      useAppStore.getState().setVaultExportSection('cloud-backup');
+    });
+
+    expect(useAppStore.getState().vaultExportSection).toBe('cloud-backup');
+
+    act(() => {
+      useAppStore.getState().setVaultExportSection('family-book');
+    });
+  });
+
   it('upserts notifications by dedupeKey', () => {
     act(() => {
       useAppStore.getState().clearNotifications();
