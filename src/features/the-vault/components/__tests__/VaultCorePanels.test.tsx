@@ -94,9 +94,43 @@ describe('Vault core panels', () => {
     );
 
     expect(screen.getByRole('heading', { name: 'Tree Privacy' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Collaboration access' })).toBeInTheDocument();
+    expect(screen.getByText('Private tree')).toBeInTheDocument();
     expect(screen.queryByText('Reset options')).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('checkbox', { name: 'Privacy Mode' }));
     expect(onUpdateSetting).toHaveBeenCalledWith('privacyMode', true);
+  });
+
+  it('explains why privacy settings are unavailable when no tree is open', () => {
+    render(
+      <PrivacySettingsPanel
+        currentTreeId={null}
+        treeSettings={{ privacyMode: false } as TreeSettings}
+        treeIsPrivate
+        canManageSecurity
+        onUpdateSetting={vi.fn()}
+        t={en}
+      />
+    );
+
+    expect(screen.getByRole('status')).toHaveTextContent('Open a tree to review its privacy settings.');
+    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+  });
+
+  it('does not expose privacy controls without owner permission', () => {
+    render(
+      <PrivacySettingsPanel
+        currentTreeId="tree-1"
+        treeSettings={{ privacyMode: true } as TreeSettings}
+        treeIsPrivate={false}
+        canManageSecurity={false}
+        onUpdateSetting={vi.fn()}
+        t={en}
+      />
+    );
+
+    expect(screen.getByRole('status')).toHaveTextContent('Only the tree owner can change these privacy settings.');
+    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
   });
 
   it('announces lazy section loading instead of rendering a blank panel', () => {

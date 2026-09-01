@@ -51,6 +51,7 @@ const t = {
   vaultBackupNow: 'Backup now',
   vaultActivityLog: 'Activity log',
   vaultExportDataTitle: 'Export data',
+  vaultPortableRawRestricted: 'Full project backups and raw JSON are available only to the tree owner.',
   vaultCloudFiles: 'Cloud files',
   vaultCloudFilesHint: 'Manage Google Drive backups from this tab.',
   vaultRefreshCloudFiles: 'Refresh files',
@@ -77,6 +78,7 @@ const t = {
 
 const baseProps = {
   canManageCloud: true,
+  canExportRawData: true,
   files: [],
   t,
   onCloseVault: vi.fn(),
@@ -221,6 +223,20 @@ describe('ExportCloudPanel manuscript preview', () => {
         includeNarrative: true,
       }),
     }));
+  });
+
+  it('keeps raw person identifiers out of the manuscript root picker DOM', () => {
+    render(<ExportCloudPanel {...baseProps} />);
+
+    const rootPicker = screen.getByLabelText(/Manuscript root/i);
+    const options = document.getElementById('manuscript-root-options');
+
+    expect(rootPicker).toHaveValue('Root Person');
+    expect(options).not.toBeNull();
+    expect(options?.innerHTML).not.toContain('person-1');
+    expect(options?.innerHTML).not.toContain('person-2');
+    expect(options?.textContent).toContain('Root Person');
+    expect(options?.textContent).toContain('Branch Person');
   });
 
   it('opens the manuscript preview in a separate browser window', async () => {
@@ -593,7 +609,7 @@ describe('ExportCloudPanel manuscript preview', () => {
     expect(screen.getAllByText('Portable Data').length).toBeGreaterThan(0);
     expect(screen.getByRole('button', { name: /GEDCOM/i })).toBeInTheDocument();
     expect(screen.getByText(/Genealogy exchange format. Owner spot check passed./i)).toBeInTheDocument();
-    expect(screen.getByText(/Limited beta ready/i)).toBeInTheDocument();
+    expect(screen.getByText(/^Genealogy exchange$/i)).toBeInTheDocument();
 
     expect(screen.getByRole('button', { name: /Raw Project JSON/i })).toBeInTheDocument();
     expect(screen.getByText(/Internal raw export \/ not for sharing/i)).toBeInTheDocument();
@@ -604,7 +620,7 @@ describe('ExportCloudPanel manuscript preview', () => {
     expect(screen.getByText(/Full owner archive. May contain raw project data, media, and backup files. Not a public sharing format./i)).toBeInTheDocument();
 
     expect(screen.getByRole('button', { name: /Calendar/i })).toBeInTheDocument();
-    expect(screen.getByText(/Structural beta pass/i)).toBeInTheDocument();
+    expect(screen.getByText(/^Complete-date events$/i)).toBeInTheDocument();
     expect(screen.getByText(/Exports complete-date events only; partial dates such as year-only values are skipped to avoid false precision./i)).toBeInTheDocument();
 
     // Verify click handlers are triggered correctly
@@ -625,6 +641,18 @@ describe('ExportCloudPanel manuscript preview', () => {
     expect(screen.queryByRole('button', { name: /Markdown/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Print/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Family Book PDF/i })).not.toBeInTheDocument();
+  });
+
+  it('hides owner-only raw project exports from collaborators', () => {
+    render(<ExportCloudPanel {...baseProps} canManageCloud={false} canExportRawData={false} />);
+
+    switchToExportSection(/Portable Data/i);
+
+    expect(screen.getByRole('status')).toHaveTextContent('Full project backups and raw JSON are available only to the tree owner.');
+    expect(screen.queryByRole('button', { name: /Raw Project JSON/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Jozor Full Backup/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /GEDCOM/i })).toBeEnabled();
+    expect(screen.getByRole('button', { name: /Calendar/i })).toBeEnabled();
   });
 
   it('keeps Google Drive disconnected messaging inside the Cloud Backup workflow', () => {
@@ -951,7 +979,7 @@ describe('ExportCloudPanel manuscript preview', () => {
       expect(screen.getAllByText('PDF').length).toBe(2);
     });
 
-    it('requires a two-step confirmation to clear history', () => {
+    it('requires an explicit cancellable confirmation to clear history', async () => {
       mockExportHistoryData = [
         {
           id: 3,
@@ -975,14 +1003,17 @@ describe('ExportCloudPanel manuscript preview', () => {
       const clearBtn = screen.getByRole('button', { name: /Clear History/i });
       expect(clearBtn).toBeInTheDocument();
 
-      // First click: changes button label to "Confirm clear"
       fireEvent.click(clearBtn);
       expect(mockClearExportHistory).not.toHaveBeenCalled();
-      expect(screen.getByRole('button', { name: /Confirm clear/i })).toBeInTheDocument();
+      expect(screen.getByRole('alert')).toHaveTextContent('Files you already downloaded will not be deleted.');
 
-      // Second click: calls clearExportHistory
-      fireEvent.click(screen.getByRole('button', { name: /Confirm clear/i }));
-      expect(mockClearExportHistory).toHaveBeenCalled();
+      fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+      expect(mockClearExportHistory).not.toHaveBeenCalled();
+
+      fireEvent.click(screen.getByRole('button', { name: /Clear History/i }));
+      fireEvent.click(screen.getByRole('button', { name: /Clear history permanently/i }));
+      await waitFor(() => expect(mockClearExportHistory).toHaveBeenCalledTimes(1));
     });
   });
 });

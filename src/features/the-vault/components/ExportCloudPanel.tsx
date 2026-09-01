@@ -32,6 +32,7 @@ import { VisualPublishingStudio } from './visual-studio/VisualPublishingStudio';
 
 interface ExportCloudPanelProps {
   canManageCloud: boolean;
+  canExportRawData: boolean;
   files: DriveFile[];
   t: TranslationSchema;
   onCloseVault: () => void;
@@ -275,6 +276,7 @@ function countBranchPeopleInScope(
 
 export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
   canManageCloud,
+  canExportRawData,
   files,
   t,
   onCloseVault,
@@ -321,6 +323,7 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
   const [rootSearchText, setRootSearchText] = useState('');
   const [generationsDepth, setGenerationsDepth] = useState<number | 'all'>(3);
   const [confirmClearHistory, setConfirmClearHistory] = useState(false);
+  const [isClearingHistory, setIsClearingHistory] = useState(false);
   const [uncontrolledActiveSection, setUncontrolledActiveSection] = useState<ExportPanelSection>('family-book');
   const [expandedHistoryId, setExpandedHistoryId] = useState<number | string | null>(null);
   const activeSectionTabRef = useRef<HTMLButtonElement>(null);
@@ -332,6 +335,7 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
   }, [activeSection]);
   const setActiveSection = useCallback((section: ExportPanelSection) => {
     setPendingCloudFileAction(null);
+    setConfirmClearHistory(false);
     if (controlledActiveSection === undefined) {
       setUncontrolledActiveSection(section);
     }
@@ -356,23 +360,40 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
     void loadExportHistory();
   }, [checkControlledPdfReadiness, loadExportHistory]);
 
-  const personOptions = useMemo(
-    () => Object.values(people)
+  const personOptions = useMemo(() => {
+    const options = Object.values(people)
       .map((person) => ({
         id: person.id,
-        name: [person.title, person.firstName, person.middleName, person.lastName].filter(Boolean).join(' ').trim() || person.nickName || person.id,
+        name: [person.title, person.firstName, person.middleName, person.lastName].filter(Boolean).join(' ').trim() || person.nickName || (language === 'ar' ? 'شخص بلا اسم' : 'Unnamed person'),
       }))
-      .sort((a, b) => a.name.localeCompare(b.name)),
-    [people]
-  );
+      .sort((a, b) => a.name.localeCompare(b.name));
+    const nameTotals = new Map<string, number>();
+    const nameIndexes = new Map<string, number>();
+
+    options.forEach((person) => {
+      const key = person.name.toLocaleLowerCase();
+      nameTotals.set(key, (nameTotals.get(key) ?? 0) + 1);
+    });
+
+    return options.map((person) => {
+      const key = person.name.toLocaleLowerCase();
+      const index = (nameIndexes.get(key) ?? 0) + 1;
+      nameIndexes.set(key, index);
+      return {
+        ...person,
+        selectorLabel: (nameTotals.get(key) ?? 0) > 1 ? `${person.name} (${index})` : person.name,
+      };
+    });
+  }, [language, people]);
 
   const effectiveRootPersonId = selectedRootPersonId || focusId || personOptions[0]?.id || '';
   const selectedRootName = personOptions.find((person) => person.id === effectiveRootPersonId)?.name || effectiveRootPersonId;
+  const selectedRootSelectorLabel = personOptions.find((person) => person.id === effectiveRootPersonId)?.selectorLabel || selectedRootName;
   const handleRootSearchChange = useCallback((value: string) => {
     setRootSearchText(value);
     const normalizedValue = value.trim().toLocaleLowerCase();
     const matchedPerson = personOptions.find((person) =>
-      person.id.toLocaleLowerCase() === normalizedValue ||
+      person.selectorLabel.toLocaleLowerCase() === normalizedValue ||
       person.name.toLocaleLowerCase() === normalizedValue
     );
 
@@ -757,7 +778,7 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                   {language === 'ar' ? 'كتاب العائلة الكلاسيكي' : 'Classic Family Book'}
                 </h5>
                 <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 shrink-0">
-                  {language === 'ar' ? 'جاهز للبيتا المحدودة' : 'Limited beta ready'}
+                  {language === 'ar' ? 'PDF وMarkdown' : 'PDF and Markdown'}
                 </span>
               </div>
               <ManuscriptExportSummary
@@ -776,7 +797,7 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                 <span>{language === 'ar' ? 'جذر المخطوط' : 'Manuscript root'}</span>
                 <input
                   list="manuscript-root-options"
-                  value={rootSearchText || selectedRootName}
+                  value={rootSearchText || selectedRootSelectorLabel}
                   onChange={(event) => handleRootSearchChange(event.target.value)}
                   onFocus={() => setRootSearchText('')}
                   onBlur={() => setRootSearchText('')}
@@ -785,10 +806,7 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                 />
                 <datalist id="manuscript-root-options">
                   {personOptions.map((person) => (
-                    <option key={person.id} value={person.id}>{person.name}</option>
-                  ))}
-                  {personOptions.map((person) => (
-                    <option key={`${person.id}-name`} value={person.name}>{person.id}</option>
+                    <option key={person.id} value={person.selectorLabel}>{person.name}</option>
                   ))}
                 </datalist>
               </label>
@@ -968,7 +986,7 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                     {language === 'ar' ? 'ثيم دافئ' : 'Warm Theme'}
                   </span>
                   <span className="rounded-full bg-indigo-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
-                    {language === 'ar' ? 'اجتياز بنيوي للبيتا' : 'Structural beta pass'}
+                    {language === 'ar' ? 'قالب بوستر' : 'Poster template'}
                   </span>
                 </div>
                 <p className="mt-1 text-[11px] leading-relaxed text-[var(--text-muted)]">
@@ -1064,7 +1082,7 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                     {language === 'ar' ? 'ثيم داكن' : 'Dark Theme'}
                   </span>
                   <span className="rounded-full bg-indigo-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
-                    {language === 'ar' ? 'اجتياز بنيوي للبيتا' : 'Structural beta pass'}
+                    {language === 'ar' ? 'لقطة الشجرة' : 'Tree snapshot'}
                   </span>
                 </div>
                 <p className="mt-1 text-[11px] leading-relaxed text-[var(--text-muted)]">
@@ -1183,11 +1201,19 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
         <h4 className="text-[16px] font-bold tracking-tight text-[var(--text-main)]">
           {language === 'ar' ? 'بيانات قابلة للنقل' : 'Portable Data'}
         </h4>
+        {!canExportRawData && (
+          <p role="status" className="mt-3 rounded-lg border border-[var(--border-soft)] bg-[var(--surface-subtle)] px-3 py-2 text-xs leading-relaxed text-[var(--text-muted)]">
+            {t.vaultPortableRawRestricted}
+          </p>
+        )}
         <div className="mt-3">
           {(['portable-data'] as const).map((group) => (
             <div key={group}>
               <div className="grid gap-2 sm:grid-cols-2">
-                {EXPORT_ACTIONS.filter((action) => action.group === group).map((action) => {
+                {EXPORT_ACTIONS
+                  .filter((action) => action.group === group)
+                  .filter((action) => canExportRawData || (action.id !== 'jozor' && action.id !== 'json'))
+                  .map((action) => {
                   const Icon = action.icon;
                   let displayName = t[action.labelKey] || action.id;
                   let badgeText = '';
@@ -1209,13 +1235,13 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                       : 'May include internal metadata, media references, and raw project fields. Not a clean portable JSON export.';
                     badgeStyle = 'bg-rose-500/10 text-rose-600 dark:text-rose-400';
                   } else if (action.id === 'gedcom') {
-                    badgeText = language === 'ar' ? 'جاهز للبيتا المحدودة' : 'Limited beta ready';
+                    badgeText = language === 'ar' ? 'صيغة تبادل أنساب' : 'Genealogy exchange';
                     descriptionText = language === 'ar'
                       ? 'صيغة تبادل مع برامج الأنساب. اجتازت معاينة المالك.'
                       : 'Genealogy exchange format. Owner spot check passed.';
                     badgeStyle = 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400';
                   } else if (action.id === 'ics') {
-                    badgeText = language === 'ar' ? 'اجتياز بنيوي للبيتا' : 'Structural beta pass';
+                    badgeText = language === 'ar' ? 'أحداث بتواريخ مكتملة' : 'Complete-date events';
                     descriptionText = language === 'ar'
                       ? 'يصدر الأحداث ذات التواريخ الكاملة فقط، ويتجاهل التواريخ الجزئية مثل السنة فقط لتجنب الدقة الزائفة.'
                       : 'Exports complete-date events only; partial dates such as year-only values are skipped to avoid false precision.';
@@ -1250,7 +1276,7 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                       )}
                     </button>
                   );
-                })}
+                  })}
               </div>
             </div>
           ))}
@@ -1270,26 +1296,60 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
           {exportHistory && exportHistory.length > 0 && (
             <button
               type="button"
-              onClick={() => {
-                if (confirmClearHistory) {
-                  void clearExportHistory();
-                  setConfirmClearHistory(false);
-                } else {
-                  setConfirmClearHistory(true);
-                }
-              }}
-              className={`min-h-9 px-3 rounded-lg text-xs font-bold transition-all duration-200 ${
-                confirmClearHistory
-                  ? 'bg-red-600 text-white hover:bg-red-700'
-                  : 'border border-[var(--border-soft)] bg-[var(--surface-subtle)] text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]'
-              }`}
+              onClick={() => setConfirmClearHistory(true)}
+              disabled={isClearingHistory}
+              className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-[var(--border-soft)] bg-[var(--surface-subtle)] px-3 text-xs font-bold text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-hover)] disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {confirmClearHistory
-                ? (language === 'ar' ? 'تأكيد المسح' : 'Confirm clear')
-                : (language === 'ar' ? 'مسح السجل' : 'Clear History')}
+              <Trash2 className="h-3.5 w-3.5" />
+              {language === 'ar' ? 'مسح السجل' : 'Clear History'}
             </button>
           )}
         </div>
+
+        {confirmClearHistory && exportHistory && exportHistory.length > 0 && (
+          <div role="alert" className="mb-4 flex flex-col gap-3 rounded-lg border border-[var(--danger-500)]/30 bg-[var(--danger-500)]/10 p-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
+              <p className="text-sm font-bold text-[var(--danger-700)]">
+                {language === 'ar' ? 'مسح سجل النشر؟' : 'Clear publishing history?'}
+              </p>
+              <p className="mt-1 text-xs leading-relaxed text-[var(--text-muted)]">
+                {language === 'ar'
+                  ? 'سيُحذف سجل النتائج والجودة من هذا الجهاز. لن تُحذف ملفات التصدير التي نزّلتها.'
+                  : 'This removes local export and quality records. Files you already downloaded will not be deleted.'}
+              </p>
+            </div>
+            <div className="flex shrink-0 gap-2">
+              <button
+                type="button"
+                onClick={() => setConfirmClearHistory(false)}
+                disabled={isClearingHistory}
+                className="min-h-9 rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3 text-xs font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] disabled:opacity-50"
+              >
+                {t.cancel}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (isClearingHistory) return;
+                  setIsClearingHistory(true);
+                  void clearExportHistory()
+                    .then(() => setConfirmClearHistory(false))
+                    .catch((error: unknown) => {
+                      showToast.error(error instanceof Error
+                        ? error.message
+                        : (language === 'ar' ? 'تعذر مسح سجل النشر.' : 'Unable to clear publishing history.'));
+                    })
+                    .finally(() => setIsClearingHistory(false));
+                }}
+                disabled={isClearingHistory}
+                className="inline-flex min-h-9 items-center gap-2 rounded-lg bg-[var(--danger-600)] px-3 text-xs font-bold text-white hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isClearingHistory && <RefreshCw className="h-3.5 w-3.5 animate-spin" />}
+                {language === 'ar' ? 'مسح السجل نهائيًا' : 'Clear history permanently'}
+              </button>
+            </div>
+          </div>
+        )}
 
         {(!exportHistory || exportHistory.length === 0) ? (
           <div className="rounded-2xl border border-dashed border-[var(--border-soft)] bg-[var(--surface-subtle)] p-5 text-center text-xs text-[var(--text-muted)]">

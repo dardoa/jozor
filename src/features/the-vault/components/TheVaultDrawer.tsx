@@ -57,6 +57,7 @@ export const TheVaultDrawer: React.FC<TheVaultDrawerProps> = ({
   const vaultTab = useAppStore((state) => state.vaultTab) as VaultTab;
   const setVaultTab = useAppStore((state) => state.setVaultTab);
   const currentUser = useAppStore((state) => state.user);
+  const isE2E = useAppStore((state) => state.isE2E);
   const currentTreeId = useAppStore((state) => state.currentTreeId);
   const setCurrentTreeId = useAppStore((state) => state.setCurrentTreeId);
   const setCurrentUserRole = useAppStore((state) => state.setCurrentUserRole);
@@ -120,6 +121,9 @@ export const TheVaultDrawer: React.FC<TheVaultDrawerProps> = ({
 
   const roleLabel = role === 'owner' ? t.roles.owner : role === 'editor' ? t.roles.editor : role === 'viewer' ? t.roles.viewer : t.roles.unknown;
   const hasInitialRefreshed = useRef(false);
+  const hasVaultSession = isE2E || Boolean(
+    currentUser?.uid && currentUser.email && currentUser.supabaseToken
+  );
 
   useEffect(() => {
     if (!isVaultOpen) {
@@ -127,7 +131,7 @@ export const TheVaultDrawer: React.FC<TheVaultDrawerProps> = ({
       return;
     }
 
-    if (!currentUser?.uid || !currentUser?.email || !currentUser?.supabaseToken) {
+    if (!hasVaultSession) {
       clearTrees();
       if (vaultTab === 'trees' || vaultTab === 'members' || vaultTab === 'security') {
         setVaultTab('stats');
@@ -137,10 +141,11 @@ export const TheVaultDrawer: React.FC<TheVaultDrawerProps> = ({
 
     if (!hasInitialRefreshed.current) {
       hasInitialRefreshed.current = true;
+      if (isE2E) return;
       void googleSync.refreshDriveFiles();
       void loadTrees();
     }
-  }, [clearTrees, currentUser, googleSync, isVaultOpen, loadTrees, vaultTab, setVaultTab]);
+  }, [clearTrees, googleSync, hasVaultSession, isE2E, isVaultOpen, loadTrees, vaultTab, setVaultTab]);
 
   useEffect(() => {
     if (currentUser?.supabaseToken) {
@@ -179,7 +184,7 @@ export const TheVaultDrawer: React.FC<TheVaultDrawerProps> = ({
   }, [setVaultOpen, toolsActions]);
 
   const insightsLabel = t.vaultInsightsTools;
-  const isGuest = !currentUser;
+  const isGuest = !hasVaultSession;
 
   const navItems: readonly VaultDesktopNavItem[] = useMemo(() => {
     if (isGuest) {

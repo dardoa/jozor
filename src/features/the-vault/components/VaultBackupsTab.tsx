@@ -6,6 +6,7 @@ import { ExportCloudPanel, type ExportPanelSection } from './ExportCloudPanel';
 
 interface VaultBackupsTabProps {
   canManageCloud: boolean;
+  canExportRawData: boolean;
   files: DriveFile[];
   t: TranslationSchema;
   onCloseVault: () => void;

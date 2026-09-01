@@ -673,14 +673,32 @@ test.describe('Vault role boundaries', () => {
       await expect(navigation.getByRole('button', { name: 'Insights & Tools', exact: true })).toBeVisible();
       await expect(navigation.getByRole('button', { name: 'Publishing & Backup', exact: true })).toBeVisible();
 
+      await navigation.getByRole('button', { name: 'Insights & Tools', exact: true }).click();
+      await expect(page.getByRole('heading', { name: 'Explore the tree' })).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Check and calculate' })).toBeVisible();
+      await expect(page.getByRole('button', { name: /Open data consistency check:/i })).toBeVisible();
+
       if (scenario.canManage) {
         await expect(navigation.getByRole('button', { name: 'Members', exact: true })).toBeVisible();
         await expect(navigation.getByRole('button', { name: 'Privacy', exact: true })).toBeVisible();
+        await navigation.getByRole('button', { name: 'Publishing & Backup', exact: true }).click();
+        await page.getByRole('tab', { name: 'Portable Data', exact: true }).click();
+        await expect(page.getByRole('button', { name: /Jozor Full Backup/i })).toBeVisible();
+        await expect(page.getByRole('button', { name: /Raw Project JSON/i })).toBeVisible();
+        await navigation.getByRole('button', { name: 'Privacy', exact: true }).click();
+        await expect(page.getByRole('heading', { name: 'Collaboration access' })).toBeVisible();
+        await expect(page.getByRole('checkbox', { name: 'Privacy Mode' })).toBeVisible();
       } else {
         await expect(navigation.getByRole('button', { name: 'Members', exact: true })).toHaveCount(0);
         await expect(navigation.getByRole('button', { name: 'Privacy', exact: true })).toHaveCount(0);
 
         await navigation.getByRole('button', { name: 'Publishing & Backup', exact: true }).click();
+        await page.getByRole('tab', { name: 'Portable Data', exact: true }).click();
+        await expect(page.getByRole('button', { name: /Jozor Full Backup/i })).toHaveCount(0);
+        await expect(page.getByRole('button', { name: /Raw Project JSON/i })).toHaveCount(0);
+        await expect(page.getByRole('button', { name: /GEDCOM/i })).toBeVisible();
+        await expect(page.getByText(/available only to the tree owner/i)).toBeVisible();
+
         await page.getByRole('tab', { name: /Cloud Backup/i }).click();
         await expect(page.getByText('Cloud access limited')).toBeVisible();
         await expect(page.getByRole('button', { name: 'Refresh files' })).toHaveCount(0);
@@ -796,6 +814,17 @@ test.describe('mobile shell', () => {
     expect(vaultHeadingBox).not.toBeNull();
     expect(vaultHeadingBox!.x).toBeGreaterThanOrEqual(0);
     expect(vaultHeadingBox!.x + vaultHeadingBox!.width).toBeLessThanOrEqual(390);
+
+    await vaultNavigation.getByRole('button', { name: 'Insights & Tools', exact: true }).click();
+    await expect(page.getByRole('heading', { name: 'Explore the tree' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Check and calculate' })).toBeVisible();
+
+    await vaultNavigation.getByRole('button', { name: 'Privacy', exact: true }).click();
+    await expect(page.getByRole('heading', { name: 'Collaboration access' })).toBeVisible();
+    const privacyPanelBox = await page.getByRole('heading', { name: 'Tree Privacy' }).locator('xpath=ancestor::section').boundingBox();
+    expect(privacyPanelBox).not.toBeNull();
+    expect(privacyPanelBox!.x).toBeGreaterThanOrEqual(0);
+    expect(privacyPanelBox!.x + privacyPanelBox!.width).toBeLessThanOrEqual(390);
   });
 });
 

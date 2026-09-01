@@ -88,6 +88,7 @@ export const VaultBackupsContent = ({ context }: { context: VaultRenderContext }
     <Suspense fallback={<VaultTabLoader label={context.t.vaultLoading} />}>
       <VaultBackupsTab
         canManageCloud={context.canManageCloud}
+        canExportRawData={!context.currentUser || context.canManageCloud}
         files={context.googleSync.driveFiles || []}
         t={context.t}
         onCloseVault={context.onCloseVault}
