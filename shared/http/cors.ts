@@ -1,4 +1,4 @@
-import { normalizeHttpOrigin } from './origin';
+import { normalizeHttpOrigin } from './origin.js';
 
 export interface CorsHeadersOptions {
   methods: string;
