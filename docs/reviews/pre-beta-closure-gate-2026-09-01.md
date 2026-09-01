@@ -36,11 +36,15 @@ The application and Visual Publishing Studio do not require an architectural rew
 
 Digital page geometry is verified, but no physical printer proof was performed in this pass. Print representative A3 and one large-format sample through the intended print provider and inspect trim, safe margins, Arabic readability, color, and photo quality at normal viewing distance.
 
+The regenerated representative files and sign-off matrix are documented in
+`docs/reviews/visual-studio-physical-print-handoff-2026-09-01.md`. The workstation
+currently exposes virtual printers only, so this gate remains externally pending.
+
 ### Family Book controlled PDF gate
 
-The Vercel project currently lacks `BROWSERLESS_TOKEN` and `VITE_ENABLE_CONTROLLED_PDF`. Before presenting controlled Family Book PDF as beta-ready, either:
+Family Book controlled PDF uses embedded Chromium and no longer requires Browserless credentials. Before presenting it as beta-ready, either:
 
-1. configure and redeploy the controlled renderer, then complete a real Arabic/photo PDF owner review; or
+1. set `VITE_ENABLE_CONTROLLED_PDF=true`, redeploy, then complete a real Arabic/photo PDF owner review; or
 2. exclude Family Book PDF from the first beta cohort and keep Markdown plus browser-print fallback clearly labeled as transitional.
 
 ### Authenticated collaboration gate

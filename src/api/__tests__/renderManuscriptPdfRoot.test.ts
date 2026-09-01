@@ -3,8 +3,45 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import handler from '../../../api/publishing/render-manuscript-pdf';
 import { verifyInternalToken } from '../../../shared/auth/internalJwt.js';
 
+const chromiumMocks = vi.hoisted(() => {
+  const page = {
+    setDefaultTimeout: vi.fn(),
+    setDefaultNavigationTimeout: vi.fn(),
+    setRequestInterception: vi.fn(),
+    on: vi.fn(),
+    setContent: vi.fn(),
+    emulateMediaType: vi.fn(),
+    evaluate: vi.fn(),
+    pdf: vi.fn(),
+  };
+  const browser = {
+    newPage: vi.fn(),
+    close: vi.fn(),
+  };
+  return {
+    page,
+    browser,
+    executablePath: vi.fn(),
+    launch: vi.fn(),
+  };
+});
+
 vi.mock('../../../shared/auth/internalJwt.js', () => ({
   verifyInternalToken: vi.fn(),
+}));
+
+vi.mock('@sparticuz/chromium', () => ({
+  default: {
+    args: ['--no-sandbox'],
+    executablePath: chromiumMocks.executablePath,
+    setGraphicsMode: true,
+  },
+}));
+
+vi.mock('puppeteer-core', () => ({
+  default: {
+    launch: chromiumMocks.launch,
+  },
 }));
 
 const createResponse = () => {
@@ -55,8 +92,16 @@ describe('root renderManuscriptPdf API function', () => {
     process.env = {
       ...originalEnv,
       APP_ORIGIN: 'http://localhost:3000',
-      BROWSERLESS_TOKEN: 'test-token',
     };
+    chromiumMocks.executablePath.mockResolvedValue('/tmp/chromium');
+    chromiumMocks.launch.mockResolvedValue(chromiumMocks.browser);
+    chromiumMocks.browser.newPage.mockResolvedValue(chromiumMocks.page);
+    chromiumMocks.browser.close.mockResolvedValue(undefined);
+    chromiumMocks.page.setRequestInterception.mockResolvedValue(undefined);
+    chromiumMocks.page.setContent.mockResolvedValue(undefined);
+    chromiumMocks.page.emulateMediaType.mockResolvedValue(undefined);
+    chromiumMocks.page.evaluate.mockResolvedValue(undefined);
+    chromiumMocks.page.pdf.mockResolvedValue(Buffer.from('%PDF-1.7\ncontrolled manuscript'));
     vi.mocked(verifyInternalToken).mockResolvedValue({
       uid: 'user-1',
       email: 'owner@example.test',
@@ -109,16 +154,8 @@ describe('root renderManuscriptPdf API function', () => {
     await handler(request({ method: 'GET' }) as never, res as never);
 
     expect(res.statusCode).toBe(200);
-    expect(res.body).toEqual({ ready: true });
+    expect(res.body).toEqual({ ready: true, renderer: 'embedded-chromium' });
     expect(fetchSpy).not.toHaveBeenCalled();
-  });
-
-  it('reports missing Browserless configuration with 503', async () => {
-    delete process.env.BROWSERLESS_TOKEN;
-    const res = createResponse();
-    await handler(request({ method: 'GET' }) as never, res as never);
-    expect(res.statusCode).toBe(503);
-    expect(res.body).toEqual({ error: 'Controlled PDF renderer is not configured' });
   });
 
   it('validates payload content, title, and request size', async () => {
@@ -149,39 +186,22 @@ describe('root renderManuscriptPdf API function', () => {
     expect(resourceResponse.statusCode).toBe(400);
   });
 
-  it('rejects upstream failures, invalid MIME, and invalid PDF signatures', async () => {
+  it('rejects Chromium failures and invalid PDF signatures while closing launched browsers', async () => {
     const failureResponse = createResponse();
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, headers: { get: () => null } }));
+    chromiumMocks.launch.mockRejectedValueOnce(new Error('launch failed'));
     await handler(request() as never, failureResponse as never);
     expect(failureResponse.statusCode).toBe(502);
 
-    const mimeResponse = createResponse();
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-      ok: true,
-      headers: { get: () => 'text/plain' },
-      arrayBuffer: async () => new ArrayBuffer(10),
-    }));
-    await handler(request() as never, mimeResponse as never);
-    expect(mimeResponse.statusCode).toBe(502);
-
     const signatureResponse = createResponse();
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-      ok: true,
-      headers: { get: () => 'application/pdf' },
-      arrayBuffer: async () => Buffer.from('not-pdf'),
-    }));
+    chromiumMocks.page.pdf.mockResolvedValueOnce(Buffer.from('not-pdf'));
     await handler(request() as never, signatureResponse as never);
     expect(signatureResponse.statusCode).toBe(502);
+    expect(chromiumMocks.browser.close).toHaveBeenCalledTimes(1);
   });
 
-  it('returns a verified PDF and disables Browserless headers and footers', async () => {
+  it('returns a verified PDF with an isolated embedded Chromium print session', async () => {
     const pdf = Buffer.from('%PDF-1.7\ncontrolled manuscript');
-    const fetchSpy = vi.fn().mockResolvedValue({
-      ok: true,
-      headers: { get: () => 'application/pdf' },
-      arrayBuffer: async () => pdf,
-    });
-    vi.stubGlobal('fetch', fetchSpy);
+    chromiumMocks.page.pdf.mockResolvedValueOnce(pdf);
     const res = createResponse();
 
     await handler(request() as never, res as never);
@@ -190,11 +210,42 @@ describe('root renderManuscriptPdf API function', () => {
     expect(res.headers['Content-Type']).toBe('application/pdf');
     expect(res.headers['Cache-Control']).toBe('no-store');
     expect(res.body).toEqual(pdf);
-    const upstreamBody = JSON.parse(fetchSpy.mock.calls[0][1].body as string);
-    expect(upstreamBody.options).toMatchObject({
+    expect(chromiumMocks.launch).toHaveBeenCalledWith(expect.objectContaining({
+      args: ['--no-sandbox'],
+      executablePath: '/tmp/chromium',
+      headless: 'shell',
+    }));
+    expect(chromiumMocks.page.setRequestInterception).toHaveBeenCalledWith(true);
+    const requestHandler = chromiumMocks.page.on.mock.calls.find(([event]) => event === 'request')?.[1] as
+      | ((request: {
+          url: () => string;
+          continue: () => void;
+          abort: (errorCode: string) => void;
+        }) => void)
+      | undefined;
+    expect(requestHandler).toBeTypeOf('function');
+    if (!requestHandler) throw new Error('Chromium request interceptor was not registered');
+
+    const embeddedRequest = { url: () => 'data:image/png;base64,AAAA', continue: vi.fn(), abort: vi.fn() };
+    requestHandler(embeddedRequest);
+    expect(embeddedRequest.continue).toHaveBeenCalledOnce();
+    expect(embeddedRequest.abort).not.toHaveBeenCalled();
+
+    const externalRequest = { url: () => 'https://storage.example/private.jpg', continue: vi.fn(), abort: vi.fn() };
+    requestHandler(externalRequest);
+    expect(externalRequest.abort).toHaveBeenCalledWith('blockedbyclient');
+    expect(externalRequest.continue).not.toHaveBeenCalled();
+    expect(chromiumMocks.page.setContent).toHaveBeenCalledWith(
+      '<!doctype html><html><body>Book</body></html>',
+      expect.objectContaining({ waitUntil: 'domcontentloaded' })
+    );
+    expect(chromiumMocks.page.emulateMediaType).toHaveBeenCalledWith('print');
+    expect(chromiumMocks.page.evaluate).toHaveBeenCalledTimes(1);
+    expect(chromiumMocks.page.pdf).toHaveBeenCalledWith(expect.objectContaining({
       printBackground: true,
       preferCSSPageSize: true,
       displayHeaderFooter: false,
-    });
+    }));
+    expect(chromiumMocks.browser.close).toHaveBeenCalledTimes(1);
   });
 });

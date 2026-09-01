@@ -11,9 +11,13 @@ import {
 
 const MAX_HTML_BYTES = 3_800_000;
 const MAX_TITLE_LENGTH = 240;
-const RENDER_TIMEOUT_MS = 30_000;
+const RENDER_TIMEOUT_MS = 45_000;
 const RESOURCE_ATTRIBUTE_REGEX = /(?:src|href)\s*=\s*["']([^"']+)["']/gi;
 const CSS_RESOURCE_REGEX = /url\(\s*["']?([^"')]+)["']?\s*\)/gi;
+
+export const config = {
+  maxDuration: 60,
+};
 
 function getEnv(name: string): string | undefined {
   const value = process.env[name];
@@ -76,6 +80,62 @@ function configureCors(req: VercelRequest, res: VercelResponse): boolean {
   return true;
 }
 
+async function renderWithEmbeddedChromium(html: string): Promise<Buffer> {
+  const [{ default: chromium }, { default: puppeteer }] = await Promise.all([
+    import('@sparticuz/chromium'),
+    import('puppeteer-core'),
+  ]);
+  chromium.setGraphicsMode = false;
+
+  const browser = await puppeteer.launch({
+    args: chromium.args,
+    defaultViewport: {
+      width: 1240,
+      height: 1754,
+      deviceScaleFactor: 1,
+    },
+    executablePath: await chromium.executablePath(),
+    headless: 'shell',
+    protocolTimeout: RENDER_TIMEOUT_MS,
+  });
+
+  try {
+    const page = await browser.newPage();
+    page.setDefaultTimeout(RENDER_TIMEOUT_MS);
+    page.setDefaultNavigationTimeout(RENDER_TIMEOUT_MS);
+    await page.setRequestInterception(true);
+    page.on('request', (request) => {
+      const url = request.url();
+      if (url === 'about:blank' || url.startsWith('data:')) {
+        void request.continue();
+        return;
+      }
+      void request.abort('blockedbyclient');
+    });
+
+    await page.setContent(html, {
+      waitUntil: 'domcontentloaded',
+      timeout: RENDER_TIMEOUT_MS,
+    });
+    await page.emulateMediaType('print');
+    await page.evaluate(async () => {
+      await document.fonts.ready;
+    });
+
+    const pdf = await page.pdf({
+      printBackground: true,
+      format: 'A4',
+      preferCSSPageSize: true,
+      displayHeaderFooter: false,
+      margin: { top: '20mm', bottom: '20mm', left: '15mm', right: '15mm' },
+      timeout: RENDER_TIMEOUT_MS,
+    });
+    return Buffer.from(pdf);
+  } finally {
+    await browser.close();
+  }
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Cache-Control', 'no-store');
   if (!configureCors(req, res)) return;
@@ -92,12 +152,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  const token = getEnv('BROWSERLESS_TOKEN');
-  if (!token) {
-    return res.status(503).json({ error: 'Controlled PDF renderer is not configured' });
-  }
   if (req.method === 'GET') {
-    return res.status(200).json({ ready: true });
+    return res.status(200).json({ ready: true, renderer: 'embedded-chromium' });
   }
 
   const { html, title } = req.body || {};
@@ -114,30 +170,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: 'Manuscript contains unsupported external resources' });
   }
 
-  const endpoint = getEnv('BROWSERLESS_ENDPOINT') || 'https://chrome.browserless.io/pdf';
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), RENDER_TIMEOUT_MS);
   try {
-    const response = await fetch(`${endpoint}?token=${encodeURIComponent(token)}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      signal: controller.signal,
-      body: JSON.stringify({
-        html,
-        options: {
-          printBackground: true,
-          format: 'A4',
-          preferCSSPageSize: true,
-          displayHeaderFooter: false,
-          margin: { top: '20mm', bottom: '20mm', left: '15mm', right: '15mm' },
-        },
-      }),
-    });
-
-    if (!response.ok || !(response.headers.get('content-type') || '').includes('application/pdf')) {
-      return res.status(502).json({ error: 'Controlled PDF renderer returned invalid PDF' });
-    }
-    const buffer = Buffer.from(await response.arrayBuffer());
+    const buffer = await renderWithEmbeddedChromium(html);
     if (buffer.length < 5 || buffer.subarray(0, 5).toString('ascii') !== '%PDF-') {
       return res.status(502).json({ error: 'Controlled PDF renderer returned invalid PDF' });
     }
@@ -148,7 +182,5 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).send(buffer);
   } catch {
     return res.status(502).json({ error: 'Controlled PDF renderer returned invalid PDF' });
-  } finally {
-    clearTimeout(timeout);
   }
 }

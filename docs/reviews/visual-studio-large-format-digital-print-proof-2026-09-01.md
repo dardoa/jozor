@@ -19,6 +19,13 @@ Run artifacts and the measured manifest are written to the ignored directory:
 
 `output/playwright/visual-studio-large-format-print-proof/`
 
+The representative files and print-provider checklist are bundled in:
+
+`output/print-proof-handoff/visual-studio-physical-print-handoff-2026-09-01.zip`
+
+See `docs/reviews/visual-studio-physical-print-handoff-2026-09-01.md` for the
+physical acceptance procedure and truthful workstation-printer limitation.
+
 ## Single-sheet Results
 
 | Size | PDF physical size | SVG embedded font | Embedded images | Result |
