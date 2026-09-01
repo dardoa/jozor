@@ -110,6 +110,7 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
   const [expandedHistoryId, setExpandedHistoryId] = useState<number | string | null>(null);
   const activeSection = controlledActiveSection ?? uncontrolledActiveSection;
   const activeSectionTabRef = useRef<HTMLButtonElement>(null);
+  const sectionTabRefs = useRef<Partial<Record<ExportPanelSection, HTMLButtonElement | null>>>({});
 
   const setActiveSection = useCallback(
     (section: ExportPanelSection) => {
@@ -128,6 +129,31 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
       activeSectionTabRef.current.scrollIntoView({ block: 'nearest', inline: 'center' });
     }
   }, [activeSection]);
+
+  const handleSectionTabKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLButtonElement>, section: ExportPanelSection) => {
+      const currentIndex = EXPORT_PANEL_SECTIONS.findIndex((item) => item.id === section);
+      let targetIndex: number | undefined;
+
+      if (event.key === 'Home') {
+        targetIndex = 0;
+      } else if (event.key === 'End') {
+        targetIndex = EXPORT_PANEL_SECTIONS.length - 1;
+      } else if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+        const visualStep = event.key === 'ArrowRight' ? 1 : -1;
+        const logicalStep = language === 'ar' ? -visualStep : visualStep;
+        targetIndex = (currentIndex + logicalStep + EXPORT_PANEL_SECTIONS.length) % EXPORT_PANEL_SECTIONS.length;
+      }
+
+      if (targetIndex === undefined) return;
+
+      event.preventDefault();
+      const targetSection = EXPORT_PANEL_SECTIONS[targetIndex].id;
+      setActiveSection(targetSection);
+      sectionTabRefs.current[targetSection]?.focus();
+    },
+    [language, setActiveSection]
+  );
 
   const handleExport = useCallback(
     async (type: ExportType) => {
@@ -163,12 +189,17 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
             const isActive = activeSection === section.id;
             return (
               <button
-                ref={isActive ? activeSectionTabRef : undefined}
+                ref={(element) => {
+                  sectionTabRefs.current[section.id] = element;
+                  if (isActive) activeSectionTabRef.current = element;
+                }}
                 key={section.id}
                 type="button"
                 role="tab"
                 aria-selected={isActive}
+                tabIndex={isActive ? 0 : -1}
                 onClick={() => setActiveSection(section.id)}
+                onKeyDown={(event) => handleSectionTabKeyDown(event, section.id)}
                 className={`min-h-10 min-w-[8rem] shrink-0 rounded-lg px-3 py-2 text-xs font-bold transition-all lg:min-w-0 lg:flex-1 ${
                   isActive
                     ? 'bg-[var(--primary-600)] text-white shadow-sm'

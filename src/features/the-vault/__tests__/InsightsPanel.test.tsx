@@ -21,6 +21,7 @@ describe('InsightsPanel', () => {
 
     expect(screen.getByText('Vault QA Tree')).toBeInTheDocument();
     expect(screen.getByText('12')).toBeInTheDocument();
+    expect(screen.getByText('Total People')).not.toHaveClass('truncate');
     expect(screen.getByRole('heading', { name: 'Explore the tree' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Check and calculate' })).toBeInTheDocument();
     expect(screen.getByRole('progressbar', { name: 'Data Health Score' })).toHaveValue(84);

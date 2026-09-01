@@ -118,12 +118,12 @@ export const InsightsPanel: React.FC<InsightsPanelProps> = ({
                 <div
                   key={stat.id}
                   role="listitem"
-                  className="flex min-h-[58px] min-w-0 items-center gap-2.5 rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3 py-2.5"
+                  className="flex min-h-16 min-w-0 items-center gap-2.5 rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3 py-2.5"
                 >
                   <stat.icon className={`h-4 w-4 shrink-0 ${stat.color}`} />
                   <div className="min-w-0">
                     <p className={`text-base font-semibold leading-none tabular-nums ${stat.color}`}>{stat.value}</p>
-                    <p className="mt-1 truncate text-[11px] text-[var(--text-muted)]">{stat.label}</p>
+                    <p className="mt-1 text-[11px] leading-4 text-[var(--text-muted)]">{stat.label}</p>
                   </div>
                 </div>
               ))}

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { VisualOutputReadinessNotice } from './VisualOutputReadinessNotice';
 import { VisualOutputPreviewPane } from './VisualOutputPreviewPane';
 import {
@@ -198,7 +199,11 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
               className="flex w-full items-center justify-between rounded-md border border-stone-800 bg-stone-900 px-3.5 py-2 text-xs font-medium text-stone-200 hover:bg-stone-800/60"
             >
               <span>{isAr ? 'معاينة البوستر' : 'Poster Preview'}</span>
-              <span className="text-amber-400 font-bold">{isMobilePreviewExpanded ? '▲' : '▼'}</span>
+              {isMobilePreviewExpanded ? (
+                <ChevronUp className="h-4 w-4 shrink-0 text-amber-400" aria-hidden="true" />
+              ) : (
+                <ChevronDown className="h-4 w-4 shrink-0 text-amber-400" aria-hidden="true" />
+              )}
             </button>
           </div>
 

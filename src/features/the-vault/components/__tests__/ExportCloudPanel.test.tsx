@@ -101,6 +101,33 @@ const switchToExportSection = (name: RegExp) => {
   fireEvent.click(screen.getByRole('tab', { name }));
 };
 
+describe('ExportCloudPanel section navigation', () => {
+  it('uses roving focus and keyboard navigation across export sections', () => {
+    render(<ExportCloudPanel {...baseProps} />);
+
+    const familyBookTab = screen.getByRole('tab', { name: 'Family Book' });
+    const visualOutputsTab = screen.getByRole('tab', { name: 'Visual Outputs' });
+    const cloudBackupTab = screen.getByRole('tab', { name: 'Cloud Backup' });
+
+    expect(familyBookTab).toHaveAttribute('tabindex', '0');
+    expect(visualOutputsTab).toHaveAttribute('tabindex', '-1');
+
+    familyBookTab.focus();
+    fireEvent.keyDown(familyBookTab, { key: 'ArrowRight' });
+
+    expect(visualOutputsTab).toHaveAttribute('aria-selected', 'true');
+    expect(visualOutputsTab).toHaveFocus();
+
+    fireEvent.keyDown(visualOutputsTab, { key: 'End' });
+    expect(cloudBackupTab).toHaveAttribute('aria-selected', 'true');
+    expect(cloudBackupTab).toHaveFocus();
+
+    fireEvent.keyDown(cloudBackupTab, { key: 'Home' });
+    expect(familyBookTab).toHaveAttribute('aria-selected', 'true');
+    expect(familyBookTab).toHaveFocus();
+  });
+});
+
 describe('ExportCloudPanel manuscript preview', () => {
   it('renders neutral manuscript summary fallbacks when values are missing', () => {
     render(
