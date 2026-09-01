@@ -149,7 +149,8 @@ export const TreeListItem: React.FC<TreeListItemProps> = ({
             <button
               type="button"
               onClick={() => onStartRename(tree)}
-              className={`min-h-11 min-w-11 ${compact ? 'rounded-xl' : 'rounded-2xl'} p-2 transition-all duration-300 ease-in-out ${isActive ? 'text-white hover:bg-white/10' : 'text-[var(--text-muted)] hover:bg-[var(--surface-hover)]'}`}
+              disabled={isBusy}
+              className={`min-h-11 min-w-11 ${compact ? 'rounded-xl' : 'rounded-2xl'} p-2 transition-all duration-300 ease-in-out disabled:cursor-not-allowed disabled:opacity-40 ${isActive ? 'text-white hover:bg-white/10' : 'text-[var(--text-muted)] hover:bg-[var(--surface-hover)]'}`}
               title={labels.renameTree}
               aria-label={labels.renameTree}
             >
@@ -160,7 +161,8 @@ export const TreeListItem: React.FC<TreeListItemProps> = ({
             <button
               type="button"
               onClick={() => onDelete(tree.id)}
-              className={`min-h-11 min-w-11 ${compact ? 'rounded-xl' : 'rounded-2xl'} p-2 transition-all duration-300 ease-in-out ${isActive ? 'text-white hover:bg-white/10' : 'text-[var(--danger-500)] hover:bg-[var(--danger-500)]/10'}`}
+              disabled={isBusy}
+              className={`min-h-11 min-w-11 ${compact ? 'rounded-xl' : 'rounded-2xl'} p-2 transition-all duration-300 ease-in-out disabled:cursor-not-allowed disabled:opacity-40 ${isActive ? 'text-white hover:bg-white/10' : 'text-[var(--danger-500)] hover:bg-[var(--danger-500)]/10'}`}
               title={labels.deleteTree}
               aria-label={labels.deleteTree}
             >

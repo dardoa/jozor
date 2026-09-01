@@ -93,10 +93,11 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = memo(
 
             {requiredConfirmText && (
               <div className='space-y-2 animate-in slide-in-from-top-1 duration-200'>
-                <p className='ds-label px-1'>
+                <label htmlFor={`${overlayId}-confirmation-input`} className='ds-label px-1'>
                   {confirmPlaceholder || t.deleteConfirmPlaceholder.replace('{name}', requiredConfirmText)}
-                </p>
+                </label>
                 <input
+                  id={`${overlayId}-confirmation-input`}
                   autoFocus
                   type="text"
                   value={confirmInput}

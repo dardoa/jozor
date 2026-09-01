@@ -19,7 +19,7 @@ export const AccessInviteSection: React.FC<{
       {t.treeManager.inviteNewCollaborator}
     </h4>
     <p className={accessDescriptionClassName}>{sectionText.inviteDescription}</p>
-    <div className="flex flex-col gap-4">
+    <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] lg:grid-cols-[minmax(0,1fr)_auto_auto] lg:items-center">
       <div className="relative">
         <Mail className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-muted)]" />
         <input
@@ -28,14 +28,16 @@ export const AccessInviteSection: React.FC<{
           onChange={(e) => onEmailChange(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && void onInvite()}
           placeholder={t.treeManager.emailLabel}
+          aria-label={t.treeManager.emailLabel}
           className="min-h-11 w-full rounded-xl border border-[var(--border-soft)] bg-[var(--surface-subtle)] ps-10 pe-3 py-3 text-sm text-[var(--text-main)] outline-none transition-all duration-200 ease-in-out placeholder:text-[var(--text-muted)] focus:border-[var(--primary-600)]/30 focus:bg-[var(--surface-panel)]"
         />
       </div>
 
-      <div className="flex flex-wrap gap-2.5 gap-y-3">
+      <div className="grid grid-cols-2 gap-2" role="group" aria-label={t.vaultMembersRole}>
         <button
           type="button"
           onClick={() => onRoleChange('viewer')}
+          aria-pressed={inviteRole === 'viewer'}
           className={inviteRole === 'viewer' ? activeChipClass : inactiveChipClass}
         >
           {t.viewer}
@@ -43,6 +45,7 @@ export const AccessInviteSection: React.FC<{
         <button
           type="button"
           onClick={() => onRoleChange('editor')}
+          aria-pressed={inviteRole === 'editor'}
           className={inviteRole === 'editor' ? activeChipClass : inactiveChipClass}
         >
           {t.editor}
@@ -53,7 +56,7 @@ export const AccessInviteSection: React.FC<{
         type="button"
         onClick={() => void onInvite()}
         disabled={isInviting || !inviteEmail.trim()}
-        className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[var(--primary-600)] px-4 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-in-out hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
+        className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[var(--primary-600)] px-4 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-in-out hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50 sm:col-span-2 lg:col-span-1"
       >
         {isInviting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
         {t.treeManager.inviteButton}

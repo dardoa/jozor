@@ -131,6 +131,11 @@ type HistoryProductCategory =
   | 'cloud-backup'
   | 'unknown';
 
+type PendingCloudFileAction = {
+  action: 'overwrite' | 'restore' | 'delete';
+  fileId: string;
+} | null;
+
 interface HistoryProductDisplay {
   category: HistoryProductCategory;
   productLabel: string;
@@ -295,8 +300,8 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
   onActiveSectionChange,
 }) => {
   const [newFileName, setNewFileName] = useState('');
-  const [confirmOverwriteId, setConfirmOverwriteId] = useState<string | null>(null);
-  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [pendingCloudFileAction, setPendingCloudFileAction] = useState<PendingCloudFileAction>(null);
+  const [isCloudFileActionRunning, setIsCloudFileActionRunning] = useState(false);
   const [preview, setPreview] = useState<PublishingPreviewResult | null>(null);
   const [previewSettingsSignature, setPreviewSettingsSignature] = useState<string | null>(null);
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
@@ -326,6 +331,7 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
     if (activeSection === 'visuals') setHasOpenedVisualStudio(true);
   }, [activeSection]);
   const setActiveSection = useCallback((section: ExportPanelSection) => {
+    setPendingCloudFileAction(null);
     if (controlledActiveSection === undefined) {
       setUncontrolledActiveSection(section);
     }
@@ -505,15 +511,43 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
     setNewFileName('');
   }, [newFileName, onSaveAsNewFile]);
 
-  const handleOverwrite = useCallback(async (fileId: string) => {
-    await onOverwriteDriveFile(fileId);
-    setConfirmOverwriteId(null);
-  }, [onOverwriteDriveFile]);
+  const handleConfirmCloudFileAction = useCallback(async () => {
+    if (!pendingCloudFileAction || isCloudFileActionRunning) return;
 
-  const handleDelete = useCallback(async (fileId: string) => {
-    await onDeleteDriveFile(fileId);
-    setConfirmDeleteId(null);
-  }, [onDeleteDriveFile]);
+    setIsCloudFileActionRunning(true);
+    try {
+      if (pendingCloudFileAction.action === 'overwrite') {
+        await onOverwriteDriveFile(pendingCloudFileAction.fileId);
+      } else if (pendingCloudFileAction.action === 'restore') {
+        await onOpenDriveFile(pendingCloudFileAction.fileId);
+      } else {
+        await onDeleteDriveFile(pendingCloudFileAction.fileId);
+      }
+      setPendingCloudFileAction(null);
+    } catch (error) {
+      showToast.error(error instanceof Error
+        ? error.message
+        : (language === 'ar' ? 'تعذر إكمال عملية النسخة السحابية.' : 'Unable to complete the cloud backup action.'));
+    } finally {
+      setIsCloudFileActionRunning(false);
+    }
+  }, [
+    isCloudFileActionRunning,
+    language,
+    onDeleteDriveFile,
+    onOpenDriveFile,
+    onOverwriteDriveFile,
+    pendingCloudFileAction,
+  ]);
+
+  useEffect(() => {
+    if (!pendingCloudFileAction) return;
+
+    const fileStillExists = files.some((file) => file.id === pendingCloudFileAction.fileId);
+    if (activeSection !== 'cloud-backup' || !canManageCloud || !isAuthorized || !fileStillExists) {
+      setPendingCloudFileAction(null);
+    }
+  }, [activeSection, canManageCloud, files, isAuthorized, pendingCloudFileAction]);
 
   const handleGoogleLogin = useCallback(async () => {
     try {
@@ -618,7 +652,7 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
         </div>
       </div>
 
-      {activeSection === 'cloud-backup' && (
+      {activeSection === 'cloud-backup' && canManageCloud && (
       <section className="rounded-[14px] border border-[var(--border-soft)] bg-[var(--surface-panel)] p-4 shadow-none">
         {hasSessionError && (
           <div className="mb-4 flex flex-col gap-4 rounded-xl border border-[var(--danger-500)]/20 bg-[var(--danger-500)]/10 p-4 animate-in fade-in slide-in-from-top-2 duration-300">
@@ -675,17 +709,19 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <h3 className="text-[16px] font-bold tracking-tight text-[var(--text-main)]">{t.vaultCloudBackupTitle}</h3>
           <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-            <button
-              type="button"
-              onClick={() => void onBackupNow()}
-              disabled={!canManageCloud || !isAuthorized || isBackingUp}
-              className="min-h-11 rounded-xl bg-[var(--primary-600)] px-4 py-2 text-sm font-semibold text-white transition-all duration-200 ease-in-out hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <span className="inline-flex items-center gap-2">
-                {isBackingUp ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Cloud className="h-4 w-4" />}
-                {t.vaultBackupNow}
-              </span>
-            </button>
+            {isAuthorized && (
+              <button
+                type="button"
+                onClick={() => void onBackupNow()}
+                disabled={isBackingUp}
+                className="min-h-11 rounded-xl bg-[var(--primary-600)] px-4 py-2 text-sm font-semibold text-white transition-all duration-200 ease-in-out hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <span className="inline-flex items-center gap-2">
+                  {isBackingUp ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Cloud className="h-4 w-4" />}
+                  {t.vaultBackupNow}
+                </span>
+              </button>
+            )}
             <button
               type="button"
               onClick={onOpenActivityLog}
@@ -1444,7 +1480,7 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
       </section>
       )}
 
-      {activeSection === 'cloud-backup' && (
+      {activeSection === 'cloud-backup' && canManageCloud && isAuthorized && (
       <section className="rounded-[14px] border border-[var(--border-soft)] bg-[var(--surface-panel)] p-4 shadow-none">
         <div className="mb-4 flex flex-col gap-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -1495,6 +1531,22 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
           <div className="space-y-6">
             {sortedFiles.map((file) => {
               const isActive = file.id === currentActiveDriveFileId;
+              const pendingAction = pendingCloudFileAction?.fileId === file.id
+                ? pendingCloudFileAction.action
+                : null;
+              const pendingActionLabel = pendingAction === 'overwrite'
+                ? (language === 'ar'
+                    ? `سيتم استبدال النسخة «${file.name}» ببيانات الشجرة الحالية.`
+                    : `The backup "${file.name}" will be replaced with the current tree.`)
+                : pendingAction === 'restore'
+                  ? (language === 'ar'
+                      ? `ستحل النسخة «${file.name}» محل بيانات الشجرة المفتوحة حاليًا.`
+                      : `The backup "${file.name}" will replace the tree currently open.`)
+                  : pendingAction === 'delete'
+                    ? (language === 'ar'
+                        ? `سيتم حذف النسخة «${file.name}» نهائيًا من جوجل درايف.`
+                        : `The backup "${file.name}" will be permanently deleted from Google Drive.`)
+                    : null;
 
               return (
               <div key={file.id} className={`flex flex-col gap-3 rounded-2xl border px-4 py-3 sm:flex-row sm:items-center sm:justify-between ${isActive ? 'border-[var(--primary-600)]/40 bg-[var(--primary-600)]/5' : 'border-[var(--border-soft)] bg-[var(--surface-subtle)]'}`}>
@@ -1514,70 +1566,95 @@ export const ExportCloudPanel: React.FC<ExportCloudPanelProps> = ({
                     <p className="truncate text-[12px] text-[var(--text-muted)]">{file.modifiedTime}</p>
                   </div>
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  {confirmOverwriteId === file.id ? (
+                {pendingAction && pendingActionLabel ? (
+                  <div
+                    role="group"
+                    aria-label={pendingActionLabel}
+                    aria-busy={isCloudFileActionRunning}
+                    className="flex w-full flex-col gap-3 rounded-xl border border-[var(--warning-500)]/35 bg-[var(--warning-500)]/8 p-3 sm:max-w-md"
+                  >
+                    <p className="text-xs font-semibold leading-5 text-[var(--text-secondary)]">
+                      {pendingActionLabel}
+                    </p>
+                    <div className="flex flex-wrap items-center justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setPendingCloudFileAction(null)}
+                        disabled={isCloudFileActionRunning || isSaving || isDeleting}
+                        className="min-h-11 rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3 py-2 text-xs font-semibold text-[var(--text-secondary)] transition-all hover:bg-[var(--surface-hover)] disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {t.cancel}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void handleConfirmCloudFileAction()}
+                        disabled={isCloudFileActionRunning || (pendingAction === 'delete' ? isDeleting : isSaving)}
+                        className={`min-h-11 rounded-xl px-3 py-2 text-xs font-semibold text-white transition-all hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50 ${pendingAction === 'delete' ? 'bg-[var(--danger-500)]' : 'bg-[var(--warning-600)]'}`}
+                      >
+                        <span className="inline-flex items-center gap-1.5">
+                          {isCloudFileActionRunning
+                            ? <RefreshCw className="h-4 w-4 animate-spin" />
+                            : pendingAction === 'delete'
+                              ? <Trash2 className="h-4 w-4" />
+                              : <AlertTriangle className="h-4 w-4" />}
+                          {pendingAction === 'overwrite'
+                            ? t.confirmOverwrite
+                            : pendingAction === 'delete'
+                              ? t.confirmDelete
+                              : (language === 'ar' ? 'تأكيد الاستعادة' : 'Confirm restore')}
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap items-center gap-2">
                     <button
                       type="button"
-                      onClick={() => void handleOverwrite(file.id)}
-                      disabled={isSaving}
-                      className="min-h-11 rounded-xl bg-orange-600 px-3 py-2 text-xs font-semibold text-white transition-all hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      <span className="inline-flex items-center gap-1.5">
-                        <AlertTriangle className="h-4 w-4" />
-                        {t.confirmOverwrite}
-                      </span>
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => setConfirmOverwriteId(file.id)}
+                      onClick={() => setPendingCloudFileAction({ action: 'overwrite', fileId: file.id })}
                       disabled={!canManageCloud || !isAuthorized || isSaving || isActive}
                       className="min-h-11 rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3 py-2 text-xs font-semibold text-[var(--text-secondary)] transition-all hover:bg-[var(--surface-hover)] disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {t.overwrite}
                     </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => void onOpenDriveFile(file.id)}
-                    disabled={!isAuthorized || isActive}
-                    className="min-h-11 rounded-xl bg-[var(--primary-600)] px-3 py-2 text-xs font-semibold text-white transition-all duration-200 ease-in-out hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {t.vaultOpenCloudFile}
-                  </button>
-                  {confirmDeleteId === file.id ? (
                     <button
                       type="button"
-                      onClick={() => void handleDelete(file.id)}
-                      disabled={isDeleting}
-                      className="min-h-11 rounded-xl bg-red-600 px-3 py-2 text-xs font-semibold text-white transition-all hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
+                      onClick={() => setPendingCloudFileAction({ action: 'restore', fileId: file.id })}
+                      disabled={!isAuthorized || isSaving || isActive}
+                      className="min-h-11 rounded-xl bg-[var(--primary-600)] px-3 py-2 text-xs font-semibold text-white transition-all duration-200 ease-in-out hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                      <span className="inline-flex items-center gap-1.5">
-                        <Trash2 className="h-4 w-4" />
-                        {t.confirmDelete}
-                      </span>
+                      {t.vaultOpenCloudFile}
                     </button>
-                  ) : (
                     <button
                       type="button"
-                      onClick={() => setConfirmDeleteId(file.id)}
+                      onClick={() => setPendingCloudFileAction({ action: 'delete', fileId: file.id })}
                       disabled={!canManageCloud || !isAuthorized || isDeleting || isActive}
                       className="min-h-11 rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3 py-2 text-xs font-semibold text-[var(--text-secondary)] transition-all hover:bg-[var(--surface-hover)] disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {t.delete}
                     </button>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
               );
             })}
           </div>
         )}
 
-        {!canManageCloud && (
-          <div className="mt-4 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-subtle)] p-4 text-[12px] text-[var(--text-muted)]">{t.vaultCloudAccessLimited}</div>
-        )}
       </section>
+      )}
+
+      {activeSection === 'cloud-backup' && !canManageCloud && (
+        <section className="rounded-[14px] border border-[var(--border-soft)] bg-[var(--surface-panel)] p-4 shadow-none">
+          <div className="flex items-start gap-3">
+            <div className="rounded-xl bg-[var(--surface-subtle)] p-2 text-[var(--text-muted)]">
+              <Cloud className="h-5 w-5" />
+            </div>
+            <div className="min-w-0">
+              <h3 className="text-[16px] font-bold tracking-tight text-[var(--text-main)]">{t.vaultCloudBackupTitle}</h3>
+              <p className="mt-1 text-[12px] leading-5 text-[var(--text-muted)]">{t.vaultCloudAccessLimited}</p>
+            </div>
+          </div>
+        </section>
       )}
     </div>
   );

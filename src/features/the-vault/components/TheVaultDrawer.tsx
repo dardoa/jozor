@@ -74,6 +74,7 @@ export const TheVaultDrawer: React.FC<TheVaultDrawerProps> = ({
     ownedTrees,
     sharedTrees,
     isTreeLoading,
+    treeLoadError,
     busyTreeId,
     editingTreeId,
     editTreeName,
@@ -241,12 +242,17 @@ export const TheVaultDrawer: React.FC<TheVaultDrawerProps> = ({
     refreshTrees: t.vaultRefreshTrees,
     ownedCount: t.vaultTreeOwnedCount,
     sharedCount: t.vaultTreeSharedCount,
+    loading: t.vaultTreesLoading,
     ownedTitle: t.vaultTreeOwnedTitle,
     sharedTitle: t.vaultTreeSharedTitle,
     ownedEmpty: t.vaultTreeOwnedEmpty,
     sharedEmpty: t.vaultTreeSharedEmpty,
     list: treeListLabels,
   };
+  const pendingDeleteTree = deleteTreeId
+    ? ownedTrees.find((tree) => tree.id === deleteTreeId) ?? null
+    : null;
+  const pendingDeleteTreeName = pendingDeleteTree?.name.trim() || null;
   const renderContext: VaultRenderContext = {
     auth,
     googleSync,
@@ -271,6 +277,7 @@ export const TheVaultDrawer: React.FC<TheVaultDrawerProps> = ({
     sharedTrees,
     busyTreeId,
     isTreeLoading,
+    treeLoadError,
     editingTreeId,
     editTreeName,
     treePanelLabels,
@@ -279,7 +286,10 @@ export const TheVaultDrawer: React.FC<TheVaultDrawerProps> = ({
     onUpdateVisibilitySetting: updateVisibilitySetting,
     onCreateTree: () => void handleCreateTree(),
     onImportTree: () => fileInputRef.current?.click(),
-    onRefreshTrees: () => void loadTrees(),
+    onRefreshTrees: () => {
+      resetSessionFailure();
+      void loadTrees();
+    },
     onOpenTree: (treeId, treeRole) => void handleOpenTree(treeId, treeRole || 'viewer'),
     onStartRename: (tree) => {
       setEditingTreeId(tree.id);
@@ -351,7 +361,21 @@ export const TheVaultDrawer: React.FC<TheVaultDrawerProps> = ({
           </div>
         </div>
       </OverlayPrimitive>
-      <ConfirmationModal isOpen={Boolean(deleteTreeId)} onClose={() => setDeleteTreeId(null)} onConfirm={() => void handleDeleteTree()} title={t.vaultTreeDeleteTitle} message={t.vaultTreeDeleteMessage} type="danger" overlayId="vault-delete-tree-confirm" />
+      <ConfirmationModal
+        isOpen={Boolean(deleteTreeId && pendingDeleteTreeName)}
+        onClose={() => setDeleteTreeId(null)}
+        onConfirm={() => void handleDeleteTree()}
+        title={t.vaultTreeDeleteTitle}
+        message={pendingDeleteTreeName
+          ? `${t.vaultTreeDeleteMessage} "${pendingDeleteTreeName}"`
+          : t.vaultTreeDeleteMessage}
+        type="danger"
+        overlayId="vault-delete-tree-confirm"
+        requiredConfirmText={pendingDeleteTreeName ?? undefined}
+        confirmPlaceholder={pendingDeleteTreeName
+          ? (t.deleteConfirmPlaceholder || '').replace('{name}', pendingDeleteTreeName)
+          : undefined}
+      />
     </>
   );
 };

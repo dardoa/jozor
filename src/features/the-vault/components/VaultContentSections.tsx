@@ -23,9 +23,11 @@ export const VaultTreesContent = ({ context, compact = false }: { context: Vault
     sharedTrees={context.sharedTrees}
     busyTreeId={context.busyTreeId}
     isTreeLoading={context.isTreeLoading}
+    loadError={context.treeLoadError}
     editingTreeId={context.editingTreeId}
     editTreeName={context.editTreeName}
     labels={context.treePanelLabels}
+    retryLabel={context.t.vaultRetry}
     maintenanceLabels={{
       title: context.t.vaultTreeMaintenanceTitle,
       hint: context.t.vaultTreeMaintenanceHint,

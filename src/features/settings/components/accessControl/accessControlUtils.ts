@@ -16,6 +16,6 @@ export const activeChipClass = `${chipBaseClass} bg-[var(--primary-600)] text-wh
 export const inactiveChipClass =
   `${chipBaseClass} border border-[var(--border-soft)] bg-[var(--surface-subtle)] text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]`;
 
-export const accessSectionClassName = 'rounded-[14px] border border-[var(--border-soft)] bg-[var(--surface-panel)] p-4 shadow-none';
+export const accessSectionClassName = 'border-b border-[var(--border-soft)] py-4 first:pt-0 last:border-b-0 last:pb-0';
 
 export const accessDescriptionClassName = 'mb-3 text-xs leading-5 text-[var(--text-muted)]';

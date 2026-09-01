@@ -1,21 +1,12 @@
-import React, { lazy, Suspense } from 'react';
+import React from 'react';
 import { useTranslation } from '../../../context/TranslationContext';
 import { ConfirmationModal } from '../../../components/ConfirmationModal';
 import { useAccessControlState } from './accessControl/useAccessControlState';
 import type { AccessControlTabProps } from './accessControl/accessControlTypes';
-
-const AccessCollaboratorsSection = lazy(() =>
-  import('./accessControl/AccessCollaboratorsSection').then((module) => ({ default: module.AccessCollaboratorsSection }))
-);
-const AccessInviteSection = lazy(() =>
-  import('./accessControl/AccessInviteSection').then((module) => ({ default: module.AccessInviteSection }))
-);
-const AccessPendingInvitationsSection = lazy(() =>
-  import('./accessControl/AccessPendingInvitationsSection').then((module) => ({ default: module.AccessPendingInvitationsSection }))
-);
-const AccessShareLinkSection = lazy(() =>
-  import('./accessControl/AccessShareLinkSection').then((module) => ({ default: module.AccessShareLinkSection }))
-);
+import { AccessCollaboratorsSection } from './accessControl/AccessCollaboratorsSection';
+import { AccessInviteSection } from './accessControl/AccessInviteSection';
+import { AccessPendingInvitationsSection } from './accessControl/AccessPendingInvitationsSection';
+import { AccessShareLinkSection } from './accessControl/AccessShareLinkSection';
 
 export const AccessControlTab: React.FC<AccessControlTabProps> = ({
   treeId,
@@ -34,54 +25,46 @@ export const AccessControlTab: React.FC<AccessControlTabProps> = ({
   const isOwner = state.currentUserRole === 'owner';
 
   return (
-    <div className="space-y-4">
-      <Suspense fallback={null}>
-        <AccessShareLinkSection
-          t={t}
-          sectionText={sectionText}
-          shareLinkLabel={state.shareLinkLabel}
-          isCopied={state.isCopied}
-          onCopy={state.copyLink}
-        />
-      </Suspense>
+    <div>
+      <AccessShareLinkSection
+        t={t}
+        sectionText={sectionText}
+        shareLinkLabel={state.shareLinkLabel}
+        isCopied={state.isCopied}
+        onCopy={state.copyLink}
+      />
 
       {isOwner && (
-        <Suspense fallback={null}>
-          <AccessInviteSection
-            t={t}
-            sectionText={sectionText}
-            inviteEmail={state.inviteEmail}
-            inviteRole={state.inviteRole}
-            isInviting={state.isInviting}
-            onEmailChange={state.setInviteEmail}
-            onRoleChange={state.setInviteRole}
-            onInvite={state.handleInvite}
-          />
-        </Suspense>
+        <AccessInviteSection
+          t={t}
+          sectionText={sectionText}
+          inviteEmail={state.inviteEmail}
+          inviteRole={state.inviteRole}
+          isInviting={state.isInviting}
+          onEmailChange={state.setInviteEmail}
+          onRoleChange={state.setInviteRole}
+          onInvite={state.handleInvite}
+        />
       )}
 
-      <Suspense fallback={null}>
-        <AccessCollaboratorsSection
-          t={t}
-          sectionText={sectionText}
-          ownerRow={state.ownerRow}
-          collaborators={state.collaborators}
-          isLoading={state.isLoading}
-          onChangeRole={state.handleChangeRole}
-          onRevoke={state.requestRevoke}
-          canManage={isOwner}
-        />
-      </Suspense>
+      <AccessCollaboratorsSection
+        t={t}
+        sectionText={sectionText}
+        ownerRow={state.ownerRow}
+        collaborators={state.collaborators}
+        isLoading={state.isLoading}
+        onChangeRole={state.handleChangeRole}
+        onRevoke={state.requestRevoke}
+        canManage={isOwner}
+      />
 
       {isOwner && (
-        <Suspense fallback={null}>
-          <AccessPendingInvitationsSection
-            t={t}
-            sectionText={sectionText}
-            pendingInvitations={state.pendingInvitations}
-            onRevokeInvitation={state.handleRevokeInvitation}
-          />
-        </Suspense>
+        <AccessPendingInvitationsSection
+          t={t}
+          sectionText={sectionText}
+          pendingInvitations={state.pendingInvitations}
+          onRevokeInvitation={state.handleRevokeInvitation}
+        />
       )}
 
       {state.isConfirmRevokeOpen ? (

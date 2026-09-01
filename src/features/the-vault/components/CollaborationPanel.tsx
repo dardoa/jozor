@@ -81,12 +81,12 @@ export const CollaborationPanel: React.FC<CollaborationPanelProps> = ({
   }
 
   return (
-    <div className="space-y-4">
+    <section className="rounded-[14px] border border-[var(--border-soft)] bg-[var(--surface-panel)] p-4 shadow-none">
       <AccessControlTab
         treeId={treeId}
         ownerId={currentUser.uid}
         ownerEmail={currentUser.email || ''}
       />
-    </div>
+    </section>
   );
 };

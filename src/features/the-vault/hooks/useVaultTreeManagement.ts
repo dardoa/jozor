@@ -73,6 +73,7 @@ export const useVaultTreeManagement = ({
   const [ownedTrees, setOwnedTrees] = useState<TreeSummary[]>([]);
   const [sharedTrees, setSharedTrees] = useState<SharedTreeSummary[]>([]);
   const [isTreeLoading, setIsTreeLoading] = useState(false);
+  const [treeLoadError, setTreeLoadError] = useState<string | null>(null);
   const [busyTreeId, setBusyTreeId] = useState<string | null>(null);
   const [editingTreeId, setEditingTreeId] = useState<string | null>(null);
   const [editTreeName, setEditTreeName] = useState('');
@@ -81,10 +82,12 @@ export const useVaultTreeManagement = ({
   const clearTrees = useCallback(() => {
     setOwnedTrees([]);
     setSharedTrees([]);
+    setTreeLoadError(null);
   }, []);
 
   const resetSessionFailure = useCallback(() => {
     hasSessionFailureRef.current = false;
+    setTreeLoadError(null);
   }, []);
 
   const loadTrees = useCallback(async () => {
@@ -93,6 +96,7 @@ export const useVaultTreeManagement = ({
 
     isLoadingTreesRef.current = true;
     setIsTreeLoading(true);
+    setTreeLoadError(null);
 
     const work = Promise.all([
       import('../../../services/supabaseTreeReadService'),
@@ -107,6 +111,7 @@ export const useVaultTreeManagement = ({
     }).catch((error) => {
       if (isSessionError(error)) {
         hasSessionFailureRef.current = true;
+        setTreeLoadError(t.vaultSessionExpired);
         showToast.error(t.vaultSessionExpired, { id: SESSION_ERROR_TOAST_ID });
       } else {
         throw error;
@@ -117,9 +122,10 @@ export const useVaultTreeManagement = ({
     });
 
     await work.catch((err) => {
+      setTreeLoadError(t.vaultTreeLoadError);
       showToast.error(extractErrorText(err) || 'messages.error.load');
     });
-  }, [currentUser, t.vaultSessionExpired]);
+  }, [currentUser, t.vaultSessionExpired, t.vaultTreeLoadError]);
 
   const handleOpenTree = useCallback(async (treeId: string, treeRole: VaultTreeRole = 'owner') => {
     if (!currentUser?.uid || !currentUser?.email) return;
@@ -285,6 +291,7 @@ export const useVaultTreeManagement = ({
     ownedTrees,
     sharedTrees,
     isTreeLoading,
+    treeLoadError,
     busyTreeId,
     editingTreeId,
     editTreeName,

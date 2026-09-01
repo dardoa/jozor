@@ -46,6 +46,7 @@ export interface VaultRenderContext {
   sharedTrees: SharedTreeSummary[];
   busyTreeId: string | null;
   isTreeLoading: boolean;
+  treeLoadError: string | null;
   editingTreeId: string | null;
   editTreeName: string;
   treePanelLabels: VaultTreesPanelLabels;

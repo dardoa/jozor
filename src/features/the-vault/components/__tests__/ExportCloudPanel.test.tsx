@@ -60,9 +60,10 @@ const t = {
   active: 'Active',
   confirmOverwrite: 'Confirm overwrite',
   overwrite: 'Overwrite',
-  vaultOpenCloudFile: 'Open file',
+  vaultOpenCloudFile: 'Restore backup',
   confirmDelete: 'Confirm delete',
   delete: 'Delete',
+  cancel: 'Cancel',
   vaultCloudAccessLimited: 'Cloud access is limited.',
   vaultExportArchive: 'Jozor archive',
   vaultExportJson: 'JSON',
@@ -634,7 +635,9 @@ describe('ExportCloudPanel manuscript preview', () => {
     switchToExportSection(/Cloud Backup/i);
 
     expect(screen.getByText(/Google Drive Disconnected/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/Cloud files/i).length).toBeGreaterThan(0);
+    expect(screen.getByRole('button', { name: /Connect Google Drive/i })).toBeEnabled();
+    expect(screen.queryByText(/Cloud files/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole('textbox', { name: 'File name' })).not.toBeInTheDocument();
   });
 
   it('marks preview as stale when any relevant option is changed', async () => {
@@ -985,13 +988,109 @@ describe('ExportCloudPanel manuscript preview', () => {
 });
 
 describe('ExportCloudPanel cloud readiness', () => {
-  it('disables cloud mutations until Google Drive is connected', () => {
+  it('hides cloud file management until Google Drive is connected', () => {
     render(<ExportCloudPanel {...baseProps} isAuthorized={false} />);
     switchToExportSection(/Cloud Backup/i);
 
     expect(screen.getByText('Google Drive disconnected')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Backup now' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Refresh files' })).toBeDisabled();
-    expect(screen.getByRole('textbox', { name: 'File name' })).toBeDisabled();
+    expect(screen.queryByRole('button', { name: 'Backup now' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Refresh files' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('textbox', { name: 'File name' })).not.toBeInTheDocument();
+  });
+
+  it('does not expose Drive file names or actions to roles without cloud management permission', () => {
+    render(
+      <ExportCloudPanel
+        {...baseProps}
+        canManageCloud={false}
+        files={[{ id: 'private-drive-file', name: 'Owner private backup', modifiedTime: '2026-08-31' }]}
+      />
+    );
+    switchToExportSection(/Cloud Backup/i);
+
+    expect(screen.getByText('Cloud access is limited.')).toBeInTheDocument();
+    expect(screen.queryByText('Owner private backup')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Restore backup' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Refresh files' })).not.toBeInTheDocument();
+  });
+
+  it('requires explicit confirmation before restoring, overwriting, or deleting a cloud backup', async () => {
+    const onOpenDriveFile = vi.fn().mockResolvedValue(undefined);
+    const onOverwriteDriveFile = vi.fn().mockResolvedValue(undefined);
+    const onDeleteDriveFile = vi.fn().mockResolvedValue(undefined);
+
+    render(
+      <ExportCloudPanel
+        {...baseProps}
+        files={[{ id: 'backup-1', name: 'Family backup', modifiedTime: '2026-08-31' }]}
+        onOpenDriveFile={onOpenDriveFile}
+        onOverwriteDriveFile={onOverwriteDriveFile}
+        onDeleteDriveFile={onDeleteDriveFile}
+      />
+    );
+    switchToExportSection(/Cloud Backup/i);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Restore backup' }));
+    expect(onOpenDriveFile).not.toHaveBeenCalled();
+    expect(screen.getByText(/will replace the tree currently open/i)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(screen.getByRole('button', { name: 'Restore backup' })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Overwrite' }));
+    expect(onOverwriteDriveFile).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm overwrite' }));
+    await waitFor(() => expect(onOverwriteDriveFile).toHaveBeenCalledWith('backup-1'));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+    expect(onDeleteDriveFile).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm delete' }));
+    await waitFor(() => expect(onDeleteDriveFile).toHaveBeenCalledWith('backup-1'));
+  });
+
+  it('clears a pending cloud confirmation when the user leaves the section', () => {
+    render(
+      <ExportCloudPanel
+        {...baseProps}
+        files={[{ id: 'backup-1', name: 'Family backup', modifiedTime: '2026-08-31' }]}
+      />
+    );
+    switchToExportSection(/Cloud Backup/i);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+    expect(screen.getByRole('button', { name: 'Confirm delete' })).toBeInTheDocument();
+
+    switchToExportSection(/Family Book/i);
+    switchToExportSection(/Cloud Backup/i);
+
+    expect(screen.queryByRole('button', { name: 'Confirm delete' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Delete' })).toBeInTheDocument();
+  });
+
+  it('locks a confirmed cloud action while it is running to prevent duplicate execution', async () => {
+    let resolveRestore!: () => void;
+    const onOpenDriveFile = vi.fn(() => new Promise<void>((resolve) => {
+      resolveRestore = resolve;
+    }));
+
+    render(
+      <ExportCloudPanel
+        {...baseProps}
+        files={[{ id: 'backup-1', name: 'Family backup', modifiedTime: '2026-08-31' }]}
+        onOpenDriveFile={onOpenDriveFile}
+      />
+    );
+    switchToExportSection(/Cloud Backup/i);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Restore backup' }));
+    const confirmRestore = screen.getByRole('button', { name: 'Confirm restore' });
+    fireEvent.click(confirmRestore);
+
+    await waitFor(() => expect(confirmRestore).toBeDisabled());
+    expect(confirmRestore.closest('[role="group"]')).toHaveAttribute('aria-busy', 'true');
+    fireEvent.click(confirmRestore);
+    expect(onOpenDriveFile).toHaveBeenCalledTimes(1);
+
+    resolveRestore();
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Restore backup' })).toBeInTheDocument());
   });
 });

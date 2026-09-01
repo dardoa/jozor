@@ -17,15 +17,15 @@ export const AccessPendingInvitationsSection: React.FC<{
     <p className={accessDescriptionClassName}>{sectionText.pendingDescription}</p>
 
     {pendingInvitations.length === 0 ? (
-      <div className="flex items-center justify-center rounded-2xl border border-dashed border-[var(--border-soft)] bg-[var(--surface-subtle)] py-4 text-center text-xs italic text-[var(--text-muted)]">
+      <p className="border-y border-dashed border-[var(--border-soft)] py-3 text-center text-xs text-[var(--text-muted)]">
         {t.treeManager.noPendingInvitations}
-      </div>
+      </p>
     ) : (
-      <div className="space-y-3">
+      <div className="divide-y divide-[var(--border-soft)] border-y border-[var(--border-soft)]">
         {pendingInvitations.map((invitation) => (
           <div
             key={invitation.id}
-            className="flex flex-col gap-3 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-subtle)] p-4 sm:flex-row sm:items-center sm:justify-between"
+            className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between"
           >
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--surface-panel)] text-[var(--primary-600)]">
@@ -42,6 +42,7 @@ export const AccessPendingInvitationsSection: React.FC<{
             <button
               type="button"
               onClick={() => void onRevokeInvitation(invitation)}
+              aria-label={`${t.delete}: ${invitation.invited_email}`}
               className="flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-[var(--danger-500)]/20 bg-[var(--danger-500)]/10 text-[var(--danger-600)] transition-all duration-200 ease-in-out hover:bg-[var(--danger-500)]/15"
               title={t.delete}
             >

@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { X, Plus, Upload, AlertTriangle } from 'lucide-react'; // Import AlertTriangle icon
+import { X, Plus, Upload, AlertTriangle, ArrowLeft } from 'lucide-react';
 import { CleanTreeOptionsModalProps } from '../types';
 import { useTranslation } from '../context/TranslationContext';
 import { OverlayPrimitive } from '../context/OverlayContext';
@@ -12,18 +12,20 @@ export const CleanTreeOptionsModal: React.FC<CleanTreeOptionsModalProps> = memo(
 
     const targetWord = language === 'ar' ? 'حذف' : 'RESET';
 
-    const handleStartNew = () => {
-      onStartNewTree();
-      onClose();
+    const resetAndClose = () => {
       setConfirmMode('none');
       setConfirmInput('');
+      onClose();
+    };
+
+    const handleStartNew = () => {
+      onStartNewTree();
+      resetAndClose();
     };
 
     const handleImport = () => {
       onTriggerImportFile();
-      onClose();
-      setConfirmMode('none');
-      setConfirmInput('');
+      resetAndClose();
     };
 
     const isConfirmed = confirmInput === targetWord;
@@ -31,112 +33,105 @@ export const CleanTreeOptionsModal: React.FC<CleanTreeOptionsModalProps> = memo(
     return (
       <OverlayPrimitive
         isOpen={isOpen}
-        onClose={() => {
-          onClose();
-          setConfirmMode('none');
-          setConfirmInput('');
-        }}
+        onClose={resetAndClose}
         id='clean-tree-options-modal'
       >
         <div
-          className='ds-overlay-card flex max-h-[92dvh] w-full sm:max-w-md flex-col overflow-hidden animate-in zoom-in-95 duration-200'
+          role='dialog'
+          aria-modal='true'
+          aria-labelledby='clean-tree-options-title'
+          className='ds-overlay-card flex max-h-[92dvh] w-full flex-col overflow-hidden animate-in zoom-in-95 duration-200 sm:max-w-md'
           onClick={(e) => e.stopPropagation()}
         >
           <div className='ds-modal-header'>
-            <div>
-              <h3 className='ds-heading'>
-                {t.cleanTreeOptionsTitle}
-              </h3>
-            </div>
+            <h3 id='clean-tree-options-title' className='ds-heading'>{t.cleanTreeOptionsTitle}</h3>
             <button
-              onClick={onClose}
+              type='button'
+              onClick={resetAndClose}
+              aria-label={t.close}
               className='inline-flex h-10 w-10 items-center justify-center rounded-full text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-subtle)] hover:text-[var(--text-main)]'
             >
-              <X className='w-5 h-5' />
+              <X className='h-5 w-5' />
             </button>
           </div>
 
-          <div className='space-y-6 bg-[var(--surface-app)]/45 p-4 sm:p-6'>
+          <div className='space-y-4 overflow-y-auto bg-[var(--surface-app)]/45 p-4 sm:p-5'>
             {confirmMode === 'none' ? (
               <>
-                {/* Warning Message */}
-                <div className='flex items-center gap-3 p-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-100 dark:border-orange-800 rounded-2xl text-orange-700 dark:text-orange-300 text-xs font-bold'>
-                  <AlertTriangle className='w-5 h-5 shrink-0 opacity-80' />
+                <div className='flex items-start gap-3 rounded-lg border border-[var(--warning-500)]/30 bg-[var(--warning-500)]/8 p-3 text-xs font-semibold leading-5 text-[var(--text-secondary)]'>
+                  <AlertTriangle className='mt-0.5 h-4 w-4 shrink-0 text-[var(--warning-600)]' />
                   <span>{t.dataLossWarning}</span>
                 </div>
 
-                <div className='grid gap-4'>
-                  {/* Option 1: Start a Blank Tree */}
+                <div className='divide-y divide-[var(--border-soft)] overflow-hidden rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)]'>
                   <button
+                    type='button'
                     onClick={() => setConfirmMode('startNew')}
-                    className='group relative w-full p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-2xl hover:bg-blue-100 dark:hover:bg-blue-900/40 hover:border-blue-200 dark:hover:border-blue-700 transition-all flex items-center gap-4 text-start'
+                    className='flex min-h-16 w-full items-center gap-3 p-4 text-start transition-colors hover:bg-[var(--surface-hover)]'
                   >
-                    <div className='w-12 h-12 bg-white dark:bg-blue-800 rounded-2xl flex items-center justify-center shadow-lg text-blue-600 dark:text-blue-200 group-hover:scale-110 transition-transform'>
-                      <Plus className='w-6 h-6' />
+                    <div className='flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--primary-600)]/10 text-[var(--primary-600)]'>
+                      <Plus className='h-5 w-5' />
                     </div>
-                    <div>
-                      <div className='font-black text-blue-900 dark:text-blue-100'>
-                        {t.startNewTreeOption}
-                      </div>
-                    </div>
+                    <span className='min-w-0 flex-1 text-sm font-bold text-[var(--text-main)]'>{t.startNewTreeOption}</span>
+                    <ArrowLeft className='h-4 w-4 shrink-0 text-[var(--text-muted)] rtl:rotate-180' />
                   </button>
 
-                  {/* Option 2: Import from File */}
                   <button
+                    type='button'
                     onClick={() => setConfirmMode('import')}
-                    className='group relative w-full p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 rounded-2xl hover:bg-emerald-100 dark:hover:bg-emerald-900/40 hover:border-emerald-200 dark:hover:border-emerald-700 transition-all flex items-center gap-4 text-start'
+                    className='flex min-h-16 w-full items-center gap-3 p-4 text-start transition-colors hover:bg-[var(--surface-hover)]'
                   >
-                    <div className='w-12 h-12 bg-white dark:bg-emerald-800 rounded-2xl flex items-center justify-center shadow-lg text-emerald-600 dark:text-emerald-200 group-hover:scale-110 transition-transform'>
-                      <Upload className='w-6 h-6' />
+                    <div className='flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--surface-subtle)] text-[var(--text-secondary)]'>
+                      <Upload className='h-5 w-5' />
                     </div>
-                    <div>
-                      <div className='font-black text-emerald-900 dark:text-emerald-100'>
-                        {t.importFileOption}
-                      </div>
-                    </div>
+                    <span className='min-w-0 flex-1 text-sm font-bold text-[var(--text-main)]'>{t.importFileOption}</span>
+                    <ArrowLeft className='h-4 w-4 shrink-0 text-[var(--text-muted)] rtl:rotate-180' />
                   </button>
                 </div>
               </>
             ) : (
-              <div className='space-y-6 animate-in slide-in-from-bottom-4 duration-300'>
-                <div className='p-5 bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30 rounded-2xl'>
-                  <div className='flex items-center gap-3 text-red-600 dark:text-red-400 mb-2'>
-                    <AlertTriangle className='w-5 h-5' />
-                    <span className='text-sm font-black uppercase tracking-wider'>{t.confirmDelete}</span>
+              <div className='space-y-4 animate-in slide-in-from-bottom-2 duration-200'>
+                <div className='rounded-lg border border-[var(--danger-500)]/25 bg-[var(--danger-500)]/8 p-4'>
+                  <div className='mb-2 flex items-center gap-2 text-[var(--danger-600)]'>
+                    <AlertTriangle className='h-4 w-4' />
+                    <span className='text-sm font-bold'>{t.confirmDelete}</span>
                   </div>
-                  <p className='text-xs font-bold text-stone-600 dark:text-stone-400 leading-relaxed'>
+                  <p className='text-xs font-medium leading-5 text-[var(--text-secondary)]'>
                     {confirmMode === 'startNew' ? t.startNewTreeOption : t.importFileOption}: {t.dataLossWarning}
                   </p>
                 </div>
 
-                <div className='space-y-3'>
-                  <p className='text-[11px] font-black text-stone-500 uppercase tracking-widest px-1'>
+                <div className='space-y-2'>
+                  <label htmlFor='clean-tree-confirm-input' className='ds-label px-1'>
                     {t.cleanTreeConfirmPlaceholder}
-                  </p>
+                  </label>
                   <input
+                    id='clean-tree-confirm-input'
                     autoFocus
-                    type="text"
+                    type='text'
                     value={confirmInput}
                     onChange={(e) => setConfirmInput(e.target.value)}
                     placeholder={targetWord}
-                    className='w-full px-4 py-3 bg-stone-50 dark:bg-stone-900/50 border border-stone-200 dark:border-stone-700 rounded-2xl text-sm font-black text-stone-900 dark:text-white placeholder:opacity-30 outline-none focus:ring-4 focus:ring-red-500/10 focus:border-red-500 transition-all'
+                    className='ds-input w-full px-4 py-3 text-sm font-semibold'
                   />
                 </div>
 
-                <div className='flex items-center gap-3 pt-2'>
+                <div className='flex flex-col-reverse gap-2 pt-1 sm:flex-row sm:justify-end'>
                   <button
+                    type='button'
                     onClick={() => {
                       setConfirmMode('none');
                       setConfirmInput('');
                     }}
-                    className='flex-1 py-3 bg-stone-100 dark:bg-stone-700 hover:bg-stone-200 dark:hover:bg-stone-600 text-stone-600 dark:text-stone-200 rounded-2xl text-sm font-bold transition-all'
+                    className='min-h-11 rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] px-4 py-2 text-sm font-semibold text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-hover)]'
                   >
                     {t.common.back}
                   </button>
                   <button
+                    type='button'
                     onClick={confirmMode === 'startNew' ? handleStartNew : handleImport}
                     disabled={!isConfirmed}
-                    className='flex-1 py-3 bg-red-600 hover:bg-red-500 text-white disabled:bg-stone-200 dark:disabled:bg-stone-700 disabled:text-stone-400 rounded-2xl text-sm font-black transition-all shadow-lg shadow-red-500/20 active:scale-95'
+                    className='min-h-11 rounded-lg bg-[var(--danger-500)] px-4 py-2 text-sm font-bold text-white transition-colors hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-45'
                   >
                     {t.confirm}
                   </button>
@@ -146,8 +141,9 @@ export const CleanTreeOptionsModal: React.FC<CleanTreeOptionsModalProps> = memo(
 
             {confirmMode === 'none' && (
               <button
-                onClick={onClose}
-                className='w-full py-3 text-stone-500 dark:text-stone-400 font-bold text-sm hover:text-stone-800 dark:hover:text-stone-200 transition-colors'
+                type='button'
+                onClick={resetAndClose}
+                className='min-h-11 w-full rounded-lg text-sm font-semibold text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-hover)] hover:text-[var(--text-main)]'
               >
                 {t.cancel}
               </button>

@@ -652,6 +652,47 @@ test('persisted notifications survive reload for the same user and do not leak t
   });
 });
 
+test.describe('Vault role boundaries', () => {
+  test('keeps owner-only destinations and Drive management out of editor and viewer sessions', async ({ page }) => {
+    const scenarios: Array<{ role: DebugRole; canManage: boolean }> = [
+      { role: 'owner', canManage: true },
+      { role: 'editor', canManage: false },
+      { role: 'viewer', canManage: false },
+    ];
+
+    for (const scenario of scenarios) {
+      await seedScenario(page, scenario.role, undefined, `${scenario.role} Vault Tree`);
+      await waitForDebugRole(page, scenario.role);
+
+      await page.getByTestId('account-menu-trigger').click();
+      await page.getByRole('menuitem', { name: /The Vault/i }).click();
+      await expect(page.getByRole('heading', { name: 'The Vault' })).toBeVisible();
+
+      const navigation = page.getByRole('navigation', { name: 'The Vault' });
+      await expect(navigation.getByRole('button', { name: 'Trees', exact: true })).toBeVisible();
+      await expect(navigation.getByRole('button', { name: 'Insights & Tools', exact: true })).toBeVisible();
+      await expect(navigation.getByRole('button', { name: 'Publishing & Backup', exact: true })).toBeVisible();
+
+      if (scenario.canManage) {
+        await expect(navigation.getByRole('button', { name: 'Members', exact: true })).toBeVisible();
+        await expect(navigation.getByRole('button', { name: 'Privacy', exact: true })).toBeVisible();
+      } else {
+        await expect(navigation.getByRole('button', { name: 'Members', exact: true })).toHaveCount(0);
+        await expect(navigation.getByRole('button', { name: 'Privacy', exact: true })).toHaveCount(0);
+
+        await navigation.getByRole('button', { name: 'Publishing & Backup', exact: true }).click();
+        await page.getByRole('tab', { name: /Cloud Backup/i }).click();
+        await expect(page.getByText('Cloud access limited')).toBeVisible();
+        await expect(page.getByRole('button', { name: 'Refresh files' })).toHaveCount(0);
+        await expect(page.getByRole('textbox', { name: 'File name' })).toHaveCount(0);
+      }
+
+      await page.getByRole('button', { name: 'Close', exact: true }).click();
+      await expect(page.getByRole('heading', { name: 'The Vault' })).toHaveCount(0);
+    }
+  });
+});
+
 test.describe('mobile shell', () => {
   test.describe.configure({ mode: 'serial' });
   test.use({

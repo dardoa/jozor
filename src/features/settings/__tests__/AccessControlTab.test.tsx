@@ -13,6 +13,7 @@ vi.mock('../../../context/TranslationContext', () => ({
       delete: 'Delete',
       copied: 'Copied',
       copyLink: 'Copy',
+      vaultMembersRole: 'Role',
       treeManager: {
         shareViaLink: 'Share via Link',
         linkNote: 'Viewer access is the default for links.',
@@ -128,6 +129,10 @@ describe('AccessControlTab', () => {
     expect(await screen.findByText('Review current access, adjust roles, or revoke collaborators who no longer need the tree.')).toBeInTheDocument();
     expect(await screen.findByText('Track invitations that have been sent but not yet accepted.')).toBeInTheDocument();
     expect(await screen.findByText(/Owner access remains fixed and cannot be reassigned from this panel\./)).toBeInTheDocument();
+    expect(await screen.findByText('owner@example.com')).toBeInTheDocument();
+    expect(screen.getByText('Collaborators (1)')).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: 'Role' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Viewer' })).toHaveAttribute('aria-pressed', 'true');
   });
 
   it('hides invite and pending sections, rendering a read-only collaborators view when user is viewer', async () => {
@@ -144,10 +149,12 @@ describe('AccessControlTab', () => {
     expect(await screen.findByText('Share via Link')).toBeInTheDocument();
     expect(await screen.findByText('Copy a stable viewer link for quick sharing. Editors should still be invited explicitly.')).toBeInTheDocument();
     expect(await screen.findByText('Review current access, adjust roles, or revoke collaborators who no longer need the tree.')).toBeInTheDocument();
+    expect(await screen.findByText('owner@example.com')).toBeInTheDocument();
     
     // Invite and pending sections should be hidden
     expect(screen.queryByText('Invite a specific collaborator when they need editor access or a tracked pending invitation.')).not.toBeInTheDocument();
     expect(screen.queryByText('Track invitations that have been sent but not yet accepted.')).not.toBeInTheDocument();
+    expect(screen.queryByRole('group', { name: 'Role' })).not.toBeInTheDocument();
   });
 });
 
