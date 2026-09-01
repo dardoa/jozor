@@ -1,12 +1,18 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import handler from '../../../api/publishing/render-manuscript-pdf';
+import { verifyInternalToken } from '../../../shared/auth/internalJwt.js';
+
+vi.mock('../../../shared/auth/internalJwt.js', () => ({
+  verifyInternalToken: vi.fn(),
+}));
 
 const createResponse = () => {
   const response = {
     statusCode: 200,
     body: undefined as unknown,
-    headers: {} as Record<string, string>,
-    setHeader(name: string, value: string) {
+    headers: {} as Record<string, string | string[]>,
+    setHeader(name: string, value: string | string[]) {
       this.headers[name] = value;
     },
     status(code: number) {
@@ -21,17 +27,41 @@ const createResponse = () => {
       this.body = payload;
       return this;
     },
+    end() {
+      return this;
+    },
   };
-
   return response;
 };
+
+const request = (overrides: Record<string, unknown> = {}) => ({
+  method: 'POST',
+  headers: {
+    authorization: 'Bearer test-session-token',
+    origin: 'http://localhost:3000',
+  },
+  body: {
+    html: '<!doctype html><html><body>Book</body></html>',
+    title: 'Family Book',
+  },
+  ...overrides,
+});
 
 describe('root renderManuscriptPdf API function', () => {
   const originalEnv = process.env;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    process.env = { ...originalEnv };
+    process.env = {
+      ...originalEnv,
+      APP_ORIGIN: 'http://localhost:3000',
+      BROWSERLESS_TOKEN: 'test-token',
+    };
+    vi.mocked(verifyInternalToken).mockResolvedValue({
+      uid: 'user-1',
+      email: 'owner@example.test',
+      type: 'internal',
+    });
   });
 
   afterEach(() => {
@@ -39,112 +69,132 @@ describe('root renderManuscriptPdf API function', () => {
     vi.restoreAllMocks();
   });
 
-  it('handles non-POST methods with 405', async () => {
-    const req = { method: 'GET', headers: {}, body: {} };
-    const res = createResponse();
+  it('handles unsupported methods with 405 and supports OPTIONS', async () => {
+    const methodResponse = createResponse();
+    await handler(request({ method: 'DELETE' }) as never, methodResponse as never);
+    expect(methodResponse.statusCode).toBe(405);
+    expect(methodResponse.headers.Allow).toEqual(['GET', 'POST', 'OPTIONS']);
 
-    await handler(req as never, res as never);
-
-    expect(res.statusCode).toBe(405);
-    expect(res.headers.Allow).toEqual(['POST']);
-    expect(res.body).toEqual({ error: 'Method Not Allowed' });
+    const optionsResponse = createResponse();
+    await handler(request({ method: 'OPTIONS' }) as never, optionsResponse as never);
+    expect(optionsResponse.statusCode).toBe(204);
   });
 
-  it('handles missing BROWSERLESS_TOKEN with 503', async () => {
-    delete process.env.BROWSERLESS_TOKEN;
-    const req = { method: 'POST', headers: {}, body: { html: 'test', title: 'test' } };
+  it('rejects unauthenticated requests before consuming renderer capacity', async () => {
+    vi.mocked(verifyInternalToken).mockResolvedValue(null);
+    delete process.env.SUPABASE_URL;
+    delete process.env.VITE_SUPABASE_URL;
     const res = createResponse();
 
-    await handler(req as never, res as never);
+    await handler(request({ headers: { origin: 'http://localhost:3000' } }) as never, res as never);
 
+    expect(res.statusCode).toBe(401);
+    expect(res.body).toEqual({ error: 'Unauthorized' });
+  });
+
+  it('rejects requests from a mismatched origin', async () => {
+    const res = createResponse();
+    await handler(request({
+      headers: { authorization: 'Bearer test-session-token', origin: 'https://evil.example' },
+    }) as never, res as never);
+    expect(res.statusCode).toBe(400);
+    expect(res.body).toEqual({ error: 'Invalid request origin.' });
+  });
+
+  it('reports readiness without rendering a PDF', async () => {
+    const fetchSpy = vi.fn();
+    vi.stubGlobal('fetch', fetchSpy);
+    const res = createResponse();
+
+    await handler(request({ method: 'GET' }) as never, res as never);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toEqual({ ready: true });
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it('reports missing Browserless configuration with 503', async () => {
+    delete process.env.BROWSERLESS_TOKEN;
+    const res = createResponse();
+    await handler(request({ method: 'GET' }) as never, res as never);
     expect(res.statusCode).toBe(503);
     expect(res.body).toEqual({ error: 'Controlled PDF renderer is not configured' });
   });
 
-  it('handles missing html or title in request body with 400', async () => {
-    process.env.BROWSERLESS_TOKEN = 'test-token';
-    const res1 = createResponse();
-    await handler({ method: 'POST', body: { title: 'Test' } } as never, res1 as never);
-    expect(res1.statusCode).toBe(400);
-    expect(res1.body).toEqual({ error: 'Missing HTML content' });
+  it('validates payload content, title, and request size', async () => {
+    const missingHtml = createResponse();
+    await handler(request({ body: { title: 'Test' } }) as never, missingHtml as never);
+    expect(missingHtml.statusCode).toBe(400);
 
-    const res2 = createResponse();
-    await handler({ method: 'POST', body: { html: 'Test' } } as never, res2 as never);
-    expect(res2.statusCode).toBe(400);
-    expect(res2.body).toEqual({ error: 'Missing title' });
+    const missingTitle = createResponse();
+    await handler(request({ body: { html: '<html></html>' } }) as never, missingTitle as never);
+    expect(missingTitle.statusCode).toBe(400);
+
+    const oversized = createResponse();
+    await handler(request({ body: { html: 'x'.repeat(3_800_001), title: 'Test' } }) as never, oversized as never);
+    expect(oversized.statusCode).toBe(413);
   });
 
-  it('handles upstream Browserless failure with 502', async () => {
-    process.env.BROWSERLESS_TOKEN = 'test-token';
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-      ok: false,
-      status: 500,
-    }));
+  it('rejects executable markup and external resource references', async () => {
+    const scriptResponse = createResponse();
+    await handler(request({
+      body: { html: '<html><script>alert(1)</script></html>', title: 'Test' },
+    }) as never, scriptResponse as never);
+    expect(scriptResponse.statusCode).toBe(400);
 
-    const req = { method: 'POST', body: { html: '<html></html>', title: 'Test' } };
-    const res = createResponse();
-
-    await handler(req as never, res as never);
-
-    expect(res.statusCode).toBe(502);
-    expect(res.body).toEqual({ error: 'Controlled PDF renderer returned invalid PDF' });
+    const resourceResponse = createResponse();
+    await handler(request({
+      body: { html: '<html><img src="https://storage.example/private.jpg"></html>', title: 'Test' },
+    }) as never, resourceResponse as never);
+    expect(resourceResponse.statusCode).toBe(400);
   });
 
-  it('handles non-PDF content type from upstream with 502', async () => {
-    process.env.BROWSERLESS_TOKEN = 'test-token';
+  it('rejects upstream failures, invalid MIME, and invalid PDF signatures', async () => {
+    const failureResponse = createResponse();
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, headers: { get: () => null } }));
+    await handler(request() as never, failureResponse as never);
+    expect(failureResponse.statusCode).toBe(502);
+
+    const mimeResponse = createResponse();
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
       ok: true,
-      headers: {
-        get: (key: string) => (key === 'content-type' ? 'text/plain' : null),
-      },
+      headers: { get: () => 'text/plain' },
       arrayBuffer: async () => new ArrayBuffer(10),
     }));
+    await handler(request() as never, mimeResponse as never);
+    expect(mimeResponse.statusCode).toBe(502);
 
-    const req = { method: 'POST', body: { html: '<html></html>', title: 'Test' } };
-    const res = createResponse();
-
-    await handler(req as never, res as never);
-
-    expect(res.statusCode).toBe(502);
-  });
-
-  it('handles empty buffer from upstream with 502', async () => {
-    process.env.BROWSERLESS_TOKEN = 'test-token';
+    const signatureResponse = createResponse();
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
       ok: true,
-      headers: {
-        get: (key: string) => (key === 'content-type' ? 'application/pdf' : null),
-      },
-      arrayBuffer: async () => new ArrayBuffer(0),
+      headers: { get: () => 'application/pdf' },
+      arrayBuffer: async () => Buffer.from('not-pdf'),
     }));
-
-    const req = { method: 'POST', body: { html: '<html></html>', title: 'Test' } };
-    const res = createResponse();
-
-    await handler(req as never, res as never);
-
-    expect(res.statusCode).toBe(502);
+    await handler(request() as never, signatureResponse as never);
+    expect(signatureResponse.statusCode).toBe(502);
   });
 
-  it('handles successful PDF rendering with 200 and binary data', async () => {
-    process.env.BROWSERLESS_TOKEN = 'test-token';
-    const fakeData = new Uint8Array([1, 2, 3]);
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+  it('returns a verified PDF and disables Browserless headers and footers', async () => {
+    const pdf = Buffer.from('%PDF-1.7\ncontrolled manuscript');
+    const fetchSpy = vi.fn().mockResolvedValue({
       ok: true,
-      headers: {
-        get: (key: string) => (key === 'content-type' ? 'application/pdf' : null),
-      },
-      arrayBuffer: async () => fakeData.buffer,
-    }));
-
-    const req = { method: 'POST', body: { html: '<html></html>', title: 'Test' } };
+      headers: { get: () => 'application/pdf' },
+      arrayBuffer: async () => pdf,
+    });
+    vi.stubGlobal('fetch', fetchSpy);
     const res = createResponse();
 
-    await handler(req as never, res as never);
+    await handler(request() as never, res as never);
 
     expect(res.statusCode).toBe(200);
     expect(res.headers['Content-Type']).toBe('application/pdf');
-    expect(res.headers['Content-Length']).toBe(fakeData.length.toString());
-    expect(res.body).toEqual(Buffer.from(fakeData.buffer));
+    expect(res.headers['Cache-Control']).toBe('no-store');
+    expect(res.body).toEqual(pdf);
+    const upstreamBody = JSON.parse(fetchSpy.mock.calls[0][1].body as string);
+    expect(upstreamBody.options).toMatchObject({
+      printBackground: true,
+      preferCSSPageSize: true,
+      displayHeaderFooter: false,
+    });
   });
 });

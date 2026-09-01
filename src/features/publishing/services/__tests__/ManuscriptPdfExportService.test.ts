@@ -154,10 +154,10 @@ describe('ManuscriptPdfExportService', () => {
     // Enforce that metadata diagnostics are strictly allowlisted and sanitized
     expect(passedRequest.metadata).toEqual({
       templateId: 'classic-book',
-      rootPersonId: 'p1',
       userRole: 'viewer',
       masked: true,
     });
+    expect(passedRequest.metadata).not.toHaveProperty('rootPersonId');
     expect(passedRequest.metadata).not.toHaveProperty('personName');
     expect(passedRequest.metadata).not.toHaveProperty('html');
     expect(passedRequest.metadata).not.toHaveProperty('unallowlisted');
@@ -189,7 +189,7 @@ describe('ManuscriptPdfExportService', () => {
     expect(fallbackSpy).toHaveBeenCalledWith(request);
   });
 
-  it('controlled-pdf still falls back to browser-print and reports stub unconfigured state when flag is enabled but default adapter remains a stub', async () => {
+  it('controlled-pdf falls back to browser print when an authenticated renderer session is unavailable', async () => {
     vi.stubEnv('VITE_ENABLE_CONTROLLED_PDF', 'true');
     const fallbackSpy = vi
       .spyOn(ManuscriptPdfExportService, 'exportViaBrowserPrintFallback')
@@ -209,7 +209,7 @@ describe('ManuscriptPdfExportService', () => {
     expect(result).toEqual({
       mode: 'browser-print-fallback',
       controlledAttempted: true,
-      controlledReason: 'Controlled PDF export is not configured yet.',
+      controlledReason: 'Controlled PDF renderer requires an authenticated session',
     });
 
     expect(fallbackSpy).toHaveBeenCalledWith(request);
@@ -250,7 +250,7 @@ describe('ManuscriptPdfExportService', () => {
     const adapter = vi.fn().mockResolvedValue({
       mode: 'controlled-pdf',
       available: true,
-      requestMetadata: { masked: true, rootPersonId: 'p1' },
+      requestMetadata: { masked: true },
     });
 
     const request = {
@@ -267,7 +267,7 @@ describe('ManuscriptPdfExportService', () => {
 
     expect(adapter).toHaveBeenCalledWith(expect.objectContaining({
       language: 'ar',
-      metadata: { masked: true, rootPersonId: 'p1' },
+      metadata: { masked: true },
     }));
   });
 

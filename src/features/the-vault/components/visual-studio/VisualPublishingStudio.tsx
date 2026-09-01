@@ -74,6 +74,7 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
     branchCollectionBlockingWarnings,
     tiledWallPosterPlan,
     posterSvgResources,
+    posterResourceStatus,
   } = useVisualStudioPosterRuntime({
     language,
     designState: studioDesign.state,
@@ -135,6 +136,7 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
       branchCollectionAvailable={Boolean(branchPosterCollection?.itemCount && branchCollectionBlockingWarnings.length === 0)}
       branchCollectionBlocked={Boolean(branchPosterCollection?.itemCount && branchCollectionBlockingWarnings.length > 0)}
       tiledWallAvailable={Boolean(tiledWallPosterPlan && tiledWallPosterPlan.quality.status !== 'blocked')}
+      resourceStatus={posterResourceStatus}
       isBlocked={Boolean(posterSceneEvaluation.capacityError)}
       capacityErrorGuidance={capacityErrorGuidance}
       onExportSvg={mappingResult.supported ? () => void exportPoster('svg') : undefined}

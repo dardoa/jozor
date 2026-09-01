@@ -2,6 +2,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ControlledPdfReadinessService } from '../ControlledPdfReadinessService';
 import { ControlledPdfFeatureFlag } from '../ControlledPdfFeatureFlag';
 
+vi.mock('../../../../services/supabaseClient', () => ({
+  getSupabaseSessionAccessToken: vi.fn().mockResolvedValue('session-access-token'),
+}));
+
 describe('ControlledPdfReadinessService', () => {
   let originalEnv: string | undefined;
 
@@ -35,6 +39,7 @@ describe('ControlledPdfReadinessService', () => {
     expect(result.available).toBe(false);
     expect(result.recommendedMode).toBe('browser-print-fallback');
     expect(result.reasons).toContain('Controlled PDF feature flag disabled');
+    expect(successRenderer).not.toHaveBeenCalled();
   });
 
   it('reports fallback and available false when flag is enabled but default endpoint returns 501', async () => {
@@ -53,10 +58,8 @@ describe('ControlledPdfReadinessService', () => {
     expect(result.recommendedMode).toBe('browser-print-fallback');
     expect(result.reasons).toContain('Controlled PDF export is not configured yet.');
     expect(result.diagnostics).toEqual({
-      renderer: 'controlled-adapter',
-      probe: true,
-      mode: 'controlled-pdf',
-      availableResult: false,
+      renderer: 'controlled-api',
+      probe: 'configuration',
       featureFlagEnabled: true,
     });
   });
@@ -75,12 +78,10 @@ describe('ControlledPdfReadinessService', () => {
 
     expect(result.available).toBe(false);
     expect(result.recommendedMode).toBe('browser-print-fallback');
-    expect(result.reasons).toContain('Controlled PDF renderer unavailable');
+    expect(result.reasons).toContain('Controlled PDF export is not configured yet.');
     expect(result.diagnostics).toEqual({
-      renderer: 'controlled-adapter',
-      probe: true,
-      mode: 'controlled-pdf',
-      availableResult: false,
+      renderer: 'controlled-api',
+      probe: 'configuration',
       featureFlagEnabled: true,
     });
   });
@@ -121,8 +122,8 @@ describe('ControlledPdfReadinessService', () => {
 
     // Verify diagnostics output structure and values
     expect(result.diagnostics).toEqual({
-      renderer: 'controlled-adapter',
-      probe: true,
+      renderer: 'controlled-api',
+      probe: 'synthetic-render',
       mode: 'controlled-pdf',
       availableResult: true,
       outputType: 'application/pdf',

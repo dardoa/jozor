@@ -54,6 +54,8 @@ interface UseVisualStudioPosterRuntimeOptions {
   suppliedPosterSvgResources?: StudioPosterSvgResources;
 }
 
+export type VisualStudioPosterResourceStatus = 'ready' | 'loading' | 'error';
+
 const STUDIO_PREVIEW_FIXTURE_SOURCE: FixturePreviewSource = {
   nodes: [
     {
@@ -482,6 +484,14 @@ export function useVisualStudioPosterRuntime({
 
   const [resolvedPosterSvgResources, setResolvedPosterSvgResources] = useState<StudioPosterSvgResources>();
   const [resolvedPosterImages, setResolvedPosterImages] = useState<StudioPosterSvgResources['embeddedImages']>();
+  const [fontResolution, setFontResolution] = useState<{
+    family?: string;
+    status: VisualStudioPosterResourceStatus;
+  }>({ status: suppliedPosterSvgResources ? 'ready' : 'loading' });
+  const [imageResolution, setImageResolution] = useState<{
+    requestKey: string;
+    status: Exclude<VisualStudioPosterResourceStatus, 'error'>;
+  }>({ requestKey: '', status: 'ready' });
 
   const resolvedPosterFontFamily = !posterOptions || posterOptions.fontFamily === 'style-default'
     ? selectedDefinition.id === 'modern-ancestor-poster'
@@ -500,12 +510,17 @@ export function useVisualStudioPosterRuntime({
 
     let isCancelled = false;
 
+    startTransition(() => {
+      setFontResolution({ family: resolvedPosterFontFamily, status: 'loading' });
+    });
+
     void posterFontAssetResolver.resolveArabicFont(resolvedPosterFontFamily)
       .then((asset) => {
         if (!isCancelled) {
           const nextResources = getPosterSvgFontResources(asset);
           startTransition(() => {
             setResolvedPosterSvgResources(nextResources);
+            setFontResolution({ family: resolvedPosterFontFamily, status: 'ready' });
           });
         }
       })
@@ -513,6 +528,7 @@ export function useVisualStudioPosterRuntime({
         if (!isCancelled) {
           startTransition(() => {
             setResolvedPosterSvgResources(undefined);
+            setFontResolution({ family: resolvedPosterFontFamily, status: 'error' });
           });
         }
       });
@@ -846,6 +862,11 @@ export function useVisualStudioPosterRuntime({
     return requests;
   }, [posterImageSourceResolver, posterScene, previewData]);
 
+  const imageRequestKey = useMemo(
+    () => imageRequests.map(({ previewId, source }) => `${previewId}:${source}`).sort().join('|'),
+    [imageRequests]
+  );
+
   useEffect(() => {
     if (suppliedPosterSvgResources?.embeddedImages !== undefined) {
       if (resolvedPosterImages !== undefined) {
@@ -865,11 +886,15 @@ export function useVisualStudioPosterRuntime({
     }
 
     let isCancelled = false;
+    startTransition(() => {
+      setImageResolution({ requestKey: imageRequestKey, status: 'loading' });
+    });
     void posterImageAssetResolver.resolveImages(imageRequests)
       .then((resolution) => {
         if (!isCancelled) {
           startTransition(() => {
             setResolvedPosterImages(resolution.assets);
+            setImageResolution({ requestKey: imageRequestKey, status: 'ready' });
           });
         }
       })
@@ -877,6 +902,8 @@ export function useVisualStudioPosterRuntime({
         if (!isCancelled) {
           startTransition(() => {
             setResolvedPosterImages(undefined);
+            // Failed images intentionally fall back to initials and do not block export.
+            setImageResolution({ requestKey: imageRequestKey, status: 'ready' });
           });
         }
       });
@@ -884,7 +911,7 @@ export function useVisualStudioPosterRuntime({
     return () => {
       isCancelled = true;
     };
-  }, [imageRequests, posterImageAssetResolver, resolvedPosterImages, suppliedPosterSvgResources?.embeddedImages]);
+  }, [imageRequestKey, imageRequests, posterImageAssetResolver, resolvedPosterImages, suppliedPosterSvgResources?.embeddedImages]);
 
   const posterSvgResources: StudioPosterSvgResources | undefined = useMemo(() => {
     const primaryResources = suppliedPosterSvgResources ?? matchingResolvedPosterSvgResources;
@@ -895,6 +922,43 @@ export function useVisualStudioPosterRuntime({
       embeddedImages: suppliedPosterSvgResources?.embeddedImages ?? resolvedPosterImages,
     };
   }, [suppliedPosterSvgResources, matchingResolvedPosterSvgResources, resolvedPosterImages]);
+
+  const sceneContainsArabic = useMemo(() => {
+    if (!posterScene) return false;
+    return [
+      posterScene.content.title,
+      posterScene.content.subtitle,
+      posterScene.content.footerText,
+      ...posterScene.nodes.flatMap((node) => [
+        node.displayName,
+        node.relationshipHint,
+        node.birthPlaceLabel,
+        node.occupationLabel,
+        node.descriptionLabel,
+      ]),
+    ].some((value) => typeof value === 'string' && /[\u0600-\u06ff]/.test(value));
+  }, [posterScene]);
+
+  const fontResourceStatus: VisualStudioPosterResourceStatus = suppliedPosterSvgResources
+    ? (!sceneContainsArabic || suppliedPosterSvgResources.embeddedArabicFontDataUri ? 'ready' : 'error')
+    : !sceneContainsArabic
+      ? 'ready'
+      : matchingResolvedPosterSvgResources
+        ? 'ready'
+        : fontResolution.family === resolvedPosterFontFamily && fontResolution.status === 'error'
+          ? 'error'
+          : 'loading';
+  const imageResourceStatus: Exclude<VisualStudioPosterResourceStatus, 'error'> =
+    suppliedPosterSvgResources?.embeddedImages !== undefined || imageRequests.length === 0
+      ? 'ready'
+      : imageResolution.requestKey === imageRequestKey
+        ? imageResolution.status
+        : 'loading';
+  const posterResourceStatus: VisualStudioPosterResourceStatus = fontResourceStatus === 'error'
+    ? 'error'
+    : fontResourceStatus === 'loading' || imageResourceStatus === 'loading'
+      ? 'loading'
+      : 'ready';
 
   return {
     definitions,
@@ -914,5 +978,6 @@ export function useVisualStudioPosterRuntime({
     branchCollectionBlockingWarnings,
     tiledWallPosterPlan,
     posterSvgResources,
+    posterResourceStatus,
   };
 }

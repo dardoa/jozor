@@ -28,7 +28,6 @@ describe('LocalControlledPdfRenderer', () => {
     // Verify metadata allowlist rules
     expect(result.requestMetadata).toEqual({
       templateId: 'classic-book-manuscript',
-      treeId: 'tree-999',
       userRole: 'viewer',
       masked: true,
       scopePersonCount: 15,
@@ -37,6 +36,7 @@ describe('LocalControlledPdfRenderer', () => {
     // Enforce that raw personal data and HTML are strictly hidden/excluded from diagnostics metadata
     expect(result.requestMetadata).not.toHaveProperty('html');
     expect(result.requestMetadata).not.toHaveProperty('rootPersonId');
+    expect(result.requestMetadata).not.toHaveProperty('treeId');
     expect(result.requestMetadata).not.toHaveProperty('pageEstimate');
     expect(result.requestMetadata).not.toHaveProperty('someUnsafeKey');
   });

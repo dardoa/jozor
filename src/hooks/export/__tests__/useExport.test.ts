@@ -153,6 +153,11 @@ vi.mock('../../../features/publishing', () => ({
   MarkdownManuscriptRenderer: {
     renderToMarkdown: vi.fn(() => '# Family Manuscript\n'),
   },
+  embedControlledManuscriptAssets: vi.fn(async (html: string) => ({
+    html,
+    embeddedImageCount: 0,
+    omittedImageCount: 0,
+  })),
   ManuscriptPdfExportService: {
     exportManuscriptPdf: vi.fn(async () => ({ mode: 'browser-print-fallback' })),
   },
@@ -525,19 +530,19 @@ describe('useExport', () => {
     expect(exportArgs.title).not.toContain('John');
 
     expect(ManuscriptPdfExportService.exportManuscriptPdf).toHaveBeenCalledWith(expect.objectContaining({
-      html: '<!doctype html><html><body>Arabic manuscript</body></html>',
+      html: expect.stringContaining('Arabic manuscript'),
       title: 'Family Manuscript',
       language: 'en',
       metadata: expect.objectContaining({
         templateId: 'classic-book-manuscript',
-        treeId: 'tree-1',
-        rootPersonId: 'person-1',
         userRole: 'viewer',
         masked: true,
         scopePersonCount: 1,
         pageEstimate: expect.any(Number),
       }),
-    }), { mode: 'browser-print-fallback' });
+    }), { mode: 'controlled-pdf' });
+    expect(exportArgs.metadata).not.toHaveProperty('treeId');
+    expect(exportArgs.metadata).not.toHaveProperty('rootPersonId');
     expect(ManuscriptStructureBuilder.buildModel).toHaveBeenCalledWith(expect.objectContaining({
       rootPersonId: 'person-1',
       people: expect.objectContaining({
@@ -567,6 +572,32 @@ describe('useExport', () => {
       true,
       [],
       [expect.objectContaining({ name: 'Family Manuscript.pdf', format: 'pdf' })]
+    );
+  });
+
+  it('downloads the controlled PDF blob when the renderer succeeds', async () => {
+    const pdfBlob = new Blob(['%PDF-1.7'], { type: 'application/pdf' });
+    vi.mocked(ManuscriptPdfExportService.exportManuscriptPdf).mockResolvedValueOnce({
+      mode: 'controlled-pdf',
+      available: true,
+      blob: pdfBlob,
+      fileName: 'family_book_manuscript.pdf',
+    });
+    const svgRef = { current: null };
+    const { result } = renderHook(() => useExport(mockPeople, svgRef));
+
+    await act(async () => {
+      await result.current.handlePublishingExport({
+        templateId: 'classic-book-manuscript',
+        format: 'pdf',
+        renderer: 'html-print',
+      });
+    });
+
+    expect(downloadFile).toHaveBeenCalledWith(
+      pdfBlob,
+      'family_book_manuscript.pdf',
+      'application/pdf'
     );
   });
 

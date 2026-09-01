@@ -422,6 +422,8 @@ describe('Phase 1A: Final Two-Issue Closure Pass', () => {
     it('verifies preset applying and modified state detection', () => {
       let state = createInitialPosterDesignState('classic-heritage');
       expect(isPresetModified(state)).toBe(false);
+      expect(state.shared.includePhotos).toBe(true);
+      expect(state.shared.cardLayout).toBe('photo-focused');
 
       state = updateSharedSetting(state, 'photoShape', 'square');
       expect(isPresetModified(state)).toBe(true);

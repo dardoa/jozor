@@ -38,7 +38,7 @@ describe('Phase 1B: posterDesignStateRuntimeAdapter', () => {
     expect(opts.cardEffect).toBe('soft');
     expect(opts.cardFrame).toBe('classic');
     expect(opts.cardCorner).toBe('soft');
-    expect(opts.cardLayout).toBe('style-default');
+    expect(opts.cardLayout).toBe('photo-focused');
     expect(opts.pageFrame).toBe('heritage');
     expect(opts.header).toBe('ceremonial');
     expect(opts.footerText).toBe('');

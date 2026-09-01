@@ -25,6 +25,7 @@ export interface VisualOutputActionBarProps {
   branchCollectionAvailable?: boolean;
   branchCollectionBlocked?: boolean;
   tiledWallAvailable?: boolean;
+  resourceStatus?: 'ready' | 'loading' | 'error';
   isBlocked?: boolean;
   capacityErrorGuidance?: string;
   onExportSvg?: () => void;
@@ -46,6 +47,7 @@ export const VisualOutputActionBar: React.FC<VisualOutputActionBarProps> = ({
   branchCollectionAvailable = false,
   branchCollectionBlocked = false,
   tiledWallAvailable = false,
+  resourceStatus = 'ready',
   isBlocked = false,
   capacityErrorGuidance,
   onExportSvg,
@@ -65,11 +67,13 @@ export const VisualOutputActionBar: React.FC<VisualOutputActionBarProps> = ({
   const isBranchCollection = outputMode === 'branch-collection';
   const isTiledWall = outputMode === 'tiled-wall';
   const isPackageOutput = isBranchCollection || isTiledWall;
-  const isPrintBlocked = isBranchCollection
+  const isQualityBlocked = isBranchCollection
     ? branchCollectionBlocked || !branchCollectionAvailable
     : isTiledWall
       ? !tiledWallAvailable
       : isBlocked || quality?.status === 'blocked';
+  const isResourceBlocked = resourceStatus !== 'ready';
+  const isPrintBlocked = isQualityBlocked || isResourceBlocked;
   const hasPrintWarning = !isPackageOutput && quality?.status === 'warning';
   const hasLargeTreeAlternative = branchCollectionAvailable || tiledWallAvailable;
   const hasGuidedRecovery = Boolean(
@@ -77,6 +81,10 @@ export const VisualOutputActionBar: React.FC<VisualOutputActionBarProps> = ({
   );
   const exportStatusAnnouncement = isExporting
     ? (isAr ? `جاري تصدير ${exportingFormat}...` : `Exporting ${exportingFormat}...`)
+    : resourceStatus === 'loading'
+      ? (isAr ? 'جاري تجهيز الخطوط والصور للتصدير' : 'Preparing fonts and images for export')
+    : resourceStatus === 'error'
+      ? (isAr ? 'تعذر تجهيز الخط العربي للتصدير' : 'The Arabic print font could not be prepared')
     : isPrintBlocked
       ? (isAr
           ? 'تصدير البوستر متوقف حتى معالجة مشكلة جودة الطباعة'
@@ -118,7 +126,25 @@ export const VisualOutputActionBar: React.FC<VisualOutputActionBarProps> = ({
           : 'SVG for vector printing, PNG for a high-resolution image, and PDF for direct printing.'}
       </span>
 
-      {!isPackageOutput && (capacityErrorGuidance || isPrintBlocked || hasPrintWarning) && (
+      {isResourceBlocked && (
+        <div
+          role="status"
+          className={`text-[10px] font-semibold leading-relaxed ${
+            resourceStatus === 'error' ? 'text-red-700' : 'text-amber-700'
+          }`}
+          data-testid="poster-resource-preparation-notice"
+        >
+          {resourceStatus === 'error'
+            ? (isAr
+                ? 'تعذر تجهيز الخط العربي المضمّن. أعد تحميل الاستوديو قبل التصدير.'
+                : 'The embedded Arabic font could not be prepared. Reload the Studio before exporting.')
+            : (isAr
+                ? 'جاري تضمين الخطوط والصور. ستتاح أزرار التنزيل عند اكتمال التجهيز.'
+                : 'Embedding fonts and images. Downloads will unlock when preparation completes.')}
+        </div>
+      )}
+
+      {!isPackageOutput && (capacityErrorGuidance || isQualityBlocked || hasPrintWarning) && (
       <div className="flex min-w-0 w-full flex-col gap-1 text-start lg:max-w-md">
         {capacityErrorGuidance && (
           <span
@@ -128,13 +154,13 @@ export const VisualOutputActionBar: React.FC<VisualOutputActionBarProps> = ({
             {capacityErrorGuidance}
           </span>
         )}
-        {(isPrintBlocked || hasPrintWarning) && (
+        {(isQualityBlocked || hasPrintWarning) && (
           <span
-            className={isPrintBlocked ? 'text-[10px] font-semibold text-red-700 whitespace-normal break-words' : 'text-[10px] font-semibold text-amber-700 whitespace-normal break-words'}
+            className={isQualityBlocked ? 'text-[10px] font-semibold text-red-700 whitespace-normal break-words' : 'text-[10px] font-semibold text-amber-700 whitespace-normal break-words'}
             data-testid="poster-print-quality-notice"
             data-quality-warnings={JSON.stringify(quality?.warnings || [])}
           >
-            {isPrintBlocked
+            {isQualityBlocked
               ? (hasLargeTreeAlternative
                   ? (isAr
                       ? 'الصفحة الواحدة لا تكفي لهذه الشجرة. استخدم مجموعة الفروع أو اللوحة المقسمة.'
@@ -147,7 +173,7 @@ export const VisualOutputActionBar: React.FC<VisualOutputActionBarProps> = ({
                   : 'Review poster density and text readability before printing.')}
           </span>
         )}
-        {isPrintBlocked && hasGuidedRecovery && (
+        {isQualityBlocked && hasGuidedRecovery && (
           <div
             className="mt-2 flex max-w-2xl flex-col gap-2 rounded-lg border border-amber-200 bg-amber-50 p-2.5 text-amber-950"
             data-testid="poster-large-tree-guidance"
@@ -216,7 +242,7 @@ export const VisualOutputActionBar: React.FC<VisualOutputActionBarProps> = ({
           <button
             type="button"
             onClick={onExportBranchCollection}
-            disabled={isExporting}
+            disabled={isExporting || isResourceBlocked}
             aria-label={isAr ? 'تنزيل مجموعة الفروع' : 'Download branch collection'}
             className="col-span-2 inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-[var(--primary-600)] px-4 py-2 text-xs font-bold text-[var(--primary-700)] transition-colors hover:bg-[var(--primary-500)]/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary-500)] disabled:cursor-wait disabled:opacity-65 lg:col-span-1"
           >
@@ -232,7 +258,7 @@ export const VisualOutputActionBar: React.FC<VisualOutputActionBarProps> = ({
           <button
             type="button"
             onClick={onExportTiledWall}
-            disabled={isExporting}
+            disabled={isExporting || isResourceBlocked}
             aria-label={isAr ? 'تنزيل لوحة مقسمة' : 'Download tiled wall poster'}
             className="col-span-2 inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-[var(--primary-600)] px-4 py-2 text-xs font-bold text-[var(--primary-700)] transition-colors hover:bg-[var(--primary-500)]/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary-500)] disabled:cursor-wait disabled:opacity-65 lg:col-span-1"
           >

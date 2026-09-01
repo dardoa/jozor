@@ -249,7 +249,7 @@ describe('PosterScene foundation', () => {
     expect(classic.cardCornerPreset).toBe('soft');
     expect(modern.cardCornerPreset).toBe('rounded');
     expect(dense.cardCornerPreset).toBe('square');
-    expect(classic.cardLayoutPreset).toBe('standard');
+    expect(classic.cardLayoutPreset).toBe('photo-focused');
     expect(modern.cardLayoutPreset).toBe('photo-focused');
     expect(dense.cardLayoutPreset).toBe('standard');
     expect(classic.pageFramePreset).toBe('heritage');

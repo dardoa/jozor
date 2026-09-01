@@ -66,13 +66,10 @@ export class ControlledManuscriptPdfAdapter {
 
 const SAFE_DIAGNOSTIC_METADATA_KEYS = new Set([
   'templateId',
-  'treeId',
-  'rootPersonId',
   'userRole',
   'masked',
   'scopePersonCount',
   'pageEstimate',
-  'generatedAt',
 ]);
 
 export function sanitizeDiagnosticsMetadata(

@@ -111,10 +111,10 @@ describe('ControlledManuscriptPdfAdapter', () => {
 
     expect(result.requestMetadata).toEqual({
       templateId: 'classic-book-manuscript',
-      rootPersonId: 'p1',
       masked: true,
       scopePersonCount: 15,
     });
+    expect(result.requestMetadata).not.toHaveProperty('rootPersonId');
 
     // Verify it doesn't leak any raw markup or unintended sensitive details
     expect(result.requestMetadata).not.toHaveProperty('html');

@@ -7,8 +7,8 @@ export const CLASSIC_HERITAGE_PRESET: PosterPresetDefinition = {
     ar: 'التراث الكلاسيكي',
   },
   description: {
-    en: 'Traditional warm manuscript aesthetic with classic serif typography and ornate page frames.',
-    ar: 'طابع ملمس التراث الدافئ مع خطوط كلاسيكية وأطر زخرفية أصيلة.',
+    en: 'Portrait-led family heritage artwork with warm manuscript details and ceremonial framing.',
+    ar: 'لوحة تراثية عائلية تبرز صور الأشخاص ضمن تفاصيل دافئة وإطار احتفائي أصيل.',
   },
   baselineSettings: {
     colorPalette: 'heritage-warm',
@@ -18,7 +18,7 @@ export const CLASSIC_HERITAGE_PRESET: PosterPresetDefinition = {
     cardEffect: 'soft',
     cardFrame: 'classic',
     cardCorner: 'soft',
-    cardLayout: 'style-default',
+    cardLayout: 'photo-focused',
     photoShape: 'circle',
     pageFrame: 'heritage',
     header: 'ceremonial',

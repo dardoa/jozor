@@ -282,7 +282,67 @@ export const focusFamilyPosterLayoutEngine: PosterLayoutEngine = {
     }
 
     const cardWidth = Math.min(maxCardW, rawCardWidth);
-    const cardHeight = Math.min(baseCardH, rawCardHeight);
+    let cardHeight = Math.min(baseCardH, rawCardHeight);
+    if (isVertical) {
+      const negativeHalf = treeCenterY - treeBounds.y;
+      const positiveHalf = treeBounds.y + treeBounds.height - treeCenterY;
+      const hasMainAxisCapacity = (candidateHeight: number) => {
+        const overflow = getPosterCardVerticalOverflow(candidateHeight, cardPreset);
+        const minimumStep = candidateHeight + overflow.top + overflow.bottom + gap;
+        const negativeStep = maxNegDepth === 0
+          ? Number.POSITIVE_INFINITY
+          : (negativeHalf - candidateHeight / 2 - overflow.top) / maxNegDepth;
+        const positiveStep = maxPosDepth === 0
+          ? Number.POSITIVE_INFINITY
+          : (positiveHalf - candidateHeight / 2 - overflow.bottom) / maxPosDepth;
+        return negativeStep >= minimumStep - 0.1 && positiveStep >= minimumStep - 0.1;
+      };
+
+      while (cardHeight > minCardH && !hasMainAxisCapacity(cardHeight)) {
+        cardHeight = Math.max(minCardH, cardHeight - 1);
+      }
+      if (!hasMainAxisCapacity(cardHeight)) {
+        throw new FocusLayoutCapacityError(
+          'Focus layout capacity exceeded: tree bounds cannot separate focus tiers without overlap.'
+        );
+      }
+    } else {
+      const tierZeroCompanionCount = Math.max(0, (tierGroups.get(0)?.length ?? 1) - 1);
+      const upperCompanionCount = Math.ceil(tierZeroCompanionCount / 2);
+      const lowerCompanionCount = Math.floor(tierZeroCompanionCount / 2);
+      const nonZeroTierCounts = Array.from(tierGroups.entries())
+        .filter(([tier]) => tier !== 0)
+        .map(([, nodes]) => nodes.length);
+
+      const hasCrossAxisCapacity = (candidateHeight: number) => {
+        const overflow = getPosterCardVerticalOverflow(candidateHeight, cardPreset);
+        const visualHeight = candidateHeight + overflow.top + overflow.bottom;
+        const companionStep = visualHeight + gap;
+        const availableHalfHeight = treeBounds.height / 2;
+        const upperExtent =
+          upperCompanionCount * companionStep + candidateHeight / 2 + overflow.top;
+        const lowerExtent =
+          lowerCompanionCount * companionStep + candidateHeight / 2 + overflow.bottom;
+        const nonZeroTiersFit = nonZeroTierCounts.every(
+          (count) => count * visualHeight + Math.max(0, count - 1) * gap <= treeBounds.height + 0.1
+        );
+
+        return (
+          upperExtent <= availableHalfHeight + 0.1 &&
+          lowerExtent <= availableHalfHeight + 0.1 &&
+          nonZeroTiersFit
+        );
+      };
+
+      while (cardHeight > minCardH && !hasCrossAxisCapacity(cardHeight)) {
+        cardHeight = Math.max(minCardH, cardHeight - 1);
+      }
+      if (!hasCrossAxisCapacity(cardHeight)) {
+        throw new FocusLayoutCapacityError(
+          'Focus layout capacity exceeded: tree bounds cannot fit focus rows with photo overflow.'
+        );
+      }
+    }
     const isSoloFocus = includedNodes.length === 1;
     const focalCardWidth = isSoloFocus
       ? Math.min(treeBounds.width * 0.34, maxCardW * 1.5)
@@ -322,7 +382,7 @@ export const focusFamilyPosterLayoutEngine: PosterLayoutEngine = {
     })();
 
     const minimumTierStep = isVertical
-      ? cardHeight + gap
+      ? cardHeight + verticalVisualOverflow + gap
       : (focalCardWidth + regularCardWidth) / 2 + gap;
     if (
       (maxNegDepth > 0 && negativeTierStep < minimumTierStep - 0.1) ||
@@ -484,12 +544,15 @@ export const focusFamilyPosterLayoutEngine: PosterLayoutEngine = {
       });
     });
 
-    const getNodeVisualRect = (node: PosterSceneNode) => ({
-      x: node.rect.x,
-      y: node.rect.y - cardOverflow.top,
-      width: node.rect.width,
-      height: node.rect.height + verticalVisualOverflow,
-    });
+    const getNodeVisualRect = (node: PosterSceneNode) => {
+      const nodeOverflow = getPosterCardVerticalOverflow(node.rect.height, cardPreset);
+      return {
+        x: node.rect.x,
+        y: node.rect.y - nodeOverflow.top,
+        width: node.rect.width,
+        height: node.rect.height + nodeOverflow.top + nodeOverflow.bottom,
+      };
+    };
 
     // Defensive Invariants: Check complete rendered bounds, including overlapping avatars.
     sceneNodes.forEach((node) => {
@@ -500,8 +563,14 @@ export const focusFamilyPosterLayoutEngine: PosterLayoutEngine = {
         visualRect.x + visualRect.width > treeBounds.x + treeBounds.width + 0.5 ||
         visualRect.y + visualRect.height > treeBounds.y + treeBounds.height + 0.5
       ) {
+        const exceededEdges = [
+          visualRect.x < treeBounds.x - 0.5 ? 'start-x' : null,
+          visualRect.y < treeBounds.y - 0.5 ? 'start-y' : null,
+          visualRect.x + visualRect.width > treeBounds.x + treeBounds.width + 0.5 ? 'end-x' : null,
+          visualRect.y + visualRect.height > treeBounds.y + treeBounds.height + 0.5 ? 'end-y' : null,
+        ].filter(Boolean).join(', ');
         throw new FocusLayoutCapacityError(
-          `Focus layout capacity exceeded: node '${node.displayName}' exceeds printable tree bounds.`
+          `Focus layout capacity exceeded: node '${node.displayName}' exceeds printable tree bounds (${exceededEdges}).`
         );
       }
     });

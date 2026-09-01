@@ -12,7 +12,7 @@ export class LocalControlledPdfRenderer {
       // Exclude full HTML and personal names to ensure absolute privacy in logs
       const cleanDiagnosticsMetadata: Record<string, unknown> = {};
       if (request.metadata) {
-        const allowedKeys = ['templateId', 'treeId', 'userRole', 'masked', 'scopePersonCount', 'pageEstimate'];
+        const allowedKeys = ['templateId', 'userRole', 'masked', 'scopePersonCount', 'pageEstimate'];
         allowedKeys.forEach((key) => {
           const value = request.metadata?.[key];
           if (isSafeDiagnosticValue(value)) {

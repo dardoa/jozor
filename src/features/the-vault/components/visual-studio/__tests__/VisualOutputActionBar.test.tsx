@@ -127,6 +127,31 @@ describe('VisualOutputActionBar print-quality gate', () => {
     );
   });
 
+  it('holds every export action until embedded poster resources are ready', () => {
+    render(
+      <VisualOutputActionBar
+        language="ar"
+        selectedDefinition={definition}
+        quality={quality('pass')}
+        resourceStatus="loading"
+        onExportSvg={vi.fn()}
+        onExportPng={vi.fn()}
+        onExportPdf={vi.fn()}
+      />
+    );
+
+    expect(screen.getByRole('button', { name: 'تنزيل SVG' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'تنزيل PNG' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'تنزيل PDF' })).toBeDisabled();
+    expect(screen.getByTestId('poster-resource-preparation-notice')).toHaveTextContent(
+      'جاري تضمين الخطوط والصور'
+    );
+    expect(screen.queryByTestId('poster-print-quality-notice')).not.toBeInTheDocument();
+    expect(screen.getByTestId('visual-studio-export-status-live-region')).toHaveTextContent(
+      'جاري تجهيز الخطوط والصور للتصدير'
+    );
+  });
+
   it('shows only the selected package action and ignores single-sheet quality state', () => {
     render(
       <VisualOutputActionBar

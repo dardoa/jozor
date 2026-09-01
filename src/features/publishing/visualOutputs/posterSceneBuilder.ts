@@ -126,7 +126,7 @@ function getDefaultPosterCardCorner(stylePreset: PosterVisualStylePreset): Poste
 }
 
 function getDefaultPosterCardLayout(stylePreset: PosterVisualStylePreset): PosterCardLayoutPreset {
-  if (stylePreset === 'modern-gallery') return 'photo-focused';
+  if (stylePreset === 'classic-heritage' || stylePreset === 'modern-gallery') return 'photo-focused';
   if (stylePreset === 'branch-index') return 'text-minimal';
   return 'standard';
 }

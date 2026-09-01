@@ -309,6 +309,8 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
       expect(posterSvg).not.toContain('data-poster-theme="classic-heritage"');
       expect(posterSvg).not.toContain('QU1JUkk=');
     });
+    expect(screen.getByRole('button', { name: 'Download SVG' })).toBeDisabled();
+    expect(screen.getByTestId('poster-resource-preparation-notice')).toBeInTheDocument();
 
     expect(resolveModernFont).toBeDefined();
     resolveModernFont?.({
@@ -324,6 +326,9 @@ describe('VisualPublishingStudio Phase 1B Complete Behavioral Suite', () => {
       const posterSvg = screen.getByTestId('studio-poster-renderer-preview').innerHTML;
       expect(posterSvg).toContain('data-poster-font-family="noto-sans-arabic"');
       expect(posterSvg).toContain('Tk9UTw==');
+    });
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Download SVG' })).toBeEnabled();
     });
   });
 

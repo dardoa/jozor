@@ -11,7 +11,7 @@ import { downloadFile } from '@/utils/fileUtils';
 import { showToast } from '../../utils/showToast';
 import { useAppStore } from '../../store/useAppStore';
 import { logError, logInfo, logWarn } from '../../utils/errorLogger';
-import { PublishingTracker } from '../../features/publishing';
+import { embedControlledManuscriptAssets, PublishingTracker } from '../../features/publishing';
 import type { FamilyManuscriptModel } from '../../features/publishing';
 import { maskPeopleMap } from '../../utils/privacyUtils';
 import { imageCacheService } from '../../services/imageCacheService';
@@ -306,10 +306,11 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
             includeNarrative: manuscriptOptions.includeNarrative,
             language: language === 'ar' ? 'ar' : 'en',
         }), manuscriptOptions);
-        const html = HtmlManuscriptRenderer.renderToHtml(manuscriptModel, {
+        const renderedHtml = HtmlManuscriptRenderer.renderToHtml(manuscriptModel, {
             language: language === 'ar' ? 'ar' : 'en',
             title: manuscriptModel.title,
         });
+        const { html } = await embedControlledManuscriptAssets(renderedHtml);
 
         return {
             title: manuscriptModel.title,
@@ -407,21 +408,24 @@ export const useExport = (people: Record<string, Person>, svgRef: RefObject<SVGS
                     const preview = await buildHtmlManuscriptPreview(templateId, options.manuscriptOptions);
                     outputName = `${preview.title}.pdf`;
 
-                    await ManuscriptPdfExportService.exportManuscriptPdf({
+                    const manuscriptPdfResult = await ManuscriptPdfExportService.exportManuscriptPdf({
                         html: preview.html,
                         title: preview.title,
                         language: language === 'ar' ? 'ar' : 'en',
                         metadata: {
                             templateId,
-                            treeId: currentTreeId,
-                            rootPersonId: manuscriptRootPersonId,
                             userRole: currentUserRole,
                             masked: currentUserRole === 'viewer',
                             scopePersonCount: Object.keys(activePeople).length,
                             pageEstimate: preview.pageEstimate,
-                            generatedAt: new Date().toISOString(),
                         },
-                    }, { mode: 'browser-print-fallback' });
+                    }, { mode: 'controlled-pdf' });
+                    if (manuscriptPdfResult.available && manuscriptPdfResult.blob) {
+                        outputName = manuscriptPdfResult.fileName || outputName;
+                        downloadFile(manuscriptPdfResult.blob, outputName, 'application/pdf');
+                    } else if (manuscriptPdfResult.controlledAttempted) {
+                        warnings.push(manuscriptPdfResult.controlledReason || 'Controlled PDF unavailable; browser print fallback used.');
+                    }
                     (trackerState.manifest as { totalPages: number }).totalPages = preview.pageEstimate;
                 } else if (format === 'png') {
                     outputName = `${doc.title}.png`;
