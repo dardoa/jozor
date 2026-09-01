@@ -1,6 +1,6 @@
 # Family Book Controlled PDF Readiness
 
-Date: 2026-09-01
+Date: 2026-09-01 (production evidence updated 2026-09-02)
 
 ## Decision
 
@@ -26,18 +26,21 @@ The readiness check is a lightweight authenticated `GET`; it does not start Chro
 - The returned payload must have `application/pdf` MIME type and a `%PDF-` signature.
 - API responses are `no-store`, browser headers/footers are disabled, and the browser closes in `finally`.
 
-## Activation Checklist
+## Production Activation Evidence
 
-1. Add build-time `VITE_ENABLE_CONTROLLED_PDF=true` to Preview and Production.
-2. Redeploy so the Vite flag is included in the client build.
-3. Confirm the authenticated readiness endpoint reports `embedded-chromium`.
-4. Export a real Arabic Family Book with photos and verify page count, Arabic shaping, embedded images, no browser headers/footers, and no external resource URLs.
+- `VITE_ENABLE_CONTROLLED_PDF=true` is configured in Vercel Preview and Production.
+- Production deployment `dpl_8SJkzu19hpMivYkdzewsJYTVEBw6` is Ready and aliased to `https://jozor.vercel.app`.
+- The unauthenticated production endpoint returns the expected `401 Unauthorized` response with `no-store` and the controlled CORS policy.
+- An authenticated synthetic production request containing Arabic text, mixed RTL/LTR years, an embedded Amiri font, and an embedded image returned a valid `%PDF-` document.
+- The production proof is one A4 page (`594.96 x 841.92 pt`), contains no PDF JavaScript, renders shaped Arabic correctly, and preserves the embedded image.
+- The remaining owner gate is a real Family Book export using owner-authorized tree content and photos; no live owner data was used in the synthetic production proof.
 
 ## Current Classification
 
 - Application implementation: Pass
 - Authentication and privacy controls: Pass
 - Deterministic unit/API evidence: Pass
-- Embedded Chromium renderer: Implemented; deployment verification pending
-- Real Arabic controlled PDF owner review: Pending feature activation
+- Embedded Chromium renderer: Production deployed and verified
+- Synthetic Arabic/font/image production proof: Pass
+- Real owner Family Book visual review: Pending
 - Browser print fallback: Available, transitional only

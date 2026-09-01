@@ -4,9 +4,9 @@ Date: 2026-09-01
 
 ## Executive Decision
 
-Status: **Local release candidate pass / external beta handoff pending**
+Status: **Production release candidate pass / external beta handoff pending**
 
-The application and Visual Publishing Studio do not require an architectural rewrite. The current local release candidate is suitable for final owner acceptance and deployment. External tester invitations should wait until this exact working tree is committed, pushed, deployed, and the open physical/external-service gates below are explicitly accepted.
+The application and Visual Publishing Studio do not require an architectural rewrite. The release candidate is committed, pushed, and deployed to production. External tester invitations should wait until the open physical, owner-review, and authenticated-collaboration gates below are explicitly accepted or excluded from the first cohort.
 
 ## Verified In This Pass
 
@@ -21,16 +21,10 @@ The application and Visual Publishing Studio do not require an architectural rew
 - Family Book now prefers a controlled, authenticated PDF path and downloads the returned PDF blob when available.
 - Family Book font and profile images are embedded before controlled rendering; external storage URLs are removed from portable HTML.
 - Browser print remains an explicitly labeled fallback.
+- Controlled Family Book PDF is enabled in Preview and Production and the embedded-Chromium production endpoint passed an authenticated Arabic/font/image smoke proof.
+- GitHub Actions run `33560351663` passed typecheck, API typecheck, lint, unit tests, and Playwright smoke tests for production commit `35d844f`; its check annotations are empty after the Node 24 action upgrade.
 
 ## Open Gates Before External Invitations
-
-### Required deployment gate
-
-- Commit the current release-candidate changes.
-- Push the commit to `origin/main`.
-- Confirm GitHub CI is green for that exact commit.
-- Confirm Vercel production is serving that exact commit.
-- Rerun the live deployed smoke against the new production deployment.
 
 ### Physical print gate
 
@@ -42,10 +36,7 @@ currently exposes virtual printers only, so this gate remains externally pending
 
 ### Family Book controlled PDF gate
 
-Family Book controlled PDF uses embedded Chromium and no longer requires Browserless credentials. Before presenting it as beta-ready, either:
-
-1. set `VITE_ENABLE_CONTROLLED_PDF=true`, redeploy, then complete a real Arabic/photo PDF owner review; or
-2. exclude Family Book PDF from the first beta cohort and keep Markdown plus browser-print fallback clearly labeled as transitional.
+Family Book controlled PDF uses embedded Chromium and no longer requires Browserless credentials. Preview and Production are activated, and an authenticated synthetic Arabic/font/image PDF passed on the production endpoint. Before presenting the Family Book as beta-ready, complete a real owner-authorized Arabic/photo Family Book visual review, or exclude that output from the first cohort while retaining Markdown and the clearly labeled browser-print fallback.
 
 ### Authenticated collaboration gate
 
@@ -68,7 +59,7 @@ Exclude or label as transitional:
 - Legacy poster renderers.
 - Public portable raw JSON.
 - Unsupported/planned layout and scope combinations.
-- Controlled Family Book PDF until Browserless activation and real-file review.
+- Controlled Family Book PDF until the real owner-authorized manuscript review is accepted.
 - Any claim of physical-print approval for large-format outputs.
 
 ## Acceptance Checklist
@@ -78,10 +69,10 @@ Exclude or label as transitional:
 - [x] Publishing architecture and privacy boundaries remain intact.
 - [x] Large-format digital artifacts pass.
 - [x] Controlled Family Book implementation is code-complete and safely falls back.
-- [ ] Current working tree committed and pushed.
-- [ ] CI green for the new commit.
-- [ ] New commit deployed and live-smoked.
+- [x] Release-candidate implementation committed and pushed.
+- [x] GitHub CI is green for production commit `35d844f`.
+- [x] Vercel production deployment is Ready and the controlled endpoint is live-smoked.
 - [ ] Physical print proof accepted.
-- [ ] Browserless activated and Family Book controlled PDF reviewed, or feature excluded from cohort.
+- [ ] Real owner-authorized Family Book controlled PDF reviewed, or feature excluded from cohort.
 - [ ] Real authenticated collaboration E2E run when collaboration is in cohort scope.
 - [ ] Owner explicitly authorizes first tester invitation.
