@@ -180,7 +180,8 @@ describe('VisualOutputActionBar print-quality gate', () => {
   it('offers reversible preview routes without starting an export', () => {
     const onUseDensePreset = vi.fn();
     const onUseLargestPage = vi.fn();
-    const onSetUpLargeTreeProducts = vi.fn();
+    const onUseBranchCollection = vi.fn();
+    const onUseTiledWall = vi.fn();
     const onExportPng = vi.fn();
 
     render(
@@ -192,7 +193,8 @@ describe('VisualOutputActionBar print-quality gate', () => {
         onExportPdf={vi.fn()}
         onUseDensePreset={onUseDensePreset}
         onUseLargestPage={onUseLargestPage}
-        onSetUpLargeTreeProducts={onSetUpLargeTreeProducts}
+        onUseBranchCollection={onUseBranchCollection}
+        onUseTiledWall={onUseTiledWall}
       />
     );
 
@@ -201,11 +203,13 @@ describe('VisualOutputActionBar print-quality gate', () => {
     );
     fireEvent.click(screen.getByRole('button', { name: 'Use Dense Genealogy' }));
     fireEvent.click(screen.getByRole('button', { name: 'Try A0 landscape' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Set up large-tree products' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Create branch collection' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Create tiled wall' }));
 
     expect(onUseDensePreset).toHaveBeenCalledOnce();
     expect(onUseLargestPage).toHaveBeenCalledOnce();
-    expect(onSetUpLargeTreeProducts).toHaveBeenCalledOnce();
+    expect(onUseBranchCollection).toHaveBeenCalledOnce();
+    expect(onUseTiledWall).toHaveBeenCalledOnce();
     expect(onExportPng).not.toHaveBeenCalled();
   });
 });

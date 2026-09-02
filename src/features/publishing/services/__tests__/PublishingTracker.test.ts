@@ -1,5 +1,5 @@
 ﻿import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { PublishingTracker } from '../PublishingTracker';
+import { generateSecurePublicationId, PublishingTracker } from '../PublishingTracker';
 import { useAppStore } from '../../../../store/useAppStore';
 import type { Person } from '../../../../types';
 import { createPerson } from '../../../../utils/familyLogic';
@@ -88,6 +88,31 @@ describe('PublishingTracker', () => {
             source: 'legacy_person_fields',
             driftWarningCount: 0,
         });
+    });
+
+    it('uses cryptographically secure random bytes when randomUUID is unavailable', () => {
+        const getRandomValues = vi.fn((bytes: Uint8Array) => {
+            bytes.set(Array.from({ length: 16 }, (_, index) => index));
+            return bytes;
+        });
+        vi.stubGlobal('crypto', { getRandomValues });
+
+        try {
+            expect(generateSecurePublicationId()).toBe('00010203-0405-4607-8809-0a0b0c0d0e0f');
+            expect(getRandomValues).toHaveBeenCalledTimes(1);
+        } finally {
+            vi.unstubAllGlobals();
+        }
+    });
+
+    it('fails closed when no secure random source is available', () => {
+        vi.stubGlobal('crypto', undefined);
+
+        try {
+            expect(() => generateSecurePublicationId()).toThrow('Secure random number generation is unavailable.');
+        } finally {
+            vi.unstubAllGlobals();
+        }
     });
 
     it('should end tracking, compute duration, and save entry to store', async () => {

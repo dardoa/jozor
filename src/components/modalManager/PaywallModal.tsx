@@ -1,5 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { CheckoutEventNames, initializePaddle, type Paddle } from '@paddle/paddle-js';
+import {
+  CheckoutEventNames,
+  initializePaddle,
+  type Paddle,
+  type PaddleEventData,
+} from '@paddle/paddle-js';
 import { X, Check, Shield, Zap, Users, Sparkles, type LucideIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from '../../context/TranslationContext';
@@ -60,6 +65,7 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ isOpen, onClose }) =
   const { language } = useTranslation();
   const user = useAppStore(state => state.user);
   const currentTier = useAppStore(state => state.subscriptionTier);
+  const isE2E = useAppStore(state => state.isE2E);
   const [paddle, setPaddle] = useState<Paddle>();
   const [checkoutLoading, setCheckoutLoading] = useState<BillingTier | null>(null);
   const [portalLoading, setPortalLoading] = useState<'overview' | 'cancel' | 'payment' | null>(null);
@@ -78,6 +84,27 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ isOpen, onClose }) =
     const environment = import.meta.env.VITE_PADDLE_ENVIRONMENT === 'production' ? 'production' : 'sandbox';
     const token = import.meta.env.VITE_PADDLE_CLIENT_TOKEN;
 
+    const eventCallback = (event: PaddleEventData) => {
+      if (event.name === CheckoutEventNames.CHECKOUT_COMPLETED) {
+        toast.success(isRtlRef.current ? 'تم الاشتراك بنجاح. جار ترقية حسابك...' : 'Subscription successful! Upgrading your account...');
+        onCloseRef.current();
+      } else if (event.name === CheckoutEventNames.CHECKOUT_CLOSED) {
+        setCheckoutLoading(null);
+      }
+    };
+
+    const injectedTestInstance = import.meta.env.DEV && isE2E
+      ? (window as Window & { __jozorPaddleTestInstance?: Paddle }).__jozorPaddleTestInstance
+      : undefined;
+    if (injectedTestInstance) {
+      injectedTestInstance.Initialize({
+        token: 'e2e-contract-token',
+        eventCallback,
+      });
+      setPaddle(injectedTestInstance);
+      return;
+    }
+
     if (!token) {
       console.error('VITE_PADDLE_CLIENT_TOKEN is not configured');
       return;
@@ -86,14 +113,7 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ isOpen, onClose }) =
     initializePaddle({
       environment,
       token,
-      eventCallback: event => {
-        if (event.name === CheckoutEventNames.CHECKOUT_COMPLETED) {
-          toast.success(isRtlRef.current ? 'تم الاشتراك بنجاح. جار ترقية حسابك...' : 'Subscription successful! Upgrading your account...');
-          onCloseRef.current();
-        } else if (event.name === CheckoutEventNames.CHECKOUT_CLOSED) {
-          setCheckoutLoading(null);
-        }
-      },
+      eventCallback,
     })
       .then(instance => {
         if (!cancelled && instance) setPaddle(instance);
@@ -105,7 +125,7 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ isOpen, onClose }) =
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [isE2E]);
 
   const text = useMemo(() => ({
     title: isRtl ? 'اختر خطة الاشتراك المناسبة لك' : 'Choose Your Subscription Plan',

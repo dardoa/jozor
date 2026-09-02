@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import * as crypto from 'crypto';
 
 type DebugUser = {
@@ -21,137 +21,181 @@ type JozorDebug = {
   }) => void;
 };
 
-type PaddleWindow = Window & {
-  jozorDebug?: JozorDebug;
-  Paddle?: unknown;
+type PaddleCall = {
+  type: 'environment' | 'initialize' | 'update' | 'checkout-open';
+  payload: unknown;
 };
 
-test.describe('Paddle Paywall and Checkout Smoke Test', () => {
+type PaddleWindow = Window & {
+  jozorDebug?: JozorDebug;
+  PaddleBillingV1?: unknown;
+  __jozorPaddleTestInstance?: unknown;
+  __paddleCalls?: PaddleCall[];
+};
+
+function createInternalTestToken(): string {
+  const jwtSecret = process.env.SUPABASE_JWT_SECRET;
+  if (!jwtSecret) return 'dummy-token';
+
+  const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url');
+  const payload = Buffer.from(JSON.stringify({
+    sub: 'free-user-123',
+    email: 'free-user.test.invalid',
+    exp: Math.floor(Date.now() / 1000) + 3600,
+  })).toString('base64url');
+  const signature = crypto
+    .createHmac('sha256', jwtSecret)
+    .update(`${header}.${payload}`)
+    .digest('base64url');
+  return `${header}.${payload}.${signature}`;
+}
+
+async function seedFreeUserAndOpenPaywall(page: Page, token: string): Promise<void> {
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+  await page.waitForFunction(() => (
+    typeof (window as PaddleWindow).jozorDebug?.seedTreeScenario === 'function'
+  ));
+  await page.evaluate(({ accessToken }) => {
+    (window as PaddleWindow).jozorDebug?.seedTreeScenario({
+      people: {
+        root: {
+          id: 'root',
+          firstName: 'Root',
+          lastName: 'Person',
+          gender: 'male',
+          birthDate: '1980',
+          isDeceased: false,
+        },
+      },
+      focusId: 'root',
+      role: 'owner',
+      treeName: 'Free Tree',
+      user: {
+        uid: 'free-user-123',
+        displayName: 'Free User',
+        email: 'free-user.test.invalid',
+        photoURL: '',
+        supabaseToken: accessToken,
+      },
+    });
+    window.dispatchEvent(new CustomEvent('open-paywall'));
+  }, { accessToken: token });
+
+  const modal = page.getByRole('dialog').first();
+  await expect(modal).toBeVisible();
+  await expect(modal.getByRole('heading', { name: /Manage subscription/i })).toBeVisible();
+}
+
+test.describe('Paddle Paywall and Checkout Contracts', () => {
   test.beforeEach(async ({ page }) => {
     await page.addInitScript(() => {
       localStorage.setItem('language', 'en');
     });
   });
 
-  test('renders paywall and triggers upgrade checkout session request', async ({ page }) => {
-    // Generate valid internal JWT signed with local SUPABASE_JWT_SECRET
-    const jwtSecret = process.env.SUPABASE_JWT_SECRET;
-    let supabaseToken = 'dummy-token';
-    
-    if (jwtSecret) {
-      const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url');
-      const payload = Buffer.from(JSON.stringify({
-        sub: 'free-user-123',
-        email: 'free-user.test.invalid',
-        exp: Math.floor(Date.now() / 1000) + 3600,
-      })).toString('base64url');
-      const signature = crypto
-        .createHmac('sha256', jwtSecret)
-        .update(`${header}.${payload}`)
-        .digest('base64url');
-      supabaseToken = `${header}.${payload}.${signature}`;
-      console.info('[E2E Check] Signed valid internal JWT token for free-user-123');
-    } else {
-      console.warn('[E2E Check] SUPABASE_JWT_SECRET is not available in environment. Token verification might fail with 401.');
-    }
+  test('submits a deterministic checkout request and opens the mocked Paddle transaction', async ({ page }) => {
+    const paddleCdnRequests: string[] = [];
+    page.on('request', (request) => {
+      if (request.url().includes('cdn.paddle.com')) paddleCdnRequests.push(request.url());
+    });
 
-    // 1. Go to the home page
-    await page.goto('/', { waitUntil: 'domcontentloaded' });
-
-    // 2. Wait for jozorDebug to load
-    await page.waitForFunction(() => typeof (window as PaddleWindow).jozorDebug?.seedTreeScenario === 'function');
-
-    // 3. Seed scenario as owner with free tier user
-    await page.evaluate(({ token }) => {
-      (window as PaddleWindow).jozorDebug?.seedTreeScenario({
-        people: {
-          root: {
-            id: 'root',
-            firstName: 'Root',
-            lastName: 'Person',
-            gender: 'male',
-            birthDate: '1980',
-            isDeceased: false,
+    await page.addInitScript(() => {
+      const calls: PaddleCall[] = [];
+      const paddle = {
+        Initialized: false,
+        Environment: {
+          set(environment: unknown) {
+            calls.push({ type: 'environment', payload: environment });
           },
         },
-        focusId: 'root',
-        role: 'owner',
-        treeName: 'Free Tree',
-        user: {
-          uid: 'free-user-123',
-          displayName: 'Free User',
-          email: 'free-user.test.invalid',
-          photoURL: '',
-          supabaseToken: token,
+        Initialize(options: unknown) {
+          paddle.Initialized = true;
+          calls.push({ type: 'initialize', payload: options });
         },
-      });
-    }, { token: supabaseToken });
-
-    // 4. Trigger the paywall modal by dispatching the open-paywall custom event
-    await page.evaluate(() => {
-      window.dispatchEvent(new CustomEvent('open-paywall'));
+        Update(options: unknown) {
+          calls.push({ type: 'update', payload: options });
+        },
+        Checkout: {
+          open(options: unknown) {
+            calls.push({ type: 'checkout-open', payload: options });
+          },
+        },
+      };
+      (window as PaddleWindow).PaddleBillingV1 = paddle;
+      (window as PaddleWindow).__jozorPaddleTestInstance = paddle;
+      (window as PaddleWindow).__paddleCalls = calls;
     });
 
-    // 5. Verify the Paywall Modal is visible (via role="dialog")
-    const modal = page.getByRole('dialog').first();
-    await expect(modal).toBeVisible();
-    await expect(modal.getByRole('heading', { name: /Manage subscription/i })).toBeVisible();
-
-    // 6. Verify plan options "Pro" and "Family" buttons exist
-    const proButton = modal.getByRole('button', { name: /Upgrade Now/i }).first();
-    await expect(proButton).toBeVisible();
-
-    // Check if Paddle successfully initialized
-    const isPaddleInitialized = await page.evaluate(() => {
-      return new Promise<boolean>((resolve) => {
-        let attempts = 0;
-        const interval = setInterval(() => {
-          attempts++;
-          if ((window as PaddleWindow).Paddle) {
-            clearInterval(interval);
-            resolve(true);
-          } else if (attempts >= 20) {
-            clearInterval(interval);
-            resolve(false);
-          }
-        }, 250);
+    let checkoutRequest: { authorization: string | undefined; body: unknown } | undefined;
+    await page.route('**/api/billing/create-checkout-session', async (route) => {
+      const request = route.request();
+      checkoutRequest = {
+        authorization: request.headers().authorization,
+        body: request.postDataJSON(),
+      };
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ transactionId: 'txn_mock_contract_123' }),
       });
     });
 
-    console.info(`[E2E Check] window.Paddle initialized status: ${isPaddleInitialized}`);
+    const token = createInternalTestToken();
+    await seedFreeUserAndOpenPaywall(page, token);
+    await page.waitForFunction(() => (
+      (window as PaddleWindow).__paddleCalls?.some((call) => (
+        call.type === 'initialize' || call.type === 'update'
+      ))
+    ));
 
-    if (!isPaddleInitialized) {
-      console.warn('[E2E Check] Paddle SDK did not initialize in this environment. Checkout request smoke skipped.');
-      return;
-    }
-
-    // 7. Intercept the network request to create-checkout-session
-    const requestPromise = page.waitForRequest(request =>
-      request.url().includes('/api/billing/create-checkout-session') && request.method() === 'POST'
-    );
-
-    // 8. Click the Pro Upgrade button
+    const proButton = page.getByRole('dialog').first().getByRole('button', { name: /Upgrade Now/i }).first();
+    await expect(proButton).toBeEnabled();
     await proButton.click();
 
-    // 9. Await the request intercept and verify payload
+    await expect.poll(() => checkoutRequest).toBeTruthy();
+    expect(checkoutRequest?.authorization).toBe(`Bearer ${token}`);
+    expect(checkoutRequest?.body).toEqual({ tier: 'pro' });
+
+    await page.waitForFunction(() => (
+      (window as PaddleWindow).__paddleCalls?.some((call) => call.type === 'checkout-open')
+    ));
+    const checkoutOpen = await page.evaluate(() => (
+      (window as PaddleWindow).__paddleCalls?.find((call) => call.type === 'checkout-open')
+    ));
+    expect(checkoutOpen?.payload).toEqual({
+      transactionId: 'txn_mock_contract_123',
+      settings: {
+        displayMode: 'overlay',
+        theme: 'dark',
+        locale: 'en',
+        successUrl: 'http://localhost:3000',
+      },
+    });
+    expect(paddleCdnRequests).toEqual([]);
+  });
+
+  test('opens a real Paddle sandbox checkout when the live environment is explicitly enabled', async ({ page }) => {
+    test.skip(
+      process.env.PADDLE_LIVE_E2E !== 'true',
+      'Set PADDLE_LIVE_E2E=true with sandbox credentials to run the live checkout boundary.'
+    );
+
+    const token = createInternalTestToken();
+    await seedFreeUserAndOpenPaywall(page, token);
+    await page.waitForFunction(() => Boolean((window as PaddleWindow).PaddleBillingV1), undefined, {
+      timeout: 15_000,
+    });
+
+    const requestPromise = page.waitForRequest((request) => (
+      request.url().includes('/api/billing/create-checkout-session')
+      && request.method() === 'POST'
+    ));
+    const proButton = page.getByRole('dialog').first().getByRole('button', { name: /Upgrade Now/i }).first();
+    await proButton.click();
+
     const request = await requestPromise;
-    const postData = JSON.parse(request.postData() || '{}');
-    expect(postData.tier).toBe('pro');
-
-    // 10. Wait for the API response and verify either sandbox session creation or safe failure handling.
+    expect(request.postDataJSON()).toEqual({ tier: 'pro' });
     const response = await request.response();
-    if (response) {
-      console.info(`[E2E Check] Checkout session API response status: ${response.status()}`);
-      expect([200, 500, 401]).toContain(response.status());
-    }
-
-    // 11. Confirm either checkout opened successfully or the UI displayed a graceful failure state.
-    if (response?.ok()) {
-      await page.waitForFunction(() => Boolean((window as PaddleWindow).Paddle), undefined, { timeout: 5000 });
-      return;
-    }
-
-    const errorToast = page.locator('text=Failed to open checkout').first();
-    await expect(errorToast).toBeVisible({ timeout: 5000 });
+    expect(response?.status()).toBe(200);
   });
 });

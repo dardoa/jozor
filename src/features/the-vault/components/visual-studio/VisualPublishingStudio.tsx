@@ -59,7 +59,6 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
   const {
     definitions,
     selectedDefinition,
-    isFullTreeScope,
     selectedPosterRootToken,
     selectedFocalPersonToken,
     posterRootOptions,
@@ -150,12 +149,12 @@ const VisualPublishingStudioInner: React.FC<VisualPublishingStudioInnerProps> = 
       onUseLargestPage={mappingResult.posterOptions?.size === 'A0'
         ? undefined
         : () => studioDesign.updatePrint({ size: 'A0', orientation: 'landscape' })}
-      onSetUpLargeTreeProducts={isFullTreeScope
+      onUseBranchCollection={studioDesign.state.productMode === 'branch-collection'
         ? undefined
-        : () => {
-            studioDesign.switchProductMode('full-tree-overview');
-            studioDesign.updatePrint({ size: 'A0', orientation: 'landscape' });
-          }}
+        : () => studioDesign.switchProductMode('branch-collection')}
+      onUseTiledWall={studioDesign.state.productMode === 'tiled-wall'
+        ? undefined
+        : () => studioDesign.switchProductMode('tiled-wall')}
     />
   );
 

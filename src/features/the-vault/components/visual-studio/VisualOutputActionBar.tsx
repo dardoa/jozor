@@ -8,7 +8,6 @@ import {
   LayoutGrid,
   Loader2,
   Maximize2,
-  Network,
 } from 'lucide-react';
 import type {
   PosterProductMode,
@@ -35,7 +34,8 @@ export interface VisualOutputActionBarProps {
   onExportTiledWall?: () => void;
   onUseDensePreset?: () => void;
   onUseLargestPage?: () => void;
-  onSetUpLargeTreeProducts?: () => void;
+  onUseBranchCollection?: () => void;
+  onUseTiledWall?: () => void;
 }
 
 export const VisualOutputActionBar: React.FC<VisualOutputActionBarProps> = ({
@@ -57,7 +57,8 @@ export const VisualOutputActionBar: React.FC<VisualOutputActionBarProps> = ({
   onExportTiledWall,
   onUseDensePreset,
   onUseLargestPage,
-  onSetUpLargeTreeProducts,
+  onUseBranchCollection,
+  onUseTiledWall,
 }) => {
   const isAr = language === 'ar';
   const supportsSvg = selectedDefinition?.capabilities.rendererTargets.includes('svg') ?? false;
@@ -77,7 +78,7 @@ export const VisualOutputActionBar: React.FC<VisualOutputActionBarProps> = ({
   const hasPrintWarning = !isPackageOutput && quality?.status === 'warning';
   const hasLargeTreeAlternative = branchCollectionAvailable || tiledWallAvailable;
   const hasGuidedRecovery = Boolean(
-    onUseDensePreset || onUseLargestPage || onSetUpLargeTreeProducts
+    onUseDensePreset || onUseLargestPage || onUseBranchCollection || onUseTiledWall
   );
   const exportStatusAnnouncement = isExporting
     ? (isAr ? `جاري تصدير ${exportingFormat}...` : `Exporting ${exportingFormat}...`)
@@ -211,15 +212,26 @@ export const VisualOutputActionBar: React.FC<VisualOutputActionBarProps> = ({
                   {isAr ? 'تجربة A0 أفقي' : 'Try A0 landscape'}
                 </button>
               )}
-              {onSetUpLargeTreeProducts && (
+              {onUseBranchCollection && (
                 <button
                   type="button"
-                  onClick={onSetUpLargeTreeProducts}
-                  aria-label={isAr ? 'تهيئة منتجات الشجرة الكبيرة' : 'Set up large-tree products'}
+                  onClick={onUseBranchCollection}
+                  aria-label={isAr ? 'إنشاء مجموعة فروع' : 'Create branch collection'}
                   className="inline-flex min-h-8 items-center gap-1.5 rounded-md border border-amber-300 bg-white px-2.5 text-[10px] font-bold transition-colors hover:bg-amber-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
                 >
-                  <Network className="h-3.5 w-3.5" aria-hidden="true" />
-                  {isAr ? 'تهيئة منتجات الشجرة الكبيرة' : 'Set up large-tree products'}
+                  <Archive className="h-3.5 w-3.5" aria-hidden="true" />
+                  {isAr ? 'إنشاء مجموعة فروع' : 'Create branch collection'}
+                </button>
+              )}
+              {onUseTiledWall && (
+                <button
+                  type="button"
+                  onClick={onUseTiledWall}
+                  aria-label={isAr ? 'إنشاء لوحة مقسمة' : 'Create tiled wall'}
+                  className="inline-flex min-h-8 items-center gap-1.5 rounded-md border border-amber-300 bg-white px-2.5 text-[10px] font-bold transition-colors hover:bg-amber-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+                >
+                  <Grid3X3 className="h-3.5 w-3.5" aria-hidden="true" />
+                  {isAr ? 'إنشاء لوحة مقسمة' : 'Create tiled wall'}
                 </button>
               )}
             </div>
