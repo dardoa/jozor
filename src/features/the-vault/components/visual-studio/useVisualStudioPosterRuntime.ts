@@ -784,13 +784,11 @@ export function useVisualStudioPosterRuntime({
 
   const fontResourceStatus: VisualStudioPosterResourceStatus = suppliedPosterSvgResources
     ? (!sceneContainsArabic || suppliedPosterSvgResources.embeddedArabicFontDataUri ? 'ready' : 'error')
-    : !sceneContainsArabic
+    : matchingResolvedPosterSvgResources
       ? 'ready'
-      : matchingResolvedPosterSvgResources
-        ? 'ready'
-        : fontResolution.family === resolvedPosterFontFamily && fontResolution.status === 'error'
-          ? 'error'
-          : 'loading';
+      : fontResolution.family === resolvedPosterFontFamily && fontResolution.status === 'error'
+        ? 'error'
+        : 'loading';
   const imageResourceStatus: Exclude<VisualStudioPosterResourceStatus, 'error'> =
     suppliedPosterSvgResources?.embeddedImages !== undefined || imageRequests.length === 0
       ? 'ready'
