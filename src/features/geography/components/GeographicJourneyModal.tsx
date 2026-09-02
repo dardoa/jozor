@@ -19,6 +19,7 @@ import {
 import { mapStyles } from './geography/MapStyles';
 import { applyBranding } from './geography/MapBranding';
 import { MapView } from './geography/MapView';
+import { mapTileProvider } from './geography/mapTileProvider';
 
 type GeographicJourneyModalProps = {
   isOpen: boolean;
@@ -290,20 +291,22 @@ export const GeographicJourneyModal: React.FC<GeographicJourneyModalProps> = ({
                 </button>
               </div>
 
-              <button
-                type="button"
-                onClick={() => setShowPlaceLabels(value => !value)}
-                className={`mt-4 flex items-center justify-between gap-3 rounded-2xl border border-[#E3D8C8] bg-[#F8F3EB] px-4 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-[#6B5A49] transition-colors hover:bg-[#F2EEE8] ${isRtl ? 'flex-row-reverse' : ''}`}
-                aria-pressed={showPlaceLabels}
-              >
-                <span className={`flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
-                  <Eye className="h-4 w-4 text-[#8B6914]" />
-                  {isRtl ? arabicMapCopy.placeLabels : 'Place labels'}
-                </span>
-                <span className={`h-5 w-9 rounded-full p-0.5 transition-colors ${showPlaceLabels ? 'bg-[#2C1810]' : 'bg-[#DDD2C2]'}`}>
-                  <span className={`block h-4 w-4 rounded-full bg-[#FAF7F2] transition-transform ${showPlaceLabels ? (isRtl ? '-translate-x-4' : 'translate-x-4') : ''}`} />
-                </span>
-              </button>
+              {mapTileProvider.supportsLabelToggle ? (
+                <button
+                  type="button"
+                  onClick={() => setShowPlaceLabels(value => !value)}
+                  className={`mt-4 flex items-center justify-between gap-3 rounded-2xl border border-[#E3D8C8] bg-[#F8F3EB] px-4 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-[#6B5A49] transition-colors hover:bg-[#F2EEE8] ${isRtl ? 'flex-row-reverse' : ''}`}
+                  aria-pressed={showPlaceLabels}
+                >
+                  <span className={`flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                    <Eye className="h-4 w-4 text-[#8B6914]" />
+                    {isRtl ? arabicMapCopy.placeLabels : 'Place labels'}
+                  </span>
+                  <span className={`h-5 w-9 rounded-full p-0.5 transition-colors ${showPlaceLabels ? 'bg-[#2C1810]' : 'bg-[#DDD2C2]'}`}>
+                    <span className={`block h-4 w-4 rounded-full bg-[#FAF7F2] transition-transform ${showPlaceLabels ? (isRtl ? '-translate-x-4' : 'translate-x-4') : ''}`} />
+                  </span>
+                </button>
+              ) : null}
 
               <label className="mt-4 block">
                 <span className="sr-only">{isRtl ? arabicMapCopy.searchItems : 'Search map items'}</span>

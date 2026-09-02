@@ -8,6 +8,7 @@ import { ClusterMarkers } from './ClusterMarkers';
 import { MigrationPathsOverlay } from './MigrationPathsOverlay';
 import { MapLabelPane } from './MapLabelPane';
 import type { MapViewProps } from './MapView';
+import { mapTileProvider } from './mapTileProvider';
 
 // Inner implementation eagerly imports Leaflet, react-leaflet, and Supercluster.
 
@@ -25,6 +26,7 @@ const MapViewImpl: React.FC<MapViewProps> = ({
   onTogglePersonSelection,
 }) => {
   const [mapInstance, setMapInstance] = React.useState<L.Map | null>(null);
+  const [tileErrorCount, setTileErrorCount] = React.useState(0);
 
   const handleMapRef = React.useCallback(
     (map: L.Map | null) => {
@@ -56,80 +58,108 @@ const MapViewImpl: React.FC<MapViewProps> = ({
     return cluster;
   }, [eventLocations]);
 
+  const handleTileLoad = React.useCallback(() => {
+    setTileErrorCount(0);
+  }, []);
+
+  const handleTileError = React.useCallback(() => {
+    setTileErrorCount(current => Math.min(current + 1, 3));
+  }, []);
+
   return (
-    <MapContainer
-      center={[20, 0]}
-      zoom={3}
-      zoomControl={false}
-      className="h-full w-full"
-      ref={handleMapRef}
-      preferCanvas={true}
-      renderer={canvasRenderer}
-    >
-      <MapLabelPane />
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-        url="https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png"
-        crossOrigin="anonymous"
-      />
-      {showPlaceLabels ? (
+    <div className="relative h-full w-full bg-[#EEE8DD]">
+      <MapContainer
+        center={[20, 0]}
+        zoom={3}
+        zoomControl={false}
+        className="h-full w-full"
+        ref={handleMapRef}
+        preferCanvas={true}
+        renderer={canvasRenderer}
+      >
+        <MapLabelPane />
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-          url="https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png"
-          pane="journey-labels"
-          className="journey-label-tiles"
+          attribution={mapTileProvider.attribution}
+          url={mapTileProvider.baseUrl}
           crossOrigin="anonymous"
+          eventHandlers={{
+            tileerror: handleTileError,
+            tileload: handleTileLoad,
+          }}
         />
-      ) : null}
-
-      {mode === 'events' && mapInstance ? (
-        <ClusterMarkers
-          cluster={superclusterIndex}
-          points={eventLocations}
-          map={mapInstance}
-          onSelectPerson={onSelectPerson}
-        />
-      ) : null}
-
-      {mode === 'migration' ? (
-        <>
-          {migrationJourney.nodes.map(node => (
-            <Marker
-              key={`${node.personId}-${node.locationName}`}
-              position={[node.lat, node.lng]}
-              icon={L.divIcon({
-                html: '<div style="width:18px;height:18px;border-radius:9999px;background:#FAF7F2;border:1px solid #C4A882;box-shadow:0 12px 24px rgba(44,24,16,0.14);display:flex;align-items:center;justify-content:center;"><div style="width:8px;height:8px;border-radius:9999px;background:#8B6914;"></div></div>',
-                className: '',
-                iconSize: L.point(18, 18),
-              })}
-              eventHandlers={{
-                click: () => {
-                  onTogglePersonSelection(node.personId);
-                },
-              }}
-            >
-              <Popup>
-                <div className={`p-1 ${isRtl ? 'text-right' : 'text-left'}`}>
-                  <h3 className="font-bold text-[#2C1810]">{node.name}</h3>
-                  <p className="text-sm text-[#6B5A49]">{node.locationName}</p>
-                  {node.year ? (
-                    <p className="text-xs font-semibold text-[#8B6914]">{node.year}</p>
-                  ) : null}
-                </div>
-              </Popup>
-            </Marker>
-          ))}
-          <MigrationPathsOverlay
-            links={migrationJourney.links}
-            selectedPersonId={selectedPersonId}
-            selectedRouteId={selectedRouteId}
-            onSelectRoute={(routeId) => {
-              onSelectRoute(routeId);
+        {showPlaceLabels && mapTileProvider.labelsUrl ? (
+          <TileLayer
+            attribution={mapTileProvider.attribution}
+            url={mapTileProvider.labelsUrl}
+            pane="journey-labels"
+            className="journey-label-tiles"
+            crossOrigin="anonymous"
+            eventHandlers={{
+              tileerror: handleTileError,
+              tileload: handleTileLoad,
             }}
           />
-        </>
+        ) : null}
+
+        {mode === 'events' && mapInstance ? (
+          <ClusterMarkers
+            cluster={superclusterIndex}
+            points={eventLocations}
+            map={mapInstance}
+            onSelectPerson={onSelectPerson}
+          />
+        ) : null}
+
+        {mode === 'migration' ? (
+          <>
+            {migrationJourney.nodes.map(node => (
+              <Marker
+                key={`${node.personId}-${node.locationName}`}
+                position={[node.lat, node.lng]}
+                icon={L.divIcon({
+                  html: '<div style="width:18px;height:18px;border-radius:9999px;background:#FAF7F2;border:1px solid #C4A882;box-shadow:0 12px 24px rgba(44,24,16,0.14);display:flex;align-items:center;justify-content:center;"><div style="width:8px;height:8px;border-radius:9999px;background:#8B6914;"></div></div>',
+                  className: '',
+                  iconSize: L.point(18, 18),
+                })}
+                eventHandlers={{
+                  click: () => {
+                    onTogglePersonSelection(node.personId);
+                  },
+                }}
+              >
+                <Popup>
+                  <div className={`p-1 ${isRtl ? 'text-right' : 'text-left'}`}>
+                    <h3 className="font-bold text-[#2C1810]">{node.name}</h3>
+                    <p className="text-sm text-[#6B5A49]">{node.locationName}</p>
+                    {node.year ? (
+                      <p className="text-xs font-semibold text-[#8B6914]">{node.year}</p>
+                    ) : null}
+                  </div>
+                </Popup>
+              </Marker>
+            ))}
+            <MigrationPathsOverlay
+              links={migrationJourney.links}
+              selectedPersonId={selectedPersonId}
+              selectedRouteId={selectedRouteId}
+              onSelectRoute={(routeId) => {
+                onSelectRoute(routeId);
+              }}
+            />
+          </>
+        ) : null}
+      </MapContainer>
+      {tileErrorCount >= 3 ? (
+        <div
+          role="alert"
+          className="pointer-events-none absolute inset-x-4 bottom-8 z-[500] rounded-xl border border-amber-300 bg-amber-50/95 px-4 py-3 text-center text-xs font-semibold text-amber-900 shadow-lg"
+        >
+          {isRtl
+            ? 'تعذر تحميل خلفية الخريطة. ما زالت قائمة الأماكن ومسارات العائلة متاحة.'
+            : 'The map background could not be loaded. The place list and family routes are still available.'}
+        </div>
       ) : null}
-    </MapContainer>
+    </div>
   );
 };
 

@@ -8,6 +8,8 @@ import type { Collaborator } from '../../../../services/supabaseTreeTypes';
 import { getSupabaseFull } from '../../../../services/supabaseClient';
 import {
   createTreeInvitation,
+  buildAuthorizedTreeLink,
+  buildTreeInvitationLink,
   listTreeInvitations,
   revokeTreeInvitation,
   type TreeInvitation,
@@ -41,7 +43,7 @@ export const useAccessControlState = ({
 
   const supabaseToken = useAppStore((state) => state.user?.supabaseToken);
   const currentUserRole = useAppStore((state) => state.currentUserRole);
-  const shareLink = `${window.location.origin}/tree/${treeId}`;
+  const shareLink = buildAuthorizedTreeLink(window.location.origin, treeId);
   const shareLinkLabel = formatShareLinkLabel(shareLink);
   const ownerRow = useMemo<CollaboratorRow>(
     () => ({
@@ -146,7 +148,7 @@ export const useAccessControlState = ({
         ownerEmail,
         supabaseToken
       );
-      const inviteLink = `${window.location.origin}/shared/${inviteToken}`;
+      const inviteLink = buildTreeInvitationLink(window.location.origin, inviteToken);
       await navigator.clipboard.writeText(inviteLink);
       setInviteEmail('');
       showToast.success('messages.success.invite', { variables: { email: trimmedInviteEmail } });

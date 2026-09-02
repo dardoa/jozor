@@ -3,10 +3,14 @@ import { easeCubicInOut, easeCubicOut } from 'd3-ease';
 import { select } from 'd3-selection';
 import 'd3-transition';
 import { zoom, zoomIdentity, type D3ZoomEvent, type ZoomBehavior } from 'd3-zoom';
-import { extent } from 'd3-array';
 import { selectIsTreeSyncing, useAppStore } from '../../store/useAppStore';
-import { TreeNode } from '../../types';
+import type { FanArc, TreeNode } from '../../types';
 import { useThrottledCallback } from '../ui/useDebounce';
+import {
+    calculateTreeViewportTransform,
+    getTreeContentBounds,
+    type TreeViewportMode,
+} from './treeViewportTransform';
 
 interface UseTreeInteractionProps {
     svgRef: React.RefObject<SVGSVGElement | null>;
@@ -14,9 +18,11 @@ interface UseTreeInteractionProps {
     wrapperRef: React.RefObject<HTMLDivElement | null>;
     focusId: string;
     nodes: TreeNode[];
-    fanArcCount: number;
+    fanArcs: FanArc[];
     isFanChart: boolean;
     isForce: boolean;
+    nodeWidth: number;
+    nodeHeight: number;
     searchTarget: { id: string; timestamp: number } | null;
     isAdvancedBarOpen?: boolean;
     viewportResetKey: string;
@@ -44,9 +50,11 @@ export const useTreeInteraction = ({
     wrapperRef,
     focusId,
     nodes,
-    fanArcCount,
+    fanArcs,
     isFanChart,
     isForce,
+    nodeWidth,
+    nodeHeight,
     searchTarget,
     isAdvancedBarOpen = false,
     viewportResetKey,
@@ -164,85 +172,73 @@ export const useTreeInteraction = ({
 
         const { width: vWidth, height: vHeight } = wrapperRef.current.getBoundingClientRect() || { width: 1000, height: 1000 };
 
-        if (nodes.length > 0) {
-            const xExtent = extent(nodes, n => n.x);
-            const yExtent = extent(nodes, n => n.y);
-
-            if (xExtent[0] !== undefined && yExtent[0] !== undefined) {
-                zoomBehavior.current.translateExtent([
-                    [xExtent[0]! - vWidth, yExtent[0]! - vHeight],
-                    [xExtent[1]! + vWidth, yExtent[1]! + vHeight]
-                ]);
-            }
+        const bounds = getTreeContentBounds({
+            nodes,
+            fanArcs,
+            isFanChart,
+            nodeWidth,
+            nodeHeight,
+        });
+        if (bounds) {
+            zoomBehavior.current.translateExtent([
+                [bounds.minX - vWidth, bounds.minY - vHeight],
+                [bounds.maxX + vWidth, bounds.maxY + vHeight]
+            ]);
         } else {
             zoomBehavior.current.translateExtent([[-vWidth * 2, -vHeight * 2], [vWidth * 3, vHeight * 3]]);
         }
-    }, [nodes, wrapperRef]);
+    }, [fanArcs, isFanChart, nodeHeight, nodeWidth, nodes, wrapperRef]);
 
     // Unified Center/Fit logic
-    const centerOnTarget = useCallback((force = false, fitAll = false) => {
-        if (!wrapperRef.current || !svgRef.current || !zoomBehavior.current || nodes.length === 0) return;
+    const centerOnTarget = useCallback((force = false, mode: TreeViewportMode = 'focus') => {
+        const hasContent = isFanChart ? fanArcs.length > 0 : nodes.length > 0;
+        if (!wrapperRef.current || !svgRef.current || !zoomBehavior.current || !hasContent) return;
 
         // Block auto-centering if user is interacting or if we are in a background sync update
-        if (!force && !fitAll) {
+        if (!force && mode === 'focus') {
             if (isUserInteracting.current) return;
             if (isSyncing) return;
         }
 
         // Skip if same target and not forced (prevents jitter)
-        if (!force && !fitAll && focusId === lastFocusId.current) return;
-        if (isTransitioning.current && !force && !fitAll) return;
+        if (!force && mode === 'focus' && focusId === lastFocusId.current) return;
+        if (isTransitioning.current && !force && mode === 'focus') return;
 
         const { width, height } = wrapperRef.current.getBoundingClientRect();
         if (width === 0 || height === 0) return;
 
-        let tX = 0, tY = 0, scale = 1;
         const viewportOffsetY = isAdvancedBarOpen ? -70 : 0;
+        const transform = calculateTreeViewportTransform({
+            mode,
+            viewportWidth: width,
+            viewportHeight: height,
+            viewportOffsetY,
+            focusId,
+            nodes,
+            fanArcs,
+            isFanChart,
+            isForce,
+            nodeWidth,
+            nodeHeight,
+        });
+        if (!transform) return;
 
-        if (fitAll) {
-            if (isFanChart || isForce) {
-                const radius = isFanChart ? 900 : 500;
-                scale = Math.min(width / (radius * 2), height / (radius * 2), 0.8) * 0.9;
-                tX = width / 2;
-                tY = height / 2 + viewportOffsetY;
-            } else if (nodes.length > 0) {
-                const xExt = extent(nodes, n => n.x);
-                const yExt = extent(nodes, n => n.y);
-                if (xExt[0] !== undefined && yExt[0] !== undefined) {
-                    const treeW = xExt[1]! - xExt[0]! + 240;
-                    const treeH = yExt[1]! - yExt[0]! + 240;
-                    scale = Math.min((width - 60) / treeW, (height - 60) / treeH, 1.2);
-                    scale = Math.max(scale, 0.1);
-                    tX = width / 2 - (xExt[0]! + (treeW - 240) / 2) * scale;
-                    tY = (height / 2 + viewportOffsetY) - (yExt[0]! + (treeH - 240) / 2) * scale;
-                }
-            }
-        } else if (isFanChart || isForce) {
-            tX = width / 2;
-            tY = height / 2 + viewportOffsetY;
-            scale = isForce ? 0.6 : isFanChart ? 0.8 : 1;
-        } else {
-            const focusNode = nodes.find(n => n.id === focusId) || nodes[0];
-            if (focusNode) {
-                scale = 0.85;
-                tX = width / 2 - focusNode.x * scale;
-                tY = (height / 2 + viewportOffsetY) - focusNode.y * scale;
-            }
-        }
-
-        if (!fitAll) lastFocusId.current = focusId;
+        if (mode === 'focus') lastFocusId.current = focusId;
         isTransitioning.current = true;
 
         const svg = select(svgRef.current);
         svg
             .transition()
-            .duration(fitAll ? 600 : 500)
+            .duration(mode === 'fit' ? 600 : 500)
             .ease(easeCubicOut)
-            .call(zoomBehavior.current.transform, zoomIdentity.translate(tX, tY).scale(scale))
+            .call(
+                zoomBehavior.current.transform,
+                zoomIdentity.translate(transform.x, transform.y).scale(transform.scale),
+            )
             .on('end interrupt', () => {
                 isTransitioning.current = false;
             });
-    }, [focusId, nodes, isFanChart, isForce, svgRef, wrapperRef, isAdvancedBarOpen, isSyncing]);
+    }, [fanArcs, focusId, isAdvancedBarOpen, isFanChart, isForce, isSyncing, nodeHeight, nodeWidth, nodes, svgRef, wrapperRef]);
 
     // Handle Resize Observer
     useEffect(() => {
@@ -278,13 +274,14 @@ export const useTreeInteraction = ({
             .call(zoomBehavior.current.transform, zoomIdentity.translate(tX, tY).scale(targetScale));
     }, [searchTarget, nodes, svgRef, wrapperRef, isAdvancedBarOpen]);
 
-    // Auto-fit on first load
+    // Start from a readable focal view. The explicit fit control remains the
+    // overview action for large trees.
     useEffect(() => {
-        const hasContent = isFanChart ? fanArcCount > 0 : nodes.length > 0;
+        const hasContent = isFanChart ? fanArcs.length > 0 : nodes.length > 0;
         if (!hasContent || lastAutoFitKeyRef.current === viewportResetKey) return;
-        centerOnTarget(true, true);
+        centerOnTarget(true, 'focus');
         lastAutoFitKeyRef.current = viewportResetKey;
-    }, [fanArcCount, nodes.length, isFanChart, viewportResetKey, centerOnTarget]);
+    }, [fanArcs.length, nodes.length, isFanChart, viewportResetKey, centerOnTarget]);
 
     const handleZoomIn = useCallback(() => {
         if (svgRef.current && zoomBehavior.current) {
@@ -298,8 +295,8 @@ export const useTreeInteraction = ({
         }
     }, [svgRef]);
 
-    const handleResetZoom = useCallback(() => centerOnTarget(true, true), [centerOnTarget]);
-    const handleFitToScreen = useCallback(() => centerOnTarget(true, true), [centerOnTarget]);
+    const handleResetZoom = useCallback(() => centerOnTarget(true, 'focus'), [centerOnTarget]);
+    const handleFitToScreen = useCallback(() => centerOnTarget(true, 'fit'), [centerOnTarget]);
 
     useEffect(() => {
         const handleResetEvent = () => handleFitToScreen();

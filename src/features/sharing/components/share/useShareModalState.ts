@@ -2,6 +2,10 @@ import { FormEvent, useState } from 'react';
 import type { UserProfile } from '../../../../types';
 import { useTranslation } from '../../../../context/TranslationContext';
 import { createTreeInvitation } from '../../services/treeInvitationService';
+import {
+  buildAuthorizedTreeLink,
+  buildTreeInvitationLink,
+} from '../../services/treeAccessLinks';
 import { getUserFacingErrorInfo, logError } from '../../../../utils/errorLogger';
 import { showToast } from '../../../../utils/showToast';
 import { useAppStore } from '../../../../store/useAppStore';
@@ -27,7 +31,7 @@ export const useShareModalState = ({
 
   const shareLink =
     user && treeId
-      ? `${window.location.origin}/tree/${treeId}`
+      ? buildAuthorizedTreeLink(window.location.origin, treeId)
       : '';
 
   const handleInvite = async (event: FormEvent) => {
@@ -55,7 +59,7 @@ export const useShareModalState = ({
         user.supabaseToken,
       );
 
-      const inviteLink = `${window.location.origin}/shared/${inviteToken}`;
+      const inviteLink = buildTreeInvitationLink(window.location.origin, inviteToken);
       await navigator.clipboard.writeText(inviteLink);
 
       setEmail('');

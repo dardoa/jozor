@@ -1,4 +1,4 @@
-import { Check, Copy, Globe } from 'lucide-react';
+import { Check, Copy, LockKeyhole } from 'lucide-react';
 import { Button } from '../../../../components/ui/Button';
 import type { ShareModalState } from './useShareModalState';
 
@@ -11,9 +11,12 @@ export const ShareLinkPanel = ({
   copyLink,
 }: ShareLinkPanelProps) => (
   <div className="ds-panel ds-panel-subtle p-3 border-dashed flex items-center justify-between gap-3">
-    <div className="flex items-center gap-2 text-sm text-[var(--text-dim)] overflow-hidden">
-      <Globe className="w-4 h-4 shrink-0" />
-      <span className="truncate">{shareLink}</span>
+    <div className="min-w-0 text-sm text-[var(--text-dim)]">
+      <div className="flex items-center gap-2 overflow-hidden">
+        <LockKeyhole className="w-4 h-4 shrink-0" />
+        <span className="truncate">{shareLink}</span>
+      </div>
+      <p className="mt-1 text-[11px] leading-4 text-[var(--text-muted)]">{t.treeManager.linkNote}</p>
     </div>
     <Button
       onClick={copyLink}

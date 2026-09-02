@@ -42,9 +42,9 @@ vi.mock('../geography/MapView', () => ({
 
     return (
       <div data-testid="map-container">
-        <div data-testid="tile-layer" data-url="https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png" />
+        <div data-testid="tile-layer" data-url="https://tile.openstreetmap.org/{z}/{x}/{y}.png" />
         {showPlaceLabels ? (
-          <div className="journey-label-tiles" data-testid="tile-layer" data-url="https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png" />
+          <div className="journey-label-tiles" data-testid="tile-layer" data-url="https://maps.example/labels/{z}/{x}/{y}.png" />
         ) : null}
         {mode === 'events' ? <div data-testid="cluster-markers" /> : null}
         {mode === 'migration' ? (
@@ -174,27 +174,9 @@ describe('GeographicJourneyModal', () => {
     );
 
     expect(screen.getByTestId('map-container')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Place labels' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Place labels' })).not.toBeInTheDocument();
     expect(screen.getAllByTestId('tile-layer')).toHaveLength(1);
     expect(document.querySelector('.journey-label-tiles')).not.toBeInTheDocument();
-  });
-
-  it('shows place label tiles only after the user enables labels', () => {
-    render(
-      <GeographicJourneyModal
-        isOpen
-        onClose={vi.fn()}
-        people={{ [person.id]: person }}
-        locations={locations}
-        language="en"
-        initialMode="events"
-      />
-    );
-
-    fireEvent.click(screen.getByRole('button', { name: 'Place labels' }));
-
-    expect(document.querySelector('.journey-label-tiles')).toBeInTheDocument();
-    expect(screen.getAllByTestId('tile-layer')).toHaveLength(2);
   });
 
   it('renders migration route counters and selected route details', () => {

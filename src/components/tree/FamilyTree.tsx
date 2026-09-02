@@ -5,6 +5,13 @@ import { FamilyTreeCanvas } from './FamilyTreeCanvas';
 import { useTreeInteraction } from '../../hooks/tree/useTreeInteraction';
 import { useFamilyTreeLayoutController } from '../../hooks/tree/useFamilyTreeLayoutController';
 import { useLayoutModeTransition } from '../../hooks/ui/useLayoutModeTransition';
+import {
+  NODE_HEIGHT_COMPACT,
+  NODE_HEIGHT_DEFAULT,
+  NODE_WIDTH_COMPACT,
+  NODE_WIDTH_DEFAULT,
+  V3_PERSON_VISUAL_BUFFER_Y,
+} from '../../utils/layout/constants';
 
 interface FamilyTreeProps {
   people: Record<string, Person>;
@@ -76,9 +83,13 @@ export const FamilyTree = React.memo(React.forwardRef<SVGSVGElement, FamilyTreeP
     wrapperRef,
     focusId,
     nodes: displayNodes,
-    fanArcCount: displayFanArcs.length,
+    fanArcs: displayFanArcs,
     isFanChart,
     isForce,
+    nodeWidth: settings.nodeWidth || (settings.isCompact ? NODE_WIDTH_COMPACT : NODE_WIDTH_DEFAULT),
+    nodeHeight:
+      (settings.isCompact ? NODE_HEIGHT_COMPACT : NODE_HEIGHT_DEFAULT) +
+      V3_PERSON_VISUAL_BUFFER_Y,
     searchTarget,
     isAdvancedBarOpen,
     viewportResetKey: JSON.stringify({

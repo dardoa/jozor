@@ -5,6 +5,9 @@ interface ImportMetaEnv {
   readonly VITE_SUPABASE_URL: string;
   readonly VITE_SUPABASE_ANON_KEY: string;
   readonly VITE_KINDI_AI_ENABLED?: string;
+  readonly VITE_GEOGRAPHY_TILE_URL?: string;
+  readonly VITE_GEOGRAPHY_LABEL_TILE_URL?: string;
+  readonly VITE_GEOGRAPHY_TILE_ATTRIBUTION?: string;
 }
 
 interface ImportMeta {

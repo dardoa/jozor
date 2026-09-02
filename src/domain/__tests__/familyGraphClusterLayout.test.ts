@@ -182,7 +182,7 @@ describe('buildFamilyGraphClusterLayout reference card rules', () => {
   });
 });
 
-describe.skip('buildFamilyGraphClusterLayout', () => {
+describe('buildFamilyGraphClusterLayout', () => {
   it('keeps a spouse line on the inner edges and puts the marriage point at its midpoint', () => {
     const people = {
       alex: makePerson('alex', { spouses: ['sam'], children: ['casey'] }),
@@ -299,8 +299,6 @@ describe.skip('buildFamilyGraphClusterLayout', () => {
     expect(Math.abs(layout.nodes.childA1Spouse.x - layout.nodes.childA1.x)).toBe(V3_PARTNER_GAP);
   });
 
-  it.skip('derives renderer positions and edges from the same cluster points', () => {});
-
   it('uses a local reference card for cousin marriage partners from another branch', () => {
     const people = {
       grand: makePerson('grand', { spouses: ['grandSpouse'], children: ['leftParent', 'rightParent'] }),
@@ -335,6 +333,7 @@ describe.skip('buildFamilyGraphClusterLayout', () => {
         children: ['sharedChild'],
       }),
       rightCousin: makePerson('rightCousin', {
+        gender: 'female',
         parents: ['rightParent', 'rightSpouse'],
         spouses: ['leftCousin'],
         children: ['sharedChild'],

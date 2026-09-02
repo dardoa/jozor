@@ -15,8 +15,8 @@ vi.mock('../../../context/TranslationContext', () => ({
       copyLink: 'Copy',
       vaultMembersRole: 'Role',
       treeManager: {
-        shareViaLink: 'Share via Link',
-        linkNote: 'Viewer access is the default for links.',
+        shareViaLink: 'Authorized Tree Link',
+        linkNote: 'This address does not grant access.',
         inviteNewCollaborator: 'Invite New Collaborator',
         emailLabel: 'Email Address',
         inviteButton: 'Invite',
@@ -42,7 +42,7 @@ vi.mock('../../../context/TranslationContext', () => ({
       },
       adminHub: {
         accessSections: {
-          shareDescription: 'Copy a stable viewer link for quick sharing. Editors should still be invited explicitly.',
+          shareDescription: 'Copy the stable tree address for members who already have access. Use a tracked invitation to grant access.',
           inviteDescription: 'Invite a specific collaborator when they need editor access or a tracked pending invitation.',
           collaboratorsDescription: 'Review current access, adjust roles, or revoke collaborators who no longer need the tree.',
           pendingDescription: 'Track invitations that have been sent but not yet accepted.',
@@ -60,6 +60,8 @@ vi.mock('../../../services/supabaseTreeCollaboratorService', () => ({
 }));
 
 vi.mock('../../../features/sharing', () => ({
+  buildAuthorizedTreeLink: (origin: string, treeId: string) => `${origin}/tree/${treeId}`,
+  buildTreeInvitationLink: (origin: string, token: string) => `${origin}/shared/${token}`,
   createTreeInvitation: vi.fn(),
   listTreeInvitations: vi.fn().mockResolvedValue([]),
   revokeTreeInvitation: vi.fn(),
@@ -123,8 +125,9 @@ describe('AccessControlTab', () => {
       />
     );
 
-    expect(await screen.findByText('Share via Link')).toBeInTheDocument();
-    expect(await screen.findByText('Copy a stable viewer link for quick sharing. Editors should still be invited explicitly.')).toBeInTheDocument();
+    expect(await screen.findByText('Authorized Tree Link')).toBeInTheDocument();
+    expect(await screen.findByText('Copy the stable tree address for members who already have access. Use a tracked invitation to grant access.')).toBeInTheDocument();
+    expect(await screen.findByText('This address does not grant access.')).toBeInTheDocument();
     expect(await screen.findByText('Invite a specific collaborator when they need editor access or a tracked pending invitation.')).toBeInTheDocument();
     expect(await screen.findByText('Review current access, adjust roles, or revoke collaborators who no longer need the tree.')).toBeInTheDocument();
     expect(await screen.findByText('Track invitations that have been sent but not yet accepted.')).toBeInTheDocument();
@@ -146,8 +149,9 @@ describe('AccessControlTab', () => {
       />
     );
 
-    expect(await screen.findByText('Share via Link')).toBeInTheDocument();
-    expect(await screen.findByText('Copy a stable viewer link for quick sharing. Editors should still be invited explicitly.')).toBeInTheDocument();
+    expect(await screen.findByText('Authorized Tree Link')).toBeInTheDocument();
+    expect(await screen.findByText('Copy the stable tree address for members who already have access. Use a tracked invitation to grant access.')).toBeInTheDocument();
+    expect(await screen.findByText('This address does not grant access.')).toBeInTheDocument();
     expect(await screen.findByText('Review current access, adjust roles, or revoke collaborators who no longer need the tree.')).toBeInTheDocument();
     expect(await screen.findByText('owner@example.com')).toBeInTheDocument();
     

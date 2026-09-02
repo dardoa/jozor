@@ -12,3 +12,7 @@ export {
   subscribeToOwnedInvitations,
 } from './services/treeInvitationService';
 export type { TreeInvitation } from './services/treeInvitationService';
+export {
+  buildAuthorizedTreeLink,
+  buildTreeInvitationLink,
+} from './services/treeAccessLinks';

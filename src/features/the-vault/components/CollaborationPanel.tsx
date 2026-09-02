@@ -5,6 +5,7 @@ import type { UserProfile } from '../../../types';
 import { useTranslation } from '../../../context/TranslationContext';
 import { showToast } from '../../../utils/showToast';
 import { AccessControlTab } from '../../settings';
+import { buildAuthorizedTreeLink } from '../../sharing';
 
 interface CollaborationPanelProps {
   treeId: string | null;
@@ -18,7 +19,9 @@ export const CollaborationPanel: React.FC<CollaborationPanelProps> = ({
   canManageMembers,
 }) => {
   const { t } = useTranslation();
-  const canonicalTreeLink = treeId ? `${window.location.origin}/tree/${treeId}` : '';
+  const canonicalTreeLink = treeId
+    ? buildAuthorizedTreeLink(window.location.origin, treeId)
+    : '';
 
   if (!treeId || !currentUser?.email) {
     return (
@@ -60,6 +63,7 @@ export const CollaborationPanel: React.FC<CollaborationPanelProps> = ({
             <div className="min-w-0">
               <p className="text-[11px] font-bold uppercase tracking-[0.05em] text-[var(--text-muted)]">{t.vaultCanonicalShareLink}</p>
               <p className="mt-2 truncate text-[12px] text-[var(--text-secondary)]">{canonicalTreeLink}</p>
+              <p className="mt-1 text-[11px] leading-4 text-[var(--text-muted)]">{t.treeManager.linkNote}</p>
             </div>
             <button
               type="button"
