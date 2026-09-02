@@ -29,7 +29,7 @@ const BIO_SANITIZE_OPTIONS = {
   ALLOWED_ATTR: [],
 } satisfies DOMPurifyConfig;
 
-const sanitizeBioHtml = (bio: string): string => String(DOMPurify.sanitize(bio, BIO_SANITIZE_OPTIONS));
+export const sanitizeBioHtml = (bio: string): string => String(DOMPurify.sanitize(bio, BIO_SANITIZE_OPTIONS));
 
 export const BioBiographySection: React.FC<BioBiographySectionProps> = ({
   person,

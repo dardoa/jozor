@@ -13,13 +13,9 @@ interface TreeDiscussionItemProps {
   onReply?: (message: TreeDiscussionMessage) => void;
 }
 
-const getDeleteConfirmationMessage = (language: string) =>
-  language === 'ar'
-    ? 'هل أنت متأكد من حذف هذه الرسالة؟'
-    : 'Are you sure you want to delete this message?';
-
 export const TreeDiscussionItem: React.FC<TreeDiscussionItemProps> = ({ message, isOwn, onReply }) => {
-  const { language } = useTranslation();
+  const { t, language } = useTranslation();
+  const discussionText = t.discussionDrawer;
   const user = useAppStore(state => state.user);
   const currentUserRole = useAppStore(state => state.currentUserRole);
   const removeMessage = useAppStore(state => state.removeDiscussionMessage);
@@ -38,7 +34,7 @@ export const TreeDiscussionItem: React.FC<TreeDiscussionItemProps> = ({ message,
 
   const handleDelete = async () => {
     if (!user || isDeleting) return;
-    if (!window.confirm(getDeleteConfirmationMessage(language))) return;
+    if (!window.confirm(discussionText.deleteConfirmation)) return;
 
     setIsDeleting(true);
     try {
@@ -57,7 +53,7 @@ export const TreeDiscussionItem: React.FC<TreeDiscussionItemProps> = ({ message,
   };
 
   return (
-    <div className={`flex flex-col gap-1 mb-4 group ${isOwn ? 'items-end' : 'items-start'}`}>
+    <div className={`group/message flex flex-col gap-1 mb-4 ${isOwn ? 'items-end' : 'items-start'}`}>
       <div className="flex items-center gap-2 px-1">
         {!isOwn && (
           <div className="w-6 h-6 rounded-full bg-[var(--surface-subtle)] flex items-center justify-center">
@@ -65,7 +61,7 @@ export const TreeDiscussionItem: React.FC<TreeDiscussionItemProps> = ({ message,
           </div>
         )}
         <span className="text-xs font-bold text-[var(--text-secondary)]">
-          {message.userEmail?.split('@')[0] || 'Someone'}
+          {message.userEmail?.split('@')[0] || discussionText.someone}
         </span>
         {isOwn && (
           <div className="w-6 h-6 rounded-full bg-[var(--color-primary-subtle)] flex items-center justify-center">
@@ -74,22 +70,26 @@ export const TreeDiscussionItem: React.FC<TreeDiscussionItemProps> = ({ message,
         )}
       </div>
 
-      <div className="flex items-center gap-2 max-w-[90%] w-full justify-start group">
+      <div className="flex items-center gap-2 max-w-[90%] w-full justify-start">
         {isOwn && (
-          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="flex items-center gap-1 opacity-100 transition-opacity sm:opacity-0 sm:group-hover/message:opacity-100 sm:group-focus-within/message:opacity-100">
             <button 
+              type="button"
               onClick={() => onReply?.(message)}
-              className="p-1.5 hover:bg-[var(--surface-subtle)] rounded-lg text-[var(--text-muted)] hover:text-[var(--text-main)] transition-all active:scale-90"
-              title="Reply"
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--text-muted)] transition-all hover:bg-[var(--surface-subtle)] hover:text-[var(--text-main)] active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-500)]"
+              title={discussionText.reply}
+              aria-label={discussionText.reply}
             >
               <Reply className="w-3.5 h-3.5" />
             </button>
             {canDelete && (
               <button 
+                type="button"
                 onClick={handleDelete}
                 disabled={isDeleting}
-                className="p-1.5 hover:bg-red-500/10 rounded-lg text-red-500 transition-all active:scale-90"
-                title="Delete"
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-red-500 transition-all hover:bg-red-500/10 active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+                title={discussionText.delete}
+                aria-label={discussionText.delete}
               >
                 {isDeleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
               </button>
@@ -111,7 +111,7 @@ export const TreeDiscussionItem: React.FC<TreeDiscussionItemProps> = ({ message,
                 : 'bg-[var(--surface-app)] border-[var(--color-primary-500)]/40 text-[var(--text-muted)]'}
             `}>
               <div className={`font-bold mb-0.5 ${isOwn ? 'text-white/90' : 'text-[var(--color-primary-500)]'}`}>
-                {message.replyToUserName || 'Someone'}
+                {message.replyToUserName || discussionText.someone}
               </div>
               <div className="truncate opacity-90 italic">
                 {message.replyToContent}
@@ -122,20 +122,24 @@ export const TreeDiscussionItem: React.FC<TreeDiscussionItemProps> = ({ message,
         </div>
 
         {!isOwn && (
-          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="flex items-center gap-1 opacity-100 transition-opacity sm:opacity-0 sm:group-hover/message:opacity-100 sm:group-focus-within/message:opacity-100">
              <button 
+               type="button"
                onClick={() => onReply?.(message)}
-               className="p-1.5 hover:bg-[var(--surface-subtle)] rounded-lg text-[var(--text-muted)] hover:text-[var(--text-main)] transition-all active:scale-90"
-               title="Reply"
+               className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--text-muted)] transition-all hover:bg-[var(--surface-subtle)] hover:text-[var(--text-main)] active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-500)]"
+               title={discussionText.reply}
+               aria-label={discussionText.reply}
              >
                <Reply className="w-3.5 h-3.5" />
              </button>
              {canDelete && (
                 <button 
+                  type="button"
                   onClick={handleDelete}
                   disabled={isDeleting}
-                  className="p-1.5 hover:bg-red-500/10 rounded-lg text-red-500 transition-all active:scale-90"
-                  title="Delete"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg text-red-500 transition-all hover:bg-red-500/10 active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+                  title={discussionText.delete}
+                  aria-label={discussionText.delete}
                 >
                   {isDeleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
                 </button>
@@ -151,7 +155,7 @@ export const TreeDiscussionItem: React.FC<TreeDiscussionItemProps> = ({ message,
         {message.replyToEventId && (
           <div className="flex items-center gap-1 text-[10px] text-[var(--color-info-500)] font-bold">
             <MessageSquare className="w-3 h-3" />
-            <span>Context</span>
+            <span>{discussionText.context}</span>
           </div>
         )}
       </div>

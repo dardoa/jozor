@@ -25,22 +25,9 @@ interface TreeDiscussionDrawerProps {
 const EMPTY_ONLINE_USERS: DiscussionPresenceUser[] = [];
 const EMPTY_COLLABORATORS: DiscussionCollaborator[] = [];
 
-type DiscussionDrawerTranslations = {
-    discussionDrawer?: {
-        title?: string;
-        subtitle?: string;
-        online?: string;
-        searchPlaceholder?: string;
-        emptyState?: string;
-        emptyStateDesc?: string;
-        loadMore?: string;
-        placeholder?: string;
-    };
-};
-
 const TreeDiscussionDrawer: React.FC<TreeDiscussionDrawerProps> = ({ isOpen, onClose, treeId }) => {
     const { t, language } = useTranslation();
-    const discussionText = (t as typeof t & DiscussionDrawerTranslations).discussionDrawer;
+    const discussionText = t.discussionDrawer;
     const user = useAppStore(state => state.user);
     const markAsRead = useAppStore(state => state.markAsRead);
     const onlineUsers = useAppStore(state => state.onlineUsers[treeId] || EMPTY_ONLINE_USERS);
@@ -134,7 +121,7 @@ const TreeDiscussionDrawer: React.FC<TreeDiscussionDrawerProps> = ({ isOpen, onC
                 setContent('');
                 setReplyingTo(null);
             } else {
-                setSendError(language === 'ar' ? 'تعذر إرسال الرسالة. لم يتم حذف النص، حاول مرة أخرى.' : 'Message could not be sent. Your draft was kept; please try again.');
+                setSendError(discussionText.sendError);
             }
         } finally {
             setIsSending(false);
@@ -143,7 +130,7 @@ const TreeDiscussionDrawer: React.FC<TreeDiscussionDrawerProps> = ({ isOpen, onC
 
     const replyToUserName = (msg: TreeDiscussionMessage | null) => {
         if (!msg) return '';
-        return msg.userEmail?.split('@')[0] || 'Someone';
+        return msg.userEmail?.split('@')[0] || discussionText.someone;
     };
 
     // Auto scroll to bottom
@@ -166,11 +153,15 @@ const TreeDiscussionDrawer: React.FC<TreeDiscussionDrawerProps> = ({ isOpen, onC
             />
 
             <div className={`
-                ds-drawer-shell fixed top-14 md:top-16 end-0 h-[calc(100vh-3.5rem)] md:h-[calc(100vh-4rem)] w-[400px] z-[calc(var(--z-index-drawer)+1)]
+                ds-drawer-shell fixed top-14 md:top-16 end-0 h-[calc(100vh-3.5rem)] md:h-[calc(100vh-4rem)] w-full max-w-[400px] z-[calc(var(--z-index-drawer)+1)]
                 transform transition-transform duration-300 ease-in-out
                 ${isOpen ? 'translate-x-0' : 'translate-x-full rtl:-translate-x-full'}
                 flex flex-col bg-[var(--surface-app)] border-l border-[var(--border-soft)] shadow-2xl
-            `}>
+            `}
+                role="dialog"
+                aria-modal="false"
+                aria-labelledby="tree-discussion-title"
+            >
                 {/* Header */}
                 <div className="ds-drawer-header p-6 flex flex-col gap-4 sticky top-0 shadow-[var(--shadow-sm)] bg-[var(--surface-app)]">
                     <div className="flex items-center justify-between">
@@ -179,18 +170,18 @@ const TreeDiscussionDrawer: React.FC<TreeDiscussionDrawerProps> = ({ isOpen, onC
                                 <MessageCircle className="w-5 h-5" />
                             </div>
                             <div>
-                                <h2 className="text-lg font-bold text-[var(--text-main)] leading-tight">
-                                    {discussionText?.title || 'Tree Discussion'}
+                                <h2 id="tree-discussion-title" className="text-lg font-bold text-[var(--text-main)] leading-tight">
+                                    {discussionText.title}
                                 </h2>
                                 <div className="flex items-center gap-2 mt-1">
                                     <p className="text-xs text-[var(--text-muted)] font-medium uppercase tracking-wider">
-                                        {discussionText?.subtitle || 'Coordinate with collaborators'}
+                                        {discussionText.subtitle}
                                     </p>
                                     {onlineUsers.length > 0 && (
                                         <div className="flex items-center gap-1.5 px-2 py-0.5 bg-green-500/10 rounded-full border border-green-500/20">
                                             <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
                                             <span className="text-[10px] text-green-600 font-bold">
-                                                {onlineUsers.length} {discussionText?.online || 'Online'}
+                                                {onlineUsers.length} {discussionText.online}
                                             </span>
                                         </div>
                                     )}
@@ -198,8 +189,10 @@ const TreeDiscussionDrawer: React.FC<TreeDiscussionDrawerProps> = ({ isOpen, onC
                             </div>
                         </div>
                         <button
+                            type="button"
                             onClick={onClose}
-                            className="p-2 hover:bg-[var(--surface-subtle)] rounded-full transition-colors group"
+                            aria-label={discussionText.close}
+                            className="p-2 hover:bg-[var(--surface-subtle)] rounded-full transition-colors group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-500)]"
                         >
                             <X className="w-5 h-5 text-[var(--text-muted)] group-hover:text-[var(--text-main)]" />
                         </button>
@@ -217,7 +210,7 @@ const TreeDiscussionDrawer: React.FC<TreeDiscussionDrawerProps> = ({ isOpen, onC
                                             ? 'bg-green-500/5 border-green-500/20 ring-1 ring-green-500/10' 
                                             : 'bg-[var(--surface-subtle)] border-[var(--border-soft)] opacity-60'}
                                     `}
-                                    title={m.isOnline ? 'Online' : 'Offline'}
+                                    title={m.isOnline ? discussionText.online : discussionText.offline}
                                 >
                                     <div className={`w-1.5 h-1.5 rounded-full ${m.isOnline ? 'bg-green-500 shadow-[0_0_4px_rgba(34,197,94,0.5)]' : 'bg-gray-400'}`} />
                                     <span className={`text-[10px] font-medium ${m.isOnline ? 'text-green-700' : 'text-[var(--text-muted)]'}`}>
@@ -234,14 +227,13 @@ const TreeDiscussionDrawer: React.FC<TreeDiscussionDrawerProps> = ({ isOpen, onC
                             type="search"
                             value={searchQuery}
                             onChange={(event) => setSearchQuery(event.target.value)}
-                            placeholder={discussionText?.searchPlaceholder || (language === 'ar' ? 'ابحث في الرسائل...' : 'Search messages...')}
+                            placeholder={discussionText.searchPlaceholder}
+                            aria-label={discussionText.searchPlaceholder}
                             className="w-full rounded-xl border border-[var(--border-soft)] bg-[var(--surface-subtle)] py-2 ps-9 pe-3 text-sm text-[var(--text-main)] outline-none transition focus:ring-2 focus:ring-[var(--color-primary-500)]/20"
                         />
                         {normalizedSearchQuery && (
                             <div className="mt-1 text-[10px] font-medium text-[var(--text-muted)]">
-                                {language === 'ar'
-                                    ? `${visibleMessages.length} نتيجة من ${messages.length} رسالة محملة`
-                                    : `${visibleMessages.length} of ${messages.length} loaded messages`}
+                                {discussionText.searchResults(visibleMessages.length, messages.length)}
                             </div>
                         )}
                     </div>
@@ -259,10 +251,10 @@ const TreeDiscussionDrawer: React.FC<TreeDiscussionDrawerProps> = ({ isOpen, onC
                                 <MessageCircle className="w-8 h-8 text-[var(--text-muted)]" />
                             </div>
                             <p className="text-[var(--text-secondary)] font-bold">
-                                {discussionText?.emptyState || 'No messages yet'}
+                                {discussionText.emptyState}
                             </p>
                             <p className="text-xs text-[var(--text-muted)] mt-1">
-                                {discussionText?.emptyStateDesc || 'Start a discussion to coordinate with other collaborators'}
+                                {discussionText.emptyStateDesc}
                             </p>
                         </div>
                     ) : normalizedSearchQuery && visibleMessages.length === 0 ? (
@@ -271,10 +263,10 @@ const TreeDiscussionDrawer: React.FC<TreeDiscussionDrawerProps> = ({ isOpen, onC
                                 <Search className="w-8 h-8 text-[var(--text-muted)]" />
                             </div>
                             <p className="text-[var(--text-secondary)] font-bold">
-                                {language === 'ar' ? 'لا توجد رسائل مطابقة' : 'No matching messages'}
+                                {discussionText.noMatches}
                             </p>
                             <p className="text-xs text-[var(--text-muted)] mt-1">
-                                {language === 'ar' ? 'جرّب كلمة أخرى أو حمّل رسائل أقدم.' : 'Try another keyword or load older messages.'}
+                                {discussionText.noMatchesDesc}
                             </p>
                         </div>
                     ) : (
@@ -291,7 +283,7 @@ const TreeDiscussionDrawer: React.FC<TreeDiscussionDrawerProps> = ({ isOpen, onC
                                     ) : (
                                         <MessageCircle className="w-3 h-3" />
                                     )}
-                                    <span>{discussionText?.loadMore || 'Load older messages'}</span>
+                                    <span>{discussionText.loadMore}</span>
                                 </button>
                             )}
 
@@ -321,8 +313,10 @@ const TreeDiscussionDrawer: React.FC<TreeDiscussionDrawerProps> = ({ isOpen, onC
                                 </p>
                             </div>
                             <button 
+                                type="button"
                                 onClick={() => setReplyingTo(null)}
-                                className="p-1 hover:bg-[var(--surface-app)] rounded-full text-[var(--text-muted)] hover:text-red-500 transition-colors"
+                                aria-label={discussionText.cancelReply}
+                                className="p-1 hover:bg-[var(--surface-app)] rounded-full text-[var(--text-muted)] hover:text-red-500 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-500)]"
                             >
                                 <X className="w-3.5 h-3.5" />
                             </button>
@@ -340,7 +334,8 @@ const TreeDiscussionDrawer: React.FC<TreeDiscussionDrawerProps> = ({ isOpen, onC
                                         handleSend();
                                     }
                                 }}
-                                placeholder={discussionText?.placeholder || 'Type a message...'}
+                                placeholder={discussionText.placeholder}
+                                aria-label={discussionText.placeholder}
                                 maxLength={DISCUSSION_MESSAGE_MAX_LENGTH}
                                 className="w-full bg-[var(--surface-subtle)] border border-[var(--border-soft)] rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-500)]/20 transition-all resize-none custom-scrollbar max-h-32"
                                 rows={1}
@@ -350,6 +345,7 @@ const TreeDiscussionDrawer: React.FC<TreeDiscussionDrawerProps> = ({ isOpen, onC
                         <button
                             type="submit"
                             disabled={!content.trim() || isSending}
+                            aria-label={discussionText.send}
                             className={`
                                 p-3 rounded-2xl transition-all
                                 ${content.trim() && !isSending 

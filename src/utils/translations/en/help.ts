@@ -9,12 +9,18 @@ export const helpEn: HelpTranslations = {
       desc: 'Learn the essentials of navigating your canvas and adding people to your tree.',
       items: [
         {
-          q: 'Basic Navigation & Viewing Modes',
-          a: 'Toggle between Descendant and Pedigree views using the icon on the right side. Zoom out dynamically and pan across to explore different branches seamlessly. In mobile, use the floating Action Bar to access tools directly.'
+          id: 'tree-view-modes',
+          route: '/tree/:treeId',
+          controlId: 'visual-preferences-trigger',
+          q: 'Navigate the Tree and Choose a View',
+          a: 'Use Visual Preferences to choose Focus for a family neighborhood around one person or Radial for ancestry and descendant rings. Use Fit to see the whole rendered tree, and Reset to return to the selected person at a readable scale.'
         },
         {
+          id: 'add-relatives',
+          route: '/tree/:treeId',
+          controlId: 'primary-add-action',
           q: 'Adding Your First People',
-          a: 'Use the sidebar on the left to start adding people. Click any node to open their detailed profile modal and assign spouses, children, or parents visually without reloading the page.'
+          a: 'Use the central Add action, or open a person card and choose a parent, spouse, or child action. Selecting a card opens the person details drawer, where identity, relationships, events, media, and sources can be reviewed.'
         }
       ]
     },
@@ -23,12 +29,18 @@ export const helpEn: HelpTranslations = {
       desc: 'Deep-dive into Jozor\'s premium interactive ecosystem.',
       items: [
         {
+          id: 'saving-and-history',
+          route: '/tree/:treeId',
+          controlId: 'sync-status',
           q: 'Smart Auto-Saving & History Logging',
-          a: 'Your tree saves instantly. Use the Activity Log (clock icon) to review all major additions and restorations visually tracked through time.'
+          a: 'Tree edits synchronize with the Jozor database and any pending local changes appear in the sync status. Google Drive is a separate optional backup. Open The Vault for Activity History, cloud backup files, and recovery actions.'
         },
         {
-          q: 'Interactive Fan Chart Mode',
-          a: 'Visualize a person\'s direct ancestry in a 360-degree colorful fan chart. Perfect for exploring deep ancestral roots up to 7 generations back.'
+          id: 'focus-and-radial',
+          route: '/tree/:treeId',
+          controlId: 'visual-preferences-layout-mode',
+          q: 'Focus and Radial Views',
+          a: 'Focus centers a selected person with configurable ancestors, descendants, spouses, and siblings. Radial displays ancestor or descendant generations as a 180-degree fan or 360-degree circle. The available depth depends on the active tree and layout capacity.'
         }
       ]
     },
@@ -37,12 +49,18 @@ export const helpEn: HelpTranslations = {
       desc: 'Ensure your legacy data remains safe and strictly yours.',
       items: [
         {
+          id: 'exports-and-backups',
+          route: '/tree/:treeId#vault-cloud',
+          controlId: 'vault-export-navigation',
           q: 'Exporting & Local Backups',
-          a: 'Click the "Export" button to download a full `.jozor` file encoded with all metadata. GEDCOM export is also fully supported for historical archiving.'
+          a: 'Open The Vault, then Publishing & Backup. Portable Data provides owner archives and GEDCOM exchange files, Visual Outputs creates printable posters, and Cloud Backup manages optional Google Drive copies.'
         },
         {
+          id: 'sharing-and-permissions',
+          route: '/tree/:treeId#vault-members',
+          controlId: 'vault-members-navigation',
           q: 'Security and Authentication',
-          a: 'All data is cryptographically isolated using Row-Level Security (RLS). Only defined collaborators in the Share menu can modify the specific family tree.'
+          a: 'Use The Vault > Members to invite collaborators with a tracked viewer or editor role. Copying the canonical tree address does not grant access by itself. Tree data is protected by authentication and row-level authorization.'
         }
       ]
     }

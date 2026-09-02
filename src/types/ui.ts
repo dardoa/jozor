@@ -16,9 +16,9 @@ export interface HelpTranslations {
     title: string;
     description: string;
     categories: {
-        gettingStarted: { title: string; desc: string; items: { q: string; a: string }[] };
-        toolsFeatures: { title: string; desc: string; items: { q: string; a: string }[] };
-        privacySharing: { title: string; desc: string; items: { q: string; a: string }[] };
+        gettingStarted: { title: string; desc: string; items: HelpTopicTranslation[] };
+        toolsFeatures: { title: string; desc: string; items: HelpTopicTranslation[] };
+        privacySharing: { title: string; desc: string; items: HelpTopicTranslation[] };
     };
     contactSupport: string;
     supportEmail: string;
@@ -125,6 +125,14 @@ export interface PublishingExportOptions {
         includeTimeline?: boolean;
         includeEvidence?: boolean;
     };
+}
+
+export interface HelpTopicTranslation {
+    id: string;
+    route: string;
+    controlId: string;
+    q: string;
+    a: string;
 }
 
 export interface PublishingPreviewResult {

@@ -69,8 +69,8 @@ export const PersonaTabs = memo<PersonaTabsProps>(({ activeTab, setActiveTab, ta
           type='button'
           onClick={onClose}
           className='flex h-9 w-9 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-full border border-[var(--border-soft)] bg-[var(--surface-panel)] text-[var(--text-main)] shadow-[var(--shadow-sm)] transition-all active:scale-95'
-          aria-label={t.close || 'Close'}
-          title={t.close || 'Close'}
+          aria-label={t.close}
+          title={t.close}
         >
           <X className='h-4 w-4 sm:h-5 sm:w-5' />
         </button>

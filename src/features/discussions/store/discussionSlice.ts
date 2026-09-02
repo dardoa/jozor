@@ -117,20 +117,12 @@ export const createDiscussionSlice: StateCreator<DiscussionSlice> = (set) => ({
     const existing = state.discussionMessages[treeId] || [];
     const index = existing.findIndex(m => m.id === message.id);
     
-    let newMessages;
-    if (index !== -1) {
-      // Update existing message (merge)
-      newMessages = [...existing];
-      newMessages[index] = { ...newMessages[index], ...message };
-    } else {
-      // Add new message
-      newMessages = [...existing, message];
-    }
-
-    // Sort to keep order
-    newMessages.sort((a, b) => 
-      new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-    );
+    const newMessages = (index !== -1
+      ? existing.map((existingMessage, messageIndex) => (
+          messageIndex === index ? { ...existingMessage, ...message } : existingMessage
+        ))
+      : [...existing, message]
+    ).sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
     
     // Unread count logic: only for NEW messages (not updates) from others while drawer closed
     const isNew = index === -1;

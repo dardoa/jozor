@@ -23,8 +23,6 @@ interface LinksTabProps {
   isMobileLayout?: boolean;
 }
 
-const relationshipDetailsHelp = 'Edit marriage dates, status, and locations.';
-
 export const LinksTab = memo<LinksTabProps>(
   ({ person, people, isEditing, onUpdate, onSelect, familyActions, isMobileLayout = false }) => {
     const { t } = useTranslation();
@@ -48,17 +46,17 @@ export const LinksTab = memo<LinksTabProps>(
 
     const contextItems = [
       person.spouses.length > 0 ? {
-        label: 'Age at first marriage',
-        value: ageAtFirstMarriage !== null ? `${ageAtFirstMarriage} years` : 'Unknown',
+        label: t.ageAtFirstMarriage,
+        value: ageAtFirstMarriage !== null ? `${ageAtFirstMarriage} ${t.years}` : t.unknown,
         icon: HeartHandshake,
       } : null,
       person.children.length > 0 ? {
-        label: 'Age at first child',
-        value: ageAtFirstChild !== null ? `${ageAtFirstChild} years` : 'Unknown',
+        label: t.ageAtFirstChild,
+        value: ageAtFirstChild !== null ? `${ageAtFirstChild} ${t.years}` : t.unknown,
         icon: GitBranchPlus,
       } : null,
       person.parents.length > 0 ? {
-        label: 'Known parents',
+        label: t.knownParents,
         value: `${person.parents.length}`,
         icon: Users,
       } : null,
@@ -75,8 +73,8 @@ export const LinksTab = memo<LinksTabProps>(
                   <Heart className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-[var(--text-main)]">{t.partners || 'Relationship Details'}</h3>
-                  <p className="mt-1 text-xs text-[var(--text-muted)]">{relationshipDetailsHelp}</p>
+                  <h3 className="text-sm font-bold text-[var(--text-main)]">{t.partners}</h3>
+                  <p className="mt-1 text-xs text-[var(--text-muted)]">{t.relationshipDetailsHelp}</p>
                 </div>
               </div>
             )}
@@ -99,8 +97,8 @@ export const LinksTab = memo<LinksTabProps>(
                 <Users className="h-5 w-5" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-[var(--text-main)]">Relationships</h3>
-                <p className="mt-1 text-xs text-[var(--text-muted)]">Parents, spouses, children, and siblings are grouped into touch-friendly cards.</p>
+                <h3 className="text-sm font-bold text-[var(--text-main)]">{t.relationshipsTitle}</h3>
+                <p className="mt-1 text-xs text-[var(--text-muted)]">{t.relationshipsHelp}</p>
               </div>
             </div>
           )}
@@ -118,7 +116,7 @@ export const LinksTab = memo<LinksTabProps>(
 
 
         {!isEditing && (person.parents.length > 0 || person.children.length > 0 || person.spouses.length > 0) && (
-          <Card title="Contextual insights" tone="flat" contentClassName="space-y-3">
+          <Card title={t.contextualInsights} tone="flat" contentClassName="space-y-3">
             {isMobileLayout && contextItems.length > 0 ? (
               <div className="grid grid-cols-2 gap-3">
                 {contextItems.map((item) => {
@@ -138,18 +136,18 @@ export const LinksTab = memo<LinksTabProps>(
               <ul className="space-y-2 text-sm text-[var(--text-main)]">
                 {person.spouses.length > 0 && (
                   <li>
-                    <span className="text-[var(--text-muted)]">Age at first marriage:</span>{' '}
+                    <span className="text-[var(--text-muted)]">{t.ageAtFirstMarriage}:</span>{' '}
                     <span className="font-semibold">
-                      {ageAtFirstMarriage !== null ? `${ageAtFirstMarriage} years` : <span className="font-normal italic text-[var(--text-dim)]">Unknown</span>}
+                      {ageAtFirstMarriage !== null ? `${ageAtFirstMarriage} ${t.years}` : <span className="font-normal italic text-[var(--text-dim)]">{t.unknown}</span>}
                     </span>
                   </li>
                 )}
 
                 {person.children.length > 0 && (
                   <li>
-                    <span className="text-[var(--text-muted)]">Age at first child:</span>{' '}
+                    <span className="text-[var(--text-muted)]">{t.ageAtFirstChild}:</span>{' '}
                     <span className="font-semibold">
-                      {ageAtFirstChild !== null ? `${ageAtFirstChild} years` : <span className="font-normal italic text-[var(--text-dim)]">Unknown</span>}
+                      {ageAtFirstChild !== null ? `${ageAtFirstChild} ${t.years}` : <span className="font-normal italic text-[var(--text-dim)]">{t.unknown}</span>}
                     </span>
                   </li>
                 )}
@@ -160,9 +158,9 @@ export const LinksTab = memo<LinksTabProps>(
                   const diff = calculateAgeDifference(person.birthDate, parent.birthDate);
                   return (
                     <li key={`parent-diff-${parentId}`}>
-                      <span className="text-[var(--text-muted)]">Age gap with {parent.firstName}:</span>{' '}
+                      <span className="text-[var(--text-muted)]">{t.ageGapWith(parent.firstName)}:</span>{' '}
                       <span className="font-semibold">
-                        {diff !== null ? `${diff} years` : <span className="font-normal italic text-[var(--text-dim)]">Unknown</span>}
+                        {diff !== null ? `${diff} ${t.years}` : <span className="font-normal italic text-[var(--text-dim)]">{t.unknown}</span>}
                       </span>
                     </li>
                   );
@@ -174,9 +172,9 @@ export const LinksTab = memo<LinksTabProps>(
                   const diff = calculateAgeDifference(person.birthDate, child.birthDate);
                   return (
                     <li key={`child-diff-${childId}`}>
-                      <span className="text-[var(--text-muted)]">Age gap with {child.firstName}:</span>{' '}
+                      <span className="text-[var(--text-muted)]">{t.ageGapWith(child.firstName)}:</span>{' '}
                       <span className="font-semibold">
-                        {diff !== null ? `${diff} years` : <span className="font-normal italic text-[var(--text-dim)]">Unknown</span>}
+                        {diff !== null ? `${diff} ${t.years}` : <span className="font-normal italic text-[var(--text-dim)]">{t.unknown}</span>}
                       </span>
                     </li>
                   );

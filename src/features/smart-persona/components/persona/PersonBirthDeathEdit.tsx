@@ -136,7 +136,7 @@ export const PersonBirthDeathEdit = memo<PersonBirthDeathEditProps>(({ person, o
         <Card title={t.deathDetails} tone='flat'>
           <button
             onClick={() => setShowDeathDetails(!showDeathDetails)}
-            aria-label={showDeathDetails ? 'Hide death details' : 'Show death details'}
+            aria-label={showDeathDetails ? t.hideDeathDetails : t.showDeathDetails}
             className='w-full flex items-center justify-between text-xs font-medium text-[var(--text-muted)] hover:text-[var(--primary-600)] py-1 px-0.5 -mx-0.5 rounded-md transition-colors'
           >
             <ChevronDown

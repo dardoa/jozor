@@ -126,9 +126,9 @@ export const SmartPersonaDrawerBody: React.FC<SmartPersonaDrawerBodyProps> = ({
       <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[color:rgba(179,92,75,0.12)] text-[var(--danger-600)]">
         <AlertTriangle className="h-5 w-5" />
       </div>
-      <h3 className="text-sm font-bold text-[var(--text-main)]">Unable to render this profile section.</h3>
+      <h3 className="text-sm font-bold text-[var(--text-main)]">{t.profileRenderErrorTitle}</h3>
       <p className="mt-2 text-xs text-[var(--text-muted)]">
-        The drawer frame is still active. Try switching tabs or reopening the profile.
+        {t.profileRenderErrorDescription}
       </p>
     </div>
   );
@@ -147,8 +147,8 @@ export const SmartPersonaDrawerBody: React.FC<SmartPersonaDrawerBodyProps> = ({
               <Loader2 className="h-5 w-5 animate-spin" />
             </div>
             <div className="min-w-0 flex-1">
-              <div className="text-sm font-bold text-[var(--text-main)]">Loading profile...</div>
-              <div className="text-xs text-[var(--text-muted)]">Preparing the person drawer.</div>
+              <div className="text-sm font-bold text-[var(--text-main)]">{t.loadingProfile}</div>
+              <div className="text-xs text-[var(--text-muted)]">{t.preparingPersonDrawer}</div>
             </div>
           </div>
           <div className="ds-empty-state flex flex-col gap-5">

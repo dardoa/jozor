@@ -17,10 +17,6 @@ type GalleryMediaItem = string | {
   createdAt?: string;
 };
 
-type MediaTabTranslations = {
-  addPhoto?: string;
-};
-
 const MAX_VOICE_FILE_SIZE_BYTES = 15 * 1024 * 1024;
 const MAX_VOICE_DURATION_SECONDS = 10 * 60;
 const ACCEPTED_VOICE_TYPES = new Set([
@@ -66,8 +62,7 @@ interface MediaTabProps {
 }
 
 export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user }) => {
-  const { t, language } = useTranslation();
-  const mediaText = t as typeof t & MediaTabTranslations;
+  const { t } = useTranslation();
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const voiceInputRef = useRef<HTMLInputElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -112,26 +107,26 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
     if (!file) return;
 
     if (!ACCEPTED_VOICE_TYPES.has(file.type)) {
-      showToast.error('Unsupported audio file type.');
+      showToast.error(t.unsupportedAudioType);
       return;
     }
 
     if (file.size > MAX_VOICE_FILE_SIZE_BYTES) {
-      showToast.error('Audio file is too large. Maximum size is 15 MB.');
+      showToast.error(t.audioFileTooLarge);
       return;
     }
 
     try {
       const duration = await getAudioDurationSeconds(file);
       if (duration > MAX_VOICE_DURATION_SECONDS) {
-        showToast.error('Audio file is too long. Maximum duration is 10 minutes.');
+        showToast.error(t.audioFileTooLong);
         return;
       }
 
       await handleVoiceSave(file, file.name || `voice_${person.id}_${Date.now()}`, file.type);
     } catch (error) {
       console.error('Audio validation failed', error);
-      showToast.error('Unable to read this audio file.');
+      showToast.error(t.audioReadError);
     }
   };
 
@@ -141,7 +136,7 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
   const voiceNotes = person.voiceNotes || [];
   const hasPhotos = gallery.length > 0;
   const hasVoiceNotes = voiceNotes.length > 0;
-  const uploadAudioLabel = language === 'ar' ? 'رفع صوت' : 'Upload audio';
+  const uploadAudioLabel = t.uploadAudio;
 
   const personFullName = [person.firstName, person.lastName].filter(Boolean).join(' ');
   const galleryUrls = gallery.map(item => getGalleryImageUrl(item)).filter(Boolean) as string[];
@@ -158,10 +153,10 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
           </div>
           <div className="max-w-md mx-auto space-y-2 mt-4">
             <h3 className="text-base font-extrabold text-[var(--text-main)]">
-              المعرض والذكريات الصوتية مقفلة للزوار
+              {t.guestMediaTitle}
             </h3>
             <p className="text-xs text-[var(--text-muted)] leading-relaxed">
-              لحفظ صور عائلتك وشهادات الأجداد الصوتية بشكل آمن مدى الحياة وتجنب فقدانها عند مسح كاش المتصفح، يرجى تسجيل الدخول بحسابك السحابي.
+              {t.guestMediaDescription}
             </p>
           </div>
           <div className="bg-[var(--surface-subtle)] border border-[var(--border-soft)] rounded-2xl p-3 max-w-sm mx-auto flex items-center gap-3 text-start mt-4">
@@ -169,8 +164,8 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
               <ImageIcon className="w-4.5 h-4.5 text-blue-500" />
             </div>
             <div>
-              <h4 className="text-[11px] font-bold text-[var(--text-main)]">ميزة الحفظ السحابي التلقائي</h4>
-              <p className="text-[9px] text-[var(--text-dim)] mt-0.5">مساحة آمنة لحفظ ألبومات عائلتك مباشرة على حساب Google Drive الخاص بك.</p>
+              <h4 className="text-[11px] font-bold text-[var(--text-main)]">{t.automaticCloudStorage}</h4>
+              <p className="text-[9px] text-[var(--text-dim)] mt-0.5">{t.automaticCloudStorageDescription}</p>
             </div>
           </div>
         </div>
@@ -190,7 +185,7 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
                 ) : (
                    <Plus className='w-3.5 h-3.5' />
                 )}
-                {mediaText.addPhoto || 'Add Photo'}
+                {t.addPhoto}
               </button>
             </div>
           )}
@@ -201,7 +196,7 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
           accept='image/*'
           className='hidden'
           onChange={handleImageUpload}
-          aria-label={mediaText.addPhoto || 'Add Photo'}
+          aria-label={t.addPhoto}
         />
 
         {!hasPhotos && !isEditing ? (

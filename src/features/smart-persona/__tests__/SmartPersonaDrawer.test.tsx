@@ -14,6 +14,8 @@ vi.mock('../../../context/TranslationContext', () => ({
       galleryTab: 'Gallery',
       readOnly: 'You are viewing this tree in read-only mode.',
       close: 'Close Panel',
+      personDetailsLabel: 'Person details',
+      expandPersonDetails: 'Expand details',
       aboutSections: {
         title: 'Persona Insights',
         description: 'AI-assisted biographical data.',
@@ -99,6 +101,8 @@ describe('SmartPersonaDrawer', () => {
         user={null}
       />
     );
+
+    expect(screen.getByLabelText('Person details')).toBeInTheDocument();
 
     // Persona close triggers
     const closeBtn = screen.getByRole('button', { name: 'Close Persona' });

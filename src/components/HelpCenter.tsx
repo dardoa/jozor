@@ -12,27 +12,27 @@ import { useTranslation } from '../context/TranslationContext';
 import { Button } from './ui/Button';
 import { EmptyState } from './ui/EmptyState';
 import { useNavigate } from 'react-router-dom';
+import type { HelpTopicTranslation } from '../types';
 
-interface FAQItemProps {
-  question: string;
-  answer: string;
-}
-
-const FAQItem: React.FC<FAQItemProps> = ({ question, answer }) => {
+const FAQItem: React.FC<{ item: HelpTopicTranslation }> = ({ item }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
     <div className='border-b border-[var(--border-soft)] last:border-0'>
       <button
         onClick={() => setIsOpen(!isOpen)}
+        aria-expanded={isOpen}
+        data-help-topic={item.id}
+        data-help-route={item.route}
+        data-help-control={item.controlId}
         className='group flex w-full items-center justify-between gap-4 py-4 text-start transition-colors hover:text-[var(--primary-600)]'
       >
-        <span className='font-semibold text-[var(--text-main)] group-hover:text-[var(--primary-600)]'>{question}</span>
+        <span className='font-semibold text-[var(--text-main)] group-hover:text-[var(--primary-600)]'>{item.q}</span>
         {isOpen ? <ChevronUp className='h-4 w-4 text-[var(--text-dim)]' /> : <ChevronDown className='h-4 w-4 text-[var(--text-dim)]' />}
       </button>
       {isOpen && (
         <div className='animate-in slide-in-from-top-2 pb-4 text-sm leading-relaxed text-[var(--text-dim)] duration-300'>
-          {answer}
+          {item.a}
         </div>
       )}
     </div>
@@ -42,7 +42,7 @@ const FAQItem: React.FC<FAQItemProps> = ({ question, answer }) => {
 interface FAQSectionProps {
   title: string;
   icon: React.ReactNode;
-  items: { q: string; a: string }[];
+  items: HelpTopicTranslation[];
 }
 
 const FAQSection: React.FC<FAQSectionProps> = ({ title, icon, items }) => (
@@ -54,8 +54,8 @@ const FAQSection: React.FC<FAQSectionProps> = ({ title, icon, items }) => (
       <h3 className='text-lg font-bold text-[var(--text-main)]'>{title}</h3>
     </div>
     <div className='space-y-1'>
-      {items.map((item, idx) => (
-        <FAQItem key={idx} question={item.q} answer={item.a} />
+      {items.map((item) => (
+        <FAQItem key={item.id} item={item} />
       ))}
     </div>
   </div>

@@ -11,6 +11,23 @@ let mockLanguage = 'ar';
 vi.mock('../../../../context/TranslationContext', () => ({
   useTranslation: () => ({
     language: mockLanguage,
+    t: {
+      discussionDrawer: mockLanguage === 'ar'
+        ? {
+            reply: 'رد',
+            delete: 'حذف الرسالة',
+            someone: 'شخص ما',
+            context: 'سياق',
+            deleteConfirmation: 'هل أنت متأكد من حذف هذه الرسالة؟',
+          }
+        : {
+            reply: 'Reply',
+            delete: 'Delete message',
+            someone: 'Someone',
+            context: 'Context',
+            deleteConfirmation: 'Are you sure you want to delete this message?',
+          },
+    },
   }),
 }));
 
@@ -56,7 +73,7 @@ describe('TreeDiscussionItem', () => {
   it('uses a readable Arabic delete confirmation message', async () => {
     render(<TreeDiscussionItem message={message} isOwn />);
 
-    fireEvent.click(screen.getByTitle('Delete'));
+    fireEvent.click(screen.getByRole('button', { name: 'حذف الرسالة' }));
 
     expect(window.confirm).toHaveBeenCalledWith('هل أنت متأكد من حذف هذه الرسالة؟');
     await waitFor(() => {
@@ -71,9 +88,16 @@ describe('TreeDiscussionItem', () => {
 
     render(<TreeDiscussionItem message={message} isOwn />);
 
-    fireEvent.click(screen.getByTitle('Delete'));
+    fireEvent.click(screen.getByRole('button', { name: 'Delete message' }));
 
     expect(window.confirm).toHaveBeenCalledWith('Are you sure you want to delete this message?');
     expect(mockDeleteMessage).not.toHaveBeenCalled();
+  });
+
+  it('gives reply and delete controls localized accessible names', () => {
+    render(<TreeDiscussionItem message={message} isOwn onReply={vi.fn()} />);
+
+    expect(screen.getByRole('button', { name: 'رد' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'حذف الرسالة' })).toBeInTheDocument();
   });
 });

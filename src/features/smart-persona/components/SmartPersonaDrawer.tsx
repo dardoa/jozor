@@ -70,12 +70,12 @@ export const SmartPersonaDrawer = memo<SmartPersonaDrawerProps>(
     } = useSmartPersonaDrawerState({
       person,
       isOpen,
-      fallbackProfileLabel: t.profile || 'Profile',
+      fallbackProfileLabel: t.profile,
       unnamedPersonLabel: t.unnamedPerson,
       tabLabels: {
-        about: t.aboutTab || 'About',
-        links: t.linksTab || 'Links',
-        media: t.galleryTab || 'Media',
+        about: t.aboutTab,
+        links: t.linksTab,
+        media: t.galleryTab,
       },
     });
 
@@ -94,7 +94,7 @@ export const SmartPersonaDrawer = memo<SmartPersonaDrawerProps>(
         )}
 
         <aside
-          aria-label="Person details"
+          aria-label={t.personDetailsLabel}
           className={`ds-persona-shell fixed inset-x-0 bottom-0 sm:bottom-auto sm:top-14 md:top-16 z-[calc(var(--z-index-drawer)+1)] flex w-full max-w-full min-h-0 flex-col border-t sm:border-t-0 transition-all duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] rounded-t-[24px] sm:rounded-none sm:end-0 sm:start-auto sm:border-inline-start-0 ltr:sm:start-0 ltr:sm:end-auto ltr:sm:border-r rtl:sm:right-0 rtl:sm:left-auto rtl:sm:border-l ${isMobileViewport ? 'inset-0 rounded-none border-0' : ''} ${sizeClasses}`}
           style={{
             transform: isDragging && isOpen && !isMobileViewport ? `translateY(${Math.max(dragY, 0)}px)` : undefined,
@@ -130,10 +130,12 @@ export const SmartPersonaDrawer = memo<SmartPersonaDrawerProps>(
                   </div>
                 </div>
                 <button
+                  type="button"
                   onClick={() => setSmartPersonaSize('expanded')}
+                  aria-label={t.expandPersonDetails}
                   className="min-h-11 shrink-0 rounded-full bg-[var(--primary-100)] px-4 py-2 text-xs font-medium text-[var(--primary-600)]"
                 >
-                  Expand
+                  {t.expandPersonDetails}
                 </button>
               </div>
             )}

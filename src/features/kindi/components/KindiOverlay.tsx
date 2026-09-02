@@ -4,7 +4,9 @@ import { Check, CornerDownLeft, Mic, MicOff, Send, ShieldCheck, Sparkles, X } fr
 
 import { KindiIcon } from '../../../components/icons/KindiIcon';
 import { SmartAvatar } from '../../../components/ui/SmartAvatar';
+import { useTranslation } from '../../../context/TranslationContext';
 import type { Person } from '../../../types/person';
+import type { TranslationSchema } from '../../../utils/translationLoader';
 import { ConfidenceBadge } from './ConfidenceBadge';
 import { getKindiPersonContextLabel } from '../logic/kindiPersonContext';
 import type { KindiConfirmation, KindiMessage, KindiPersonResult } from '../types';
@@ -13,6 +15,8 @@ type ConfirmationDetailRow = {
   label: string;
   value: string;
 };
+
+type KindiUiText = TranslationSchema['kindi'];
 
 interface KindiOverlayProps {
   isOpen: boolean;
@@ -35,8 +39,60 @@ interface KindiOverlayProps {
   onToggleVoice?: () => void;
 }
 
-const personName = (person: Person) =>
-  [person.firstName, person.middleName, person.lastName].filter(Boolean).join(' ').trim() || 'Unnamed person';
+const KINDI_OVERLAY_STYLES = `
+  @keyframes kindi-drawer-slide-in {
+    from {
+      transform: translateX(100%);
+      opacity: 0.9;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+  [dir="rtl"] @keyframes kindi-drawer-slide-in {
+    from {
+      transform: translateX(-100%);
+      opacity: 0.9;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+  @keyframes kindi-slide-up {
+    from {
+      opacity: 0;
+      transform: translateY(12px) scale(0.98);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+  .kindi-scrollbar::-webkit-scrollbar {
+    width: 5px;
+  }
+  .kindi-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .kindi-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--border-soft);
+    border-radius: 99px;
+  }
+  .kindi-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-600);
+  }
+  .animate-kindi-drawer {
+    animation: kindi-drawer-slide-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  .animate-kindi-message {
+    animation: kindi-slide-up 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+`;
+
+const personName = (person: Person, unnamedPersonLabel: string) =>
+  [person.firstName, person.middleName, person.lastName].filter(Boolean).join(' ').trim() || unnamedPersonLabel;
 
 const toConfirmationDisplayValue = (value: unknown): string | undefined => {
   if (typeof value !== 'string' && typeof value !== 'number') return undefined;
@@ -51,6 +107,7 @@ const KindiPersonCard = ({
   result,
   actionLabel,
   contextLabel,
+  text,
 }: {
   person: Person;
   onFocus: (id: string) => void;
@@ -58,6 +115,7 @@ const KindiPersonCard = ({
   result?: KindiPersonResult;
   actionLabel?: string;
   contextLabel?: string;
+  text: KindiUiText;
 }) => (
   <button
     type="button"
@@ -72,11 +130,11 @@ const KindiPersonCard = ({
     />
     <div className="min-w-0 flex-1">
       <div className="flex min-w-0 items-center gap-2">
-        <div className="truncate text-sm font-bold text-[var(--text-main)]">{personName(person)}</div>
+        <div className="truncate text-sm font-bold text-[var(--text-main)]">{personName(person, text.unnamedPerson)}</div>
         {result && <ConfidenceBadge matchLevel={result.matchLevel} />}
       </div>
       <div className="mt-0.5 truncate text-xs text-[var(--text-muted)]">
-        {[person.birthDate, person.birthPlace].filter(Boolean).join(' · ') || 'Person profile'}
+        {[person.birthDate, person.birthPlace].filter(Boolean).join(' · ') || text.personProfile}
       </div>
       {contextLabel && (
         <div className="mt-0.5 truncate text-[11px] font-bold text-[var(--primary-600)]">
@@ -92,7 +150,7 @@ const KindiPersonCard = ({
   </button>
 );
 
-const getConfirmationDetailRows = (confirmation: KindiConfirmation): ConfirmationDetailRow[] => {
+const getConfirmationDetailRows = (confirmation: KindiConfirmation, text: KindiUiText): ConfirmationDetailRow[] => {
   const plan = confirmation.plan;
   if (!plan) return [];
 
@@ -101,7 +159,7 @@ const getConfirmationDetailRows = (confirmation: KindiConfirmation): Confirmatio
     const fullName = [plan.name?.firstName, plan.name?.lastName].filter(Boolean).join(' ').trim();
     const updates = plan.initialUpdates ?? {};
 
-    if (fullName) rows.push({ label: 'الاسم', value: fullName });
+    if (fullName) rows.push({ label: text.fields.name, value: fullName });
     const birthDate = toConfirmationDisplayValue(updates.birthDate);
     const birthPlace = toConfirmationDisplayValue(updates.birthPlace);
     const profession = toConfirmationDisplayValue(updates.profession);
@@ -110,36 +168,36 @@ const getConfirmationDetailRows = (confirmation: KindiConfirmation): Confirmatio
     const residence = toConfirmationDisplayValue(updates.residence);
     const bio = toConfirmationDisplayValue(updates.bio);
 
-    if (birthDate) rows.push({ label: 'تاريخ الميلاد', value: birthDate });
-    if (birthPlace) rows.push({ label: 'مكان الميلاد', value: birthPlace });
-    if (profession) rows.push({ label: 'المهنة', value: profession });
-    if (residence) rows.push({ label: 'السكن', value: residence });
-    if (deathDate) rows.push({ label: 'تاريخ الوفاة', value: deathDate });
-    if (deathPlace) rows.push({ label: 'مكان الوفاة', value: deathPlace });
-    if (bio) rows.push({ label: 'ملاحظات', value: bio });
+    if (birthDate) rows.push({ label: text.fields.birthDate, value: birthDate });
+    if (birthPlace) rows.push({ label: text.fields.birthPlace, value: birthPlace });
+    if (profession) rows.push({ label: text.fields.profession, value: profession });
+    if (residence) rows.push({ label: text.fields.residence, value: residence });
+    if (deathDate) rows.push({ label: text.fields.deathDate, value: deathDate });
+    if (deathPlace) rows.push({ label: text.fields.deathPlace, value: deathPlace });
+    if (bio) rows.push({ label: text.fields.bio, value: bio });
 
     return rows;
   }
 
   if (plan.type === 'UPDATE') {
     const labels: Partial<Record<keyof Person, string>> = {
-      firstName: 'الاسم الأول',
-      middleName: 'الاسم الأوسط',
-      nickName: 'الكنية',
-      lastName: 'اسم العائلة',
-      birthDate: 'تاريخ الميلاد',
-      birthPlace: 'مكان الميلاد',
-      residence: 'السكن',
-      deathDate: 'تاريخ الوفاة',
-      deathPlace: 'مكان الوفاة',
-      profession: 'المهنة',
-      bio: 'ملاحظات',
+      firstName: text.fields.firstName,
+      middleName: text.fields.middleName,
+      nickName: text.fields.nickName,
+      lastName: text.fields.lastName,
+      birthDate: text.fields.birthDate,
+      birthPlace: text.fields.birthPlace,
+      residence: text.fields.residence,
+      deathDate: text.fields.deathDate,
+      deathPlace: text.fields.deathPlace,
+      profession: text.fields.profession,
+      bio: text.fields.bio,
     };
 
     return Object.entries(plan.updates)
       .map(([key, value]) => ({
         label: labels[key as keyof Person] ?? key,
-        value: value === '' ? 'فارغ' : toConfirmationDisplayValue(value),
+        value: value === '' ? text.emptyValue : toConfirmationDisplayValue(value),
       }))
       .filter((row): row is ConfirmationDetailRow => Boolean(row.value));
   }
@@ -151,12 +209,14 @@ const KindiConfirmCard = ({
   confirmation,
   onConfirm,
   onCancel,
+  text,
 }: {
   confirmation: KindiConfirmation;
   onConfirm: (confirmation: KindiConfirmation) => void;
   onCancel: (confirmation?: KindiConfirmation) => void;
+  text: KindiUiText;
 }) => {
-  const detailRows = getConfirmationDetailRows(confirmation);
+  const detailRows = getConfirmationDetailRows(confirmation, text);
 
   return (
     <div className={`mt-3 rounded-2xl border p-3.5 shadow-md transition-all duration-300 ${
@@ -184,7 +244,7 @@ const KindiConfirmCard = ({
       {detailRows.length > 0 && (
         <div className="mt-3.5 rounded-xl border border-[var(--border-soft)]/60 bg-[var(--surface-panel)]/90 px-3 py-2.5">
           <div className="text-[10px] font-black tracking-wider text-[var(--primary-600)] uppercase">
-            التفاصيل التي سيتم حفظها
+            {text.detailsHeading}
           </div>
           <dl className="mt-2 grid gap-1.5">
             {detailRows.map((row) => (
@@ -199,12 +259,12 @@ const KindiConfirmCard = ({
       {confirmation.status && confirmation.status !== 'pending' && (
         <div className="mt-3 rounded-xl bg-[var(--surface-panel)]/90 px-3 py-2 text-xs font-bold text-[var(--text-secondary)]">
           {confirmation.status === 'confirmed'
-            ? 'تم تنفيذ هذا القرار، ولم تعد البطاقة قابلة لإعادة التنفيذ.'
+            ? text.confirmedStatus
             : confirmation.status === 'processing'
-              ? 'جاري تنفيذ القرار وحفظه...'
+              ? text.processingStatus
             : confirmation.status === 'failed'
-              ? confirmation.error || 'تعذر تنفيذ هذا القرار. لم يتم اعتماد البطاقة.'
-              : 'تم إلغاء هذا القرار، ولم يتم تغيير أي بيانات.'}
+              ? confirmation.error || text.failedStatus
+              : text.cancelledStatus}
         </div>
       )}
       {!confirmation.status || confirmation.status === 'pending' ? (
@@ -254,6 +314,8 @@ export const KindiOverlay: React.FC<KindiOverlayProps> = memo(({
   isVoiceSupported = false,
   onToggleVoice,
 }) => {
+  const { t } = useTranslation();
+  const kindiText = t.kindi;
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const activeConfirmation = [...messages]
     .reverse()
@@ -318,63 +380,12 @@ export const KindiOverlay: React.FC<KindiOverlayProps> = memo(({
       onClick={handleBackdropClick}
       className="fixed inset-0 z-[var(--z-index-modal)] flex justify-end bg-black/10 backdrop-blur-[2px] transition-all duration-300"
     >
-      {/* Self-contained Premium Styles for transitions and scrollbars */}
-      <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes kindi-drawer-slide-in {
-          from {
-            transform: translateX(100%);
-            opacity: 0.9;
-          }
-          to {
-            transform: translateX(0);
-            opacity: 1;
-          }
-        }
-        [dir="rtl"] @keyframes kindi-drawer-slide-in {
-          from {
-            transform: translateX(-100%);
-            opacity: 0.9;
-          }
-          to {
-            transform: translateX(0);
-            opacity: 1;
-          }
-        }
-        @keyframes kindi-slide-up {
-          from {
-            opacity: 0;
-            transform: translateY(12px) scale(0.98);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-          }
-        }
-        .kindi-scrollbar::-webkit-scrollbar {
-          width: 5px;
-        }
-        .kindi-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .kindi-scrollbar::-webkit-scrollbar-thumb {
-          background: var(--border-soft);
-          border-radius: 99px;
-        }
-        .kindi-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: var(--primary-600);
-        }
-        .animate-kindi-drawer {
-          animation: kindi-drawer-slide-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-        .animate-kindi-message {
-          animation: kindi-slide-up 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-      `}} />
+      <style>{KINDI_OVERLAY_STYLES}</style>
 
       <section
         role="dialog"
         aria-modal="true"
-        aria-label="Kindi intelligent assistant"
+        aria-label={kindiText.dialogLabel}
         className="animate-kindi-drawer flex h-full sm:h-[calc(100vh-3rem)] w-full sm:max-w-[480px] flex-col overflow-hidden rounded-none sm:rounded-[2rem] border-none sm:border sm:border-[var(--border-main)]/60 bg-[var(--surface-app)] sm:bg-[var(--surface-app)]/85 sm:backdrop-blur-xl shadow-2xl m-0 sm:my-6 sm:me-6 sm:ms-0"
       >
         <header className="flex items-center justify-between border-b border-[var(--border-soft)]/50 px-4 py-3.5 bg-[var(--surface-app)] sm:bg-[var(--surface-app)]/40">
@@ -383,15 +394,15 @@ export const KindiOverlay: React.FC<KindiOverlayProps> = memo(({
               <KindiIcon size={38} className="h-9 w-9 object-contain" />
             </div>
             <div>
-              <h2 className="text-sm font-black text-[var(--text-main)]">Kindi</h2>
-              <p className="text-xs text-[var(--text-muted)]">Search and tree-control assistant</p>
+              <h2 className="text-sm font-black text-[var(--text-main)]">{kindiText.title}</h2>
+              <p className="text-xs text-[var(--text-muted)]">{kindiText.subtitle}</p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
             className="rounded-full p-2 text-[var(--text-muted)] transition-all hover:bg-[var(--surface-hover)] hover:text-[var(--text-main)] hover:scale-105 active:scale-95"
-            aria-label="Close Kindi"
+            aria-label={kindiText.close}
           >
             <X className="h-4 w-4" />
           </button>
@@ -421,9 +432,10 @@ export const KindiOverlay: React.FC<KindiOverlayProps> = memo(({
                         contextLabel={message.disambiguation ? getKindiPersonContextLabel(person, peopleById) : undefined}
                         actionLabel={message.disambiguation
                           ? (!message.disambiguation.status || message.disambiguation.status === 'pending'
-                            ? 'Choose'
-                            : message.disambiguation.status)
+                            ? kindiText.choose
+                            : undefined)
                           : undefined}
+                        text={kindiText}
                         onFocus={message.disambiguation
                           ? (personId) => onChooseDisambiguation(message.id, personId)
                           : onFocusPerson}
@@ -435,7 +447,7 @@ export const KindiOverlay: React.FC<KindiOverlayProps> = memo(({
                         onClick={() => onShowMorePeople(message.id)}
                         className="rounded-2xl border border-dashed border-[var(--primary-600)]/25 bg-[var(--surface-subtle)] px-3 py-3 text-sm font-black text-[var(--primary-600)] transition hover:-translate-y-0.5 hover:bg-[var(--surface-hover)]"
                       >
-                        عرض المزيد ({message.people.length - (message.visiblePeopleCount ?? 0)} متبقي)
+                        {kindiText.showMore} ({message.people.length - (message.visiblePeopleCount ?? 0)} {kindiText.remaining})
                       </button>
                     )}
                     {message.disambiguation && (!message.disambiguation.status || message.disambiguation.status === 'pending') && (
@@ -444,12 +456,12 @@ export const KindiOverlay: React.FC<KindiOverlayProps> = memo(({
                         onClick={() => onCancelDisambiguation(message.id)}
                         className="justify-self-end rounded-full px-3 py-1.5 text-xs font-bold text-[var(--text-secondary)] transition hover:bg-[var(--surface-hover)]"
                       >
-                        إلغاء
+                        {kindiText.cancel}
                       </button>
                     )}
                     {message.disambiguation?.status === 'cancelled' && (
                       <div className="rounded-xl bg-[var(--surface-panel)] px-3 py-2 text-xs font-bold text-[var(--text-secondary)]">
-                        تم إلغاء هذا الاختيار، ولم يتم تغيير أي بيانات.
+                        {kindiText.selectionCancelled}
                       </div>
                     )}
                   </div>
@@ -461,6 +473,7 @@ export const KindiOverlay: React.FC<KindiOverlayProps> = memo(({
                         key={result.person.id}
                         person={result.person}
                         result={result}
+                        text={kindiText}
                         onFocus={onFocusPerson}
                       />
                     ))}
@@ -470,7 +483,7 @@ export const KindiOverlay: React.FC<KindiOverlayProps> = memo(({
                         onClick={() => onShowMorePeople(message.id)}
                         className="rounded-2xl border border-dashed border-[var(--primary-600)]/25 bg-[var(--surface-subtle)] px-3 py-3 text-sm font-black text-[var(--primary-600)] transition hover:-translate-y-0.5 hover:bg-[var(--surface-hover)]"
                       >
-                        عرض المزيد ({message.peopleResults.length - (message.visiblePeopleCount ?? 0)} متبقي)
+                        {kindiText.showMore} ({message.peopleResults.length - (message.visiblePeopleCount ?? 0)} {kindiText.remaining})
                       </button>
                     )}
                   </div>
@@ -480,6 +493,7 @@ export const KindiOverlay: React.FC<KindiOverlayProps> = memo(({
                     confirmation={message.confirmation}
                     onConfirm={onConfirm}
                     onCancel={onCancel}
+                    text={kindiText}
                   />
                 )}
               </div>
@@ -488,7 +502,7 @@ export const KindiOverlay: React.FC<KindiOverlayProps> = memo(({
           {isThinking && (
             <div className="inline-flex items-center gap-2 rounded-full bg-[var(--surface-panel)]/80 backdrop-blur-md px-3.5 py-2 text-xs font-bold text-[var(--text-muted)] shadow-sm animate-kindi-message">
               <Sparkles className="h-3.5 w-3.5 animate-pulse text-[var(--primary-600)]" />
-              <span>Kindi is thinking</span>
+              <span>{kindiText.thinking}</span>
               <span className="flex items-center gap-0.5" aria-hidden="true">
                 <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[var(--primary-600)] [animation-delay:-0.25s]" />
                 <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[var(--primary-600)] [animation-delay:-0.12s]" />
@@ -513,28 +527,28 @@ export const KindiOverlay: React.FC<KindiOverlayProps> = memo(({
           }`}>
             {hasPendingDecision ? (
               <div className="flex flex-1 items-center justify-between gap-2 text-[11px] font-bold text-[var(--text-secondary)]">
-                <span className="truncate">تأكيد القرار معلق حالياً...</span>
+                <span className="truncate">{kindiText.pendingDecision}</span>
                 <div className="flex items-center gap-1.5 shrink-0 select-none">
                   {activeConfirmation?.kind !== 'DELETE' && (
                     <>
                       <span className="flex items-center gap-0.5 rounded border border-[var(--border-soft)] bg-[var(--surface-panel)] px-1.5 py-0.5 font-mono text-[9px] text-[var(--text-main)] shadow-sm">
                         Ctrl Enter <CornerDownLeft className="h-2.5 w-2.5" />
                       </span>
-                      <span className="text-[var(--text-muted)] text-[9px]">للتأكيد</span>
+                      <span className="text-[var(--text-muted)] text-[9px]">{kindiText.confirmShortcut}</span>
                     </>
                   )}
                   <span className="flex items-center gap-0.5 rounded border border-[var(--border-soft)] bg-[var(--surface-panel)] px-1.5 py-0.5 font-mono text-[9px] text-[var(--text-main)] shadow-sm">
                     Esc
                   </span>
-                  <span className="text-[var(--text-muted)] text-[9px]">للتراجع</span>
+                  <span className="text-[var(--text-muted)] text-[9px]">{kindiText.cancelShortcut}</span>
                 </div>
               </div>
             ) : (
               <input
                 value={draft}
                 onChange={(event) => onDraftChange(event.target.value)}
-                placeholder={isListening ? 'Listening...' : 'Ask Kindi: children of Mahmoud, add a son...'}
-                aria-label="Kindi message"
+                placeholder={isListening ? kindiText.listeningPlaceholder : kindiText.messagePlaceholder}
+                aria-label={kindiText.messageLabel}
                 className="min-w-0 flex-1 bg-transparent text-sm font-medium text-[var(--text-main)] outline-none placeholder:text-[var(--text-muted)]"
                 autoFocus
               />
@@ -549,7 +563,7 @@ export const KindiOverlay: React.FC<KindiOverlayProps> = memo(({
                     ? 'bg-[var(--danger-500)] text-white shadow-sm'
                     : 'text-[var(--text-muted)] hover:bg-[var(--primary-600)]/10 hover:text-[var(--primary-600)]'
                 }`}
-                aria-label={isListening ? 'Stop voice input' : 'Start voice input'}
+                aria-label={isListening ? kindiText.stopVoice : kindiText.startVoice}
               >
                 {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
               </button>
@@ -558,7 +572,7 @@ export const KindiOverlay: React.FC<KindiOverlayProps> = memo(({
               type="submit"
               disabled={!draft.trim() || isThinking || hasPendingDecision}
               className="rounded-full bg-[var(--primary-600)] p-2 text-white shadow-sm transition hover:bg-[var(--primary-700)] disabled:opacity-40"
-              aria-label="Send to Kindi"
+              aria-label={kindiText.send}
             >
               <Send className="h-4 w-4 rtl:-scale-x-100" />
             </button>

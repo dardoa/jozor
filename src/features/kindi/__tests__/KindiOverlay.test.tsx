@@ -1,9 +1,59 @@
-import { fireEvent, render } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { KindiOverlay } from '../components/KindiOverlay';
 import type { KindiConfirmation, KindiMessage } from '../types';
 import type { Person } from '../../../types';
+
+vi.mock('../../../context/TranslationContext', () => ({
+  useTranslation: () => ({
+    t: {
+      kindi: {
+        title: 'كِندي',
+        dialogLabel: 'مساعد كِندي الذكي',
+        subtitle: 'مساعد البحث والتحكم بالشجرة',
+        close: 'إغلاق كِندي',
+        unnamedPerson: 'شخص بلا اسم',
+        personProfile: 'ملف الشخص',
+        choose: 'اختيار',
+        showMore: 'عرض المزيد',
+        remaining: 'متبقٍ',
+        cancel: 'إلغاء',
+        selectionCancelled: 'تم إلغاء هذا الاختيار، ولم تتغير أي بيانات.',
+        thinking: 'كِندي يفكر',
+        pendingDecision: 'يوجد قرار بانتظار التأكيد...',
+        confirmShortcut: 'للتأكيد',
+        cancelShortcut: 'للتراجع',
+        listeningPlaceholder: 'جارٍ الاستماع...',
+        messagePlaceholder: 'اسأل كِندي...',
+        messageLabel: 'رسالة إلى كِندي',
+        stopVoice: 'إيقاف الإدخال الصوتي',
+        startVoice: 'بدء الإدخال الصوتي',
+        send: 'إرسال إلى كِندي',
+        detailsHeading: 'التفاصيل التي سيتم حفظها',
+        confirmedStatus: 'تم تنفيذ القرار.',
+        processingStatus: 'جارٍ تنفيذ القرار...',
+        failedStatus: 'تعذر تنفيذ القرار.',
+        cancelledStatus: 'تم إلغاء القرار.',
+        emptyValue: 'فارغ',
+        fields: {
+          name: 'الاسم',
+          firstName: 'الاسم الأول',
+          middleName: 'الاسم الأوسط',
+          nickName: 'الكنية',
+          lastName: 'اسم العائلة',
+          birthDate: 'تاريخ الميلاد',
+          birthPlace: 'مكان الميلاد',
+          profession: 'المهنة',
+          residence: 'السكن',
+          deathDate: 'تاريخ الوفاة',
+          deathPlace: 'مكان الوفاة',
+          bio: 'ملاحظات',
+        },
+      },
+    },
+  }),
+}));
 
 beforeAll(() => {
   Element.prototype.scrollIntoView = vi.fn();
@@ -129,6 +179,18 @@ const renderOverlayWithMessages = (
 };
 
 describe('KindiOverlay keyboard confirmation guardrails', () => {
+  it('uses localized shell labels and accessible command names', () => {
+    renderOverlayWithMessages([
+      { id: 'message-plain', role: 'assistant', text: 'جاهز' },
+    ], false);
+
+    expect(screen.getByRole('dialog', { name: 'مساعد كِندي الذكي' })).toBeInTheDocument();
+    expect(screen.getByText('مساعد البحث والتحكم بالشجرة')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'إغلاق كِندي' })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'رسالة إلى كِندي' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'إرسال إلى كِندي' })).toBeInTheDocument();
+  });
+
   it('does not confirm a pending decision with plain Enter', () => {
     const props = renderOverlay(baseConfirmation);
 

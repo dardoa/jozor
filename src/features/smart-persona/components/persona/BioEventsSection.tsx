@@ -68,7 +68,7 @@ const getLifeEventMeta = (type: string | undefined, t: TranslationSchema) => {
 
   if (normalized.includes('move') || normalized.includes('home') || normalized.includes('relocat') || normalized.includes('انتقال')) {
     return {
-      label: t.eventType || 'Move',
+      label: t.eventType,
       chipClass: 'bg-amber-50 text-amber-700 shadow-sm',
       icon: Home,
     };
@@ -125,7 +125,7 @@ export const BioEventsSection: React.FC<BioEventsSectionProps> = ({
 
       {!hasEvents && !isEditing ? (
         <p className="px-1 text-xs font-medium text-[var(--text-muted)] opacity-80">
-          {t.noEventsAdded || 'No life events recorded yet'}
+          {t.noEventsAdded}
         </p>
       ) : (
         <>
