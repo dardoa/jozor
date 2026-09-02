@@ -7,6 +7,7 @@ import { backgroundTreePersistence } from './BackgroundTreePersistence';
 import { clientInstanceId } from './syncInstance';
 import { storageService } from '../storageService';
 import { projectPendingOperations } from '../../domain/pendingOperationsProjection';
+import { applyOperationToMap } from '../../utils/syncUtils';
 
 export class DeltaOperationApplier {
     private incomingProcessingQueue: Promise<void> = Promise.resolve();
@@ -25,7 +26,6 @@ export class DeltaOperationApplier {
                 requestAnimationFrame(async () => {
                     try {
                         const state = useAppStore.getState();
-                        const { applyOperationToMap } = await import('../../utils/syncUtils');
 
                         const result = applyIncomingOps({
                             people: state.people,

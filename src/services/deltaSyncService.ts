@@ -19,6 +19,7 @@ import { DeltaOperationApplier } from './sync/DeltaOperationApplier';
 import { DeltaRemoteSyncClient } from './sync/DeltaRemoteSyncClient';
 import { clientInstanceId } from './sync/syncInstance';
 import { projectPendingOperations } from '../domain/pendingOperationsProjection';
+import { fetchTree } from './supabaseTreeReadService';
 
 /**
  * DeltaSyncService (Modular Refactor)
@@ -353,7 +354,6 @@ class DeltaSyncService {
             const user = store.user;
             if (!user) return;
 
-            const { fetchTree } = await import('./supabaseTreeReadService');
             const full = await fetchTree(treeId, user.uid, user.email || '', user.supabaseToken || undefined);
 
             store.setConfirmedPeople(full.people);

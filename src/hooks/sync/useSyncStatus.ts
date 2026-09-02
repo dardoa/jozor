@@ -2,6 +2,7 @@ import { useCallback, useMemo } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { deriveCanonicalTreeSync } from '../../domain/sync/canonicalSyncState';
 import { useAppStore } from '../../store/useAppStore';
+import { deltaSyncService } from '../../services/deltaSyncService';
 
 export function useSyncStatus() {
     const {
@@ -50,9 +51,7 @@ export function useSyncStatus() {
             retryAttempt: 0,
             nextRetryAt: null,
         });
-        import('../../services/deltaSyncService').then(({ deltaSyncService }) => {
-            deltaSyncService.retryPendingChanges();
-        });
+        deltaSyncService.retryPendingChanges();
     }, [setSyncStatus]);
 
     return {

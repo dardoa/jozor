@@ -33,18 +33,16 @@ export class AddRelativeCommand implements TreeCommand {
         };
 
         // 1. Pure Mutation in Store
-        let res;
-        switch (this.type) {
-            case 'parent':
-                res = store.addParent(this.gender, this.bypassSync, this.relatedPersonId, focusId);
-                break;
-            case 'spouse':
-                res = store.addSpouse(this.gender, this.bypassSync, this.relatedPersonId);
-                break;
-            case 'child':
-                res = store.addChild(this.gender, this.bypassSync, this.relatedPersonId, focusId);
-                break;
-        }
+        const res = (() => {
+            switch (this.type) {
+                case 'parent':
+                    return store.addParent(this.gender, this.bypassSync, this.relatedPersonId, focusId);
+                case 'spouse':
+                    return store.addSpouse(this.gender, this.bypassSync, this.relatedPersonId);
+                case 'child':
+                    return store.addChild(this.gender, this.bypassSync, this.relatedPersonId, focusId);
+            }
+        })();
 
         if (!res) {
             return { success: false, error: `Unable to add ${this.type}.` };

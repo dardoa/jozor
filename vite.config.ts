@@ -1,8 +1,36 @@
 import * as path from 'path';
+import { gzipSync } from 'node:zlib';
 import { defineConfig, loadEnv } from 'vite';
+import type { Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { createLocalApiProxyMiddleware } from './scripts/dev/localApiProxyMiddleware';
+
+const ENTRY_CHUNK_BUDGET_BYTES = 950 * 1024;
+const ENTRY_CHUNK_GZIP_BUDGET_BYTES = 315 * 1024;
+
+function enforceEntryBundleBudget(): Plugin {
+  return {
+    name: 'jozor-entry-bundle-budget',
+    apply: 'build',
+    generateBundle(_options, bundle) {
+      for (const output of Object.values(bundle)) {
+        if (output.type !== 'chunk' || !output.isEntry) continue;
+
+        const bytes = Buffer.byteLength(output.code, 'utf8');
+        const gzipBytes = gzipSync(output.code).byteLength;
+        if (bytes > ENTRY_CHUNK_BUDGET_BYTES || gzipBytes > ENTRY_CHUNK_GZIP_BUDGET_BYTES) {
+          this.error(
+            `Entry bundle ${output.fileName} exceeds the Jozor budget: `
+            + `${(bytes / 1024).toFixed(2)} KB / ${(gzipBytes / 1024).toFixed(2)} KB gzip; `
+            + `limits are ${ENTRY_CHUNK_BUDGET_BYTES / 1024} KB / `
+            + `${ENTRY_CHUNK_GZIP_BUDGET_BYTES / 1024} KB gzip.`
+          );
+        }
+      }
+    },
+  };
+}
 
 export default defineConfig(({ mode }) => {
   console.log('\x1b[36m%s\x1b[0m', '🛡️ Jozor Security: Initializing configuration...');
@@ -36,6 +64,7 @@ export default defineConfig(({ mode }) => {
     },
     plugins: [
       react(),
+      enforceEntryBundleBudget(),
       shouldAnalyzeBundle && visualizer({
         filename: 'dist/bundle-stats.html',
         gzipSize: true,
@@ -48,6 +77,7 @@ export default defineConfig(({ mode }) => {
       __APP_VERSION__: JSON.stringify('2.0.0'),
     },
     build: {
+      chunkSizeWarningLimit: ENTRY_CHUNK_BUDGET_BYTES / 1024,
       rollupOptions: {
         output: {
           manualChunks(id) {

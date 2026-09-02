@@ -168,6 +168,28 @@ describe('ImageCacheService', () => {
       expect(mockCache.delete).not.toHaveBeenCalledWith(unrelatedRequest);
     });
 
+    it('starts all stale cache deletions before awaiting their completion', async () => {
+      mockCache.match.mockResolvedValue(undefined);
+      const staleRequests = [
+        { url: 'https://example.com/pic.jpg?v=1' },
+        { url: 'https://example.com/pic.jpg?v=2' },
+      ];
+      mockCache.keys.mockResolvedValue(staleRequests);
+
+      const deleteResolvers: Array<(value: boolean) => void> = [];
+      mockCache.delete.mockImplementation(() => new Promise<boolean>((resolve) => {
+        deleteResolvers.push(resolve);
+      }));
+
+      const fetchPromise = imageCacheService.fetchAndCache('https://example.com/pic.jpg?v=3');
+
+      await vi.waitFor(() => {
+        expect(mockCache.delete).toHaveBeenCalledTimes(2);
+      });
+      deleteResolvers.forEach((resolve) => resolve(true));
+      await fetchPromise;
+    });
+
     it('preserves different dimension buckets for the same image version', async () => {
       mockCache.match.mockResolvedValue(undefined);
 

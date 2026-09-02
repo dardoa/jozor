@@ -5,6 +5,7 @@ import type { UserProfile } from '../../../types';
 import type { TranslationSchema } from '../../../utils/translationLoader';
 import { showToast } from '../../../utils/showToast';
 import type { SharedTreeSummary, TreeSummary } from '../../../services/supabaseTreeTypes';
+import { fetchTree, fetchTreesForUser } from '../../../services/supabaseTreeReadService';
 import { hydrateTreeTombstonesAndResumeSync } from '../../../hooks/authInit/treeActivationSync';
 
 const SESSION_ERROR_TOAST_ID = 'session-error';
@@ -99,12 +100,11 @@ export const useVaultTreeManagement = ({
     setTreeLoadError(null);
 
     const work = Promise.all([
-      import('../../../services/supabaseTreeReadService'),
-      import('../../../services/supabaseTreeAccessService'),
-    ]).then(([readService, accessService]) => Promise.all([
-      readService.fetchTreesForUser(currentUser.uid, currentUser.email, currentUser.supabaseToken),
-      accessService.fetchSharedTrees(currentUser.uid, currentUser.email, currentUser.supabaseToken),
-    ])).then(([owned, shared]) => {
+      fetchTreesForUser(currentUser.uid, currentUser.email, currentUser.supabaseToken),
+      import('../../../services/supabaseTreeAccessService').then((accessService) =>
+        accessService.fetchSharedTrees(currentUser.uid, currentUser.email, currentUser.supabaseToken)
+      ),
+    ]).then(([owned, shared]) => {
       hasSessionFailureRef.current = false;
       setOwnedTrees(owned);
       setSharedTrees(shared);
@@ -131,7 +131,6 @@ export const useVaultTreeManagement = ({
     if (!currentUser?.uid || !currentUser?.email) return;
 
     const work = async () => {
-      const { fetchTree } = await import('../../../services/supabaseTreeReadService');
       const full = await fetchTree(treeId, currentUser.uid, currentUser.email, currentUser.supabaseToken);
       localStorage.setItem('lastActiveTreeId', treeId);
       useAppStore.getState().setDeletedPersonIds([]);

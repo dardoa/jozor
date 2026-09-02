@@ -3,7 +3,6 @@ import {
   createBranchPosterCollection,
   createPosterDocumentSpec,
   createPosterPersonTokenCatalogSession,
-  createPosterScene,
   createRawGraphFromFixtureSource,
   createRawGraphFromLiveSource,
   createTiledWallPosterPlan,
@@ -28,17 +27,20 @@ import {
   selectSnapshotPreviewGraph,
   branchFixturePreviewGraphSelector,
   type FixturePreviewSource,
-  type PosterContentSpec,
   type PosterDesignState,
   type PosterFontAssetResolver,
   type PosterImageAssetRequest,
   type PosterImageAssetResolver,
   type PosterVisualStylePreset,
   type PreviewLiveTreeSource,
-  type SanitizedPreviewGraph,
   type StudioPosterSvgResources,
 } from '../../../publishing';
 import { mapPosterDesignStateToRuntimeOptions } from './posterDesignStateRuntimeAdapter';
+import {
+  evaluateVisualStudioPosterScene,
+  isFocusCapacityError,
+  isRadialCapacityError,
+} from './visualStudioPosterSceneEvaluation';
 import {
   getVisualStudioPosterNodeLimit,
 } from './visualStudioPosterOptions';
@@ -150,27 +152,6 @@ const STUDIO_PREVIEW_FIXTURE_SOURCE: FixturePreviewSource = {
     { fromFixtureId: 'fixture-father', toFixtureId: 'fixture-sibling', relationshipType: 'parent-child' },
   ],
 };
-
-const isFocusCapacityError = (error: unknown): boolean => {
-  if (error instanceof FocusLayoutCapacityError) return true;
-  if (!error || typeof error !== 'object') return false;
-  const candidate = error as { code?: unknown; message?: unknown };
-  return candidate.code === 'FOCUS_LAYOUT_CAPACITY_EXCEEDED'
-    || (typeof candidate.message === 'string' && candidate.message.startsWith('Focus layout capacity exceeded:'));
-};
-
-const isRadialCapacityError = (error: unknown): boolean => {
-  if (error instanceof RadialLayoutCapacityError) return true;
-  if (!error || typeof error !== 'object') return false;
-  const candidate = error as { code?: unknown; message?: unknown };
-  return candidate.code === 'RADIAL_LAYOUT_CAPACITY_EXCEEDED'
-    || (typeof candidate.message === 'string' && candidate.message.startsWith('Radial layout capacity exceeded:'));
-};
-
-const getVisibleGenerationCount = (graph: SanitizedPreviewGraph): number => Math.max(
-  1,
-  ...graph.nodes.map((node) => node.generation ?? 1)
-);
 
 const getExplicitPresetValue = <T extends string>(
   value: T | undefined
@@ -611,157 +592,19 @@ export function useVisualStudioPosterRuntime({
     );
   }, [mappingResult.posterOptions, selectedDefinition.productType, designState.shared]);
 
-  const posterSceneEvaluation = useMemo(() => {
-    if (designState.layoutMode === 'radial-generations' && radialSelectionResult?.error) {
-      return { scene: undefined, capacityError: radialSelectionResult.error };
-    }
-    if (designState.layoutMode === 'focus-family' && focusSelectionResult?.error) {
-      return { scene: undefined, capacityError: focusSelectionResult.error };
-    }
-    if (!mappingResult.posterOptions || !posterDocumentSpec || !previewData?.graph) {
-      return { scene: undefined, capacityError: undefined };
-    }
-
-    if (mappingResult.posterOptions.engineId === 'radial-generations' && radialSelectionResult?.selection) {
-      try {
-        const radialGraph = radialSelectionResult.selection.sanitizedGraph;
-        const scene = createPosterScene({
-          graph: radialGraph,
-          document: posterDocumentSpec,
-          content: {
-            ...mappingResult.posterOptions.content,
-            generationCount: getVisibleGenerationCount(radialGraph),
-          },
-          engineId: 'radial-generations',
-          radialOptions: mappingResult.posterOptions.radialOptions,
-          stylePreset: selectedPosterStyle,
-          photoShape: designState.shared.photoShape,
-          connectorStyle: designState.shared.connectorStyle,
-          connectorPathStyle: getExplicitPresetValue(designState.shared.connectorPath),
-          colorPalette: getExplicitPresetValue(designState.shared.colorPalette),
-          colorOverrides: designState.shared.colorOverrides,
-          decoration: getExplicitPresetValue(designState.shared.decoration),
-          ornament: getExplicitPresetValue(designState.shared.ornament),
-          typographyPreset: designState.shared.typography,
-          fontFamily: getExplicitPresetValue(designState.shared.fontFamily),
-          cardScalePreset: designState.shared.cardScale,
-          cardEffectPreset: getExplicitPresetValue(designState.shared.cardEffect),
-          cardFramePreset: getExplicitPresetValue(designState.shared.cardFrame),
-          cardCornerPreset: getExplicitPresetValue(designState.shared.cardCorner),
-          cardLayoutPreset: getExplicitPresetValue(designState.shared.cardLayout),
-          pageFramePreset: getExplicitPresetValue(designState.shared.pageFrame),
-          headerPreset: getExplicitPresetValue(designState.shared.header),
-          spacingPreset: getExplicitPresetValue(designState.shared.spacing),
-          direction: designState.shared.direction,
-        });
-        return { scene, capacityError: undefined };
-      } catch (err) {
-        if (isRadialCapacityError(err)) {
-          return {
-            scene: undefined,
-            capacityError: err instanceof RadialLayoutCapacityError ? err : new RadialLayoutCapacityError('Exceeded radial capacity.'),
-          };
-        }
-        throw err;
-      }
-    }
-
-    if (mappingResult.posterOptions.engineId === 'focus-family' && focusSelectionResult?.selection) {
-      try {
-        const focusGraph = focusSelectionResult.selection.sanitizedGraph;
-        const scene = createPosterScene({
-          graph: focusGraph,
-          document: posterDocumentSpec,
-          content: {
-            ...mappingResult.posterOptions.content,
-            scope: 'selected-root-focus',
-            generationCount: getVisibleGenerationCount(focusGraph),
-          },
-          engineId: 'focus-family',
-          focusOptions: mappingResult.posterOptions.focusOptions,
-          stylePreset: selectedPosterStyle,
-          photoShape: designState.shared.photoShape,
-          connectorStyle: designState.shared.connectorStyle,
-          connectorPathStyle: getExplicitPresetValue(designState.shared.connectorPath),
-          colorPalette: getExplicitPresetValue(designState.shared.colorPalette),
-          colorOverrides: designState.shared.colorOverrides,
-          decoration: getExplicitPresetValue(designState.shared.decoration),
-          ornament: getExplicitPresetValue(designState.shared.ornament),
-          typographyPreset: designState.shared.typography,
-          fontFamily: getExplicitPresetValue(designState.shared.fontFamily),
-          cardScalePreset: designState.shared.cardScale,
-          cardEffectPreset: getExplicitPresetValue(designState.shared.cardEffect),
-          cardFramePreset: getExplicitPresetValue(designState.shared.cardFrame),
-          cardCornerPreset: getExplicitPresetValue(designState.shared.cardCorner),
-          cardLayoutPreset: getExplicitPresetValue(designState.shared.cardLayout),
-          pageFramePreset: getExplicitPresetValue(designState.shared.pageFrame),
-          headerPreset: getExplicitPresetValue(designState.shared.header),
-          spacingPreset: getExplicitPresetValue(designState.shared.spacing),
-          direction: designState.shared.direction,
-        });
-        return { scene, capacityError: undefined };
-      } catch (err) {
-        if (isFocusCapacityError(err)) {
-          return {
-            scene: undefined,
-            capacityError: err instanceof FocusLayoutCapacityError ? err : new FocusLayoutCapacityError('Exceeded focus capacity.'),
-          };
-        }
-        throw err;
-      }
-    }
-
-    const content: PosterContentSpec = {
-      definitionId: selectedDefinition.id,
-      language,
-      generationCount: getVisibleGenerationCount(previewData.graph),
-      privacyMode: designState.shared.privacyMode,
-      title: posterTitle,
-      subtitle: posterSubtitle,
-      footerText: normalizePosterFooterText(designState.shared.footerText || ''),
-      showJozorAttribution: designState.shared.showJozorAttribution,
-      scope: designState.scope === 'ancestors'
-        ? 'selected-root-ancestors'
-        : designState.scope === 'descendants'
-          ? 'selected-root-descendants'
-          : designState.scope === 'selected-branch'
-            ? 'selected-branch'
-          : 'full-tree',
-      showYears: designState.shared.showYears,
-      showRelationship: designState.shared.showRelationship,
-      showBirthPlace: designState.shared.showBirthPlace,
-      showOccupation: designState.shared.showOccupation,
-      showDescription: designState.shared.showDescription,
-    };
-
-    return {
-      scene: createPosterScene({
-        graph: previewData.graph,
-        document: posterDocumentSpec,
-        content,
-        stylePreset: selectedPosterStyle,
-        photoShape: designState.shared.photoShape,
-        connectorStyle: designState.shared.connectorStyle,
-        connectorPathStyle: getExplicitPresetValue(designState.shared.connectorPath),
-        colorPalette: getExplicitPresetValue(designState.shared.colorPalette),
-        colorOverrides: designState.shared.colorOverrides,
-        decoration: getExplicitPresetValue(designState.shared.decoration),
-        ornament: getExplicitPresetValue(designState.shared.ornament),
-        typographyPreset: designState.shared.typography,
-        fontFamily: getExplicitPresetValue(designState.shared.fontFamily),
-        cardScalePreset: designState.shared.cardScale,
-        cardEffectPreset: getExplicitPresetValue(designState.shared.cardEffect),
-        cardFramePreset: getExplicitPresetValue(designState.shared.cardFrame),
-        cardCornerPreset: getExplicitPresetValue(designState.shared.cardCorner),
-        cardLayoutPreset: getExplicitPresetValue(designState.shared.cardLayout),
-        pageFramePreset: getExplicitPresetValue(designState.shared.pageFrame),
-        headerPreset: getExplicitPresetValue(designState.shared.header),
-        spacingPreset: getExplicitPresetValue(designState.shared.spacing),
-        direction: designState.shared.direction,
-      }),
-      capacityError: undefined,
-    };
-  }, [radialSelectionResult, focusSelectionResult, mappingResult.posterOptions, posterDocumentSpec, previewData, selectedDefinition.id, language, posterTitle, posterSubtitle, selectedPosterStyle, designState]);
+  const posterSceneEvaluation = useMemo(() => evaluateVisualStudioPosterScene({
+    language,
+    designState,
+    posterOptions: mappingResult.posterOptions,
+    document: posterDocumentSpec,
+    previewGraph: previewData?.graph,
+    focusSelection: focusSelectionResult,
+    radialSelection: radialSelectionResult,
+    selectedDefinitionId: selectedDefinition.id,
+    posterTitle,
+    posterSubtitle,
+    stylePreset: selectedPosterStyle,
+  }), [radialSelectionResult, focusSelectionResult, mappingResult.posterOptions, posterDocumentSpec, previewData, selectedDefinition.id, language, posterTitle, posterSubtitle, selectedPosterStyle, designState]);
 
   const posterScene = posterSceneEvaluation.scene;
 

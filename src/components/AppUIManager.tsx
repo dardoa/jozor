@@ -13,8 +13,6 @@ import { EMPTY_STRING } from '../constants';
 
 import { LandingPage } from '../features/landing';
 
-import { AppLayout } from './AppLayout';
-
 import { TreeSelector } from '../features/tree-manager';
 
 import { useAppStore, loadFullState } from '../store/useAppStore';
@@ -35,6 +33,10 @@ import { NotFound } from './NotFound';
 
 import { useTranslation } from '../context/TranslationContext';
 import { MobileActionBar } from './ui/MobileActionBar';
+
+const AppLayout = React.lazy(() =>
+  import('./AppLayout').then((module) => ({ default: module.AppLayout }))
+);
 
 export const AppUIManager: React.FC = () => {
   const { t } = useTranslation();

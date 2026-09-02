@@ -4,6 +4,7 @@ import { getTreeClient } from './supabaseTreeClient';
 import type { TreeSummary } from './supabaseTreeTypes';
 import type { DeltaOperation } from './sync/SyncTypes';
 import { logError } from '../utils/errorLogger';
+import { applyOperationToMap } from '../utils/syncUtils';
 
 export const fetchTreesForUser = async (
   ownerId: string,
@@ -194,7 +195,6 @@ export const fetchTree = async (
       (max, op) => Math.max(max, Number(op.version_seq ?? 0)),
       result.lastVersion
     );
-    const { applyOperationToMap } = await import('../utils/syncUtils');
     const replayed = operations.reduce((people, op) => {
       if (op.type === 'SET_TREE_METADATA') {
         const metadata = op.payload.treeMetadata ?? {};
@@ -244,7 +244,6 @@ export const fetchTree = async (
   const result = buildTreeFetchResult(tree, peopleRows, relRows, null);
   const operations = (operationRows ?? []) as DeltaOperation[];
   const maxVersion = operations.reduce((max, op) => Math.max(max, Number(op.version_seq ?? 0)), 0);
-  const { applyOperationToMap } = await import('../utils/syncUtils');
   const replayed = operations.reduce((people, op) => {
     if (op.type === 'SET_TREE_METADATA') {
       const metadata = op.payload.treeMetadata ?? {};

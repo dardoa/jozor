@@ -91,14 +91,13 @@ async function cleanStaleVersions(cache: Cache, url: string): Promise<void> {
     const targetBase = getBaseUrl(url);
     const targetVersionedSource = getVersionedSourceUrl(url);
     const keys = await cache.keys();
-    for (const request of keys) {
-      if (
+    const staleRequests = keys.filter(
+      (request) =>
         getBaseUrl(request.url) === targetBase &&
         getVersionedSourceUrl(request.url) !== targetVersionedSource
-      ) {
-        await cache.delete(request);
-      }
-    }
+    );
+
+    await Promise.all(staleRequests.map((request) => cache.delete(request)));
   } catch (error) {
     logError('IMAGE_CACHE_CLEANUP_FAILED', error, { showToast: false });
   }
