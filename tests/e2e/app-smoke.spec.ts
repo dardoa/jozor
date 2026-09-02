@@ -192,6 +192,7 @@ const seedScenario = async (
   if (await loader.count() > 0) {
     await expect(loader).toBeHidden({ timeout: 15000 });
   }
+  await expect(page.getByTestId('tree-node').first()).toBeVisible({ timeout: 15000 });
 };
 
 const openNodeContextMenu = async (page: Page) => {
@@ -676,7 +677,7 @@ test.describe('Vault role boundaries', () => {
       await navigation.getByRole('button', { name: 'Insights & Tools', exact: true }).click();
       await expect(page.getByRole('heading', { name: 'Explore the tree' })).toBeVisible();
       await expect(page.getByRole('heading', { name: 'Check and calculate' })).toBeVisible();
-      await expect(page.getByRole('button', { name: /Open data consistency check:/i })).toBeVisible();
+      await expect(page.getByRole('button', { name: /Open structural integrity review:/i })).toBeVisible();
 
       if (scenario.canManage) {
         await expect(navigation.getByRole('button', { name: 'Members', exact: true })).toBeVisible();
