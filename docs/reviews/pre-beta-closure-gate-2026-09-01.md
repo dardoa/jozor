@@ -23,6 +23,7 @@ The application and Visual Publishing Studio do not require an architectural rew
 - Browser print remains an explicitly labeled fallback.
 - Controlled Family Book PDF is enabled in Preview and Production and the embedded-Chromium production endpoint passed an authenticated Arabic/font/image smoke proof.
 - GitHub Actions run `33560351663` passed typecheck, API typecheck, lint, unit tests, and Playwright smoke tests for production commit `35d844f`; its check annotations are empty after the Node 24 action upgrade.
+- A real owner-authorized Family Book passed production PDF review: 20 A4 pages, 63 person cards, 27 embedded images, embedded Arabic fonts, no blank text pages, no broken Arabic, and no private infrastructure identifiers or external resources in the portable artifact.
 
 ## Open Gates Before External Invitations
 
@@ -33,10 +34,6 @@ Digital page geometry is verified, but no physical printer proof was performed i
 The regenerated representative files and sign-off matrix are documented in
 `docs/reviews/visual-studio-physical-print-handoff-2026-09-01.md`. The workstation
 currently exposes virtual printers only, so this gate remains externally pending.
-
-### Family Book controlled PDF gate
-
-Family Book controlled PDF uses embedded Chromium and no longer requires Browserless credentials. Preview and Production are activated, and an authenticated synthetic Arabic/font/image PDF passed on the production endpoint. Before presenting the Family Book as beta-ready, complete a real owner-authorized Arabic/photo Family Book visual review, or exclude that output from the first cohort while retaining Markdown and the clearly labeled browser-print fallback.
 
 ### Authenticated collaboration gate
 
@@ -59,7 +56,6 @@ Exclude or label as transitional:
 - Legacy poster renderers.
 - Public portable raw JSON.
 - Unsupported/planned layout and scope combinations.
-- Controlled Family Book PDF until the real owner-authorized manuscript review is accepted.
 - Any claim of physical-print approval for large-format outputs.
 
 ## Acceptance Checklist
@@ -72,7 +68,7 @@ Exclude or label as transitional:
 - [x] Release-candidate implementation committed and pushed.
 - [x] GitHub CI is green for production commit `35d844f`.
 - [x] Vercel production deployment is Ready and the controlled endpoint is live-smoked.
+- [x] Real owner-authorized Family Book controlled PDF reviewed and accepted.
 - [ ] Physical print proof accepted.
-- [ ] Real owner-authorized Family Book controlled PDF reviewed, or feature excluded from cohort.
 - [ ] Real authenticated collaboration E2E run when collaboration is in cohort scope.
 - [ ] Owner explicitly authorizes first tester invitation.

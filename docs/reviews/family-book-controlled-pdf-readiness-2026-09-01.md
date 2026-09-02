@@ -33,7 +33,9 @@ The readiness check is a lightweight authenticated `GET`; it does not start Chro
 - The unauthenticated production endpoint returns the expected `401 Unauthorized` response with `no-store` and the controlled CORS policy.
 - An authenticated synthetic production request containing Arabic text, mixed RTL/LTR years, an embedded Amiri font, and an embedded image returned a valid `%PDF-` document.
 - The production proof is one A4 page (`594.96 x 841.92 pt`), contains no PDF JavaScript, renders shaped Arabic correctly, and preserves the embedded image.
-- The remaining owner gate is a real Family Book export using owner-authorized tree content and photos; no live owner data was used in the synthetic production proof.
+- A real owner-authorized manuscript was generated through the production endpoint and reviewed without recording private names or profile data in repository evidence.
+- The owner artifact contains 20 A4 pages, 63 person cards, and 27 embedded images. All pages rendered, all fonts are embedded, Arabic shaping is correct, and no blank text pages, replacement characters, mojibake, external image URLs, storage URLs, raw tree UUIDs, tokens, JavaScript, or automatic PDF actions were detected.
+- The Studio estimated 21 pages while Chromium produced 20 pages. The estimate remains advisory and the difference did not cause missing content or an empty page.
 
 ## Current Classification
 
@@ -42,5 +44,5 @@ The readiness check is a lightweight authenticated `GET`; it does not start Chro
 - Deterministic unit/API evidence: Pass
 - Embedded Chromium renderer: Production deployed and verified
 - Synthetic Arabic/font/image production proof: Pass
-- Real owner Family Book visual review: Pending
+- Real owner Family Book visual review: Pass
 - Browser print fallback: Available, transitional only
