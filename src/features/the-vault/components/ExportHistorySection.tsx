@@ -191,8 +191,11 @@ export const ExportHistorySection: React.FC<ExportHistorySectionProps> = ({
       )}
 
       {!exportHistory || exportHistory.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-[var(--border-soft)] bg-[var(--surface-subtle)] p-5 text-center text-xs text-[var(--text-muted)]">
-          {language === 'ar' ? 'لا يوجد سجل تصدير بعد.' : 'No export history available yet.'}
+        <div className="rounded-2xl border border-dashed border-[var(--border-soft)] bg-[var(--surface-subtle)] p-5 text-center">
+          <p className="text-sm font-semibold text-[var(--text-main)]">{t.vaultExportHistoryEmptyTitle}</p>
+          <p className="mx-auto mt-1 max-w-xl text-xs leading-5 text-[var(--text-muted)]">
+            {t.vaultExportHistoryEmptyHint}
+          </p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -286,7 +289,7 @@ export const ExportHistorySection: React.FC<ExportHistorySectionProps> = ({
                         <div className="grid gap-2 border-t border-[var(--border-soft)] pt-2.5 sm:grid-cols-3">
                           {entry.integrity?.healthScore !== undefined && (
                             <div className="flex items-center gap-2 rounded-lg bg-[var(--surface-panel)] p-2 text-xs">
-                              <span className="text-[var(--text-muted)]">{language === 'ar' ? 'صحة الشجرة:' : 'Health:'}</span>
+                              <span className="text-[var(--text-muted)]">{language === 'ar' ? 'السلامة البنيوية:' : 'Structural integrity:'}</span>
                               <span className="font-bold text-[var(--text-main)]">{entry.integrity.healthScore}%</span>
                             </div>
                           )}

@@ -27,12 +27,16 @@ export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(({ the
   const { t } = useTranslation();
   const setVaultOpen = useAppStore((state) => state.setVaultOpen);
   const setVaultTab = useAppStore((state) => state.setVaultTab);
+  const setVaultExportSection = useAppStore((state) => state.setVaultExportSection);
   const setSettingsDrawerOpen = useAppStore((state) => state.setSettingsDrawerOpen);
   const { role } = useTreePermissions();
 
   const openVault = (tab: 'cloud' | 'security' | 'trees' | 'members' | 'stats' = 'trees') => {
     setSettingsDrawerOpen(false);
     setVaultTab(tab);
+    if (tab === 'cloud') {
+      setVaultExportSection('cloud-backup');
+    }
     setVaultOpen(true);
   };
 
@@ -46,7 +50,12 @@ export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(({ the
         {auth.user ? (
           <>
             <NotificationBell />
-            <SyncStatusIndicator onOpenVault={() => openVault('cloud')} title='Open The Vault Cloud' />
+            <SyncStatusIndicator
+              onOpenVault={() => openVault('cloud')}
+              title={t.syncStatus.openBackupSettings}
+              driveConnectionState={auth.hasSessionError ? 'expired' : auth.isAuthorized ? 'connected' : 'disconnected'}
+              hasLinkedBackup={Boolean(auth.currentActiveDriveFileId)}
+            />
 
             {role && (
               <button

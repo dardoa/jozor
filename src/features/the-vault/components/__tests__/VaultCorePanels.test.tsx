@@ -7,6 +7,7 @@ import { ActiveTreeCard } from '../ActiveTreeCard';
 import { PrivacySettingsPanel } from '../PrivacySettingsPanel';
 import { VaultTabLoader } from '../VaultTabLoader';
 import { VaultTreesPanel } from '../VaultTreesPanel';
+import { TreeGridList } from '../TreeGridList';
 
 const treePanelProps = {
   treeName: 'Family Tree',
@@ -161,5 +162,33 @@ describe('Vault core panels', () => {
     expect(screen.queryByText('No owned trees.')).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
     expect(onRefreshTrees).toHaveBeenCalledTimes(1);
+  });
+
+  it('disambiguates duplicate names and formats update dates explicitly', () => {
+    render(
+      <TreeGridList
+        title="Manage owned trees"
+        items={[
+          { id: 'tree-1', name: 'New Family Tree', createdAt: '2026-04-01T00:00:00.000Z', role: 'owner' },
+          { id: 'tree-2', name: 'New Family Tree', createdAt: '2026-05-30T00:00:00.000Z', role: 'owner' },
+        ]}
+        activeTreeId="tree-1"
+        busyId={null}
+        editingId={null}
+        editName=""
+        onEditNameChange={vi.fn()}
+        onSelect={vi.fn()}
+        emptyText="No trees"
+        labels={{
+          locale: 'en-US',
+          duplicateName: 'Tree {index} of {total} with this name',
+        }}
+        compact
+      />
+    );
+
+    expect(screen.getByLabelText('Tree 1 of 2 with this name')).toBeInTheDocument();
+    expect(screen.getByLabelText('Tree 2 of 2 with this name')).toBeInTheDocument();
+    expect(screen.getByText(/Updated Apr 1, 2026/)).toBeInTheDocument();
   });
 });

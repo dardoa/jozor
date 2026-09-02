@@ -74,6 +74,8 @@ const t = {
   vaultExportPng: 'PNG',
   vaultExportPdf: 'PDF',
   vaultExportPrint: 'Print',
+  vaultExportHistoryEmptyTitle: 'No publishing history yet',
+  vaultExportHistoryEmptyHint: 'Poster, Family Book, and portable-data exports recorded by the publishing pipeline will appear here with their quality and privacy details.',
 } as unknown as TranslationSchema;
 
 const baseProps = {
@@ -841,7 +843,8 @@ describe('ExportCloudPanel manuscript preview', () => {
     it('renders empty history placeholder when no history exists', () => {
       render(<ExportCloudPanel {...baseProps} />);
       switchToExportSection(/History & Quality/i);
-      expect(screen.getByText('No export history available yet.')).toBeInTheDocument();
+      expect(screen.getByText('No publishing history yet')).toBeInTheDocument();
+      expect(screen.getByText(/Poster, Family Book, and portable-data exports/)).toBeInTheDocument();
       expect(screen.queryByRole('button', { name: /Clear History/i })).not.toBeInTheDocument();
     });
 
@@ -891,7 +894,7 @@ describe('ExportCloudPanel manuscript preview', () => {
       fireEvent.click(screen.getByRole('button', { name: /Show details/i }));
 
       // Integrity and Evidence
-      expect(screen.getByText('Health:')).toBeInTheDocument();
+      expect(screen.getByText('Structural integrity:')).toBeInTheDocument();
       expect(screen.getByText('94%')).toBeInTheDocument();
       expect(screen.getByText('Citations:')).toBeInTheDocument();
       expect(screen.getByText('85%')).toBeInTheDocument();

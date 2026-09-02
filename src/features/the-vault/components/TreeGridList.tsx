@@ -31,6 +31,8 @@ const DEFAULT_TREE_LIST_LABELS: TreeListLabels = {
   ownerRole: 'Owner',
   editorRole: 'Editor',
   viewerRole: 'Viewer',
+  locale: 'en-US',
+  duplicateName: 'Tree {index} of {total} with this name',
 };
 
 export const TreeGridList: React.FC<TreeGridListProps> = ({
@@ -52,6 +54,12 @@ export const TreeGridList: React.FC<TreeGridListProps> = ({
   hideTitle = false,
 }) => {
   const resolvedLabels = { ...DEFAULT_TREE_LIST_LABELS, ...labels };
+  const nameCounts = items.reduce<Record<string, number>>((counts, tree) => {
+    const key = tree.name.trim().toLocaleLowerCase();
+    counts[key] = (counts[key] || 0) + 1;
+    return counts;
+  }, {});
+  const seenNames: Record<string, number> = {};
 
   if (items.length === 0) {
     return (
@@ -67,6 +75,11 @@ export const TreeGridList: React.FC<TreeGridListProps> = ({
       {!hideTitle && <h4 className="px-1 text-[16px] font-bold tracking-tight text-[var(--text-main)]">{title}</h4>}
       <div className={compact ? 'space-y-3' : 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3'}>
         {items.map((tree) => {
+          const normalizedName = tree.name.trim().toLocaleLowerCase();
+          seenNames[normalizedName] = (seenNames[normalizedName] || 0) + 1;
+          const duplicatePosition = nameCounts[normalizedName] > 1
+            ? { index: seenNames[normalizedName], total: nameCounts[normalizedName] }
+            : null;
           return (
             <TreeListItem
               key={tree.id}
@@ -83,6 +96,7 @@ export const TreeGridList: React.FC<TreeGridListProps> = ({
               onCancelRename={onCancelRename}
               onSelect={onSelect}
               onDelete={onDelete}
+              duplicatePosition={duplicatePosition}
             />
           );
         })}

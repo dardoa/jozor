@@ -1,9 +1,10 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { HeaderRightSection } from '../HeaderRightSection';
 import type { HeaderRightSectionProps } from '../../../types';
+import { useAppStore } from '../../../store/useAppStore';
 
 vi.mock('../../../context/TranslationContext', () => ({
   useTranslation: () => ({
@@ -18,6 +19,9 @@ vi.mock('../../../context/TranslationContext', () => ({
       saveAs: 'Save As',
       printMenu: 'Print',
       print: 'Print',
+      syncStatus: {
+        openBackupSettings: 'Open backup settings',
+      },
     },
   }),
 }));
@@ -27,7 +31,9 @@ vi.mock('../../../features/kindi', () => ({
 }));
 
 vi.mock('../../SyncStatusIndicator', () => ({
-  SyncStatusIndicator: () => <div data-testid="sync-status" />,
+  SyncStatusIndicator: ({ onOpenVault }: { onOpenVault?: () => void }) => (
+    <button type="button" data-testid="sync-status" onClick={onOpenVault}>Sync</button>
+  ),
 }));
 
 vi.mock('../NotificationBell', () => ({
@@ -82,6 +88,14 @@ const buildProps = (): HeaderRightSectionProps => ({
 } as unknown as HeaderRightSectionProps);
 
 describe('HeaderRightSection', () => {
+  beforeEach(() => {
+    useAppStore.setState({
+      isVaultOpen: false,
+      vaultTab: 'trees',
+      vaultExportSection: 'family-book',
+    });
+  });
+
   it('exposes an ultra-clean authenticated header surface', () => {
     render(<HeaderRightSection {...buildProps()} />);
 
@@ -94,6 +108,11 @@ describe('HeaderRightSection', () => {
     render(<HeaderRightSection {...buildProps()} />);
 
     expect(screen.getByTestId('sync-status')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId('sync-status'));
+    expect(useAppStore.getState().isVaultOpen).toBe(true);
+    expect(useAppStore.getState().vaultTab).toBe('cloud');
+    expect(useAppStore.getState().vaultExportSection).toBe('cloud-backup');
   });
 
   it('opens the account menu for authenticated users', () => {

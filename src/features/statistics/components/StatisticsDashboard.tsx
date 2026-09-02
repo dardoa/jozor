@@ -8,6 +8,7 @@ import {
   Layout,
   MapPin,
   Mars,
+  Search,
   ShieldCheck,
   Users,
   Venus,
@@ -86,13 +87,23 @@ const SEVERITY_ORDER: Record<IntegritySeverity, number> = {
   INFO: 2,
 };
 
+const INTEGRITY_ISSUE_BATCH_SIZE = 40;
+
 type HealthCenterLabels = {
   all: string;
   healthScore: string;
   completeness: string;
   citationCoverage: string;
+  structuralIntegrityHelp: string;
   allClearTitle: string;
   allClearDescription: string;
+  searchPlaceholder: string;
+  severityAll: string;
+  showingResults: (visible: number, total: number) => string;
+  showMore: string;
+  openPerson: string;
+  currentIssuesHint: string;
+  issueMessages: Record<DataIntegrityIssue['code'], string>;
   categories: Record<IntegrityCategory, string>;
   severities: Record<IntegritySeverity, string>;
 };
@@ -131,26 +142,45 @@ const FamilyTreeHealthCenter = ({
 }) => {
   const report = useMemo(() => evaluateDataIntegrity(people), [people]);
   const [selectedCategory, setSelectedCategory] = useState<IntegrityCategory | 'ALL'>('ALL');
-  const visibleIssues = useMemo(
-    () => report.issues
-      .filter((issue) => selectedCategory === 'ALL' || issue.category === selectedCategory)
-      .sort((a, b) => {
-        const severityDelta = SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity];
-        if (severityDelta !== 0) return severityDelta;
-        return a.message.localeCompare(b.message);
-      }),
-    [report.issues, selectedCategory]
-  );
+  const [selectedSeverity, setSelectedSeverity] = useState<IntegritySeverity | 'ALL'>('ALL');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [visibleLimit, setVisibleLimit] = useState(INTEGRITY_ISSUE_BATCH_SIZE);
+
+  const getPersonName = (id?: string) => {
+    if (!id) return '';
+    const person = people[id];
+    return person ? `${person.firstName} ${person.lastName}`.trim() || id : id;
+  };
 
   const renderIssuePersonNames = (issue: DataIntegrityIssue) => {
     const ids = issue.personIds?.length ? issue.personIds : [issue.personId];
-    return ids
-      .map((id) => {
-        const person = people[id];
-        return person ? `${person.firstName} ${person.lastName}`.trim() || id : id;
-      })
-      .join(' / ');
+    return ids.map((id) => getPersonName(id)).join(' / ');
   };
+
+  const renderIssueMessage = (issue: DataIntegrityIssue) => labels.issueMessages[issue.code]
+    .replace('{person}', getPersonName(issue.personId))
+    .replace('{related}', getPersonName(issue.relatedId));
+
+  const normalizedQuery = searchQuery.trim().toLocaleLowerCase();
+  const visibleIssues = report.issues
+    .filter((issue) => selectedCategory === 'ALL' || issue.category === selectedCategory)
+    .filter((issue) => selectedSeverity === 'ALL' || issue.severity === selectedSeverity)
+    .filter((issue) => {
+      if (!normalizedQuery) return true;
+      return [renderIssueMessage(issue), renderIssuePersonNames(issue), issue.code]
+        .join(' ')
+        .toLocaleLowerCase()
+        .includes(normalizedQuery);
+    })
+    .sort((a, b) => {
+      const severityDelta = SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity];
+      if (severityDelta !== 0) return severityDelta;
+      const categoryDelta = HEALTH_CENTER_CATEGORIES.indexOf(a.category) - HEALTH_CENTER_CATEGORIES.indexOf(b.category);
+      if (categoryDelta !== 0) return categoryDelta;
+      return a.id.localeCompare(b.id);
+    });
+
+  const renderedIssues = visibleIssues.slice(0, visibleLimit);
 
   return (
     <section className="space-y-5 rounded-[24px] border border-[#eadfce] bg-white/70 p-4 shadow-[0_2px_10px_rgba(0,0,0,0.03)] sm:p-5">
@@ -159,11 +189,47 @@ const FamilyTreeHealthCenter = ({
         <ScoreCard label={labels.completeness} value={report.completenessScore} tone="amber" />
         <ScoreCard label={labels.citationCoverage} value={report.citationCoverage} tone="blue" />
       </div>
+      <p className="text-xs leading-5 text-slate-500">{labels.structuralIntegrityHelp}</p>
+
+      <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_180px]">
+        <label className="relative min-w-0">
+          <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <input
+            type="search"
+            value={searchQuery}
+            onChange={(event) => {
+              setSearchQuery(event.target.value);
+              setVisibleLimit(INTEGRITY_ISSUE_BATCH_SIZE);
+            }}
+            placeholder={labels.searchPlaceholder}
+            aria-label={labels.searchPlaceholder}
+            className="h-10 w-full rounded-xl border border-[#e2d8c9] bg-white ps-9 pe-3 text-sm text-slate-800 outline-none transition focus:border-[#a67c37] focus:ring-2 focus:ring-[#a67c37]/20"
+          />
+        </label>
+        <select
+          value={selectedSeverity}
+          onChange={(event) => {
+            setSelectedSeverity(event.target.value as IntegritySeverity | 'ALL');
+            setVisibleLimit(INTEGRITY_ISSUE_BATCH_SIZE);
+          }}
+          aria-label={labels.severityAll}
+          className="h-10 rounded-xl border border-[#e2d8c9] bg-white px-3 text-sm text-slate-700 outline-none transition focus:border-[#a67c37] focus:ring-2 focus:ring-[#a67c37]/20"
+        >
+          <option value="ALL">{labels.severityAll}</option>
+          {(Object.keys(SEVERITY_ORDER) as IntegritySeverity[]).map((severity) => (
+            <option key={severity} value={severity}>{labels.severities[severity]}</option>
+          ))}
+        </select>
+      </div>
 
       <div className="flex flex-wrap gap-2">
         <button
           type="button"
-          onClick={() => setSelectedCategory('ALL')}
+          onClick={() => {
+            setSelectedCategory('ALL');
+            setVisibleLimit(INTEGRITY_ISSUE_BATCH_SIZE);
+          }}
+          aria-pressed={selectedCategory === 'ALL'}
           className={`rounded-full px-3 py-1.5 text-[12px] font-semibold transition-colors ${
             selectedCategory === 'ALL' ? 'bg-[#3d1f13] text-white' : 'bg-[#f3efe6] text-slate-700 hover:bg-white'
           }`}
@@ -174,7 +240,11 @@ const FamilyTreeHealthCenter = ({
           <button
             key={category}
             type="button"
-            onClick={() => setSelectedCategory(category)}
+            onClick={() => {
+              setSelectedCategory(category);
+              setVisibleLimit(INTEGRITY_ISSUE_BATCH_SIZE);
+            }}
+            aria-pressed={selectedCategory === category}
             className={`rounded-full px-3 py-1.5 text-[12px] font-semibold transition-colors ${
               selectedCategory === category ? 'bg-[#3d1f13] text-white' : 'bg-[#f3efe6] text-slate-700 hover:bg-white'
             }`}
@@ -182,6 +252,11 @@ const FamilyTreeHealthCenter = ({
             {labels.categories[category]} {report.countsByCategory[category]}
           </button>
         ))}
+      </div>
+
+      <div className="flex flex-wrap items-center justify-between gap-2 text-[12px] text-slate-500">
+        <span>{labels.showingResults(Math.min(renderedIssues.length, visibleIssues.length), visibleIssues.length)}</span>
+        <span>{labels.currentIssuesHint}</span>
       </div>
 
       {visibleIssues.length === 0 ? (
@@ -194,7 +269,7 @@ const FamilyTreeHealthCenter = ({
         </div>
       ) : (
         <div className="max-h-[420px] space-y-2 overflow-y-auto pe-1">
-          {visibleIssues.map((issue) => {
+          {renderedIssues.map((issue) => {
             const canNavigate = Boolean(onNavigateToPerson && issue.personId);
             const content = (
               <>
@@ -207,7 +282,7 @@ const FamilyTreeHealthCenter = ({
                       {labels.categories[issue.category]}
                     </span>
                   </div>
-                  <p className="mt-2 text-sm font-semibold text-slate-800">{issue.message}</p>
+                  <p className="mt-2 text-sm font-semibold text-slate-800">{renderIssueMessage(issue)}</p>
                   <p className="mt-1 truncate text-[12px] text-slate-500">{renderIssuePersonNames(issue)}</p>
                 </div>
                 {canNavigate ? (
@@ -229,12 +304,22 @@ const FamilyTreeHealthCenter = ({
                 key={issue.id}
                 type="button"
                 onClick={() => onNavigateToPerson?.(issue.personId)}
+                aria-label={`${labels.openPerson}: ${getPersonName(issue.personId)}`}
                 className="group flex w-full items-center justify-between gap-3 rounded-2xl bg-[#f3efe6] px-4 py-3 text-start transition-all duration-200 ease-in-out hover:bg-white"
               >
                 {content}
               </button>
             );
           })}
+          {renderedIssues.length < visibleIssues.length ? (
+            <button
+              type="button"
+              onClick={() => setVisibleLimit((current) => current + INTEGRITY_ISSUE_BATCH_SIZE)}
+              className="mt-3 w-full rounded-xl border border-[#d9cbb8] bg-white px-4 py-2.5 text-sm font-semibold text-[#6f4b2f] transition hover:bg-[#faf7f2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a67c37]"
+            >
+              {labels.showMore}
+            </button>
+          ) : null}
         </div>
       )}
     </section>
@@ -357,8 +442,16 @@ export const StatisticsDashboard = memo(({
     healthScore: t.statistics.healthCenter.healthScore,
     completeness: t.statistics.healthCenter.completeness,
     citationCoverage: t.statistics.healthCenter.citationCoverage,
+    structuralIntegrityHelp: t.statistics.healthCenter.structuralIntegrityHelp,
     allClearTitle: t.statistics.healthCenter.allClearTitle,
     allClearDescription: t.statistics.healthCenter.allClearDescription,
+    searchPlaceholder: t.statistics.healthCenter.searchPlaceholder,
+    severityAll: t.statistics.healthCenter.severityAll,
+    showingResults: t.statistics.healthCenter.showingResults,
+    showMore: t.statistics.healthCenter.showMore,
+    openPerson: t.statistics.healthCenter.openPerson,
+    currentIssuesHint: t.statistics.healthCenter.currentIssuesHint,
+    issueMessages: t.statistics.healthCenter.issueMessages,
     categories: {
       RELATIONSHIP: t.statistics.healthCenter.structural,
       TIMELINE: t.statistics.healthCenter.timeline,

@@ -3,13 +3,21 @@ import { ShieldCheck } from 'lucide-react';
 import { useSyncStatus } from '../hooks/sync/useSyncStatus';
 import { useTranslation } from '../context/TranslationContext';
 import { getSyncStatusDotClass } from './syncStatusPresentation';
+import type { DriveConnectionState } from './syncStatusPresentation';
 
 const SyncStatusFloatingLayer = lazy(() => import('./SyncStatusFloatingLayer'));
 
 export const SyncStatusIndicator: React.FC<{
     onOpenVault?: () => void;
     title?: string;
-}> = ({ onOpenVault, title = 'Open The Vault' }) => {
+    driveConnectionState?: DriveConnectionState;
+    hasLinkedBackup?: boolean;
+}> = ({
+    onOpenVault,
+    title = 'Open The Vault',
+    driveConnectionState = 'disconnected',
+    hasLinkedBackup = false,
+}) => {
     const { t } = useTranslation();
     const { syncStatus, forceDriveSync, onClearSyncCache, resetError } = useSyncStatus();
     const [isOpen, setIsOpen] = useState(false);
@@ -24,6 +32,7 @@ export const SyncStatusIndicator: React.FC<{
                 onFocus={() => setIsOpen(true)}
                 onClick={() => {
                     if (onOpenVault) {
+                        setIsOpen(false);
                         onOpenVault();
                     } else {
                         setIsOpen(true);
@@ -45,7 +54,10 @@ export const SyncStatusIndicator: React.FC<{
                     <SyncStatusFloatingLayer
                         referenceElement={referenceElement}
                         syncStatus={syncStatus}
+                        driveConnectionState={driveConnectionState}
+                        hasLinkedBackup={hasLinkedBackup}
                         forceDriveSync={forceDriveSync}
+                        onOpenVault={onOpenVault || (() => undefined)}
                         onClearSyncCache={onClearSyncCache}
                         resetError={resetError}
                         onClose={() => setIsOpen(false)}

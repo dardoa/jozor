@@ -49,7 +49,7 @@ export const TheVaultDrawer: React.FC<TheVaultDrawerProps> = ({
   onOpenActivityLog,
   onOpenCleanTree,
 }) => {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const { role, canManageMembers, canManageCloud, canManageSecurity } = useTreePermissions();
 
   const isVaultOpen = useAppStore((state) => state.isVaultOpen);
@@ -238,6 +238,8 @@ export const TheVaultDrawer: React.FC<TheVaultDrawerProps> = ({
     ownerRole: t.roles.owner,
     editorRole: t.roles.editor,
     viewerRole: t.roles.viewer,
+    locale: language === 'ar' ? 'ar-SA' : 'en-US',
+    duplicateName: t.vaultTreeDuplicateName,
   };
   const treePanelLabels = {
     activeTree: t.vaultActiveTreeLabel,

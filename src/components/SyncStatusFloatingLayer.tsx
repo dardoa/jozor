@@ -14,11 +14,15 @@ import {
 } from '@floating-ui/react';
 import type { SyncStatus } from '../types';
 import { SyncStatusTooltip } from './SyncStatusTooltip';
+import type { DriveConnectionState } from './syncStatusPresentation';
 
 interface SyncStatusFloatingLayerProps {
     referenceElement: HTMLElement | null;
     syncStatus: SyncStatus;
+    driveConnectionState: DriveConnectionState;
+    hasLinkedBackup: boolean;
     forceDriveSync: () => void;
+    onOpenVault: () => void;
     onClearSyncCache: () => void;
     resetError: () => void;
     onClose: () => void;
@@ -27,7 +31,10 @@ interface SyncStatusFloatingLayerProps {
 const SyncStatusFloatingLayer: React.FC<SyncStatusFloatingLayerProps> = ({
     referenceElement,
     syncStatus,
+    driveConnectionState,
+    hasLinkedBackup,
     forceDriveSync,
+    onOpenVault,
     onClearSyncCache,
     resetError,
     onClose,
@@ -76,7 +83,10 @@ const SyncStatusFloatingLayer: React.FC<SyncStatusFloatingLayerProps> = ({
             getFloatingProps={getFloatingProps}
             context={context}
             syncStatus={syncStatus}
+            driveConnectionState={driveConnectionState}
+            hasLinkedBackup={hasLinkedBackup}
             onForceSync={forceDriveSync}
+            onOpenVault={onOpenVault}
             onClearSyncCache={onClearSyncCache}
             onResetError={resetError}
             onClose={onClose}

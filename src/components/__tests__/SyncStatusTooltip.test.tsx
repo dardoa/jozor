@@ -22,7 +22,58 @@ vi.mock('../../context/TranslationContext', () => ({
       settings: {
         clearSyncQueue: 'Reset Backup Link',
       },
+      syncStatus: {
+        savingLocally: 'Saving locally...',
+        syncing: 'Syncing...',
+        checking: 'Checking session...',
+        saving: 'Saving...',
+        error: 'Sync error',
+        offline: 'Offline',
+        synced: 'Synced',
+        allChangesSaved: 'All changes saved',
+        attentionNeeded: 'Attention needed',
+        overallLabel: 'Overall',
+        cloudSyncLabel: 'Cloud sync (Supabase)',
+        backupLabel: 'Backup (Google Drive)',
+        databaseSyncLabel: 'Tree database',
+        offlineQueueLabel: 'Local queue',
+        driveConnectionLabel: 'Google Drive connection',
+        backupFileLabel: 'Linked backup file',
+        connected: 'Connected',
+        disconnected: 'Not connected',
+        sessionExpired: 'Reconnect required',
+        queueClear: 'No pending changes',
+        queuePending: '{count} pending changes',
+        backupUnlinked: 'No backup file selected',
+        backupReady: 'Ready for first backup',
+        openBackupSettings: 'Open backup settings',
+        nextActionLabel: 'Next action',
+        online: 'Online',
+        needsAttention: 'Needs attention',
+        lastLabel: 'Last',
+        backedUp: 'Backed up',
+        uploading: 'Uploading',
+        categoryLabel: 'Category',
+        whenLabel: 'When',
+        retryLabel: 'Retry',
+        retryAutomatic: 'Automatic retry expected',
+        retryManual: 'Manual action may be required',
+        retryAttemptLabel: 'Attempt',
+        nextRetryLabel: 'Next retry',
+        retryPausedLabel: 'Automatic retries paused. Your changes remain saved locally.',
+        retryNow: 'Retry pending changes now',
+        backupNow: 'Backup Now (Google Drive)',
+        resetBackupTitle: 'Reset backup',
+        resetBackupAction: 'Reset Backup Link & Retry',
+        dismissError: 'Dismiss Error',
+        footerNote: 'Changes are saved to Supabase. Google Drive is used for backups.',
+        resetBackupDialogTitle: 'Reset Backup Link',
+        resetBackupMessage: 'Reset the backup?',
+        resetBackupConfirm: 'Reset & Retry',
+        never: 'Never',
+      },
     },
+    dateLocale: undefined,
   }),
 }));
 
@@ -70,7 +121,10 @@ describe('SyncStatusTooltip', () => {
     render(
       <SyncStatusTooltip
         syncStatus={buildSyncStatus()}
+        driveConnectionState="connected"
+        hasLinkedBackup
         onForceSync={vi.fn()}
+        onOpenVault={vi.fn()}
         onClearSyncCache={vi.fn()}
         onResetError={onResetError}
         onClose={onClose}
@@ -86,7 +140,7 @@ describe('SyncStatusTooltip', () => {
     expect(screen.getByText('Category: PERMISSION')).toBeInTheDocument();
     expect(screen.getByText('Retry: Manual action may be required')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Dismiss Error' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Retry pending changes now' }));
 
     expect(onResetError).toHaveBeenCalledTimes(1);
     expect(onClose).toHaveBeenCalledTimes(1);
@@ -98,8 +152,17 @@ describe('SyncStatusTooltip', () => {
 
     render(
       <SyncStatusTooltip
-        syncStatus={buildSyncStatus()}
+        syncStatus={buildSyncStatus({
+          state: 'synced',
+          supabaseStatus: 'idle',
+          driveStatus: 'error',
+          pendingCount: 0,
+          errorMessage: undefined,
+        })}
+        driveConnectionState="connected"
+        hasLinkedBackup
         onForceSync={vi.fn()}
+        onOpenVault={vi.fn()}
         onClearSyncCache={onClearSyncCache}
         onResetError={vi.fn()}
         onClose={onClose}
@@ -133,7 +196,10 @@ describe('SyncStatusTooltip', () => {
           retryPaused: true,
           nextRetryAt: null,
         })}
+        driveConnectionState="connected"
+        hasLinkedBackup
         onForceSync={vi.fn()}
+        onOpenVault={vi.fn()}
         onClearSyncCache={vi.fn()}
         onResetError={onResetError}
         onClose={vi.fn()}
@@ -150,6 +216,41 @@ describe('SyncStatusTooltip', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Retry pending changes now' }));
     expect(onResetError).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not claim a Drive backup exists when no file is linked', () => {
+    const onOpenVault = vi.fn();
+
+    render(
+      <SyncStatusTooltip
+        syncStatus={buildSyncStatus({
+          state: 'synced',
+          supabaseStatus: 'idle',
+          driveStatus: 'idle',
+          pendingCount: 0,
+          errorMessage: undefined,
+          lastSyncDrive: null,
+        })}
+        driveConnectionState="connected"
+        hasLinkedBackup={false}
+        onForceSync={vi.fn()}
+        onOpenVault={onOpenVault}
+        onClearSyncCache={vi.fn()}
+        onResetError={vi.fn()}
+        onClose={vi.fn()}
+        setFloating={vi.fn()}
+        setArrowElement={vi.fn()}
+        floatingStyles={{}}
+        getFloatingProps={() => ({})}
+        context={{} as never}
+      />
+    );
+
+    expect(screen.getByText('No backup file selected')).toBeInTheDocument();
+    expect(screen.queryByText('Backed up')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open backup settings' }));
+    expect(onOpenVault).toHaveBeenCalledTimes(1);
   });
 });
 

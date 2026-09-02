@@ -11,6 +11,7 @@ import {
   FileText,
   Home,
   MapPin,
+  Search,
 } from 'lucide-react';
 import { getDisplayDate } from '../../../utils/familyLogic';
 import { useTranslation } from '../../../context/TranslationContext';
@@ -37,10 +38,15 @@ type EventTypeMeta = {
 type TimelineTranslations = {
   birth?: string;
   births?: string;
-  familyScope?: string;
-  personScope?: string;
-  personTimeline?: string;
+  familyScope: string;
+  personScope: string;
+  personTimeline: string;
+  timelineSearchPlaceholder: string;
+  timelineSearchResults: (visible: number, total: number) => string;
+  showMoreEvents: string;
 };
+
+const TIMELINE_EVENT_BATCH_SIZE = 50;
 
 const buildPersonName = (person: Person) =>
   [person.firstName, person.middleName, person.lastName].filter(Boolean).join(' ').trim();
@@ -53,13 +59,16 @@ export const TimelineModal = ({ isOpen, onClose, people, onSelectPerson, focusPe
     new Set(['birth', 'death', 'marriage', 'custom'])
   );
   const [scope, setScope] = useState<'person' | 'family'>(focusPersonId ? 'person' : 'family');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [visibleLimit, setVisibleLimit] = useState(TIMELINE_EVENT_BATCH_SIZE);
   const focusPerson = focusPersonId ? people[focusPersonId] : undefined;
   const isPersonScope = scope === 'person' && !!focusPerson;
   const title = isPersonScope
-    ? `${buildPersonName(focusPerson) || t.unnamedPerson} - ${timelineText.personTimeline || t.familyTimelineHeader}`
+    ? `${buildPersonName(focusPerson) || t.unnamedPerson} - ${timelineText.personTimeline}`
     : t.familyTimeline;
 
   const toggleFilter = (type: TimelineEvent['type']) => {
+    setVisibleLimit(TIMELINE_EVENT_BATCH_SIZE);
     setActiveFilters((prev) => {
       const next = new Set(prev);
       if (next.has(type)) next.delete(type);
@@ -177,24 +186,43 @@ export const TimelineModal = ({ isOpen, onClose, people, onSelectPerson, focusPe
       });
     });
 
+    const normalizedQuery = searchQuery.trim().toLocaleLowerCase();
+
     return list
       .filter((event) => activeFilters.has(event.type))
+      .filter((event) => {
+        if (!normalizedQuery) return true;
+        const person = people[event.personId];
+        const relatedPerson = event.relatedId ? people[event.relatedId] : undefined;
+        return [
+          event.label,
+          event.subLabel,
+          person ? buildPersonName(person) : '',
+          relatedPerson ? buildPersonName(relatedPerson) : '',
+        ]
+          .filter(Boolean)
+          .join(' ')
+          .toLocaleLowerCase()
+          .includes(normalizedQuery);
+      })
       .sort((a, b) => {
         if (sortAsc && a.year !== b.year) return a.year - b.year;
         if (!sortAsc && a.year !== b.year) return b.year - a.year;
         return sortAsc ? a.dateStr.localeCompare(b.dateStr) : b.dateStr.localeCompare(a.dateStr);
       });
-  }, [people, focusPerson, isPersonScope, sortAsc, activeFilters, t]);
+  }, [people, focusPerson, isPersonScope, sortAsc, activeFilters, searchQuery, t]);
+
+  const renderedEvents = events.slice(0, visibleLimit);
 
   const groupedEvents = useMemo(() => {
     const groups = new Map<number, TimelineEvent[]>();
-    events.forEach((event) => {
+    renderedEvents.forEach((event) => {
       const current = groups.get(event.year) || [];
       current.push(event);
       groups.set(event.year, current);
     });
     return Array.from(groups.entries()).map(([year, yearEvents]) => ({ year, events: yearEvents }));
-  }, [events]);
+  }, [renderedEvents]);
 
   return (
     <OverlayPrimitive isOpen={isOpen} onClose={onClose} id='timeline-modal'>
@@ -210,7 +238,15 @@ export const TimelineModal = ({ isOpen, onClose, people, onSelectPerson, focusPe
             <h3 className='text-[16px] font-semibold tracking-[0.2px] text-slate-800'>{title}</h3>
           </div>
           <div className='flex items-center gap-2'>
-            <Button onClick={() => setSortAsc(!sortAsc)} variant='secondary' size='sm' className='text-xs'>
+            <Button
+              onClick={() => {
+                setSortAsc(!sortAsc);
+                setVisibleLimit(TIMELINE_EVENT_BATCH_SIZE);
+              }}
+              variant='secondary'
+              size='sm'
+              className='text-xs'
+            >
               {sortAsc ? t.oldestFirst : t.newestFirst}
             </Button>
             <button
@@ -223,26 +259,47 @@ export const TimelineModal = ({ isOpen, onClose, people, onSelectPerson, focusPe
           </div>
         </div>
 
-        <div className='flex flex-wrap gap-2 border-b border-black/[0.05] bg-[#F6F1E7]/90 p-4'>
+        <div className='space-y-3 border-b border-black/[0.05] bg-[#F6F1E7]/90 p-4'>
+          <label className='relative block min-w-0'>
+            <Search className='pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400' />
+            <input
+              type='search'
+              value={searchQuery}
+              onChange={(event) => {
+                setSearchQuery(event.target.value);
+                setVisibleLimit(TIMELINE_EVENT_BATCH_SIZE);
+              }}
+              placeholder={timelineText.timelineSearchPlaceholder}
+              aria-label={timelineText.timelineSearchPlaceholder}
+              className='h-10 w-full rounded-xl border border-black/[0.08] bg-white/80 ps-9 pe-3 text-sm text-slate-800 outline-none transition focus:border-[#a67c37] focus:ring-2 focus:ring-[#a67c37]/20'
+            />
+          </label>
+          <div className='flex flex-wrap gap-2'>
           {focusPerson ? (
             <div className='me-2 inline-flex rounded-full border border-black/[0.06] bg-white/70 p-1 shadow-sm'>
               <button
                 type='button'
-                onClick={() => setScope('person')}
+                onClick={() => {
+                  setScope('person');
+                  setVisibleLimit(TIMELINE_EVENT_BATCH_SIZE);
+                }}
                 className={`rounded-full px-3 py-1.5 text-xs font-bold transition-colors ${
                   scope === 'person' ? 'bg-[#3B271E] text-white' : 'text-slate-600 hover:bg-white'
                 }`}
               >
-                {timelineText.personScope || 'Person only'}
+                {timelineText.personScope}
               </button>
               <button
                 type='button'
-                onClick={() => setScope('family')}
+                onClick={() => {
+                  setScope('family');
+                  setVisibleLimit(TIMELINE_EVENT_BATCH_SIZE);
+                }}
                 className={`rounded-full px-3 py-1.5 text-xs font-bold transition-colors ${
                   scope === 'family' ? 'bg-[#3B271E] text-white' : 'text-slate-600 hover:bg-white'
                 }`}
               >
-                {timelineText.familyScope || t.familyTimeline}
+                {timelineText.familyScope}
               </button>
             </div>
           ) : null}
@@ -260,6 +317,10 @@ export const TimelineModal = ({ isOpen, onClose, people, onSelectPerson, focusPe
               {type.icon} {type.label}
             </button>
           ))}
+          </div>
+          <p className='text-[12px] text-slate-500'>
+            {timelineText.timelineSearchResults(Math.min(renderedEvents.length, events.length), events.length)}
+          </p>
         </div>
 
         <div className='relative flex-1 overflow-y-auto bg-[#FAF7F2] p-4 sm:p-6'>
@@ -335,6 +396,15 @@ export const TimelineModal = ({ isOpen, onClose, people, onSelectPerson, focusPe
                   </div>
                 </section>
               ))}
+              {renderedEvents.length < events.length ? (
+                <button
+                  type='button'
+                  onClick={() => setVisibleLimit((current) => current + TIMELINE_EVENT_BATCH_SIZE)}
+                  className='ms-10 w-[calc(100%-2.5rem)] rounded-xl border border-[#d9cbb8] bg-white px-4 py-2.5 text-sm font-semibold text-[#6f4b2f] transition hover:bg-[#f6f1e8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a67c37]'
+                >
+                  {timelineText.showMoreEvents}
+                </button>
+              ) : null}
             </div>
           )}
         </div>

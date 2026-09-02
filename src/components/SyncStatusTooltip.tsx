@@ -6,17 +6,20 @@ import { SyncStatus } from '../types';
 import { useTranslation } from '../context/TranslationContext';
 import { ConfirmationModal } from './ConfirmationModal';
 import {
+    deriveSyncStatusPresentation,
+    type DriveConnectionState,
     getDriveStatusClass,
-    getDriveStatusLabel,
     getSupabaseStatusClass,
-    getSupabaseStatusLabel,
     getSyncStatusDotClass,
     getSyncStatusText,
 } from './syncStatusPresentation';
 
 interface SyncStatusTooltipProps {
     syncStatus: SyncStatus;
+    driveConnectionState: DriveConnectionState;
+    hasLinkedBackup: boolean;
     onForceSync: () => void;
+    onOpenVault: () => void;
     onClearSyncCache: () => void;
     onResetError: () => void;
     onClose: () => void;
@@ -34,18 +37,90 @@ export const SyncStatusTooltip: React.FC<SyncStatusTooltipProps> = ({
     getFloatingProps,
     context,
     syncStatus,
+    driveConnectionState,
+    hasLinkedBackup,
     onForceSync,
+    onOpenVault,
     onClearSyncCache,
     onResetError,
     onClose,
 }) => {
-    const { t } = useTranslation();
+    const { t, dateLocale } = useTranslation();
     const [isConfirmClearModalOpen, setIsConfirmClearModalOpen] = React.useState(false);
-    const syncText = t.syncStatus || {};
+    const syncText = t.syncStatus;
+    const presentation = deriveSyncStatusPresentation({
+        syncStatus,
+        driveConnectionState,
+        hasLinkedBackup,
+    });
     
     const formatTime = (time: Date | null) => {
-        if (!time) return syncText.never || 'Never';
-        return formatDistanceToNow(time, { addSuffix: true });
+        if (!time) return syncText.never;
+        return formatDistanceToNow(time, { addSuffix: true, locale: dateLocale });
+    };
+
+    const databaseStatusLabel = presentation.databaseState === 'checking'
+        ? syncText.checking
+        : presentation.databaseState === 'offline'
+            ? syncText.offline
+            : presentation.databaseState === 'syncing'
+                ? syncText.syncing
+                : presentation.databaseState === 'error'
+                    ? syncText.needsAttention
+                    : syncText.online;
+    const databaseStatusClass = presentation.databaseState === 'error'
+        ? getSupabaseStatusClass('error')
+        : presentation.databaseState === 'syncing' || presentation.databaseState === 'checking'
+            ? getSupabaseStatusClass('syncing')
+            : presentation.databaseState === 'offline'
+                ? 'text-[var(--text-muted)]'
+                : getSupabaseStatusClass('idle');
+    const driveConnectionLabel = presentation.driveConnectionState === 'connected'
+        ? syncText.connected
+        : presentation.driveConnectionState === 'expired'
+            ? syncText.sessionExpired
+            : syncText.disconnected;
+    const backupStatusLabel = presentation.backupState === 'uploading'
+        ? syncText.uploading
+        : presentation.backupState === 'error'
+            ? syncText.needsAttention
+            : presentation.backupState === 'backed-up'
+                ? syncText.backedUp
+                : presentation.backupState === 'ready'
+                    ? syncText.backupReady
+                    : presentation.backupState === 'unlinked'
+                        ? syncText.backupUnlinked
+                        : driveConnectionLabel;
+    const backupStatusClass = presentation.backupState === 'error' || presentation.backupState === 'expired'
+        ? getDriveStatusClass('error')
+        : presentation.backupState === 'uploading'
+            ? getDriveStatusClass('uploading')
+            : presentation.backupState === 'disconnected' || presentation.backupState === 'unlinked'
+                ? 'text-[var(--text-muted)]'
+                : getDriveStatusClass('idle');
+    const primaryActionLabel = presentation.primaryAction === 'retry-database'
+        ? syncText.retryNow
+        : presentation.primaryAction === 'open-backups'
+            ? syncText.openBackupSettings
+            : presentation.primaryAction === 'reset-backup'
+                ? syncText.resetBackupAction
+                : presentation.primaryAction === 'backup-now'
+                    ? syncText.backupNow
+                    : null;
+
+    const handlePrimaryAction = () => {
+        if (presentation.primaryAction === 'retry-database') {
+            onResetError();
+            onClose();
+        } else if (presentation.primaryAction === 'open-backups') {
+            onOpenVault();
+            onClose();
+        } else if (presentation.primaryAction === 'reset-backup') {
+            setIsConfirmClearModalOpen(true);
+        } else if (presentation.primaryAction === 'backup-now') {
+            onForceSync();
+            onClose();
+        }
     };
 
     return (
@@ -82,35 +157,50 @@ export const SyncStatusTooltip: React.FC<SyncStatusTooltipProps> = ({
                 </button>
             </div>
 
-                <div className="text-[11px] text-[var(--text-dim)] mb-3 flex items-center gap-2">
-                <RefreshCw className="w-3 h-3" />
-                <span><strong>{syncText.overallLabel || 'Overall'}:</strong> {formatTime(syncStatus.lastSyncTime)}</span>
-            </div>
-
             <div className="space-y-3 text-xs mb-4 bg-[var(--theme-surface)] rounded-xl p-3 border border-[var(--border-main)]">
                 <div className="space-y-1">
                     <div className="flex justify-between items-center">
-                        <span className="text-[var(--text-dim)]">Cloud Sync (Supabase)</span>
-                        <span className={`font-bold ${getSupabaseStatusClass(syncStatus.supabaseStatus)}`}>
-                            {getSupabaseStatusLabel(syncStatus.supabaseStatus, syncText)}
+                        <span className="text-[var(--text-dim)]">{syncText.databaseSyncLabel}</span>
+                        <span className={`font-bold ${databaseStatusClass}`}>
+                            {databaseStatusLabel}
                         </span>
                     </div>
                     <div className="text-[10px] text-[var(--text-dim)] opacity-70">
-                        {syncText.lastLabel || 'Last'}: {formatTime(syncStatus.lastSyncSupabase)}
+                        {syncText.lastLabel}: {formatTime(syncStatus.lastSyncSupabase)}
                     </div>
+                </div>
+
+                <div className="h-px bg-[var(--border-main)]/50 mx-1"></div>
+
+                <div className="flex items-center justify-between gap-3">
+                    <span className="text-[var(--text-dim)]">{syncText.offlineQueueLabel}</span>
+                    <span className="text-end font-bold text-[var(--text-main)]">
+                        {presentation.queueState === 'pending'
+                            ? syncText.queuePending.replace('{count}', String(syncStatus.pendingCount))
+                            : syncText.queueClear}
+                    </span>
+                </div>
+
+                <div className="h-px bg-[var(--border-main)]/50 mx-1"></div>
+
+                <div className="flex items-center justify-between gap-3">
+                    <span className="text-[var(--text-dim)]">{syncText.driveConnectionLabel}</span>
+                    <span className={`text-end font-bold ${presentation.driveConnectionState === 'connected' ? 'text-green-600 dark:text-green-400' : 'text-[var(--text-muted)]'}`}>
+                        {driveConnectionLabel}
+                    </span>
                 </div>
 
                 <div className="h-px bg-[var(--border-main)]/50 mx-1"></div>
 
                 <div className="space-y-1">
                     <div className="flex justify-between items-center">
-                        <span className="text-[var(--text-dim)]">Backup (Google Drive)</span>
-                        <span className={`font-bold ${getDriveStatusClass(syncStatus.driveStatus)}`}>
-                            {getDriveStatusLabel(syncStatus.driveStatus, syncText)}
+                        <span className="text-[var(--text-dim)]">{syncText.backupFileLabel}</span>
+                        <span className={`text-end font-bold ${backupStatusClass}`}>
+                            {backupStatusLabel}
                         </span>
                     </div>
                     <div className="text-[10px] text-[var(--text-dim)] opacity-70">
-                        {syncText.lastLabel || 'Last'}: {formatTime(syncStatus.lastSyncDrive)}
+                        {syncText.lastLabel}: {formatTime(syncStatus.lastSyncDrive)}
                     </div>
                 </div>
             </div>
@@ -121,22 +211,22 @@ export const SyncStatusTooltip: React.FC<SyncStatusTooltipProps> = ({
                     {(syncStatus.lastErrorCategory || syncStatus.lastErrorAt || syncStatus.lastErrorRetryable !== undefined) && (
                         <div className="mt-2 space-y-1 text-[10px] opacity-80">
                             {syncStatus.lastErrorCategory && (
-                                <div>{syncText.categoryLabel || 'Category'}: {syncStatus.lastErrorCategory}</div>
+                                <div>{syncText.categoryLabel}: {syncStatus.lastErrorCategory}</div>
                             )}
                             {syncStatus.lastErrorAt && (
-                                <div>{syncText.whenLabel || 'When'}: {formatTime(syncStatus.lastErrorAt)}</div>
+                                <div>{syncText.whenLabel}: {formatTime(syncStatus.lastErrorAt)}</div>
                             )}
                             {syncStatus.lastErrorRetryable !== undefined && (
-                                <div>{syncText.retryLabel || 'Retry'}: {syncStatus.lastErrorRetryable ? (syncText.retryAutomatic || 'Automatic retry expected') : (syncText.retryManual || 'Manual action may be required')}</div>
+                                <div>{syncText.retryLabel}: {syncStatus.lastErrorRetryable ? syncText.retryAutomatic : syncText.retryManual}</div>
                             )}
                             {(syncStatus.retryAttempt ?? 0) > 0 && (
-                                <div>{syncText.retryAttemptLabel || 'Attempt'}: {syncStatus.retryAttempt}</div>
+                                <div>{syncText.retryAttemptLabel}: {syncStatus.retryAttempt}</div>
                             )}
                             {syncStatus.nextRetryAt && (
-                                <div>{syncText.nextRetryLabel || 'Next retry'}: {formatTime(syncStatus.nextRetryAt)}</div>
+                                <div>{syncText.nextRetryLabel}: {formatTime(syncStatus.nextRetryAt)}</div>
                             )}
                             {syncStatus.retryPaused && (
-                                <div>{syncText.retryPausedLabel || 'Automatic retries paused. Your changes remain saved locally.'}</div>
+                                <div>{syncText.retryPausedLabel}</div>
                             )}
                         </div>
                     )}
@@ -144,43 +234,26 @@ export const SyncStatusTooltip: React.FC<SyncStatusTooltipProps> = ({
             )}
 
             <div className="space-y-2">
-                <button
-                    onClick={() => {
-                        onForceSync();
-                        onClose();
-                    }}
-                    className="w-full py-2 px-3 bg-[var(--primary-600)] text-white rounded-lg text-sm font-medium hover:bg-[var(--primary-500)] transition-colors flex items-center justify-center gap-2"
-                >
-                    <RefreshCw className="w-4 h-4" />
-                    {syncText.backupNow || 'Backup Now (Google Drive)'}
-                </button>
-
-                <button
-                    onClick={() => setIsConfirmClearModalOpen(true)}
-                    className="w-full py-2 px-3 bg-amber-50 dark:bg-amber-900/10 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/30 rounded-lg text-xs font-medium hover:bg-amber-100 dark:hover:bg-amber-900/20 transition-all flex items-center justify-center gap-2"
-                    title={syncText.resetBackupTitle || 'Purge corrupted sync state and force new file creation'}
-                >
-                    <AlertCircle className="w-3.5 h-3.5" />
-                    {syncText.resetBackupAction || 'Reset Backup Link & Retry'}
-                </button>
-
-                {syncStatus.state === 'error' && (
+                {primaryActionLabel ? (
+                  <div className="space-y-1.5">
+                    <p className="text-[10px] font-semibold uppercase text-[var(--text-dim)]">{syncText.nextActionLabel}</p>
                     <button
-                        onClick={() => {
-                            onResetError();
-                            onClose();
-                        }}
-                        className="w-full py-2 px-3 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg text-sm font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                        onClick={handlePrimaryAction}
+                        className="flex w-full items-center justify-center gap-2 rounded-lg bg-[var(--primary-600)] px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--primary-500)]"
                     >
-                        {syncStatus.retryPaused
-                            ? (syncText.retryNow || 'Retry pending changes now')
-                            : (syncText.dismissError || 'Dismiss Error')}
+                        {presentation.primaryAction === 'reset-backup' ? (
+                            <AlertCircle className="h-4 w-4" />
+                        ) : (
+                            <RefreshCw className="h-4 w-4" />
+                        )}
+                        {primaryActionLabel}
                     </button>
-                )}
+                  </div>
+                ) : null}
             </div>
 
             <div className="mt-3 pt-3 border-t border-[var(--border-main)] text-xs text-[var(--text-dim)]">
-                {syncText.footerNote || 'Changes are saved to Supabase. Google Drive is used for backups.'}
+                {syncText.footerNote}
             </div>
 
             {isConfirmClearModalOpen && (
@@ -191,9 +264,9 @@ export const SyncStatusTooltip: React.FC<SyncStatusTooltipProps> = ({
                         onClearSyncCache();
                         onClose();
                     }}
-                    title={t.settings?.clearSyncQueue || syncText.resetBackupDialogTitle || "Reset Backup Link"}
-                    message={syncText.resetBackupMessage || "This will reset the Google Drive file reference and create a new backup. Any current pending changes will be re-synced to the new file. Continue?"}
-                    confirmText={t.confirm || syncText.resetBackupConfirm || "Reset & Retry"}
+                    title={t.settings?.clearSyncQueue || syncText.resetBackupDialogTitle}
+                    message={syncText.resetBackupMessage}
+                    confirmText={t.confirm}
                     type="warning"
                     overlayId="sync-reset-confirm"
                 />

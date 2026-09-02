@@ -2,6 +2,71 @@ import type { SyncStatus } from '../types';
 
 type SyncText = Record<string, string | undefined>;
 
+export type DriveConnectionState = 'connected' | 'disconnected' | 'expired';
+export type SyncPrimaryAction = 'retry-database' | 'open-backups' | 'backup-now' | 'reset-backup' | null;
+
+export interface SyncStatusPresentationSnapshot {
+  databaseState: 'checking' | 'offline' | 'syncing' | 'error' | 'synced';
+  queueState: 'pending' | 'clear';
+  driveConnectionState: DriveConnectionState;
+  backupState: 'disconnected' | 'expired' | 'unlinked' | 'uploading' | 'error' | 'ready' | 'backed-up';
+  primaryAction: SyncPrimaryAction;
+}
+
+export const deriveSyncStatusPresentation = ({
+  syncStatus,
+  driveConnectionState,
+  hasLinkedBackup,
+}: {
+  syncStatus: SyncStatus;
+  driveConnectionState: DriveConnectionState;
+  hasLinkedBackup: boolean;
+}): SyncStatusPresentationSnapshot => {
+  const databaseState = syncStatus.state === 'offline'
+    ? 'offline'
+    : syncStatus.state === 'checking'
+      ? 'checking'
+      : syncStatus.state === 'error' || syncStatus.supabaseStatus === 'error' || syncStatus.retryPaused
+        ? 'error'
+        : syncStatus.state === 'saving' || syncStatus.supabaseStatus === 'syncing' || syncStatus.pendingCount > 0
+          ? 'syncing'
+          : 'synced';
+
+  const backupState = driveConnectionState === 'expired'
+    ? 'expired'
+    : driveConnectionState === 'disconnected'
+      ? 'disconnected'
+      : !hasLinkedBackup
+        ? 'unlinked'
+        : syncStatus.driveStatus === 'uploading'
+          ? 'uploading'
+          : syncStatus.driveStatus === 'error'
+            ? 'error'
+            : syncStatus.lastSyncDrive
+              ? 'backed-up'
+              : 'ready';
+
+  const primaryAction: SyncPrimaryAction = databaseState === 'error'
+    ? 'retry-database'
+    : databaseState === 'offline' || databaseState === 'checking' || databaseState === 'syncing'
+      ? null
+      : backupState === 'disconnected' || backupState === 'expired' || backupState === 'unlinked'
+        ? 'open-backups'
+        : backupState === 'error'
+          ? 'reset-backup'
+          : backupState === 'ready' || backupState === 'backed-up'
+            ? 'backup-now'
+            : null;
+
+  return {
+    databaseState,
+    queueState: syncStatus.pendingCount > 0 ? 'pending' : 'clear',
+    driveConnectionState,
+    backupState,
+    primaryAction,
+  };
+};
+
 export const getSyncStatusDotClass = (state: SyncStatus['state']) => {
   switch (state) {
     case 'checking':

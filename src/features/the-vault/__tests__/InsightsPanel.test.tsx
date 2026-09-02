@@ -24,7 +24,8 @@ describe('InsightsPanel', () => {
     expect(screen.getByText('Total People')).not.toHaveClass('truncate');
     expect(screen.getByRole('heading', { name: 'Explore the tree' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Check and calculate' })).toBeInTheDocument();
-    expect(screen.getByRole('progressbar', { name: 'Data Health Score' })).toHaveValue(84);
+    expect(screen.getByRole('progressbar', { name: 'Structural Integrity' })).toHaveValue(84);
+    expect(screen.getByText(/Completeness and source coverage are scored separately/)).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /Relationship Calculator/i }));
 
@@ -44,8 +45,8 @@ describe('InsightsPanel', () => {
       />
     );
 
-    expect(screen.getByText('Needs attention')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /Open data consistency check: 46%/i }));
+    expect(screen.getByText('Structural issues detected')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Open structural integrity review: 46%/i }));
     expect(onOpenTool).toHaveBeenCalledWith('consistency');
   });
 

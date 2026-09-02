@@ -46,9 +46,10 @@ vi.mock('../../../context/TranslationContext', () => ({
         days: 'days',
         healthCenter: {
           all: 'All',
-          healthScore: 'Health Score',
+          healthScore: 'Structural Integrity',
           completeness: 'Completeness',
           citationCoverage: 'Citation Coverage',
+          structuralIntegrityHelp: 'Relationship and timeline consistency only. Completeness and citation coverage are separate scores.',
           structural: 'Structural',
           timeline: 'Timeline',
           duplicates: 'Duplicates',
@@ -58,6 +59,20 @@ vi.mock('../../../context/TranslationContext', () => ({
           info: 'Info',
           allClearTitle: 'Tree health looks good',
           allClearDescription: 'No issues match the current filter.',
+          searchPlaceholder: 'Search issues or people...',
+          severityAll: 'All severities',
+          showingResults: (visible: number, total: number) => `Showing ${visible} of ${total} current issues`,
+          showMore: 'Show more issues',
+          openPerson: 'Open person to fix this issue',
+          currentIssuesHint: 'Issues disappear automatically after correction.',
+          issueMessages: {
+            broken_parent_reference: '{person} references a missing parent.',
+            missing_birth_date: '{person} is missing a birth date.',
+            missing_residence: '{person} is missing residence information.',
+            missing_occupation: '{person} is missing occupation information.',
+            missing_parents: '{person} has no listed parents.',
+            missing_profile_source: '{person} has no profile-level source.',
+          },
         },
       },
     },
@@ -107,17 +122,48 @@ describe('StatisticsDashboard health center consistency view', () => {
       />
     );
 
-    expect(screen.getByText('Health Score')).toBeInTheDocument();
+    expect(screen.getByText('Structural Integrity')).toBeInTheDocument();
+    expect(screen.getByText(/Completeness and citation coverage are separate scores/)).toBeInTheDocument();
     expect(screen.getAllByText('Completeness').length).toBeGreaterThan(0);
     expect(screen.getByText('Citation Coverage')).toBeInTheDocument();
     expect(screen.getByText(/Completeness \d+/)).toBeInTheDocument();
     expect(screen.getByText('Structural 1')).toBeInTheDocument();
     expect(screen.getAllByText('Error').length).toBeGreaterThan(0);
+    expect(screen.getByText(/Showing \d+ of \d+ current issues/)).toBeInTheDocument();
     const issueButtons = screen.getAllByRole('button').filter((button) => button.textContent?.includes('Family'));
     expect(issueButtons[0]).toHaveTextContent('p2 Family references a missing parent.');
 
     fireEvent.click(screen.getByText('p1 Family is missing a birth date.'));
 
     expect(onNavigateToPerson).toHaveBeenCalledWith('p1');
+
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Search issues or people...' }), {
+      target: { value: 'missing parent' },
+    });
+    expect(screen.getByText('p2 Family references a missing parent.')).toBeInTheDocument();
+    expect(screen.queryByText('p1 Family is missing a birth date.')).not.toBeInTheDocument();
+  });
+
+  it('renders large issue collections in bounded batches', () => {
+    const people = Object.fromEntries(
+      Array.from({ length: 12 }, (_, index) => {
+        const id = `person-${index + 1}`;
+        return [id, buildPerson(id)];
+      })
+    );
+
+    render(
+      <StatisticsDashboard
+        isOpen
+        onClose={vi.fn()}
+        people={people}
+        initialView="consistency"
+      />
+    );
+
+    expect(screen.getByText('Showing 40 of 60 current issues')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Show more issues' }));
+    expect(screen.getByText('Showing 60 of 60 current issues')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Show more issues' })).not.toBeInTheDocument();
   });
 });

@@ -21,6 +21,8 @@ export interface TreeListLabels {
   ownerRole: string;
   editorRole: string;
   viewerRole: string;
+  locale: string;
+  duplicateName: string;
 }
 
 interface TreeListItemProps {
@@ -37,13 +39,22 @@ interface TreeListItemProps {
   onCancelRename?: () => void;
   onSelect: (treeId: string, role?: 'owner' | 'editor' | 'viewer') => void;
   onDelete?: (treeId: string) => void;
+  duplicatePosition?: { index: number; total: number } | null;
 }
 
-const formatDateLabel = (tree: TreeRow, justNowLabel: string) => {
+const formatDateLabel = (tree: TreeRow, justNowLabel: string, locale: string) => {
   const raw = tree.updatedAt || tree.createdAt;
   if (!raw) return justNowLabel;
   try {
-    return new Date(raw).toLocaleDateString();
+    const date = new Date(raw);
+    if (Number.isNaN(date.getTime())) return raw;
+    const absolute = new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(date);
+    const elapsedDays = Math.round((date.getTime() - Date.now()) / 86_400_000);
+    const relative = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' }).format(
+      Math.abs(elapsedDays) < 30 ? elapsedDays : Math.round(elapsedDays / 30),
+      Math.abs(elapsedDays) < 30 ? 'day' : 'month'
+    );
+    return `${absolute} · ${relative}`;
   } catch {
     return raw;
   }
@@ -70,6 +81,7 @@ export const TreeListItem: React.FC<TreeListItemProps> = ({
   onCancelRename,
   onSelect,
   onDelete,
+  duplicatePosition = null,
 }) => {
   const isActive = activeTreeId === tree.id;
   const isEditing = editingId === tree.id;
@@ -126,9 +138,19 @@ export const TreeListItem: React.FC<TreeListItemProps> = ({
                     {labels.active}
                   </span>
                 )}
+                {duplicatePosition ? (
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${isActive ? 'bg-white/15 text-white' : 'bg-amber-50 text-amber-700'}`}
+                    aria-label={labels.duplicateName
+                      .replace('{index}', String(duplicatePosition.index))
+                      .replace('{total}', String(duplicatePosition.total))}
+                  >
+                    #{duplicatePosition.index}/{duplicatePosition.total}
+                  </span>
+                ) : null}
               </div>
               <p className={`mt-1 text-[12px] ${isActive ? 'text-white/80' : 'text-[var(--text-muted)]'}`}>
-                {labels.updated} {formatDateLabel(tree, labels.justNow)}
+                {labels.updated} {formatDateLabel(tree, labels.justNow, labels.locale)}
               </p>
             </>
           )}

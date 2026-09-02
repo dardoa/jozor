@@ -107,6 +107,9 @@ export const InsightsPanel: React.FC<InsightsPanelProps> = ({
               value={normalizedHealthScore}
               aria-label={t.vaultStatsHealthScore}
             />
+            <p className="mt-2 text-xs leading-5 text-[var(--text-muted)]">
+              {t.vaultStatsHealthExplanation}
+            </p>
 
             <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4" role="list" aria-label={t.vaultStatsGenderDist}>
               {[
