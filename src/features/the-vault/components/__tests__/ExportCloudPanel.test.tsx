@@ -564,8 +564,9 @@ describe('ExportCloudPanel manuscript preview', () => {
     expect(within(actualExportSection).queryByText(/legacy poster/i)).not.toBeInTheDocument();
     expect(within(actualExportSection).queryByRole('button', { name: /Download PNG/i })).not.toBeInTheDocument();
     expect(within(actualExportSection).queryByRole('button', { name: /Download PDF/i })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Download PNG/i })).toBeEnabled();
-    expect(screen.getByRole('button', { name: /Download PDF/i })).toBeEnabled();
+    expect(screen.getByRole('button', { name: /Download PNG/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /Download PDF/i })).toBeDisabled();
+    expect(screen.getByTestId('poster-resource-preparation-notice')).toBeInTheDocument();
     expect(onRunPublishingExport).not.toHaveBeenCalled();
 
     // Verify the compact tree snapshot strip remains downloadable.
@@ -607,8 +608,9 @@ describe('ExportCloudPanel manuscript preview', () => {
     expect(screen.queryByText(/legacy poster PDF path remains paused/i)).not.toBeInTheDocument();
     expect(screen.queryByText('sanitized-data')).not.toBeInTheDocument();
     expect(screen.getByTestId('visual-studio-action-bar')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Download PNG/i })).toBeEnabled();
-    expect(screen.getByRole('button', { name: /Download PDF/i })).toBeEnabled();
+    expect(screen.getByRole('button', { name: /Download PNG/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /Download PDF/i })).toBeDisabled();
+    expect(screen.getByTestId('poster-resource-preparation-notice')).toBeInTheDocument();
   });
 
   it('preserves the active poster design while moving between Vault output sections', async () => {
