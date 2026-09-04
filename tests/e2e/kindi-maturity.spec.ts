@@ -73,9 +73,13 @@ const person = (
 const CHILD_IDS = Array.from({ length: 8 }, (_, index) => `child-${index + 1}`);
 const PEOPLE: Record<string, unknown> = {
   root: person('root', 'سامي', { children: CHILD_IDS }),
-  ...Object.fromEntries(CHILD_IDS.map((id, index) => [
+  'child-1': {
+    ...person('child-1', 'ابن 1', { parents: ['root'] }),
+    birthDate: '1981-07-12',
+  },
+  ...Object.fromEntries(CHILD_IDS.slice(1).map((id, index) => [
     id,
-    person(id, `ابن ${index + 1}`, { parents: ['root'] }),
+    person(id, `ابن ${index + 2}`, { parents: ['root'] }),
   ])),
 };
 
@@ -190,6 +194,7 @@ test.describe('Kindi product maturity journeys', () => {
     await seedScenario(page, 'ar');
     const { dialog } = await openKindi(page, 'ar');
 
+    await expect(dialog.getByRole('log', { name: 'محادثة كِندي' })).toBeVisible();
     await expect(dialog.getByText('السياق الحالي')).toBeVisible();
     await expect(dialog.getByText('سامي الاختبار', { exact: true })).toBeVisible();
     await dialog.getByRole('button', { name: 'اسأل عن العائلة' }).click();
@@ -201,6 +206,10 @@ test.describe('Kindi product maturity journeys', () => {
     await expect(dialog.getByText(/وجدت 8 من الأبناء/)).toBeVisible();
     await expect(dialog.getByText('إجابة عائلية', { exact: true })).toBeVisible();
     await expect(dialog.getByText('من شجرتك', { exact: true })).toBeVisible();
+    await expect(dialog.getByRole('article', { name: 'رسالتك' })).toHaveText('من هم أبناؤه؟');
+    await expect(dialog.getByRole('article', { name: 'رسالة من كِندي' })).toHaveCount(2);
+    await expect(dialog.getByRole('button', { name: 'ابن 1 الاختبار 1981', exact: true })).toBeVisible();
+    await expect(dialog.getByText('1981-07-12', { exact: true })).toHaveCount(0);
     await expect(dialog.getByRole('button', { name: /عرض المزيد/ })).toBeVisible();
     await expect(dialog.getByText('ابن 7 الاختبار', { exact: true })).toHaveCount(0);
     await dialog.getByRole('button', { name: /عرض المزيد/ }).click();

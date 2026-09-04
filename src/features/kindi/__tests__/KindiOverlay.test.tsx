@@ -13,6 +13,9 @@ vi.mock('../../../context/TranslationContext', () => ({
         dialogLabel: 'مساعد كِندي الذكي',
         subtitle: 'مساعد البحث والتحكم بالشجرة',
         close: 'إغلاق كِندي',
+        conversationLabel: 'محادثة كِندي',
+        assistantMessageLabel: 'رسالة من كِندي',
+        userMessageLabel: 'رسالتك',
         unnamedPerson: 'شخص بلا اسم',
         personProfile: 'ملف الشخص',
         choose: 'اختيار',
@@ -248,6 +251,17 @@ describe('KindiOverlay keyboard confirmation guardrails', () => {
     expect(screen.getByRole('button', { name: 'إغلاق كِندي' })).toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: 'رسالة إلى كِندي' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'إرسال إلى كِندي' })).toBeInTheDocument();
+  });
+
+  it('identifies the conversation log and message senders for assistive technology', () => {
+    renderOverlayWithMessages([
+      { id: 'assistant-message', role: 'assistant', text: 'كيف أساعدك؟' },
+      { id: 'user-message', role: 'user', text: 'افحص الشجرة' },
+    ], false);
+
+    expect(screen.getByRole('log', { name: 'محادثة كِندي' })).toBeInTheDocument();
+    expect(screen.getByRole('article', { name: 'رسالة من كِندي' })).toHaveTextContent('كيف أساعدك؟');
+    expect(screen.getByRole('article', { name: 'رسالتك' })).toHaveTextContent('افحص الشجرة');
   });
 
   it('uses starter actions to prepare a draft without submitting it', () => {
@@ -610,6 +624,23 @@ describe('KindiOverlay keyboard confirmation guardrails', () => {
     ], true, { [father.id]: father, [child.id]: child });
 
     expect(document.body.textContent).toContain('بنت Mahmoud Alqarji');
+  });
+
+  it('shows a compact birth year instead of a raw ISO date on person cards', () => {
+    const personWithIsoDate = testPersonWithRelations('dated-person', 'ليلى', {
+      birthDate: '1987-04-23',
+      birthPlace: 'دمشق',
+    });
+
+    renderOverlayWithMessages([{
+      id: 'message-with-dated-person',
+      role: 'assistant',
+      text: 'وجدت شخصًا.',
+      people: [personWithIsoDate],
+    }], false);
+
+    expect(screen.getByRole('button', { name: 'ليلى Alqarji 1987 · دمشق' })).toBeInTheDocument();
+    expect(screen.queryByText(/1987-04-23/)).not.toBeInTheDocument();
   });
 
   it('does not close from the backdrop while a decision is pending', () => {

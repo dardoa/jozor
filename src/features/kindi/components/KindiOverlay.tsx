@@ -23,6 +23,7 @@ import { KindiIcon } from '../../../components/icons/KindiIcon';
 import { SmartAvatar } from '../../../components/ui/SmartAvatar';
 import { useTranslation } from '../../../context/TranslationContext';
 import type { Person } from '../../../types/person';
+import { getDisplayDate } from '../../../utils/familyLogic';
 import type { TranslationSchema } from '../../../utils/translationLoader';
 import { ConfidenceBadge } from './ConfidenceBadge';
 import { KindiAnswerFeedback, KindiAnswerHeader } from './KindiAnswerMeta';
@@ -173,11 +174,13 @@ const KindiPersonCard = ({
     disabled={disabled}
     className="flex w-full items-center gap-3 rounded-2xl border border-[var(--border-soft)]/80 bg-[var(--surface-panel)]/80 px-3 py-2.5 text-start shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-[var(--surface-hover)] hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
   >
-    <SmartAvatar
-      person={person}
-      size={42}
-      className="rounded-2xl ring-1 ring-[var(--border-soft)]/50 shadow-sm"
-    />
+    <span aria-hidden="true" className="shrink-0">
+      <SmartAvatar
+        person={person}
+        size={42}
+        className="rounded-2xl ring-1 ring-[var(--border-soft)]/50 shadow-sm"
+      />
+    </span>
     <div className="min-w-0 flex-1">
       <div className="flex min-w-0 items-center gap-2">
         <div className="truncate text-sm font-bold text-[var(--text-main)]">{personName(person, text.unnamedPerson)}</div>
@@ -190,7 +193,7 @@ const KindiPersonCard = ({
         )}
       </div>
       <div className="mt-0.5 truncate text-xs text-[var(--text-muted)]">
-        {[person.birthDate, person.birthPlace].filter(Boolean).join(' · ') || text.personProfile}
+        {[getDisplayDate(person.birthDate), person.birthPlace].filter(Boolean).join(' · ') || text.personProfile}
       </div>
       {contextLabel && (
         <div className="mt-0.5 truncate text-[11px] font-bold text-[var(--primary-600)]">
@@ -524,11 +527,26 @@ export const KindiOverlay: React.FC<KindiOverlayProps> = memo(({
           </div>
         </header>
 
-        <div className="flex-1 space-y-4 overflow-y-auto px-4 py-4 kindi-scrollbar bg-transparent">
+        <div
+          role="log"
+          aria-label={kindiText.conversationLabel}
+          aria-live="polite"
+          aria-relevant="additions text"
+          className="flex-1 space-y-4 overflow-y-auto px-4 py-4 kindi-scrollbar bg-transparent"
+        >
           {messages.map((message) => (
-            <div key={message.id} className={message.role === 'user' ? 'flex justify-end' : 'flex justify-start'}>
+            <article
+              key={message.id}
+              aria-label={message.role === 'user'
+                ? kindiText.userMessageLabel
+                : kindiText.assistantMessageLabel}
+              className={message.role === 'user' ? 'flex justify-end' : 'flex justify-start'}
+            >
               {message.role !== 'user' && (
-                <div className="me-2 mt-1 flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[var(--primary-600)] shadow-sm ring-1 ring-[var(--border-soft)]/50 animate-kindi-message">
+                <div
+                  aria-hidden="true"
+                  className="me-2 mt-1 flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[var(--primary-600)] shadow-sm ring-1 ring-[var(--border-soft)]/50 animate-kindi-message"
+                >
                   <KindiIcon size={28} className="h-7 w-7 object-contain" />
                 </div>
               )}
@@ -736,7 +754,7 @@ export const KindiOverlay: React.FC<KindiOverlayProps> = memo(({
                   />
                 )}
               </div>
-            </div>
+            </article>
           ))}
           {showStarterActions && (
             <div className="ms-10 animate-kindi-message" data-testid="kindi-starter-actions">
