@@ -68,6 +68,7 @@ vi.mock('../../../context/TranslationContext', () => ({
         diagnosticNotApplicable: 'غير منطبق',
         diagnosticIssueCounts: (errors: number, warnings: number, notes: number) => `${errors} أخطاء · ${warnings} تنبيهات · ${notes} ملاحظات تحسين`,
         diagnosticOpenRecord: 'فتح السجل',
+        diagnosticCompleteWithKindi: 'أكمل عبر كِندي',
         diagnosticNextSteps: 'خطوات الإثراء المقترحة',
         biographyDraftHeading: 'مسودة السيرة',
         biographyFactsUsed: 'الحقائق المستخدمة',
@@ -220,6 +221,7 @@ const renderOverlayWithMessages = (
     onClose: vi.fn(),
     onFocusPerson: vi.fn(),
     onOpenPersonRecord: vi.fn(),
+    onPrepareDiagnosticUpdate: vi.fn(() => true),
     onConfirm: vi.fn(),
     onCancel: vi.fn(),
     onCancelDisambiguation: vi.fn(),
@@ -401,6 +403,20 @@ describe('KindiOverlay keyboard confirmation guardrails', () => {
       'relationships',
       'parents'
     );
+    fireEvent.click(screen.getByRole('button', {
+      name: /أضف تاريخ الميلاد.*أكمل عبر كِندي/,
+    }));
+    expect(props.onPrepareDiagnosticUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        key: 'birth-date',
+        targetPersonId: 'record-person-id',
+        targetField: 'birthDate',
+      })
+    );
+    expect(screen.getByRole('textbox', { name: 'رسالة إلى كِندي' })).toHaveFocus();
+    expect(screen.queryByRole('button', {
+      name: /أضف الوالدين المعروفين.*أكمل عبر كِندي/,
+    })).not.toBeInTheDocument();
     expect(props.onConfirm).not.toHaveBeenCalled();
   });
 

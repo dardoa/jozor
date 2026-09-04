@@ -268,6 +268,22 @@ test.describe('Kindi product maturity journeys', () => {
     await expect(suggestions).not.toContainText('child-1');
     await expect.poll(() => getPeopleCount(page)).toBe(initialPeopleCount);
 
+    const completeOccupationWithKindi = suggestions.getByRole('button', {
+      name: /أكمل المهنة.*أكمل عبر كِندي/,
+    });
+    await expect(completeOccupationWithKindi).toBeVisible();
+    await completeOccupationWithKindi.click();
+    await expect(input).toBeFocused();
+    await expect(input).toHaveValue('حدّث مهنة هذا الشخص إلى ');
+    await expect(dialog).not.toContainText('root');
+
+    await input.fill('حدّث مهنة هذا الشخص إلى مهندس');
+    await dialog.getByRole('button', { name: 'إرسال إلى كِندي' }).click();
+    await expect(dialog.getByText('مراجعة تعديل البيانات', { exact: true })).toBeVisible();
+    await expect.poll(() => getPersonField(page, 'root', 'profession')).toBe('');
+    await dialog.getByRole('button', { name: 'تأكيد', exact: true }).click();
+    await expect.poll(() => getPersonField(page, 'root', 'profession')).toBe('مهندس');
+
     const reviewParentsSuggestion = suggestions.getByRole('button', {
       name: /أضف الوالدين المعروفين.*فتح السجل/,
     });

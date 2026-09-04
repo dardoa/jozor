@@ -56,5 +56,14 @@ describe('updateCommandParser', () => {
         profession: 'طبيب',
       });
     });
+
+    it('preserves the primary value in contextual English updates', () => {
+      expect(extractUpdateFields('Update residence for this person to Riyadh')).toEqual({
+        residence: 'Riyadh',
+      });
+      expect(extractUpdateFields('Update profession for this person to Engineer')).toEqual({
+        profession: 'Engineer',
+      });
+    });
   });
 });

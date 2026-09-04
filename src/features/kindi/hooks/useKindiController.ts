@@ -4,7 +4,10 @@ import { searchService } from '../../../services/searchService';
 import { useAppStore } from '../../../store/useAppStore';
 import type { Person } from '../../../types/person';
 import { getSafeKindiRedactedQuery } from '../logic/kindiInteractionContext';
+import { createKindiGuidedUpdateDraft } from '../logic/kindiGuidedUpdate';
+import { canKindiMutateTree } from '../logic/kindiPermissions';
 import type {
+  KindiDiagnosticSuggestion,
   KindiLearningTrace,
 } from '../types';
 import { useKindiCommandPlanningFlow } from './useKindiCommandPlanningFlow';
@@ -155,6 +158,24 @@ export const useKindiController = ({ people, onFocusPerson }: UseKindiController
     [focusId, lastContextPersonId, people]
   );
 
+  const canPrepareDiagnosticUpdate = canKindiMutateTree(currentUserRole, currentTreeId)
+    && !hasPendingDecision
+    && !isThinking;
+
+  const prepareDiagnosticUpdate = useCallback((suggestion: KindiDiagnosticSuggestion): boolean => {
+    if (!canKindiMutateTree(currentUserRole, currentTreeId) || hasPendingDecision || isThinking) {
+      return false;
+    }
+    if (!people[suggestion.targetPersonId]) return false;
+
+    const nextDraft = createKindiGuidedUpdateDraft(suggestion.targetField, language);
+    if (!nextDraft) return false;
+
+    setLastContextPersonId(suggestion.targetPersonId);
+    setDraft(nextDraft);
+    return true;
+  }, [currentTreeId, currentUserRole, hasPendingDecision, isThinking, language, people]);
+
   const {
     startNewConversation,
     undoKindiChange,
@@ -255,5 +276,7 @@ export const useKindiController = ({ people, onFocusPerson }: UseKindiController
     startNewConversation,
     undoKindiChange,
     rateKindiAnswer,
+    canPrepareDiagnosticUpdate,
+    prepareDiagnosticUpdate,
   };
 };

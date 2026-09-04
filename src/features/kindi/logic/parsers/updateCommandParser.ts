@@ -260,7 +260,9 @@ export const extractUpdateFields = (query: string): Partial<Person> => {
     'السكن|سكنه|سكنها|مكان\\s+سكنه|مكان\\s+سكنها|اقامته|إقامته|اقامتها|إقامتها|يسكن|تسكن|ساكن|ساكنة|residence|lives\\s+in|live\\s+in',
     UPDATE_VALUE_STOP_TERMS
   );
-  if (residence !== undefined) updates.residence = residence;
+  if (residence !== undefined && updates.residence === undefined) {
+    updates.residence = residence;
+  }
 
   const birthPlace = fieldValue('birth place|place of birth|مكان الميلاد|مكان ميلاده|مكان ميلادها|ميلاده|ميلادها|ولادته')
     || cleanNameText(query.match(/(?:ولد|ولدت|مولود|مولودة)\s+في\s+(.+?)(?=\s+(?:عام|سنة|مواليد|born|$))/iu)?.[1]);

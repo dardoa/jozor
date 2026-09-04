@@ -18,6 +18,7 @@ const captured = vi.hoisted(() => ({
       targetSection?: 'overview' | 'workBio' | 'relationships',
       targetField?: 'parents'
     ) => void;
+    onPrepareDiagnosticUpdate?: (suggestion: { targetPersonId: string }) => boolean;
   },
 }));
 
@@ -40,6 +41,8 @@ const controller = vi.hoisted(() => ({
   startNewConversation: vi.fn(),
   undoKindiChange: vi.fn(),
   rateKindiAnswer: vi.fn(),
+  canPrepareDiagnosticUpdate: true,
+  prepareDiagnosticUpdate: vi.fn(() => true),
 }));
 
 vi.mock('../../../context/TranslationContext', () => ({
@@ -151,5 +154,15 @@ describe('KindiOverlayWrapper voice review', () => {
     expect(controller.focusPerson).not.toHaveBeenCalled();
     expect(onOpenPersonRecord).toHaveBeenCalledWith('person-1', 'links', 'relationships', 'parents');
     expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('forwards the guarded guided-update callback without closing Kindi', () => {
+    const onClose = vi.fn();
+    render(<KindiOverlayWrapper isOpen onClose={onClose} people={{}} onFocusPerson={vi.fn()} />);
+    const suggestion = { targetPersonId: 'person-1' };
+
+    expect(captured.overlayProps?.onPrepareDiagnosticUpdate?.(suggestion)).toBe(true);
+    expect(controller.prepareDiagnosticUpdate).toHaveBeenCalledWith(suggestion);
+    expect(onClose).not.toHaveBeenCalled();
   });
 });

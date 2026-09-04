@@ -854,4 +854,96 @@ describe('useKindiController confidence handling', () => {
     expect(answer?.text).not.toContain(root.id);
     expect(searchService.search).not.toHaveBeenCalled();
   });
+
+  it('prepares a diagnostic field update against opaque in-memory context without mutating', () => {
+    const lina = person('private-person-record-id', 'Lina');
+    appState.people = { [lina.id]: lina };
+    appState.currentTreeId = 'tree-1';
+
+    const { result } = renderHook(() => useKindiController({
+      people: appState.people,
+      onFocusPerson: vi.fn(),
+    }));
+
+    let prepared = false;
+    act(() => {
+      prepared = result.current.prepareDiagnosticUpdate({
+        key: 'occupation',
+        text: 'Complete the occupation.',
+        targetPersonId: lina.id,
+        targetTab: 'about',
+        targetSection: 'workBio',
+        targetField: 'profession',
+      });
+    });
+
+    expect(prepared).toBe(true);
+    expect(result.current.draft).toBe('حدّث مهنة هذا الشخص إلى ');
+    expect(result.current.currentContextPerson).toEqual(lina);
+    expect(result.current.draft).not.toContain(lina.id);
+    expect(treeActionMocks.updatePerson).not.toHaveBeenCalled();
+    expect(result.current.messages.some((message) => message.confirmation)).toBe(false);
+  });
+
+  it('routes a completed diagnostic draft through confirmation before the official update action', async () => {
+    const lina = person('private-guided-record-id', 'Lina');
+    appState.people = { [lina.id]: lina };
+    appState.currentTreeId = 'tree-1';
+
+    const { result } = renderHook(() => useKindiController({
+      people: appState.people,
+      onFocusPerson: vi.fn(),
+    }));
+
+    act(() => {
+      result.current.prepareDiagnosticUpdate({
+        key: 'occupation',
+        text: 'Complete the occupation.',
+        targetPersonId: lina.id,
+        targetTab: 'about',
+        targetSection: 'workBio',
+        targetField: 'profession',
+      });
+    });
+    await submitAndFlush(result, `${result.current.draft}مهندسة`);
+
+    const confirmation = result.current.messages.at(-1)?.confirmation;
+    expect(confirmation?.plan).toEqual({
+      type: 'UPDATE',
+      personId: lina.id,
+      updates: { profession: 'مهندسة' },
+    });
+    expect(treeActionMocks.updatePerson).not.toHaveBeenCalled();
+
+    await act(async () => {
+      await result.current.confirm(confirmation!);
+    });
+    expect(treeActionMocks.updatePerson).toHaveBeenCalledWith(lina.id, {
+      profession: 'مهندسة',
+    });
+  });
+
+  it('does not expose guided diagnostic updates to a viewer or complex fields', () => {
+    const lina = person('private-viewer-record-id', 'Lina');
+    appState.people = { [lina.id]: lina };
+    appState.currentTreeId = 'tree-1';
+    appState.currentUserRole = 'viewer';
+
+    const { result } = renderHook(() => useKindiController({
+      people: appState.people,
+      onFocusPerson: vi.fn(),
+    }));
+
+    expect(result.current.canPrepareDiagnosticUpdate).toBe(false);
+    expect(result.current.prepareDiagnosticUpdate({
+      key: 'parents',
+      text: 'Review parents.',
+      targetPersonId: lina.id,
+      targetTab: 'links',
+      targetSection: 'relationships',
+      targetField: 'parents',
+    })).toBe(false);
+    expect(result.current.draft).toBe('');
+    expect(treeActionMocks.updatePerson).not.toHaveBeenCalled();
+  });
 });

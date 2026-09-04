@@ -111,6 +111,7 @@ export const general = {
     diagnosticNotApplicable: 'غير منطبق',
     diagnosticIssueCounts: (errors: number, warnings: number, notes: number) => `${errors} أخطاء · ${warnings} تنبيهات · ${notes} ملاحظات تحسين`,
     diagnosticOpenRecord: 'فتح السجل',
+    diagnosticCompleteWithKindi: 'أكمل عبر كِندي',
     diagnosticNextSteps: 'خطوات الإثراء المقترحة',
     biographyDraftHeading: 'مسودة السيرة',
     biographyFactsUsed: 'الحقائق المستخدمة',

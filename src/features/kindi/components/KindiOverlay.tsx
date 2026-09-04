@@ -30,9 +30,11 @@ import { KindiBiographyDraft } from './KindiBiographyDraft';
 import { KindiDiagnosticSummary } from './KindiDiagnosticSummary';
 import { KindiRecordReview } from './KindiRecordReview';
 import { getKindiPersonContextLabel } from '../logic/kindiPersonContext';
+import { isKindiGuidedUpdateField } from '../logic/kindiGuidedUpdate';
 import type {
   KindiAnswerFeedback as KindiAnswerFeedbackValue,
   KindiConfirmation,
+  KindiDiagnosticSuggestion,
   KindiDiagnosticTargetSection,
   KindiDiagnosticTargetField,
   KindiDiagnosticTargetTab,
@@ -65,6 +67,7 @@ interface KindiOverlayProps {
     targetSection?: KindiDiagnosticTargetSection,
     targetField?: KindiDiagnosticTargetField
   ) => void;
+  onPrepareDiagnosticUpdate?: (suggestion: KindiDiagnosticSuggestion) => boolean;
   onConfirm: (confirmation: KindiConfirmation) => void;
   onCancel: (confirmation?: KindiConfirmation) => void;
   onCancelDisambiguation: (messageId: string) => void;
@@ -359,6 +362,7 @@ export const KindiOverlay: React.FC<KindiOverlayProps> = memo(({
   onClose,
   onFocusPerson,
   onOpenPersonRecord,
+  onPrepareDiagnosticUpdate,
   onConfirm,
   onCancel,
   onCancelDisambiguation,
@@ -564,24 +568,39 @@ export const KindiOverlay: React.FC<KindiOverlayProps> = memo(({
                     </h3>
                     <ul className="mt-2 divide-y divide-[var(--border-soft)]/70 text-xs leading-5 text-[var(--text-secondary)]">
                       {message.diagnosticSuggestions.map((suggestion) => (
-                        <li key={`${suggestion.key}:${suggestion.targetPersonId}`} className="flex items-center gap-3 py-2 first:pt-0 last:pb-0">
+                        <li key={`${suggestion.key}:${suggestion.targetPersonId}`} className="flex flex-col gap-2 py-2 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:gap-3">
                           <span className="min-w-0 flex-1">{suggestion.text}</span>
-                          {onOpenPersonRecord && (
-                            <button
-                              type="button"
-                              onClick={() => onOpenPersonRecord(
-                                suggestion.targetPersonId,
-                                suggestion.targetTab,
-                                suggestion.targetSection,
-                                suggestion.targetField
-                              )}
-                              aria-label={`${suggestion.text} · ${kindiText.diagnosticOpenRecord}`}
-                              className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-lg border border-[var(--primary-600)]/25 bg-[var(--surface-subtle)] px-2.5 py-1 text-[10px] font-black text-[var(--primary-600)] transition hover:bg-[var(--surface-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary-600)]"
-                            >
-                              <SquarePen className="h-3.5 w-3.5" aria-hidden="true" />
-                              <span>{kindiText.diagnosticOpenRecord}</span>
-                            </button>
-                          )}
+                          <div className="flex shrink-0 flex-wrap items-center gap-1.5">
+                            {onPrepareDiagnosticUpdate && isKindiGuidedUpdateField(suggestion.targetField) && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (onPrepareDiagnosticUpdate(suggestion)) inputRef.current?.focus();
+                                }}
+                                aria-label={`${suggestion.text} · ${kindiText.diagnosticCompleteWithKindi}`}
+                                className="inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-[var(--primary-600)] px-2.5 py-1 text-[10px] font-black text-white transition hover:bg-[var(--primary-700)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary-600)] focus-visible:ring-offset-2"
+                              >
+                                <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+                                <span>{kindiText.diagnosticCompleteWithKindi}</span>
+                              </button>
+                            )}
+                            {onOpenPersonRecord && (
+                              <button
+                                type="button"
+                                onClick={() => onOpenPersonRecord(
+                                  suggestion.targetPersonId,
+                                  suggestion.targetTab,
+                                  suggestion.targetSection,
+                                  suggestion.targetField
+                                )}
+                                aria-label={`${suggestion.text} · ${kindiText.diagnosticOpenRecord}`}
+                                className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-[var(--primary-600)]/25 bg-[var(--surface-subtle)] px-2.5 py-1 text-[10px] font-black text-[var(--primary-600)] transition hover:bg-[var(--surface-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary-600)]"
+                              >
+                                <SquarePen className="h-3.5 w-3.5" aria-hidden="true" />
+                                <span>{kindiText.diagnosticOpenRecord}</span>
+                              </button>
+                            )}
+                          </div>
                         </li>
                       ))}
                     </ul>

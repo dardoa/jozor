@@ -104,6 +104,9 @@ const KindiOverlayWrapper: React.FC<KindiOverlayWrapperProps> = ({
       onClose={handleClose}
       onFocusPerson={handleFocusPerson}
       onOpenPersonRecord={onOpenPersonRecord ? handleOpenPersonRecord : undefined}
+      onPrepareDiagnosticUpdate={controller.canPrepareDiagnosticUpdate
+        ? controller.prepareDiagnosticUpdate
+        : undefined}
       onConfirm={controller.confirm}
       onCancel={controller.cancel}
       onCancelDisambiguation={controller.cancelDisambiguation}
