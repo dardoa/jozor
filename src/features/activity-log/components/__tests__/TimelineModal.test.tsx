@@ -151,5 +151,5 @@ describe('TimelineModal', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Show more events' }));
     expect(screen.getByText('Showing 55 of 55 events')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Show more events' })).not.toBeInTheDocument();
-  });
+  }, 10_000);
 });

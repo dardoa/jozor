@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { createLimit } from '../concurrency';
 
 describe('createLimit concurrency helper', () => {
@@ -52,25 +52,32 @@ describe('createLimit concurrency helper', () => {
   it('resolves promises and returns results in the expected order', async () => {
     const limit = createLimit(2);
     const results: number[] = [];
+    const started: number[] = [];
+    const releases = new Map<number, () => void>();
 
-    const task = async (id: number, delay: number) => {
-      await new Promise((resolve) => setTimeout(resolve, delay));
+    const task = async (id: number) => {
+      started.push(id);
+      await new Promise<void>((resolve) => {
+        releases.set(id, resolve);
+      });
       results.push(id);
       return id;
     };
 
-    // Task 1 (starts immediately) takes 20ms
-    // Task 2 (starts immediately) takes 5ms
-    // Task 3 (queued, runs when Task 2 finishes) takes 5ms
-    const p1 = limit(() => task(1, 20));
-    const p2 = limit(() => task(2, 5));
-    const p3 = limit(() => task(3, 5));
+    const p1 = limit(() => task(1));
+    const p2 = limit(() => task(2));
+    const p3 = limit(() => task(3));
+
+    await vi.waitFor(() => expect(started).toEqual([1, 2]));
+    releases.get(2)?.();
+    await vi.waitFor(() => expect(started).toEqual([1, 2, 3]));
+    releases.get(3)?.();
+    await vi.waitFor(() => expect(results).toEqual([2, 3]));
+    releases.get(1)?.();
 
     const all = await Promise.all([p1, p2, p3]);
 
-    // Task 2 should finish first, then Task 3, then Task 1
     expect(results).toEqual([2, 3, 1]);
-    // The resolved array should match call order
     expect(all).toEqual([1, 2, 3]);
   });
 
