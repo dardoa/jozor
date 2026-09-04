@@ -5,7 +5,7 @@ import { sanitizeExternalUrl } from '../../../../utils/safeUrl';
 import { showToast } from '../../../../utils/showToast';
 import type { TranslationSchema } from '../../../../utils/translationLoader';
 
-export type BioEditableField = 'profession' | 'company' | 'interests' | 'bio';
+export type BioEditableField = 'profession' | 'company' | 'interests' | 'residence' | 'bio';
 export type PersonSource = Person['sources'][number];
 export type PersonEvent = Person['events'][number];
 export type PersonSourceField = Exclude<keyof PersonSource, 'id'>;
@@ -40,7 +40,9 @@ export const usePersonBio = ({ person, people, isEditing, onUpdate, t }: UsePers
   const [newEventDescription, setNewEventDescription] = useState('');
   const [newEventType, setNewEventType] = useState('');
 
-  const hasWorkInterests = Boolean(person.profession || person.company || person.interests);
+  const hasWorkInterests = Boolean(
+    person.profession || person.company || person.interests || person.residence
+  );
   const hasBio = Boolean(person.bio);
   const hasSources = Boolean(person.sources?.length);
   const hasEvents = Boolean(person.events?.length);
@@ -72,11 +74,18 @@ export const usePersonBio = ({ person, people, isEditing, onUpdate, t }: UsePers
     setExpandedSections((prev) => ({ ...prev, [section]: !prev[section] }));
   }, []);
 
+  const openSection = useCallback((section: string) => {
+    setExpandedSections((previous) => previous[section]
+      ? previous
+      : { ...previous, [section]: true });
+  }, []);
+
   const updateEditableField = useCallback((field: BioEditableField, value: string | number) => {
     const stringValue = typeof value === 'number' ? String(value) : value;
     if (field === 'profession') onUpdate(person.id, { profession: stringValue });
     if (field === 'company') onUpdate(person.id, { company: stringValue });
     if (field === 'interests') onUpdate(person.id, { interests: stringValue });
+    if (field === 'residence') onUpdate(person.id, { residence: stringValue });
     if (field === 'bio') onUpdate(person.id, { bio: stringValue });
   }, [onUpdate, person.id]);
 
@@ -169,6 +178,7 @@ export const usePersonBio = ({ person, people, isEditing, onUpdate, t }: UsePers
     hasEvents,
     groupedLifeEvents,
     toggleSection,
+    openSection,
     updateEditableField,
     handleGenerateBio,
     sourceDraft: {

@@ -122,8 +122,13 @@ export const PersonIdentityEdit = memo<PersonIdentityEditProps>(({ person, onUpd
         </div>
       </div>
 
-      <Card title={t.identity} tone='flat'>
-        <div className='space-y-2 mt-2 animate-in fade-in slide-in-from-top-1 duration-200'>
+      <div
+        data-smart-persona-field="identity"
+        tabIndex={-1}
+        className="scroll-mt-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary-600)]/50"
+      >
+        <Card title={t.identity} tone='flat'>
+          <div className='space-y-2 mt-2 animate-in fade-in slide-in-from-top-1 duration-200'>
           <FormField
             label={t.firstName}
             value={person.firstName}
@@ -192,8 +197,9 @@ export const PersonIdentityEdit = memo<PersonIdentityEditProps>(({ person, onUpd
               </div>
             </div>
           )}
-        </div>
-      </Card>
+          </div>
+        </Card>
+      </div>
 
       {/* Smart Extract Modal */}
       {showSmartModal && (

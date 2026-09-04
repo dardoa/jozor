@@ -1,8 +1,9 @@
 
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SmartPersonaDrawer } from '../components/SmartPersonaDrawer';
+import { useAppStore } from '../../../store/useAppStore';
 
 vi.mock('../../../context/TranslationContext', () => ({
   useTranslation: () => ({
@@ -70,10 +71,29 @@ vi.mock('../components/tabs/AboutTab', () => ({
 }));
 
 vi.mock('../components/tabs/LinksTab', () => ({
-  LinksTab: () => <div>LinksTabMock</div>,
+  LinksTab: () => (
+    <div data-smart-persona-section="relationships">
+      <div data-smart-persona-field="parents" tabIndex={-1}>
+        <button type="button">Parent action</button>
+      </div>
+      LinksTabMock
+    </div>
+  ),
 }));
 
 describe('SmartPersonaDrawer', () => {
+  beforeEach(() => {
+    act(() => {
+      useAppStore.setState({
+        smartPersonaTab: 'about',
+        smartPersonaTargetSection: null,
+        smartPersonaTargetField: null,
+        smartPersonaSize: 'closed',
+        isSmartPersonaEditing: false,
+      });
+    });
+  });
+
   it('renders the persona drawer, shows details, and supports tab selection', async () => {
     const handleClose = vi.fn();
     const mockPerson = {
@@ -116,5 +136,47 @@ describe('SmartPersonaDrawer', () => {
     const linksTabBtn = screen.getByRole('button', { name: 'Links' });
     fireEvent.click(linksTabBtn);
     expect(await screen.findByText('LinksTabMock')).toBeInTheDocument();
+  });
+
+  it('focuses the exact requested field target and clears the transient route', async () => {
+    const mockPerson = {
+      id: 'p-1',
+      firstName: 'Fatima',
+      lastName: 'Zahra',
+      birthDate: '1975-04-12',
+      spouses: [],
+      children: [],
+      parents: [],
+    };
+    act(() => {
+      useAppStore.setState({
+        smartPersonaTab: 'links',
+        smartPersonaTargetSection: 'relationships',
+        smartPersonaTargetField: 'parents',
+        smartPersonaSize: 'full',
+      });
+    });
+
+    render(
+      <SmartPersonaDrawer
+        person={mockPerson as unknown as Person}
+        people={{ 'p-1': mockPerson as unknown as Person }}
+        onUpdate={vi.fn()}
+        onDelete={vi.fn()}
+        onSelect={vi.fn()}
+        isOpen
+        onClose={vi.fn()}
+        onOpenModal={vi.fn()}
+        familyActions={{} as unknown as FamilyActionsProps}
+        settings={{} as unknown as TreeSettings}
+        user={null}
+        canEdit
+      />
+    );
+
+    const parentAction = await screen.findByRole('button', { name: 'Parent action' });
+    await waitFor(() => expect(parentAction).toHaveFocus());
+    expect(useAppStore.getState().smartPersonaTargetSection).toBeNull();
+    expect(useAppStore.getState().smartPersonaTargetField).toBeNull();
   });
 });

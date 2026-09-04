@@ -1,5 +1,5 @@
 
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { Person } from '../../../../../types';
@@ -15,6 +15,7 @@ const t = {
   sourceTitlePlaceholder: 'Title',
   sourceTypePlaceholder: 'Type',
   addSource: 'Add source',
+  unsafeSourceUrlHidden: 'The source link is hidden because it is unsafe.',
   noSources: 'No sources',
   removeSource: 'Remove source',
 } as unknown as TranslationSchema;
@@ -62,7 +63,7 @@ const person: Person = {
 };
 
 describe('BioSourcesSection', () => {
-  it('renders unsafe imported source URLs as plain text instead of executable links', () => {
+  it('hides unsafe imported source URLs instead of exposing or linking them', () => {
     render(
       <BioSourcesSection
         person={person}
@@ -87,8 +88,49 @@ describe('BioSourcesSection', () => {
       />
     );
 
-    expect(screen.getByText('javascript:alert(1)')).toBeInTheDocument();
+    expect(screen.getByText('The source link is hidden because it is unsafe.')).toBeInTheDocument();
+    expect(screen.queryByText('javascript:alert(1)')).not.toBeInTheDocument();
     expect(screen.queryByRole('link')).not.toBeInTheDocument();
+  });
+
+  it('targets the source draft without adding or changing a source automatically', () => {
+    const onAdd = vi.fn();
+    const onUpdate = vi.fn();
+    const draftSetTitle = vi.fn();
+    const { container } = render(
+      <BioSourcesSection
+        person={{ ...person, sources: [] }}
+        isEditing
+        isOpen
+        hasSources={false}
+        focusTarget
+        t={t}
+        draft={{
+          title: '',
+          url: '',
+          date: '',
+          type: '',
+          setTitle: draftSetTitle,
+          setUrl: vi.fn(),
+          setDate: vi.fn(),
+          setType: vi.fn(),
+        }}
+        onToggle={vi.fn()}
+        onAdd={onAdd}
+        onUpdate={onUpdate}
+        onRemove={vi.fn()}
+      />
+    );
+
+    const target = container.querySelector<HTMLElement>('[data-smart-persona-field="sources"]');
+    expect(target).not.toBeNull();
+    const input = within(target!).getByRole('textbox');
+    fireEvent.focus(input);
+    fireEvent.blur(input);
+
+    expect(onAdd).not.toHaveBeenCalled();
+    expect(onUpdate).not.toHaveBeenCalled();
+    expect(draftSetTitle).not.toHaveBeenCalled();
   });
 });
 

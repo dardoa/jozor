@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { Person } from '../../../../../types';
@@ -92,5 +92,22 @@ describe('AboutTab', () => {
       .toHaveClass('max-h-[1000px]');
     expect(screen.getByRole('button', { name: /Contact/ }).nextElementSibling)
       .toHaveClass('max-h-0');
+  });
+
+  it('reveals a targeted read-only section on mobile without enabling editing', async () => {
+    const selectedPerson = createPerson('person-target');
+    render(
+      <AboutTab
+        {...createProps(selectedPerson)}
+        canEdit={false}
+        targetSection="workBio"
+      />
+    );
+
+    const workBioButton = screen.getByRole('button', { name: /Work and bio/ });
+    await waitFor(() => {
+      expect(workBioButton.nextElementSibling).toHaveClass('max-h-[1000px]');
+    });
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
   });
 });

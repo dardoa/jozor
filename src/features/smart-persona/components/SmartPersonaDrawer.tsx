@@ -56,6 +56,10 @@ export const SmartPersonaDrawer = memo<SmartPersonaDrawerProps>(
       setIsEditing,
       smartPersonaSize,
       setSmartPersonaSize,
+      targetSection,
+      setTargetSection,
+      targetField,
+      setTargetField,
       dragY,
       isDragging,
       isMobileViewport,
@@ -82,6 +86,11 @@ export const SmartPersonaDrawer = memo<SmartPersonaDrawerProps>(
     const handleAboutModalOpen = useCallback((modalType: AboutModalType) => {
       onOpenModal(modalType, person ? { sourcePersonId: person.id } : undefined);
     }, [onOpenModal, person]);
+
+    const handleTargetHandled = useCallback(() => {
+      setTargetSection(null);
+      setTargetField(null);
+    }, [setTargetField, setTargetSection]);
 
     return (
       <>
@@ -155,6 +164,9 @@ export const SmartPersonaDrawer = memo<SmartPersonaDrawerProps>(
             user={user}
             isMobileViewport={isMobileViewport}
             smartPersonaSize={smartPersonaSize}
+            targetSection={targetSection}
+            targetField={targetField}
+            onTargetHandled={handleTargetHandled}
             tabBoundaryKey={tabBoundaryKey}
             t={t}
           />

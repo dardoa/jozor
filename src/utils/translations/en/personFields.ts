@@ -15,6 +15,7 @@ export const personFields = {
   deathSource: 'Death Source',
   isDeceased: 'Is Deceased',
   profession: 'Profession',
+  residence: 'Residence',
   company: 'Company',
   interests: 'Interests',
   bio: 'Bio',
@@ -53,6 +54,7 @@ export const personFields = {
   sourceType: 'Type',
   sourceTypePlaceholder: 'e.g. Document, Website, Book',
   addSource: 'Add Source',
+  unsafeSourceUrlHidden: 'The source link is hidden because it is unsafe.',
   removeSource: 'Remove Source',
   noSources: 'No sources added yet.',
   // New event-related translations

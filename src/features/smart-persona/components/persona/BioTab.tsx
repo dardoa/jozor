@@ -1,6 +1,6 @@
-import { lazy, memo, Suspense } from 'react';
+import { lazy, memo, Suspense, useEffect } from 'react';
 
-import type { Person } from '../../../../types';
+import type { Person, SmartPersonaFieldId } from '../../../../types';
 import { useTranslation } from '../../../../context/TranslationContext';
 import { BioWorkInterestsCard } from './BioWorkInterestsCard';
 import { usePersonBio } from './usePersonBio';
@@ -20,11 +20,17 @@ interface BioTabProps {
   people: Record<string, Person>;
   isEditing: boolean;
   onUpdate: (id: string, updates: Partial<Person>) => void;
+  targetField?: SmartPersonaFieldId | null;
 }
 
-export const BioTab = memo<BioTabProps>(({ person, people, isEditing, onUpdate }) => {
+export const BioTab = memo<BioTabProps>(({ person, people, isEditing, onUpdate, targetField }) => {
   const { t } = useTranslation();
   const bio = usePersonBio({ person, people, isEditing, onUpdate, t });
+  const { openSection } = bio;
+
+  useEffect(() => {
+    if (targetField === 'sources') openSection('sources');
+  }, [openSection, targetField]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -73,6 +79,7 @@ export const BioTab = memo<BioTabProps>(({ person, people, isEditing, onUpdate }
           hasSources={bio.hasSources}
           t={t}
           draft={bio.sourceDraft}
+          focusTarget={targetField === 'sources'}
           onToggle={() => bio.toggleSection('sources')}
           onAdd={bio.addSource}
           onUpdate={bio.updateSource}

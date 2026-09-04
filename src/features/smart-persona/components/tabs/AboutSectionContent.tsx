@@ -4,6 +4,7 @@ import type {
   FamilyActionsProps,
   Person,
   PersonUpdateHandler,
+  SmartPersonaFieldId,
   TreeSettings,
 } from '../../../../types';
 import { Skeleton } from '../../../../components/ui/Skeleton';
@@ -35,6 +36,7 @@ interface AboutSectionContentProps {
   familyActions: FamilyActionsProps;
   settings: TreeSettings;
   padded?: boolean;
+  targetField?: SmartPersonaFieldId | null;
 }
 
 export const AboutSectionContent: React.FC<AboutSectionContentProps> = ({
@@ -49,6 +51,7 @@ export const AboutSectionContent: React.FC<AboutSectionContentProps> = ({
   familyActions,
   settings,
   padded = false,
+  targetField,
 }) => {
   const sectionLoader = (
     <div className="space-y-3">
@@ -82,6 +85,7 @@ export const AboutSectionContent: React.FC<AboutSectionContentProps> = ({
           people={people}
           isEditing={isEditing}
           onUpdate={onUpdate}
+          targetField={targetField}
         />
       );
     }

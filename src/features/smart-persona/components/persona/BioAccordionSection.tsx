@@ -9,6 +9,7 @@ interface BioAccordionSectionProps {
   children: React.ReactNode;
   hasContent: boolean;
   isEditing: boolean;
+  focusTarget?: string;
 }
 
 export const BioAccordionSection: React.FC<BioAccordionSectionProps> = ({
@@ -19,8 +20,14 @@ export const BioAccordionSection: React.FC<BioAccordionSectionProps> = ({
   children,
   hasContent,
   isEditing,
+  focusTarget,
 }) => (
-  <div className="ds-persona-section overflow-hidden transition-all duration-300">
+  <div
+    data-smart-persona-field={focusTarget}
+    data-smart-persona-expanded={isOpen ? 'true' : 'false'}
+    tabIndex={focusTarget ? -1 : undefined}
+    className="ds-persona-section scroll-mt-4 overflow-hidden transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[var(--primary-600)]/50"
+  >
     <button
       onClick={onToggle}
       className="w-full flex items-center justify-between p-4 hover:bg-[var(--theme-hover)] transition-colors group"

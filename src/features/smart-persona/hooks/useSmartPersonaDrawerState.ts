@@ -29,6 +29,10 @@ export const useSmartPersonaDrawerState = ({
   const setIsEditing = useAppStore((state) => state.setSmartPersonaEditing);
   const smartPersonaSize = useAppStore((state) => state.smartPersonaSize);
   const setSmartPersonaSize = useAppStore((state) => state.setSmartPersonaSize);
+  const targetSection = useAppStore((state) => state.smartPersonaTargetSection);
+  const setTargetSection = useAppStore((state) => state.setSmartPersonaTargetSection);
+  const targetField = useAppStore((state) => state.smartPersonaTargetField);
+  const setTargetField = useAppStore((state) => state.setSmartPersonaTargetField);
 
   const [dragY, setDragY] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
@@ -87,8 +91,10 @@ export const useSmartPersonaDrawerState = ({
       setSmartPersonaSize(isMobile ? 'expanded' : 'full');
     } else if (!isOpen && smartPersonaSize !== 'closed') {
       setSmartPersonaSize('closed');
+      setTargetSection(null);
+      setTargetField(null);
     }
-  }, [isOpen, smartPersonaSize, setSmartPersonaSize]);
+  }, [isOpen, setSmartPersonaSize, setTargetField, setTargetSection, smartPersonaSize]);
 
   const handleTouchStart = (event: React.TouchEvent) => {
     if (isMobileViewport) return;
@@ -141,6 +147,10 @@ export const useSmartPersonaDrawerState = ({
     setIsEditing,
     smartPersonaSize,
     setSmartPersonaSize,
+    targetSection,
+    setTargetSection,
+    targetField,
+    setTargetField,
     dragY,
     isDragging,
     isMobileViewport,

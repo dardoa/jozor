@@ -38,6 +38,15 @@ export const BioWorkInterestsCard: React.FC<BioWorkInterestsCardProps> = ({
           disabled={!isEditing}
           placeholder={isEditing ? t.professionPlaceholder : ''}
           labelWidthClass="w-24"
+          focusTarget="profession"
+        />
+        <FormField
+          label={t.residence}
+          value={person.residence || ''}
+          onCommit={(value: string | number) => onChange('residence', value)}
+          disabled={!isEditing}
+          labelWidthClass="w-24"
+          focusTarget="residence"
         />
         <FormField
           label={t.company}

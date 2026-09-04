@@ -32,6 +32,7 @@ interface BioSourcesSectionProps {
   onAdd: () => void;
   onUpdate: (id: string, field: PersonSourceField, value: string | number) => void;
   onRemove: (id: string) => void;
+  focusTarget?: boolean;
 }
 
 export const BioSourcesSection: React.FC<BioSourcesSectionProps> = ({
@@ -45,6 +46,7 @@ export const BioSourcesSection: React.FC<BioSourcesSectionProps> = ({
   onAdd,
   onUpdate,
   onRemove,
+  focusTarget = false,
 }) => (
   <BioAccordionSection
     title={`${t.sourcesTab}${person.sources?.length ? ` (${person.sources.length})` : ''}`}
@@ -53,11 +55,12 @@ export const BioSourcesSection: React.FC<BioSourcesSectionProps> = ({
     onToggle={onToggle}
     hasContent={hasSources}
     isEditing={isEditing}
+    focusTarget={!isEditing && focusTarget ? 'sources' : undefined}
   >
     <div className="space-y-4">
       {isEditing && (
         <div className="ds-empty-state p-4 space-y-3">
-          <FormField label={t.sourceTitle} value={draft.title} onCommit={(value: string | number) => draft.setTitle(String(value))} placeholder={t.sourceTitlePlaceholder} className="!h-8 !text-xs" labelWidthClass="w-20" />
+          <FormField label={t.sourceTitle} value={draft.title} onCommit={(value: string | number) => draft.setTitle(String(value))} placeholder={t.sourceTitlePlaceholder} className="!h-8 !text-xs" labelWidthClass="w-20" focusTarget={focusTarget ? 'sources' : undefined} />
           <FormField label={t.sourceUrl} value={draft.url} onCommit={(value: string | number) => draft.setUrl(String(value))} placeholder="https://..." type="url" className="!h-8 !text-xs" labelWidthClass="w-20" />
           <FormField label={t.sourceDate} value={draft.date} onCommit={(value: string | number) => draft.setDate(String(value))} placeholder="YYYY-MM-DD" className="!h-8 !text-xs" labelWidthClass="w-20" />
           <FormField label={t.sourceType} value={draft.type} onCommit={(value: string | number) => draft.setType(String(value))} placeholder={t.sourceTypePlaceholder} className="!h-8 !text-xs" labelWidthClass="w-20" />
@@ -107,7 +110,7 @@ export const BioSourcesSection: React.FC<BioSourcesSectionProps> = ({
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] text-[var(--text-dim)]">
                       {source.date && <span className="flex items-center gap-1.5"><Calendar className="w-3 h-3 text-[var(--primary-500)]" /> {source.date}</span>}
                       {source.type && <span className="flex items-center gap-1.5"><Tag className="w-3 h-3 text-[var(--primary-500)]" /> {source.type}</span>}
-                      {hasUnsafeSourceUrl && <span className="break-all">{source.url}</span>}
+                      {hasUnsafeSourceUrl && <span>{t.unsafeSourceUrlHidden}</span>}
                     </div>
                   </div>
                 )}

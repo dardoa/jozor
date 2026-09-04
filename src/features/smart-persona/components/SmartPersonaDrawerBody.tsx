@@ -6,7 +6,9 @@ import type { TranslationSchema } from '../../../utils/translationLoader';
 import type {
   FamilyActionsProps,
   Person,
+  SmartPersonaFieldId,
   SmartPersonaTabId,
+  SmartPersonaSectionId,
   PersonUpdateHandler,
   TreeSettings,
   UserProfile,
@@ -86,6 +88,9 @@ interface SmartPersonaDrawerBodyProps {
   user: UserProfile | null;
   isMobileViewport: boolean;
   smartPersonaSize: string;
+  targetSection: SmartPersonaSectionId | null;
+  targetField: SmartPersonaFieldId | null;
+  onTargetHandled: () => void;
   tabBoundaryKey: string;
   t: TranslationSchema;
 }
@@ -104,9 +109,65 @@ export const SmartPersonaDrawerBody: React.FC<SmartPersonaDrawerBodyProps> = ({
   user,
   isMobileViewport,
   smartPersonaSize,
+  targetSection,
+  targetField,
+  onTargetHandled,
   tabBoundaryKey,
   t,
 }) => {
+  const scrollContainerRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (!person || (!targetSection && !targetField) || smartPersonaSize === 'collapsed') return;
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const focusTarget = (allowSectionFallback: boolean) => {
+      const fieldTarget = targetField
+        ? container.querySelector<HTMLElement>(`[data-smart-persona-field="${targetField}"]`)
+        : null;
+      const target = fieldTarget ?? (allowSectionFallback && targetSection
+        ? container.querySelector<HTMLElement>(`[data-smart-persona-section="${targetSection}"]`)
+        : null);
+      if (!target) return false;
+
+      const containingSection = target.closest<HTMLElement>('[data-smart-persona-section]');
+      if (
+        target.dataset.smartPersonaExpanded === 'false'
+        || containingSection?.dataset.smartPersonaExpanded === 'false'
+      ) return false;
+
+      const interactiveTarget = target.matches('input:not(:disabled), select:not(:disabled), textarea:not(:disabled), button:not(:disabled), a[href]')
+        ? target
+        : target.querySelector<HTMLElement>(
+          'input:not(:disabled), select:not(:disabled), textarea:not(:disabled), button:not(:disabled), a[href]'
+        );
+      target.scrollIntoView?.({ block: 'start', behavior: 'smooth' });
+      (interactiveTarget ?? target).focus({ preventScroll: true });
+      onTargetHandled();
+      return true;
+    };
+
+    const frame = window.requestAnimationFrame(() => {
+      focusTarget(!targetField);
+    });
+    const observer = new MutationObserver(() => {
+      if (focusTarget(!targetField)) observer.disconnect();
+    });
+    observer.observe(container, { attributes: true, childList: true, subtree: true });
+    const fallbackTimer = targetField && targetSection
+      ? window.setTimeout(() => {
+        if (focusTarget(true)) observer.disconnect();
+      }, 800)
+      : undefined;
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      if (fallbackTimer !== undefined) window.clearTimeout(fallbackTimer);
+      observer.disconnect();
+    };
+  }, [activeTab, onTargetHandled, person, smartPersonaSize, targetField, targetSection]);
+
   const tabLoader = (
     <div className="space-y-4 rounded-[22px] border border-[var(--border-soft)] bg-[var(--surface-panel)] px-4 py-5 shadow-[var(--shadow-sm)]">
       <div className="flex items-center gap-3">
@@ -135,6 +196,7 @@ export const SmartPersonaDrawerBody: React.FC<SmartPersonaDrawerBodyProps> = ({
 
   return (
     <div
+      ref={scrollContainerRef}
       className="custom-scrollbar no-drag flex-1 min-h-0 overflow-y-auto px-4 py-4 sm:px-5 sm:py-5 lg:px-6"
       style={{ WebkitOverflowScrolling: 'touch' }}
     >
@@ -179,6 +241,8 @@ export const SmartPersonaDrawerBody: React.FC<SmartPersonaDrawerBodyProps> = ({
                     familyActions={familyActions}
                     settings={settings}
                     isMobileLayout={isMobileViewport}
+                    targetSection={targetSection}
+                    targetField={targetField}
                   />
                 </div>
               )}

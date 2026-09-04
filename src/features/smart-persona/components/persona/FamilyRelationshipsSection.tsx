@@ -21,6 +21,7 @@ const FamilyGroup = memo(
     isEditing, // Removed 't' prop
     iconBgClass: _iconBgClass = 'bg-[var(--surface-subtle)]', // Default background for icon
     iconTextColorClass: _iconTextColorClass = 'text-[var(--text-secondary)]', // Default text color for icon
+    focusTarget,
   }: {
     title: string;
     icon: React.ReactNode;
@@ -34,10 +35,15 @@ const FamilyGroup = memo(
     isEditing: boolean; // Removed 't' from prop type
     iconBgClass?: string; // New prop for icon background class
     iconTextColorClass?: string; // New prop for icon text color class
+    focusTarget?: string;
   }) => {
     // Removed useTranslation() hook here as 't' is now passed as a prop
     return (
-      <div className='mb-3 last:mb-0'>
+      <div
+        data-smart-persona-field={focusTarget}
+        tabIndex={focusTarget ? -1 : undefined}
+        className='mb-3 scroll-mt-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary-600)]/50 last:mb-0'
+      >
         <div className='flex items-center justify-between mb-2 px-1'>
           <div className='flex items-center gap-2 text-[var(--text-muted)]'>
             <div className={`text-[var(--text-muted)]`}>{icon}</div>
@@ -141,6 +147,7 @@ export const FamilyRelationshipsSection = memo<FamilyRelationshipsSectionProps>(
             isEditing={isEditing}
             iconBgClass='bg-[color:rgba(197,160,89,0.14)]'
             iconTextColorClass='text-[var(--color-accent-500)]'
+            focusTarget='parents'
           // Removed t={t}
           />
         )}

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useId } from 'react';
 import { SmartInput, SmartTextarea } from './SmartInput';
 
 interface FormFieldProps {
@@ -17,6 +17,8 @@ interface FormFieldProps {
   step?: number;
   helperText?: string;
   icon?: React.ReactNode;
+  focusTarget?: string;
+  ariaLabel?: string;
 }
 
 export const FormField: React.FC<FormFieldProps> = ({
@@ -35,7 +37,10 @@ export const FormField: React.FC<FormFieldProps> = ({
   step,
   helperText,
   icon,
+  focusTarget,
+  ariaLabel,
 }) => {
+  const inputId = useId();
   const baseInputClass =
     'ds-input w-full h-10 px-3 py-2 text-sm';
   const baseTextareaClass =
@@ -50,9 +55,14 @@ export const FormField: React.FC<FormFieldProps> = ({
   const textareaClasses = `${baseTextareaClass} ${disabled ? disabledTextareaClass : ''} ${className}`;
 
   return (
-    <div className='ds-panel-subtle p-3.5 transition-colors shadow-[var(--shadow-sm)]'>
+    <div
+      data-smart-persona-field={focusTarget}
+      tabIndex={focusTarget ? -1 : undefined}
+      className='ds-panel-subtle scroll-mt-4 p-3.5 transition-colors shadow-[var(--shadow-sm)] focus:outline-none focus:ring-2 focus:ring-[var(--primary-600)]/50'
+    >
       <div className={`flex items-center gap-3 ${isTextArea ? 'items-start' : ''}`}>
         <label
+          htmlFor={inputId}
           className={`${labelWidthClass} shrink-0 text-[11px] font-semibold text-[var(--text-dim)] ${isTextArea ? 'mt-2' : ''} flex items-center gap-1.5 leading-4`}
         >
           {icon && <span className="text-[var(--text-muted)]">{icon}</span>}
@@ -61,6 +71,8 @@ export const FormField: React.FC<FormFieldProps> = ({
         <div className="flex-1">
           {isTextArea ? (
             <SmartTextarea
+              id={inputId}
+              aria-label={ariaLabel || label || undefined}
               disabled={disabled}
               rows={rows}
               value={value as string}
@@ -70,6 +82,8 @@ export const FormField: React.FC<FormFieldProps> = ({
             />
           ) : (
             <SmartInput
+              id={inputId}
+              aria-label={ariaLabel || label || undefined}
               disabled={disabled}
               type={type}
               value={value}

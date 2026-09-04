@@ -95,7 +95,11 @@ export const PersonHeaderView = memo<PersonHeaderViewProps>(
 
     return (
       <div className='space-y-5 pb-4'>
-        <div className='ds-persona-section animate-in fade-in flex min-w-0 flex-row items-start gap-4 p-4 duration-200 sm:gap-5 sm:p-5'>
+        <div
+          data-smart-persona-field="identity"
+          tabIndex={-1}
+          className='ds-persona-section animate-in fade-in flex min-w-0 scroll-mt-4 flex-row items-start gap-4 rounded-lg p-4 duration-200 focus:outline-none focus:ring-2 focus:ring-[var(--primary-600)]/50 sm:gap-5 sm:p-5'
+        >
           {/* Image */}
           <div className='flex shrink-0 flex-col items-center gap-2 self-start'>
             <div className='relative group cursor-pointer' onClick={() => onSelect(person.id)}>
@@ -144,9 +148,15 @@ export const PersonHeaderView = memo<PersonHeaderViewProps>(
                   </span>
                 )}
               </div>
-              <div className='space-y-1 pt-1'>
+              <div
+                data-smart-persona-field="vitalDates"
+                tabIndex={-1}
+                className='space-y-1 scroll-mt-4 rounded-lg pt-1 focus:outline-none focus:ring-2 focus:ring-[var(--primary-600)]/50'
+              >
                 <div
-                  className='flex items-center gap-2 text-xs text-[var(--text-main)] group cursor-help'
+                  data-smart-persona-field="birthDate"
+                  tabIndex={-1}
+                  className='flex scroll-mt-4 items-center gap-2 rounded-lg text-xs text-[var(--text-main)] group cursor-help focus:outline-none focus:ring-2 focus:ring-[var(--primary-600)]/50'
                   title={person.birthSource ? `${t.source}: ${person.birthSource}` : ''}
                 >
                   <Baby className='w-3.5 h-3.5 text-[var(--text-dim)]' />
@@ -168,7 +178,9 @@ export const PersonHeaderView = memo<PersonHeaderViewProps>(
                 </div>
                 {person.isDeceased && (
                   <div
-                    className='flex items-center gap-2 text-xs text-[var(--text-main)] group cursor-help'
+                    data-smart-persona-field="deathDate"
+                    tabIndex={-1}
+                    className='flex scroll-mt-4 items-center gap-2 rounded-lg text-xs text-[var(--text-main)] group cursor-help focus:outline-none focus:ring-2 focus:ring-[var(--primary-600)]/50'
                     title={person.deathSource ? `${t.source}: ${person.deathSource}` : ''}
                   >
                     <Ribbon className='w-3.5 h-3.5 text-[var(--text-dim)] fill-current' />

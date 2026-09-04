@@ -90,11 +90,19 @@ export const PersonBirthDeathEdit = memo<PersonBirthDeathEditProps>(({ person, o
   };
 
   return (
-    <>
+    <div
+      data-smart-persona-field="vitalDates"
+      tabIndex={-1}
+      className="space-y-4 scroll-mt-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary-600)]/50"
+    >
       {/* Birth Details */}
       <Card title={t.birthDetails} tone='flat'>
         <div className='space-y-2 mt-2 animate-in fade-in slide-in-from-top-1 duration-200'>
-          <div className='flex items-center gap-2'>
+          <div
+            data-smart-persona-field="birthDate"
+            tabIndex={-1}
+            className='flex scroll-mt-4 items-center gap-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary-600)]/50'
+          >
             <label className='w-24 shrink-0 text-xs text-[var(--text-muted)] font-medium'>
               {t.birthDate}
             </label>
@@ -125,6 +133,8 @@ export const PersonBirthDeathEdit = memo<PersonBirthDeathEditProps>(({ person, o
                 placeholder={t.sourcePlaceholder}
                 className='!h-7 !text-xs placeholder:italic'
                 labelWidthClass='hidden'
+                focusTarget="birthSource"
+                ariaLabel={t.birthSource}
               />
             </div>
           </div>
@@ -145,7 +155,11 @@ export const PersonBirthDeathEdit = memo<PersonBirthDeathEditProps>(({ person, o
           </button>
           {showDeathDetails && (
             <div className='space-y-2 mt-2 animate-in fade-in slide-in-from-top-1 duration-200'>
-              <div className='flex items-center gap-2'>
+              <div
+                data-smart-persona-field="deathDate"
+                tabIndex={-1}
+                className='flex scroll-mt-4 items-center gap-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary-600)]/50'
+              >
                 <label className='w-24 shrink-0 text-xs text-[var(--text-muted)] font-medium'>
                   {t.deathDate}
                 </label>
@@ -176,6 +190,8 @@ export const PersonBirthDeathEdit = memo<PersonBirthDeathEditProps>(({ person, o
                     placeholder={t.sourcePlaceholder}
                     className='!h-7 !text-xs placeholder:italic'
                     labelWidthClass='hidden'
+                    focusTarget="deathSource"
+                    ariaLabel={t.deathSource}
                   />
                 </div>
               </div>
@@ -183,6 +199,6 @@ export const PersonBirthDeathEdit = memo<PersonBirthDeathEditProps>(({ person, o
           )}
         </Card>
       )}
-    </>
+    </div>
   );
 });

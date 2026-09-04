@@ -1,7 +1,7 @@
-import { memo, useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 import { BriefcaseBusiness, ChevronDown, Info, Mail } from 'lucide-react';
 
-import { FamilyActionsProps, Person, PersonUpdateHandler, TreeSettings } from '../../../../types';
+import { FamilyActionsProps, Person, PersonUpdateHandler, SmartPersonaFieldId, TreeSettings } from '../../../../types';
 import { useTranslation } from '../../../../context/TranslationContext';
 import { AboutSectionContent } from './AboutSectionContent';
 // AboutSectionPicker removed in favor of mobile Accordion layout
@@ -26,6 +26,8 @@ interface AboutTabProps {
   familyActions: FamilyActionsProps;
   settings: TreeSettings;
   isMobileLayout?: boolean;
+  targetSection?: AboutSectionId | 'relationships' | null;
+  targetField?: SmartPersonaFieldId | null;
 }
 
 const createDefaultExpandedSections = (): Record<AboutSectionId, boolean> => ({
@@ -40,7 +42,7 @@ interface ExpandedSectionsState {
 }
 
 export const AboutTab = memo<AboutTabProps>(
-  ({ person, people, isEditing, canEdit, onUpdate, onSelect, onOpenModal, familyActions, settings, isMobileLayout = false }) => {
+  ({ person, people, isEditing, canEdit, onUpdate, onSelect, onOpenModal, familyActions, settings, isMobileLayout = false, targetSection, targetField }) => {
     const { t } = useTranslation();
     const [expandedSectionsState, setExpandedSectionsState] = useState<ExpandedSectionsState>(() => ({
       personId: person.id,
@@ -49,6 +51,22 @@ export const AboutTab = memo<AboutTabProps>(
     const expandedSections = expandedSectionsState.personId === person.id
       ? expandedSectionsState.sections
       : createDefaultExpandedSections();
+
+    useEffect(() => {
+      if (!isMobileLayout || isEditing || !targetSection || targetSection === 'relationships') return;
+      const frame = window.requestAnimationFrame(() => {
+        setExpandedSectionsState((previous) => ({
+          personId: person.id,
+          sections: {
+            ...(previous.personId === person.id
+              ? previous.sections
+              : createDefaultExpandedSections()),
+            [targetSection]: true,
+          },
+        }));
+      });
+      return () => window.cancelAnimationFrame(frame);
+    }, [isEditing, isMobileLayout, person.id, targetSection]);
 
     const toggleSection = (id: AboutSectionId) => {
       setExpandedSectionsState((previous) => {
@@ -96,7 +114,10 @@ export const AboutTab = memo<AboutTabProps>(
             return (
               <div
                 key={card.id}
-                className="overflow-hidden transition-all duration-300"
+                data-smart-persona-section={card.id}
+                data-smart-persona-expanded={isExpanded ? 'true' : 'false'}
+                tabIndex={-1}
+                className="scroll-mt-4 overflow-hidden rounded-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[var(--primary-600)]/50"
               >
                 {/* Header */}
                 <button
@@ -135,6 +156,7 @@ export const AboutTab = memo<AboutTabProps>(
                       onOpenModal={onOpenModal}
                       familyActions={familyActions}
                       settings={settings}
+                      targetField={targetField}
                     />
                   </div>
                 </div>
@@ -147,7 +169,7 @@ export const AboutTab = memo<AboutTabProps>(
 
     return (
       <div className="flex flex-col space-y-8">
-        <section>
+        <section data-smart-persona-section="overview" tabIndex={-1} className="scroll-mt-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary-600)]/50">
           <AboutSectionContent
             section="overview"
             person={person}
@@ -159,10 +181,11 @@ export const AboutTab = memo<AboutTabProps>(
             onOpenModal={onOpenModal}
             familyActions={familyActions}
             settings={settings}
+            targetField={targetField}
           />
         </section>
 
-        <section>
+        <section data-smart-persona-section="workBio" tabIndex={-1} className="scroll-mt-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary-600)]/50">
           <AboutSectionContent
             section="workBio"
             person={person}
@@ -174,10 +197,11 @@ export const AboutTab = memo<AboutTabProps>(
             onOpenModal={onOpenModal}
             familyActions={familyActions}
             settings={settings}
+            targetField={targetField}
           />
         </section>
 
-        <section>
+        <section data-smart-persona-section="contact" tabIndex={-1} className="scroll-mt-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary-600)]/50">
           <AboutSectionContent
             section="contact"
             person={person}
@@ -189,6 +213,7 @@ export const AboutTab = memo<AboutTabProps>(
             onOpenModal={onOpenModal}
             familyActions={familyActions}
             settings={settings}
+            targetField={targetField}
           />
         </section>
       </div>

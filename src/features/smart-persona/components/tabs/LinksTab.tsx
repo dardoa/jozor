@@ -90,7 +90,11 @@ export const LinksTab = memo<LinksTabProps>(
           </section>
         )}
 
-        <section className={isMobileLayout ? 'rounded-[24px] border border-[var(--border-soft)] bg-[var(--surface-panel)] p-4 shadow-[var(--shadow-sm)]' : ''}>
+        <section
+          data-smart-persona-section="relationships"
+          tabIndex={-1}
+          className={`${isMobileLayout ? 'rounded-[24px] border border-[var(--border-soft)] bg-[var(--surface-panel)] p-4 shadow-[var(--shadow-sm)]' : 'rounded-lg'} scroll-mt-4 focus:outline-none focus:ring-2 focus:ring-[var(--primary-600)]/50`}
+        >
           {isMobileLayout && (
             <div className="mb-4 flex items-start gap-3">
               <div className="rounded-2xl bg-[var(--surface-subtle)] p-2 text-[var(--primary-700)]">
