@@ -258,22 +258,23 @@ export const useKindiDecisionFlow = ({
     setPendingAddNameRequest(null);
     if (confirmation?.status && confirmation.status !== 'pending') return;
 
-    if (confirmation) {
-      setConfirmationStatus(confirmation.id, 'cancelled');
-      logEvent({
-        eventType: 'confirmation_cancelled',
-        interactionId: confirmation.interactionId,
-        routeKind: confirmation.kind,
-        failureReason: KINDI_LEARNING_FAILURE_REASONS.USER_CANCELLED,
-        redactedQuery: confirmation.learningTrace?.redactedQuery,
-        confidence: confirmation.learningTrace?.confidence,
-        intentGuess: confirmation.kind,
-        parserStage: 'confirmation',
-        parserName: 'KindiOverlay',
-      });
+    if (!confirmation) {
+      addAssistantMessage({ text: strings.flow.cancelled });
+      return;
     }
 
-    addAssistantMessage({ text: strings.flow.cancelled });
+    setConfirmationStatus(confirmation.id, 'cancelled');
+    logEvent({
+      eventType: 'confirmation_cancelled',
+      interactionId: confirmation.interactionId,
+      routeKind: confirmation.kind,
+      failureReason: KINDI_LEARNING_FAILURE_REASONS.USER_CANCELLED,
+      redactedQuery: confirmation.learningTrace?.redactedQuery,
+      confidence: confirmation.learningTrace?.confidence,
+      intentGuess: confirmation.kind,
+      parserStage: 'confirmation',
+      parserName: 'KindiOverlay',
+    });
   }, [addAssistantMessage, logEvent, setConfirmationStatus, strings.flow.cancelled]);
 
   const cancelDisambiguation = useCallback((messageId: string) => {

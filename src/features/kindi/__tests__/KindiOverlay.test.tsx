@@ -535,6 +535,14 @@ describe('KindiOverlay keyboard confirmation guardrails', () => {
     expect(props.onCancel).toHaveBeenCalledWith(baseConfirmation);
   });
 
+  it('announces a cancelled decision once inside its confirmation card', () => {
+    renderOverlay({ ...baseConfirmation, status: 'cancelled' });
+
+    expect(screen.getByRole('status')).toHaveTextContent('تم إلغاء القرار.');
+    expect(screen.queryByRole('button', { name: 'Confirm' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Cancel' })).not.toBeInTheDocument();
+  });
+
   it('closes Kindi with Escape when no decision is active', () => {
     const props = renderOverlayWithMessages([
       { id: 'message-plain', role: 'assistant', text: 'جاهز' },

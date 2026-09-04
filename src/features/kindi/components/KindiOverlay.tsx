@@ -313,7 +313,11 @@ const KindiConfirmCard = ({
         </div>
       )}
       {confirmation.status && confirmation.status !== 'pending' && (
-        <div className="mt-3 rounded-xl bg-[var(--surface-panel)]/90 px-3 py-2 text-xs font-bold text-[var(--text-secondary)]">
+        <div
+          role="status"
+          aria-live="polite"
+          className="mt-3 rounded-xl bg-[var(--surface-panel)]/90 px-3 py-2 text-xs font-bold text-[var(--text-secondary)]"
+        >
           {confirmation.status === 'confirmed'
             ? text.confirmedStatus
             : confirmation.status === 'processing'
@@ -660,7 +664,11 @@ export const KindiOverlay: React.FC<KindiOverlayProps> = memo(({
                       </button>
                     )}
                     {message.disambiguation?.status === 'cancelled' && (
-                      <div className="rounded-xl bg-[var(--surface-panel)] px-3 py-2 text-xs font-bold text-[var(--text-secondary)]">
+                      <div
+                        role="status"
+                        aria-live="polite"
+                        className="rounded-xl bg-[var(--surface-panel)] px-3 py-2 text-xs font-bold text-[var(--text-secondary)]"
+                      >
                         {kindiText.selectionCancelled}
                       </div>
                     )}

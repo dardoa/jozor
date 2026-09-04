@@ -212,6 +212,20 @@ describe('useKindiDecisionFlow', () => {
       redactedQuery: 'أضف ابنا لـ[NAME_1]',
       confidence: 0.8,
     }));
-    expect(harness.addAssistantMessage).toHaveBeenCalledTimes(1);
+    expect(harness.addAssistantMessage).not.toHaveBeenCalled();
+  });
+
+  it('keeps a standalone acknowledgement for cancellation without a confirmation card', () => {
+    const harness = createHarness();
+
+    act(() => {
+      harness.result.current.cancel();
+    });
+
+    expect(harness.setConfirmationStatus).not.toHaveBeenCalled();
+    expect(harness.logEvent).not.toHaveBeenCalled();
+    expect(harness.addAssistantMessage).toHaveBeenCalledWith({
+      text: expect.any(String),
+    });
   });
 });

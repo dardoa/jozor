@@ -560,7 +560,8 @@ test.describe('Kindi product maturity journeys', () => {
     await expect(dialog.getByText('التفاصيل التي سيتم حفظها')).toBeVisible();
     await dialog.getByRole('button', { name: 'إلغاء' }).click();
 
-    await expect(dialog.getByText('تم إلغاء الطلب. لم يتم تغيير أي بيانات.')).toBeVisible();
+    await expect(dialog.getByText('تم إلغاء هذا القرار، ولم تتغير أي بيانات.')).toBeVisible();
+    await expect(dialog.getByText('تم إلغاء الطلب. لم يتم تغيير أي بيانات.')).toHaveCount(0);
     await expect.poll(() => getPeopleCount(page)).toBe(initialPeopleCount);
   });
 
@@ -745,7 +746,8 @@ test.describe('Kindi product maturity journeys', () => {
     await opened.dialog.getByRole('button', { name: 'Send to Kindi' }).click();
     await expect(opened.dialog.getByText('Review tree addition', { exact: true })).toBeVisible();
     await opened.dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
-    await expect(opened.dialog.getByText('The request was cancelled. No data was changed.')).toBeVisible();
+    await expect(opened.dialog.getByText('This decision was cancelled. No data was changed.')).toBeVisible();
+    await expect(opened.dialog.getByText('The request was cancelled. No data was changed.')).toHaveCount(0);
     await expect.poll(() => getPeopleCount(page)).toBe(initialPeopleCount);
   });
 
