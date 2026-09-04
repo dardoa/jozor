@@ -5,6 +5,9 @@ import type {
     Language,
     ModalOpenContext,
     ModalRouteType,
+    SmartPersonaFieldId,
+    SmartPersonaTabId,
+    SmartPersonaSectionId,
     SyncStatus,
     UserProfile,
 } from './common';
@@ -15,11 +18,21 @@ import type { DriveFile, TreeSettings } from './tree';
 export interface HelpTranslations {
     title: string;
     description: string;
-    categories: {
-        gettingStarted: { title: string; desc: string; items: HelpTopicTranslation[] };
-        toolsFeatures: { title: string; desc: string; items: HelpTopicTranslation[] };
-        privacySharing: { title: string; desc: string; items: HelpTopicTranslation[] };
-    };
+    searchPlaceholder: string;
+    allCategories: string;
+    topicCount: (count: number) => string;
+    noResultsTitle: string;
+    noResultsDescription: string;
+    clearSearch: string;
+    openTopic: string;
+    closeTopic: string;
+    audienceLabel: string;
+    ownerRole: string;
+    editorRole: string;
+    viewerRole: string;
+    requiresTree: string;
+    unavailableForRole: string;
+    askKindi: string;
     contactSupport: string;
     supportEmail: string;
     goHome: string;
@@ -127,14 +140,6 @@ export interface PublishingExportOptions {
     };
 }
 
-export interface HelpTopicTranslation {
-    id: string;
-    route: string;
-    controlId: string;
-    q: string;
-    a: string;
-}
-
 export interface PublishingPreviewResult {
     title: string;
     html: string;
@@ -151,6 +156,12 @@ export interface ExportActionsProps {
 export interface SearchProps {
     people: Record<string, Person>;
     onFocusPerson: (id: string) => void;
+    onOpenPersonRecord?: (
+        id: string,
+        targetTab?: SmartPersonaTabId,
+        targetSection?: SmartPersonaSectionId,
+        targetField?: SmartPersonaFieldId
+    ) => void;
 }
 
 export interface MutationActionResult {

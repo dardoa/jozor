@@ -43,7 +43,11 @@ export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(({ the
   return (
     <div className='flex items-center gap-1.5 md:gap-2.5' role='navigation' aria-label={t.mainNavigation}>
       <div className='flex items-center gap-2' role='search' aria-label={t.search}>
-        <KindiSearchTrigger people={searchProps.people} onFocusPerson={searchProps.onFocusPerson} />
+        <KindiSearchTrigger
+          people={searchProps.people}
+          onFocusPerson={searchProps.onFocusPerson}
+          onOpenPersonRecord={searchProps.onOpenPersonRecord}
+        />
       </div>
 
       <div className='flex items-center gap-0.5 sm:gap-1.5' role='group' aria-label={t.accountProfile}>

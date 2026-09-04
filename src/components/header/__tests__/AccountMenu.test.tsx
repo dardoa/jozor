@@ -6,6 +6,11 @@ import { AccountMenu } from '../AccountMenu';
 
 const useKindiReportsAdminAccessMock = vi.hoisted(() => vi.fn(() => false));
 const openAdminBillingDiagnosticsMock = vi.hoisted(() => vi.fn());
+const navigateMock = vi.hoisted(() => vi.fn());
+
+vi.mock('react-router-dom', () => ({
+  useNavigate: () => navigateMock,
+}));
 
 vi.mock('../../../context/TranslationContext', () => ({
   useTranslation: () => ({
@@ -28,6 +33,7 @@ vi.mock('../../../context/TranslationContext', () => ({
       adminBillingDiagnostics: 'Billing diagnostics',
       adminBillingDiagnosticsHint: 'Inspect Paddle webhook processing and subscription update events.',
       globalSettings: { title: 'Global Settings' },
+      help: { title: 'Help & Knowledge Base', description: 'Guides for using Jozor.' },
       userMenu: {
         welcome: 'Welcome',
         backupNow: 'Backup now',
@@ -52,6 +58,20 @@ vi.mock('../../../services/supabaseAuthService', () => ({
 }));
 
 describe('AccountMenu', () => {
+  it('links the account menu to the Help Center', () => {
+    render(
+      <AccountMenu
+        themeLanguage={{ language: 'en', setLanguage: vi.fn(), darkMode: false, setDarkMode: vi.fn() }}
+        user={null}
+        onLogin={vi.fn(async () => {})}
+        onLogout={vi.fn(async () => {})}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('menuitem', { name: /Help & Knowledge Base/i }));
+    expect(navigateMock).toHaveBeenCalledWith('/help');
+  });
+
   it('renders authenticated actions and toggles language', async () => {
     useKindiReportsAdminAccessMock.mockReturnValue(false);
     const setLanguage = vi.fn();

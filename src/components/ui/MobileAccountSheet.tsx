@@ -1,5 +1,6 @@
 import { memo, useCallback, useEffect, useState } from 'react';
-import { CloudUpload, CreditCard, KeyRound, Languages, LayoutDashboard, Loader2, LogIn, LogOut, Moon, Settings, Sun, X } from 'lucide-react';
+import { CircleHelp, CloudUpload, CreditCard, KeyRound, Languages, LayoutDashboard, Loader2, LogIn, LogOut, Moon, Settings, Sun, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '../../context/TranslationContext';
 import type { ThemeLanguageProps, UserProfile } from '../../types';
 import { openAdminBillingDiagnostics, openAdminDashboard, useKindiReportsAdminAccess } from '../../features/admin';
@@ -90,6 +91,7 @@ export const MobileAccountSheet = memo(({
   onOpenGlobalSettings,
 }: MobileAccountSheetProps) => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const text = t as typeof t & MobileAccountTranslations;
   const accountLabel = text.accountMenu || t.accountProfile;
   const canOpenKindiReports = useKindiReportsAdminAccess(user);
@@ -236,6 +238,18 @@ export const MobileAccountSheet = memo(({
               />
             </section>
           ) : null}
+
+          <section className="space-y-3">
+            <h3 className="px-1 text-[11px] font-bold uppercase tracking-wider text-[var(--text-dim)] opacity-50">
+              {t.help?.title || 'Help'}
+            </h3>
+            <SheetAction
+              icon={<CircleHelp className="h-5 w-5" />}
+              label={t.help?.title || 'Help & Knowledge Base'}
+              subLabel={t.help?.description || 'Guides for using Jozor.'}
+              onClick={closeThen(() => navigate('/help'))}
+            />
+          </section>
 
           {user && canOpenKindiReports ? (
             <section className="space-y-3">

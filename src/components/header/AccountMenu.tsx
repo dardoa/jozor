@@ -1,5 +1,6 @@
 import { memo, useCallback, useEffect, useState } from 'react';
-import { BrainCircuit, CreditCard, FolderArchive, KeyRound, Languages, LayoutDashboard, Loader2, LogIn, LogOut, Moon, Settings, Sun, Sparkles } from 'lucide-react';
+import { BrainCircuit, CircleHelp, CreditCard, FolderArchive, KeyRound, Languages, LayoutDashboard, Loader2, LogIn, LogOut, Moon, Settings, Sun, Sparkles } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { DropdownContent, DropdownMenuDivider, DropdownMenuHeader, DropdownMenuItem } from '../ui/DropdownMenu';
 import { useTranslation } from '../../context/TranslationContext';
 import type { ThemeLanguageProps, UserProfile } from '../../types';
@@ -28,6 +29,7 @@ type AccountMenuTranslations = {
 export const AccountMenu = memo<AccountMenuProps>(
   ({ themeLanguage, user, onLogin, onLogout }) => {
     const { t } = useTranslation();
+    const navigate = useNavigate();
     const text = t as typeof t & AccountMenuTranslations;
     const accountLabel = t.accountMenu || t.accountProfile;
     const setVaultOpen = useAppStore((state) => state.setVaultOpen);
@@ -186,6 +188,15 @@ export const AccountMenu = memo<AccountMenuProps>(
               ? (t.vaultSubtitle || 'Manage your trees and backups')
               : 'الإحصائيات والتصدير المحلي'
           }
+        />
+
+        <DropdownMenuDivider />
+        <DropdownMenuHeader icon={<CircleHelp className="w-3 h-3" />} label={t.help?.title || 'Help'} />
+        <DropdownMenuItem
+          onClick={() => navigate('/help')}
+          icon={<CircleHelp className="w-4 h-4" />}
+          label={t.help?.title || 'Help & Knowledge Base'}
+          subLabel={t.help?.description || 'Guides for using Jozor.'}
         />
 
         {user && canOpenKindiReports && (

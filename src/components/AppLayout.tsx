@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Toaster } from 'sonner';
 
 import { FamilyTree } from './tree/FamilyTree';
@@ -12,6 +12,7 @@ import { useAppStore, selectIsSyncing } from '../store/useAppStore';
 import { useTranslation } from '../context/TranslationContext';
 import { useTreeAppearanceAdapter } from '../hooks/utils/useTreeAppearanceAdapter';
 import { useTreePermissions } from '../hooks/tree/useTreePermissions';
+import { isHelpActionId } from '../features/help/helpKnowledgeBase';
 import {
   AppStateAndActions,
   ModalStateAndActions,
@@ -71,6 +72,8 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   onAddPerson,
 }) => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const handledHelpActionRef = React.useRef<string | null>(null);
   const { people, focusId, setFocusId, activePerson } = appState;
   const { treeSettings: legacyTreeSettings } = viewSettings;
   const adapterPatch = useTreeAppearanceAdapter();
@@ -90,6 +93,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   const setNodeContextMenu = useAppStore((state) => state.setNodeContextMenu);
   const setVaultOpen = useAppStore((state) => state.setVaultOpen);
   const setVaultTab = useAppStore((state) => state.setVaultTab);
+  const setVaultExportSection = useAppStore((state) => state.setVaultExportSection);
   const isSyncing = useAppStore(selectIsSyncing);
   const isDemoMode = useAppStore((state) => state.isDemoMode);
   const setActivityLogOpen = useAppStore((state) => state.setActivityLogOpen);
@@ -104,10 +108,25 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
     [navigate, setFocusId]
   );
 
+  const openKindiPersonRecord = React.useCallback<NonNullable<SearchProps['onOpenPersonRecord']>>((
+    personId,
+    targetTab = 'about',
+    targetSection,
+    targetField
+  ) => {
+    focusAndNavigate(personId);
+    setDetailsPanelOpen(true);
+    useAppStore.getState().setSmartPersonaTab(targetTab);
+    useAppStore.getState().setSmartPersonaTargetSection(targetSection ?? null);
+    useAppStore.getState().setSmartPersonaTargetField(targetField ?? null);
+    useAppStore.getState().setSmartPersonaEditing(canEditActiveTree);
+  }, [canEditActiveTree, focusAndNavigate, setDetailsPanelOpen]);
+
   const routedSearchProps = React.useMemo<SearchProps>(() => ({
     ...searchProps,
     onFocusPerson: focusAndNavigate,
-  }), [focusAndNavigate, searchProps]);
+    onOpenPersonRecord: openKindiPersonRecord,
+  }), [focusAndNavigate, openKindiPersonRecord, searchProps]);
 
   const handleNodeContextMenu = (e: React.MouseEvent, id: string) => {
     e.preventDefault();
@@ -145,6 +164,92 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
 
     onAddPerson();
   }, [focusId, modals, onAddPerson]);
+
+  const openVaultExportSection = React.useCallback((
+    section: 'family-book' | 'visuals' | 'data-export' | 'history' | 'cloud-backup'
+  ) => {
+    setTreeControlCenterOpen(false);
+    setSettingsDrawerOpen(false);
+    setVaultTab('cloud');
+    setVaultExportSection(section);
+    setVaultOpen(true);
+  }, [setSettingsDrawerOpen, setTreeControlCenterOpen, setVaultExportSection, setVaultOpen, setVaultTab]);
+
+  React.useEffect(() => {
+    const helpAction = searchParams.get('helpAction');
+    if (!isHelpActionId(helpAction)) {
+      handledHelpActionRef.current = null;
+      return;
+    }
+    if (handledHelpActionRef.current === helpAction) return;
+    handledHelpActionRef.current = helpAction;
+
+    switch (helpAction) {
+      case 'tree-preferences':
+        openAppearanceLab();
+        break;
+      case 'tree-control':
+        openTreeControlCenter();
+        break;
+      case 'kindi':
+        window.dispatchEvent(new CustomEvent('jozor:open-kindi'));
+        break;
+      case 'add-person':
+        openAddPersonModal();
+        break;
+      case 'activity-log':
+        setActivityLogOpen(true);
+        break;
+      case 'global-settings':
+        modals.onOpenGlobalSettings();
+        break;
+      case 'diagnostics':
+        setDiagnosticsDrawerOpen(true);
+        break;
+      case 'vault-trees':
+        openVaultTab('trees');
+        break;
+      case 'vault-members':
+        openVaultTab('members');
+        break;
+      case 'vault-security':
+        openVaultTab('security');
+        break;
+      case 'vault-stats':
+        openVaultTab('stats');
+        break;
+      case 'vault-family-book':
+        openVaultExportSection('family-book');
+        break;
+      case 'vault-visuals':
+        openVaultExportSection('visuals');
+        break;
+      case 'vault-data-export':
+        openVaultExportSection('data-export');
+        break;
+      case 'vault-history':
+        openVaultExportSection('history');
+        break;
+      case 'vault-cloud-backup':
+        openVaultExportSection('cloud-backup');
+        break;
+    }
+
+    const nextSearchParams = new URLSearchParams(searchParams);
+    nextSearchParams.delete('helpAction');
+    setSearchParams(nextSearchParams, { replace: true });
+  }, [
+    modals,
+    openAddPersonModal,
+    openAppearanceLab,
+    openTreeControlCenter,
+    openVaultExportSection,
+    openVaultTab,
+    searchParams,
+    setActivityLogOpen,
+    setDiagnosticsDrawerOpen,
+    setSearchParams,
+  ]);
 
   return (
     <>

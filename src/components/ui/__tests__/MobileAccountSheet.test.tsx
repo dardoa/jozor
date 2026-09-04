@@ -6,6 +6,11 @@ import { MobileAccountSheet } from '../MobileAccountSheet';
 
 const useKindiReportsAdminAccessMock = vi.hoisted(() => vi.fn(() => false));
 const openAdminBillingDiagnosticsMock = vi.hoisted(() => vi.fn());
+const navigateMock = vi.hoisted(() => vi.fn());
+
+vi.mock('react-router-dom', () => ({
+  useNavigate: () => navigateMock,
+}));
 
 vi.mock('../../../context/TranslationContext', () => ({
   useTranslation: () => ({
@@ -26,6 +31,7 @@ vi.mock('../../../context/TranslationContext', () => ({
       globalSettings: {
         title: 'Global Settings',
       },
+      help: { title: 'Help & Knowledge Base', description: 'Guides for using Jozor.' },
       userMenu: {
         backupNow: 'Backup now',
       },
@@ -52,6 +58,22 @@ vi.mock('../../../services/supabaseAuthService', () => ({
 }));
 
 describe('MobileAccountSheet', () => {
+  it('opens the Help Center from the mobile account sheet', () => {
+    render(
+      <MobileAccountSheet
+        isOpen
+        onClose={vi.fn()}
+        themeLanguage={{ language: 'en', setLanguage: vi.fn(), darkMode: false, setDarkMode: vi.fn() }}
+        user={null}
+        onLogin={vi.fn(async () => {})}
+        onLogout={vi.fn(async () => {})}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /Help & Knowledge Base/i }));
+    expect(navigateMock).toHaveBeenCalledWith('/help');
+  });
+
   it('renders account actions in a mobile sheet and opens global settings', async () => {
     useKindiReportsAdminAccessMock.mockReturnValue(false);
     const onClose = vi.fn();

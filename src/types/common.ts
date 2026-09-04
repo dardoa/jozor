@@ -128,6 +128,18 @@ export interface ModalOpenContext {
 }
 
 export type SmartPersonaTabId = 'about' | 'links' | 'media';
+export type SmartPersonaSectionId = 'overview' | 'workBio' | 'contact' | 'relationships';
+export type SmartPersonaFieldId =
+    | 'identity'
+    | 'vitalDates'
+    | 'birthDate'
+    | 'deathDate'
+    | 'birthSource'
+    | 'deathSource'
+    | 'residence'
+    | 'profession'
+    | 'parents'
+    | 'sources';
 
 export type ExportType = 'jozor' | 'json' | 'gedcom' | 'ics' | 'markdown' | 'print' | 'png' | 'pdf' | 'svg' | 'jpeg';
 

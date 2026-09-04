@@ -26,6 +26,10 @@ export interface UISlice {
     triggerPulse: (id: string) => void;
     smartPersonaTab: import('../../types').SmartPersonaTabId;
     setSmartPersonaTab: (tab: import('../../types').SmartPersonaTabId) => void;
+    smartPersonaTargetSection: import('../../types').SmartPersonaSectionId | null;
+    setSmartPersonaTargetSection: (section: import('../../types').SmartPersonaSectionId | null) => void;
+    smartPersonaTargetField: import('../../types').SmartPersonaFieldId | null;
+    setSmartPersonaTargetField: (field: import('../../types').SmartPersonaFieldId | null) => void;
     isSmartPersonaEditing: boolean;
     setSmartPersonaEditing: (editing: boolean) => void;
     isVaultOpen: boolean;
@@ -123,6 +127,10 @@ export const createUISlice: StateCreator<AppStore, [["zustand/devtools", never]]
     setAdminHubTab: (tab) => set({ adminHubTab: tab }),
     smartPersonaTab: 'about',
     setSmartPersonaTab: (tab) => set({ smartPersonaTab: tab }),
+    smartPersonaTargetSection: null,
+    setSmartPersonaTargetSection: (section) => set({ smartPersonaTargetSection: section }),
+    smartPersonaTargetField: null,
+    setSmartPersonaTargetField: (field) => set({ smartPersonaTargetField: field }),
     smartPersonaSize: 'closed',
     setSmartPersonaSize: (size) => set({ smartPersonaSize: size }),
     isSmartPersonaEditing: false,
