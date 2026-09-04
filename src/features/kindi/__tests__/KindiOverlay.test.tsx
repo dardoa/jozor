@@ -210,11 +210,12 @@ const renderOverlayWithMessages = (
   messages: KindiMessage[],
   hasPendingDecision = true,
   peopleById: Record<string, Person> = {},
-  contextPerson?: Person
+  contextPerson?: Person,
+  draft = ''
 ) => {
   const props = {
     isOpen: true,
-    draft: '',
+    draft,
     messages,
     peopleById,
     contextPerson,
@@ -273,6 +274,20 @@ describe('KindiOverlay keyboard confirmation guardrails', () => {
 
     expect(props.onDraftChange).toHaveBeenCalledWith('من هم أبناؤه؟');
     expect(props.onSubmit).not.toHaveBeenCalled();
+  });
+
+  it('returns focus to the message field after submitting with the send button', () => {
+    const props = renderOverlayWithMessages([
+      { id: 'message-plain', role: 'assistant', text: 'جاهز' },
+    ], false, {}, undefined, 'سؤال');
+    const input = screen.getByRole('textbox', { name: 'رسالة إلى كِندي' });
+    const sendButton = screen.getByRole('button', { name: 'إرسال إلى كِندي' });
+
+    sendButton.focus();
+    fireEvent.click(sendButton);
+
+    expect(props.onSubmit).toHaveBeenCalledOnce();
+    expect(input).toHaveFocus();
   });
 
   it('offers undo only for an available Kindi mutation', () => {

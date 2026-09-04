@@ -56,7 +56,6 @@ export const useKindiController = ({ people, onFocusPerson }: UseKindiController
   const [isThinking, setIsThinking] = useState(false);
   const [lastContextPersonId, setLastContextPersonId] = useState<string | undefined>(undefined);
   const setSearchTarget = useAppStore((state) => state.setSearchTarget);
-  const triggerPulse = useAppStore((state) => state.triggerPulse);
   const currentUserRole = useAppStore((state) => state.currentUserRole);
   const currentTreeId = useAppStore((state) => state.currentTreeId);
   const focusId = useAppStore((state) => state.focusId);
@@ -149,9 +148,8 @@ export const useKindiController = ({ people, onFocusPerson }: UseKindiController
     setLastContextPersonId(personId);
     onFocusPerson(personId);
     setSearchTarget(personId);
-    triggerPulse(personId);
     setIsOpen(false);
-  }, [onFocusPerson, setSearchTarget, triggerPulse]);
+  }, [onFocusPerson, setSearchTarget]);
 
   const currentContextPerson = useMemo(
     () => people[lastContextPersonId ?? focusId],

@@ -223,6 +223,31 @@ test.describe('Kindi product maturity journeys', () => {
     await expect(dialog.getByText('من هم أبناؤه؟', { exact: true })).toHaveCount(0);
   });
 
+  test('hands focus to the selected person context instead of returning it to Kindi', async ({ page }) => {
+    await seedScenario(page, 'ar');
+    const { dialog, trigger } = await openKindi(page, 'ar');
+    const input = dialog.getByRole('textbox', { name: 'رسالة إلى كِندي' });
+
+    await input.fill('من هم أبناؤه؟');
+    await dialog.getByRole('button', { name: 'إرسال إلى كِندي' }).click();
+    await expect(input).toBeFocused();
+
+    await dialog.getByRole('button', { name: 'ابن 1 الاختبار 1981', exact: true }).click();
+
+    await expect(dialog).toBeHidden();
+    await expect(page).toHaveURL(/\/person\/child-1$/);
+    await expect(trigger).not.toBeFocused();
+    await expect(page.locator('[data-testid="tree-node"][data-person-id="child-1"] .search-focus-pulse'))
+      .toBeVisible();
+
+    const visiblePersonDrawer = page.locator('#smart-persona-drawer:visible');
+    const expectedDestinationId = await visiblePersonDrawer.count() > 0
+      ? 'smart-persona-drawer'
+      : 'family-tree-canvas';
+    await expect.poll(() => page.evaluate(() => document.activeElement?.id))
+      .toBe(expectedDestinationId);
+  });
+
   test('explains the recorded relationship path between two named people locally', async ({ page }) => {
     await seedScenario(page, 'ar');
     const initialPeopleCount = await getPeopleCount(page);

@@ -121,7 +121,10 @@ export const FamilyTreeCanvas: React.FC<FamilyTreeCanvasProps> = ({
     <div
       id="family-tree-canvas"
       ref={wrapperRef}
-      className="flex-1 h-full overflow-hidden relative cursor-move select-none transition-all duration-500 ease-in-out pb-[72px] sm:pb-0"
+      role="region"
+      aria-label={t.familyTree}
+      tabIndex={-1}
+      className="flex-1 h-full overflow-hidden relative cursor-move select-none transition-all duration-500 ease-in-out pb-[72px] focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[var(--primary-600)]/50 sm:pb-0"
       style={{
         ...treeCssVariables,
         backgroundColor: canvasBg,

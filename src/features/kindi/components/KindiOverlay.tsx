@@ -824,6 +824,9 @@ export const KindiOverlay: React.FC<KindiOverlayProps> = memo(({
           onSubmit={(event) => {
             event.preventDefault();
             onSubmit();
+            if (!hasPendingDecision) {
+              inputRef.current?.focus();
+            }
           }}
         >
           {voiceError && (

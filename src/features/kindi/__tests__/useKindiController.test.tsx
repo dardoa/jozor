@@ -191,6 +191,24 @@ describe('useKindiController confidence handling', () => {
     expect(window.sessionStorage.getItem('jozor:kindi:failure-log')).toBeNull();
   });
 
+  it('delegates person targeting without dispatching a duplicate pulse', () => {
+    const lina = person('p1', 'Lina');
+    const onFocusPerson = vi.fn();
+    const { result } = renderHook(() => useKindiController({
+      people: { [lina.id]: lina },
+      onFocusPerson,
+    }));
+
+    act(() => {
+      result.current.focusPerson(lina.id);
+    });
+
+    expect(onFocusPerson).toHaveBeenCalledWith(lina.id);
+    expect(appState.setSearchTarget).toHaveBeenCalledWith(lina.id);
+    expect(appState.triggerPulse).not.toHaveBeenCalled();
+    expect(result.current.currentContextPerson?.id).toBe(lina.id);
+  });
+
   it('starts a clean conversation while keeping the currently focused person as context', async () => {
     const lina = person('p1', 'Lina');
     vi.mocked(searchService.search).mockResolvedValue([searchResult(lina, 'exact')]);

@@ -7,6 +7,34 @@ import type { SearchProps } from '../../../types/ui';
 
 const LazyKindiOverlayWrapper = React.lazy(() => import('./KindiOverlayWrapper'));
 
+const focusPersonDestinationAfterNavigation = () => {
+  let attempt = 0;
+
+  // The source trigger may unmount while the person route and drawer settle.
+  // Keep this short handoff independent from the trigger component lifecycle.
+  const focusDestination = () => {
+    const activeElement = document.activeElement as HTMLElement | null;
+    const personDrawer = document.getElementById('smart-persona-drawer');
+    const treeCanvas = document.getElementById('family-tree-canvas');
+    const destination = personDrawer ?? treeCanvas;
+    const focusWasMovedElsewhere = activeElement
+      && activeElement !== document.body
+      && activeElement.id !== 'tree-search-input'
+      && activeElement.id !== 'family-tree-canvas'
+      && activeElement.id !== 'smart-persona-drawer';
+
+    if (focusWasMovedElsewhere) return;
+    destination?.focus({ preventScroll: true });
+
+    attempt += 1;
+    if (!personDrawer && attempt < 5) {
+      window.setTimeout(focusDestination, 40);
+    }
+  };
+
+  window.setTimeout(focusDestination, 0);
+};
+
 export const KindiSearchTrigger: React.FC<SearchProps> = memo(({
   people,
   onFocusPerson,
@@ -18,8 +46,10 @@ export const KindiSearchTrigger: React.FC<SearchProps> = memo(({
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const isOpenRef = useRef(false);
   const shouldRestoreFocusRef = useRef(false);
+  const suppressNextFocusRestoreRef = useRef(false);
 
   const handleOpen = useCallback(() => {
+    suppressNextFocusRestoreRef.current = false;
     shouldRestoreFocusRef.current = false;
     isOpenRef.current = true;
     setHasOpened(true);
@@ -29,9 +59,26 @@ export const KindiSearchTrigger: React.FC<SearchProps> = memo(({
   const handleClose = useCallback(() => {
     if (!isOpenRef.current) return;
     isOpenRef.current = false;
-    shouldRestoreFocusRef.current = true;
+    shouldRestoreFocusRef.current = !suppressNextFocusRestoreRef.current;
+    suppressNextFocusRestoreRef.current = false;
     setIsOpen(false);
   }, []);
+
+  const handleFocusPerson = useCallback((personId: string) => {
+    suppressNextFocusRestoreRef.current = true;
+    onFocusPerson(personId);
+    focusPersonDestinationAfterNavigation();
+  }, [onFocusPerson]);
+
+  const handleOpenPersonRecord = useCallback<NonNullable<SearchProps['onOpenPersonRecord']>>((
+    personId,
+    targetTab,
+    targetSection,
+    targetField
+  ) => {
+    suppressNextFocusRestoreRef.current = true;
+    onOpenPersonRecord?.(personId, targetTab, targetSection, targetField);
+  }, [onOpenPersonRecord]);
 
   useLayoutEffect(() => {
     if (isOpen || !shouldRestoreFocusRef.current) return;
@@ -81,8 +128,8 @@ export const KindiSearchTrigger: React.FC<SearchProps> = memo(({
             isOpen={isOpen}
             onClose={handleClose}
             people={people}
-            onFocusPerson={onFocusPerson}
-            onOpenPersonRecord={onOpenPersonRecord}
+            onFocusPerson={handleFocusPerson}
+            onOpenPersonRecord={onOpenPersonRecord ? handleOpenPersonRecord : undefined}
           />
         </Suspense>
       ) : null}
