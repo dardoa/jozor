@@ -1,4 +1,13 @@
-import { lazy, memo, Suspense, useRef, useState, type ChangeEvent } from 'react';
+import {
+  lazy,
+  memo,
+  Suspense,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+} from 'react';
 import { Person, UserProfile } from '../../../../types';
 import { Plus, Image as ImageIcon, X, Mic, Trash2, Cloud, Loader2, Upload } from 'lucide-react';
 import { Card } from '../../../../components/ui/Card';
@@ -7,6 +16,7 @@ import { EmptyState } from '../../../../components/ui/EmptyState';
 import { showToast } from '../../../../utils/showToast';
 import { useGallery } from '../../hooks/useGallery';
 import { getGalleryImageUrl } from '../../../../utils/mediaUtils';
+import { logError } from '../../../../utils/errorLogger';
 
 type GalleryMediaItem = string | {
   id?: string;
@@ -16,6 +26,12 @@ type GalleryMediaItem = string | {
   caption?: string;
   createdAt?: string;
 };
+
+interface ResolvedGalleryItem {
+  item: GalleryMediaItem;
+  sourceIndex: number;
+  src: string;
+}
 
 const MAX_VOICE_FILE_SIZE_BYTES = 15 * 1024 * 1024;
 const MAX_VOICE_DURATION_SECONDS = 10 * 60;
@@ -29,6 +45,52 @@ const ACCEPTED_VOICE_TYPES = new Set([
   'audio/aac',
   'audio/x-m4a',
 ]);
+
+const createVoiceMemoryFileName = (mimeType = 'audio/webm'): string => {
+  const baseMimeType = mimeType.split(';', 1)[0];
+  const extension = baseMimeType
+    .split('/')[1]
+    ?.replace(/^x-/, '')
+    .replace(/[^a-z0-9]/gi, '') || 'webm';
+  return `voice-memory-${Date.now()}.${extension}`;
+};
+
+interface GalleryCaptionInputProps {
+  value: string;
+  placeholder: string;
+  onCommit: (value: string) => void;
+}
+
+const GalleryCaptionInput = memo<GalleryCaptionInputProps>(({
+  value,
+  placeholder,
+  onCommit,
+}) => {
+  const [draft, setDraft] = useState(value);
+
+  useEffect(() => {
+    setDraft(value);
+  }, [value]);
+
+  const commit = () => {
+    if (draft !== value) onCommit(draft);
+  };
+
+  return (
+    <input
+      type="text"
+      aria-label={placeholder}
+      placeholder={placeholder}
+      value={draft}
+      onChange={(event) => setDraft(event.target.value)}
+      onBlur={commit}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter') event.currentTarget.blur();
+      }}
+      className="w-full rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] px-2 py-1 text-center text-[10px] text-[var(--text-main)] placeholder-[var(--text-dim)] focus:border-[var(--primary-500)] focus:outline-none"
+    />
+  );
+});
 
 const getAudioDurationSeconds = (file: File): Promise<number> =>
   new Promise((resolve, reject) => {
@@ -89,14 +151,14 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
       const uploadMimeType = mimeType || audioBlob.type || 'audio/webm';
       const driveUrl = await googleMediaService.uploadFile(
         audioBlob,
-        fileName || `voice_${person.id}_${Date.now()}.webm`,
+        fileName || createVoiceMemoryFileName(uploadMimeType),
         uploadMimeType
       );
       const currentNotes = person.voiceNotes || [];
       onUpdate(person.id, { voiceNotes: [...currentNotes, driveUrl] });
       showToast.success('messages.success.uploadSuccess');
     } catch (err) {
-      console.error('Voice note upload failed', err);
+      logError('VOICE_NOTE_UPLOAD_FAILED', err, { showToast: false });
       showToast.error('messages.error.import');
     }
   };
@@ -123,23 +185,38 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
         return;
       }
 
-      await handleVoiceSave(file, file.name || `voice_${person.id}_${Date.now()}`, file.type);
+      await handleVoiceSave(file, file.name || createVoiceMemoryFileName(file.type), file.type);
     } catch (error) {
-      console.error('Audio validation failed', error);
+      logError('VOICE_NOTE_VALIDATION_FAILED', error, { showToast: false });
       showToast.error(t.audioReadError);
     }
   };
 
-  const gallery: GalleryMediaItem[] = Array.isArray(person.gallery)
-    ? person.gallery as unknown as GalleryMediaItem[]
-    : [];
+  const gallery = useMemo<GalleryMediaItem[]>(
+    () => Array.isArray(person.gallery)
+      ? person.gallery as unknown as GalleryMediaItem[]
+      : [],
+    [person.gallery]
+  );
+  const resolvedGallery = useMemo<ResolvedGalleryItem[]>(() => (
+    gallery.flatMap((item, sourceIndex) => {
+      const src = getGalleryImageUrl(item);
+      return src ? [{ item, sourceIndex, src }] : [];
+    })
+  ), [gallery]);
   const voiceNotes = person.voiceNotes || [];
-  const hasPhotos = gallery.length > 0;
+  const hasPhotos = resolvedGallery.length > 0;
   const hasVoiceNotes = voiceNotes.length > 0;
   const uploadAudioLabel = t.uploadAudio;
 
   const personFullName = [person.firstName, person.lastName].filter(Boolean).join(' ');
-  const galleryUrls = gallery.map(item => getGalleryImageUrl(item)).filter(Boolean) as string[];
+  const galleryUrls = resolvedGallery.map(({ src }) => src);
+
+  useEffect(() => {
+    if (selectedImgIndex !== null && selectedImgIndex >= galleryUrls.length) {
+      setSelectedImgIndex(null);
+    }
+  }, [galleryUrls.length, selectedImgIndex]);
 
   return (
     <div className='space-y-5'>
@@ -176,6 +253,7 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
           {isEditing && !isGuest && (
             <div className='flex gap-1.5 ms-auto'>
               <button
+                type="button"
                 onClick={() => galleryInputRef.current?.click()}
                 disabled={isUploading}
                 className='text-xs font-bold text-[var(--primary-600)] hover:bg-[var(--surface-subtle)] flex items-center gap-1 px-2 py-1 rounded-full transition-colors disabled:opacity-50 border border-[var(--primary-100)]'
@@ -206,69 +284,71 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
           />
         ) : (
           <div className='grid grid-cols-2 gap-3'>
-            {gallery.map((item, idx) => {
-              const src = getGalleryImageUrl(item);
-              if (!src) return null;
-              const imgAlt = personFullName ? `${personFullName} — ${t.galleryTab} ${idx + 1}` : `Gallery image ${idx + 1}`;
+            {resolvedGallery.map(({ item, sourceIndex, src }, galleryIndex) => {
+              const imgAlt = personFullName
+                ? `${personFullName} — ${t.galleryTab} ${galleryIndex + 1}`
+                : t.openGalleryImage(galleryIndex + 1);
               const isObj = typeof item === 'object';
-              const itemId = isObj ? item.id : String(idx);
+              const itemId = isObj ? item.id : String(sourceIndex);
               const caption = isObj ? item.caption : undefined;
 
               return (
-                <div key={itemId} className='flex flex-col gap-1.5 animate-in fade-in duration-200'>
                 <div
-                  /* thumbnail wrapper */
-                  className='relative group rounded-xl overflow-hidden border border-[var(--border-soft)] aspect-square bg-[var(--surface-subtle)] shadow-[var(--shadow-sm)] cursor-zoom-in'
-                  onClick={() => setSelectedImgIndex(idx)}
+                  key={`${itemId || 'gallery-item'}-${sourceIndex}`}
+                  className='animate-in fade-in flex flex-col gap-1.5 duration-200'
                 >
-                  <img 
-                    src={src} 
-                    alt={imgAlt} 
-                    className='w-full h-full object-cover transition-transform duration-500 group-hover:scale-110' 
-                    loading="lazy" 
-                  />
-
-                  <div className='absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-start justify-end p-2'>
+                  <div className='group relative aspect-square'>
+                    <button
+                      type="button"
+                      aria-label={t.openGalleryImage(galleryIndex + 1)}
+                      className='h-full w-full cursor-zoom-in overflow-hidden rounded-xl border border-[var(--border-soft)] bg-[var(--surface-subtle)] shadow-[var(--shadow-sm)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary-500)]'
+                      onClick={() => setSelectedImgIndex(galleryIndex)}
+                    >
+                      <img
+                        src={src}
+                        alt={imgAlt}
+                        className='h-full w-full object-cover transition-transform duration-500 group-hover:scale-105'
+                        loading="lazy"
+                      />
+                      {!isEditing && caption && (
+                        <span className='absolute inset-x-0 bottom-0 truncate bg-black/60 p-1 text-[10px] text-white backdrop-blur-sm'>
+                          {caption}
+                        </span>
+                      )}
+                    </button>
                     {isEditing && (
                       <button
+                        type="button"
                         onClick={(e) => {
                           e.stopPropagation();
                           if (isObj && item.id) {
-                            removePhoto(person.id, item.id);
+                            void removePhoto(person.id, item.id);
                           } else {
                             const newGallery = [...gallery];
-                            newGallery.splice(idx, 1);
+                            newGallery.splice(sourceIndex, 1);
                             onUpdate(person.id, { gallery: newGallery as Person['gallery'] });
                           }
                         }}
-                        className='p-1.5 bg-red-500/80 hover:bg-red-600 text-white rounded-full shadow-lg backdrop-blur-sm transition-transform hover:scale-110'
+                        className='absolute end-2 top-2 rounded-full bg-red-600/90 p-1.5 text-white opacity-0 shadow-lg backdrop-blur-sm transition-opacity hover:bg-red-700 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white group-hover:opacity-100'
                         aria-label={t.delete}
                       >
                         <X className='w-4 h-4' />
                       </button>
                     )}
                   </div>
-                  {!isEditing && caption && (
-                    <div className='absolute bottom-0 inset-x-0 bg-black/60 text-white text-[10px] p-1 truncate backdrop-blur-sm'>
-                      {caption}
-                    </div>
-                  )}
-                  </div>
 
                   {isEditing && !isGuest && (
-                    <input
-                      type='text'
-                      placeholder='أضف وصفاً للصورة...'
+                    <GalleryCaptionInput
                       value={caption || ''}
-                      onChange={(e) => {
-                        const newCaption = e.target.value;
+                      placeholder={t.photoCaptionPlaceholder}
+                      onCommit={(newCaption) => {
                         const newGallery = [...gallery];
                         if (isObj) {
-                          newGallery[idx] = { ...item, caption: newCaption };
+                          newGallery[sourceIndex] = { ...item, caption: newCaption };
                         } else {
-                          newGallery[idx] = {
-                            id: `gallery-legacy-${idx}`,
-                            path: item,
+                          newGallery[sourceIndex] = {
+                            id: `gallery-legacy-${sourceIndex}`,
+                            url: item,
                             version: 1,
                             caption: newCaption,
                             createdAt: new Date().toISOString(),
@@ -276,8 +356,6 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
                         }
                         onUpdate(person.id, { gallery: newGallery as Person['gallery'] });
                       }}
-                      onClick={(e) => e.stopPropagation()}
-                      className='w-full text-[10px] px-2 py-1 rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] text-[var(--text-main)] placeholder-[var(--text-dim)] focus:outline-none focus:border-[var(--primary-500)] text-center'
                     />
                   )}
                 </div>
@@ -293,7 +371,14 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
           <ImageLightbox
             images={galleryUrls}
             currentIndex={selectedImgIndex}
-            altPrefix={personFullName}
+            altPrefix={personFullName || t.galleryTab}
+            labels={{
+              download: t.downloadGalleryImage,
+              close: t.closeGallery,
+              previous: t.previousGalleryImage,
+              next: t.nextGalleryImage,
+              closeHint: t.galleryCloseHint,
+            }}
             onNavigate={setSelectedImgIndex}
             onClose={() => setSelectedImgIndex(null)}
           />
@@ -351,6 +436,7 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
                 </div>
                 {isEditing && (
                   <button
+                    type="button"
                     onClick={() => {
                       const newNotes = [...voiceNotes];
                       newNotes.splice(idx, 1);

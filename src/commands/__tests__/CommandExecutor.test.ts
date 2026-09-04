@@ -5,6 +5,7 @@ import { localTreePersistenceService } from '../../services/localTreePersistence
 import { searchService } from '../../services/searchService';
 import { TreeCommand } from '../types';
 import type { Person } from '../../types';
+import { TREE_EDIT_FORBIDDEN_ERROR } from '../../domain/treePermissionPolicy';
 
 // Mock dependencies
 vi.mock('../../store/useAppStore', () => {
@@ -12,6 +13,8 @@ vi.mock('../../store/useAppStore', () => {
     people: {
       'person-1': { id: 'person-1', firstName: 'Original' } as unknown as Person,
     },
+    currentTreeId: null as string | null,
+    currentUserRole: null as 'owner' | 'editor' | 'viewer' | null,
   };
   const mockGetState = vi.fn(() => mockState);
   const useAppStoreMock = {
@@ -46,6 +49,8 @@ describe('CommandExecutor', () => {
     state.people = {
       'person-1': { id: 'person-1', firstName: 'Original' } as unknown as Person,
     };
+    state.currentTreeId = null;
+    state.currentUserRole = null;
   });
 
   it('runs command.execute successfully and triggers side effects', async () => {
@@ -103,6 +108,22 @@ describe('CommandExecutor', () => {
 
     expect(result.success).toBe(false);
     expect(result.error).toBe('Database exception');
+    expect(localTreePersistenceService.saveChangedPeople).not.toHaveBeenCalled();
+    expect(searchService.updateSearchIndex).not.toHaveBeenCalled();
+  });
+
+  it('rejects cloud mutations while the current role is unresolved', async () => {
+    const state = useAppStore.getState();
+    state.currentTreeId = 'tree-1';
+    state.currentUserRole = null;
+    const cloudCommand: TreeCommand = {
+      execute: vi.fn(() => ({ success: true })),
+    };
+
+    const result = await CommandExecutor.execute(cloudCommand);
+
+    expect(result).toEqual({ success: false, error: TREE_EDIT_FORBIDDEN_ERROR });
+    expect(cloudCommand.execute).not.toHaveBeenCalled();
     expect(localTreePersistenceService.saveChangedPeople).not.toHaveBeenCalled();
     expect(searchService.updateSearchIndex).not.toHaveBeenCalled();
   });

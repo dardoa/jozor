@@ -1,10 +1,16 @@
-export type KindiTreeRole = 'owner' | 'editor' | 'viewer' | null | undefined;
+import {
+  canEditTreeContext,
+  type TreeAccessRole,
+} from '../../../domain/treePermissionPolicy';
+
+export type KindiTreeRole = TreeAccessRole | undefined;
 
 export const canKindiMutateTree = (
   role: KindiTreeRole,
   currentTreeId?: string | null
 ): boolean => {
-  if (role === 'owner' || role === 'editor') return true;
-  if (role === 'viewer') return false;
-  return !currentTreeId;
+  return canEditTreeContext({
+    currentTreeId: currentTreeId ?? null,
+    role: role ?? null,
+  });
 };

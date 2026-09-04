@@ -18,7 +18,6 @@ import { SmartAvatar } from '../../../../components/ui/SmartAvatar';
 interface PersonHeaderViewProps {
   person: Person;
   canEdit: boolean;
-  onSelect: (id: string) => void;
   onOpenModal: (
     modalType:
       | 'calculator'
@@ -33,7 +32,7 @@ interface PersonHeaderViewProps {
 }
 
 export const PersonHeaderView = memo<PersonHeaderViewProps>(
-  ({ person, canEdit, onSelect, onOpenModal, familyActions, settings }) => {
+  ({ person, canEdit, onOpenModal, familyActions, settings }) => {
     const { t } = useTranslation();
     const fullName =
       [person.title, person.firstName, person.middleName, person.lastName, person.suffix]
@@ -102,21 +101,16 @@ export const PersonHeaderView = memo<PersonHeaderViewProps>(
         >
           {/* Image */}
           <div className='flex shrink-0 flex-col items-center gap-2 self-start'>
-            <div className='relative group cursor-pointer' onClick={() => onSelect(person.id)}>
+            <div className='relative'>
               <div
                 className={`flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-subtle)] shadow-[var(--shadow-sm)] sm:h-28 sm:w-28 ${person.isDeceased ? 'grayscale' : ''}`}
               >
                 <SmartAvatar
                   person={person}
                   size={112}
-                  className='rounded-2xl transition-transform duration-500 group-hover:scale-105'
+                  className='rounded-2xl'
                 />
               </div>
-              {person.isDeceased && (
-                <div className='absolute -top-2 -end-2 bg-[var(--surface-panel)] rounded-full p-1 shadow-[var(--shadow-sm)] border border-[var(--border-soft)] z-10'>
-                  <Ribbon className='w-4 h-4 text-[var(--text-dim)] fill-current' />
-                </div>
-              )}
             </div>
           </div>
 
@@ -183,7 +177,7 @@ export const PersonHeaderView = memo<PersonHeaderViewProps>(
                     className='flex scroll-mt-4 items-center gap-2 rounded-lg text-xs text-[var(--text-main)] group cursor-help focus:outline-none focus:ring-2 focus:ring-[var(--primary-600)]/50'
                     title={person.deathSource ? `${t.source}: ${person.deathSource}` : ''}
                   >
-                    <Ribbon className='w-3.5 h-3.5 text-[var(--text-dim)] fill-current' />
+                    <Ribbon className='w-3.5 h-3.5 text-[var(--text-dim)]' />
                     <span>
                       {t.died}{' '}
                       <strong className='text-[var(--text-main)]'>

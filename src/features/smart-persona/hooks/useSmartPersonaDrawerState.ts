@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useAppStore } from '../../../store/useAppStore';
 import type { Person, SmartPersonaTabId } from '../../../types';
@@ -7,6 +7,7 @@ import { getDisplayDate } from '../../../utils/familyLogic';
 interface UseSmartPersonaDrawerStateArgs {
   person: Person | null;
   isOpen: boolean;
+  canEdit: boolean;
   fallbackProfileLabel: string;
   unnamedPersonLabel: string;
   tabLabels: {
@@ -19,14 +20,15 @@ interface UseSmartPersonaDrawerStateArgs {
 export const useSmartPersonaDrawerState = ({
   person,
   isOpen,
+  canEdit,
   fallbackProfileLabel,
   unnamedPersonLabel,
   tabLabels,
 }: UseSmartPersonaDrawerStateArgs) => {
   const activeTab = useAppStore((state) => state.smartPersonaTab);
   const setActiveTab = useAppStore((state) => state.setSmartPersonaTab);
-  const isEditing = useAppStore((state) => state.isSmartPersonaEditing);
-  const setIsEditing = useAppStore((state) => state.setSmartPersonaEditing);
+  const storedIsEditing = useAppStore((state) => state.isSmartPersonaEditing);
+  const setStoredIsEditing = useAppStore((state) => state.setSmartPersonaEditing);
   const smartPersonaSize = useAppStore((state) => state.smartPersonaSize);
   const setSmartPersonaSize = useAppStore((state) => state.setSmartPersonaSize);
   const targetSection = useAppStore((state) => state.smartPersonaTargetSection);
@@ -38,6 +40,11 @@ export const useSmartPersonaDrawerState = ({
   const [isDragging, setIsDragging] = useState(false);
   const [isMobileViewport, setIsMobileViewport] = useState(false);
   const startYRef = useRef(0);
+  const isEditing = canEdit && storedIsEditing;
+
+  const setIsEditing = useCallback((editing: boolean) => {
+    setStoredIsEditing(canEdit && editing);
+  }, [canEdit, setStoredIsEditing]);
 
   const safeDisplayName = useMemo(() => {
     if (!person) return fallbackProfileLabel;
@@ -82,6 +89,12 @@ export const useSmartPersonaDrawerState = ({
     mediaQuery.addListener(handleChange);
     return () => mediaQuery.removeListener(handleChange);
   }, []);
+
+  useEffect(() => {
+    if (!canEdit && storedIsEditing) {
+      setStoredIsEditing(false);
+    }
+  }, [canEdit, setStoredIsEditing, storedIsEditing]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;

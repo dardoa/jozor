@@ -86,6 +86,7 @@ describe('useTreeActions', () => {
       },
       focusId: 'person-1',
       currentTreeId: 'tree-1',
+      currentUserRole: 'owner',
       user: {
         uid: 'user-1',
         displayName: 'User One',
@@ -119,6 +120,25 @@ describe('useTreeActions', () => {
       firstName: 'After',
       bio: 'Fresh bio',
     });
+  });
+
+  it('fails closed when a cloud tree role is unresolved', async () => {
+    useAppStore.setState({ currentUserRole: null });
+    const { result } = renderHook(() => useTreeActions());
+
+    let updateResult;
+    await act(async () => {
+      updateResult = await result.current.updatePerson('person-1', {
+        firstName: 'Blocked',
+      });
+    });
+
+    expect(updateResult).toEqual({
+      success: false,
+      error: 'Unauthorized: This tree cannot be edited with the current role.',
+    });
+    expect(useAppStore.getState().people['person-1'].firstName).toBe('Before');
+    expect(debouncedPushMock).not.toHaveBeenCalled();
   });
 
   it('rolls back a local update when the sync queue rejects it', async () => {

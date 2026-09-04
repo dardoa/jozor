@@ -200,7 +200,7 @@ export const SmartPersonaDrawerBody: React.FC<SmartPersonaDrawerBodyProps> = ({
       className="custom-scrollbar no-drag flex-1 min-h-0 overflow-y-auto px-4 py-4 sm:px-5 sm:py-5 lg:px-6"
       style={{ WebkitOverflowScrolling: 'touch' }}
     >
-      {!canEdit && <div className="mb-5 ds-status-note">{t.readOnly}</div>}
+      {!canEdit && <div role="status" className="mb-5 ds-status-note">{t.readOnly}</div>}
 
       {!person ? (
         <div className="space-y-5 rounded-[22px] border border-[var(--border-soft)] bg-[var(--surface-panel)] px-4 py-6 shadow-[var(--shadow-sm)]">

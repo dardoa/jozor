@@ -18,7 +18,7 @@ const t = {
 } as unknown as TranslationSchema;
 
 describe('BioWorkInterestsCard', () => {
-  it('shows the recorded residence in read-only mode as a focusable diagnostic target', () => {
+  it('shows only recorded facts in read-only mode and keeps the diagnostic target focusable', () => {
     const person = { ...createPerson(), id: 'person-1', residence: 'Riyadh' };
     const { container } = render(
       <BioWorkInterestsCard
@@ -32,8 +32,12 @@ describe('BioWorkInterestsCard', () => {
 
     const target = container.querySelector<HTMLElement>('[data-smart-persona-field="residence"]');
     expect(target).not.toBeNull();
-    expect(within(target!).getByRole('textbox')).toHaveValue('Riyadh');
-    expect(within(target!).getByRole('textbox')).toBeDisabled();
+    expect(within(target!).getByText('Riyadh')).toBeInTheDocument();
+    expect(within(target!).queryByRole('textbox')).not.toBeInTheDocument();
+    expect(target).toHaveAttribute('tabindex', '-1');
+    expect(screen.queryByText('Profession')).not.toBeInTheDocument();
+    expect(screen.queryByText('Company')).not.toBeInTheDocument();
+    expect(screen.queryByText('Interests')).not.toBeInTheDocument();
   });
 
   it('commits an edited residence only after the user changes and leaves the field', () => {

@@ -7,6 +7,7 @@ import { storageService } from '../../services/storageService';
 import { clientInstanceId } from '../../services/sync/syncInstance';
 import { logError } from '../../utils/errorLogger';
 import { maskPeopleMap } from '../../utils/privacyUtils';
+import { assertCanEditTreeContext } from '../../domain/treePermissionPolicy';
 
 const getInitialFamilyState = () => {
     const initialId = crypto.randomUUID();
@@ -93,6 +94,16 @@ const filterDeletedPeople = (
     return Object.fromEntries(
         Object.entries(people).filter(([id]) => !deletedIds.has(id))
     );
+};
+
+const assertFamilyMutationAllowed = (
+    get: () => AppStore
+): void => {
+    const state = get();
+    assertCanEditTreeContext({
+        currentTreeId: state.currentTreeId,
+        role: state.currentUserRole,
+    });
 };
 
 export const createFamilySlice: StateCreator<AppStore, [["zustand/devtools", never]], [], FamilySlice> = (originalSet, get) => {
@@ -271,7 +282,7 @@ export const createFamilySlice: StateCreator<AppStore, [["zustand/devtools", nev
     },
 
     updatePerson: (id: string, updates: Partial<Person>, _bypassSync = false, addToHistory = true) => {
-        if (get().currentUserRole === 'viewer') throw new Error('Unauthorized: Viewers cannot edit.');
+        assertFamilyMutationAllowed(get);
         const currentPeople = get().people;
         const nextClientVersion = get().localClientVersion + 1;
         const updatedPeople = reduceFamilyDomain(currentPeople, {
@@ -293,7 +304,7 @@ export const createFamilySlice: StateCreator<AppStore, [["zustand/devtools", nev
     },
 
     deletePerson: (id: string, _bypassSync = false, addToHistory = true) => {
-        if (get().currentUserRole === 'viewer') throw new Error('Unauthorized: Viewers cannot delete.');
+        assertFamilyMutationAllowed(get);
         const currentPeople = get().people;
         const { focusId } = get();
         const newPeople = reduceFamilyDomain(currentPeople, { type: 'deletePerson', id });
@@ -324,7 +335,7 @@ export const createFamilySlice: StateCreator<AppStore, [["zustand/devtools", nev
     },
 
     addParent: (gender, _bypassSync = false, relatedPersonId, targetPersonId) => {
-        if (get().currentUserRole === 'viewer') throw new Error('Unauthorized: Viewers cannot add parents.');
+        assertFamilyMutationAllowed(get);
         const currentPeople = get().people;
         const { focusId } = get();
         const targetId = targetPersonId || focusId;
@@ -350,7 +361,7 @@ export const createFamilySlice: StateCreator<AppStore, [["zustand/devtools", nev
     },
 
     addSpouse: (gender, _bypassSync = false, relatedPersonId) => {
-        if (get().currentUserRole === 'viewer') throw new Error('Unauthorized: Viewers cannot add spouses.');
+        assertFamilyMutationAllowed(get);
         const currentPeople = get().people;
         const { focusId } = get();
         const targetId = relatedPersonId || focusId;
@@ -375,7 +386,7 @@ export const createFamilySlice: StateCreator<AppStore, [["zustand/devtools", nev
     },
 
     addChild: (gender, _bypassSync = false, relatedPersonId, targetPersonId) => {
-        if (get().currentUserRole === 'viewer') throw new Error('Unauthorized: Viewers cannot add children.');
+        assertFamilyMutationAllowed(get);
         const currentPeople = get().people;
         const { focusId } = get();
         const targetId = targetPersonId || focusId;
@@ -401,7 +412,7 @@ export const createFamilySlice: StateCreator<AppStore, [["zustand/devtools", nev
     },
 
     removeRelationship: (targetId, relativeId, type, _bypassSync = false, addToHistory = true) => {
-        if (get().currentUserRole === 'viewer') throw new Error('Unauthorized: Viewers cannot remove relationships.');
+        assertFamilyMutationAllowed(get);
         const currentPeople = get().people;
         const updatedPeople = reduceFamilyDomain(currentPeople, {
             type: 'removeRelationship',
@@ -420,7 +431,7 @@ export const createFamilySlice: StateCreator<AppStore, [["zustand/devtools", nev
     },
 
     linkPerson: (existingId, type, _bypassSync = false, addToHistory = true, relatedPersonId) => {
-        if (get().currentUserRole === 'viewer') throw new Error('Unauthorized: Viewers cannot link persons.');
+        assertFamilyMutationAllowed(get);
         if (!type) return;
 
         const currentPeople = get().people;
@@ -482,7 +493,7 @@ export const createFamilySlice: StateCreator<AppStore, [["zustand/devtools", nev
     },
 
     addFirstPerson: (gender) => {
-        if (get().currentUserRole === 'viewer') throw new Error('Unauthorized: Viewers cannot add people.');
+        assertFamilyMutationAllowed(get);
         const currentPeople = get().people;
         const newPerson = {
             ...createPerson(gender),

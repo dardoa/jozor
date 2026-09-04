@@ -6,6 +6,11 @@ import { searchService } from '../services/searchService';
 import { localTreePersistenceService } from '../services/localTreePersistenceService';
 import { CommandContext, TreeCommand } from './types';
 import { MutationActionResult } from '../types';
+import {
+    canEditTreeContext,
+    TREE_EDIT_FORBIDDEN_ERROR,
+} from '../domain/treePermissionPolicy';
+import { logError } from '../utils/errorLogger';
 
 /**
  * CommandExecutor manages the execution lifecycle of TreeCommands.
@@ -14,6 +19,14 @@ import { MutationActionResult } from '../types';
  */
 export class CommandExecutor {
     public static async execute(command: TreeCommand): Promise<MutationActionResult> {
+        const initialState = useAppStore.getState();
+        if (!canEditTreeContext({
+            currentTreeId: initialState.currentTreeId,
+            role: initialState.currentUserRole,
+        })) {
+            return { success: false, error: TREE_EDIT_FORBIDDEN_ERROR };
+        }
+
         const context: CommandContext = {
             getState: () => useAppStore.getState(),
             syncService: deltaSyncService,
@@ -96,7 +109,7 @@ export class CommandExecutor {
             
             return result;
         } catch (error) {
-            console.error('[CommandExecutor] Execution Error:', error);
+            logError('COMMAND_EXECUTION_FAILED', error, { showToast: false });
             return { 
                 success: false, 
                 error: error instanceof Error ? error.message : 'An unexpected error occurred during command execution.'

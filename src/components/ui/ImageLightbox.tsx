@@ -1,6 +1,7 @@
 import { X, Download, Maximize2, ChevronLeft, ChevronRight } from 'lucide-react';
-import { memo, useEffect, useCallback } from 'react';
+import { memo, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { logError } from '../../utils/errorLogger';
 
 interface ImageLightboxProps {
   images: string[];
@@ -8,50 +9,105 @@ interface ImageLightboxProps {
   onClose: () => void;
   onNavigate: (index: number) => void;
   altPrefix?: string;
+  labels?: {
+    download: string;
+    close: string;
+    previous: string;
+    next: string;
+    closeHint: string;
+  };
 }
+
+const DEFAULT_LABELS = {
+  download: 'Download image',
+  close: 'Close gallery',
+  previous: 'Previous image',
+  next: 'Next image',
+  closeHint: 'Click outside or press Escape to close',
+};
 
 export const ImageLightbox = memo<ImageLightboxProps>(({ 
   images, 
   currentIndex, 
   onClose, 
   onNavigate,
-  altPrefix = 'Gallery Image'
+  altPrefix = 'Gallery Image',
+  labels = DEFAULT_LABELS,
 }) => {
   const hasMultiple = images.length > 1;
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const isOpen = currentIndex !== null;
   
   const handleNext = useCallback((e?: React.MouseEvent) => {
     e?.stopPropagation();
-    if (currentIndex === null) return;
+    if (currentIndex === null || images.length === 0) return;
     const nextIndex = (currentIndex + 1) % images.length;
     onNavigate(nextIndex);
   }, [currentIndex, images.length, onNavigate]);
 
   const handlePrev = useCallback((e?: React.MouseEvent) => {
     e?.stopPropagation();
-    if (currentIndex === null) return;
+    if (currentIndex === null || images.length === 0) return;
     const prevIndex = (currentIndex - 1 + images.length) % images.length;
     onNavigate(prevIndex);
   }, [currentIndex, images.length, onNavigate]);
 
   useEffect(() => {
+    if (!isOpen) return;
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
       if (e.key === 'ArrowRight') handleNext();
       if (e.key === 'ArrowLeft') handlePrev();
+      if (e.key === 'Tab') {
+        const focusable = Array.from(
+          dialogRef.current?.querySelectorAll<HTMLElement>('button:not([disabled]), [href], [tabindex]:not([tabindex="-1"])') ?? []
+        );
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+
+        if (first && last && !dialogRef.current?.contains(document.activeElement)) {
+          e.preventDefault();
+          (e.shiftKey ? last : first).focus();
+        } else if (first && last && e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (first && last && !e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
     };
     window.addEventListener('keydown', handleKeyDown);
     
-    if (currentIndex !== null) {
-      document.body.style.overflow = 'hidden';
-    }
-    
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = 'unset';
     };
-  }, [onClose, currentIndex, handleNext, handlePrev]);
+  }, [handleNext, handlePrev, isOpen, onClose]);
 
-  if (currentIndex === null || typeof document === 'undefined') return null;
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const previouslyFocused = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    closeButtonRef.current?.focus();
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      previouslyFocused?.focus();
+    };
+  }, [isOpen]);
+
+  if (
+    currentIndex === null ||
+    currentIndex < 0 ||
+    currentIndex >= images.length ||
+    typeof document === 'undefined'
+  ) return null;
 
   const currentSrc = images[currentIndex];
   const alt = `${altPrefix} ${currentIndex + 1} / ${images.length}`;
@@ -69,12 +125,16 @@ export const ImageLightbox = memo<ImageLightboxProps>(({
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
     } catch (err) {
-      console.error('Download failed', err);
+      logError('GALLERY_IMAGE_DOWNLOAD_FAILED', err, { showToast: false });
     }
   };
 
   return createPortal(
     <div 
+      ref={dialogRef}
+      role="dialog"
+      aria-modal="true"
+      aria-label={altPrefix}
       className="fixed inset-0 z-[10000] flex items-center justify-center bg-[var(--surface-panel)]/80 backdrop-blur-md animate-in fade-in duration-300"
       onClick={onClose}
     >
@@ -88,16 +148,21 @@ export const ImageLightbox = memo<ImageLightboxProps>(({
         </div>
         <div className="flex gap-4 px-4">
           <button 
+            type="button"
             onClick={(e) => { e.stopPropagation(); handleDownload(); }}
             className="p-2 text-[var(--text-muted)] hover:text-[var(--primary-600)] transition-colors bg-white/20 rounded-full backdrop-blur-sm"
-            title="Download"
+            title={labels.download}
+            aria-label={labels.download}
           >
             <Download className="w-5 h-5" />
           </button>
           <button 
+            ref={closeButtonRef}
+            type="button"
             onClick={onClose}
             className="p-2 text-[var(--text-muted)] hover:text-red-500 transition-colors bg-white/20 rounded-full backdrop-blur-sm"
-            title="Close"
+            title={labels.close}
+            aria-label={labels.close}
           >
             <X className="w-6 h-6" />
           </button>
@@ -108,16 +173,20 @@ export const ImageLightbox = memo<ImageLightboxProps>(({
       {hasMultiple && (
         <>
           <button
+            type="button"
             onClick={handlePrev}
             className="absolute left-4 p-3 z-20 text-[var(--text-muted)] hover:text-[var(--primary-600)] bg-white/20 hover:bg-white/40 rounded-full backdrop-blur-md transition-all hover:scale-110 active:scale-95"
-            title="Previous"
+            title={labels.previous}
+            aria-label={labels.previous}
           >
             <ChevronLeft className="w-8 h-8" />
           </button>
           <button
+            type="button"
             onClick={handleNext}
             className="absolute right-4 p-3 z-20 text-[var(--text-muted)] hover:text-[var(--primary-600)] bg-white/20 hover:bg-white/40 rounded-full backdrop-blur-md transition-all hover:scale-110 active:scale-95"
-            title="Next"
+            title={labels.next}
+            aria-label={labels.next}
           >
             <ChevronRight className="w-8 h-8" />
           </button>
@@ -139,9 +208,9 @@ export const ImageLightbox = memo<ImageLightboxProps>(({
 
       {/* Hint */}
       <div className="absolute bottom-8 text-[var(--text-muted)] text-[10px] uppercase tracking-widest flex items-center gap-4 font-bold opacity-60">
-        <span className="flex items-center gap-1"><ChevronLeft className="w-3 h-3"/> Prev</span>
-        <span className="flex items-center gap-1"><Maximize2 className="w-3 h-3" /> Click outside to close</span>
-        <span className="flex items-center gap-1">Next <ChevronRight className="w-3 h-3"/></span>
+        <span className="flex items-center gap-1"><ChevronLeft className="w-3 h-3"/> {labels.previous}</span>
+        <span className="flex items-center gap-1"><Maximize2 className="w-3 h-3" /> {labels.closeHint}</span>
+        <span className="flex items-center gap-1">{labels.next} <ChevronRight className="w-3 h-3"/></span>
       </div>
     </div>,
     document.body

@@ -1,4 +1,4 @@
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useLayoutEffect, useMemo, useRef } from 'react';
 
 import { useTranslation } from '../../../context/TranslationContext';
 import {
@@ -49,6 +49,46 @@ export const SmartPersonaDrawer = memo<SmartPersonaDrawerProps>(
     canEdit = false,
   }) => {
     const { t } = useTranslation();
+    const canEditRef = useRef(canEdit);
+
+    useLayoutEffect(() => {
+      canEditRef.current = canEdit;
+    }, [canEdit]);
+
+    const blockedMutation = useCallback(() => ({
+      success: false,
+      error: t.readOnly,
+    }), [t.readOnly]);
+
+    const handleUpdate = useCallback<PersonUpdateHandler>((personId, updates) => (
+      canEditRef.current ? onUpdate(personId, updates) : blockedMutation()
+    ), [blockedMutation, onUpdate]);
+
+    const guardedFamilyActions = useMemo<FamilyActionsProps>(() => ({
+      onAddParent: (...args) => (
+        canEditRef.current ? familyActions.onAddParent(...args) : blockedMutation()
+      ),
+      onAddSpouse: (...args) => (
+        canEditRef.current ? familyActions.onAddSpouse(...args) : blockedMutation()
+      ),
+      onAddChild: (...args) => (
+        canEditRef.current ? familyActions.onAddChild(...args) : blockedMutation()
+      ),
+      onAddFirstPerson: (...args) => (
+        canEditRef.current ? familyActions.onAddFirstPerson(...args) : blockedMutation()
+      ),
+      onRemoveRelationship: familyActions.onRemoveRelationship
+        ? (...args) => (
+            canEditRef.current
+              ? familyActions.onRemoveRelationship!(...args)
+              : blockedMutation()
+          )
+        : undefined,
+      onLinkPerson: (...args) => (
+        canEditRef.current ? familyActions.onLinkPerson(...args) : blockedMutation()
+      ),
+    }), [blockedMutation, familyActions]);
+
     const {
       activeTab,
       setActiveTab,
@@ -74,6 +114,7 @@ export const SmartPersonaDrawer = memo<SmartPersonaDrawerProps>(
     } = useSmartPersonaDrawerState({
       person,
       isOpen,
+      canEdit,
       fallbackProfileLabel: t.profile,
       unnamedPersonLabel: t.unnamedPerson,
       tabLabels: {
@@ -157,10 +198,10 @@ export const SmartPersonaDrawer = memo<SmartPersonaDrawerProps>(
             activeTab={activeTab}
             isEditing={isEditing}
             canEdit={canEdit}
-            onUpdate={onUpdate}
+            onUpdate={handleUpdate}
             onSelect={onSelect}
             onOpenModal={handleAboutModalOpen}
-            familyActions={familyActions}
+            familyActions={guardedFamilyActions}
             settings={settings}
             user={user}
             isMobileViewport={isMobileViewport}

@@ -10,7 +10,9 @@ export interface RelationshipInfo {
 
 export interface GalleryItem {
     id: string;
-    path: string;
+    path?: string;
+    /** Transitional direct URL retained when a legacy string item gains metadata. */
+    url?: string;
     version: number;
     caption?: string;
     createdAt: string;

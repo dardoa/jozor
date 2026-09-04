@@ -286,6 +286,29 @@ test('role upgrade from viewer to editor unlocks editing actions without reseedi
   await expect(page.getByRole('menuitem', { name: 'Add Father' })).toBeEnabled();
 });
 
+test('role downgrade closes an active person edit session before another mutation', async ({ page }) => {
+  await seedScenario(page, 'editor');
+  await waitForDebugRole(page, 'editor');
+
+  const editDetailsBtn = page.getByLabel('Edit Details').first();
+  await expect(editDetailsBtn).toBeVisible({ timeout: 10000 });
+  await editDetailsBtn.click();
+
+  const firstNameInput = page.getByText('First Name', { exact: true }).locator('xpath=..').getByRole('textbox');
+  await expect(firstNameInput).toBeVisible();
+
+  await page.evaluate(() => {
+    (window as DebugWindow).jozorDebug?.setRole('viewer');
+  });
+
+  await waitForDebugRole(page, 'viewer');
+  await expect(firstNameInput).toHaveCount(0);
+  const personDrawer = page.locator('#smart-persona-drawer');
+  await expect(personDrawer.getByRole('status').filter({ hasText: 'Read-Only' })).toBeVisible();
+  await expect(personDrawer.getByRole('button', { name: 'Edit Details' })).toHaveCount(0);
+  await expect(personDrawer.getByRole('button', { name: 'Delete Person' })).toHaveCount(0);
+});
+
 test('editor edits a person and the value persists after reload', async ({ page }) => {
   await seedScenario(page, 'editor');
   await waitForDebugRole(page, 'editor');

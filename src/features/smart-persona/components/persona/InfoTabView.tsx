@@ -31,7 +31,6 @@ export const InfoTabView = memo<InfoTabViewProps>(
         <PersonHeaderView
           person={person}
           canEdit={canEdit}
-          onSelect={onSelect}
           onOpenModal={onOpenModal}
           familyActions={familyActions}
           settings={settings}

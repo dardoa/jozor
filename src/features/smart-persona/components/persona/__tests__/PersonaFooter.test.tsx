@@ -42,7 +42,7 @@ describe('PersonaFooter', () => {
     expect(onDelete).toHaveBeenCalledWith('person-1');
   });
 
-  it('keeps the delete action disabled for read-only viewers', () => {
+  it('does not expose mutation actions to read-only viewers', () => {
     const onDelete = vi.fn();
 
     render(
@@ -55,8 +55,7 @@ describe('PersonaFooter', () => {
       />
     );
 
-    const [deleteButton] = screen.getAllByRole('button', { name: 'Read only' });
-    expect(deleteButton).toBeDisabled();
+    expect(screen.queryByRole('button')).not.toBeInTheDocument();
     expect(onDelete).not.toHaveBeenCalled();
   });
 });

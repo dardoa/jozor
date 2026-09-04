@@ -1,5 +1,6 @@
 import { getSupabaseFull } from '../../../services/supabaseClient';
 import { processImageFile } from '../../../utils/imageLogic';
+import { logError } from '../../../utils/errorLogger';
 
 export interface GalleryItem {
   id: string;
@@ -72,7 +73,7 @@ export const SupabaseGalleryService = {
       .remove([path]);
 
     if (error) {
-      console.error('[SupabaseGalleryService] Delete error:', error);
+      logError('GALLERY_STORAGE_DELETE_FAILED', error, { showToast: false });
       throw error;
     }
   },

@@ -67,14 +67,37 @@ vi.mock('../components/persona/MediaTab', () => ({
 }));
 
 vi.mock('../components/tabs/AboutTab', () => ({
-  AboutTab: () => <div>AboutTabMock</div>,
+  AboutTab: ({
+    person,
+    isEditing,
+    onUpdate,
+  }: {
+    person: { id: string };
+    isEditing: boolean;
+    onUpdate: (personId: string, updates: { firstName: string }) => unknown;
+  }) => (
+    <div>
+      AboutTabMock
+      <span data-testid="persona-edit-state">{isEditing ? 'editing' : 'viewing'}</span>
+      <button type="button" onClick={() => onUpdate(person.id, { firstName: 'Blocked update' })}>
+        Attempt person update
+      </button>
+    </div>
+  ),
 }));
 
 vi.mock('../components/tabs/LinksTab', () => ({
-  LinksTab: () => (
+  LinksTab: ({
+    familyActions,
+  }: {
+    familyActions: FamilyActionsProps;
+  }) => (
     <div data-smart-persona-section="relationships">
       <div data-smart-persona-field="parents" tabIndex={-1}>
         <button type="button">Parent action</button>
+        <button type="button" onClick={() => familyActions.onAddParent('male')}>
+          Attempt relation update
+        </button>
       </div>
       LinksTabMock
     </div>
@@ -178,5 +201,64 @@ describe('SmartPersonaDrawer', () => {
     await waitFor(() => expect(parentAction).toHaveFocus());
     expect(useAppStore.getState().smartPersonaTargetSection).toBeNull();
     expect(useAppStore.getState().smartPersonaTargetField).toBeNull();
+  });
+
+  it('drops stale edit state and blocks mutations when editor access becomes read-only', async () => {
+    const mockPerson = {
+      id: 'p-1',
+      firstName: 'Fatima',
+      lastName: 'Zahra',
+      spouses: [],
+      children: [],
+      parents: [],
+    } as unknown as Person;
+    const onUpdate = vi.fn(() => ({ success: true }));
+    const familyActions: FamilyActionsProps = {
+      onAddParent: vi.fn(() => ({ success: true })),
+      onAddSpouse: vi.fn(() => ({ success: true })),
+      onAddChild: vi.fn(() => ({ success: true })),
+      onAddFirstPerson: vi.fn(() => ({ success: true })),
+      onRemoveRelationship: vi.fn(() => ({ success: true })),
+      onLinkPerson: vi.fn(() => ({ success: true })),
+    };
+    act(() => {
+      useAppStore.setState({
+        isSmartPersonaEditing: true,
+        smartPersonaSize: 'full',
+      });
+    });
+
+    const renderDrawer = (canEdit: boolean) => (
+      <SmartPersonaDrawer
+        person={mockPerson}
+        people={{ 'p-1': mockPerson }}
+        onUpdate={onUpdate}
+        onDelete={vi.fn()}
+        onSelect={vi.fn()}
+        isOpen
+        onClose={vi.fn()}
+        onOpenModal={vi.fn()}
+        familyActions={familyActions}
+        settings={{} as TreeSettings}
+        user={null}
+        canEdit={canEdit}
+      />
+    );
+    const { rerender } = render(renderDrawer(true));
+
+    expect(screen.getByTestId('persona-edit-state')).toHaveTextContent('editing');
+    fireEvent.click(screen.getByRole('button', { name: 'Attempt person update' }));
+    expect(onUpdate).toHaveBeenCalledOnce();
+
+    rerender(renderDrawer(false));
+
+    expect(screen.getByTestId('persona-edit-state')).toHaveTextContent('viewing');
+    await waitFor(() => expect(useAppStore.getState().isSmartPersonaEditing).toBe(false));
+    fireEvent.click(screen.getByRole('button', { name: 'Attempt person update' }));
+    expect(onUpdate).toHaveBeenCalledOnce();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Links' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Attempt relation update' }));
+    expect(familyActions.onAddParent).not.toHaveBeenCalled();
   });
 });
