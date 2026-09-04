@@ -4,9 +4,15 @@ import type { KindiPersonResult } from '../types';
 
 interface ConfidenceBadgeProps {
   matchLevel: KindiPersonResult['matchLevel'];
+  strongLabel?: string;
+  nearbyLabel?: string;
 }
 
-export const ConfidenceBadge = ({ matchLevel }: ConfidenceBadgeProps) => {
+export const ConfidenceBadge = ({
+  matchLevel,
+  strongLabel = 'تطابق قوي',
+  nearbyLabel = 'نتيجة قريبة',
+}: ConfidenceBadgeProps) => {
   const isStrong = matchLevel === 'strong';
   const Icon = isStrong ? CheckCircle2 : AlertTriangle;
 
@@ -19,7 +25,7 @@ export const ConfidenceBadge = ({ matchLevel }: ConfidenceBadgeProps) => {
       }`}
     >
       <Icon className="h-3 w-3" />
-      {isStrong ? 'تطابق قوي' : 'نتيجة قريبة'}
+      {isStrong ? strongLabel : nearbyLabel}
     </span>
   );
 };

@@ -610,10 +610,37 @@ async function reserveQuota(
   return { reservationId: resId as string };
 }
 
-interface AIUsageStats {
+export interface AIUsageStats {
   used: number;
   limit: number;
   resetAt: string;
+}
+
+export function normalizeAIUsageStats(value: unknown): AIUsageStats | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+
+  const usage = value as Record<string, unknown>;
+  const used = usage.cloud_requests_used;
+  const limit = usage.cloud_requests_limit;
+  const resetAt = usage.reset_at;
+
+  if (
+    !Number.isInteger(used) ||
+    !Number.isInteger(limit) ||
+    (used as number) < 0 ||
+    (limit as number) < 1 ||
+    (used as number) > (limit as number) ||
+    typeof resetAt !== 'string' ||
+    Number.isNaN(Date.parse(resetAt))
+  ) {
+    return null;
+  }
+
+  return {
+    used: used as number,
+    limit: limit as number,
+    resetAt,
+  };
 }
 
 async function finalizeQuota(
@@ -624,27 +651,24 @@ async function finalizeQuota(
   if (!reservationId) return null;
 
   await completeUsageReservation(supabaseAdmin, reservationId);
-  const fallbackUsageStats: AIUsageStats = {
-    used: 0,
-    limit: 30,
-    resetAt: '',
-  };
 
-  const { data: usage } = await supabaseAdmin
+  const { data: usage, error: usageError } = await supabaseAdmin
     .from('ai_monthly_usage')
     .select('cloud_requests_used, cloud_requests_limit, reset_at')
     .eq('user_id', userId)
     .single();
 
-  if (usage) {
-    return {
-      used: usage.cloud_requests_used,
-      limit: usage.cloud_requests_limit,
-      resetAt: usage.reset_at,
-    };
+  if (usageError) {
+    logServerError('API_AI_PROXY_USAGE_READ', usageError);
+    return null;
   }
 
-  return fallbackUsageStats;
+  const normalizedUsage = normalizeAIUsageStats(usage);
+  if (!normalizedUsage) {
+    logServerError('API_AI_PROXY_USAGE_READ', new Error('AI usage query returned malformed data.'));
+  }
+
+  return normalizedUsage;
 }
 
 export async function handleHandlerError(

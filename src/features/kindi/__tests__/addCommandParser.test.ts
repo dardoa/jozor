@@ -42,5 +42,31 @@ describe('addCommandParser', () => {
         initialUpdates: undefined,
       });
     });
+
+    it('does not mistake English articles or relationship words for a person name', () => {
+      expect(parseKindiCommand('add a son to this person')).toMatchObject({
+        relation: 'child',
+        gender: 'male',
+        newPersonName: undefined,
+        targetMention: 'this person',
+      });
+      expect(parseKindiCommand('add a daughter')).toMatchObject({
+        relation: 'child',
+        gender: 'female',
+        newPersonName: undefined,
+      });
+    });
+
+    it('preserves an explicitly marked English name', () => {
+      expect(parseKindiCommand('add a son named Adam Test to Sami Test')).toMatchObject({
+        relation: 'child',
+        gender: 'male',
+        newPersonName: {
+          firstName: 'Adam',
+          lastName: 'Test',
+        },
+        targetMention: 'Sami Test',
+      });
+    });
   });
 });

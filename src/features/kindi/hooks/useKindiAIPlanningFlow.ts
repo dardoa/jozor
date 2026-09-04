@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 
 import type { Person } from '../../../types/person';
+import type { Language } from '../../../types/common';
 import { redactKindiPrompt, restoreKindiDraft, type KindiPromptRedaction } from '../logic/kindiPrivacy';
 import { routeKindiIntent } from '../logic/intentRouter';
 import { createKindiLearningTrace } from '../logic/kindiLearningTrace';
@@ -14,9 +15,7 @@ import type {
 import { type KindiCommandPlanningResult, useKindiCommandPlanningFlow } from './useKindiCommandPlanningFlow';
 
 export interface KindiAIPlannerRequestArgs {
-  originalQuery: string;
   redactedText: string;
-  redaction: KindiPromptRedaction;
 }
 
 export type KindiAIPlannerRequest = (args: KindiAIPlannerRequestArgs) => Promise<KindiAIPlanDraft | KindiAIClassification | null>;
@@ -24,9 +23,10 @@ export type KindiAIPlannerRequest = (args: KindiAIPlannerRequestArgs) => Promise
 interface UseKindiAIPlanningFlowArgs {
   requestDraft?: KindiAIPlannerRequest;
   minimumConfidence?: number;
+  language?: Language;
 }
 
-interface PlanWithAIArgs {
+export interface PlanWithAIArgs {
   query: string;
   peopleList: Person[];
   lastContextPersonId?: string;
@@ -77,6 +77,19 @@ export type KindiAIPlanningResult =
     };
 
 const DEFAULT_AI_CONFIDENCE_FLOOR = 0.55;
+
+const getKnownPersonNames = (peopleList: Person[]): string[] => peopleList.flatMap((person) => {
+  const fullName = [person.firstName, person.middleName, person.lastName].filter(Boolean).join(' ').trim();
+  const firstAndLast = [person.firstName, person.lastName].filter(Boolean).join(' ').trim();
+
+  return [
+    fullName,
+    firstAndLast,
+    person.firstName,
+    person.birthName,
+    person.nickName,
+  ].filter((name): name is string => Boolean(name?.trim()));
+});
 
 const asText = (value: unknown): string | undefined => {
   if (typeof value !== 'string') return undefined;
@@ -226,8 +239,9 @@ const preserveDraftUpdatesInPlanning = (
 export const useKindiAIPlanningFlow = ({
   requestDraft,
   minimumConfidence = DEFAULT_AI_CONFIDENCE_FLOOR,
+  language = 'ar',
 }: UseKindiAIPlanningFlowArgs = {}) => {
-  const { planCommand } = useKindiCommandPlanningFlow();
+  const { planCommand } = useKindiCommandPlanningFlow(language);
 
   const planWithAI = useCallback(async ({
     query,
@@ -235,7 +249,7 @@ export const useKindiAIPlanningFlow = ({
     lastContextPersonId,
     focusId,
   }: PlanWithAIArgs): Promise<KindiAIPlanningResult> => {
-    const redaction = redactKindiPrompt(query);
+    const redaction = redactKindiPrompt(query, getKnownPersonNames(peopleList));
 
     if (!requestDraft) {
       return { kind: 'disabled', redaction };
@@ -243,9 +257,7 @@ export const useKindiAIPlanningFlow = ({
 
     try {
       const aiResponse = await requestDraft({
-        originalQuery: query,
         redactedText: redaction.redactedText,
-        redaction,
       });
 
       if (!aiResponse) {
@@ -280,7 +292,7 @@ export const useKindiAIPlanningFlow = ({
         return { kind: 'invalid_draft', redaction, draft, restoredDraft };
       }
 
-      const routed = routeKindiIntent(syntheticQuery);
+      const routed = routeKindiIntent(syntheticQuery, language);
       const planning = preserveDraftUpdatesInPlanning(planCommand({
         routed,
         query,
@@ -305,7 +317,7 @@ export const useKindiAIPlanningFlow = ({
     } catch (error) {
       return { kind: 'failed', redaction, error };
     }
-  }, [minimumConfidence, planCommand, requestDraft]);
+  }, [language, minimumConfidence, planCommand, requestDraft]);
 
   return { planWithAI };
 };

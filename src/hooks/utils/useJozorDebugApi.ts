@@ -20,6 +20,8 @@ type DebugScenario = {
   treeId?: string | null;
   treeName?: string;
   user?: UserProfile | null;
+  subscriptionTier?: 'free' | 'pro' | 'family';
+  aiCloudQuotaRemaining?: number;
 };
 
 type JozorDebugApi = {
@@ -33,6 +35,8 @@ type JozorDebugApi = {
     treeId?: string;
     treeName?: string;
     user?: UserProfile | null;
+    subscriptionTier?: 'free' | 'pro' | 'family';
+    aiCloudQuotaRemaining?: number;
   }) => void;
   setRole: (role: 'owner' | 'editor' | 'viewer' | null) => void;
   setScenarioAccess: (scenario: {
@@ -66,6 +70,8 @@ const captureScenario = (): DebugScenario => {
     treeId: state.currentTreeId,
     treeName: state.treeName,
     user: state.user,
+    subscriptionTier: state.subscriptionTier,
+    aiCloudQuotaRemaining: state.aiCloudQuotaRemaining,
   };
 };
 
@@ -104,7 +110,12 @@ export const useJozorDebugApi = (setShowWelcome: (show: boolean) => void) => {
         setCurrentTreeId(scenario.treeId || null);
         setCurrentUserRole(scenario.role || null);
         useAppStore.getState().setUser(scenario.user || null);
-        useAppStore.setState({ isE2E: true, authLoading: false });
+        useAppStore.setState({
+          isE2E: true,
+          authLoading: false,
+          subscriptionTier: scenario.subscriptionTier ?? 'free',
+          aiCloudQuotaRemaining: scenario.aiCloudQuotaRemaining ?? 0,
+        });
         setShowWelcome(false);
       } catch (error) {
         console.warn('[jozorDebug] Failed to restore persisted scenario', error);
@@ -131,6 +142,8 @@ export const useJozorDebugApi = (setShowWelcome: (show: boolean) => void) => {
         treeId = '00000000-0000-0000-0000-000000000001',
         treeName = 'E2E Tree',
         user,
+        subscriptionTier = 'free',
+        aiCloudQuotaRemaining = 0,
       }) => {
         loadFullState({
           version: 1,
@@ -151,7 +164,12 @@ export const useJozorDebugApi = (setShowWelcome: (show: boolean) => void) => {
               }
             : user
         );
-        useAppStore.setState({ isE2E: true, authLoading: false });
+        useAppStore.setState({
+          isE2E: true,
+          authLoading: false,
+          subscriptionTier,
+          aiCloudQuotaRemaining,
+        });
         setShowWelcome(false);
       },
       setRole: (role) => {

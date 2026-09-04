@@ -2,62 +2,111 @@ import { authTokenService } from '../../../services/authTokenService';
 import { getSupabaseFull } from '../../../services/supabaseClient';
 import type { KindiIntentKind, KindiLearningTrace } from '../types';
 import { KINDI_LOCAL_LEXICON_VERSION, shouldLogKindiLearningTrace } from '../logic/kindiLearningTrace';
-import type { KindiLearningFailureReason, KindiParserStage } from '../logic/kindiLearningTaxonomy';
+import {
+  KINDI_LEARNING_FAILURE_REASONS,
+  type KindiLearningFailureReason,
+  type KindiParserStage,
+} from '../logic/kindiLearningTaxonomy';
+import {
+  KINDI_LEARNING_AI_CATEGORIES,
+  KINDI_LEARNING_ANSWER_KINDS,
+  KINDI_LEARNING_ANSWER_SOURCES,
+  KINDI_LEARNING_EVENT_TYPES,
+  KINDI_LEARNING_INTENT_GUESSES,
+  KINDI_LEARNING_PARSER_NAMES,
+  KINDI_LEARNING_PARSER_STAGES,
+  KINDI_LEARNING_PLAN_TYPES,
+  KINDI_LEARNING_RESULT_KINDS,
+  KINDI_LEARNING_ROUTE_KINDS,
+  type KindiLearningAICategory,
+  type KindiLearningEventType,
+  type KindiLearningIntentGuess,
+  type KindiLearningParserName,
+  type KindiLearningResultKind,
+} from '../logic/kindiLearningDimensions';
 
 export const KINDI_PARSER_VERSION = '2026-05-kindi-parser-v1';
 
-export type KindiLearningEventType =
-  | 'query_submitted'
-  | 'search_success'
-  | 'search_failure'
-  | 'ai_fallback_requested'
-  | 'ai_fallback_result'
-  | 'confirmation_shown'
-  | 'confirmation_confirmed'
-  | 'confirmation_cancelled'
-  | 'confirmation_failed'
-  | 'disambiguation_shown'
-  | 'disambiguation_resolved'
-  | 'disambiguation_cancelled'
-  | 'support_local_answered'
-  | 'support_unanswered';
+export type { KindiLearningEventType } from '../logic/kindiLearningDimensions';
 
 export interface KindiLearningEventInput {
   eventType: KindiLearningEventType;
   interactionId?: string;
   routeKind?: KindiIntentKind;
-  resultKind?: string;
+  resultKind?: KindiLearningResultKind;
   failureReason?: KindiLearningFailureReason;
   redactedQuery?: string;
-  aiCategory?: string;
+  aiCategory?: KindiLearningAICategory;
   confidence?: number;
-  intentGuess?: string;
+  intentGuess?: KindiLearningIntentGuess;
   parserStage?: KindiParserStage;
-  parserName?: string;
+  parserName?: KindiLearningParserName;
   metadata?: Record<string, unknown>;
-  parserVersion?: string;
-  localLexiconVersion?: string;
 }
 
 const containsRedactionToken = (value: string | undefined): boolean =>
   Boolean(value && /\[NAME_\d+\]/.test(value));
 
+const SAFE_INTERACTION_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const SAFE_TOPIC_ID_PATTERN = /^[a-z0-9][a-z0-9-]{0,79}$/;
+const SAFE_ANSWER_SOURCES = new Set<string>(KINDI_LEARNING_ANSWER_SOURCES);
+const SAFE_ANSWER_KINDS = new Set<string>(KINDI_LEARNING_ANSWER_KINDS);
+const SAFE_PLAN_TYPES = new Set<string>(KINDI_LEARNING_PLAN_TYPES);
+const SAFE_EVENT_TYPES = new Set<string>(KINDI_LEARNING_EVENT_TYPES);
+const SAFE_ROUTE_KINDS = new Set<string>(KINDI_LEARNING_ROUTE_KINDS);
+const SAFE_RESULT_KINDS = new Set<string>(KINDI_LEARNING_RESULT_KINDS);
+const SAFE_FAILURE_REASONS = new Set(Object.values(KINDI_LEARNING_FAILURE_REASONS));
+const SAFE_AI_CATEGORIES = new Set<string>(KINDI_LEARNING_AI_CATEGORIES);
+const SAFE_INTENT_GUESSES = new Set<string>(KINDI_LEARNING_INTENT_GUESSES);
+const SAFE_PARSER_STAGES = new Set<string>(KINDI_LEARNING_PARSER_STAGES);
+const SAFE_PARSER_NAMES = new Set<string>(KINDI_LEARNING_PARSER_NAMES);
+
+const safeAllowedValue = (
+  value: unknown,
+  allowedValues: ReadonlySet<string>
+): string | undefined => typeof value === 'string' && allowedValues.has(value)
+  ? value
+  : undefined;
+
 const sanitizeMetadata = (metadata: Record<string, unknown> | undefined): Record<string, unknown> => {
   if (!metadata) return {};
 
-  return Object.fromEntries(
-    Object.entries(metadata)
-      .filter(([, value]) =>
-        value === null
-        || typeof value === 'string'
-        || typeof value === 'number'
-        || typeof value === 'boolean'
-      )
-      .filter(([key]) => !/(person|target|subject|email|query|raw|id)$/i.test(key))
-  );
+  const safe: Record<string, unknown> = {};
+  ['bestFuseScore', 'bestScore'].forEach((key) => {
+    const value = metadata[key];
+    if (typeof value === 'number' && Number.isFinite(value)) safe[key] = value;
+  });
+  ['candidateCount', 'lowConfidenceCount'].forEach((key) => {
+    const value = metadata[key];
+    if (typeof value === 'number' && Number.isInteger(value) && value >= 0) safe[key] = value;
+  });
+  const planType = safeAllowedValue(metadata.planType, SAFE_PLAN_TYPES);
+  const route = safeAllowedValue(metadata.route, SAFE_ROUTE_KINDS);
+  if (planType) safe.planType = planType;
+  if (route) safe.route = route;
+
+  const answerSource = metadata.answerSource;
+  const answerKind = metadata.answerKind;
+  const topicId = metadata.topicId;
+  if (typeof answerSource === 'string' && SAFE_ANSWER_SOURCES.has(answerSource)) {
+    safe.answerSource = answerSource;
+  }
+  if (typeof answerKind === 'string' && SAFE_ANSWER_KINDS.has(answerKind)) {
+    safe.answerKind = answerKind;
+  }
+  if (
+    answerSource === 'help-center'
+    && typeof topicId === 'string'
+    && SAFE_TOPIC_ID_PATTERN.test(topicId)
+  ) {
+    safe.topicId = topicId;
+  }
+
+  return safe;
 };
 
 export const insertKindiLearningEvent = async (event: KindiLearningEventInput): Promise<void> => {
+  if (!SAFE_EVENT_TYPES.has(event.eventType)) return;
   if (event.redactedQuery && !containsRedactionToken(event.redactedQuery)) return;
   if (event.confidence !== undefined && (!Number.isFinite(event.confidence) || event.confidence < 0 || event.confidence > 1)) return;
 
@@ -69,18 +118,20 @@ export const insertKindiLearningEvent = async (event: KindiLearningEventInput): 
     .from('kindi_learning_events')
     .insert({
       event_type: event.eventType,
-      interaction_id: event.interactionId,
-      route_kind: event.routeKind,
-      result_kind: event.resultKind,
-      failure_reason: event.failureReason,
+      interaction_id: event.interactionId && SAFE_INTERACTION_ID_PATTERN.test(event.interactionId)
+        ? event.interactionId
+        : undefined,
+      route_kind: safeAllowedValue(event.routeKind, SAFE_ROUTE_KINDS),
+      result_kind: safeAllowedValue(event.resultKind, SAFE_RESULT_KINDS),
+      failure_reason: safeAllowedValue(event.failureReason, SAFE_FAILURE_REASONS),
       redacted_query: event.redactedQuery,
-      ai_category: event.aiCategory,
+      ai_category: safeAllowedValue(event.aiCategory, SAFE_AI_CATEGORIES),
       confidence: event.confidence,
-      intent_guess: event.intentGuess,
-      parser_stage: event.parserStage,
-      parser_name: event.parserName,
-      parser_version: event.parserVersion ?? KINDI_PARSER_VERSION,
-      local_lexicon_version: event.localLexiconVersion ?? KINDI_LOCAL_LEXICON_VERSION,
+      intent_guess: safeAllowedValue(event.intentGuess, SAFE_INTENT_GUESSES),
+      parser_stage: safeAllowedValue(event.parserStage, SAFE_PARSER_STAGES),
+      parser_name: safeAllowedValue(event.parserName, SAFE_PARSER_NAMES),
+      parser_version: KINDI_PARSER_VERSION,
+      local_lexicon_version: KINDI_LOCAL_LEXICON_VERSION,
       metadata: sanitizeMetadata(event.metadata),
     });
 

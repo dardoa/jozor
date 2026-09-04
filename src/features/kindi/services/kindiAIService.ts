@@ -191,14 +191,58 @@ export const requestKindiPlanDraft = async (redactedText: string): Promise<Kindi
 
 export const requestKindiClassification = async (redactedText: string): Promise<KindiAIClassification | null> => {
   try {
-    const response = await callAIProxy({
-      operation: 'kindi_plan',
-      data: { redactedText },
-    });
-    const parsed = JSON.parse(cleanJsonCodeBlock(response.result || ''));
-    return sanitizeKindiClassification(parsed, getNameTokens(redactedText));
+    const response = await requestKindiClassificationWithUsage(redactedText);
+    return response.classification;
   } catch (error) {
     console.warn('[Kindi AI] Failed to request or parse classification.', error);
     return null;
   }
+};
+
+export interface KindiClassificationWithUsage {
+  classification: KindiAIClassification | null;
+  usage?: {
+    used: number;
+    limit: number;
+    resetAt: string;
+  };
+}
+
+const normalizeProxyUsage = (value: unknown): KindiClassificationWithUsage['usage'] => {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined;
+  const usage = value as Record<string, unknown>;
+  if (!Number.isInteger(usage.used) || !Number.isInteger(usage.limit)) return undefined;
+  if ((usage.used as number) < 0 || (usage.limit as number) < 1 || (usage.used as number) > (usage.limit as number)) {
+    return undefined;
+  }
+  if (typeof usage.resetAt !== 'string' || Number.isNaN(Date.parse(usage.resetAt))) return undefined;
+
+  return {
+    used: usage.used as number,
+    limit: usage.limit as number,
+    resetAt: usage.resetAt,
+  };
+};
+
+const getProxyErrorCode = (error: unknown): string | undefined => {
+  if (!error || typeof error !== 'object' || !('code' in error)) return undefined;
+  return typeof error.code === 'string' ? error.code : undefined;
+};
+
+export const isKindiCloudQuotaExceededError = (error: unknown): boolean =>
+  getProxyErrorCode(error) === 'AI_USAGE_LIMIT_EXCEEDED';
+
+export const requestKindiClassificationWithUsage = async (
+  redactedText: string
+): Promise<KindiClassificationWithUsage> => {
+  const response = await callAIProxy({
+    operation: 'kindi_plan',
+    data: { redactedText },
+  });
+  const parsed = JSON.parse(cleanJsonCodeBlock(response.result || ''));
+  const usage = normalizeProxyUsage(response.usage);
+  return {
+    classification: sanitizeKindiClassification(parsed, getNameTokens(redactedText)),
+    ...(usage ? { usage } : {}),
+  };
 };

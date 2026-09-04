@@ -3,6 +3,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { callAIProxy } from '../../../services/aiProxyClient';
 import {
   requestKindiPlanDraft,
+  requestKindiClassification,
+  requestKindiClassificationWithUsage,
   sanitizeKindiClassification,
   sanitizeKindiPlanDraft,
 } from '../services/kindiAIService';
@@ -90,6 +92,67 @@ describe('kindiAIService', () => {
     }, new Set(['[NAME_1]']))).toEqual({
       category: 'SUPPORT',
       confidence: 0.9,
+    });
+  });
+
+  it('preserves authoritative usage returned by the proxy', async () => {
+    vi.mocked(callAIProxy).mockResolvedValueOnce({
+      result: '{"category":"FAMILY_QUERY","confidence":0.91}',
+      usage: {
+        used: 9,
+        limit: 30,
+        resetAt: '2026-10-01T00:00:00.000Z',
+      },
+    });
+
+    await expect(requestKindiClassificationWithUsage('[NAME_1] family')).resolves.toEqual({
+      classification: {
+        category: 'FAMILY_QUERY',
+        confidence: 0.91,
+      },
+      usage: {
+        used: 9,
+        limit: 30,
+        resetAt: '2026-10-01T00:00:00.000Z',
+      },
+    });
+  });
+
+  it('propagates the authoritative quota error for controller handling', async () => {
+    vi.mocked(callAIProxy).mockRejectedValueOnce({
+      code: 'AI_USAGE_LIMIT_EXCEEDED',
+    });
+
+    await expect(requestKindiClassificationWithUsage('[NAME_1] family')).rejects.toMatchObject({
+      code: 'AI_USAGE_LIMIT_EXCEEDED',
+    });
+  });
+
+  it('propagates cloud failures through the usage-aware contract while preserving the legacy nullable contract', async () => {
+    const networkError = new TypeError('Failed to fetch');
+    vi.mocked(callAIProxy).mockRejectedValueOnce(networkError);
+
+    await expect(requestKindiClassificationWithUsage('[NAME_1] family')).rejects.toBe(networkError);
+
+    vi.mocked(callAIProxy).mockRejectedValueOnce(networkError);
+    await expect(requestKindiClassification('[NAME_1] family')).resolves.toBeNull();
+  });
+
+  it('ignores malformed usage without discarding a valid classification', async () => {
+    vi.mocked(callAIProxy).mockResolvedValueOnce({
+      result: '{"category":"SUPPORT","confidence":0.8}',
+      usage: {
+        used: 31,
+        limit: 30,
+        resetAt: 'not-a-date',
+      },
+    });
+
+    await expect(requestKindiClassificationWithUsage('[NAME_1] help')).resolves.toEqual({
+      classification: {
+        category: 'SUPPORT',
+        confidence: 0.8,
+      },
     });
   });
 });

@@ -18,6 +18,8 @@ const eventTypeValues = [
   'confirmation_cancelled',
   'disambiguation_shown',
   'support_unanswered',
+  'answer_feedback_helpful',
+  'answer_feedback_unhelpful',
 ] as const;
 
 const formatPercent = (value: number) => `${Math.round((value || 0) * 100)}%`;
@@ -270,7 +272,32 @@ export const AdminKindiLearningReports: React.FC<AdminKindiLearningReportsProps>
           <StatCard label={text.stats.cancelledConfirmations} value={overview?.cancellations ?? 0} />
           <StatCard label={text.stats.aiSuccessAfterConfirm} value={formatPercent(overview?.ai_success_after_confirmation_rate ?? 0)} />
           <StatCard label={text.stats.cancellationRate} value={formatPercent(overview?.cancellation_rate ?? 0)} />
+          <StatCard label={text.stats.answerFeedback} value={overview?.answer_feedback_total ?? 0} />
+          <StatCard label={text.stats.answerHelpfulRate} value={formatPercent(overview?.answer_helpful_rate ?? 0)} />
         </section>
+
+        <SimpleTable
+          title={text.tables.answerFeedback}
+          emptyMessage={text.tables.answerFeedbackEmpty}
+          columns={[
+            text.columns.answerSource,
+            text.columns.answerKind,
+            text.columns.topic,
+            text.columns.helpful,
+            text.columns.unhelpful,
+            text.columns.helpfulRate,
+            text.columns.lastSeen,
+          ]}
+          rows={(reports?.answerFeedback ?? []).map((row) => [
+            row.answer_source,
+            row.answer_kind,
+            row.topic_id ?? '-',
+            row.helpful_count,
+            row.unhelpful_count,
+            formatPercent(row.helpful_rate),
+            formatDate(row.last_seen_at),
+          ])}
+        />
 
         <SimpleTable
           title={text.tables.localOpportunities}

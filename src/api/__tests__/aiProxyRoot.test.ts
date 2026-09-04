@@ -4,6 +4,7 @@ import rootHandler, { config as rootConfig } from '../../../api/ai-proxy';
 import srcHandler, {
   config as srcConfig,
   handleHandlerError,
+  normalizeAIUsageStats,
   resolveAllowedOrigin,
   validateAIProxyRequest,
   validateKindiPlanRequestData,
@@ -115,6 +116,18 @@ describe('root AI proxy API function', () => {
       expect(() => validateKindiPlanRequestData({
         redactedText: 'delete 64392415-5ef0-46f3-b869-8adddb4fa9e3',
       })).toThrow('must not contain internal identifiers');
+    });
+
+    it.each([
+      'find owner@example.test',
+      'open https://project.supabase.co/storage/v1/object/private/photo.jpg',
+      'use Bearer secret-token',
+      'inspect person_internal-123',
+      'embed data:image/png;base64,AAAA',
+    ])('rejects private or external data at the Kindi AI boundary: %s', (redactedText) => {
+      expect(() => validateKindiPlanRequestData({ redactedText })).toThrow(
+        'must not contain private data or external resource references'
+      );
     });
 
     it('rejects malformed Kindi request data before provider processing', () => {
@@ -280,6 +293,42 @@ describe('root AI proxy API function', () => {
           code: 'INTERNAL_SERVER_ERROR',
         },
       });
+    });
+  });
+
+  describe('authoritative AI usage normalization', () => {
+    it('normalizes a complete server usage row', () => {
+      expect(normalizeAIUsageStats({
+        cloud_requests_used: 12,
+        cloud_requests_limit: 30,
+        reset_at: '2026-10-01T00:00:00.000Z',
+      })).toEqual({
+        used: 12,
+        limit: 30,
+        resetAt: '2026-10-01T00:00:00.000Z',
+      });
+    });
+
+    it.each([
+      null,
+      {},
+      {
+        cloud_requests_used: 0,
+        cloud_requests_limit: 30,
+        reset_at: '',
+      },
+      {
+        cloud_requests_used: 31,
+        cloud_requests_limit: 30,
+        reset_at: '2026-10-01T00:00:00.000Z',
+      },
+      {
+        cloud_requests_used: 1.5,
+        cloud_requests_limit: 30,
+        reset_at: '2026-10-01T00:00:00.000Z',
+      },
+    ])('returns no usage instead of fabricating quota data for %j', (value) => {
+      expect(normalizeAIUsageStats(value)).toBeNull();
     });
   });
 });

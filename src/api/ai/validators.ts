@@ -28,6 +28,8 @@ const asRequestRecord = (value: unknown): Record<string, unknown> | null =>
     ? value as Record<string, unknown>
     : null;
 
+const KINDI_FORBIDDEN_PRIVATE_DATA_PATTERN = /(?:https?:\/\/|file:\/\/|blob:|data:image\/|bearer\s+|\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b|\b(?:person|tree|user|node)_[A-Z0-9_-]+\b)/i;
+
 const asRequestArray = (value: unknown, fieldName: string): unknown[] => {
   if (!Array.isArray(value)) {
     throw new AIProxyValidationError(`${fieldName} must be an array.`);
@@ -239,6 +241,9 @@ export function validateKindiPlanRequestData(value: unknown): KindiPlanAIRequest
   }
   if (UUID_PATTERN.test(redactedText)) {
     throw new AIProxyValidationError('Kindi planning text must not contain internal identifiers.');
+  }
+  if (KINDI_FORBIDDEN_PRIVATE_DATA_PATTERN.test(redactedText)) {
+    throw new AIProxyValidationError('Kindi planning text must not contain private data or external resource references.');
   }
 
   return { redactedText };

@@ -1,6 +1,23 @@
-import React, { memo, useEffect, useRef } from 'react';
+import React, { memo, useEffect, useLayoutEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Check, CornerDownLeft, Mic, MicOff, Send, ShieldCheck, Sparkles, X } from 'lucide-react';
+import {
+  BookOpen,
+  Check,
+  CornerDownLeft,
+  MessageSquarePlus,
+  Mic,
+  MicOff,
+  ListChecks,
+  RotateCcw,
+  Send,
+  ShieldCheck,
+  Sparkles,
+  SquarePen,
+  UserPlus,
+  UsersRound,
+  X,
+} from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 import { KindiIcon } from '../../../components/icons/KindiIcon';
 import { SmartAvatar } from '../../../components/ui/SmartAvatar';
@@ -8,8 +25,21 @@ import { useTranslation } from '../../../context/TranslationContext';
 import type { Person } from '../../../types/person';
 import type { TranslationSchema } from '../../../utils/translationLoader';
 import { ConfidenceBadge } from './ConfidenceBadge';
+import { KindiAnswerFeedback, KindiAnswerHeader } from './KindiAnswerMeta';
+import { KindiBiographyDraft } from './KindiBiographyDraft';
+import { KindiDiagnosticSummary } from './KindiDiagnosticSummary';
+import { KindiRecordReview } from './KindiRecordReview';
 import { getKindiPersonContextLabel } from '../logic/kindiPersonContext';
-import type { KindiConfirmation, KindiMessage, KindiPersonResult } from '../types';
+import type {
+  KindiAnswerFeedback as KindiAnswerFeedbackValue,
+  KindiConfirmation,
+  KindiDiagnosticTargetSection,
+  KindiDiagnosticTargetField,
+  KindiDiagnosticTargetTab,
+  KindiMessage,
+  KindiPersonResult,
+  KindiUndoAction,
+} from '../types';
 
 type ConfirmationDetailRow = {
   label: string;
@@ -23,19 +53,30 @@ interface KindiOverlayProps {
   draft: string;
   messages: KindiMessage[];
   peopleById?: Record<string, Person>;
+  contextPerson?: Person;
   isThinking: boolean;
   onDraftChange: (value: string) => void;
   onSubmit: () => void;
   onClose: () => void;
   onFocusPerson: (personId: string) => void;
+  onOpenPersonRecord?: (
+    personId: string,
+    targetTab?: KindiDiagnosticTargetTab,
+    targetSection?: KindiDiagnosticTargetSection,
+    targetField?: KindiDiagnosticTargetField
+  ) => void;
   onConfirm: (confirmation: KindiConfirmation) => void;
   onCancel: (confirmation?: KindiConfirmation) => void;
   onCancelDisambiguation: (messageId: string) => void;
   onShowMorePeople: (messageId: string) => void;
   onChooseDisambiguation: (messageId: string, personId: string) => void;
+  onStartNewConversation: () => void;
+  onUndoChange: (messageId: string, undoAction: KindiUndoAction) => void;
+  onRateAnswer: (messageId: string, feedback: KindiAnswerFeedbackValue) => void;
   hasPendingDecision?: boolean;
   isListening?: boolean;
   isVoiceSupported?: boolean;
+  voiceError?: string | null;
   onToggleVoice?: () => void;
 }
 
@@ -89,6 +130,12 @@ const KINDI_OVERLAY_STYLES = `
   .animate-kindi-message {
     animation: kindi-slide-up 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
+  @media (prefers-reduced-motion: reduce) {
+    .animate-kindi-drawer,
+    .animate-kindi-message {
+      animation: none;
+    }
+  }
 `;
 
 const personName = (person: Person, unnamedPersonLabel: string) =>
@@ -131,7 +178,13 @@ const KindiPersonCard = ({
     <div className="min-w-0 flex-1">
       <div className="flex min-w-0 items-center gap-2">
         <div className="truncate text-sm font-bold text-[var(--text-main)]">{personName(person, text.unnamedPerson)}</div>
-        {result && <ConfidenceBadge matchLevel={result.matchLevel} />}
+        {result && (
+          <ConfidenceBadge
+            matchLevel={result.matchLevel}
+            strongLabel={text.strongMatch}
+            nearbyLabel={text.nearbyMatch}
+          />
+        )}
       </div>
       <div className="mt-0.5 truncate text-xs text-[var(--text-muted)]">
         {[person.birthDate, person.birthPlace].filter(Boolean).join(' · ') || text.personProfile}
@@ -299,24 +352,32 @@ export const KindiOverlay: React.FC<KindiOverlayProps> = memo(({
   draft,
   messages,
   peopleById = {},
+  contextPerson,
   isThinking,
   onDraftChange,
   onSubmit,
   onClose,
   onFocusPerson,
+  onOpenPersonRecord,
   onConfirm,
   onCancel,
   onCancelDisambiguation,
   onShowMorePeople,
   onChooseDisambiguation,
+  onStartNewConversation,
+  onUndoChange,
+  onRateAnswer,
   hasPendingDecision = false,
   isListening = false,
   isVoiceSupported = false,
+  voiceError = null,
   onToggleVoice,
 }) => {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const kindiText = t.kindi;
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const dialogRef = useRef<HTMLElement | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
   const activeConfirmation = [...messages]
     .reverse()
     .find((m) => m.confirmation && (!m.confirmation.status || m.confirmation.status === 'pending'))
@@ -324,9 +385,24 @@ export const KindiOverlay: React.FC<KindiOverlayProps> = memo(({
   const activeDisambiguationMessage = [...messages]
     .reverse()
     .find((m) => m.disambiguation && (!m.disambiguation.status || m.disambiguation.status === 'pending'));
+  const canStartNewConversation = messages.length > 1 && !hasPendingDecision && !isThinking;
+  const showStarterActions = messages.length === 1 && !isThinking;
+
+  useLayoutEffect(() => {
+    if (!isOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const frame = window.requestAnimationFrame(() => inputRef.current?.focus());
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isOpen]);
 
   // Setup dynamic keyboard shortcuts listener for confirmations (Enter/Escape)
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!isOpen) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -338,6 +414,23 @@ export const KindiOverlay: React.FC<KindiOverlayProps> = memo(({
           onCancelDisambiguation(activeDisambiguationMessage.id);
         } else {
           onClose();
+        }
+      }
+
+      if (e.key === 'Tab' && dialogRef.current) {
+        const focusable = Array.from(dialogRef.current.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), a[href], input:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        )).filter((element) => !element.hasAttribute('hidden'));
+        if (focusable.length === 0) return;
+
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
         }
       }
 
@@ -363,7 +456,8 @@ export const KindiOverlay: React.FC<KindiOverlayProps> = memo(({
 
   useEffect(() => {
     if (!isOpen) return;
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    messagesEndRef.current?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'end' });
   }, [isOpen, isThinking, messages]);
 
   if (!isOpen || typeof document === 'undefined') return null;
@@ -383,6 +477,8 @@ export const KindiOverlay: React.FC<KindiOverlayProps> = memo(({
       <style>{KINDI_OVERLAY_STYLES}</style>
 
       <section
+        id="kindi-dialog"
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-label={kindiText.dialogLabel}
@@ -398,14 +494,26 @@ export const KindiOverlay: React.FC<KindiOverlayProps> = memo(({
               <p className="text-xs text-[var(--text-muted)]">{kindiText.subtitle}</p>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-full p-2 text-[var(--text-muted)] transition-all hover:bg-[var(--surface-hover)] hover:text-[var(--text-main)] hover:scale-105 active:scale-95"
-            aria-label={kindiText.close}
-          >
-            <X className="h-4 w-4" />
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={onStartNewConversation}
+              disabled={!canStartNewConversation}
+              className="rounded-full p-2 text-[var(--text-muted)] transition hover:bg-[var(--surface-hover)] hover:text-[var(--text-main)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary-600)] disabled:cursor-not-allowed disabled:opacity-35"
+              aria-label={kindiText.newConversation}
+              title={hasPendingDecision ? kindiText.newConversationUnavailable : kindiText.newConversation}
+            >
+              <MessageSquarePlus className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-full p-2 text-[var(--text-muted)] transition-all hover:bg-[var(--surface-hover)] hover:text-[var(--text-main)] hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary-600)]"
+              aria-label={kindiText.close}
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
         </header>
 
         <div className="flex-1 space-y-4 overflow-y-auto px-4 py-4 kindi-scrollbar bg-transparent">
@@ -421,7 +529,73 @@ export const KindiOverlay: React.FC<KindiOverlayProps> = memo(({
                   ? 'bg-[var(--primary-600)] text-white rounded-te-sm'
                   : 'border border-[var(--border-soft)]/60 bg-[var(--surface-panel)]/80 backdrop-blur-md text-[var(--text-main)] rounded-ts-sm'
               }`}>
+                {message.role === 'assistant' && message.answerMeta && (
+                  <KindiAnswerHeader answer={message.answerMeta} text={kindiText} />
+                )}
                 <p className="text-sm leading-6">{message.text}</p>
+                {message.diagnosticSummary && (
+                  <KindiDiagnosticSummary summary={message.diagnosticSummary} text={kindiText} />
+                )}
+                {message.biographyDraft && (
+                  <KindiBiographyDraft draft={message.biographyDraft} text={kindiText} />
+                )}
+                {message.recordReview && (
+                  <KindiRecordReview
+                    review={message.recordReview}
+                    text={kindiText}
+                    onOpenRecord={message.recordReviewTargetPersonId && onOpenPersonRecord
+                      ? () => onOpenPersonRecord(
+                        message.recordReviewTargetPersonId!,
+                        'about',
+                        'workBio'
+                      )
+                      : undefined}
+                  />
+                )}
+                {message.diagnosticSuggestions && message.diagnosticSuggestions.length > 0 && (
+                  <section
+                    className="mt-3 border-y border-[var(--border-soft)]/70 py-2.5"
+                    aria-label={kindiText.diagnosticNextSteps}
+                    data-testid="kindi-diagnostic-suggestions"
+                  >
+                    <h3 className="flex items-center gap-1.5 text-xs font-black text-[var(--text-main)]">
+                      <ListChecks className="h-3.5 w-3.5 text-[var(--primary-600)]" aria-hidden="true" />
+                      {kindiText.diagnosticNextSteps}
+                    </h3>
+                    <ul className="mt-2 divide-y divide-[var(--border-soft)]/70 text-xs leading-5 text-[var(--text-secondary)]">
+                      {message.diagnosticSuggestions.map((suggestion) => (
+                        <li key={`${suggestion.key}:${suggestion.targetPersonId}`} className="flex items-center gap-3 py-2 first:pt-0 last:pb-0">
+                          <span className="min-w-0 flex-1">{suggestion.text}</span>
+                          {onOpenPersonRecord && (
+                            <button
+                              type="button"
+                              onClick={() => onOpenPersonRecord(
+                                suggestion.targetPersonId,
+                                suggestion.targetTab,
+                                suggestion.targetSection,
+                                suggestion.targetField
+                              )}
+                              aria-label={`${suggestion.text} · ${kindiText.diagnosticOpenRecord}`}
+                              className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-lg border border-[var(--primary-600)]/25 bg-[var(--surface-subtle)] px-2.5 py-1 text-[10px] font-black text-[var(--primary-600)] transition hover:bg-[var(--surface-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary-600)]"
+                            >
+                              <SquarePen className="h-3.5 w-3.5" aria-hidden="true" />
+                              <span>{kindiText.diagnosticOpenRecord}</span>
+                            </button>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                )}
+                {message.helpTopicId && (
+                  <Link
+                    to={`/help?topic=${encodeURIComponent(message.helpTopicId)}`}
+                    className="mt-3 inline-flex items-center gap-2 rounded-full border border-[var(--primary-600)]/25 bg-[var(--surface-subtle)] px-3 py-1.5 text-xs font-black text-[var(--primary-600)] transition hover:bg-[var(--surface-hover)]"
+                  >
+                    <BookOpen className="h-3.5 w-3.5" />
+                    {t.help.openTopic}
+                  </Link>
+                )}
                 {message.people && message.people.length > 0 && (
                   <div className="mt-3 grid gap-2 animate-kindi-message">
                     {message.people.slice(0, message.visiblePeopleCount ?? message.people.length).map((person) => (
@@ -429,16 +603,23 @@ export const KindiOverlay: React.FC<KindiOverlayProps> = memo(({
                         key={person.id}
                         person={person}
                         disabled={message.disambiguation?.status && message.disambiguation.status !== 'pending'}
-                        contextLabel={message.disambiguation ? getKindiPersonContextLabel(person, peopleById) : undefined}
+                        contextLabel={message.disambiguation
+                          ? getKindiPersonContextLabel(person, peopleById, language)
+                          : message.personContexts?.find((item) => item.personId === person.id)?.summary
+                            ?? message.diagnosticPersonContexts?.find((item) => item.personId === person.id)?.summary}
                         actionLabel={message.disambiguation
                           ? (!message.disambiguation.status || message.disambiguation.status === 'pending'
                             ? kindiText.choose
                             : undefined)
-                          : undefined}
+                          : message.answerMeta?.kind === 'diagnostic'
+                            ? kindiText.diagnosticOpenRecord
+                            : undefined}
                         text={kindiText}
                         onFocus={message.disambiguation
                           ? (personId) => onChooseDisambiguation(message.id, personId)
-                          : onFocusPerson}
+                          : message.answerMeta?.kind === 'diagnostic' && onOpenPersonRecord
+                            ? (personId) => onOpenPersonRecord(personId, 'about', 'overview')
+                            : onFocusPerson}
                       />
                     ))}
                     {(message.visiblePeopleCount ?? message.people.length) < message.people.length && (
@@ -496,9 +677,89 @@ export const KindiOverlay: React.FC<KindiOverlayProps> = memo(({
                     text={kindiText}
                   />
                 )}
+                {message.undoAction && (
+                  <div className="mt-3 border-t border-[var(--border-soft)]/60 pt-2.5">
+                    {message.undoAction.status === 'available' ? (
+                      <button
+                        type="button"
+                        onClick={() => onUndoChange(message.id, message.undoAction as KindiUndoAction)}
+                        className="inline-flex items-center gap-1.5 text-xs font-black text-[var(--primary-600)] transition hover:text-[var(--primary-700)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary-600)]"
+                      >
+                        <RotateCcw className="h-3.5 w-3.5" />
+                        {kindiText.undoChange}
+                      </button>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[var(--text-muted)]">
+                        <RotateCcw className="h-3.5 w-3.5" />
+                        {message.undoAction.status === 'undone'
+                          ? kindiText.undoDone
+                          : message.undoAction.status === 'expired'
+                            ? kindiText.undoExpired
+                            : kindiText.undoFailed}
+                      </span>
+                    )}
+                  </div>
+                )}
+                {message.role === 'assistant' && message.answerMeta && (
+                  <KindiAnswerFeedback
+                    messageId={message.id}
+                    answer={message.answerMeta}
+                    text={kindiText}
+                    onRate={onRateAnswer}
+                  />
+                )}
               </div>
             </div>
           ))}
+          {showStarterActions && (
+            <div className="ms-10 animate-kindi-message" data-testid="kindi-starter-actions">
+              {contextPerson && (
+                <div className="mb-2 flex min-w-0 items-center gap-2 text-xs text-[var(--text-muted)]">
+                  <span>{kindiText.currentContext}</span>
+                  <span aria-hidden="true">·</span>
+                  <span className="truncate font-black text-[var(--text-main)]">
+                    {personName(contextPerson, kindiText.unnamedPerson)}
+                  </span>
+                </div>
+              )}
+              <p className="mb-2 text-[11px] font-bold text-[var(--text-muted)]">{kindiText.startHere}</p>
+              <div className="grid gap-1.5 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    onDraftChange(kindiText.starterFamilyPrompt);
+                    inputRef.current?.focus();
+                  }}
+                  className="flex min-h-10 items-center gap-2 rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3 py-2 text-start text-xs font-bold text-[var(--text-main)] transition hover:border-[var(--primary-600)]/40 hover:bg-[var(--surface-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary-600)]"
+                >
+                  <UsersRound className="h-4 w-4 shrink-0 text-[var(--primary-600)]" />
+                  {kindiText.starterFamily}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onDraftChange(kindiText.starterChangePrompt);
+                    inputRef.current?.focus();
+                  }}
+                  className="flex min-h-10 items-center gap-2 rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3 py-2 text-start text-xs font-bold text-[var(--text-main)] transition hover:border-[var(--primary-600)]/40 hover:bg-[var(--surface-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary-600)]"
+                >
+                  <UserPlus className="h-4 w-4 shrink-0 text-[var(--primary-600)]" />
+                  {kindiText.starterChange}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onDraftChange(kindiText.starterHelpPrompt);
+                    inputRef.current?.focus();
+                  }}
+                  className="flex min-h-10 items-center gap-2 rounded-lg border border-[var(--border-soft)] bg-[var(--surface-panel)] px-3 py-2 text-start text-xs font-bold text-[var(--text-main)] transition hover:border-[var(--primary-600)]/40 hover:bg-[var(--surface-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary-600)] sm:col-span-2"
+                >
+                  <BookOpen className="h-4 w-4 shrink-0 text-[var(--primary-600)]" />
+                  {kindiText.starterHelp}
+                </button>
+              </div>
+            </div>
+          )}
           {isThinking && (
             <div className="inline-flex items-center gap-2 rounded-full bg-[var(--surface-panel)]/80 backdrop-blur-md px-3.5 py-2 text-xs font-bold text-[var(--text-muted)] shadow-sm animate-kindi-message">
               <Sparkles className="h-3.5 w-3.5 animate-pulse text-[var(--primary-600)]" />
@@ -520,6 +781,14 @@ export const KindiOverlay: React.FC<KindiOverlayProps> = memo(({
             onSubmit();
           }}
         >
+          {voiceError && (
+            <div
+              role="alert"
+              className="mb-2 rounded-lg border border-[var(--danger-500)]/25 bg-[var(--danger-500)]/10 px-3 py-2 text-xs font-bold text-[var(--danger-600)]"
+            >
+              {voiceError}
+            </div>
+          )}
           <div className={`flex items-center gap-2 rounded-full border px-3.5 py-2 shadow-inner transition-all duration-300 ${
             isListening
               ? 'border-[var(--danger-500)] bg-[var(--danger-500)]/10 ring-2 ring-[var(--danger-500)]/30'
@@ -545,12 +814,13 @@ export const KindiOverlay: React.FC<KindiOverlayProps> = memo(({
               </div>
             ) : (
               <input
+                ref={inputRef}
+                autoFocus
                 value={draft}
                 onChange={(event) => onDraftChange(event.target.value)}
                 placeholder={isListening ? kindiText.listeningPlaceholder : kindiText.messagePlaceholder}
                 aria-label={kindiText.messageLabel}
                 className="min-w-0 flex-1 bg-transparent text-sm font-medium text-[var(--text-main)] outline-none placeholder:text-[var(--text-muted)]"
-                autoFocus
               />
             )}
             {isVoiceSupported && (

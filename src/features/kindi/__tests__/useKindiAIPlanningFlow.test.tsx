@@ -95,6 +95,12 @@ describe('useKindiAIPlanningFlow', () => {
     expect(requestDraft).toHaveBeenCalledWith(expect.objectContaining({
       redactedText: expect.stringContaining('[NAME_1]'),
     }));
+    expect(requestDraft).not.toHaveBeenCalledWith(expect.objectContaining({
+      originalQuery: expect.anything(),
+    }));
+    expect(requestDraft).not.toHaveBeenCalledWith(expect.objectContaining({
+      redaction: expect.anything(),
+    }));
     expect(response?.kind).toBe('planned');
     const planned = response as Extract<KindiAIPlanningResult, { kind: 'planned' }>;
 

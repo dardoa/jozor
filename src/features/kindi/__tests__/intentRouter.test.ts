@@ -1,14 +1,20 @@
 import { describe, expect, it } from 'vitest';
 
 import { routeKindiIntent } from '../logic/intentRouter';
-import { getConversationFlowIntent, hasCommandTerm, KINDI_LEXICON, stripKnownCommandTerms } from '../logic/kindiCommandLexicon';
+import {
+  getConversationFlowIntent,
+  hasCommandTerm,
+  hasKindiAIFallbackIntentSignal,
+  KINDI_LEXICON,
+  stripKnownCommandTerms,
+} from '../logic/kindiCommandLexicon';
 
 describe('routeKindiIntent', () => {
   it('routes plain relationship search as QUERY', () => {
     const intent = routeKindiIntent('children of mahmoud');
 
     expect(intent.kind).toBe('QUERY');
-    expect(intent.summary).toBe('استعلام استدلالي');
+    expect(intent.summary).toBe('استعلام عن الشجرة');
     expect(intent.parsedIntents.map((item) => item.id)).toContain('rel_children');
   });
 
@@ -34,10 +40,38 @@ describe('routeKindiIntent', () => {
     expect(routeKindiIntent('إزالة محمود القرجي').kind).toBe('DELETE');
   });
 
-  it('routes support language as SUPPORT only when no explicit command exists', () => {
+  it('routes instructional and capability questions as SUPPORT without preparing changes', () => {
     expect(routeKindiIntent('كيف أستخدم كيندي؟').kind).toBe('SUPPORT');
     expect(routeKindiIntent('وين أجد المساعدة؟').kind).toBe('SUPPORT');
-    expect(routeKindiIntent('كيف أضيف ابن لسامي').kind).toBe('ACTION');
+    expect(routeKindiIntent('كيف أضيف ابن لسامي').kind).toBe('SUPPORT');
+    expect(routeKindiIntent('ماذا تستطيع أن تفعل؟').kind).toBe('SUPPORT');
+    expect(routeKindiIntent('what can you do?').kind).toBe('SUPPORT');
+  });
+
+  it('routes tree diagnostics as QUERY even when phrased as a how-question', () => {
+    expect(routeKindiIntent('كيف هي جودة البيانات في الشجرة؟').kind).toBe('QUERY');
+    expect(routeKindiIntent('what is missing for this person?').kind).toBe('QUERY');
+    expect(routeKindiIntent('check the tree for errors', 'en').kind).toBe('QUERY');
+  });
+
+  it('routes biography drafting as a read-only QUERY even when phrased with a creation verb', () => {
+    expect(routeKindiIntent('أنشئ مسودة سيرة لهذا الشخص').kind).toBe('QUERY');
+    expect(routeKindiIntent('اكتب نبذة عن محمد القرجي').kind).toBe('QUERY');
+    expect(routeKindiIntent('create a biography for this person', 'en').kind).toBe('QUERY');
+    expect(routeKindiIntent('عدل السيرة لمحمد').kind).toBe('UPDATE');
+  });
+
+  it('routes record organization as a read-only QUERY', () => {
+    expect(routeKindiIntent('نظّم ملاحظات ومصادر هذا الشخص').kind).toBe('QUERY');
+    expect(routeKindiIntent('راجع مصادر هذا الشخص').kind).toBe('QUERY');
+    expect(routeKindiIntent("organize this person's record", 'en').kind).toBe('QUERY');
+  });
+
+  it('localizes the routed summary without changing intent detection', () => {
+    const routed = routeKindiIntent('أضف ابنًا لمحمود', 'en');
+
+    expect(routed.kind).toBe('ACTION');
+    expect(routed.summary).toBe('Add to the family tree');
   });
 
   it('routes greetings as GREETING unless an explicit command exists', () => {
@@ -76,5 +110,12 @@ describe('routeKindiIntent', () => {
     expect(routeKindiIntent('قل لي نكتة').kind).toBe('UNKNOWN');
     expect(routeKindiIntent('كيف أصلح السيارة؟').kind).toBe('UNKNOWN');
     expect(routeKindiIntent('محمد القرجي').kind).toBe('QUERY');
+  });
+
+  it('recognizes broad Arabic and English family signals without matching unrelated topics', () => {
+    expect(hasKindiAIFallbackIntentSignal('show me the family relationship for Lina')).toBe(true);
+    expect(hasKindiAIFallbackIntentSignal('explain my ancestry')).toBe(true);
+    expect(hasKindiAIFallbackIntentSignal('اشرح صلة القرابة')).toBe(true);
+    expect(hasKindiAIFallbackIntentSignal('tell me the weather tomorrow')).toBe(false);
   });
 });

@@ -4,6 +4,16 @@ import type { KindiRedactionEntity } from '../logic/kindiPrivacy';
 import type { KindiAIPlanDraft } from '../types';
 
 describe('kindiPrivacy', () => {
+  it('redacts known tree names even when the sentence does not match a command template', () => {
+    const redaction = redactKindiPrompt(
+      'هل سامي القرجي هو الشخص المقصود؟',
+      ['سامي القرجي']
+    );
+
+    expect(redaction.redactedText).toContain('[NAME_1]');
+    expect(redaction.redactedText).not.toContain('سامي القرجي');
+  });
+
   it('redacts target and new person names in a single add command', () => {
     const redaction = redactKindiPrompt('أضف ابن لمحمد خير القرجي اسمه أمير');
 

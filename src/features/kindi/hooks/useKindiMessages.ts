@@ -1,22 +1,27 @@
 import { useCallback, useMemo, useState } from 'react';
 
-import { KINDI_STRINGS } from '../logic/kindiLocales';
-import type { KindiConfirmation, KindiMessage } from '../types';
-
-export type KindiConversationCue = 'greeting' | 'flow-search' | 'flow-add' | undefined;
+import type { Language } from '../../../types/common';
+import type { KindiConversationCue } from '../logic/kindiConversationOrchestrator';
+import { getKindiStrings } from '../logic/kindiLocales';
+import type {
+  KindiAnswerFeedback,
+  KindiConfirmation,
+  KindiMessage,
+  KindiUndoAction,
+} from '../types';
 
 export const createKindiMessageId = () => `kindi:${Date.now()}:${crypto.randomUUID()}`;
 
-const INITIAL_MESSAGES: KindiMessage[] = [
+const createInitialMessages = (language: Language): KindiMessage[] => [
   {
     id: 'kindi:welcome',
     role: 'assistant',
-    text: KINDI_STRINGS.initialMessage,
+    text: getKindiStrings(language).initialMessage,
   },
 ];
 
-export const useKindiMessages = () => {
-  const [messages, setMessages] = useState<KindiMessage[]>(INITIAL_MESSAGES);
+export const useKindiMessages = (language: Language = 'ar') => {
+  const [messages, setMessages] = useState<KindiMessage[]>(() => createInitialMessages(language));
   const [lastConversationCue, setLastConversationCue] = useState<KindiConversationCue>('greeting');
 
   const hasPendingDecision = useMemo(() => messages.some((message) => {
@@ -27,15 +32,23 @@ export const useKindiMessages = () => {
     return hasPendingConfirmation || hasPendingDisambiguation;
   }), [messages]);
 
+  const localizedMessages = useMemo(() => messages.map((message) =>
+    message.id === 'kindi:welcome'
+      ? { ...message, text: getKindiStrings(language).initialMessage }
+      : message
+  ), [language, messages]);
+
   const addAssistantMessage = useCallback((message: Omit<KindiMessage, 'id' | 'role'>) => {
+    const id = createKindiMessageId();
     setMessages((current) => [
       ...current,
       {
-        id: createKindiMessageId(),
+        id,
         role: 'assistant',
         ...message,
       },
     ]);
+    return id;
   }, []);
 
   const addAssistantMessageWithCue = useCallback((
@@ -59,6 +72,33 @@ export const useKindiMessages = () => {
 
   const clearConversationCue = useCallback(() => {
     setLastConversationCue(undefined);
+  }, []);
+
+  const resetConversation = useCallback(() => {
+    setMessages(createInitialMessages(language));
+    setLastConversationCue('greeting');
+  }, [language]);
+
+  const setUndoActionStatus = useCallback((
+    messageId: string,
+    status: KindiUndoAction['status']
+  ) => {
+    setMessages((current) => current.map((message) =>
+      message.id === messageId && message.undoAction
+        ? { ...message, undoAction: { ...message.undoAction, status } }
+        : message
+    ));
+  }, []);
+
+  const setAnswerFeedback = useCallback((
+    messageId: string,
+    feedback: KindiAnswerFeedback
+  ) => {
+    setMessages((current) => current.map((message) =>
+      message.id === messageId && message.answerMeta?.feedbackEnabled && !message.answerMeta.feedback
+        ? { ...message, answerMeta: { ...message.answerMeta, feedback } }
+        : message
+    ));
   }, []);
 
   const setConfirmationStatus = useCallback((
@@ -104,7 +144,7 @@ export const useKindiMessages = () => {
   }, []);
 
   return {
-    messages,
+    messages: localizedMessages,
     setMessages,
     lastConversationCue,
     hasPendingDecision,
@@ -112,8 +152,11 @@ export const useKindiMessages = () => {
     addAssistantMessageWithCue,
     addUserMessage,
     clearConversationCue,
+    resetConversation,
     setConfirmationStatus,
     setDisambiguationStatus,
+    setUndoActionStatus,
+    setAnswerFeedback,
     showMorePeople,
   };
 };

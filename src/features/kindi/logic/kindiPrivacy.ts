@@ -21,6 +21,9 @@ interface EntitySpan {
   original: string;
 }
 
+const WORD_CHARACTER_PATTERN = /[\p{L}\p{N}_]/u;
+const ARABIC_ATTACHED_PREFIX_PATTERN = /[وبفكل]/u;
+
 const NAME_TOKEN_PREFIX = 'NAME';
 const NAME_TOKEN_PATTERN = /\[NAME_\d+\]/g;
 const NAME_CAPTURE =
@@ -108,13 +111,62 @@ const addRegexSpans = (
   }
 };
 
-const collectEntitySpans = (text: string): EntitySpan[] => {
+const normalizeKnownName = (value: string): string =>
+  normalizeArabic(cleanNameCandidate(value)).toLocaleLowerCase();
+
+const addKnownNameSpans = (
+  text: string,
+  knownNames: readonly string[],
+  spans: EntitySpan[]
+) => {
+  const candidates = new Set(
+    knownNames
+      .map(cleanNameCandidate)
+      .filter((candidate) => candidate.length >= 2 && !isRelationOnly(candidate))
+      .map(normalizeKnownName)
+  );
+  const words = Array.from(text.matchAll(/[\p{L}\p{M}\p{N}'-]+/gu));
+
+  for (let wordIndex = 0; wordIndex < words.length; wordIndex += 1) {
+    const firstWord = words[wordIndex];
+    const firstStart = firstWord.index ?? 0;
+    const maxEndIndex = Math.min(words.length, wordIndex + 6);
+
+    for (let endIndex = wordIndex; endIndex < maxEndIndex; endIndex += 1) {
+      const lastWord = words[endIndex];
+      const end = (lastWord.index ?? 0) + lastWord[0].length;
+      const directValue = text.slice(firstStart, end);
+      const directMatch = candidates.has(normalizeKnownName(directValue));
+      const firstCharacter = text[firstStart];
+      const prefixedStart = firstStart + 1;
+      const prefixMatch = ARABIC_ATTACHED_PREFIX_PATTERN.test(firstCharacter ?? '')
+        && candidates.has(normalizeKnownName(text.slice(prefixedStart, end)));
+
+      if (directMatch || prefixMatch) {
+        const start = directMatch ? firstStart : prefixedStart;
+        const before = text[start - 1];
+        const beforePrefix = text[start - 2];
+        const after = text[end];
+        const hasStartBoundary = !WORD_CHARACTER_PATTERN.test(before ?? '')
+          || (ARABIC_ATTACHED_PREFIX_PATTERN.test(before) && !WORD_CHARACTER_PATTERN.test(beforePrefix ?? ''));
+        const hasEndBoundary = !WORD_CHARACTER_PATTERN.test(after ?? '');
+
+        if (hasStartBoundary && hasEndBoundary) {
+          spans.push({ start, end, kind: 'subject', original: text.slice(start, end) });
+        }
+      }
+    }
+  }
+};
+
+const collectEntitySpans = (text: string, knownNames: readonly string[]): EntitySpan[] => {
   const spans: EntitySpan[] = [];
 
   addRegexSpans(text, nameMarkerRegex, 'new_person', spans);
   addRegexSpans(text, targetPrepRegex, 'target', spans, (candidate) => !isRelationOnly(candidate));
   addRegexSpans(text, actionSubjectRegex, 'subject', spans, (candidate) => !isRelationOnly(candidate));
   addRegexSpans(text, bareAddNameRegex, 'new_person', spans, (candidate) => !isRelationOnly(candidate));
+  addKnownNameSpans(text, knownNames, spans);
 
   return spans
     .sort((a, b) => a.start - b.start || b.end - a.end)
@@ -125,8 +177,11 @@ const collectEntitySpans = (text: string): EntitySpan[] => {
     }, []);
 };
 
-export const redactKindiPrompt = (text: string): KindiPromptRedaction => {
-  const spans = collectEntitySpans(text);
+export const redactKindiPrompt = (
+  text: string,
+  knownNames: readonly string[] = []
+): KindiPromptRedaction => {
+  const spans = collectEntitySpans(text, knownNames);
   const entities = spans.map<KindiRedactionEntity>((span, index) => ({
     token: `[${NAME_TOKEN_PREFIX}_${index + 1}]`,
     original: span.original,

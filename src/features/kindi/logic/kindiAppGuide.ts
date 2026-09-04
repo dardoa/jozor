@@ -1,150 +1,27 @@
+import { HELP_TOPICS } from '../../help/helpKnowledgeBase';
+import type { Language } from '../../../types/common';
+
 export interface KindiGuideTopic {
   id: string;
+  helpTopicId: string;
   title: string;
   keywords: readonly string[];
   answer: string;
 }
 
-export const KINDI_APP_GUIDE_TOPICS: readonly KindiGuideTopic[] = [
-  {
-    id: 'kindi-search',
-    title: 'البحث في الشجرة',
-    keywords: [
-      'search',
-      'find',
-      'lookup',
-      'بحث',
-      'ابحث',
-      'العثور',
-      'شخص',
-      'الاشخاص',
-      'الأشخاص',
-      'قريب',
-      'اقارب',
-      'أقارب',
-    ],
-    answer:
-      'للبحث في الشجرة اكتب اسم الشخص أو صلة القرابة. أمثلة: "محمد القرجي"، "أبناء محمود"، أو "نساء من مكة". إذا ظهرت عدة نتائج، اختر البطاقة الصحيحة للانتقال إليها.',
-  },
-  {
-    id: 'kindi-add-relative',
-    title: 'إضافة قريب',
-    keywords: [
-      'add',
-      'create',
-      'relative',
-      'اضافة',
-      'إضافة',
-      'اضف',
-      'أضف',
-      'ابن',
-      'بنت',
-      'زوجة',
-      'زوج',
-      'اب',
-      'أب',
-      'ام',
-      'أم',
-      'قريب',
-    ],
-    answer:
-      'لإضافة قريب اكتب الأمر مع الصلة والاسم. مثال: "أضف ابن لسامي اسمه علي" أو "أضف زوجة لمحمود اسمها نورة". كيندي سيعرض بطاقة تأكيد قبل أي تغيير.',
-  },
-  {
-    id: 'kindi-update-person',
-    title: 'تعديل بيانات شخص',
-    keywords: [
-      'update',
-      'edit',
-      'change',
-      'تعديل',
-      'عدل',
-      'غيّر',
-      'غير',
-      'صحح',
-      'ميلاد',
-      'مهنة',
-      'وظيفة',
-      'سكن',
-      'اسم',
-    ],
-    answer:
-      'لتعديل بيانات شخص اكتب الحقل والقيمة الجديدة. مثال: "عدل تاريخ ميلاد Lina إلى 1990-01-01" أو "غير مهنة محمود إلى مهندس". لن يتم الحفظ إلا بعد بطاقة التأكيد.',
-  },
-  {
-    id: 'kindi-delete-person',
-    title: 'حذف شخص',
-    keywords: [
-      'delete',
-      'remove',
-      'حذف',
-      'احذف',
-      'امسح',
-      'ازالة',
-      'إزالة',
-      'شيل',
-    ],
-    answer:
-      'للحذف اكتب اسم الشخص بوضوح، مثل: "احذف خالد القرجي". الحذف إجراء حساس، لذلك لا يمكن تأكيده باختصار لوحة المفاتيح ويحتاج ضغط زر الحذف من بطاقة التأكيد.',
-  },
-  {
-    id: 'kindi-backup-sync',
-    title: 'النسخ الاحتياطي والمزامنة',
-    keywords: [
-      'backup',
-      'sync',
-      'drive',
-      'google',
-      'نسخ',
-      'احتياطي',
-      'مزامنة',
-      'حفظ',
-      'درايف',
-      'جوجل',
-      'سحابة',
-    ],
-    answer:
-      'المزامنة تحفظ تغييرات الشجرة في السحابة، ويمكن استخدام Google Drive للنسخ الاحتياطي. افتح مركز الشجرة أو الإعدادات للوصول إلى النسخ الاحتياطي، إدارة ملفات Drive، وسجل النشاط.',
-  },
-  {
-    id: 'kindi-access-privacy',
-    title: 'الصلاحيات والخصوصية',
-    keywords: [
-      'privacy',
-      'access',
-      'share',
-      'viewer',
-      'editor',
-      'owner',
-      'خصوصية',
-      'صلاحيات',
-      'مشاركة',
-      'دعوة',
-      'مشاهد',
-      'محرر',
-      'مالك',
-    ],
-    answer:
-      'الصلاحيات تحدد من يستطيع مشاهدة الشجرة أو تعديلها. المالك يمكنه الدعوة وتغيير الأدوار، المحرر يستطيع التعديل، والمشاهد للقراءة فقط. أوامر كيندي التنفيذية تتوقف تلقائيًا للمشاهدين.',
-  },
-  {
-    id: 'kindi-disambiguation',
-    title: 'اختيار الشخص الصحيح',
-    keywords: [
-      'ambiguous',
-      'same name',
-      'choose',
-      'اختار',
-      'اختيار',
-      'تشابه',
-      'متشابه',
-      'نفس الاسم',
-      'تكرر الاسم',
-      'اي شخص',
-      'أي شخص',
-      'بطاقة',
-    ],
-    answer:
-      'إذا وجد كيندي أكثر من شخص مناسب، سيعرض بطاقات اختيار. اختر الشخص الصحيح أولًا، وبعدها سيكمل كيندي بطاقة التأكيد. يمكنك ضغط Esc لإلغاء الاختيار المعلّق.',
-  },
-] as const;
+export const getKindiAppGuideTopics = (language: Language): readonly KindiGuideTopic[] =>
+  HELP_TOPICS
+    .filter((topic) => topic.kindiGuide)
+    .map((topic) => {
+      const localized = topic.content[language];
+      return {
+        id: topic.kindiGuideId ?? topic.id,
+        helpTopicId: topic.id,
+        title: localized.title,
+        keywords: [...topic.content.ar.keywords, ...topic.content.en.keywords],
+        answer: `${localized.summary} ${localized.steps.join(' ')}`,
+      };
+    });
+
+/** Arabic remains the default for legacy local callers; runtime callers pass the active language. */
+export const KINDI_APP_GUIDE_TOPICS: readonly KindiGuideTopic[] = getKindiAppGuideTopics('ar');

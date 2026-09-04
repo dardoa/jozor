@@ -120,6 +120,93 @@ const NAME_INDICATOR_MARKERS = [
 const SUPPORT_HOW = ['how', 'كيف', 'شلون', 'طريقة', 'كيفية'];
 const SUPPORT_WHERE = ['where', 'اين', 'أين', 'وين'];
 const SUPPORT_HELP = ['help', 'guide', 'instructions', 'مساعدة', 'تعليمات', 'دليل'];
+const SUPPORT_CAPABILITIES = [
+  'what can you do',
+  'what do you do',
+  'your capabilities',
+  'ماذا تستطيع',
+  'ما الذي تستطيع',
+  'ماذا تفعل',
+  'ما الذي تفعله',
+  'قدراتك',
+  'ما هي قدراتك',
+  'ماهي قدراتك',
+];
+export const KINDI_TREE_DIAGNOSTIC_TERMS = [
+  'مشاكل الشجرة',
+  'أخطاء الشجرة',
+  'تعارضات الشجرة',
+  'افحص الشجرة',
+  'فحص الشجرة',
+  'افحص بيانات',
+  'فحص بيانات',
+  'جودة البيانات',
+  'اكتمال البيانات',
+  'البيانات الناقصة',
+  'بيانات ناقصة',
+  'مشاكل هذا الشخص',
+  'مشاكل الشخص المحدد',
+  'افحص هذا الشخص',
+  'فحص هذا الشخص',
+  'ما ينقص هذا الشخص',
+  'بيانات هذا الشخص الناقصة',
+  'بياناته الناقصة',
+  'tree issues',
+  'tree errors',
+  'tree conflicts',
+  'check tree',
+  'check the tree',
+  'check data',
+  'data quality',
+  'data completeness',
+  'missing data',
+  'issues for this person',
+  "this person's issues",
+  'check this person',
+  'missing data for this person',
+  'what is missing for this person',
+] as const;
+export const KINDI_BIOGRAPHY_DRAFT_TERMS = [
+  'اكتب مسودة سيرة',
+  'أنشئ مسودة سيرة',
+  'انشئ مسودة سيرة',
+  'اكتب سيرة',
+  'أنشئ سيرة',
+  'انشئ سيرة',
+  'اكتب نبذة',
+  'أنشئ نبذة',
+  'انشئ نبذة',
+  'مسودة نبذة',
+  'draft a biography',
+  'write a biography',
+  'create a biography',
+  'biography draft',
+  'draft a bio',
+  'write a bio',
+  'create a bio',
+] as const;
+export const KINDI_RECORD_REVIEW_TERMS = [
+  'نظم ملاحظات ومصادر',
+  'نظّم ملاحظات ومصادر',
+  'رتب ملاحظات ومصادر',
+  'رتّب ملاحظات ومصادر',
+  'راجع ملاحظات ومصادر',
+  'راجع مصادر هذا الشخص',
+  'راجع ملاحظات هذا الشخص',
+  'نظم سجل',
+  'نظّم سجل',
+  'نظم سجل هذا الشخص',
+  'نظّم سجل هذا الشخص',
+  'organize notes and sources',
+  'organise notes and sources',
+  'review notes and sources',
+  'review sources for this person',
+  'review notes for this person',
+  "organize this person's record",
+  "organise this person's record",
+  'organize record',
+  'organise record',
+] as const;
 const GREETING_INDICATOR_TERMS = [
   'hello',
   'hi',
@@ -226,7 +313,8 @@ export const KINDI_LEXICON = {
     HOW: SUPPORT_HOW,
     WHERE: SUPPORT_WHERE,
     HELP: SUPPORT_HELP,
-    ALL: [...SUPPORT_HOW, ...SUPPORT_WHERE, ...SUPPORT_HELP],
+    CAPABILITIES: SUPPORT_CAPABILITIES,
+    ALL: [...SUPPORT_HOW, ...SUPPORT_WHERE, ...SUPPORT_HELP, ...SUPPORT_CAPABILITIES],
   },
   GREETING_INDICATORS: GREETING_INDICATOR_TERMS,
   FLOW_KEYWORDS: {
@@ -273,6 +361,19 @@ const AI_FALLBACK_INTENT_TERMS = [
   'لقب',
   'يسكن',
   'تسكن',
+  'family',
+  'relation',
+  'relationship',
+  'relative',
+  'relatives',
+  'ancestry',
+  'ancestor',
+  'ancestors',
+  'descendant',
+  'descendants',
+  'kinship',
+  'lineage',
+  'surname',
 ];
 
 export const hasKindiAIFallbackIntentSignal = (text: string): boolean =>
@@ -348,12 +449,22 @@ export const getConversationFlowIntent = (query: string): 'search' | 'add' | und
 export const hasOutOfScopeTerm = (query: string): boolean => hasCommandTerm(query, OUT_OF_SCOPE_INDICATORS);
 
 export const detectKindiIntentKind = (query: string): KindiIntentKind => {
+  const hasExplicitAction = hasCommandTerm(query, [
+    ...DELETE_VERBS,
+    ...UPDATE_VERBS,
+    ...ADD_VERBS,
+  ]);
+
+  if (hasOutOfScopeTerm(query)) return 'UNKNOWN';
+  if (hasGreetingTerm(query) && !hasExplicitAction) return 'GREETING';
+  if (hasCommandTerm(query, KINDI_TREE_DIAGNOSTIC_TERMS)) return 'QUERY';
+  if (hasCommandTerm(query, KINDI_BIOGRAPHY_DRAFT_TERMS)) return 'QUERY';
+  if (hasCommandTerm(query, KINDI_RECORD_REVIEW_TERMS)) return 'QUERY';
+  if (hasSupportTerm(query)) return 'SUPPORT';
   if (hasCommandTerm(query, DELETE_VERBS)) return 'DELETE';
   if (hasCommandTerm(query, UPDATE_VERBS)) return 'UPDATE';
   if (hasCommandTerm(query, ADD_VERBS)) return 'ACTION';
   if (hasGreetingTerm(query)) return 'GREETING';
-  if (hasOutOfScopeTerm(query)) return 'UNKNOWN';
-  if (hasSupportTerm(query)) return 'SUPPORT';
   return 'QUERY';
 };
 

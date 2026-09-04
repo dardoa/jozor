@@ -69,4 +69,9 @@ export type AIProxyRequest =
 export interface AIProxyResponse {
   result: string;
   model?: string;
+  usage?: {
+    used: number;
+    limit: number;
+    resetAt: string;
+  };
 }

@@ -1,4 +1,9 @@
 import type { Person } from '../../types/person';
+import type {
+  SmartPersonaFieldId,
+  SmartPersonaSectionId,
+  SmartPersonaTabId,
+} from '../../types/common';
 import type { ParsedIntent } from '../../services/search/queryParser';
 import type { RelativeType } from '../../commands/AddRelativeCommand';
 
@@ -108,12 +113,116 @@ export interface KindiConfirmation {
   description: string;
   confirmLabel: string;
   cancelLabel: string;
-  kind: Exclude<KindiIntentKind, 'QUERY' | 'GREETING' | 'SUPPORT'>;
+  kind: Extract<KindiIntentKind, 'ACTION' | 'UPDATE' | 'DELETE'>;
   status?: 'pending' | 'processing' | 'confirmed' | 'failed' | 'cancelled';
   error?: string;
   relatedPeople?: Person[];
   plan?: KindiExecutivePlan;
   learningTrace?: KindiLearningTrace;
+}
+
+export interface KindiUndoAction {
+  status: 'available' | 'undone' | 'expired' | 'failed';
+  peopleVersion: number;
+  historyEntryToken: string;
+  pastCount: number;
+  futureCount: number;
+}
+
+export type KindiAnswerSource = 'local-tree' | 'help-center' | 'cloud-assisted';
+export type KindiAnswerKind = 'relationship' | 'diagnostic' | 'biography' | 'record-review' | 'search' | 'guide' | 'change';
+export type KindiAnswerFeedback = 'helpful' | 'not-helpful';
+
+export interface KindiAnswerMeta {
+  source: KindiAnswerSource;
+  kind: KindiAnswerKind;
+  interactionId?: string;
+  topicId?: string;
+  feedbackEnabled?: boolean;
+  feedback?: KindiAnswerFeedback;
+}
+
+export interface KindiDiagnosticSummary {
+  scope: 'tree' | 'person';
+  healthScore: number;
+  completenessScore: number;
+  citationCoverage: number | null;
+  errorCount: number;
+  warningCount: number;
+  reviewNoteCount: number;
+}
+
+export type KindiDiagnosticSuggestionKey =
+  | 'relationship-structure'
+  | 'relationship-reciprocity'
+  | 'timeline'
+  | 'possible-duplicate'
+  | 'birth-date'
+  | 'death-date'
+  | 'residence'
+  | 'occupation'
+  | 'parents'
+  | 'birth-source'
+  | 'death-source'
+  | 'profile-source';
+
+export type KindiDiagnosticTargetTab = Extract<SmartPersonaTabId, 'about' | 'links'>;
+export type KindiDiagnosticTargetSection = Extract<
+  SmartPersonaSectionId,
+  'overview' | 'workBio' | 'relationships'
+>;
+export type KindiDiagnosticTargetField = SmartPersonaFieldId;
+
+export interface KindiDiagnosticSuggestion {
+  key: KindiDiagnosticSuggestionKey;
+  text: string;
+  targetPersonId: string;
+  targetTab: KindiDiagnosticTargetTab;
+  targetSection: KindiDiagnosticTargetSection;
+  targetField?: KindiDiagnosticTargetField;
+}
+
+export interface KindiPersonContextSummary {
+  personId: string;
+  summary: string;
+}
+
+export type KindiDiagnosticPersonContext = KindiPersonContextSummary;
+
+export interface KindiBiographyFact {
+  label: string;
+  value: string;
+}
+
+export interface KindiBiographyDraft {
+  facts: KindiBiographyFact[];
+  text: string;
+  isSaved: false;
+}
+
+export type KindiRecordSectionId = 'facts' | 'notes' | 'sources';
+
+export interface KindiRecordItem {
+  label: string;
+  value: string;
+}
+
+export interface KindiRecordSection {
+  id: KindiRecordSectionId;
+  title: string;
+  items: KindiRecordItem[];
+}
+
+export interface KindiRecordReview {
+  sections: KindiRecordSection[];
+  sourceSummary: {
+    recordedCount: number;
+    displayedCount: number;
+    hasBirthSource: boolean;
+    hasDeathSource: boolean;
+  };
+  reviewNotes: string[];
+  isSaved: false;
 }
 
 export interface KindiMessage {
@@ -125,6 +234,16 @@ export interface KindiMessage {
   visiblePeopleCount?: number;
   confirmation?: KindiConfirmation;
   disambiguation?: KindiDisambiguation;
+  helpTopicId?: string;
+  undoAction?: KindiUndoAction;
+  answerMeta?: KindiAnswerMeta;
+  diagnosticSummary?: KindiDiagnosticSummary;
+  diagnosticPersonContexts?: KindiDiagnosticPersonContext[];
+  diagnosticSuggestions?: KindiDiagnosticSuggestion[];
+  biographyDraft?: KindiBiographyDraft;
+  recordReview?: KindiRecordReview;
+  recordReviewTargetPersonId?: string;
+  personContexts?: KindiPersonContextSummary[];
 }
 
 export interface KindiParsedCommand {

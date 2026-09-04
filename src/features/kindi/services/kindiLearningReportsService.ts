@@ -1,21 +1,21 @@
 import type { UserProfile } from '../../../types/common';
 import { getSupabaseFull } from '../../../services/supabaseClient';
+import {
+  KINDI_LEARNING_AI_CATEGORIES,
+  KINDI_LEARNING_ANSWER_KINDS,
+  KINDI_LEARNING_ANSWER_SOURCES,
+  KINDI_LEARNING_EVENT_TYPES,
+  KINDI_LEARNING_INTENT_GUESSES,
+  KINDI_LEARNING_PARSER_NAMES,
+  KINDI_LEARNING_PARSER_STAGES,
+  KINDI_LEARNING_PLAN_TYPES,
+  KINDI_LEARNING_RESULT_KINDS,
+  KINDI_LEARNING_ROUTE_KINDS,
+  type KindiLearningEventType,
+} from '../logic/kindiLearningDimensions';
+import { KINDI_LEARNING_FAILURE_REASONS } from '../logic/kindiLearningTaxonomy';
 
-export type KindiLearningEventType =
-  | 'query_submitted'
-  | 'search_success'
-  | 'search_failure'
-  | 'ai_fallback_requested'
-  | 'ai_fallback_result'
-  | 'confirmation_shown'
-  | 'confirmation_confirmed'
-  | 'confirmation_cancelled'
-  | 'confirmation_failed'
-  | 'disambiguation_shown'
-  | 'disambiguation_resolved'
-  | 'disambiguation_cancelled'
-  | 'support_local_answered'
-  | 'support_unanswered';
+export type { KindiLearningEventType } from '../logic/kindiLearningDimensions';
 
 export interface KindiLearningReportFilters {
   dateFrom?: string;
@@ -33,6 +33,8 @@ export interface KindiLearningOverview {
   cancellations: number;
   confirmed_ai_successes: number;
   local_improvement_opportunities: number;
+  answer_feedback_total: number;
+  answer_helpful_rate: number;
   cancellation_rate: number;
   ai_success_after_confirmation_rate: number;
 }
@@ -95,6 +97,17 @@ export interface KindiLocalOpportunitySummary {
   last_seen_at: string | null;
 }
 
+export interface KindiAnswerFeedbackSummary {
+  answer_source: 'local-tree' | 'help-center' | 'cloud-assisted' | 'unknown';
+  answer_kind: 'relationship' | 'diagnostic' | 'biography' | 'record-review' | 'search' | 'guide' | 'change' | 'unknown';
+  topic_id: string | null;
+  helpful_count: number;
+  unhelpful_count: number;
+  total_count: number;
+  helpful_rate: number;
+  last_seen_at: string | null;
+}
+
 export interface KindiLearningReports {
   isAdmin: boolean;
   overview: KindiLearningOverview;
@@ -103,6 +116,7 @@ export interface KindiLearningReports {
   ambiguousNames: KindiAmbiguousNamesSummary[];
   redactedQueries: KindiRedactedQuerySummary[];
   localOpportunities: KindiLocalOpportunitySummary[];
+  answerFeedback: KindiAnswerFeedbackSummary[];
   recentEvents: KindiLearningEventRow[];
 }
 
@@ -115,6 +129,8 @@ const emptyOverview: KindiLearningOverview = {
   cancellations: 0,
   confirmed_ai_successes: 0,
   local_improvement_opportunities: 0,
+  answer_feedback_total: 0,
+  answer_helpful_rate: 0,
   cancellation_rate: 0,
   ai_success_after_confirmation_rate: 0,
 };
@@ -131,18 +147,144 @@ const sortByCount = <T extends { event_count: number; last_seen_at: string | nul
 const average = (values: number[]) =>
   values.length === 0 ? null : values.reduce((total, value) => total + value, 0) / values.length;
 
-const buildReportsFromEvents = (events: KindiLearningEventRow[]): Omit<KindiLearningReports, 'isAdmin'> => {
+const ANSWER_SOURCES = new Set<KindiAnswerFeedbackSummary['answer_source']>([
+  ...KINDI_LEARNING_ANSWER_SOURCES,
+]);
+const ANSWER_KINDS = new Set<KindiAnswerFeedbackSummary['answer_kind']>([
+  ...KINDI_LEARNING_ANSWER_KINDS,
+]);
+const SAFE_TOPIC_ID_PATTERN = /^[a-z0-9][a-z0-9-]{0,79}$/;
+
+const getAnswerFeedbackIdentity = (metadata: Record<string, unknown>) => {
+  const sourceValue = metadata.answerSource;
+  const kindValue = metadata.answerKind;
+  const topicValue = metadata.topicId;
+  const answerSource = typeof sourceValue === 'string' && ANSWER_SOURCES.has(sourceValue as KindiAnswerFeedbackSummary['answer_source'])
+    ? sourceValue as KindiAnswerFeedbackSummary['answer_source']
+    : 'unknown';
+  const answerKind = typeof kindValue === 'string' && ANSWER_KINDS.has(kindValue as KindiAnswerFeedbackSummary['answer_kind'])
+    ? kindValue as KindiAnswerFeedbackSummary['answer_kind']
+    : 'unknown';
+  const topicId = answerSource === 'help-center'
+    && typeof topicValue === 'string'
+    && SAFE_TOPIC_ID_PATTERN.test(topicValue)
+    ? topicValue
+    : null;
+
+  return { answerSource, answerKind, topicId };
+};
+
+const KNOWN_EVENT_TYPES = new Set<string>(KINDI_LEARNING_EVENT_TYPES);
+const SAFE_ROUTE_KINDS = new Set<string>(KINDI_LEARNING_ROUTE_KINDS);
+const SAFE_RESULT_KINDS = new Set<string>(KINDI_LEARNING_RESULT_KINDS);
+const SAFE_FAILURE_REASONS = new Set<string>(Object.values(KINDI_LEARNING_FAILURE_REASONS));
+const SAFE_AI_CATEGORIES = new Set<string>(KINDI_LEARNING_AI_CATEGORIES);
+const SAFE_INTENT_GUESSES = new Set<string>(KINDI_LEARNING_INTENT_GUESSES);
+const SAFE_PARSER_STAGES = new Set<string>(KINDI_LEARNING_PARSER_STAGES);
+const SAFE_PARSER_NAMES = new Set<string>(KINDI_LEARNING_PARSER_NAMES);
+const SAFE_PLAN_TYPES = new Set<string>(KINDI_LEARNING_PLAN_TYPES);
+const SAFE_INTERACTION_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const SAFE_PARSER_VERSION_PATTERN = /^\d{4}-\d{2}-kindi-parser-v\d+$/;
+const SAFE_LEXICON_VERSION_PATTERN = /^\d{4}-\d{2}-kindi-v\d+$/;
+const PRIVATE_REPORT_TEXT_PATTERN = /(?:https?:\/\/|file:\/\/|s3:\/\/|blob:|[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}|bearer\s+|eyJ[A-Za-z0-9_-]{10,}\.)/i;
+
+const safeAllowedReportDimension = (
+  value: unknown,
+  allowedValues: ReadonlySet<string>
+): string | null => typeof value === 'string' && allowedValues.has(value) ? value : null;
+
+const safeReportVersion = (value: unknown, pattern: RegExp): string =>
+  typeof value === 'string' && pattern.test(value) ? value : 'unknown';
+
+const safeReportTimestamp = (value: unknown): string =>
+  typeof value === 'string' && Number.isFinite(Date.parse(value))
+    ? value
+    : '1970-01-01T00:00:00.000Z';
+
+const safeRedactedQuery = (value: unknown): string | null => {
+  if (typeof value !== 'string' || value.length > 500) return null;
+  if (!/\[NAME_\d+\]/.test(value) || PRIVATE_REPORT_TEXT_PATTERN.test(value)) return null;
+  return value;
+};
+
+const safeReportMetadata = (metadata: Record<string, unknown>): Record<string, unknown> => {
+  const safe: Record<string, unknown> = {};
+  const numericKeys = ['bestFuseScore', 'bestScore'];
+  const countKeys = ['candidateCount', 'lowConfidenceCount'];
+
+  numericKeys.forEach((key) => {
+    const value = metadata[key];
+    if (typeof value === 'number' && Number.isFinite(value)) safe[key] = value;
+  });
+  countKeys.forEach((key) => {
+    const value = metadata[key];
+    if (typeof value === 'number' && Number.isInteger(value) && value >= 0) safe[key] = value;
+  });
+  const planType = safeAllowedReportDimension(metadata.planType, SAFE_PLAN_TYPES);
+  const route = safeAllowedReportDimension(metadata.route, SAFE_ROUTE_KINDS);
+  if (planType) safe.planType = planType;
+  if (route) safe.route = route;
+
+  const feedback = getAnswerFeedbackIdentity(metadata);
+  if (feedback.answerSource !== 'unknown') safe.answerSource = feedback.answerSource;
+  if (feedback.answerKind !== 'unknown') safe.answerKind = feedback.answerKind;
+  if (feedback.topicId) safe.topicId = feedback.topicId;
+
+  return safe;
+};
+
+const normalizeReportEvent = (
+  event: KindiLearningEventRow,
+  index: number
+): KindiLearningEventRow => ({
+  id: `report-event-${index + 1}`,
+  interaction_id: typeof event.interaction_id === 'string' && SAFE_INTERACTION_ID_PATTERN.test(event.interaction_id)
+    ? event.interaction_id
+    : null,
+  event_type: event.event_type,
+  route_kind: safeAllowedReportDimension(event.route_kind, SAFE_ROUTE_KINDS),
+  result_kind: safeAllowedReportDimension(event.result_kind, SAFE_RESULT_KINDS),
+  failure_reason: safeAllowedReportDimension(event.failure_reason, SAFE_FAILURE_REASONS),
+  redacted_query: safeRedactedQuery(event.redacted_query),
+  ai_category: safeAllowedReportDimension(event.ai_category, SAFE_AI_CATEGORIES),
+  confidence: typeof event.confidence === 'number'
+    && Number.isFinite(event.confidence)
+    && event.confidence >= 0
+    && event.confidence <= 1
+    ? event.confidence
+    : null,
+  intent_guess: safeAllowedReportDimension(event.intent_guess, SAFE_INTENT_GUESSES),
+  parser_stage: safeAllowedReportDimension(event.parser_stage, SAFE_PARSER_STAGES),
+  parser_name: safeAllowedReportDimension(event.parser_name, SAFE_PARSER_NAMES),
+  parser_version: safeReportVersion(event.parser_version, SAFE_PARSER_VERSION_PATTERN),
+  local_lexicon_version: safeReportVersion(event.local_lexicon_version, SAFE_LEXICON_VERSION_PATTERN),
+  metadata: safeReportMetadata(
+    event.metadata && typeof event.metadata === 'object' && !Array.isArray(event.metadata)
+      ? event.metadata
+      : {}
+  ),
+  created_at: safeReportTimestamp(event.created_at),
+});
+
+export const buildReportsFromEvents = (unsafeEvents: KindiLearningEventRow[]): Omit<KindiLearningReports, 'isAdmin'> => {
+  const events = unsafeEvents
+    .filter((event) => KNOWN_EVENT_TYPES.has(event.event_type))
+    .map(normalizeReportEvent);
   const confirmationDecisions = events.filter((event) =>
     event.event_type === 'confirmation_confirmed' || event.event_type === 'confirmation_cancelled'
   ).length;
   const confirmedEvents = events.filter((event) => event.event_type === 'confirmation_confirmed');
   const confirmedAiSuccesses = confirmedEvents.filter((event) => event.result_kind === 'ai_success').length;
+  const answerFeedbackEvents = events.filter((event) =>
+    event.event_type === 'answer_feedback_helpful' || event.event_type === 'answer_feedback_unhelpful'
+  );
 
   const failures = new Map<string, KindiFailureSummary>();
   const fallbacks = new Map<string, KindiFallbackSummary & { confidenceValues: number[] }>();
   const ambiguousNames = new Map<string, KindiAmbiguousNamesSummary & { candidateValues: number[] }>();
   const redactedQueries = new Map<string, KindiRedactedQuerySummary>();
   const interactionEvents = new Map<string, KindiLearningEventRow[]>();
+  const answerFeedback = new Map<string, KindiAnswerFeedbackSummary>();
 
   events.forEach((event) => {
     if (event.interaction_id) {
@@ -183,8 +325,7 @@ const buildReportsFromEvents = (events: KindiLearningEventRow[]): Omit<KindiLear
     }
 
     if (event.event_type === 'disambiguation_shown') {
-      const promptName = typeof event.metadata.promptName === 'string' ? event.metadata.promptName : 'unknown';
-      const pattern = event.redacted_query ?? promptName;
+      const pattern = event.redacted_query ?? 'unknown';
       const current = ambiguousNames.get(pattern) ?? {
         redacted_pattern: pattern,
         event_count: 0,
@@ -209,6 +350,27 @@ const buildReportsFromEvents = (events: KindiLearningEventRow[]): Omit<KindiLear
       current.event_count += 1;
       current.last_seen_at = event.created_at > (current.last_seen_at ?? '') ? event.created_at : current.last_seen_at;
       redactedQueries.set(event.redacted_query, current);
+    }
+
+    if (event.event_type === 'answer_feedback_helpful' || event.event_type === 'answer_feedback_unhelpful') {
+      const { answerSource, answerKind, topicId } = getAnswerFeedbackIdentity(event.metadata);
+      const key = `${answerSource}|${answerKind}|${topicId ?? ''}`;
+      const current = answerFeedback.get(key) ?? {
+        answer_source: answerSource,
+        answer_kind: answerKind,
+        topic_id: topicId,
+        helpful_count: 0,
+        unhelpful_count: 0,
+        total_count: 0,
+        helpful_rate: 0,
+        last_seen_at: null,
+      };
+      if (event.event_type === 'answer_feedback_helpful') current.helpful_count += 1;
+      if (event.event_type === 'answer_feedback_unhelpful') current.unhelpful_count += 1;
+      current.total_count += 1;
+      current.helpful_rate = current.helpful_count / current.total_count;
+      current.last_seen_at = event.created_at > (current.last_seen_at ?? '') ? event.created_at : current.last_seen_at;
+      answerFeedback.set(key, current);
     }
   });
 
@@ -287,6 +449,10 @@ const buildReportsFromEvents = (events: KindiLearningEventRow[]): Omit<KindiLear
       cancellations: events.filter((event) => event.event_type === 'confirmation_cancelled').length,
       confirmed_ai_successes: confirmedAiSuccesses,
       local_improvement_opportunities: opportunityEvents.length,
+      answer_feedback_total: answerFeedbackEvents.length,
+      answer_helpful_rate: answerFeedbackEvents.length === 0
+        ? 0
+        : answerFeedbackEvents.filter((event) => event.event_type === 'answer_feedback_helpful').length / answerFeedbackEvents.length,
       cancellation_rate: confirmationDecisions === 0
         ? 0
         : events.filter((event) => event.event_type === 'confirmation_cancelled').length / confirmationDecisions,
@@ -332,7 +498,16 @@ const buildReportsFromEvents = (events: KindiLearningEventRow[]): Omit<KindiLear
       avg_ai_confidence: row.avg_ai_confidence,
       last_seen_at: row.last_seen_at,
     })).slice(0, 20),
-    recentEvents: events.slice(0, 100),
+    answerFeedback: Array.from(answerFeedback.values())
+      .sort((a, b) => {
+        if (b.total_count !== a.total_count) return b.total_count - a.total_count;
+        return (Date.parse(b.last_seen_at ?? '') || 0) - (Date.parse(a.last_seen_at ?? '') || 0);
+      })
+      .slice(0, 20),
+    recentEvents: events.slice(0, 100).map((event) => ({
+      ...event,
+      interaction_id: null,
+    })),
   };
 };
 
@@ -364,6 +539,7 @@ export const fetchKindiLearningReports = async (
       ambiguousNames: [],
       redactedQueries: [],
       localOpportunities: [],
+      answerFeedback: [],
       recentEvents: [],
     };
   }

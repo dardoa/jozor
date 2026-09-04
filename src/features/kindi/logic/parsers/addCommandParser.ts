@@ -22,6 +22,7 @@ const stripRelationWords = (value: string): string => value
   .replace(new RegExp(`^(?:${ADD_VERBS.map(escapeRegExp).join('|')})\\s+`, 'iu'), ' ')
   .replace(/\b(?:as|as a)\b/giu, ' ')
   .replace(new RegExp(`\\s*(?:${RELATION_TERMS.flatMap((term) => term.terms).map(escapeRegExp).join('|')})\\s*`, 'giu'), ' ')
+  .replace(/\b(?:a|an|the)\b/giu, ' ')
   .replace(/\s+/g, ' ')
   .trim();
 
@@ -80,10 +81,16 @@ export const extractNameFromQuery = (query: string): KindiAddPlan['name'] => {
 
   const withoutAttributes = stripAddAttributeClauses(beforeTarget);
   const hasExplicitTarget = beforeTarget !== query;
-  const stripped = hasExplicitTarget
+  const containsEnglishRelationshipTerm = RELATION_TERMS.some((term) =>
+    term.terms.some((relationTerm) =>
+      /^[a-z][a-z\\s-]*$/i.test(relationTerm)
+      && new RegExp(`(?:^|\\s)${escapeRegExp(relationTerm)}(?:\\s|$)`, 'iu').test(withoutAttributes)
+    )
+  );
+  const stripped = hasExplicitTarget || containsEnglishRelationshipTerm
     ? stripRelationWords(withoutAttributes)
     : stripAddVerbPrefix(withoutAttributes);
-  const normalizedStripped = hasExplicitTarget
+  const normalizedStripped = hasExplicitTarget || containsEnglishRelationshipTerm
     ? stripKnownCommandTerms(stripped)
     : stripped;
   return parseKindiProvidedName(normalizedStripped);

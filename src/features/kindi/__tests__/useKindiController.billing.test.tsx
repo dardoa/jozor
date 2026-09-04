@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Person } from '../../../types';
 import type { SearchResult } from '../../../services/searchService';
 import { searchService } from '../../../services/searchService';
-import { KINDI_STRINGS } from '../logic/kindiLocales';
+import { getKindiStrings } from '../logic/kindiLocales';
 import { useKindiController } from '../hooks/useKindiController';
 
 const treeActionMocks = vi.hoisted(() => ({
@@ -17,6 +17,7 @@ const treeActionMocks = vi.hoisted(() => ({
 
 const appState = vi.hoisted(() => ({
   currentUserRole: 'owner',
+  currentTreeId: null as string | null,
   focusId: 'p1',
   setSearchTarget: vi.fn(),
   triggerPulse: vi.fn(),
@@ -70,7 +71,7 @@ vi.mock('../services/kindiLearningService', () => ({
 // Mock the AI service
 const mockRequestKindiClassification = vi.hoisted(() => vi.fn());
 vi.mock('../services/kindiAIService', () => ({
-  requestKindiClassification: mockRequestKindiClassification,
+  requestKindiClassificationWithUsage: mockRequestKindiClassification,
 }));
 
 const person = (id: string, firstName: string): Person => ({
@@ -150,6 +151,7 @@ describe('useKindiController billing and quota gating', () => {
     dispatchEventSpy = vi.spyOn(window, 'dispatchEvent');
 
     appState.currentUserRole = 'owner';
+    appState.currentTreeId = null;
     appState.focusId = 'p1';
     appState.people = {};
     appState.setSearchTarget.mockReset();
@@ -179,7 +181,7 @@ describe('useKindiController billing and quota gating', () => {
     await submitAndFlush(result, 'totally unrelated dialect query');
 
     const last = result.current.messages.at(-1);
-    expect(last?.text).toBe(KINDI_STRINGS.billing.freePaywall.ar);
+    expect(last?.text).toBe(getKindiStrings('ar').billing.freePaywall);
     
     // Assert event was dispatched
     expect(dispatchEventSpy).toHaveBeenCalled();
@@ -190,13 +192,16 @@ describe('useKindiController billing and quota gating', () => {
     expect(mockRequestKindiClassification).not.toHaveBeenCalled();
   });
 
-  it('intercepts LLM queries for Pro tier when quota is exhausted', async () => {
+  it('uses the authoritative server rejection when Pro quota is exhausted', async () => {
     appState.subscriptionTier = 'pro';
     appState.aiCloudQuotaRemaining = 0;
     appState.language = 'en';
 
     const weak = person('p1', 'Lina');
     vi.mocked(searchService.search).mockResolvedValue([searchResult(weak, 'low', 0.41)]);
+    mockRequestKindiClassification.mockRejectedValueOnce({
+      code: 'AI_USAGE_LIMIT_EXCEEDED',
+    });
 
     const { result } = renderHook(() => useKindiController({
       people: { [weak.id]: weak },
@@ -206,15 +211,16 @@ describe('useKindiController billing and quota gating', () => {
     await submitAndFlush(result, 'totally unrelated dialect query');
 
     const last = result.current.messages.at(-1);
-    expect(last?.text).toBe(KINDI_STRINGS.billing.quotaExhausted.en);
+    expect(last?.text).toBe(getKindiStrings('en').billing.quotaExhausted);
     expect(dispatchEventSpy).toHaveBeenCalled();
     expect(dispatchEventSpy.mock.calls[0][0].type).toBe('open-paywall');
-    expect(mockRequestKindiClassification).not.toHaveBeenCalled();
+    expect(mockRequestKindiClassification).toHaveBeenCalledOnce();
+    expect(appState.setAiCloudQuotaRemaining).toHaveBeenCalledWith(0);
   });
 
-  it('allows Pro tier to query LLM when quota is remaining, and decrements quota on successful plan', async () => {
+  it('accepts authoritative Pro usage from a successful server response', async () => {
     appState.subscriptionTier = 'pro';
-    appState.aiCloudQuotaRemaining = 15;
+    appState.aiCloudQuotaRemaining = 0;
     appState.language = 'ar';
 
     const weak = person('p1', 'Lina');
@@ -222,8 +228,15 @@ describe('useKindiController billing and quota gating', () => {
     
     // Mock the classification response
     mockRequestKindiClassification.mockResolvedValueOnce({
-      category: 'GREETING',
-      confidence: 0.95,
+      classification: {
+        category: 'FAMILY_QUERY',
+        confidence: 0.95,
+      },
+      usage: {
+        used: 16,
+        limit: 30,
+        resetAt: '2026-10-01T00:00:00.000Z',
+      },
     });
 
     const { result } = renderHook(() => useKindiController({
@@ -237,8 +250,34 @@ describe('useKindiController billing and quota gating', () => {
     expect(appState.setAiCloudQuotaRemaining).toHaveBeenCalledWith(14);
     
     const last = result.current.messages.at(-1);
-    // Should proceed to greeting answer
-    expect(last?.text).toMatch(/مرحبا|أهلاً|يا أهلاً|تحية طيبة/);
+    expect(last?.text).toBe(getKindiStrings('ar').support.familyQuery);
+    expect(last?.answerMeta).toMatchObject({
+      source: 'cloud-assisted',
+      kind: 'relationship',
+      feedbackEnabled: true,
+    });
+  });
+
+  it('shows a localized safe state when cloud understanding is unavailable', async () => {
+    appState.subscriptionTier = 'pro';
+    appState.aiCloudQuotaRemaining = 10;
+    appState.language = 'en';
+
+    const weak = person('p1', 'Lina');
+    vi.mocked(searchService.search).mockResolvedValue([searchResult(weak, 'low', 0.41)]);
+    mockRequestKindiClassification.mockRejectedValueOnce(new TypeError('private upstream failure'));
+
+    const { result } = renderHook(() => useKindiController({
+      people: { [weak.id]: weak },
+      onFocusPerson: vi.fn(),
+    }));
+
+    await submitAndFlush(result, 'totally unrelated dialect query');
+
+    expect(result.current.messages.at(-1)?.text).toBe(getKindiStrings('en').cloud.unavailable);
+    expect(result.current.messages.at(-1)?.text).not.toContain('private upstream failure');
+    expect(appState.setAiCloudQuotaRemaining).not.toHaveBeenCalled();
+    expect(dispatchEventSpy).not.toHaveBeenCalledWith(expect.objectContaining({ type: 'open-paywall' }));
   });
 
   it('bypasses limits for Family tier and does not decrement quota', async () => {
@@ -249,8 +288,10 @@ describe('useKindiController billing and quota gating', () => {
     vi.mocked(searchService.search).mockResolvedValue([searchResult(weak, 'low', 0.41)]);
 
     mockRequestKindiClassification.mockResolvedValueOnce({
-      category: 'GREETING',
-      confidence: 0.95,
+      classification: {
+        category: 'GREETING',
+        confidence: 0.95,
+      },
     });
 
     const { result } = renderHook(() => useKindiController({

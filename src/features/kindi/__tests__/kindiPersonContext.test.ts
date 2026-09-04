@@ -49,6 +49,17 @@ describe('getKindiPersonContextLabel', () => {
       .toBe('ابن Mahmoud Alqarji');
   });
 
+  it('describes relationship context in English when requested', () => {
+    const father = person('father', 'Mahmoud');
+    const child = person('child', 'Lina', { gender: 'female', parents: [father.id] });
+
+    expect(getKindiPersonContextLabel(
+      child,
+      { [father.id]: father, [child.id]: child },
+      'en'
+    )).toBe('Daughter of Mahmoud Alqarji');
+  });
+
   it('falls back to spouse context', () => {
     const spouse = person('spouse', 'Noura', { gender: 'female' });
     const husband = person('husband', 'Sami', { spouses: [spouse.id] });

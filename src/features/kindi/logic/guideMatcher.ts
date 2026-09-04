@@ -1,5 +1,6 @@
 import { normalizeKindiCommandText } from './kindiCommandLexicon';
-import { KINDI_APP_GUIDE_TOPICS, type KindiGuideTopic } from './kindiAppGuide';
+import type { Language } from '../../../types/common';
+import { getKindiAppGuideTopics, type KindiGuideTopic } from './kindiAppGuide';
 
 export interface KindiGuideMatch {
   topic: KindiGuideTopic;
@@ -19,7 +20,8 @@ const normalizedKeywords = (topic: KindiGuideTopic): string[] =>
 
 export const matchKindiGuideTopic = (
   query: string,
-  topics: readonly KindiGuideTopic[] = KINDI_APP_GUIDE_TOPICS
+  language: Language = 'ar',
+  topics: readonly KindiGuideTopic[] = getKindiAppGuideTopics(language)
 ): KindiGuideMatch | null => {
   const normalizedQuery = normalizeKindiCommandText(query);
   const queryTokens = new Set(tokenize(query));
@@ -49,6 +51,6 @@ export const matchKindiGuideTopic = (
   return bestMatch;
 };
 
-export const getKindiGuideAnswer = (query: string): string | undefined =>
-  matchKindiGuideTopic(query)?.topic.answer;
+export const getKindiGuideAnswer = (query: string, language: Language = 'ar'): string | undefined =>
+  matchKindiGuideTopic(query, language)?.topic.answer;
 

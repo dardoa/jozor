@@ -1,13 +1,15 @@
 import { useCallback } from 'react';
 
 import type { Person } from '../../../types/person';
+import type { Language } from '../../../types/common';
 import {
   createKindiExecutivePlan,
   extractKindiSubjectText,
   extractKindiTargetText,
   resolveKindiCommandTarget,
 } from '../logic/kindiExecutivePlanner';
-import { KINDI_STRINGS } from '../logic/kindiLocales';
+import { isKindiContextTargetReference } from '../logic/parsers/targetResolver';
+import { getKindiStrings } from '../logic/kindiLocales';
 import type {
   KindiAddPlan,
   KindiConfirmation,
@@ -64,44 +66,51 @@ interface PlanDisambiguationArgs {
   peopleList: Person[];
 }
 
-export const getKindiRelationLabel = (plan: Extract<KindiExecutivePlan, { type: 'ADD' }>) => {
-  return KINDI_STRINGS.relationLabel(plan);
+export const getKindiRelationLabel = (
+  plan: Extract<KindiExecutivePlan, { type: 'ADD' }>,
+  language: Language = 'ar'
+) => {
+  return getKindiStrings(language).relationLabel(plan);
 };
 
 export const createKindiConfirmation = (
   routed: KindiRoutedIntent,
   plan: KindiExecutivePlan,
-  relatedPeople: Person[]
+  relatedPeople: Person[],
+  language: Language = 'ar'
 ): KindiConfirmation => ({
   id: createKindiMessageId(),
   kind: routed.kind === 'DELETE' ? 'DELETE' : routed.kind === 'UPDATE' ? 'UPDATE' : 'ACTION',
-  title: KINDI_STRINGS.confirmation.title(routed.kind),
+  title: getKindiStrings(language).confirmation.title(routed.kind),
   description:
     plan.type === 'ADD'
-      ? KINDI_STRINGS.confirmation.addDescription(
+      ? getKindiStrings(language).confirmation.addDescription(
         plan.name?.firstName,
-        getKindiRelationLabel(plan),
+        getKindiRelationLabel(plan, language),
         plan.targetPersonName
       )
       : plan.type === 'DELETE'
-        ? KINDI_STRINGS.confirmation.deleteDescription
-        : KINDI_STRINGS.confirmation.updateDescription,
-  confirmLabel: KINDI_STRINGS.confirmation.confirmLabel(routed.kind),
-  cancelLabel: KINDI_STRINGS.confirmation.cancelLabel,
+        ? getKindiStrings(language).confirmation.deleteDescription
+        : getKindiStrings(language).confirmation.updateDescription,
+  confirmLabel: getKindiStrings(language).confirmation.confirmLabel(routed.kind),
+  cancelLabel: getKindiStrings(language).confirmation.cancelLabel,
   status: 'pending',
   relatedPeople,
   plan,
 });
 
-const getNoPlanText = (routed: KindiRoutedIntent): string => KINDI_STRINGS.planning.noPlan(routed);
+const getNoPlanText = (routed: KindiRoutedIntent, language: Language): string =>
+  getKindiStrings(language).planning.noPlan(routed);
 
 const buildPlanningSuccess = (
   routed: KindiRoutedIntent,
   query: string | undefined,
   plan: KindiExecutivePlan,
   peopleList: Person[],
-  resultPeople: Person[]
+  resultPeople: Person[],
+  language: Language
 ): KindiCommandPlanningResult => {
+  const strings = getKindiStrings(language);
   const selectedPerson = plan.type === 'ADD'
     ? peopleList.find((person) => person.id === plan.targetPersonId)
     : peopleList.find((person) => person.id === plan.personId);
@@ -122,15 +131,16 @@ const buildPlanningSuccess = (
     kind: 'confirmation',
     selectedPersonId: selectedPerson?.id,
     text: query
-      ? KINDI_STRINGS.planning.confirmationPrepared(routed.summary, query)
-      : KINDI_STRINGS.planning.finalConfirmationPrepared,
+      ? strings.planning.confirmationPrepared(routed.summary)
+      : strings.planning.finalConfirmationPrepared,
     people: confirmationPeople,
     visiblePeopleCount: Math.min(confirmationPeople.length, 12),
-    confirmation: createKindiConfirmation(routed, plan, confirmationPeople),
+    confirmation: createKindiConfirmation(routed, plan, confirmationPeople, language),
   };
 };
 
-export const useKindiCommandPlanningFlow = () => {
+export const useKindiCommandPlanningFlow = (language: Language = 'ar') => {
+  const strings = getKindiStrings(language);
   const planCommand = useCallback(({
     routed,
     query,
@@ -144,15 +154,20 @@ export const useKindiCommandPlanningFlow = () => {
         ? extractKindiSubjectText(routed.query)
         : undefined;
     const fallbackFocusId = lastContextPersonId || focusId;
-    const resultPeople: Person[] = [];
+    const contextualTarget = isKindiContextTargetReference(commandTargetText)
+      ? peopleList.find((person) => person.id === fallbackFocusId)
+      : undefined;
+    const resultPeople: Person[] = contextualTarget ? [contextualTarget] : [];
 
     if (routed.kind === 'ACTION') {
-      const targetResolution = resolveKindiCommandTarget(commandTargetText, peopleList);
+      const targetResolution = contextualTarget
+        ? { status: 'exact' as const, candidates: [contextualTarget] as [Person] }
+        : resolveKindiCommandTarget(commandTargetText, peopleList);
       if (targetResolution.status === 'not_found') {
         return {
           kind: 'not_found',
           target: commandTargetText,
-          text: KINDI_STRINGS.planning.targetNotFound(commandTargetText),
+          text: strings.planning.targetNotFound(commandTargetText),
         };
       }
 
@@ -166,14 +181,16 @@ export const useKindiCommandPlanningFlow = () => {
         };
       }
     } else {
-      const subjectResolution = resolveKindiCommandTarget(commandTargetText, peopleList);
+      const subjectResolution = contextualTarget
+        ? { status: 'exact' as const, candidates: [contextualTarget] as [Person] }
+        : resolveKindiCommandTarget(commandTargetText, peopleList);
       if (subjectResolution.status === 'not_found') {
         return {
           kind: 'not_found',
           target: commandTargetText,
-          text: KINDI_STRINGS.planning.subjectNotFound(
+          text: strings.planning.subjectNotFound(
             commandTargetText,
-            KINDI_STRINGS.planning.actionLabel(routed.kind)
+            strings.planning.actionLabel(routed.kind)
           ),
         };
       }
@@ -184,22 +201,25 @@ export const useKindiCommandPlanningFlow = () => {
           candidates: subjectResolution.candidates,
           resultPeople: subjectResolution.candidates,
           fallbackFocusId,
-          promptName: commandTargetText || KINDI_STRINGS.disambiguation.defaultPromptName,
+          promptName: commandTargetText || strings.disambiguation.defaultPromptName,
         };
       }
     }
 
-    const plan = createKindiExecutivePlan(routed, resultPeople, fallbackFocusId, { allPeople: peopleList });
+    const plan = createKindiExecutivePlan(routed, resultPeople, fallbackFocusId, {
+      allPeople: peopleList,
+      selectedTarget: contextualTarget,
+    });
     if (!plan) {
       return {
         kind: 'no_plan',
-        text: getNoPlanText(routed),
+        text: getNoPlanText(routed, language),
         people: resultPeople,
       };
     }
 
-    return buildPlanningSuccess(routed, query, plan, peopleList, resultPeople);
-  }, []);
+    return buildPlanningSuccess(routed, query, plan, peopleList, resultPeople, language);
+  }, [language, strings.disambiguation.defaultPromptName, strings.planning]);
 
   const planDisambiguation = useCallback(({
     disambiguation,
@@ -216,7 +236,7 @@ export const useKindiCommandPlanningFlow = () => {
     if (!plan) {
       return {
         kind: 'no_plan',
-        text: KINDI_STRINGS.disambiguation.noPlan,
+        text: strings.disambiguation.noPlan,
         people: [],
       };
     }
@@ -226,9 +246,10 @@ export const useKindiCommandPlanningFlow = () => {
       undefined,
       plan,
       peopleList,
-      disambiguation.resultPeople
+      disambiguation.resultPeople,
+      language
     );
-  }, []);
+  }, [language, strings.disambiguation.noPlan]);
 
   return {
     planCommand,

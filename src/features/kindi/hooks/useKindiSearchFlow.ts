@@ -1,7 +1,8 @@
 import { useCallback } from 'react';
 
 import { searchService, type SearchResult } from '../../../services/searchService';
-import { KINDI_STRINGS } from '../logic/kindiLocales';
+import type { Language } from '../../../types/common';
+import { getKindiStrings } from '../logic/kindiLocales';
 import type { KindiPersonResult } from '../types';
 import {
   KINDI_LEARNING_FAILURE_REASONS,
@@ -30,19 +31,57 @@ type KindiSearchFlowResult =
 
 const KINDI_FAILURE_LOG_KEY = 'jozor:kindi:failure-log';
 const SEARCH_THINKING_DELAY_MS = 250;
+const SAFE_FAILURE_METADATA_KEYS = new Set([
+  'bestFuseScore',
+  'bestScore',
+  'lowConfidenceCount',
+  'route',
+]);
 
 const sleep = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
 
+const sanitizeFailureMetadata = (
+  metadata: Record<string, unknown> | undefined
+): Record<string, string | number | boolean | null> => Object.fromEntries(
+  Object.entries(metadata ?? {})
+    .filter(([key]) => SAFE_FAILURE_METADATA_KEYS.has(key))
+    .filter(([, value]) =>
+      value === null
+      || typeof value === 'string'
+      || typeof value === 'number'
+      || typeof value === 'boolean'
+    )
+) as Record<string, string | number | boolean | null>;
+
+const sanitizeStoredFailureEntry = (value: unknown) => {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const record = value as Record<string, unknown>;
+  if (typeof record.reason !== 'string' || typeof record.timestamp !== 'string') return null;
+
+  return {
+    reason: record.reason,
+    redactedQuery: typeof record.redactedQuery === 'string' && /\[NAME_\d+\]/.test(record.redactedQuery)
+      ? record.redactedQuery
+      : undefined,
+    metadata: sanitizeFailureMetadata(
+      record.metadata && typeof record.metadata === 'object' && !Array.isArray(record.metadata)
+        ? record.metadata as Record<string, unknown>
+        : undefined
+    ),
+    timestamp: record.timestamp,
+  };
+};
+
 const logKindiFailure = (
   reason: KindiFailureReason,
-  query: string,
+  _query: string,
   metadata?: Record<string, unknown>,
   context?: KindiFailureLogContext
 ) => {
   const entry = {
     reason,
-    query,
-    metadata,
+    redactedQuery: context?.redactedQuery,
+    metadata: sanitizeFailureMetadata(metadata),
     timestamp: new Date().toISOString(),
   };
 
@@ -52,7 +91,9 @@ const logKindiFailure = (
 
   try {
     const previous = JSON.parse(window.sessionStorage.getItem(KINDI_FAILURE_LOG_KEY) || '[]');
-    const entries = Array.isArray(previous) ? previous : [];
+    const entries = Array.isArray(previous)
+      ? previous.map(sanitizeStoredFailureEntry).filter(Boolean)
+      : [];
     window.sessionStorage.setItem(
       KINDI_FAILURE_LOG_KEY,
       JSON.stringify([...entries.slice(-49), entry])
@@ -101,30 +142,37 @@ const toKindiPersonResults = (
   score: result.score,
 }));
 
-const buildReliableSearchResult = (results: SearchResult[]): KindiSearchFlowResult => {
+const buildReliableSearchResult = (
+  results: SearchResult[],
+  language: Language
+): KindiSearchFlowResult => {
   const peopleResults = toKindiPersonResults(results, 'strong');
   const visiblePeopleCount = Math.min(peopleResults.length, 12);
 
   return {
     kind: 'reliable',
-    text: KINDI_STRINGS.search.reliable(peopleResults.length, visiblePeopleCount),
+    text: getKindiStrings(language).search.reliable(peopleResults.length, visiblePeopleCount),
     peopleResults,
     visiblePeopleCount,
   };
 };
 
-const buildNearbySearchResult = (results: SearchResult[]): KindiSearchFlowResult => {
+const buildNearbySearchResult = (
+  results: SearchResult[],
+  language: Language
+): KindiSearchFlowResult => {
   const peopleResults = toKindiPersonResults(results, 'medium');
 
   return {
     kind: 'nearby',
-    text: KINDI_STRINGS.search.nearby,
+    text: getKindiStrings(language).search.nearby,
     peopleResults,
     visiblePeopleCount: Math.min(peopleResults.length, 12),
   };
 };
 
-export const useKindiSearchFlow = () => {
+export const useKindiSearchFlow = (language: Language = 'ar') => {
+  const strings = getKindiStrings(language);
   const runSearchFlow = useCallback(async (
     query: string,
     context?: KindiFailureLogContext
@@ -139,16 +187,16 @@ export const useKindiSearchFlow = () => {
       logKindiFailure(KINDI_LEARNING_FAILURE_REASONS.LOCAL_SEARCH_FAILED, query, { route: 'QUERY' }, context);
       return {
         kind: 'not_found',
-        text: KINDI_STRINGS.search.notFound,
+        text: strings.search.notFound,
       };
     }
 
     if (confidence.reliable.length > 0) {
-      return buildReliableSearchResult(confidence.reliable);
+      return buildReliableSearchResult(confidence.reliable, language);
     }
 
     if (confidence.nearby.length > 0) {
-      return buildNearbySearchResult(confidence.nearby);
+      return buildNearbySearchResult(confidence.nearby, language);
     }
 
     logKindiFailure(KINDI_LEARNING_FAILURE_REASONS.AI_LOW_CONFIDENCE, query, {
@@ -159,9 +207,9 @@ export const useKindiSearchFlow = () => {
 
     return {
       kind: 'low_confidence',
-      text: KINDI_STRINGS.search.lowConfidence,
+      text: strings.search.lowConfidence,
     };
-  }, []);
+  }, [language, strings.search.lowConfidence, strings.search.notFound]);
 
   return {
     runSearchFlow,

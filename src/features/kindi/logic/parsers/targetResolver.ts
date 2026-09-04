@@ -7,6 +7,23 @@ export type KindiTargetResolution =
   | { status: 'ambiguous'; candidates: Person[] }
   | { status: 'not_found'; candidates: Person[] };
 
+const CONTEXT_TARGET_REFERENCES = new Set([
+  'this person',
+  'the selected person',
+  'selected person',
+  'the focused person',
+  'focused person',
+  'هذا الشخص',
+  'هذه الشخص',
+  'الشخص المحدد',
+  'الشخص المحدده',
+  'المحدد',
+  'المحدده',
+].map((reference) => normalizeKindiText(reference)));
+
+export const isKindiContextTargetReference = (targetText: string | undefined): boolean =>
+  Boolean(targetText && CONTEXT_TARGET_REFERENCES.has(normalizeKindiText(targetText)));
+
 const getKindiFullName = (person: Person): string => {
   const extended = person as Person & { fatherName?: string; familyName?: string };
   return [

@@ -3,6 +3,24 @@ import { authTokenService } from './authTokenService';
 
 const AI_PROXY_API = '/api/ai-proxy';
 
+export class AIProxyClientError extends Error {
+  constructor(
+    message: string,
+    readonly code: string,
+    readonly status: number,
+    readonly retryAfterSeconds?: number,
+    readonly resetAt?: string,
+  ) {
+    super(message);
+    this.name = 'AIProxyClientError';
+  }
+}
+
+const asRecord = (value: unknown): Record<string, unknown> | undefined =>
+  value && typeof value === 'object' && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : undefined;
+
 async function getProxyAuthToken(): Promise<string | null> {
   return authTokenService.getPreferredSupabaseToken();
 }
@@ -24,13 +42,22 @@ export async function callAIProxy(request: AIProxyRequest): Promise<AIProxyRespo
 
   if (!response.ok) {
     let message = 'AI request failed.';
+    let code = 'AI_REQUEST_FAILED';
+    let retryAfterSeconds: number | undefined;
+    let resetAt: string | undefined;
     try {
-      const err = await response.json();
-      message = err?.error?.message || err?.error || message;
+      const payload = asRecord(await response.json());
+      const error = asRecord(payload?.error);
+      if (typeof error?.message === 'string') message = error.message;
+      if (typeof error?.code === 'string') code = error.code;
+      if (typeof error?.retryAfterSeconds === 'number' && Number.isFinite(error.retryAfterSeconds)) {
+        retryAfterSeconds = error.retryAfterSeconds;
+      }
+      if (typeof error?.resetAt === 'string') resetAt = error.resetAt;
     } catch {
       // Ignore JSON parse errors from the proxy.
     }
-    throw new Error(message);
+    throw new AIProxyClientError(message, code, response.status, retryAfterSeconds, resetAt);
   }
 
   return await response.json() as AIProxyResponse;

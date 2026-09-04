@@ -125,7 +125,25 @@ describe('useKindiSearchFlow', () => {
     const log = JSON.parse(window.sessionStorage.getItem('jozor:kindi:failure-log') || '[]');
     expect(log[0]).toMatchObject({
       reason: 'AI_LOW_CONFIDENCE',
-      query: 'unrelated',
     });
+    expect(log[0]).not.toHaveProperty('query');
+  });
+
+  it('removes legacy raw queries when updating the local diagnostic log', async () => {
+    window.sessionStorage.setItem('jozor:kindi:failure-log', JSON.stringify([{
+      reason: 'LOCAL_SEARCH_FAILED',
+      query: 'legacy private person name',
+      metadata: { target: 'legacy private person name', route: 'QUERY' },
+      timestamp: '2026-01-01T00:00:00.000Z',
+    }]));
+    vi.mocked(searchService.search).mockResolvedValue([]);
+    const { result } = renderHook(() => useKindiSearchFlow());
+
+    await runFlow(result, 'another private query');
+
+    const log = JSON.parse(window.sessionStorage.getItem('jozor:kindi:failure-log') || '[]');
+    expect(log).toHaveLength(2);
+    expect(log.every((entry: Record<string, unknown>) => !('query' in entry))).toBe(true);
+    expect(JSON.stringify(log)).not.toContain('legacy private person name');
   });
 });

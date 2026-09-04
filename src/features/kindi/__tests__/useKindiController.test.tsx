@@ -17,10 +17,17 @@ const treeActionMocks = vi.hoisted(() => ({
 
 const appState = vi.hoisted(() => ({
   currentUserRole: 'owner',
+  currentTreeId: null as string | null,
   focusId: 'p1',
+  language: 'ar' as 'ar' | 'en',
   setSearchTarget: vi.fn(),
   triggerPulse: vi.fn(),
   people: {} as Record<string, Person>,
+  peopleVersion: 1,
+  past: [] as Record<string, Person>[],
+  future: [] as Record<string, Person>[],
+  isHistoryStale: false,
+  undo: vi.fn(() => ({ success: true } as { success: boolean; blockedReason?: 'stale_history' })),
 }));
 
 const logKindiSuccessMock = vi.hoisted(() => vi.fn());
@@ -139,8 +146,16 @@ describe('useKindiController confidence handling', () => {
     treeActionMocks.updatePerson.mockResolvedValue({ success: true });
     treeActionMocks.deletePerson.mockResolvedValue({ success: true });
     appState.currentUserRole = 'owner';
+    appState.currentTreeId = null;
     appState.focusId = 'p1';
+    appState.language = 'ar';
     appState.people = {};
+    appState.peopleVersion = 1;
+    appState.past = [];
+    appState.future = [];
+    appState.isHistoryStale = false;
+    appState.undo.mockReset();
+    appState.undo.mockReturnValue({ success: true });
     appState.setSearchTarget.mockReset();
     appState.triggerPulse.mockReset();
   });
@@ -168,7 +183,53 @@ describe('useKindiController confidence handling', () => {
       matchLevel: 'strong',
       score: 95,
     }]);
+    expect(last?.answerMeta).toMatchObject({
+      source: 'local-tree',
+      kind: 'search',
+      feedbackEnabled: true,
+    });
     expect(window.sessionStorage.getItem('jozor:kindi:failure-log')).toBeNull();
+  });
+
+  it('starts a clean conversation while keeping the currently focused person as context', async () => {
+    const lina = person('p1', 'Lina');
+    vi.mocked(searchService.search).mockResolvedValue([searchResult(lina, 'exact')]);
+    const { result } = renderHook(() => useKindiController({
+      people: { [lina.id]: lina },
+      onFocusPerson: vi.fn(),
+    }));
+
+    await submitAndFlush(result, 'Lina');
+    act(() => {
+      result.current.setDraft('unused draft');
+      result.current.startNewConversation();
+    });
+
+    expect(result.current.messages).toHaveLength(1);
+    expect(result.current.messages[0].id).toBe('kindi:welcome');
+    expect(result.current.draft).toBe('');
+    expect(result.current.currentContextPerson?.id).toBe(lina.id);
+  });
+
+  it('resolves a selected-person command against the current context before asking for the new name', async () => {
+    const parent = person('p1', 'ليلى');
+    appState.focusId = parent.id;
+    const { result } = renderHook(() => useKindiController({
+      people: { [parent.id]: parent },
+      onFocusPerson: vi.fn(),
+    }));
+
+    await submitAndFlush(result, 'أضف ابن لهذا الشخص');
+    expect(result.current.messages.at(-1)?.text).toContain('ما اسم');
+    expect(result.current.messages.at(-1)?.confirmation).toBeUndefined();
+
+    await submitAndFlush(result, 'آدم');
+    expect(result.current.messages.at(-1)?.confirmation?.plan).toMatchObject({
+      type: 'ADD',
+      relation: 'child',
+      targetPersonId: parent.id,
+      name: { firstName: 'آدم' },
+    });
   });
 
   it('asks the user to choose when search confidence is medium', async () => {
@@ -208,8 +269,8 @@ describe('useKindiController confidence handling', () => {
     const log = JSON.parse(window.sessionStorage.getItem('jozor:kindi:failure-log') || '[]');
     expect(log[0]).toMatchObject({
       reason: 'AI_LOW_CONFIDENCE',
-      query: 'totally unrelated name',
     });
+    expect(log[0]).not.toHaveProperty('query');
   });
 
   it('logs unknown out-of-scope messages without invoking search', async () => {
@@ -224,8 +285,8 @@ describe('useKindiController confidence handling', () => {
     const log = JSON.parse(window.sessionStorage.getItem('jozor:kindi:failure-log') || '[]');
     expect(log[0]).toMatchObject({
       reason: 'PARSER_PATTERN_MISSING',
-      query: 'weather in Riyadh',
     });
+    expect(log[0]).not.toHaveProperty('query');
   });
 
   it('answers app help questions from the local guide without invoking search', async () => {
@@ -240,6 +301,169 @@ describe('useKindiController confidence handling', () => {
     const last = result.current.messages.at(-1);
     expect(last?.text).toContain('Google Drive');
     expect(last?.text).toContain('النسخ الاحتياطي');
+    expect(last?.answerMeta).toMatchObject({
+      source: 'help-center',
+      kind: 'guide',
+      topicId: 'cloud-backup',
+      feedbackEnabled: true,
+    });
+  });
+
+  it('drafts a biography locally from the current record without preparing or applying a change', async () => {
+    const ramadan = person('p1', 'رمضان');
+    ramadan.birthDate = '1895-03-02';
+    ramadan.birthPlace = 'المدينة المنورة';
+    ramadan.profession = 'معلّم';
+    ramadan.residence = 'مكة المكرمة';
+    ramadan.isDeceased = true;
+    ramadan.deathDate = '1983-08-01';
+    ramadan.email = 'private-biography@example.test';
+    ramadan.bio = 'bearer private-biography-token';
+    appState.focusId = ramadan.id;
+
+    const { result } = renderHook(() => useKindiController({
+      people: { [ramadan.id]: ramadan },
+      onFocusPerson: vi.fn(),
+    }));
+
+    await submitAndFlush(result, 'أنشئ مسودة سيرة لهذا الشخص');
+
+    expect(searchService.search).not.toHaveBeenCalled();
+    expect(Object.values(treeActionMocks).every((mock) => mock.mock.calls.length === 0)).toBe(true);
+    const last = result.current.messages.at(-1);
+    expect(last?.confirmation).toBeUndefined();
+    expect(last?.answerMeta).toMatchObject({
+      source: 'local-tree',
+      kind: 'biography',
+      feedbackEnabled: true,
+    });
+    expect(last?.biographyDraft).toMatchObject({
+      isSaved: false,
+      text: expect.stringContaining('رمضان Alqarji'),
+    });
+    expect(JSON.stringify(last?.biographyDraft)).not.toContain(ramadan.email);
+    expect(JSON.stringify(last?.biographyDraft)).not.toContain(ramadan.bio);
+  });
+
+  it('organizes a person record locally without search, cloud planning, or tree changes', async () => {
+    const ramadan = person('record-raw-id-sentinel', 'رمضان');
+    ramadan.birthDate = '1895';
+    ramadan.bio = 'ملاحظة عائلية موثقة';
+    ramadan.birthSource = 'private-storage-path';
+    ramadan.sources = [{
+      id: 'source-private-id',
+      title: 'سجل الأسرة',
+      url: 'https://private.supabase.co/source-private-id',
+      date: '1950',
+      type: 'دفتر',
+    }];
+    appState.focusId = ramadan.id;
+
+    const { result } = renderHook(() => useKindiController({
+      people: { [ramadan.id]: ramadan },
+      onFocusPerson: vi.fn(),
+    }));
+
+    await submitAndFlush(result, 'نظّم ملاحظات ومصادر هذا الشخص');
+
+    expect(searchService.search).not.toHaveBeenCalled();
+    expect(Object.values(treeActionMocks).every((mock) => mock.mock.calls.length === 0)).toBe(true);
+    const last = result.current.messages.at(-1);
+    expect(last?.confirmation).toBeUndefined();
+    expect(last?.answerMeta).toMatchObject({
+      source: 'local-tree',
+      kind: 'record-review',
+      feedbackEnabled: true,
+    });
+    expect(last?.recordReview).toMatchObject({
+      isSaved: false,
+      sourceSummary: {
+        recordedCount: 2,
+        displayedCount: 2,
+      },
+    });
+    expect(last?.recordReviewTargetPersonId).toBe(ramadan.id);
+    const serialized = JSON.stringify(last?.recordReview);
+    expect(serialized).toContain('ملاحظة عائلية موثقة');
+    expect(serialized).toContain('سجل الأسرة');
+    expect(serialized).not.toContain(ramadan.id);
+    expect(serialized).not.toContain('source-private-id');
+    expect(serialized).not.toContain('supabase.co');
+  });
+
+  it('records privacy-safe feedback once without storing the query or a person name', async () => {
+    const { result } = renderHook(() => useKindiController({
+      people: {},
+      onFocusPerson: vi.fn(),
+    }));
+
+    await submitAndFlush(result, 'كيف أعمل نسخة احتياطية للشجرة؟');
+    const answer = result.current.messages.at(-1)!;
+    logKindiLearningEventMock.mockClear();
+
+    await act(async () => {
+      result.current.rateKindiAnswer(answer.id, 'helpful');
+      result.current.rateKindiAnswer(answer.id, 'not-helpful');
+      await Promise.resolve();
+    });
+
+    expect(result.current.messages.find((message) => message.id === answer.id)?.answerMeta?.feedback)
+      .toBe('helpful');
+    expect(logKindiLearningEventMock).toHaveBeenCalledOnce();
+    expect(logKindiLearningEventMock).toHaveBeenCalledWith(expect.objectContaining({
+      eventType: 'answer_feedback_helpful',
+      routeKind: 'SUPPORT',
+      resultKind: 'guide',
+      parserStage: 'support_guide',
+      metadata: {
+        answerSource: 'help-center',
+        answerKind: 'guide',
+        topicId: 'cloud-backup',
+      },
+    }));
+    const loggedEvent = logKindiLearningEventMock.mock.calls[0][0];
+    expect(loggedEvent).not.toHaveProperty('redactedQuery');
+    expect(JSON.stringify(loggedEvent)).not.toContain('نسخة احتياطية');
+  });
+
+  it('answers in the interface language even when the question uses the other language', async () => {
+    appState.language = 'en';
+    const { result } = renderHook(() => useKindiController({
+      people: {},
+      onFocusPerson: vi.fn(),
+    }));
+
+    await submitAndFlush(result, 'كيف أعمل نسخة احتياطية للشجرة؟');
+
+    expect(searchService.search).not.toHaveBeenCalled();
+    expect(result.current.messages.at(-1)?.text).toContain('backup');
+    expect(result.current.messages.at(-1)?.text).not.toMatch(/[\u0600-\u06ff]/u);
+  });
+
+  it('treats how-to action wording as help and never prepares a confirmation', async () => {
+    const sami = person('p1', 'سامي');
+    const { result } = renderHook(() => useKindiController({
+      people: { [sami.id]: sami },
+      onFocusPerson: vi.fn(),
+    }));
+
+    await submitAndFlush(result, 'كيف أضيف شخصا؟');
+
+    expect(searchService.search).not.toHaveBeenCalled();
+    expect(result.current.messages.at(-1)?.text).toContain('لإضافة قريب');
+    expect(result.current.messages.some((message) => message.confirmation)).toBe(false);
+  });
+
+  it('answers capability discovery without invoking search or AI planning', async () => {
+    const { result } = renderHook(() => useKindiController({
+      people: {},
+      onFocusPerson: vi.fn(),
+    }));
+
+    await submitAndFlush(result, 'ماذا تستطيع أن تفعل؟');
+
+    expect(searchService.search).not.toHaveBeenCalled();
+    expect(result.current.messages.at(-1)?.text).toContain('البحث عن أفراد الشجرة');
   });
 
   it('blocks new input while a disambiguation card is pending', async () => {
@@ -415,6 +639,7 @@ describe('useKindiController confidence handling', () => {
 
   it('prepares and executes an update command through the official tree action', async () => {
     const lina = person('p1', 'Lina');
+    appState.language = 'en';
     appState.people = {
       [lina.id]: lina,
     };
@@ -437,6 +662,10 @@ describe('useKindiController confidence handling', () => {
 
     const confirmation = result.current.messages.at(-1)?.confirmation;
     expect(confirmation?.kind).toBe('UPDATE');
+    expect(confirmation?.title).toBe('Review data update');
+    expect(confirmation?.description).toContain('official tree action');
+    expect(result.current.messages.at(-1)?.text).toContain('Update person data');
+    expect(result.current.messages.at(-1)?.text).not.toMatch(/[\u0600-\u06ff]/u);
     expect(confirmation?.plan).toMatchObject({
       type: 'UPDATE',
       personId: lina.id,
@@ -455,6 +684,85 @@ describe('useKindiController confidence handling', () => {
     expect(treeActionMocks.deletePerson).not.toHaveBeenCalled();
     expect(result.current.messages.find((message) => message.confirmation?.id === confirmation?.id)?.confirmation?.status)
       .toBe('confirmed');
+    expect(result.current.messages.at(-1)?.text).toContain('updated successfully');
+  });
+
+  it('undoes the latest Kindi change only while its history fingerprint is current', async () => {
+    const lina = person('p1', 'Lina');
+    appState.language = 'en';
+    appState.people = { [lina.id]: lina };
+    treeActionMocks.updatePerson.mockImplementationOnce(async (_personId, updates) => {
+      appState.past = [{ [lina.id]: lina }];
+      appState.peopleVersion = 2;
+      appState.people = { [lina.id]: { ...lina, ...updates } };
+      return { success: true };
+    });
+
+    const { result } = renderHook(() => useKindiController({
+      people: { [lina.id]: lina },
+      onFocusPerson: vi.fn(),
+    }));
+    await submitAndFlush(result, 'update birth date for Lina to 1990-01-01');
+    const confirmation = result.current.messages.at(-1)?.confirmation;
+
+    await act(async () => {
+      await result.current.confirm(confirmation!);
+    });
+
+    const successMessage = result.current.messages.at(-1);
+    expect(successMessage?.undoAction).toMatchObject({
+      status: 'available',
+      peopleVersion: 2,
+      pastCount: 1,
+      futureCount: 0,
+    });
+
+    // Background sync may re-project the same logical tree and increment the
+    // people version without creating a newer undoable history entry.
+    appState.peopleVersion = 3;
+
+    act(() => {
+      result.current.undoKindiChange(successMessage!.id, successMessage!.undoAction!);
+    });
+
+    expect(appState.undo).toHaveBeenCalledOnce();
+    expect(result.current.messages.find((message) => message.id === successMessage?.id)?.undoAction?.status)
+      .toBe('undone');
+    expect(result.current.messages.at(-1)?.text).toBe('Kindi’s latest change was undone.');
+  });
+
+  it('expires Kindi undo instead of reverting a newer tree change', async () => {
+    const lina = person('p1', 'Lina');
+    appState.language = 'en';
+    appState.people = { [lina.id]: lina };
+    treeActionMocks.updatePerson.mockImplementationOnce(async (_personId, updates) => {
+      appState.past = [{ [lina.id]: lina }];
+      appState.peopleVersion = 2;
+      appState.people = { [lina.id]: { ...lina, ...updates } };
+      return { success: true };
+    });
+
+    const { result } = renderHook(() => useKindiController({
+      people: { [lina.id]: lina },
+      onFocusPerson: vi.fn(),
+    }));
+    await submitAndFlush(result, 'update birth date for Lina to 1990-01-01');
+    const confirmation = result.current.messages.at(-1)?.confirmation;
+    await act(async () => {
+      await result.current.confirm(confirmation!);
+    });
+    const successMessage = result.current.messages.at(-1)!;
+    appState.peopleVersion = 3;
+    appState.past = [{ [lina.id]: { ...lina, birthDate: '1985' } }];
+
+    act(() => {
+      result.current.undoKindiChange(successMessage.id, successMessage.undoAction!);
+    });
+
+    expect(appState.undo).not.toHaveBeenCalled();
+    expect(result.current.messages.find((message) => message.id === successMessage.id)?.undoAction?.status)
+      .toBe('expired');
+    expect(result.current.messages.at(-1)?.text).toContain('no longer available');
   });
 
   it('keeps delete commands behind an explicit confirmation card', async () => {
@@ -522,5 +830,28 @@ describe('useKindiController confidence handling', () => {
     });
 
     expect(logKindiSuccessMock).not.toHaveBeenCalled();
+  });
+
+  it('answers a tree data-quality question locally without invoking search', async () => {
+    const root = person('private-root-id', 'Sami');
+    appState.people = { [root.id]: root };
+    appState.focusId = root.id;
+    const { result } = renderHook(() => useKindiController({
+      people: appState.people,
+      onFocusPerson: vi.fn(),
+    }));
+
+    await submitAndFlush(result, 'ما مشاكل الشجرة؟');
+
+    const answer = result.current.messages.at(-1);
+    expect(answer?.answerMeta).toMatchObject({
+      source: 'local-tree',
+      kind: 'diagnostic',
+      feedbackEnabled: true,
+    });
+    expect(answer?.text).toContain('اكتمل فحص بيانات الشجرة');
+    expect(answer?.diagnosticSummary?.citationCoverage).toBeNull();
+    expect(answer?.text).not.toContain(root.id);
+    expect(searchService.search).not.toHaveBeenCalled();
   });
 });
