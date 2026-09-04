@@ -16,6 +16,7 @@ import { type KindiCommandPlanningResult, useKindiCommandPlanningFlow } from './
 
 export interface KindiAIPlannerRequestArgs {
   redactedText: string;
+  signal?: AbortSignal;
 }
 
 export type KindiAIPlannerRequest = (args: KindiAIPlannerRequestArgs) => Promise<KindiAIPlanDraft | KindiAIClassification | null>;
@@ -31,6 +32,7 @@ export interface PlanWithAIArgs {
   peopleList: Person[];
   lastContextPersonId?: string;
   focusId?: string;
+  signal?: AbortSignal;
 }
 
 export type KindiAIPlanningResult =
@@ -248,6 +250,7 @@ export const useKindiAIPlanningFlow = ({
     peopleList,
     lastContextPersonId,
     focusId,
+    signal,
   }: PlanWithAIArgs): Promise<KindiAIPlanningResult> => {
     const redaction = redactKindiPrompt(query, getKnownPersonNames(peopleList));
 
@@ -258,6 +261,7 @@ export const useKindiAIPlanningFlow = ({
     try {
       const aiResponse = await requestDraft({
         redactedText: redaction.redactedText,
+        signal,
       });
 
       if (!aiResponse) {

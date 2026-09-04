@@ -25,8 +25,23 @@ async function getProxyAuthToken(): Promise<string | null> {
   return authTokenService.getPreferredSupabaseToken();
 }
 
-export async function callAIProxy(request: AIProxyRequest): Promise<AIProxyResponse> {
+const throwIfAborted = (signal?: AbortSignal): void => {
+  if (signal?.aborted) {
+    throw new DOMException('The operation was aborted.', 'AbortError');
+  }
+};
+
+export interface AIProxyCallOptions {
+  signal?: AbortSignal;
+}
+
+export async function callAIProxy(
+  request: AIProxyRequest,
+  { signal }: AIProxyCallOptions = {}
+): Promise<AIProxyResponse> {
+  throwIfAborted(signal);
   const token = await getProxyAuthToken();
+  throwIfAborted(signal);
   if (!token) {
     throw new Error('Please sign in to use AI features.');
   }
@@ -38,6 +53,7 @@ export async function callAIProxy(request: AIProxyRequest): Promise<AIProxyRespo
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(request),
+    signal,
   });
 
   if (!response.ok) {

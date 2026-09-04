@@ -104,4 +104,31 @@ describe('useKindiAIFallbackFlow', () => {
     expect(logEvent.mock.calls[1][0].confidence).toBeUndefined();
     expect(logEvent.mock.calls[1][0].intentGuess).toBeUndefined();
   });
+
+  it('does not record a stale completion after the cloud request is cancelled', async () => {
+    const planWithAI = vi.fn(async () => ({ kind: 'cancelled' as const }));
+    const logEvent = vi.fn<(event: KindiLearningEventInput) => void>();
+    const logDebug = vi.fn();
+    const { result } = renderHook(() => useKindiAIFallbackFlow({
+      planWithAI,
+      logEvent,
+      logDebug,
+    }));
+
+    let planningResult: Awaited<ReturnType<typeof result.current.runAIFallback>> | undefined;
+    await act(async () => {
+      planningResult = await result.current.runAIFallback(request);
+    });
+
+    expect(planningResult).toEqual({ kind: 'cancelled' });
+    expect(logEvent).toHaveBeenCalledTimes(1);
+    expect(logEvent).toHaveBeenCalledWith(expect.objectContaining({
+      eventType: 'ai_fallback_requested',
+      interactionId: 'interaction-1',
+    }));
+    expect(logDebug).toHaveBeenCalledTimes(1);
+    expect(logDebug).toHaveBeenCalledWith('fallback requested', {
+      searchKind: 'unknown_with_intent_signal',
+    });
+  });
 });

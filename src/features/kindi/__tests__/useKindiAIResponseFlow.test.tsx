@@ -120,7 +120,7 @@ const plannedResult = (
 });
 
 describe('useKindiAIResponseFlow', () => {
-  it.each(['paywall_intercepted', 'cloud_failure_intercepted'] as const)(
+  it.each(['paywall_intercepted', 'cloud_failure_intercepted', 'cancelled'] as const)(
     'treats %s as already handled without emitting another response',
     (kind) => {
       const harness = createHarness();

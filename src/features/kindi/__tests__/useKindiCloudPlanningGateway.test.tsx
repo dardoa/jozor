@@ -134,4 +134,32 @@ describe('useKindiCloudPlanningGateway', () => {
     expect(outcome?.kind).toBe('classified');
     expect(actions.setAiCloudQuotaRemaining).not.toHaveBeenCalled();
   });
+
+  it('aborts and discards an in-flight provider result when the Kindi session unmounts', async () => {
+    let resolveProvider!: (value: {
+      classification: { category: 'GREETING'; confidence: number };
+      usage: { used: number; limit: number; resetAt: string };
+    }) => void;
+    requestClassification.mockImplementationOnce(() => new Promise((resolve) => {
+      resolveProvider = resolve;
+    }));
+    const { result, actions, unmount } = createHarness();
+
+    const planningPromise = result.current.planWithAI(planningRequest);
+    await vi.waitFor(() => expect(requestClassification).toHaveBeenCalledOnce());
+    const requestOptions = requestClassification.mock.calls[0][1] as { signal: AbortSignal };
+
+    expect(requestOptions.signal.aborted).toBe(false);
+    unmount();
+    expect(requestOptions.signal.aborted).toBe(true);
+
+    resolveProvider({
+      classification: { category: 'GREETING', confidence: 0.9 },
+      usage: { used: 29, limit: 30, resetAt: '2026-10-01T00:00:00.000Z' },
+    });
+
+    await expect(planningPromise).resolves.toEqual({ kind: 'cancelled' });
+    expect(actions.setAiCloudQuotaRemaining).not.toHaveBeenCalled();
+    expect(actions.addAssistantMessage).not.toHaveBeenCalled();
+  });
 });

@@ -55,7 +55,11 @@ export const useKindiAIResponseFlow = ({
     aiPlanning: KindiAIFallbackPlanningResult,
     interactionId?: string
   ): boolean => {
-    if (aiPlanning.kind === 'paywall_intercepted' || aiPlanning.kind === 'cloud_failure_intercepted') {
+    if (
+      aiPlanning.kind === 'paywall_intercepted'
+      || aiPlanning.kind === 'cloud_failure_intercepted'
+      || aiPlanning.kind === 'cancelled'
+    ) {
       return true;
     }
     if (aiPlanning.kind !== 'classified') return false;
@@ -76,7 +80,11 @@ export const useKindiAIResponseFlow = ({
     aiPlanning: KindiAIFallbackPlanningResult,
     interactionId?: string
   ): boolean => {
-    if (aiPlanning.kind === 'paywall_intercepted' || aiPlanning.kind === 'cloud_failure_intercepted') {
+    if (
+      aiPlanning.kind === 'paywall_intercepted'
+      || aiPlanning.kind === 'cloud_failure_intercepted'
+      || aiPlanning.kind === 'cancelled'
+    ) {
       return true;
     }
     if (aiPlanning.kind !== 'planned') return false;

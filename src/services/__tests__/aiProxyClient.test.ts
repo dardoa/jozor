@@ -75,4 +75,32 @@ describe('aiProxyClient', () => {
       status: 429,
     }));
   });
+
+  it('forwards cancellation to fetch and stops before authentication when already aborted', async () => {
+    getPreferredSupabaseTokenMock.mockClear();
+    const activeController = new AbortController();
+    fetchMock.mockImplementationOnce((_input, init?: RequestInit) => new Promise((_resolve, reject) => {
+      init?.signal?.addEventListener('abort', () => reject(init.signal?.reason), { once: true });
+    }));
+
+    const requestPromise = callAIProxy({
+      operation: 'kindi_plan',
+      data: { redactedText: '[NAME_1] family' },
+    }, { signal: activeController.signal });
+    await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledOnce());
+    expect(fetchMock.mock.calls[0][1]).toEqual(expect.objectContaining({
+      signal: activeController.signal,
+    }));
+
+    activeController.abort();
+    await expect(requestPromise).rejects.toMatchObject({ name: 'AbortError' });
+
+    const abortedController = new AbortController();
+    abortedController.abort();
+    await expect(callAIProxy({
+      operation: 'kindi_plan',
+      data: { redactedText: '[NAME_1] family' },
+    }, { signal: abortedController.signal })).rejects.toMatchObject({ name: 'AbortError' });
+    expect(getPreferredSupabaseTokenMock).toHaveBeenCalledTimes(1);
+  });
 });

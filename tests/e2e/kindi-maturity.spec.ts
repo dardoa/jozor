@@ -15,7 +15,10 @@ type DebugWindow = Window & {
       subscriptionTier?: 'free' | 'pro' | 'family';
       aiCloudQuotaRemaining?: number;
     }) => void;
-    getStateSnapshot: () => { people?: Record<string, unknown> };
+    getStateSnapshot: () => {
+      people?: Record<string, unknown>;
+      aiCloudQuotaRemaining?: number;
+    };
   };
 };
 
@@ -579,6 +582,84 @@ test.describe('Kindi product maturity journeys', () => {
     await secondDialog.getByRole('button', { name: 'إرسال إلى كِندي' }).click();
     await expect(secondDialog.getByText(/ابن الشجرة الثانية الاختبار/)).toBeVisible();
     await expect.poll(() => getPeopleCount(page)).toBe(2);
+  });
+
+  test('discards an in-flight cloud result when the active tree session changes', async ({ page }) => {
+    let proxyRequestStarted = false;
+
+    page.on('request', (request) => {
+      if (new URL(request.url()).pathname === '/api/ai-proxy') {
+        proxyRequestStarted = true;
+      }
+    });
+    await page.route('**/api/ai-proxy', async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 5_000));
+      try {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            result: JSON.stringify({ category: 'SUPPORT', confidence: 0.95 }),
+            usage: {
+              used: 29,
+              limit: 30,
+              resetAt: '2026-10-01T00:00:00.000Z',
+            },
+          }),
+        });
+      } catch {
+        // An aborted browser request can invalidate the intercepted route.
+      }
+    });
+
+    await seedScenario(page, 'en', {
+      role: 'owner',
+      subscriptionTier: 'pro',
+      aiCloudQuotaRemaining: 10,
+    });
+    const { dialog } = await openKindi(page, 'en');
+    const input = dialog.getByRole('textbox', { name: 'Kindi message' });
+    await expect.poll(() => page.evaluate(() =>
+      localStorage.getItem('jozor_supabase_token')
+    )).toBe('kindi-e2e-session-token');
+    await input.fill('change سامي الاختبار in a way I cannot describe');
+    await dialog.getByRole('button', { name: 'Send to Kindi' }).click();
+    await expect.poll(() => proxyRequestStarted, { timeout: 15_000 }).toBe(true);
+
+    const secondTreePeople = {
+      'cloud-second-root': person('cloud-second-root', 'Cloud Second Root', {
+        children: ['cloud-second-child'],
+      }),
+      'cloud-second-child': person('cloud-second-child', 'Cloud Second Child', {
+        parents: ['cloud-second-root'],
+      }),
+    };
+    await page.evaluate(({ people, owner }) => {
+      const debug = (window as DebugWindow).jozorDebug;
+      if (!debug) throw new Error('jozorDebug seed API is unavailable');
+      debug.seedTreeScenario({
+        people,
+        focusId: 'cloud-second-root',
+        role: 'owner',
+        treeId: '00000000-0000-0000-0000-000000000003',
+        treeName: 'Second Cloud Boundary Tree',
+        user: owner,
+        subscriptionTier: 'pro',
+        aiCloudQuotaRemaining: 10,
+      });
+    }, { people: secondTreePeople, owner: OWNER });
+
+    await expect(dialog).toBeHidden();
+    await page.waitForTimeout(5_500);
+    await expect.poll(() => page.evaluate(() =>
+      (window as DebugWindow).jozorDebug?.getStateSnapshot().aiCloudQuotaRemaining
+    )).toBe(10);
+
+    const { dialog: secondDialog } = await openKindi(page, 'en');
+    await expect(secondDialog.getByText('Cloud Second Root الاختبار', { exact: true })).toBeVisible();
+    await expect(secondDialog.getByText(/Cloud understanding is unavailable/)).toHaveCount(0);
+    await expect(secondDialog.getByText(/With help from the cloud/)).toHaveCount(0);
+    await expect(secondDialog.getByRole('article', { name: 'Your message' })).toHaveCount(0);
   });
 
   test('answers from the English help guide and restores focus after closing on mobile', async ({ page }) => {

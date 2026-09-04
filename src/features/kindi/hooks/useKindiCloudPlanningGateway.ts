@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import type { Language } from '../../../types/common';
 import { getKindiStrings } from '../logic/kindiLocales';
@@ -27,6 +27,12 @@ const isUsageLimitError = (error: unknown): boolean => Boolean(
   && error.code === 'AI_USAGE_LIMIT_EXCEEDED'
 );
 
+const throwIfRequestWasCancelled = (signal?: AbortSignal): void => {
+  if (signal?.aborted) {
+    throw new DOMException('The Kindi request was cancelled.', 'AbortError');
+  }
+};
+
 export const useKindiCloudPlanningGateway = ({
   enabled,
   language,
@@ -35,12 +41,24 @@ export const useKindiCloudPlanningGateway = ({
   addAssistantMessage,
 }: UseKindiCloudPlanningGatewayArgs) => {
   const strings = getKindiStrings(language);
+  const activeRequestsRef = useRef(new Set<AbortController>());
+  const lifecycleVersionRef = useRef(0);
+
+  useEffect(() => () => {
+    lifecycleVersionRef.current += 1;
+    activeRequestsRef.current.forEach((controller) => controller.abort());
+    activeRequestsRef.current.clear();
+  }, []);
+
   const requestDraft = useMemo<KindiAIPlannerRequest | undefined>(() => {
     if (!enabled) return undefined;
 
-    return async ({ redactedText }) => {
+    return async ({ redactedText, signal }) => {
+      throwIfRequestWasCancelled(signal);
       const { requestKindiClassificationWithUsage } = await import('../services/kindiAIService');
-      const response = await requestKindiClassificationWithUsage(redactedText);
+      throwIfRequestWasCancelled(signal);
+      const response = await requestKindiClassificationWithUsage(redactedText, { signal });
+      throwIfRequestWasCancelled(signal);
       if (subscriptionTier === 'pro' && response.usage) {
         setAiCloudQuotaRemaining(Math.max(0, response.usage.limit - response.usage.used));
       }
@@ -61,20 +79,34 @@ export const useKindiCloudPlanningGateway = ({
         return { kind: 'paywall_intercepted' };
       }
 
-      const result = await planWithAIRaw(args);
-      if (subscriptionTier === 'pro' && result.kind === 'failed' && isUsageLimitError(result.error)) {
-        setAiCloudQuotaRemaining(0);
-        addAssistantMessage({ text: strings.billing.quotaExhausted });
-        window.dispatchEvent(new CustomEvent('open-paywall'));
-        return { kind: 'paywall_intercepted' };
-      }
+      const controller = new AbortController();
+      const requestLifecycleVersion = lifecycleVersionRef.current;
+      activeRequestsRef.current.add(controller);
 
-      if (result.kind === 'failed') {
-        addAssistantMessage({ text: strings.cloud.unavailable });
-        return { kind: 'cloud_failure_intercepted' };
-      }
+      try {
+        const result = await planWithAIRaw({ ...args, signal: controller.signal });
+        const requestIsStale = controller.signal.aborted
+          || lifecycleVersionRef.current !== requestLifecycleVersion;
+        if (requestIsStale) {
+          return { kind: 'cancelled' };
+        }
 
-      return result;
+        if (subscriptionTier === 'pro' && result.kind === 'failed' && isUsageLimitError(result.error)) {
+          setAiCloudQuotaRemaining(0);
+          addAssistantMessage({ text: strings.billing.quotaExhausted });
+          window.dispatchEvent(new CustomEvent('open-paywall'));
+          return { kind: 'paywall_intercepted' };
+        }
+
+        if (result.kind === 'failed') {
+          addAssistantMessage({ text: strings.cloud.unavailable });
+          return { kind: 'cloud_failure_intercepted' };
+        }
+
+        return result;
+      } finally {
+        activeRequestsRef.current.delete(controller);
+      }
     },
     [
       addAssistantMessage,

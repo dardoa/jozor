@@ -11,7 +11,8 @@ import type { KindiAIPlanningResult, PlanWithAIArgs } from './useKindiAIPlanning
 
 export type KindiAIFallbackPlanningResult = KindiAIPlanningResult
   | { kind: 'paywall_intercepted' }
-  | { kind: 'cloud_failure_intercepted' };
+  | { kind: 'cloud_failure_intercepted' }
+  | { kind: 'cancelled' };
 
 interface RunKindiAIFallbackArgs extends PlanWithAIArgs {
   interactionId: string;
@@ -29,8 +30,13 @@ interface UseKindiAIFallbackFlowArgs {
   logDebug?: (message: string, metadata?: Record<string, unknown>) => void;
 }
 
+type CompletedKindiAIFallbackPlanningResult = Exclude<
+  KindiAIFallbackPlanningResult,
+  { kind: 'cancelled' }
+>;
+
 const createFallbackResultEvent = (
-  result: KindiAIFallbackPlanningResult,
+  result: CompletedKindiAIFallbackPlanningResult,
   request: RunKindiAIFallbackArgs
 ): KindiLearningEventInput => ({
   eventType: 'ai_fallback_result',
@@ -92,6 +98,10 @@ export const useKindiAIFallbackFlow = ({
       lastContextPersonId,
       focusId,
     });
+
+    if (result.kind === 'cancelled') {
+      return result;
+    }
 
     if (debugSearchKind) {
       logDebug?.('fallback completed', { resultKind: result.kind });

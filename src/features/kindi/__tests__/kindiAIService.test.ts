@@ -155,4 +155,19 @@ describe('kindiAIService', () => {
       },
     });
   });
+
+  it('forwards the caller-owned abort signal through the usage-aware request', async () => {
+    const controller = new AbortController();
+    controller.abort();
+    vi.mocked(callAIProxy).mockRejectedValueOnce(controller.signal.reason);
+
+    await expect(requestKindiClassificationWithUsage(
+      '[NAME_1] family',
+      { signal: controller.signal }
+    )).rejects.toBe(controller.signal.reason);
+    expect(callAIProxy).toHaveBeenCalledWith({
+      operation: 'kindi_plan',
+      data: { redactedText: '[NAME_1] family' },
+    }, { signal: controller.signal });
+  });
 });

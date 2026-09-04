@@ -208,6 +208,10 @@ export interface KindiClassificationWithUsage {
   };
 }
 
+export interface KindiAIRequestOptions {
+  signal?: AbortSignal;
+}
+
 const normalizeProxyUsage = (value: unknown): KindiClassificationWithUsage['usage'] => {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined;
   const usage = value as Record<string, unknown>;
@@ -233,12 +237,13 @@ export const isKindiCloudQuotaExceededError = (error: unknown): boolean =>
   getProxyErrorCode(error) === 'AI_USAGE_LIMIT_EXCEEDED';
 
 export const requestKindiClassificationWithUsage = async (
-  redactedText: string
+  redactedText: string,
+  { signal }: KindiAIRequestOptions = {}
 ): Promise<KindiClassificationWithUsage> => {
   const response = await callAIProxy({
     operation: 'kindi_plan',
     data: { redactedText },
-  });
+  }, { signal });
   const parsed = JSON.parse(cleanJsonCodeBlock(response.result || ''));
   const usage = normalizeProxyUsage(response.usage);
   return {
