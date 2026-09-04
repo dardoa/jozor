@@ -29,7 +29,17 @@ export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(({ the
   const setVaultTab = useAppStore((state) => state.setVaultTab);
   const setVaultExportSection = useAppStore((state) => state.setVaultExportSection);
   const setSettingsDrawerOpen = useAppStore((state) => state.setSettingsDrawerOpen);
+  const currentTreeId = useAppStore((state) => state.currentTreeId);
   const { role } = useTreePermissions();
+  const localTreeAnchor = Object.keys(searchProps.people)[0] ?? 'empty-tree';
+  const activeTreeBoundary = currentTreeId
+    ?? auth.currentActiveDriveFileId
+    ?? `local:${localTreeAnchor}`;
+  const kindiConversationBoundary = [
+    auth.user?.uid ?? 'guest',
+    activeTreeBoundary,
+    role ?? 'no-role',
+  ].join(':');
 
   const openVault = (tab: 'cloud' | 'security' | 'trees' | 'members' | 'stats' = 'trees') => {
     setSettingsDrawerOpen(false);
@@ -44,6 +54,7 @@ export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(({ the
     <div className='flex items-center gap-1.5 md:gap-2.5' role='navigation' aria-label={t.mainNavigation}>
       <div className='flex items-center gap-2' role='search' aria-label={t.search}>
         <KindiSearchTrigger
+          key={kindiConversationBoundary}
           people={searchProps.people}
           onFocusPerson={searchProps.onFocusPerson}
           onOpenPersonRecord={searchProps.onOpenPersonRecord}

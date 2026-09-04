@@ -209,6 +209,29 @@ describe('useKindiController confidence handling', () => {
     expect(result.current.currentContextPerson?.id).toBe(lina.id);
   });
 
+  it('adopts a person selected outside Kindi when the assistant reopens', () => {
+    const lina = person('p1', 'Lina');
+    const mariam = person('p2', 'Mariam');
+    appState.focusId = lina.id;
+    const { result, rerender } = renderHook(() => useKindiController({
+      people: { [lina.id]: lina, [mariam.id]: mariam },
+      onFocusPerson: vi.fn(),
+    }));
+
+    act(() => {
+      result.current.focusPerson(lina.id);
+    });
+    expect(result.current.currentContextPerson).toEqual(lina);
+
+    appState.focusId = mariam.id;
+    rerender();
+    act(() => {
+      result.current.setIsOpen(true);
+    });
+
+    expect(result.current.currentContextPerson).toEqual(mariam);
+  });
+
   it('starts a clean conversation while keeping the currently focused person as context', async () => {
     const lina = person('p1', 'Lina');
     vi.mocked(searchService.search).mockResolvedValue([searchResult(lina, 'exact')]);

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { searchService } from '../../../services/searchService';
 import { useAppStore } from '../../../store/useAppStore';
@@ -51,7 +51,7 @@ const logKindiLearningSuccess = (trace?: KindiLearningTrace): void => {
 };
 
 export const useKindiController = ({ people, onFocusPerson }: UseKindiControllerArgs) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setOpenState] = useState(false);
   const [draft, setDraft] = useState('');
   const [isThinking, setIsThinking] = useState(false);
   const [lastContextPersonId, setLastContextPersonId] = useState<string | undefined>(undefined);
@@ -60,6 +60,8 @@ export const useKindiController = ({ people, onFocusPerson }: UseKindiController
   const currentTreeId = useAppStore((state) => state.currentTreeId);
   const focusId = useAppStore((state) => state.focusId);
   const language = useAppStore((state) => state.language);
+  const lastObservedFocusIdRef = useRef(focusId);
+  const focusChangedOutsideKindiRef = useRef(false);
 
   const peopleList = useMemo(() => Object.values(people || {}), [people]);
   const {
@@ -144,12 +146,34 @@ export const useKindiController = ({ people, onFocusPerson }: UseKindiController
     };
   }, [peopleList]);
 
+  useEffect(() => {
+    if (lastObservedFocusIdRef.current !== focusId) {
+      focusChangedOutsideKindiRef.current = true;
+      lastObservedFocusIdRef.current = focusId;
+    }
+  }, [focusId]);
+
+  const setIsOpen = useCallback((nextIsOpen: boolean) => {
+    const focusChanged = focusChangedOutsideKindiRef.current
+      || lastObservedFocusIdRef.current !== focusId;
+
+    if (nextIsOpen && focusChanged) {
+      setLastContextPersonId(focusId && people[focusId] ? focusId : undefined);
+      focusChangedOutsideKindiRef.current = false;
+      lastObservedFocusIdRef.current = focusId;
+    }
+
+    setOpenState(nextIsOpen);
+  }, [focusId, people]);
+
   const focusPerson = useCallback((personId: string) => {
+    lastObservedFocusIdRef.current = personId;
+    focusChangedOutsideKindiRef.current = false;
     setLastContextPersonId(personId);
     onFocusPerson(personId);
     setSearchTarget(personId);
     setIsOpen(false);
-  }, [onFocusPerson, setSearchTarget]);
+  }, [onFocusPerson, setIsOpen, setSearchTarget]);
 
   const currentContextPerson = useMemo(
     () => people[lastContextPersonId ?? focusId],

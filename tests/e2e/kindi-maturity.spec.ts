@@ -9,6 +9,7 @@ type DebugWindow = Window & {
       people: Record<string, unknown>;
       focusId: string;
       role: DebugRole;
+      treeId?: string;
       treeName: string;
       user: DebugUser;
       subscriptionTier?: 'free' | 'pro' | 'family';
@@ -535,6 +536,49 @@ test.describe('Kindi product maturity journeys', () => {
     await expect(dialog.getByText('تم التراجع عن التغيير')).toBeVisible();
     await expect(dialog.getByText('تم التراجع عن آخر تغيير نفذه كيندي.')).toBeVisible();
     await expect.poll(() => getPeopleCount(page)).toBe(initialPeopleCount);
+  });
+
+  test('discards prior-tree results and pending decisions at the tree boundary', async ({ page }) => {
+    await seedScenario(page, 'ar');
+    const { dialog } = await openKindi(page, 'ar');
+    const input = dialog.getByRole('textbox', { name: 'رسالة إلى كِندي' });
+
+    await dialog.getByRole('button', { name: 'حضّر تغييرًا آمنًا' }).click();
+    await expect(input).toHaveValue('أضف ابن لهذا الشخص');
+    await dialog.getByRole('button', { name: 'إرسال إلى كِندي' }).click();
+    await expect(dialog.getByText(/ما اسم ابن/)).toBeVisible();
+    await input.fill('آدم من الشجرة الأولى');
+    await dialog.getByRole('button', { name: 'إرسال إلى كِندي' }).click();
+    await expect(dialog.getByRole('button', { name: 'تأكيد', exact: true })).toBeVisible();
+
+    const secondTreePeople = {
+      'second-root': person('second-root', 'جذر الشجرة الثانية', { children: ['second-child'] }),
+      'second-child': person('second-child', 'ابن الشجرة الثانية', { parents: ['second-root'] }),
+    };
+    await page.evaluate(({ people, owner }) => {
+      const debug = (window as DebugWindow).jozorDebug;
+      if (!debug) throw new Error('jozorDebug seed API is unavailable');
+      debug.seedTreeScenario({
+        people,
+        focusId: 'second-root',
+        role: 'owner',
+        treeId: '00000000-0000-0000-0000-000000000002',
+        treeName: 'Second Kindi Tree',
+        user: owner,
+      });
+    }, { people: secondTreePeople, owner: OWNER });
+
+    await expect(dialog).toBeHidden();
+    const { dialog: secondDialog } = await openKindi(page, 'ar');
+    await expect(secondDialog.getByText('جذر الشجرة الثانية الاختبار', { exact: true })).toBeVisible();
+    await expect(secondDialog.getByText(/آدم من الشجرة الأولى/)).toHaveCount(0);
+    await expect(secondDialog.getByRole('button', { name: 'تأكيد', exact: true })).toHaveCount(0);
+
+    const secondInput = secondDialog.getByRole('textbox', { name: 'رسالة إلى كِندي' });
+    await secondInput.fill('من هم أبناؤه؟');
+    await secondDialog.getByRole('button', { name: 'إرسال إلى كِندي' }).click();
+    await expect(secondDialog.getByText(/ابن الشجرة الثانية الاختبار/)).toBeVisible();
+    await expect.poll(() => getPeopleCount(page)).toBe(2);
   });
 
   test('answers from the English help guide and restores focus after closing on mobile', async ({ page }) => {
