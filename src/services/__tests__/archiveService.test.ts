@@ -1,6 +1,7 @@
+import JSZip from 'jszip';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { Person, TreeSettings } from '../../types';
+import { createPersonMediaAssetRef, type Person, type TreeSettings } from '../../types';
 import { buildBlueprintArchive } from '../archiveService';
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -29,6 +30,14 @@ const makeSnapshot = (people: Record<string, Person>) => ({
   metadata: { lastModified: Date.parse('2026-01-01T00:00:00.000Z'), appName: 'Jozor' },
   locations: {},
 });
+
+const readBlobAsArrayBuffer = (blob: Blob): Promise<ArrayBuffer> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(reader.error ?? new Error('Unable to read archive blob'));
+    reader.onload = () => resolve(reader.result as ArrayBuffer);
+    reader.readAsArrayBuffer(blob);
+  });
 
 // ────────────────────────────────────────────────────────────────────────────
 // Test suite: M15 – archive export safety
@@ -129,5 +138,55 @@ describe('buildBlueprintArchive – M15 safety guarantees', () => {
     // Critical assertion: never more than 5 concurrent fetches
     expect(maxActiveFetches).toBeGreaterThan(0);
     expect(maxActiveFetches).toBeLessThanOrEqual(CONCURRENCY_LIMIT);
+  });
+
+  it('embeds canonical private profile and gallery assets without serializing storage references', async () => {
+    const profileAsset = createPersonMediaAssetRef({
+      treeId: 'tree-1',
+      assetId: '123e4567-e89b-42d3-a456-426614174000',
+      kind: 'profile-photo',
+      mimeType: 'image/webp',
+      byteLength: 8,
+      createdAt: '2026-09-05T00:00:00.000Z',
+    });
+    const galleryAsset = createPersonMediaAssetRef({
+      treeId: 'tree-1',
+      assetId: '223e4567-e89b-42d3-a456-426614174000',
+      kind: 'gallery-photo',
+      mimeType: 'image/webp',
+      byteLength: 8,
+      createdAt: '2026-09-05T00:00:00.000Z',
+    });
+    const personMediaFetcher = vi.fn(async () => new Blob(['RIFFdata'], { type: 'image/webp' }));
+    const person = makeMinimalPerson('person-1', {
+      photoAsset: profileAsset,
+      photoPath: 'tree-1/person-1.webp',
+      photoVersion: 8,
+      gallery: [{
+        id: galleryAsset.assetId,
+        asset: galleryAsset,
+        version: 1,
+        createdAt: galleryAsset.createdAt,
+      }],
+    });
+
+    const { blob, manifest } = await buildBlueprintArchive(makeSnapshot({ 'person-1': person }), {
+      label: 'private-media-test',
+      personMediaFetcher,
+    });
+
+    expect(personMediaFetcher).toHaveBeenCalledTimes(2);
+    expect(personMediaFetcher).toHaveBeenCalledWith(profileAsset, 'person-1');
+    expect(personMediaFetcher).toHaveBeenCalledWith(galleryAsset, 'person-1');
+    expect(manifest.media.avatars['person-1']).toMatch(/^media\/avatars\/person-1\.webp$/);
+    expect(manifest.media.gallery['person-1']).toEqual(['media/gallery/person-1-1.webp']);
+    expect(JSON.stringify(manifest)).not.toContain(profileAsset.objectPath);
+    expect(JSON.stringify(manifest)).not.toContain(galleryAsset.objectPath);
+
+    const zip = await JSZip.loadAsync(await readBlobAsArrayBuffer(blob));
+    const treeJson = await zip.file('tree.json')!.async('string');
+    expect(treeJson).not.toContain(profileAsset.objectPath);
+    expect(treeJson).not.toContain('tree-1/person-1.webp');
+    expect(treeJson).not.toContain('photoVersion');
   });
 });

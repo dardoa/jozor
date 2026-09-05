@@ -239,11 +239,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       folderLimit(() => deleteFolderIteratively(supabaseAdmin, 'avatars', userFolder, limit))
     );
 
-    // 3. Delete all tree-specific folders for trees owned by user in parallel (using shared limiter)
+    // 3. Delete all legacy and private tree media for owned trees. User profile
+    // avatars stay in the legacy bucket; person-media contains tree-scoped data only.
     if (trees && trees.length > 0) {
       for (const tree of trees) {
         deleteTasks.push(
           folderLimit(() => deleteFolderIteratively(supabaseAdmin, 'avatars', tree.id, limit))
+        );
+        deleteTasks.push(
+          folderLimit(() => deleteFolderIteratively(supabaseAdmin, 'person-media', tree.id, limit))
         );
       }
     }

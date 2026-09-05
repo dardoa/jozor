@@ -6,7 +6,7 @@ import { Camera, X, Sparkles, Loader2, ChevronDown } from 'lucide-react';
 import { useTranslation } from '../../../../context/TranslationContext';
 import { showToast } from '../../../../utils/showToast';
 import { usePhotoUpload } from '../../../../hooks/utils/usePhotoUpload';
-import { getPersonPhoto } from '../../../../utils/mediaUtils';
+import { getPersonPhoto, hasPersonPhoto } from '../../../../utils/mediaUtils';
 import { SmartAvatar } from '../../../../components/ui/SmartAvatar';
 
 interface PersonIdentityEditProps {
@@ -74,7 +74,7 @@ export const PersonIdentityEdit = memo<PersonIdentityEditProps>(({ person, onUpd
                 <Loader2 className="w-6 h-6 text-white animate-spin" />
               </div>
             )}
-            {getPersonPhoto(person) ? (
+            {hasPersonPhoto(person) ? (
               <>
                 <SmartAvatar
                   person={{ ...person, photoUrl: getPersonPhoto(person) || person.photoUrl }}
@@ -102,7 +102,7 @@ export const PersonIdentityEdit = memo<PersonIdentityEditProps>(({ person, onUpd
           <input
             ref={fileInputRef}
             type='file'
-            accept='image/*'
+            accept='image/jpeg,image/png,image/webp'
             className='hidden'
             onChange={handleImageUpload}
             aria-label={t.uploadPhoto}

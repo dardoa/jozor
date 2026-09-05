@@ -712,19 +712,15 @@ export function useVisualStudioPosterRuntime({
 
   useEffect(() => {
     if (suppliedPosterSvgResources?.embeddedImages !== undefined) {
-      if (resolvedPosterImages !== undefined) {
-        startTransition(() => {
-          setResolvedPosterImages(undefined);
-        });
-      }
+      startTransition(() => {
+        setResolvedPosterImages((current) => current === undefined ? current : undefined);
+      });
       return undefined;
     }
     if (imageRequests.length === 0) {
-      if (resolvedPosterImages !== undefined) {
-        startTransition(() => {
-          setResolvedPosterImages(undefined);
-        });
-      }
+      startTransition(() => {
+        setResolvedPosterImages((current) => current === undefined ? current : undefined);
+      });
       return undefined;
     }
 
@@ -754,7 +750,7 @@ export function useVisualStudioPosterRuntime({
     return () => {
       isCancelled = true;
     };
-  }, [imageRequestKey, imageRequests, posterImageAssetResolver, resolvedPosterImages, suppliedPosterSvgResources?.embeddedImages]);
+  }, [imageRequestKey, imageRequests, posterImageAssetResolver, suppliedPosterSvgResources?.embeddedImages]);
 
   const posterSvgResources: StudioPosterSvgResources | undefined = useMemo(() => {
     const primaryResources = suppliedPosterSvgResources ?? matchingResolvedPosterSvgResources;

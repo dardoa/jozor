@@ -1,5 +1,11 @@
 import JSZip from 'jszip';
-import { Person, GalleryItem } from '../types';
+import {
+  detectPersonMediaImageMimeType,
+  PERSON_MEDIA_MAX_IMAGE_BYTES,
+  Person,
+  GalleryItem,
+} from '../types';
+import type { ArchivePersonImageBlobs } from '../services/archiveRestoreService';
 import { validatePerson } from './familyLogic';
 import { googleMediaService } from '../services/googleService';
 import { OFFLINE_VIEWER_HTML } from './archiveTemplates';
@@ -251,6 +257,89 @@ export interface JozorArchiveData {
   people: Record<string, Person>;
   settings?: Record<string, unknown>;
 }
+
+export interface JozorCloudArchiveData extends JozorArchiveData {
+  mediaByPersonId: Record<string, ArchivePersonImageBlobs>;
+  warnings: string[];
+  mediaComplete: boolean;
+}
+
+const decodeArchiveImageDataUrl = (value: string): Blob | null => {
+  const match = /^data:(image\/(?:jpeg|png|webp));base64,([a-z0-9+/]+={0,2})$/i.exec(value);
+  if (!match || match[2].length > Math.ceil(PERSON_MEDIA_MAX_IMAGE_BYTES / 3) * 4 + 4) return null;
+  try {
+    const binary = atob(match[2]);
+    const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
+    const detectedMimeType = detectPersonMediaImageMimeType(bytes);
+    if (!detectedMimeType || detectedMimeType !== match[1].toLowerCase()) return null;
+    if (bytes.byteLength <= 0 || bytes.byteLength > PERSON_MEDIA_MAX_IMAGE_BYTES) return null;
+    return new Blob([bytes.buffer], { type: detectedMimeType });
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * Extracts archive images as validated blobs for permanent cloud upload.
+ * No data URL, object URL, archive path or provider reference is retained in
+ * the returned people records.
+ */
+export const importJozorArchiveDataForCloud = async (
+  file: File
+): Promise<JozorCloudArchiveData> => {
+  const zip = await JSZip.loadAsync(file);
+  const hasLegacyTreeFile = Boolean(
+    zip.file('family_data.json') || zip.file(/family_data\.json$/i).length > 0
+  );
+
+  if (!hasLegacyTreeFile) {
+    const { extractBlueprintArchiveForCloudImport } = await import('../services/archiveRestoreService');
+    return extractBlueprintArchiveForCloudImport(file);
+  }
+
+  const restored = await importJozorArchiveData(file);
+  const people: Record<string, Person> = {};
+  const mediaByPersonId: Record<string, ArchivePersonImageBlobs> = {};
+  const warnings: string[] = [];
+  let mediaComplete = true;
+
+  for (const personId of Object.keys(restored.people)) {
+    const person = validatePerson(restored.people[personId]);
+    const avatar = person.photoUrl?.startsWith('data:')
+      ? decodeArchiveImageDataUrl(person.photoUrl)
+      : null;
+    const gallery: Blob[] = [];
+    for (const galleryItem of person.gallery) {
+      const source = getGalleryImageUrl(galleryItem);
+      const blob = source?.startsWith('data:') ? decodeArchiveImageDataUrl(source) : null;
+      if (blob) gallery.push(blob);
+      else if (source) {
+        mediaComplete = false;
+        warnings.push('Skipped an unavailable or invalid legacy gallery image.');
+      }
+    }
+    if (person.photoUrl && !avatar) {
+      mediaComplete = false;
+      warnings.push('Skipped an unavailable or invalid legacy profile image.');
+    }
+    if (person.voiceNotes.length > 0) {
+      warnings.push('Skipped legacy voice memories because private audio import is not implemented.');
+    }
+
+    delete person.photoUrl;
+    delete person.photoPath;
+    delete person.photoVersion;
+    delete person.photoAsset;
+    person.gallery = [];
+    person.voiceNotes = [];
+    people[personId] = person;
+    if (avatar || gallery.length > 0) {
+      mediaByPersonId[personId] = { avatar: avatar ?? undefined, gallery };
+    }
+  }
+
+  return { people, settings: restored.settings, mediaByPersonId, warnings, mediaComplete };
+};
 
 export const importJozorArchiveData = async (file: File): Promise<JozorArchiveData> => {
   const zip = await JSZip.loadAsync(file);

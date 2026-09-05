@@ -5,6 +5,8 @@ import {
 } from '../../../../types/relationship';
 import { useAppStore } from '../../../../store/useAppStore';
 import { getPersonPhoto } from '../../../../utils/mediaUtils';
+import { createPersonMediaPosterSource } from '../../../../services/personMediaAssetService';
+import { isPersonMediaAssetRef } from '../../../../types';
 import {
   mapPreviewStoreSourceToLiveTreeSource,
   type PreviewStorePersonInput,
@@ -62,7 +64,9 @@ export function useVisualStudioStorePreviewSource(): VisualStudioStorePreviewInp
       description: person.bio,
       isDeceased: person.isDeceased,
       isPrivate: person.isPrivate,
-      hasProfilePhoto: Boolean(person.photoUrl || person.photoPath),
+      hasProfilePhoto: Boolean(
+        isPersonMediaAssetRef(person.photoAsset) || person.photoUrl || person.photoPath
+      ),
     }));
 
     const relationshipInputs: PreviewStoreRelationshipInput[] = Object.values(
@@ -81,7 +85,13 @@ export function useVisualStudioStorePreviewSource(): VisualStudioStorePreviewInp
         people: personInputs,
         relationships: relationshipInputs,
       }),
-      resolvePosterImageSource: (personId: string) => getPersonPhoto(people[personId]) ?? undefined,
+      resolvePosterImageSource: (personId: string) => {
+        const person = people[personId];
+        if (isPersonMediaAssetRef(person?.photoAsset)) {
+          return createPersonMediaPosterSource(person.photoAsset);
+        }
+        return getPersonPhoto(person) ?? undefined;
+      },
     };
   }, [currentTreeId, focusId, people]);
 }

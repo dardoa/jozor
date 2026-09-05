@@ -6,12 +6,16 @@ import { createPerson } from '../../../../utils/familyLogic';
 import { useGallery } from '../useGallery';
 
 const {
+  deferPersonMediaObjectCleanupMock,
   deleteGalleryItemMock,
+  removePersonMediaObjectOrEnqueueMock,
   showErrorMock,
   updatePersonMock,
   uploadToGalleryMock,
 } = vi.hoisted(() => ({
+  deferPersonMediaObjectCleanupMock: vi.fn(),
   deleteGalleryItemMock: vi.fn(),
+  removePersonMediaObjectOrEnqueueMock: vi.fn(),
   showErrorMock: vi.fn(),
   updatePersonMock: vi.fn(),
   uploadToGalleryMock: vi.fn(),
@@ -28,6 +32,11 @@ vi.mock('../../../../hooks/tree/useTreeActions', () => ({
   useTreeActions: () => ({ updatePerson: updatePersonMock }),
 }));
 
+vi.mock('../../../../services/personMediaCleanupQueue', () => ({
+  deferPersonMediaObjectCleanup: deferPersonMediaObjectCleanupMock,
+  removePersonMediaObjectOrEnqueue: removePersonMediaObjectOrEnqueueMock,
+}));
+
 vi.mock('../../../../utils/showToast', () => ({
   showToast: {
     error: showErrorMock,
@@ -40,11 +49,24 @@ describe('useGallery', () => {
     vi.clearAllMocks();
     uploadToGalleryMock.mockResolvedValue({
       id: 'gallery-1',
-      path: 'tree-1/person-1/gallery-1.webp',
+      asset: {
+        schemaVersion: 1,
+        provider: 'supabase-private',
+        bucket: 'person-media',
+        assetId: '123e4567-e89b-42d3-a456-426614174000',
+        kind: 'gallery-photo',
+        objectPath: 'tree-1/gallery-photo/123e4567-e89b-42d3-a456-426614174000.webp',
+        mimeType: 'image/webp',
+        byteLength: 128,
+        version: 1,
+        createdAt: '2026-09-04T00:00:00.000Z',
+      },
       version: 1,
       createdAt: '2026-09-04T00:00:00.000Z',
     });
     deleteGalleryItemMock.mockResolvedValue(undefined);
+    removePersonMediaObjectOrEnqueueMock.mockResolvedValue(undefined);
+    deferPersonMediaObjectCleanupMock.mockResolvedValue(undefined);
     updatePersonMock.mockResolvedValue({ success: true });
     useAppStore.setState({
       currentTreeId: 'tree-1',
@@ -97,8 +119,25 @@ describe('useGallery', () => {
     });
 
     expect(deleteGalleryItemMock).not.toHaveBeenCalled();
+    expect(removePersonMediaObjectOrEnqueueMock).not.toHaveBeenCalled();
+    expect(deferPersonMediaObjectCleanupMock).not.toHaveBeenCalled();
     expect(updatePersonMock).not.toHaveBeenCalled();
     expect(showErrorMock).toHaveBeenCalledWith('readOnly');
+  });
+
+  it('rejects unsupported image formats before invoking the upload service', async () => {
+    useAppStore.setState({ currentUserRole: 'editor' });
+    const { result } = renderHook(() => useGallery());
+
+    await act(async () => {
+      await result.current.addPhoto(new File(['image'], 'photo.svg', {
+        type: 'image/svg+xml',
+      }), 'person-1');
+    });
+
+    expect(uploadToGalleryMock).not.toHaveBeenCalled();
+    expect(updatePersonMock).not.toHaveBeenCalled();
+    expect(showErrorMock).toHaveBeenCalledWith('galleryPhotoUploadError');
   });
 
   it('allows an editor to upload and attach a gallery photo', async () => {
@@ -131,9 +170,28 @@ describe('useGallery', () => {
       }), 'person-1');
     });
 
-    expect(deleteGalleryItemMock).toHaveBeenCalledWith(expect.objectContaining({
-      path: 'tree-1/person-1/gallery-1.webp',
-    }));
+    expect(removePersonMediaObjectOrEnqueueMock).toHaveBeenCalledWith(
+      expect.objectContaining({ treeId: 'tree-1', userId: 'user-1' }),
+      expect.objectContaining({
+        bucket: 'person-media',
+        objectPath: 'tree-1/gallery-photo/123e4567-e89b-42d3-a456-426614174000.webp',
+      })
+    );
+    expect(showErrorMock).toHaveBeenCalledWith('galleryPhotoUploadError');
+  });
+
+  it('removes a newly uploaded object if attaching it to the person throws', async () => {
+    useAppStore.setState({ currentUserRole: 'editor' });
+    updatePersonMock.mockRejectedValueOnce(new Error('sync unavailable'));
+    const { result } = renderHook(() => useGallery());
+
+    await act(async () => {
+      await result.current.addPhoto(new File(['image'], 'photo.webp', {
+        type: 'image/webp',
+      }), 'person-1');
+    });
+
+    expect(removePersonMediaObjectOrEnqueueMock).toHaveBeenCalledOnce();
     expect(showErrorMock).toHaveBeenCalledWith('galleryPhotoUploadError');
   });
 
@@ -146,7 +204,18 @@ describe('useGallery', () => {
       });
       return {
         id: 'gallery-2',
-        path: 'tree-1/person-1/gallery-2.webp',
+        asset: {
+          schemaVersion: 1,
+          provider: 'supabase-private',
+          bucket: 'person-media',
+          assetId: '223e4567-e89b-42d3-a456-426614174000',
+          kind: 'gallery-photo',
+          objectPath: 'tree-1/gallery-photo/223e4567-e89b-42d3-a456-426614174000.webp',
+          mimeType: 'image/webp',
+          byteLength: 128,
+          version: 1,
+          createdAt: '2026-09-04T00:00:00.000Z',
+        },
         version: 1,
         createdAt: '2026-09-04T00:00:00.000Z',
       };
@@ -160,10 +229,12 @@ describe('useGallery', () => {
     });
 
     expect(updatePersonMock).not.toHaveBeenCalled();
-    expect(deleteGalleryItemMock).toHaveBeenCalledWith(expect.objectContaining({
-      path: 'tree-1/person-1/gallery-2.webp',
-      token: 'session-token',
-    }));
+    expect(removePersonMediaObjectOrEnqueueMock).toHaveBeenCalledWith(
+      expect.objectContaining({ treeId: 'tree-1', token: 'session-token' }),
+      expect.objectContaining({
+        objectPath: 'tree-1/gallery-photo/223e4567-e89b-42d3-a456-426614174000.webp',
+      })
+    );
   });
 
   it('updates the person before deleting the underlying gallery object', async () => {
@@ -173,7 +244,7 @@ describe('useGallery', () => {
       callOrder.push('record');
       return { success: true };
     });
-    deleteGalleryItemMock.mockImplementationOnce(async () => {
+    deferPersonMediaObjectCleanupMock.mockImplementationOnce(async () => {
       callOrder.push('storage');
     });
     const { result } = renderHook(() => useGallery());

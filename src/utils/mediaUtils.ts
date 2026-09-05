@@ -1,7 +1,10 @@
 import { Person } from '../types';
+import type { GalleryItem, PersonMediaAssetRef } from '../types';
+import { isPersonMediaAssetRef } from '../types';
 import { supabaseUrl } from '../services/supabaseConfig';
 
 interface GalleryImageItem {
+    asset?: PersonMediaAssetRef;
     url?: string;
     path?: string;
     version?: number;
@@ -12,6 +15,10 @@ interface GalleryImageItem {
  */
 export const getPersonPhoto = (person: Partial<Person> | null | undefined): string | null => {
     if (!person) return null;
+
+    // Canonical private assets must only be resolved through the authenticated
+    // person-media boundary. Never synthesize a public URL for them.
+    if (isPersonMediaAssetRef(person.photoAsset)) return null;
 
     const path = person.photoPath;
     const version = person.photoVersion;
@@ -27,6 +34,15 @@ export const getPersonPhoto = (person: Partial<Person> | null | undefined): stri
     return person.photoUrl || null;
 };
 
+export const getPersonPhotoAsset = (
+    person: Partial<Person> | null | undefined
+): PersonMediaAssetRef | null => (
+    isPersonMediaAssetRef(person?.photoAsset) ? person.photoAsset : null
+);
+
+export const hasPersonPhoto = (person: Partial<Person> | null | undefined): boolean =>
+    Boolean(getPersonPhotoAsset(person) || getPersonPhoto(person));
+
 /**
  * Resolves a gallery image URL.
  * Supports direct string URLs and GalleryItem objects.
@@ -35,6 +51,8 @@ export const getGalleryImageUrl = (item: string | GalleryImageItem | null | unde
     if (!item) return null;
 
     if (typeof item === 'string') return item;
+
+    if (isPersonMediaAssetRef(item.asset)) return null;
 
     if (typeof item.url === 'string' && item.url.trim()) return item.url;
 
@@ -46,4 +64,11 @@ export const getGalleryImageUrl = (item: string | GalleryImageItem | null | unde
     }
 
     return null;
+};
+
+export const getGalleryImageAsset = (
+    item: string | GalleryImageItem | GalleryItem | null | undefined
+): PersonMediaAssetRef | null => {
+    if (!item || typeof item === 'string') return null;
+    return isPersonMediaAssetRef(item.asset) ? item.asset : null;
 };

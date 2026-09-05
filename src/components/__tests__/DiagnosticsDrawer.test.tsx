@@ -3,12 +3,14 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DiagnosticsDrawer } from '../../features/diagnostics';
 
-const { pruneTreeOperationsMock, pruneActivityLogsMock, showErrorMock, showLoadingMock, updateToastMock, clearOutgoingQueueMock } = vi.hoisted(() => ({
+const { pruneTreeOperationsMock, pruneActivityLogsMock, migratePersonMediaMock, showErrorMock, showLoadingMock, updateToastMock, warningToastMock, clearOutgoingQueueMock } = vi.hoisted(() => ({
   pruneTreeOperationsMock: vi.fn(),
   pruneActivityLogsMock: vi.fn(),
+  migratePersonMediaMock: vi.fn(),
   showErrorMock: vi.fn(),
   showLoadingMock: vi.fn(() => 'toast-1'),
   updateToastMock: vi.fn(),
+  warningToastMock: vi.fn(),
   clearOutgoingQueueMock: vi.fn(),
 }));
 
@@ -131,6 +133,12 @@ vi.mock('../../context/TranslationContext', () => ({
         pruneActivityLogsSuccess: 'Removed {count} old activity log entries.',
         pruneOperationsError: 'Failed to prune old sync operations.',
         pruneActivityLogsError: 'Failed to prune old activity logs.',
+        migratePersonMedia: 'Secure Legacy Person Photos',
+        migratePersonMediaRunning: 'Moving legacy person photos into private storage...',
+        migratePersonMediaSuccess: 'Secured {migrated} photos and removed {cleaned} public references. External links left unchanged: {external}.',
+        migratePersonMediaNoop: 'All eligible person photos are already in private storage.',
+        migratePersonMediaPartial: 'Migration paused: {failed} failed and {blocked} blocked items. Run it again after reviewing the affected media.',
+        migratePersonMediaError: 'Failed to migrate legacy person photos.',
         clearSyncQueue: 'Clear Pending Syncs',
         clearSyncQueueDesc: 'Remove all unsaved changes waiting for upload. This cannot be undone.',
         clearSyncConfirmValue: 'CLEAR',
@@ -165,6 +173,7 @@ vi.mock('../../services/deltaSyncService', () => ({
 vi.mock('../../services/operationalMaintenanceService', () => ({
   pruneTreeOperations: (...args: unknown[]) => pruneTreeOperationsMock(...args),
   pruneActivityLogs: (...args: unknown[]) => pruneActivityLogsMock(...args),
+  migrateLegacyPersonMedia: (...args: unknown[]) => migratePersonMediaMock(...args),
 }));
 
 vi.mock('../../utils/showToast', () => ({
@@ -174,6 +183,7 @@ vi.mock('../../utils/showToast', () => ({
       error: (...args: unknown[]) => showErrorMock(...args),
       loading: showLoadingMock as unknown as (message: string) => string,
       success: (...args: unknown[]) => updateToastMock(...args),
+      warning: (...args: unknown[]) => warningToastMock(...args),
       promise: vi.fn(),
     }
   )
@@ -193,6 +203,15 @@ describe('DiagnosticsDrawer', () => {
     };
     pruneTreeOperationsMock.mockResolvedValue(5);
     pruneActivityLogsMock.mockResolvedValue(3);
+    migratePersonMediaMock.mockResolvedValue({
+      scannedCount: 4,
+      migratedCount: 2,
+      cleanedCount: 2,
+      blockedCount: 0,
+      externalCount: 1,
+      failedCount: 0,
+      complete: true,
+    });
   });
 
   it('shows diagnostics and maintenance actions for the tree owner', async () => {
@@ -216,6 +235,7 @@ describe('DiagnosticsDrawer', () => {
     expect(screen.getByText(/invitee@example.com/i)).toBeInTheDocument();
     expect(await screen.findByRole('button', { name: 'Prune Old Sync Operations' })).toBeInTheDocument();
     expect(await screen.findByRole('button', { name: 'Prune Old Activity Logs' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Secure Legacy Person Photos' })).toBeInTheDocument();
   });
 
   it('shows invitation telemetry errors when present', () => {
@@ -238,6 +258,7 @@ describe('DiagnosticsDrawer', () => {
 
     expect(screen.queryByRole('button', { name: 'Prune Old Sync Operations' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Prune Old Activity Logs' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Secure Legacy Person Photos' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Clear Pending Syncs' })).toBeDisabled();
     expect(await screen.findByText('Maintenance tools are available only to the tree owner while a tree is open.')).toBeInTheDocument();
   });
@@ -284,6 +305,46 @@ describe('DiagnosticsDrawer', () => {
     );
   });
 
+  it('runs the owner-only private media migration and reports aggregate counts', async () => {
+    render(<DiagnosticsDrawer />);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Secure Legacy Person Photos' }));
+
+    await waitFor(() => {
+      expect(migratePersonMediaMock).toHaveBeenCalledWith(
+        'tree-1',
+        expect.objectContaining({ uid: 'user-1', supabaseToken: 'token-1' })
+      );
+    });
+    expect(showLoadingMock).toHaveBeenCalledWith('Moving legacy person photos into private storage...');
+    expect(updateToastMock).toHaveBeenCalledWith(
+      'Secured 2 photos and removed 2 public references. External links left unchanged: 1.',
+      { id: 'toast-1', duration: 5000 }
+    );
+  });
+
+  it('uses warning feedback when private media migration is only partially complete', async () => {
+    migratePersonMediaMock.mockResolvedValueOnce({
+      scannedCount: 2,
+      migratedCount: 1,
+      cleanedCount: 1,
+      blockedCount: 1,
+      externalCount: 0,
+      failedCount: 1,
+      complete: true,
+    });
+    render(<DiagnosticsDrawer />);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Secure Legacy Person Photos' }));
+
+    await waitFor(() => {
+      expect(warningToastMock).toHaveBeenCalledWith(
+        'Migration paused: 1 failed and 1 blocked items. Run it again after reviewing the affected media.',
+        { id: 'toast-1', duration: 6500 }
+      );
+    });
+  });
+
   it('shows error feedback when maintenance fails', async () => {
     pruneTreeOperationsMock.mockRejectedValueOnce(new Error('Database temporarily unavailable.'));
 
@@ -312,12 +373,14 @@ describe('DiagnosticsDrawer', () => {
 
     const pruneOperationsButton = await screen.findByRole('button', { name: 'Prune Old Sync Operations' });
     const pruneActivityButton = await screen.findByRole('button', { name: 'Prune Old Activity Logs' });
+    const mediaMigrationButton = await screen.findByRole('button', { name: 'Secure Legacy Person Photos' });
 
     fireEvent.click(pruneOperationsButton);
 
     await waitFor(() => {
       expect(pruneOperationsButton).toBeDisabled();
       expect(pruneActivityButton).toBeDisabled();
+      expect(mediaMigrationButton).toBeDisabled();
     });
 
     act(() => {
@@ -327,6 +390,7 @@ describe('DiagnosticsDrawer', () => {
     await waitFor(() => {
       expect(pruneOperationsButton).not.toBeDisabled();
       expect(pruneActivityButton).not.toBeDisabled();
+      expect(mediaMigrationButton).not.toBeDisabled();
     });
   });
 

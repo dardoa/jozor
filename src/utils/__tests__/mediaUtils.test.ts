@@ -1,7 +1,22 @@
 import { describe, expect, it } from 'vitest';
-import { getPersonPhoto, getGalleryImageUrl } from '../mediaUtils';
+import {
+  getGalleryImageAsset,
+  getGalleryImageUrl,
+  getPersonPhoto,
+  getPersonPhotoAsset,
+  hasPersonPhoto,
+} from '../mediaUtils';
 import { supabaseUrl } from '../../services/supabaseConfig';
-import { Person } from '../../types';
+import { createPersonMediaAssetRef, Person } from '../../types';
+
+const privatePhotoAsset = createPersonMediaAssetRef({
+  treeId: 'tree-1',
+  assetId: '123e4567-e89b-42d3-a456-426614174000',
+  kind: 'profile-photo',
+  mimeType: 'image/webp',
+  byteLength: 512,
+  createdAt: '2026-09-05T00:00:00.000Z',
+});
 
 describe('mediaUtils', () => {
   describe('getPersonPhoto', () => {
@@ -39,6 +54,18 @@ describe('mediaUtils', () => {
 
     it('returns null if both photoPath and photoUrl are missing or empty', () => {
       expect(getPersonPhoto({ photoPath: '', photoUrl: '' } as Person)).toBeNull();
+    });
+
+    it('never converts a canonical private asset into a public URL', () => {
+      const person = {
+        photoAsset: privatePhotoAsset,
+        photoPath: 'tree-1/person-1.webp',
+        photoUrl: 'https://legacy.example/person-1.webp',
+      } as Person;
+
+      expect(getPersonPhoto(person)).toBeNull();
+      expect(getPersonPhotoAsset(person)).toEqual(privatePhotoAsset);
+      expect(hasPersonPhoto(person)).toBe(true);
     });
   });
 
@@ -82,6 +109,25 @@ describe('mediaUtils', () => {
       expect(getGalleryImageUrl({})).toBeNull();
       expect(getGalleryImageUrl({ url: '', path: '' })).toBeNull();
       expect(getGalleryImageUrl({ url: '  ', path: '   ' })).toBeNull();
+    });
+
+    it('prefers a canonical private gallery asset over stale legacy fields', () => {
+      const galleryAsset = createPersonMediaAssetRef({
+        treeId: 'tree-1',
+        assetId: '223e4567-e89b-42d3-a456-426614174000',
+        kind: 'gallery-photo',
+        mimeType: 'image/webp',
+        byteLength: 768,
+        createdAt: '2026-09-05T00:00:00.000Z',
+      });
+      const item = {
+        asset: galleryAsset,
+        url: 'https://legacy.example/gallery.webp',
+        path: 'tree-1/person-1/gallery.webp',
+      };
+
+      expect(getGalleryImageUrl(item)).toBeNull();
+      expect(getGalleryImageAsset(item)).toEqual(galleryAsset);
     });
   });
 });

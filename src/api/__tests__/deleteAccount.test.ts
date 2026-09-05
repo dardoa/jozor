@@ -168,6 +168,37 @@ describe('delete account API', () => {
     expect(listMock).toHaveBeenCalled();
   });
 
+  it('removes both legacy avatars and private person media for every owned tree', async () => {
+    const storageFrom = vi.fn((_bucket: string) => ({
+      list: vi.fn(async () => ({ data: [], error: null })),
+      remove: vi.fn(async () => ({ error: null })),
+    }));
+    const serviceClient = {
+      from: vi.fn(() => ({
+        select: vi.fn(() => ({
+          eq: vi.fn(async () => ({ data: [{ id: 'tree-1' }], error: null })),
+        })),
+      })),
+      storage: { from: storageFrom },
+      auth: { admin: { deleteUser: vi.fn(async () => ({ error: null })) } },
+    };
+    const userClient = { rpc: vi.fn(async () => ({ data: null, error: null })) };
+    createClientMock.mockReturnValueOnce(serviceClient).mockReturnValueOnce(userClient);
+    const res = createResponse();
+
+    await handler({
+      method: 'POST',
+      headers: { authorization: `Bearer ${createInternalJwt()}` },
+    } as never, res as never);
+
+    expect(res.statusCode).toBe(200);
+    expect(storageFrom).toHaveBeenCalledWith('avatars');
+    expect(storageFrom).toHaveBeenCalledWith('person-media');
+    const bucketCalls = storageFrom.mock.calls.map(([bucket]) => bucket);
+    expect(bucketCalls.filter((bucket) => bucket === 'avatars')).toHaveLength(2);
+    expect(bucketCalls.filter((bucket) => bucket === 'person-media')).toHaveLength(1);
+  });
+
   it('correctly paginates paths containing more than 100 items', async () => {
     const listMock = vi.fn();
 

@@ -1,6 +1,10 @@
 
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { pruneActivityLogs, pruneTreeOperations } from '../operationalMaintenanceService';
+import {
+  migrateLegacyPersonMedia,
+  pruneActivityLogs,
+  pruneTreeOperations,
+} from '../operationalMaintenanceService';
 
 const { fetchMock } = vi.hoisted(() => {
   const fetchMock = vi.fn();
@@ -100,6 +104,71 @@ describe('operationalMaintenanceService', () => {
         Authorization: 'Bearer stored-token',
       }),
     }));
+  });
+
+  it('runs private person media migration batches to completion and aggregates their counts', async () => {
+    fetchMock
+      .mockResolvedValueOnce(new Response(JSON.stringify({
+        scannedCount: 10,
+        migratedCount: 2,
+        cleanedCount: 2,
+        blockedCount: 0,
+        externalCount: 1,
+        failedCount: 0,
+        nextOffset: 10,
+        complete: false,
+      }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({
+        scannedCount: 3,
+        migratedCount: 1,
+        cleanedCount: 2,
+        blockedCount: 1,
+        externalCount: 0,
+        failedCount: 1,
+        nextOffset: 13,
+        complete: true,
+      }), { status: 200 }));
+
+    const result = await migrateLegacyPersonMedia('tree-5', {
+      uid: 'user-5',
+      email: 'owner@example.com',
+      supabaseToken: 'token',
+    });
+
+    expect(result).toEqual({
+      scannedCount: 13,
+      migratedCount: 3,
+      cleanedCount: 4,
+      blockedCount: 1,
+      externalCount: 1,
+      failedCount: 1,
+      complete: true,
+    });
+    expect(fetchMock).toHaveBeenNthCalledWith(1, '/api/person-media-migration', expect.objectContaining({
+      body: JSON.stringify({ treeId: 'tree-5', offset: 0, limit: 10 }),
+    }));
+    expect(fetchMock).toHaveBeenNthCalledWith(2, '/api/person-media-migration', expect.objectContaining({
+      body: JSON.stringify({ treeId: 'tree-5', offset: 10, limit: 10 }),
+    }));
+  });
+
+  it('fails closed on a malformed or non-advancing person media migration response', async () => {
+    fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({
+      scannedCount: 10,
+      migratedCount: 0,
+      cleanedCount: 0,
+      blockedCount: 0,
+      externalCount: 0,
+      failedCount: 0,
+      nextOffset: 0,
+      complete: false,
+    }), { status: 200 }));
+
+    await expect(migrateLegacyPersonMedia('tree-6', {
+      uid: 'user-6',
+      email: 'owner@example.com',
+      supabaseToken: 'token',
+    })).rejects.toThrow('Person media migration failed.');
   });
 });
 

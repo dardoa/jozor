@@ -45,6 +45,9 @@ jobs:
       - name: Unit tests
         run: npm run test
 
+      - name: Local PostgreSQL media contract tests
+        run: npm run test:database:local
+
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 

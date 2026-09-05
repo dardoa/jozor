@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import type { Person, TreeSettings, TreeNode } from '../../../types';
 import { useTranslation } from '../../../context/TranslationContext';
 import { getPrivacyPlaceholderDescriptor } from '../../../utils/avatarUtils';
-import { getPersonPhoto } from '../../../utils/mediaUtils';
+import { getPersonPhoto, hasPersonPhoto } from '../../../utils/mediaUtils';
 import {
   buildNodeMetaLines,
   buildNodeNameLines,
@@ -83,7 +83,7 @@ export const useNodeViewModel = ({
     () => getPersonPhoto(person),
     [person],
   );
-  const shouldRenderPhoto = settings.showPhotos && !settings.privacyMode && Boolean(photoSource) && !isLOD;
+  const shouldRenderPhoto = settings.showPhotos && !settings.privacyMode && hasPersonPhoto(person) && !isLOD;
   const photoAlt = useMemo(
     () => buildPhotoAlt(person, t.unnamedPerson),
     [person, t.unnamedPerson],

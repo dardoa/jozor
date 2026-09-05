@@ -84,7 +84,7 @@ export const NodeImageBlock = memo<NodeImageBlockProps>(({
               />
             ) : (
               <SmartAvatar
-                person={{ ...person, photoUrl: undefined }}
+                person={{ ...person, photoUrl: undefined, photoAsset: undefined }}
                 size={Math.min(imageBlockHeightPx, 112)}
                 className="rounded-[calc(var(--tree-node-radius)-6px)]"
               />

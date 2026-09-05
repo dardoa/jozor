@@ -112,6 +112,7 @@ export function maskPerson(person: Person): Person {
     bio: '',
     photoUrl: undefined,
     photoPath: undefined,
+    photoAsset: undefined,
     photoVersion: undefined,
     gallery: [],
     voiceNotes: [],

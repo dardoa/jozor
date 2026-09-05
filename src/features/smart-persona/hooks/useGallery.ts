@@ -4,6 +4,16 @@ import { useTreeActions } from '../../../hooks/tree/useTreeActions';
 import { showToast } from '../../../utils/showToast';
 import { logError } from '../../../utils/errorLogger';
 import { canEditTreeContext } from '../../../domain/treePermissionPolicy';
+import {
+  isPersonMediaAssetRef,
+  isPersonMediaImageMimeType,
+  type GalleryItem,
+} from '../../../types';
+import {
+  deferPersonMediaObjectCleanup,
+  removePersonMediaObjectOrEnqueue,
+  type PersonMediaStorageTarget,
+} from '../../../services/personMediaCleanupQueue';
 
 interface UseGalleryReturn {
   isUploading: boolean;
@@ -16,6 +26,29 @@ const isSameEditableTreeSession = (treeId: string, userId: string): boolean => {
   return state.currentTreeId === treeId
     && state.user?.uid === userId
     && canEditTreeContext({ currentTreeId: state.currentTreeId, role: state.currentUserRole });
+};
+
+const getGalleryCleanupTarget = (
+  treeId: string,
+  item: GalleryItem
+): PersonMediaStorageTarget | null => {
+  if (isPersonMediaAssetRef(item.asset)) {
+    return {
+      bucket: item.asset.bucket,
+      objectPath: item.asset.objectPath,
+      assetId: item.asset.assetId,
+    };
+  }
+  if (!item.path) return null;
+  const objectPath = item.path.startsWith('avatars/')
+    ? item.path.slice('avatars/'.length)
+    : item.path;
+  if (!objectPath.startsWith(`${treeId}/`)) return null;
+  return {
+    bucket: 'avatars',
+    objectPath,
+    assetId: item.id || 'legacy-gallery-photo',
+  };
 };
 
 export const useGallery = (): UseGalleryReturn => {
@@ -35,8 +68,13 @@ export const useGallery = (): UseGalleryReturn => {
       showToast.error('readOnly');
       return;
     }
+    if (!isPersonMediaImageMimeType(file.type)) {
+      showToast.error('galleryPhotoUploadError');
+      return;
+    }
     const sessionToken = user.supabaseToken || undefined;
 
+    let rollbackUploadedObject: (() => Promise<void>) | undefined;
     try {
       setIsUploading(true);
       const { SupabaseGalleryService } = await import('../services/supabaseGalleryService');
@@ -50,24 +88,22 @@ export const useGallery = (): UseGalleryReturn => {
         token: sessionToken,
       });
 
-      const cleanupUploadedItem = async () => {
-        try {
-          await SupabaseGalleryService.deleteGalleryItem({
-            path: newItem.path,
-            uid: user.uid,
-            email: user.email,
-            token: sessionToken,
-          });
-        } catch (cleanupError) {
-          logError('GALLERY_UPLOAD_ROLLBACK_FAILED', cleanupError, {
-            showToast: false,
-            metadata: { personId, treeId: currentTreeId },
-          });
-        }
+      const cleanupContext = {
+        treeId: currentTreeId,
+        userId: user.uid,
+        token: sessionToken,
+      };
+      const uploadedTarget = getGalleryCleanupTarget(currentTreeId, newItem);
+
+      rollbackUploadedObject = async () => {
+        if (!uploadedTarget) return;
+        await removePersonMediaObjectOrEnqueue(cleanupContext, uploadedTarget);
       };
 
       if (!isSameEditableTreeSession(currentTreeId, user.uid)) {
-        await cleanupUploadedItem();
+        const rollback = rollbackUploadedObject;
+        rollbackUploadedObject = undefined;
+        await rollback();
         showToast.error('galleryPhotoUploadError');
         return;
       }
@@ -79,12 +115,15 @@ export const useGallery = (): UseGalleryReturn => {
         gallery: [...currentGallery, newItem],
       });
       if (!updateResult.success) {
-        await cleanupUploadedItem();
         throw new Error(updateResult.error || 'Gallery record update failed.');
       }
+      rollbackUploadedObject = undefined;
 
       showToast.success('galleryPhotoAdded');
     } catch (error: unknown) {
+      if (rollbackUploadedObject) {
+        await rollbackUploadedObject();
+      }
       logError('GALLERY_UPLOAD_FAILED', error, { metadata: { personId, treeId: currentTreeId } });
       showToast.error('galleryPhotoUploadError');
     } finally {
@@ -106,7 +145,6 @@ export const useGallery = (): UseGalleryReturn => {
 
     try {
       setIsUploading(true);
-      const { SupabaseGalleryService } = await import('../services/supabaseGalleryService');
 
       if (!isSameEditableTreeSession(currentTreeId, user.uid)) {
         showToast.error('galleryPhotoRemoveError');
@@ -133,19 +171,14 @@ export const useGallery = (): UseGalleryReturn => {
         throw new Error(updateResult.error || 'Gallery record update failed.');
       }
 
-      if (typeof itemToRemove === 'object' && itemToRemove.path) {
-        try {
-          await SupabaseGalleryService.deleteGalleryItem({
-            path: itemToRemove.path,
-            uid: user.uid,
-            email: user.email,
+      if (typeof itemToRemove === 'object') {
+        const target = getGalleryCleanupTarget(currentTreeId, itemToRemove);
+        if (target) {
+          await deferPersonMediaObjectCleanup({
+            treeId: currentTreeId,
+            userId: user.uid,
             token: sessionToken,
-          });
-        } catch (cleanupError) {
-          logError('GALLERY_STORAGE_CLEANUP_FAILED', cleanupError, {
-            showToast: false,
-            metadata: { personId, treeId: currentTreeId },
-          });
+          }, target);
         }
       }
 

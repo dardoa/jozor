@@ -6,6 +6,7 @@ import { useAuthInit } from '../../auth/useAuthInit';
 import { supabaseAuthService } from '../../../services/supabaseAuthService';
 import type { Person } from '../../../types';
 import type { SharedTreeSummary } from '../../../services/supabaseTreeTypes';
+import { usePersonMediaCleanupLifecycle } from '../../utils/usePersonMediaCleanupLifecycle';
 
 interface UseAuthCoordinatorParams {
   isSharedMode?: boolean;
@@ -41,6 +42,8 @@ export const useAuthCoordinator = ({
   const isDemoMode = useAppStore((state) => state.isDemoMode);
   const navigate = useNavigate();
   const location = useLocation();
+
+  usePersonMediaCleanupLifecycle();
 
   const { handleLogout } = useAuthInit({
     isSharedMode,

@@ -1,6 +1,6 @@
 
 import { describe, expect, it } from 'vitest';
-import type { Person } from '../../types';
+import { createPersonMediaAssetRef, type Person } from '../../types';
 import { mapDbPersonRowToPerson, mapPersonToDbRow } from '../personRowMapper';
 
 const buildPerson = (): Person => ({
@@ -79,8 +79,21 @@ describe('personRowMapper', () => {
   });
 
   it('maps DB row back to Person while preserving extended fields from custom_fields', () => {
-    const person = buildPerson();
+    const photoAsset = createPersonMediaAssetRef({
+      treeId: 'tree-1',
+      assetId: '123e4567-e89b-42d3-a456-426614174000',
+      kind: 'profile-photo',
+      mimeType: 'image/webp',
+      byteLength: 256,
+      createdAt: '2026-09-05T00:00:00.000Z',
+    });
+    const person = { ...buildPerson(), photoAsset };
     const row = mapPersonToDbRow(person, 'tree-1');
+
+    expect(row.metadata).not.toHaveProperty('photoAsset');
+    expect(row.metadata).not.toHaveProperty('photoUrl');
+    expect(row.metadata).not.toHaveProperty('gallery');
+    expect(JSON.stringify(row.metadata)).not.toContain(photoAsset.objectPath);
 
     const restored = mapDbPersonRowToPerson({
       ...row,
@@ -100,6 +113,7 @@ describe('personRowMapper', () => {
       profession: 'Historian',
       bio: 'Researcher and family historian',
       isPrivate: true,
+      photoAsset,
     });
     expect(restored.parents).toEqual([]);
     expect(restored.spouses).toEqual([]);

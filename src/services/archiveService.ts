@@ -1,7 +1,14 @@
 import JSZip from 'jszip';
 
-import type { BackupManifest, FullState, Person } from '../types';
-import { getGalleryImageUrl } from '../utils/mediaUtils';
+import {
+  isPersonMediaAssetRef,
+  type BackupManifest,
+  type FullState,
+  type Person,
+  type PersonMediaAssetRef,
+} from '../types';
+import { getGalleryImageAsset, getGalleryImageUrl } from '../utils/mediaUtils';
+import { loadPersonMediaAssetBlobThroughGateway } from './personMediaAssetService';
 import { createLimit } from '../../shared/concurrency';
 
 export interface ArchiveBuildOptions {
@@ -9,6 +16,7 @@ export interface ArchiveBuildOptions {
   appVersion?: string;
   createdAt?: string;
   mediaFetcher?: (url: string) => Promise<Blob>;
+  personMediaFetcher?: (asset: PersonMediaAssetRef, personId: string) => Promise<Blob>;
 }
 
 export interface ArchiveBuildResult {
@@ -40,6 +48,7 @@ export const buildBlueprintArchive = async (
   const createdAt = resolveCreatedAt(snapshot, options.createdAt);
   const archiveDate = new Date(createdAt);
   const mediaFetcher = options.mediaFetcher ?? fetchMediaAsBlob;
+  const personMediaFetcher = options.personMediaFetcher ?? loadPersonMediaAssetBlobThroughGateway;
   const zip = new JSZip();
   const limit = createLimit(5);
 
@@ -55,7 +64,18 @@ export const buildBlueprintArchive = async (
       const person = snapshot.people[personId];
       const normalizedPerson = clonePersonWithoutPortableMedia(person);
 
-      const avatarPromise = person.photoUrl
+      const avatarPromise = isPersonMediaAssetRef(person.photoAsset)
+        ? limit(() =>
+            addPrivateMediaFile({
+              zip,
+              asset: person.photoAsset!,
+              personId,
+              targetBasePath: `media/avatars/${sanitizeFileSegment(personId)}`,
+              date: archiveDate,
+              personMediaFetcher,
+            })
+          )
+        : person.photoUrl
         ? limit(() =>
             addMediaFile({
               zip,
@@ -69,6 +89,19 @@ export const buildBlueprintArchive = async (
 
       const galleryPromises = (Array.isArray(person.gallery) ? person.gallery : []).map(
         (galleryItem, index) => {
+          const privateAsset = getGalleryImageAsset(galleryItem);
+          if (privateAsset) {
+            return limit(() =>
+              addPrivateMediaFile({
+                zip,
+                asset: privateAsset,
+                personId,
+                targetBasePath: `media/gallery/${sanitizeFileSegment(personId)}-${index + 1}`,
+                date: archiveDate,
+                personMediaFetcher,
+              })
+            );
+          }
           const sourceUrl = getGalleryImageUrl(galleryItem);
           if (!sourceUrl) return Promise.resolve(null);
 
@@ -166,6 +199,9 @@ export const buildBlueprintArchive = async (
 const clonePersonWithoutPortableMedia = (person: Person): Person => {
   const cloned = structuredClone(person);
   delete cloned.photoUrl;
+  delete cloned.photoPath;
+  delete cloned.photoVersion;
+  delete cloned.photoAsset;
   cloned.gallery = [];
   cloned.voiceNotes = [];
   return cloned;
@@ -188,6 +224,30 @@ interface AddMediaFileParams {
   date: Date;
   mediaFetcher: (url: string) => Promise<Blob>;
 }
+
+interface AddPrivateMediaFileParams {
+  zip: JSZip;
+  asset: PersonMediaAssetRef;
+  personId: string;
+  targetBasePath: string;
+  date: Date;
+  personMediaFetcher: (asset: PersonMediaAssetRef, personId: string) => Promise<Blob>;
+}
+
+const addPrivateMediaFile = async ({
+  zip,
+  asset,
+  personId,
+  targetBasePath,
+  date,
+  personMediaFetcher,
+}: AddPrivateMediaFileParams): Promise<string> => {
+  const blob = await personMediaFetcher(asset, personId);
+  const extension = getExtensionFromMimeType(blob.type || asset.mimeType) ?? 'bin';
+  const finalPath = `${targetBasePath}.${extension}`;
+  zip.file(finalPath, blob, { binary: true, date });
+  return finalPath;
+};
 
 const addMediaFile = async ({
   zip,

@@ -2,7 +2,11 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { Person, UserProfile } from '../../../../../types';
+import {
+  createPersonMediaAssetRef,
+  type Person,
+  type UserProfile,
+} from '../../../../../types';
 import { createPerson } from '../../../../../utils/familyLogic';
 import { MediaTab } from '../MediaTab';
 
@@ -10,10 +14,12 @@ const {
   addPhotoMock,
   removePhotoMock,
   uploadFileMock,
+  usePersonMediaAssetUrlsMock,
 } = vi.hoisted(() => ({
   addPhotoMock: vi.fn(),
   removePhotoMock: vi.fn(),
   uploadFileMock: vi.fn(),
+  usePersonMediaAssetUrlsMock: vi.fn(),
 }));
 
 vi.mock('../../../hooks/useGallery', () => ({
@@ -22,6 +28,10 @@ vi.mock('../../../hooks/useGallery', () => ({
     addPhoto: addPhotoMock,
     removePhoto: removePhotoMock,
   }),
+}));
+
+vi.mock('../../../../../hooks/utils/usePersonMediaAssetUrls', () => ({
+  usePersonMediaAssetUrls: usePersonMediaAssetUrlsMock,
 }));
 
 vi.mock('../../../../../context/TranslationContext', () => ({
@@ -109,6 +119,10 @@ describe('MediaTab', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     uploadFileMock.mockResolvedValue('https://drive.example.test/voice-note');
+    usePersonMediaAssetUrlsMock.mockReturnValue({
+      urlsByAssetId: {},
+      isLoading: false,
+    });
   });
 
   it('uses the filtered gallery index when an invalid record precedes a valid image', async () => {
@@ -173,5 +187,40 @@ describe('MediaTab', () => {
     expect(onUpdate).toHaveBeenCalledWith(person.id, {
       voiceNotes: ['https://drive.example.test/voice-note'],
     });
+  });
+
+  it('renders a private gallery asset only through its resolved blob URL', () => {
+    const asset = createPersonMediaAssetRef({
+      treeId: 'tree-1',
+      assetId: '223e4567-e89b-42d3-a456-426614174000',
+      kind: 'gallery-photo',
+      mimeType: 'image/webp',
+      byteLength: 256,
+      createdAt: '2026-09-05T00:00:00.000Z',
+    });
+    usePersonMediaAssetUrlsMock.mockReturnValue({
+      urlsByAssetId: { [asset.assetId]: 'blob:private-gallery-photo' },
+      isLoading: false,
+    });
+    const person = makePerson({
+      gallery: [{
+        id: 'gallery-item-1',
+        asset,
+        version: 1,
+        createdAt: '2026-09-05T00:00:00.000Z',
+      }],
+    });
+
+    const { container } = render(
+      <MediaTab person={person} isEditing={false} onUpdate={vi.fn()} user={user} />
+    );
+
+    expect(screen.getByRole('img', { name: 'Mariam Saleh — Gallery 1' })).toHaveAttribute(
+      'src',
+      'blob:private-gallery-photo'
+    );
+    expect(container.innerHTML).not.toContain(asset.objectPath);
+    expect(container.innerHTML).not.toContain(asset.assetId);
+    expect(container.innerHTML).not.toContain('person-media');
   });
 });

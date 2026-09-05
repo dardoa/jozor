@@ -1,6 +1,8 @@
 import { memo, useMemo, useState } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import { useCachedImage } from '../../hooks/utils/useCachedImage';
+import { usePersonMediaAssetUrl } from '../../hooks/utils/usePersonMediaAssetUrls';
+import { isPersonMediaAssetRef } from '../../types';
 
 import type { Person } from '../../types';
 import { stringToGradient } from '../../utils/stringToColor';
@@ -19,7 +21,7 @@ type AgeBand = 'child' | 'young' | 'adult' | 'senior';
 type AvatarGender = 'male' | 'female';
 
 interface SmartAvatarProps {
-  person: Pick<Person, 'id' | 'firstName' | 'lastName' | 'gender' | 'birthDate' | 'photoUrl' | 'children' | 'parents' | 'spouses'>;
+  person: Pick<Person, 'id' | 'firstName' | 'lastName' | 'gender' | 'birthDate' | 'photoUrl' | 'photoAsset' | 'children' | 'parents' | 'spouses'>;
   size: number;
   className?: string;
 }
@@ -163,14 +165,23 @@ const getPathViewBox = (pathData: string, gender: AvatarGender, ageBand: AgeBand
 };
 
 export const SmartAvatar = memo<SmartAvatarProps>(({ person, size, className = '' }) => {
-  const [failedPhotoUrl, setFailedPhotoUrl] = useState<string | null>(null);
-  const photoUrl = person.photoUrl?.trim();
+  const [failedPhotoKey, setFailedPhotoKey] = useState<string | null>(null);
+  const privateAsset = isPersonMediaAssetRef(person.photoAsset) ? person.photoAsset : null;
+  const privateDescriptor = useMemo(
+    () => privateAsset ? { personId: person.id, asset: privateAsset } : null,
+    [person.id, privateAsset]
+  );
+  const privatePhotoUrl = usePersonMediaAssetUrl(privateDescriptor);
+  const legacyPhotoUrl = privateAsset ? undefined : person.photoUrl?.trim();
+  const photoKey = privateAsset
+    ? `${privateAsset.assetId}:${privateAsset.version}`
+    : legacyPhotoUrl || null;
   const displayName = [person.firstName, person.lastName].filter(Boolean).join(' ') || 'Person';
 
   // Only subscribe to people if we actually need it for heuristic
   const people = useAppStore((state) => (person.birthDate ? undefined : state.people));
 
-  const isImageFailed = photoUrl ? failedPhotoUrl === photoUrl : false;
+  const isImageFailed = photoKey ? failedPhotoKey === photoKey : false;
 
   const ageBand = useMemo(() => getAgeBand(person, people), [person, people]);
   const gender = getGender(person);
@@ -191,10 +202,10 @@ export const SmartAvatar = memo<SmartAvatarProps>(({ person, size, className = '
     [background, size]
   );
 
-  const { cachedUrl } = useCachedImage(isImageFailed ? undefined : photoUrl, { width: size, height: size });
-  const displayUrl = cachedUrl || photoUrl;
+  const { cachedUrl } = useCachedImage(isImageFailed ? undefined : legacyPhotoUrl, { width: size, height: size });
+  const displayUrl = privatePhotoUrl || cachedUrl || legacyPhotoUrl;
 
-  if (photoUrl && !isImageFailed) {
+  if (displayUrl && !isImageFailed) {
     return (
       <img
         src={displayUrl}
@@ -203,7 +214,7 @@ export const SmartAvatar = memo<SmartAvatarProps>(({ person, size, className = '
         height={size}
         loading="lazy"
         decoding="async"
-        onError={() => setFailedPhotoUrl(photoUrl)}
+        onError={() => photoKey && setFailedPhotoKey(photoKey)}
         className={`block shrink-0 object-cover ${className}`}
         style={{ width: size, height: size }}
       />

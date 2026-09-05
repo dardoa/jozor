@@ -15,11 +15,14 @@ import { useTranslation } from '../../../../context/TranslationContext';
 import { EmptyState } from '../../../../components/ui/EmptyState';
 import { showToast } from '../../../../utils/showToast';
 import { useGallery } from '../../hooks/useGallery';
-import { getGalleryImageUrl } from '../../../../utils/mediaUtils';
+import { getGalleryImageAsset, getGalleryImageUrl } from '../../../../utils/mediaUtils';
 import { logError } from '../../../../utils/errorLogger';
+import { usePersonMediaAssetUrls } from '../../../../hooks/utils/usePersonMediaAssetUrls';
+import type { PersonMediaAssetRef } from '../../../../types';
 
 type GalleryMediaItem = string | {
   id?: string;
+  asset?: PersonMediaAssetRef;
   path?: string;
   url?: string;
   version?: number;
@@ -30,7 +33,7 @@ type GalleryMediaItem = string | {
 interface ResolvedGalleryItem {
   item: GalleryMediaItem;
   sourceIndex: number;
-  src: string;
+  src: string | null;
 }
 
 const MAX_VOICE_FILE_SIZE_BYTES = 15 * 1024 * 1024;
@@ -198,19 +201,38 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
       : [],
     [person.gallery]
   );
+  const privateGalleryDescriptors = useMemo(() => gallery.flatMap((item) => {
+    const asset = getGalleryImageAsset(item);
+    return asset ? [{ personId: person.id, asset }] : [];
+  }), [gallery, person.id]);
+  const { urlsByAssetId, isLoading: isResolvingPrivateGallery } = usePersonMediaAssetUrls(
+    privateGalleryDescriptors
+  );
   const resolvedGallery = useMemo<ResolvedGalleryItem[]>(() => (
     gallery.flatMap((item, sourceIndex) => {
+      const asset = getGalleryImageAsset(item);
+      if (asset) {
+        return [{
+          item,
+          sourceIndex,
+          src: urlsByAssetId[asset.assetId] ?? null,
+        }];
+      }
       const src = getGalleryImageUrl(item);
       return src ? [{ item, sourceIndex, src }] : [];
     })
-  ), [gallery]);
+  ), [gallery, urlsByAssetId]);
   const voiceNotes = person.voiceNotes || [];
   const hasPhotos = resolvedGallery.length > 0;
   const hasVoiceNotes = voiceNotes.length > 0;
   const uploadAudioLabel = t.uploadAudio;
 
   const personFullName = [person.firstName, person.lastName].filter(Boolean).join(' ');
-  const galleryUrls = resolvedGallery.map(({ src }) => src);
+  const readyGallery = useMemo(
+    () => resolvedGallery.filter((entry): entry is ResolvedGalleryItem & { src: string } => Boolean(entry.src)),
+    [resolvedGallery]
+  );
+  const galleryUrls = readyGallery.map(({ src }) => src);
 
   useEffect(() => {
     if (selectedImgIndex !== null && selectedImgIndex >= galleryUrls.length) {
@@ -271,7 +293,7 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
         <input
           ref={galleryInputRef}
           type='file'
-          accept='image/*'
+          accept='image/jpeg,image/png,image/webp'
           className='hidden'
           onChange={handleImageUpload}
           aria-label={t.addPhoto}
@@ -291,6 +313,9 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
               const isObj = typeof item === 'object';
               const itemId = isObj ? item.id : String(sourceIndex);
               const caption = isObj ? item.caption : undefined;
+              const lightboxIndex = src
+                ? readyGallery.findIndex((entry) => entry.sourceIndex === sourceIndex)
+                : -1;
 
               return (
                 <div
@@ -298,24 +323,36 @@ export const MediaTab = memo<MediaTabProps>(({ person, isEditing, onUpdate, user
                   className='animate-in fade-in flex flex-col gap-1.5 duration-200'
                 >
                   <div className='group relative aspect-square'>
-                    <button
-                      type="button"
-                      aria-label={t.openGalleryImage(galleryIndex + 1)}
-                      className='h-full w-full cursor-zoom-in overflow-hidden rounded-xl border border-[var(--border-soft)] bg-[var(--surface-subtle)] shadow-[var(--shadow-sm)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary-500)]'
-                      onClick={() => setSelectedImgIndex(galleryIndex)}
-                    >
-                      <img
-                        src={src}
-                        alt={imgAlt}
-                        className='h-full w-full object-cover transition-transform duration-500 group-hover:scale-105'
-                        loading="lazy"
-                      />
-                      {!isEditing && caption && (
-                        <span className='absolute inset-x-0 bottom-0 truncate bg-black/60 p-1 text-[10px] text-white backdrop-blur-sm'>
-                          {caption}
-                        </span>
-                      )}
-                    </button>
+                    {src ? (
+                      <button
+                        type="button"
+                        aria-label={t.openGalleryImage(galleryIndex + 1)}
+                        className='h-full w-full cursor-zoom-in overflow-hidden rounded-xl border border-[var(--border-soft)] bg-[var(--surface-subtle)] shadow-[var(--shadow-sm)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary-500)]'
+                        onClick={() => lightboxIndex >= 0 && setSelectedImgIndex(lightboxIndex)}
+                      >
+                        <img
+                          src={src}
+                          alt={imgAlt}
+                          className='h-full w-full object-cover transition-transform duration-500 group-hover:scale-105'
+                          loading="lazy"
+                        />
+                        {!isEditing && caption && (
+                          <span className='absolute inset-x-0 bottom-0 truncate bg-black/60 p-1 text-[10px] text-white backdrop-blur-sm'>
+                            {caption}
+                          </span>
+                        )}
+                      </button>
+                    ) : (
+                      <div
+                        role="img"
+                        aria-label={imgAlt}
+                        className='flex h-full w-full items-center justify-center rounded-xl border border-[var(--border-soft)] bg-[var(--surface-subtle)] text-[var(--text-dim)]'
+                      >
+                        {isResolvingPrivateGallery
+                          ? <Loader2 className='h-5 w-5 animate-spin' />
+                          : <ImageIcon className='h-6 w-6' />}
+                      </div>
+                    )}
                     {isEditing && (
                       <button
                         type="button"

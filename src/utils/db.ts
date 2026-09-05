@@ -25,13 +25,28 @@ export interface PersonTombstoneRec {
     deleted_at: string;
 }
 
-export const JOZOR_DB_SCHEMA_VERSION = 7;
+export interface PersonMediaCleanupJobRec {
+    id?: number;
+    dedupe_key: string;
+    tree_id: string;
+    user_id: string;
+    bucket: 'person-media' | 'avatars';
+    object_path: string;
+    asset_id: string;
+    created_at: string;
+    attempt_count: number;
+    next_attempt_at: string;
+    last_error_code?: string;
+}
+
+export const JOZOR_DB_SCHEMA_VERSION = 8;
 
 export class JozorDatabase extends Dexie {
     people!: Table<Person, string>;
     settings!: Table<LocalSetting, string>;
     pending_operations!: Table<PendingOperationRec, number>;
     person_tombstones!: Table<PersonTombstoneRec, [string, string]>;
+    person_media_cleanup!: Table<PersonMediaCleanupJobRec, number>;
     export_history!: Table<ExportHistoryEntry, number>;
     relationships!: Table<RelationshipEdge, string>;
     sources!: Table<Source, string>;
@@ -46,6 +61,7 @@ export class JozorDatabase extends Dexie {
             settings: 'key',
             pending_operations: '++id, tree_id',
             person_tombstones: '[tree_id+person_id], tree_id, person_id, deleted_at',
+            person_media_cleanup: '++id, &dedupe_key, tree_id, user_id, next_attempt_at',
             export_history: '++id, publicationId, treeId, templateId, exportType, createdAt',
             relationships: 'id, treeId, fromPersonId, toPersonId, type, [treeId+fromPersonId], [treeId+toPersonId], [treeId+type]',
             sources: 'id, treeId, type, normalizedKey, [treeId+type], [treeId+normalizedKey]',

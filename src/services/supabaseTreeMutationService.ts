@@ -2,6 +2,7 @@ import type { Person, TreeSettings } from '../types';
 import { logError } from '../utils/errorLogger';
 import { getTreeClient } from './supabaseTreeClient';
 import { activityService } from '../features/activity-log/service';
+import { buildPersonCustomFields } from './personRowMapper';
 
 type ImportablePerson = Person & {
   customFields?: Record<string, unknown>;
@@ -134,6 +135,18 @@ export const importTreeContent = async (
   // Format people mapping to JSON serializable objects matching database expected schema
   const peoplePayload = people.map((person) => {
     const importablePerson = person as ImportablePerson;
+    const sourceCustomFields = { ...(importablePerson.customFields ?? {}) };
+    delete sourceCustomFields.photoAsset;
+    delete sourceCustomFields.gallery;
+    delete sourceCustomFields.voiceNotes;
+    const metadata = { ...(importablePerson.metadata ?? {}) };
+    delete metadata.photoAsset;
+    delete metadata.photoUrl;
+    delete metadata.photoPath;
+    delete metadata.photoVersion;
+    delete metadata.gallery;
+    delete metadata.voiceNotes;
+    delete metadata.voiceNoteAssets;
 
     return {
       id: person.id,
@@ -159,8 +172,11 @@ export const importTreeContent = async (
       website: person.website,
       blog: person.blog,
       address: person.address,
-      customFields: importablePerson.customFields,
-      metadata: importablePerson.metadata,
+      customFields: {
+        ...sourceCustomFields,
+        ...buildPersonCustomFields(person),
+      },
+      metadata,
     };
   });
 

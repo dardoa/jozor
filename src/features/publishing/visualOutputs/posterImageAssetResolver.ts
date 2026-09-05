@@ -1,3 +1,9 @@
+import {
+  loadPersonMediaPosterSourceBytes,
+  parsePersonMediaPosterSource,
+} from '../../../services/personMediaAssetService';
+import { detectPersonMediaImageMimeType } from '../../../types';
+
 const DEFAULT_MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const DEFAULT_MAX_IMAGE_COUNT = 31;
 
@@ -42,6 +48,11 @@ function assertPreviewId(previewId: string): void {
 function assertPrivateSource(source: string): void {
   if (!source.trim()) throw new Error('Poster image source is empty');
 
+  if (parsePersonMediaPosterSource(source)) return;
+  if (source.startsWith('person-media:')) {
+    throw new Error('Poster image private media source is invalid');
+  }
+
   const url = new URL(source, typeof window === 'undefined' ? 'https://local.invalid' : window.location.origin);
   const isSecureRemote = url.protocol === 'https:';
   const isSameOriginHttp = url.protocol === 'http:'
@@ -56,29 +67,11 @@ function assertPrivateSource(source: string): void {
 }
 
 function detectImageMimeType(bytes: Uint8Array): PosterImageMimeType {
-  const isJpeg = bytes.length >= 3
-    && bytes[0] === 0xff
-    && bytes[1] === 0xd8
-    && bytes[2] === 0xff;
-  if (isJpeg) return 'image/jpeg';
-
-  const isPng = bytes.length >= 8
-    && bytes[0] === 0x89
-    && bytes[1] === 0x50
-    && bytes[2] === 0x4e
-    && bytes[3] === 0x47
-    && bytes[4] === 0x0d
-    && bytes[5] === 0x0a
-    && bytes[6] === 0x1a
-    && bytes[7] === 0x0a;
-  if (isPng) return 'image/png';
-
-  const isWebp = bytes.length >= 12
-    && String.fromCharCode(...bytes.subarray(0, 4)) === 'RIFF'
-    && String.fromCharCode(...bytes.subarray(8, 12)) === 'WEBP';
-  if (isWebp) return 'image/webp';
-
-  throw new Error('Poster image payload is not a supported JPEG, PNG, or WebP image');
+  const mimeType = detectPersonMediaImageMimeType(bytes);
+  if (!mimeType) {
+    throw new Error('Poster image payload is not a supported JPEG, PNG, or WebP image');
+  }
+  return mimeType;
 }
 
 function encodeBase64(bytes: Uint8Array): string {
@@ -91,6 +84,9 @@ function encodeBase64(bytes: Uint8Array): string {
 }
 
 async function loadImageBytes(source: string): Promise<Uint8Array> {
+  if (source.startsWith('person-media:')) {
+    return loadPersonMediaPosterSourceBytes(source);
+  }
   if (typeof fetch === 'undefined') {
     throw new Error('Poster image resolver requires fetch support');
   }
@@ -111,23 +107,31 @@ export function createPosterImageAssetResolver(
   const loadBytes = options.loadBytes ?? loadImageBytes;
   const sourceCache = new Map<string, Promise<Omit<PosterImageAsset, 'previewId'>>>();
 
-  const resolveSource = (source: string): Promise<Omit<PosterImageAsset, 'previewId'>> => {
-    const cached = sourceCache.get(source);
+  const resolveSource = (
+    source: string,
+    cache: Map<string, Promise<Omit<PosterImageAsset, 'previewId'>>>
+  ): Promise<Omit<PosterImageAsset, 'previewId'>> => {
+    const cached = cache.get(source);
     if (cached) return cached;
 
-    const pending = loadBytes(source).then((bytes) => {
-      if (bytes.byteLength === 0) throw new Error('Poster image payload is empty');
-      if (bytes.byteLength > maxBytesPerImage) {
-        throw new Error('Poster image payload exceeds the configured size limit');
-      }
-      const mimeType = detectImageMimeType(bytes);
-      return {
-        mimeType,
-        dataUri: `data:${mimeType};base64,${encodeBase64(bytes)}`,
-        byteLength: bytes.byteLength,
-      };
-    });
-    sourceCache.set(source, pending);
+    const pending = loadBytes(source)
+      .then((bytes) => {
+        if (bytes.byteLength === 0) throw new Error('Poster image payload is empty');
+        if (bytes.byteLength > maxBytesPerImage) {
+          throw new Error('Poster image payload exceeds the configured size limit');
+        }
+        const mimeType = detectImageMimeType(bytes);
+        return {
+          mimeType,
+          dataUri: `data:${mimeType};base64,${encodeBase64(bytes)}`,
+          byteLength: bytes.byteLength,
+        };
+      })
+      .catch((error) => {
+        cache.delete(source);
+        throw error;
+      });
+    cache.set(source, pending);
     return pending;
   };
 
@@ -139,11 +143,20 @@ export function createPosterImageAssetResolver(
 
       const assets: Record<string, PosterImageAsset> = {};
       const failedPreviewIds: string[] = [];
+      // Private bytes are deduplicated only within this resolution. Keeping them
+      // in the resolver-wide cache could reuse owner media after an auth change.
+      const privateSourceCache = new Map<
+        string,
+        Promise<Omit<PosterImageAsset, 'previewId'>>
+      >();
       await Promise.all(requests.map(async (request) => {
         assertPreviewId(request.previewId);
         try {
           assertPrivateSource(request.source);
-          const resolved = await resolveSource(request.source);
+          const cache = request.source.startsWith('person-media:')
+            ? privateSourceCache
+            : sourceCache;
+          const resolved = await resolveSource(request.source, cache);
           assets[request.previewId] = { previewId: request.previewId, ...resolved };
         } catch {
           failedPreviewIds.push(request.previewId);

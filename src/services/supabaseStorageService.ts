@@ -1,7 +1,16 @@
 import { getSupabaseFull } from './supabaseClient';
 import imageCompression, { type Options as ImageCompressionOptions } from 'browser-image-compression';
+import {
+    createPersonMediaAssetRef,
+    detectPersonMediaImageMimeType,
+    isPersonMediaImageMimeType,
+    PERSON_MEDIA_MAX_IMAGE_BYTES,
+    type PersonMediaAssetKind,
+    type PersonMediaAssetRef,
+} from '../types';
+import { logError } from '../utils/errorLogger';
+import { readBlobBytes } from '../utils/blobBytes';
 
-const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_FILE_SIZE_MB = 1;
 
 interface UploadParams {
@@ -15,19 +24,76 @@ interface UploadParams {
     onProgress?: (progress: number) => void;
 }
 
-export interface UploadResult {
+export interface UserAvatarUploadResult {
     publicUrl: string;
     photoPath: string;
     photoVersion: number;
 }
 
+export interface PersonPhotoUploadResult {
+    asset: PersonMediaAssetRef;
+    photoVersion: number;
+}
+
+interface PersonMediaBlobUploadParams {
+    treeId: string;
+    personId: string;
+    blob: Blob;
+    kind: PersonMediaAssetKind;
+    uid: string;
+    email: string;
+    token?: string;
+    currentVersion?: number;
+}
+
+const uploadPersonMediaBlob = async ({
+    treeId,
+    personId,
+    blob,
+    kind,
+    uid,
+    email,
+    token,
+    currentVersion = 0,
+}: PersonMediaBlobUploadParams): Promise<PersonMediaAssetRef> => {
+    if (!treeId || !personId) throw new Error('Person media upload requires a tree and person ID');
+    if (blob.size <= 0 || blob.size > PERSON_MEDIA_MAX_IMAGE_BYTES) {
+        throw new Error('Person media upload has an invalid image size');
+    }
+    const bytes = await readBlobBytes(blob, 'Person media upload could not read image content');
+    const mimeType = detectPersonMediaImageMimeType(bytes);
+    if (!mimeType) throw new Error('Person media upload has unsupported image content');
+    if (blob.type && blob.type !== mimeType) {
+        throw new Error('Person media upload MIME type does not match its content');
+    }
+    const asset = createPersonMediaAssetRef({
+        treeId,
+        assetId: crypto.randomUUID(),
+        kind,
+        mimeType,
+        byteLength: bytes.byteLength,
+        version: currentVersion + 1,
+    });
+    const normalizedBlob = new Blob([bytes.buffer], { type: mimeType });
+    const client = getSupabaseFull(uid, email, token);
+    const { error } = await client.storage.from(asset.bucket).upload(
+        asset.objectPath,
+        normalizedBlob,
+        { cacheControl: '3600', upsert: false, contentType: mimeType }
+    );
+    if (error) throw error;
+    return asset;
+};
+
 /**
- * Service to manage Supabase Storage operations (V2 - Path-based Architecture).
+ * Service to manage Supabase Storage operations.
  */
 export const SupabaseStorageService = {
+    uploadPersonMediaBlob,
+
     /**
      * Uploads and compresses an image for a tree node (person).
-     * Uses deterministic paths: {treeId}/{personId}.webp
+     * Uses an immutable, opaque object path in the private person-media bucket.
      */
     async uploadAndCompressImage({ 
         treeId, 
@@ -38,8 +104,9 @@ export const SupabaseStorageService = {
         token,
         currentVersion = 0,
         onProgress
-    }: UploadParams): Promise<UploadResult> {
-        if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+    }: UploadParams): Promise<PersonPhotoUploadResult> {
+        if (!personId) throw new Error('Person photo upload requires a person ID');
+        if (!isPersonMediaImageMimeType(file.type)) {
             throw new Error('Invalid file type. Only JPEG, PNG, and WebP are allowed.');
         }
 
@@ -53,60 +120,39 @@ export const SupabaseStorageService = {
             };
 
             const compressedBlob = await imageCompression(file, options);
+            if (compressedBlob.type !== 'image/webp' || compressedBlob.size <= 0) {
+                throw new Error('Person photo processing did not produce a valid WebP image.');
+            }
             if (onProgress) onProgress(40); // 40% after compression
 
-            // 2. Deterministic Path: avatars/{treeId}/{personId}.webp
-            const filePath = `${treeId}/${personId}.webp`;
+            // 2. Opaque immutable asset path. Person identity is kept in the
+            // record boundary and is not encoded into the storage object name.
+            const asset = await uploadPersonMediaBlob({
+                treeId,
+                personId,
+                blob: compressedBlob,
+                kind: 'profile-photo',
+                uid,
+                email,
+                token,
+                currentVersion,
+            });
             const nextVersion = currentVersion + 1;
-
-            const client = getSupabaseFull(uid, email, token);
-
-            // 3. Upload with upsert=true
-            const { error: uploadError } = await client.storage
-                .from('avatars')
-                .upload(filePath, compressedBlob, {
-                    cacheControl: '3600',
-                    upsert: true,
-                    contentType: 'image/webp',
-                });
 
             if (onProgress) onProgress(90); // 90% after storage upload
 
-            if (uploadError) {
-                console.error('Supabase storage upload error:', uploadError);
-                throw uploadError;
-            }
-
-            // 4. Get Public URL
-            const { data: { publicUrl } } = client.storage
-                .from('avatars')
-                .getPublicUrl(filePath);
-
-            // 5. Update DB media fields using secure RPC.
-            const { error: dbError } = await client.rpc('update_person_photo', {
-                p_person_id: personId,
-                p_tree_id: treeId,
-                p_photo_url: publicUrl,
-                p_photo_path: filePath,
-                p_photo_version: nextVersion
-            });
-
-            if (dbError) {
-                console.error('Database update error:', dbError);
-                throw dbError;
-            }
-
+            if (onProgress) onProgress(100);
             return {
-                publicUrl: `${publicUrl}?v=${nextVersion}`,
-                photoPath: filePath,
+                asset,
                 photoVersion: nextVersion
             };
         } catch (error) {
             if (onProgress) onProgress(0);
-            console.error('Error in uploadAndCompressImage:', error);
+            logError('PERSON_PHOTO_UPLOAD_FAILED', error, {
+                showToast: false,
+                metadata: { treeId },
+            });
             throw error;
-        } finally {
-            if (onProgress) onProgress(100);
         }
     },
 
@@ -114,8 +160,8 @@ export const SupabaseStorageService = {
      * Uploads a user profile avatar.
      * Path: avatars/users/{user_id}/profile.webp
      */
-    async uploadUserAvatar(userId: string, email: string, file: File, token?: string, currentVersion = 0): Promise<UploadResult> {
-        if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+    async uploadUserAvatar(userId: string, email: string, file: File, token?: string, currentVersion = 0): Promise<UserAvatarUploadResult> {
+        if (!isPersonMediaImageMimeType(file.type)) {
             throw new Error('Invalid file type. Only JPEG, PNG, and WebP are allowed.');
         }
 
@@ -166,18 +212,39 @@ export const SupabaseStorageService = {
                 photoVersion: nextVersion
             };
         } catch (error) {
-            console.error('Error in uploadUserAvatar:', error);
+            logError('USER_AVATAR_UPLOAD_FAILED', error, { showToast: false });
             throw error;
         }
+    },
+
+    async deletePersonMediaAsset(
+        asset: PersonMediaAssetRef,
+        userId: string,
+        email: string,
+        token?: string
+    ): Promise<void> {
+        const client = getSupabaseFull(userId, email, token);
+        const { error } = await client.storage.from(asset.bucket).remove([asset.objectPath]);
+        if (error) throw error;
+    },
+
+    async deleteLegacyPersonMediaPath(
+        path: string,
+        userId: string,
+        email: string,
+        token?: string
+    ): Promise<void> {
+        const cleanPath = path.startsWith('avatars/') ? path.slice('avatars/'.length) : path;
+        const client = getSupabaseFull(userId, email, token);
+        const { error } = await client.storage.from('avatars').remove([cleanPath]);
+        if (error) throw error;
     },
 
     /**
      * Physically deletes a person's photo from Supabase Storage.
      */
     async deletePersonPhoto(treeId: string, personId: string, userId: string, email: string, token?: string): Promise<void> {
-        const client = getSupabaseFull(userId, email, token);
-        const filePath = `${treeId}/${personId}.webp`;
-        await client.storage.from('avatars').remove([filePath]);
+        await this.deleteLegacyPersonMediaPath(`${treeId}/${personId}.webp`, userId, email, token);
     },
 
     /**

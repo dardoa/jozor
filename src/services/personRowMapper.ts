@@ -1,4 +1,4 @@
-import type { Person } from '../types';
+import { isPersonMediaAssetRef, type Person } from '../types';
 import { formatDateForPostgres } from '../utils/dateUtils';
 
 export interface DbPersonRow {
@@ -39,6 +39,7 @@ export const buildPersonCustomFields = (person: Person) => ({
   marriageDate: person.marriageDate || '',
   marriagePlace: person.marriagePlace || '',
   gallery: person.gallery || [],
+  ...(isPersonMediaAssetRef(person.photoAsset) ? { photoAsset: person.photoAsset } : {}),
   voiceNotes: person.voiceNotes || [],
   sources: person.sources || [],
   events: person.events || [],
@@ -77,6 +78,9 @@ export const mapDbPersonRowToPerson = (row: DbPersonRow): Person => {
     photoUrl: row.photo_url ?? undefined,
     photoPath: row.photo_path ?? undefined,
     photoVersion: row.photo_version ?? undefined,
+    photoAsset: isPersonMediaAssetRef(customFields.photoAsset)
+      ? customFields.photoAsset
+      : undefined,
     gallery: Array.isArray(customFields.gallery) ? (customFields.gallery as Person['gallery']) : [],
     voiceNotes: Array.isArray(customFields.voiceNotes) ? (customFields.voiceNotes as string[]) : [],
     sources: Array.isArray(customFields.sources) ? (customFields.sources as Person['sources']) : [],
@@ -96,10 +100,20 @@ export const mapDbPersonRowToPerson = (row: DbPersonRow): Person => {
 };
 
 export const mapPersonToDbRow = (person: Person, treeId?: string) => {
-  const relationshipKeys = new Set(['parents', 'spouses', 'children']);
+  const metadataExcludedKeys = new Set([
+    'parents',
+    'spouses',
+    'children',
+    'photoAsset',
+    'photoUrl',
+    'photoPath',
+    'photoVersion',
+    'gallery',
+    'voiceNotes',
+  ]);
   const metadata = Object.fromEntries(
-    Object.entries(person).filter(([key]) => !relationshipKeys.has(key))
-  ) as Omit<Person, 'parents' | 'spouses' | 'children'>;
+    Object.entries(person).filter(([key]) => !metadataExcludedKeys.has(key))
+  ) as Record<string, unknown>;
 
   return {
   metadata,

@@ -1,9 +1,14 @@
 import React, { useCallback, useState } from 'react';
+import { ShieldCheck } from 'lucide-react';
 
 import { useTranslation } from '../../../context/TranslationContext';
 import { useAppStore } from '../../../store/useAppStore';
 import { deltaSyncService } from '../../../services/deltaSyncService';
-import { pruneActivityLogs, pruneTreeOperations } from '../../../services/operationalMaintenanceService';
+import {
+  migrateLegacyPersonMedia,
+  pruneActivityLogs,
+  pruneTreeOperations,
+} from '../../../services/operationalMaintenanceService';
 import { showToast } from '../../../utils/showToast';
 import { ConfirmationModal } from '../../../components/ConfirmationModal';
 
@@ -53,6 +58,51 @@ export const DiagnosticsMaintenancePanels: React.FC<{ layout?: 'stack' | 'grid' 
     }
   }, [canRunMaintenance, currentTreeId, t.settings, user]);
 
+  const runPersonMediaMigration = useCallback(async () => {
+    if (!canRunMaintenance || !currentTreeId || !user) {
+      showToast.error('settings.maintenanceOwnerOnly');
+      return;
+    }
+
+    setIsRunningMaintenance(true);
+    const toastId = showToast.loading(t.settings.migratePersonMediaRunning);
+    try {
+      const summary = await migrateLegacyPersonMedia(currentTreeId, user);
+      const variables = {
+        migrated: String(summary.migratedCount),
+        cleaned: String(summary.cleanedCount),
+        external: String(summary.externalCount),
+        failed: String(summary.failedCount),
+        blocked: String(summary.blockedCount),
+      };
+      const interpolate = (template: string) => Object.entries(variables).reduce(
+        (message, [key, value]) => message.replace(`{${key}}`, value),
+        template
+      );
+
+      if (summary.failedCount > 0 || summary.blockedCount > 0) {
+        showToast.warning(interpolate(t.settings.migratePersonMediaPartial), {
+          id: toastId,
+          duration: 6500,
+        });
+      } else if (summary.migratedCount === 0 && summary.cleanedCount === 0) {
+        showToast.success(t.settings.migratePersonMediaNoop, { id: toastId, duration: 3500 });
+      } else {
+        showToast.success(interpolate(t.settings.migratePersonMediaSuccess), {
+          id: toastId,
+          duration: 5000,
+        });
+      }
+    } catch (error) {
+      showToast.error(
+        error instanceof Error ? error.message : t.settings.migratePersonMediaError,
+        { id: toastId, duration: 4500 }
+      );
+    } finally {
+      setIsRunningMaintenance(false);
+    }
+  }, [canRunMaintenance, currentTreeId, t.settings, user]);
+
   return (
     <>
       <div className={layout === 'grid' ? "grid grid-cols-1 md:grid-cols-2 gap-6" : "space-y-6"}>
@@ -62,6 +112,15 @@ export const DiagnosticsMaintenancePanels: React.FC<{ layout?: 'stack' | 'grid' 
             <p className="px-1 text-[11px] font-bold leading-relaxed text-[var(--text-secondary)]">{t.settings.maintenanceDesc}</p>
             {canRunMaintenance ? (
               <div className="grid grid-cols-1 gap-2">
+                <button
+                  type="button"
+                  onClick={() => void runPersonMediaMigration()}
+                  disabled={isRunningMaintenance}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--primary-500)]/25 bg-[var(--primary-600)]/10 px-3 py-2.5 text-[11px] font-semibold tracking-wide text-[var(--text-main)] transition-all hover:border-[var(--primary-500)]/40 hover:bg-[var(--primary-600)]/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary-500)] disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <ShieldCheck aria-hidden="true" className="h-4 w-4 shrink-0 text-[var(--primary-500)]" />
+                  <span>{t.settings.migratePersonMedia}</span>
+                </button>
                 <button onClick={() => void runMaintenance('operations', () => pruneTreeOperations(currentTreeId!, user!, 2000))} disabled={isRunningMaintenance} className="w-full rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] py-2.5 text-[11px] font-semibold tracking-wide text-[var(--text-main)] transition-all hover:border-[var(--primary-500)]/20 hover:bg-[var(--primary-600)]/10 disabled:cursor-not-allowed disabled:opacity-50">{t.settings.pruneOperations}</button>
                 <button onClick={() => void runMaintenance('activity', () => pruneActivityLogs(currentTreeId!, user!, 180))} disabled={isRunningMaintenance} className="w-full rounded-xl border border-[var(--border-soft)] bg-[var(--surface-panel)] py-2.5 text-[11px] font-semibold tracking-wide text-[var(--text-main)] transition-all hover:border-[var(--primary-500)]/20 hover:bg-[var(--primary-600)]/10 disabled:cursor-not-allowed disabled:opacity-50">{t.settings.pruneActivityLogs}</button>
               </div>

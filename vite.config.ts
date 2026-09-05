@@ -131,6 +131,14 @@ export default defineConfig(({ mode }) => {
               return 'vendor-html-to-image';
             }
 
+            if (id.includes('/jszip/') || id.includes('\\jszip\\')) {
+              return 'vendor-archive';
+            }
+
+            if (id.includes('browser-image-compression')) {
+              return 'vendor-image-processing';
+            }
+
             return undefined;
           },
         },

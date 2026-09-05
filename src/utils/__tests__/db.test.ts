@@ -12,6 +12,7 @@ describe('Dexie Database Schema Verification', () => {
     expect(tableNames).toContain('settings');
     expect(tableNames).toContain('pending_operations');
     expect(tableNames).toContain('person_tombstones');
+    expect(tableNames).toContain('person_media_cleanup');
     expect(tableNames).toContain('export_history');
     expect(tableNames).toContain('relationships');
     expect(tableNames).toContain('sources');
@@ -39,6 +40,12 @@ describe('Dexie Database Schema Verification', () => {
     expect(tombstonesSchema.indexes.some((i) => i.name === 'tree_id')).toBe(true);
     expect(tombstonesSchema.indexes.some((i) => i.name === 'person_id')).toBe(true);
     expect(tombstonesSchema.indexes.some((i) => i.name === 'deleted_at')).toBe(true);
+
+    const mediaCleanupSchema = db.person_media_cleanup.schema;
+    expect(mediaCleanupSchema.primKey.src).toBe('++id');
+    expect(mediaCleanupSchema.indexes.some((i) => i.name === 'dedupe_key')).toBe(true);
+    expect(mediaCleanupSchema.indexes.some((i) => i.name === 'tree_id')).toBe(true);
+    expect(mediaCleanupSchema.indexes.some((i) => i.name === 'user_id')).toBe(true);
 
     // 5. Export History
     const exportHistorySchema = db.export_history.schema;

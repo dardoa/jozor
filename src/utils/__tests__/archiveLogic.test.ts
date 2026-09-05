@@ -2,7 +2,11 @@ import JSZip from 'jszip';
 import { describe, expect, it, vi } from 'vitest';
 import type { Person, TreeSettings } from '../../types';
 
-import { importFromJozorArchive, importJozorArchiveData } from '../archiveLogic';
+import {
+  importFromJozorArchive,
+  importJozorArchiveData,
+  importJozorArchiveDataForCloud,
+} from '../archiveLogic';
 import { buildBlueprintArchive } from '../../services/archiveService';
 
 vi.mock('../../services/googleService', () => ({
@@ -94,6 +98,44 @@ describe('archiveLogic', () => {
 
     expect(data.people.person_1.firstName).toBe('Root');
     expect(data.settings).toEqual({ treeSettings: { chartType: 'radial' } });
+  });
+
+  it('extracts legacy archive images as blobs without persisting data or archive URLs', async () => {
+    const zip = new JSZip();
+    const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+    zip.file('family_data.json', JSON.stringify({
+      people: {
+        person_1: {
+          id: 'person_1', firstName: 'Root', lastName: 'Person', gender: 'male',
+          parents: [], children: [], spouses: [],
+          photoUrl: 'images/profile.png',
+          gallery: ['images/gallery.png'],
+          voiceNotes: ['audio/memory.webm'],
+        },
+      },
+      settings: { treeSettings: { chartType: 'focus' } },
+    }));
+    zip.file('images/profile.png', png);
+    zip.file('images/gallery.png', png);
+    zip.file('audio/memory.webm', new Uint8Array([0x1a, 0x45, 0xdf, 0xa3]));
+    const archive = new File(
+      [await zip.generateAsync({ type: 'blob' })],
+      'legacy.jozor',
+      { type: 'application/zip' }
+    );
+
+    const result = await importJozorArchiveDataForCloud(archive);
+
+    expect(result.people.person_1).toMatchObject({ gallery: [], voiceNotes: [] });
+    expect(result.mediaComplete).toBe(true);
+    expect(result.people.person_1).not.toHaveProperty('photoUrl');
+    expect(result.mediaByPersonId.person_1.avatar).toMatchObject({ type: 'image/png', size: 8 });
+    expect(result.mediaByPersonId.person_1.gallery).toHaveLength(1);
+    expect(result.warnings).toContain(
+      'Skipped legacy voice memories because private audio import is not implemented.'
+    );
+    expect(JSON.stringify(result.people)).not.toContain('data:image');
+    expect(JSON.stringify(result.people)).not.toContain('images/');
   });
 
   it('does not rehydrate encoded traversal media paths', async () => {

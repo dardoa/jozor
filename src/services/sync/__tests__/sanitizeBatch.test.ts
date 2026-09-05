@@ -43,5 +43,22 @@ describe('sanitizeOutgoingBatch', () => {
     it('returns an empty array when given an empty batch', () => {
         expect(sanitizeOutgoingBatch([])).toEqual([]);
     });
+
+    it('preserves an explicit null media removal while dropping undefined values', () => {
+        const batch: PendingDeltaOp[] = [{
+            tree_id: 'tree-1',
+            user_id: 'user-1',
+            type: 'UPDATE_PROP',
+            payload: {
+                id: 'person-1',
+                updates: { photoAsset: null, photoUrl: undefined },
+            },
+            created_at: '2026-09-05T00:00:00.000Z',
+        }];
+
+        const [operation] = sanitizeOutgoingBatch(batch);
+
+        expect(operation.payload.updates).toEqual({ photoAsset: null });
+    });
 });
 

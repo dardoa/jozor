@@ -6,7 +6,9 @@ Date: 2026-09-04
 
 Smart Persona already has the right product shape: it is the focused family-record workspace, while Kindi can open a precise tab, section, and field inside it. A ground-up rewrite is not justified. The correct path is a staged hardening and simplification pass around permissions, media lifecycle, record completeness, and evidence.
 
-Current classification: **functional and visually coherent, but not yet media-privacy complete for beta**.
+Current classification: **functional and visually coherent, with private-media
+implementation complete locally but still awaiting controlled database rollout
+and live evidence before beta**.
 
 ## Runtime map
 
@@ -69,19 +71,35 @@ The live Arabic owner tree was reviewed without changing owner data.
 
 ## Remaining work, in order
 
-### P0: private media delivery migration
+### P0: private media rollout and evidence
 
-The `avatars` bucket is still a legacy public bucket and `mediaUtils` constructs public object URLs. Secure database views prevent normal viewer discovery, but a previously known URL may remain fetchable. Before beta:
+Implementation follow-up (2026-09-05): the typed private-media foundation,
+cloud archive rehydration, resumable legacy-object migration, owner maintenance
+action, and account-deletion cleanup are implemented locally. Neither Supabase
+migration has been applied. See
+`docs/reviews/smart-persona-private-media-foundation-2026-09-05.md` for the
+runtime path, controlled legacy-migration rollout gate, and deliberately
+deferred media work.
 
-1. Introduce a normalized `PersonMediaAssetRef` contract for profile images and gallery items.
-2. Move the bucket to private delivery or a compatible private successor.
-3. Resolve short-lived, role-aware signed assets outside the person record.
-4. Define cache expiry, revocation, offline behavior, and poster/export embedding.
-5. Migrate existing public paths without breaking old archives.
+The `avatars` bucket remains public until the controlled rollout migrates owned
+person media and deletes its old objects. Secure database views prevent normal
+viewer discovery, but a previously known URL may remain fetchable. Before beta:
 
-### P0: durable media lifecycle
+1. Apply both reviewed migrations to a non-production project in order.
+2. Exercise owner/editor/viewer/revocation and masking with two real accounts.
+3. Run the owner migration until aggregate results report no eligible legacy
+   references, while leaving genuine external URLs unchanged.
+4. Verify UI, poster exports, archive round-trips, cleanup retries, and account
+   deletion against real storage bytes.
+5. Promote only after the same evidence passes in the production-like project.
 
-The immediate gallery flow now compensates an uploaded-but-unattached object and favors record integrity during deletion. Storage and record mutation are still separate systems, so production hardening requires a durable cleanup queue, idempotent retries, and observability for failed compensation or post-removal object cleanup. Voice memories need an equivalent owned asset lifecycle rather than an untyped URL array.
+### P1: remaining media lifecycle
+
+Profile/gallery cleanup now has an IndexedDB-backed retry queue and the legacy
+migration has server-side compare-and-set compensation. A server orphan sweeper
+is still needed for process termination between storage upload and compensation.
+Voice memories need an equivalent owned asset lifecycle rather than an untyped
+URL array.
 
 ### P1: media module extraction
 

@@ -1,4 +1,5 @@
 import type { Gender, RelationshipStatus } from './common';
+import type { PersonMediaAssetRef } from './personMedia';
 
 export interface RelationshipInfo {
     type: RelationshipStatus;
@@ -10,6 +11,8 @@ export interface RelationshipInfo {
 
 export interface GalleryItem {
     id: string;
+    /** Canonical private asset. Legacy path/url fields remain read-only fallbacks. */
+    asset?: PersonMediaAssetRef;
     path?: string;
     /** Transitional direct URL retained when a legacy string item gains metadata. */
     url?: string;
@@ -52,6 +55,8 @@ export interface Person {
     photoUrl?: string;
     photoPath?: string;
     photoVersion?: number;
+    /** `null` is the explicit synchronized removal value; `undefined` means absent locally. */
+    photoAsset?: PersonMediaAssetRef | null;
     gallery: (string | GalleryItem)[];
     voiceNotes: string[];
     sources: { id: string; title: string; url?: string; date?: string; type?: string }[];

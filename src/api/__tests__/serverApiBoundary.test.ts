@@ -7,6 +7,8 @@ const srcRoot = path.resolve(process.cwd(), 'src');
 const allowedSrcImports = new Set([
   'api/ai-proxy.ts -> ../src/api/ai-proxy',
   'api/proxy.ts -> ../src/api/proxy',
+  'api/person-media.ts -> ../src/api/person-media',
+  'api/person-media-migration.ts -> ../src/api/person-media-migration',
   'api/push-reminder-cron.ts -> ../src/services/pushSubscriptionService',
   'api/push-reminder-cron.ts -> ../src/services/reminders/reminderProcessor',
 ]);

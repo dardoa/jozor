@@ -1,5 +1,6 @@
 export * from './common';
 export * from './person';
+export * from './personMedia';
 export * from './domain';
 export * from './tree';
 export * from './visualization';
@@ -10,4 +11,3 @@ export * from './ai';
 export * from './relationship';
 export * from './citation';
 export * from './publishing';
-

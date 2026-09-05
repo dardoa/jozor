@@ -19,7 +19,7 @@ vi.mock('../../utils/errorLogger', () => ({
   logError: vi.fn(),
 }));
 
-import { createTreeWithRootAtomic } from '../supabaseTreeMutationService';
+import { createTreeWithRootAtomic, importTreeContent } from '../supabaseTreeMutationService';
 
 describe('createTreeWithRootAtomic', () => {
   beforeEach(() => {
@@ -92,5 +92,40 @@ describe('createTreeWithRootAtomic', () => {
         { id: 'person-1', firstName: 'Sara', lastName: 'Haddad', gender: 'female' } as Person
       )
     ).rejects.toThrow('access denied');
+  });
+
+  it('imports typed media in custom fields while stripping transport media from metadata', async () => {
+    const rpcMock = vi.fn(async () => ({ data: null, error: null }));
+    getTreeClientMock.mockReturnValue({ rpc: rpcMock });
+    const photoAsset = {
+      schemaVersion: 1 as const,
+      provider: 'supabase-private' as const,
+      bucket: 'person-media' as const,
+      assetId: '123e4567-e89b-42d3-a456-426614174000',
+      kind: 'profile-photo' as const,
+      objectPath: 'tree-1/profile-photo/123e4567-e89b-42d3-a456-426614174000.png',
+      mimeType: 'image/png' as const,
+      byteLength: 8,
+      version: 1,
+      createdAt: '2026-09-05T00:00:00.000Z',
+    };
+    const person = {
+      id: 'person-1', firstName: 'Sara', lastName: 'Haddad', gender: 'female',
+      parents: [], children: [], spouses: [], gallery: [], voiceNotes: [],
+      photoAsset,
+      customFields: { retainedImportField: 'yes', photoAsset: { malicious: true } },
+      metadata: { safe: 'yes', photoPath: 'must-not-persist', gallery: ['must-not-persist'] },
+    } as unknown as Person;
+
+    await importTreeContent('tree-1', 'owner-1', [person], [], 'owner@example.test', 'token-1');
+
+    const [, rpcPayload] = rpcMock.mock.calls[0] as unknown as [
+      string,
+      { p_people: Array<{ customFields: Record<string, unknown>; metadata: Record<string, unknown> }> },
+    ];
+    const payload = rpcPayload.p_people[0];
+    expect(payload.customFields).toMatchObject({ retainedImportField: 'yes', photoAsset, gallery: [] });
+    expect(payload.metadata).toEqual({ safe: 'yes' });
+    expect(JSON.stringify(payload.metadata)).not.toContain('must-not-persist');
   });
 });

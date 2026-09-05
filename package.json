@@ -19,6 +19,7 @@
     "test:unit:shard:1": "vitest run --shard=1/2",
     "test:unit:shard:2": "vitest run --shard=2/2",
     "test:integration:supabase": "vitest run --config vitest.integration.config.ts",
+    "test:database:local": "vitest run --config vitest.database.config.ts",
     "test:e2e": "playwright test",
     "test:e2e:smoke": "playwright test tests/e2e/app-smoke.spec.ts --project=chromium --reporter=line",
     "test:e2e:collab:live": "playwright test tests/e2e/collaboration-live.spec.ts --project=chromium --reporter=line",
@@ -63,6 +64,7 @@
     "zustand": "^5.0.9"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "0.5.8",
     "@eslint/js": "^9.39.2",
     "@playwright/test": "^1.58.2",
     "@testing-library/dom": "^10.4.1",

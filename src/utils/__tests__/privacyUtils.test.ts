@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { calculateAge, isPersonLiving, shouldMaskPerson, maskPerson, maskPeopleMap } from '../privacyUtils';
-import type { Person } from '../../types';
+import { createPersonMediaAssetRef, type Person } from '../../types';
 import { DEFAULT_PERSON_TEMPLATE } from '../../constants';
 
 const buildPerson = (overrides: Partial<Person> = {}): Person => ({
@@ -121,6 +121,14 @@ describe('privacyUtils', () => {
     });
 
     it('masks living people but preserves structural connections, gender, and technical details', () => {
+      const photoAsset = createPersonMediaAssetRef({
+        treeId: 'tree-1',
+        assetId: '123e4567-e89b-42d3-a456-426614174000',
+        kind: 'profile-photo',
+        mimeType: 'image/webp',
+        byteLength: 128,
+        createdAt: '2026-09-05T00:00:00.000Z',
+      });
       const person = buildPerson({
         id: 'some-unique-id',
         firstName: 'Ahmad',
@@ -131,6 +139,9 @@ describe('privacyUtils', () => {
         birthPlace: 'Cairo',
         bio: 'Active developer',
         email: 'ahmad@example.com',
+        photoUrl: 'https://legacy.example.test/private.webp',
+        photoPath: 'tree-1/private.webp',
+        photoAsset,
         parents: ['father-id', 'mother-id'],
         spouses: ['spouse-id'],
         children: ['child-id'],
@@ -155,6 +166,9 @@ describe('privacyUtils', () => {
       expect(masked.birthPlace).toBe('');
       expect(masked.bio).toBe('');
       expect(masked.email).toBe('');
+      expect(masked.photoUrl).toBeUndefined();
+      expect(masked.photoPath).toBeUndefined();
+      expect(masked.photoAsset).toBeUndefined();
       expect(masked.partnerDetails?.['spouse-id']?.startDate).toBe('');
       expect(masked.partnerDetails?.['spouse-id']?.startPlace).toBe('');
 
@@ -166,6 +180,7 @@ describe('privacyUtils', () => {
       expect(masked.children).toEqual(['child-id']);
       expect(masked.partnerDetails?.['spouse-id']?.type).toBe('married');
       expect(masked.metadata?.lastUpdated).toEqual({ name: '2026-06-23T11:00:00Z' });
+      expect(JSON.stringify(masked)).not.toContain(photoAsset.objectPath);
     });
   });
 

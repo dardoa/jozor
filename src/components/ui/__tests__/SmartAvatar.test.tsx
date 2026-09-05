@@ -1,9 +1,13 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 
-import type { Person } from '../../../types';
+import { createPersonMediaAssetRef, type Person } from '../../../types';
 import { SmartAvatar } from '../SmartAvatar';
 import { useCachedImage } from '../../../hooks/utils/useCachedImage';
+
+const { usePersonMediaAssetUrlMock } = vi.hoisted(() => ({
+  usePersonMediaAssetUrlMock: vi.fn(),
+}));
 
 vi.mock('../../../hooks/utils/useCachedImage', () => ({
   useCachedImage: vi.fn().mockImplementation(() => ({
@@ -13,7 +17,11 @@ vi.mock('../../../hooks/utils/useCachedImage', () => ({
   })),
 }));
 
-const basePerson: Pick<Person, 'id' | 'firstName' | 'lastName' | 'gender' | 'birthDate' | 'photoUrl' | 'parents' | 'children' | 'spouses'> = {
+vi.mock('../../../hooks/utils/usePersonMediaAssetUrls', () => ({
+  usePersonMediaAssetUrl: usePersonMediaAssetUrlMock,
+}));
+
+const basePerson: Pick<Person, 'id' | 'firstName' | 'lastName' | 'gender' | 'birthDate' | 'photoUrl' | 'photoAsset' | 'parents' | 'children' | 'spouses'> = {
   id: 'person-123',
   firstName: 'Noura',
   lastName: 'Jozor',
@@ -26,6 +34,7 @@ const basePerson: Pick<Person, 'id' | 'firstName' | 'lastName' | 'gender' | 'bir
 
 describe('SmartAvatar', () => {
   beforeEach(() => {
+    usePersonMediaAssetUrlMock.mockReturnValue(null);
     vi.mocked(useCachedImage).mockImplementation(() => ({
       cachedUrl: null,
       isLoading: false,
@@ -83,6 +92,30 @@ describe('SmartAvatar', () => {
     render(<SmartAvatar person={{ ...basePerson, photoUrl: 'https://example.com/original.jpg' }} size={48} />);
     const image = screen.getByRole('img', { name: 'Noura Jozor' });
     expect(image).toHaveAttribute('src', 'blob:cached-url-xyz');
+  });
+
+  it('renders private media through a blob URL without exposing its storage reference', () => {
+    const photoAsset = createPersonMediaAssetRef({
+      treeId: 'tree-1',
+      assetId: '123e4567-e89b-42d3-a456-426614174000',
+      kind: 'profile-photo',
+      mimeType: 'image/webp',
+      byteLength: 128,
+      createdAt: '2026-09-05T00:00:00.000Z',
+    });
+    usePersonMediaAssetUrlMock.mockReturnValue('blob:private-profile-photo');
+
+    const { container } = render(
+      <SmartAvatar person={{ ...basePerson, photoAsset }} size={48} />
+    );
+
+    expect(screen.getByRole('img', { name: 'Noura Jozor' })).toHaveAttribute(
+      'src',
+      'blob:private-profile-photo'
+    );
+    expect(container.innerHTML).not.toContain(photoAsset.objectPath);
+    expect(container.innerHTML).not.toContain(photoAsset.assetId);
+    expect(container.innerHTML).not.toContain('person-media');
   });
 });
 
