@@ -139,8 +139,8 @@ export class DeltaRemoteSyncClient {
     }
 
     async fetchRemoteOperations(treeId: string, sinceVersion: number): Promise<DeltaOperation[]> {
-        const { user } = useAppStore.getState();
-        if (!user) return [];
+        const { user, currentUserRole } = useAppStore.getState();
+        if (!user || currentUserRole === 'viewer') return [];
 
         const client = getSupabaseWithAuth(user.uid, user.email, user.supabaseToken || undefined);
         const { data, error } = await client

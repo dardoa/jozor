@@ -5,6 +5,7 @@ import {
     detectPersonMediaImageMimeType,
     isPersonMediaImageMimeType,
     PERSON_MEDIA_MAX_IMAGE_BYTES,
+    PERSON_MEDIA_STORAGE_CACHE_CONTROL,
     type PersonMediaAssetKind,
     type PersonMediaAssetRef,
 } from '../types';
@@ -79,7 +80,7 @@ const uploadPersonMediaBlob = async ({
     const { error } = await client.storage.from(asset.bucket).upload(
         asset.objectPath,
         normalizedBlob,
-        { cacheControl: '3600', upsert: false, contentType: mimeType }
+        { cacheControl: PERSON_MEDIA_STORAGE_CACHE_CONTROL, upsert: false, contentType: mimeType }
     );
     if (error) throw error;
     return asset;

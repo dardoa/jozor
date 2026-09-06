@@ -76,6 +76,11 @@ export interface Message {
     text: string;
 }
 
+export interface ArchiveGalleryMetadata {
+    caption?: string;
+    createdAt?: string;
+}
+
 export interface BackupManifest {
     version: number;
     metadata: {
@@ -89,6 +94,8 @@ export interface BackupManifest {
     media: {
         avatars: Record<string, string>;
         gallery: Record<string, string[]>;
+        /** Optional v2 extension keyed by packaged gallery file, never storage path. */
+        galleryMetadata?: Record<string, ArchiveGalleryMetadata>;
     };
 }
 

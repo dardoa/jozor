@@ -1,9 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
-type ResolveTreeContextRequest = {
-  personId?: string;
-};
-
 type ResolveTreeContextResponse = {
   treeId: string;
   ownerId: string;
@@ -23,6 +19,7 @@ const json = (status: number, body: Record<string, unknown>) =>
     headers: {
       ...corsHeaders,
       'Content-Type': 'application/json',
+      'Cache-Control': 'private, no-store',
     },
   });
 
@@ -38,9 +35,9 @@ Deno.serve(async (request) => {
   }
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
-  const serviceRoleKey = Deno.env.get('JOZOR_SUPABASE_SERVICE_ROLE_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
 
-  if (!supabaseUrl || !serviceRoleKey) {
+  if (!supabaseUrl || !anonKey) {
     return json(500, { error: 'Supabase Edge Function is missing server credentials.' });
   }
 
@@ -49,19 +46,21 @@ Deno.serve(async (request) => {
     return json(401, { error: 'Missing bearer token.' });
   }
 
-  let body: ResolveTreeContextRequest;
+  let body: unknown;
   try {
     body = await request.json();
   } catch {
     return json(400, { error: 'Invalid JSON payload.' });
   }
 
-  const personId = body.personId?.trim();
-  if (!personId) {
-    return json(400, { error: '"personId" is required.' });
+  const personId = body && typeof body === 'object' && 'personId' in body && typeof body.personId === 'string'
+    ? body.personId.trim() : '';
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(personId)) {
+    return json(400, { error: 'A valid personId is required.' });
   }
 
-  const adminClient = createClient(supabaseUrl, serviceRoleKey, {
+  // Use caller-scoped RLS, including the masked projection available to viewers.
+  const callerClient = createClient(supabaseUrl, anonKey, {
     auth: { persistSession: false, autoRefreshToken: false },
     global: { headers: { Authorization: authorization } },
   });
@@ -70,14 +69,14 @@ Deno.serve(async (request) => {
   const {
     data: { user },
     error: authError,
-  } = await adminClient.auth.getUser(token);
+  } = await callerClient.auth.getUser(token);
 
   if (authError || !user) {
     return json(401, { error: 'Unauthorized.' });
   }
 
-  const { data: personRow, error: personError } = await adminClient
-    .from('people')
+  const { data: personRow, error: personError } = await callerClient
+    .from('people_secure')
     .select('id, tree_id')
     .eq('id', personId)
     .maybeSingle();
@@ -90,7 +89,7 @@ Deno.serve(async (request) => {
     return json(404, { error: 'Person not found.' });
   }
 
-  const { data: treeRow, error: treeError } = await adminClient
+  const { data: treeRow, error: treeError } = await callerClient
     .from('trees')
     .select('id, owner_id')
     .eq('id', personRow.tree_id)
@@ -115,18 +114,20 @@ Deno.serve(async (request) => {
   }
 
   const normalizedEmail = normalizeEmail(user.email);
-  const identityFilter = user.id && normalizedEmail
-    ? `collaborator_uid.eq.${user.id},email.eq.${normalizedEmail}`
-    : user.id
-      ? `collaborator_uid.eq.${user.id}`
-      : `email.eq.${normalizedEmail}`;
-
-  const { data: collaboratorRow, error: collaboratorError } = await adminClient
+  let { data: collaboratorRow, error: collaboratorError } = await callerClient
     .from('tree_collaborators')
     .select('role')
     .eq('tree_id', treeRow.id)
-    .or(identityFilter)
+    .eq('collaborator_uid', user.id)
     .maybeSingle();
+
+  if (!collaboratorError && !collaboratorRow && normalizedEmail) {
+    const emailMembership = await callerClient.from('tree_collaborators')
+      .select('role').eq('tree_id', treeRow.id).eq('email', normalizedEmail)
+      .is('collaborator_uid', null).maybeSingle();
+    collaboratorRow = emailMembership.data;
+    collaboratorError = emailMembership.error;
+  }
 
   if (collaboratorError) {
     return json(500, { error: 'Failed to verify tree access.' });

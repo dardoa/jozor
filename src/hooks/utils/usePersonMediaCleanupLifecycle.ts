@@ -3,12 +3,14 @@ import { canEditTreeContext } from '../../domain/treePermissionPolicy';
 import { useAppStore } from '../../store/useAppStore';
 import { logError } from '../../utils/errorLogger';
 import { defaultPersonMediaAssetResolver } from '../../services/personMediaAssetService';
+import { useArchiveImportCleanupLifecycle } from './useArchiveImportCleanupLifecycle';
 import {
   flushPersonMediaCleanupQueue,
   isPersonMediaStorageTargetReferenced,
 } from '../../services/personMediaCleanupQueue';
 
 export function usePersonMediaCleanupLifecycle(): void {
+  useArchiveImportCleanupLifecycle();
   const user = useAppStore((state) => state.user);
   const treeId = useAppStore((state) => state.currentTreeId);
   const role = useAppStore((state) => state.currentUserRole);

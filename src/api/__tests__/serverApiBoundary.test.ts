@@ -9,6 +9,7 @@ const allowedSrcImports = new Set([
   'api/proxy.ts -> ../src/api/proxy',
   'api/person-media.ts -> ../src/api/person-media',
   'api/person-media-migration.ts -> ../src/api/person-media-migration',
+  'api/person-media-cleanup-cron.ts -> ../src/api/person-media-cleanup-cron',
   'api/push-reminder-cron.ts -> ../src/services/pushSubscriptionService',
   'api/push-reminder-cron.ts -> ../src/services/reminders/reminderProcessor',
 ]);

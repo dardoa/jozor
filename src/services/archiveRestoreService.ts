@@ -4,6 +4,7 @@ import {
   detectPersonMediaImageMimeType,
   PERSON_MEDIA_MAX_IMAGE_BYTES,
   type BackupManifest,
+  type ArchiveGalleryMetadata,
   type FullState,
   type Person,
 } from '../types';
@@ -23,10 +24,12 @@ export interface BlueprintArchiveRestoreResult {
 export interface ArchivePersonImageBlobs {
   avatar?: Blob;
   gallery: Blob[];
+  galleryMetadata?: ArchiveGalleryMetadata[];
 }
 
 export interface BlueprintArchiveCloudImportResult {
   people: Record<string, Person>;
+  focusId?: string;
   settings?: Record<string, unknown>;
   mediaByPersonId: Record<string, ArchivePersonImageBlobs>;
   warnings: string[];
@@ -165,20 +168,25 @@ export const extractBlueprintArchiveForCloudImport = async (
     const avatar = avatarPath
       ? await readArchiveImageBlob(zip, avatarPath, warnings)
       : undefined;
-    const gallery = (await Promise.all(
+    const galleryResults = await Promise.all(
       galleryPaths.map((filePath) => readArchiveImageBlob(zip, filePath, warnings))
-    )).filter((blob): blob is Blob => blob !== undefined);
+    );
+    const gallery = galleryResults.filter((blob): blob is Blob => blob !== undefined);
+    const galleryMetadata = galleryResults.flatMap((blob, index) => blob
+      ? [manifest.media.galleryMetadata?.[galleryPaths[index]] ?? {}]
+      : []);
     if ((avatarPath && !avatar) || gallery.length !== galleryPaths.length) {
       mediaComplete = false;
     }
 
     if (avatar || gallery.length > 0) {
-      mediaByPersonId[personId] = { avatar, gallery };
+      mediaByPersonId[personId] = { avatar, gallery, galleryMetadata };
     }
   }
 
   return {
     people,
+    focusId: resolveFocusId(treeState.focusId, people),
     settings: treeState.settings as Record<string, unknown> | undefined,
     mediaByPersonId,
     warnings,
@@ -208,6 +216,7 @@ const readManifest = async (zip: JSZip): Promise<BackupManifest> => {
   if (!isRecord(media)) throw new Error('Invalid blueprint archive: manifest.json is malformed');
   const avatars = readStringRecord(media.avatars);
   const gallery = readStringArrayRecord(media.gallery);
+  const galleryMetadata = readGalleryMetadata(media.galleryMetadata, gallery);
   if (
     !isNonNegativeInteger(parsed.version)
     || typeof metadata.createdAt !== 'string'
@@ -217,6 +226,7 @@ const readManifest = async (zip: JSZip): Promise<BackupManifest> => {
     || !isNonNegativeInteger(metadata.photoCount)
     || !avatars
     || !gallery
+    || !galleryMetadata
   ) {
     throw new Error('Invalid blueprint archive: manifest.json is malformed');
   }
@@ -231,8 +241,31 @@ const readManifest = async (zip: JSZip): Promise<BackupManifest> => {
       photoCount: metadata.photoCount,
     },
     treeFile: 'tree.json',
-    media: { avatars, gallery },
+    media: { avatars, gallery, ...(Object.keys(galleryMetadata).length ? { galleryMetadata } : {}) },
   };
+};
+
+const readGalleryMetadata = (
+  value: unknown,
+  gallery: Record<string, string[]> | null,
+): Record<string, ArchiveGalleryMetadata> | null => {
+  if (value === undefined) return {};
+  if (!isRecord(value) || !gallery) return null;
+  const paths = new Set(Object.values(gallery).flat());
+  const entries: Array<[string, ArchiveGalleryMetadata]> = [];
+  for (const [filePath, details] of Object.entries(value)) {
+    if (!paths.has(filePath) || !isRecord(details)) return null;
+    if (Object.keys(details).some(key => key !== 'caption' && key !== 'createdAt')) return null;
+    if (details.caption !== undefined && typeof details.caption !== 'string') return null;
+    if (details.createdAt !== undefined && (
+      typeof details.createdAt !== 'string' || !Number.isFinite(Date.parse(details.createdAt))
+    )) return null;
+    entries.push([filePath, {
+      ...(typeof details.caption === 'string' ? { caption: details.caption } : {}),
+      ...(typeof details.createdAt === 'string' ? { createdAt: details.createdAt } : {}),
+    }]);
+  }
+  return Object.fromEntries(entries);
 };
 
 const readTreeState = async (zip: JSZip, treeFilePath: string): Promise<ArchiveTreeState> => {
@@ -381,7 +414,7 @@ const restoreGallery = async ({
   warnings,
   createObjectUrl,
   trackObjectUrl,
-}: Omit<RestorePeopleMediaParams, 'people'> & { personId: string }): Promise<string[]> => {
+}: Omit<RestorePeopleMediaParams, 'people'> & { personId: string }): Promise<Person['gallery']> => {
   const galleryPaths = manifest.media.gallery[personId] ?? [];
 
   // Track warnings for each path to keep warnings deterministic
@@ -404,7 +437,19 @@ const restoreGallery = async ({
     warnings.push(...w);
   }
 
-  return results.filter((url): url is string => typeof url === 'string');
+  const restored: Person['gallery'] = [];
+  results.forEach((url, index) => {
+    if (!url) return;
+    const details = manifest.media.galleryMetadata?.[galleryPaths[index]];
+    restored.push(details ? {
+      id: `archive-gallery-${personId}-${index}`,
+      url,
+      version: 1,
+      createdAt: details.createdAt ?? manifest.metadata.createdAt,
+      ...(details.caption !== undefined ? { caption: details.caption } : {}),
+    } : url);
+  });
+  return restored;
 };
 
 const restoreMediaUrl = async ({

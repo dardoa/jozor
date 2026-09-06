@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { useCachedImage } from '../useCachedImage';
 import { imageCacheService } from '../../../services/imageCacheService';
 
@@ -116,5 +116,66 @@ describe('useCachedImage Hook', () => {
         format: undefined,
       });
     });
+  });
+
+  it('hides the previous blob immediately while the new person image is pending', async () => {
+    let resolveNext!: (url: string) => void;
+    vi.mocked(imageCacheService.getObjectUrl)
+      .mockResolvedValueOnce('blob:first-person')
+      .mockReturnValueOnce(new Promise((resolve) => { resolveNext = resolve; }));
+    const { result, rerender } = renderHook(({ url }) => useCachedImage(url), {
+      initialProps: { url: 'https://example.test/first.jpg' },
+    });
+    await waitFor(() => expect(result.current.cachedUrl).toBe('blob:first-person'));
+
+    rerender({ url: 'https://example.test/next.jpg' });
+    expect(result.current).toEqual({ cachedUrl: null, isLoading: true, error: null });
+    await act(async () => { resolveNext('blob:next-person'); });
+    expect(result.current.cachedUrl).toBe('blob:next-person');
+  });
+
+  it('discards a late previous source and releases its acquired blob', async () => {
+    let resolvePrevious!: (url: string) => void;
+    vi.mocked(imageCacheService.getObjectUrl)
+      .mockReturnValueOnce(new Promise((resolve) => { resolvePrevious = resolve; }))
+      .mockResolvedValueOnce('blob:current-person');
+    const { result, rerender } = renderHook(({ url }) => useCachedImage(url), {
+      initialProps: { url: 'https://example.test/previous.jpg' },
+    });
+    rerender({ url: 'https://example.test/current.jpg' });
+    await waitFor(() => expect(result.current.cachedUrl).toBe('blob:current-person'));
+    await act(async () => { resolvePrevious('blob:late-previous-person'); });
+    expect(result.current.cachedUrl).toBe('blob:current-person');
+    expect(imageCacheService.releaseObjectUrl).toHaveBeenCalledWith(
+      'https://example.test/previous.jpg', expect.any(Object)
+    );
+  });
+
+  it('clears the visible image when its source is removed', async () => {
+    vi.mocked(imageCacheService.getObjectUrl).mockResolvedValue('blob:removed-photo');
+    const initialProps: { url?: string } = { url: 'https://example.test/photo.jpg' };
+    const { result, rerender } = renderHook(({ url }: { url?: string }) => useCachedImage(url), {
+      initialProps,
+    });
+    await waitFor(() => expect(result.current.cachedUrl).toBe('blob:removed-photo'));
+    rerender({});
+    expect(result.current).toEqual({ cachedUrl: null, isLoading: false, error: null });
+    expect(imageCacheService.releaseObjectUrl).toHaveBeenCalledWith(
+      'https://example.test/photo.jpg', expect.any(Object)
+    );
+  });
+
+  it('does not reuse a released blob when returning to an earlier source', async () => {
+    vi.mocked(imageCacheService.getObjectUrl)
+      .mockResolvedValueOnce('blob:first-acquisition')
+      .mockImplementation(() => new Promise(() => undefined));
+    const { result, rerender } = renderHook(({ url }) => useCachedImage(url), {
+      initialProps: { url: 'https://example.test/first.jpg' },
+    });
+    await waitFor(() => expect(result.current.cachedUrl).toBe('blob:first-acquisition'));
+    rerender({ url: 'https://example.test/other.jpg' });
+    rerender({ url: 'https://example.test/first.jpg' });
+    expect(result.current).toEqual({ cachedUrl: null, isLoading: true, error: null });
+    expect(imageCacheService.getObjectUrl).toHaveBeenCalledTimes(3);
   });
 });

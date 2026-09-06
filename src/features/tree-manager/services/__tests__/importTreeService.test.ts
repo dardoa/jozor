@@ -6,9 +6,13 @@ const mockImportTreeContent = vi.hoisted(() => vi.fn());
 const mockImportFromGEDCOMWithReport = vi.hoisted(() => vi.fn());
 const mockImportJozorArchiveDataForCloud = vi.hoisted(() => vi.fn());
 const mockDeleteWholeTree = vi.hoisted(() => vi.fn());
+const mockUpdateTreeRoot = vi.hoisted(() => vi.fn());
 const mockUploadPersonMediaBlob = vi.hoisted(() => vi.fn());
 const mockDeletePersonMediaAsset = vi.hoisted(() => vi.fn());
 const mockDeferCleanup = vi.hoisted(() => vi.fn());
+const mockCleanupWarning = vi.hoisted(() => vi.fn());
+
+vi.mock('../../../../utils/showToast', () => ({ showToast: { warning: mockCleanupWarning } }));
 
 vi.mock('uuid', () => ({
   v4: () => mockUuid(),
@@ -18,6 +22,7 @@ vi.mock('../../../../services/supabaseTreeMutationService', () => ({
   createTree: (...args: unknown[]) => mockCreateTree(...args),
   importTreeContent: (...args: unknown[]) => mockImportTreeContent(...args),
   deleteWholeTree: (...args: unknown[]) => mockDeleteWholeTree(...args),
+  updateTreeRoot: (...args: unknown[]) => mockUpdateTreeRoot(...args),
 }));
 
 vi.mock('../../../../utils/archiveLogic', () => ({
@@ -31,8 +36,8 @@ vi.mock('../../../../services/supabaseStorageService', () => ({
   },
 }));
 
-vi.mock('../../../../services/personMediaCleanupQueue', () => ({
-  deferPersonMediaObjectCleanup: (...args: unknown[]) => mockDeferCleanup(...args),
+vi.mock('../../../../services/archiveImportCleanupQueue', () => ({
+  enqueueArchiveImportCleanup: (...args: unknown[]) => mockDeferCleanup(...args),
 }));
 
 vi.mock('../../../../utils/gedcomLogic', () => ({
@@ -76,6 +81,7 @@ describe('importTreeService', () => {
     mockCreateTree.mockResolvedValue('tree_new');
     mockImportTreeContent.mockResolvedValue(undefined);
     mockDeleteWholeTree.mockResolvedValue(undefined);
+    mockUpdateTreeRoot.mockReset().mockResolvedValue(undefined);
     mockDeletePersonMediaAsset.mockResolvedValue(undefined);
     mockDeferCleanup.mockResolvedValue(undefined);
   });
@@ -178,8 +184,12 @@ describe('importTreeService', () => {
     };
     mockImportJozorArchiveDataForCloud.mockResolvedValue({
       people: peopleMap,
+      focusId: 'old_parent',
       settings: undefined,
-      mediaByPersonId: { old_parent: { avatar: profileBlob, gallery: [galleryBlob] } },
+      mediaByPersonId: { old_parent: {
+        avatar: profileBlob, gallery: [galleryBlob],
+        galleryMetadata: [{ caption: 'Family memory', createdAt: '2020-02-03T00:00:00Z' }],
+      } },
       warnings: [],
       mediaComplete: true,
     });
@@ -199,12 +209,33 @@ describe('importTreeService', () => {
       'tree_new', 'owner_1',
       expect.arrayContaining([expect.objectContaining({
         id: 'new_parent', photoAsset: profileAsset,
-        gallery: [expect.objectContaining({ asset: galleryAsset })],
+        gallery: [expect.objectContaining({ asset: galleryAsset, caption: 'Family memory', createdAt: '2020-02-03T00:00:00Z' })],
       })]),
       expect.any(Array), 'owner@example.com', 'token_1'
     );
     const serializedCall = JSON.stringify(mockImportTreeContent.mock.calls[0]);
     expect(serializedCall).not.toContain('blob:');
+    expect(mockDeleteWholeTree).not.toHaveBeenCalled();
+    expect(mockUpdateTreeRoot).toHaveBeenCalledWith('tree_new', 'new_parent', 'owner_1', 'owner@example.com', 'token_1');
+  });
+
+  it('rejects an unknown archive focus before creating cloud resources', async () => {
+    mockImportJozorArchiveDataForCloud.mockResolvedValue({
+      people: peopleMap, focusId: 'missing', mediaByPersonId: {}, warnings: [], mediaComplete: true,
+    });
+    await expect(importTreeFromFileItem('owner_1', 'owner@example.com', { name: 'family.jozor' } as File, 'token_1'))
+      .rejects.toThrow('Archive focus references');
+    expect(mockCreateTree).not.toHaveBeenCalled();
+  });
+
+  it('queues guarded recovery instead of blindly deleting saved content when focus restore fails', async () => {
+    mockImportJozorArchiveDataForCloud.mockResolvedValue({
+      people: peopleMap, focusId: 'old_parent', mediaByPersonId: {}, warnings: [], mediaComplete: true,
+    });
+    mockUpdateTreeRoot.mockRejectedValue(new Error('Focus write failed'));
+    await expect(importTreeFromFileItem('owner_1', 'owner@example.com', { name: 'family.jozor' } as File, 'token_1'))
+      .rejects.toThrow('Focus write failed');
+    expect(mockDeferCleanup).toHaveBeenCalledWith({ treeId: 'tree_new', userId: 'owner_1' }, []);
     expect(mockDeleteWholeTree).not.toHaveBeenCalled();
   });
 
@@ -231,12 +262,11 @@ describe('importTreeService', () => {
       'owner_1', 'owner@example.com', { name: 'family.jozor' } as File, 'token_1'
     )).rejects.toThrow('storage full');
 
-    expect(mockDeletePersonMediaAsset).toHaveBeenCalledWith(
-      uploadedAsset, 'owner_1', 'owner@example.com', 'token_1'
+    expect(mockDeferCleanup).toHaveBeenCalledWith(
+      { treeId: 'tree_new', userId: 'owner_1' }, [uploadedAsset]
     );
-    expect(mockDeleteWholeTree).toHaveBeenCalledWith(
-      'tree_new', 'owner_1', 'owner@example.com', 'token_1'
-    );
+    expect(mockDeletePersonMediaAsset).not.toHaveBeenCalled();
+    expect(mockDeleteWholeTree).not.toHaveBeenCalled();
     expect(mockImportTreeContent).not.toHaveBeenCalled();
   });
 
@@ -262,8 +292,8 @@ describe('importTreeService', () => {
     )).rejects.toThrow('database rejected import');
 
     expect(mockDeferCleanup).toHaveBeenCalledWith(
-      { treeId: 'tree_new', userId: 'owner_1', token: 'token_1' },
-      expect.objectContaining({ assetId: 'asset-profile' })
+      { treeId: 'tree_new', userId: 'owner_1' },
+      [expect.objectContaining({ assetId: 'asset-profile' })]
     );
     expect(mockDeleteWholeTree).not.toHaveBeenCalled();
   });
@@ -341,5 +371,6 @@ describe('importTreeService', () => {
 
     expect(mockDeferCleanup).toHaveBeenCalledOnce();
     expect(mockDeleteWholeTree).not.toHaveBeenCalled();
+    expect(mockCleanupWarning).toHaveBeenCalledWith('messages.error.importCleanupReview', { id: 'archive-import-cleanup-review' });
   });
 });

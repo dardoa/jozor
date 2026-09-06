@@ -34,6 +34,7 @@ const basePerson: Pick<Person, 'id' | 'firstName' | 'lastName' | 'gender' | 'bir
 
 describe('SmartAvatar', () => {
   beforeEach(() => {
+    vi.clearAllMocks();
     usePersonMediaAssetUrlMock.mockReturnValue(null);
     vi.mocked(useCachedImage).mockImplementation(() => ({
       cachedUrl: null,
@@ -116,6 +117,32 @@ describe('SmartAvatar', () => {
     expect(container.innerHTML).not.toContain(photoAsset.objectPath);
     expect(container.innerHTML).not.toContain(photoAsset.assetId);
     expect(container.innerHTML).not.toContain('person-media');
+  });
+
+  it('does not fetch or render a legacy private Storage URL, even with a previous cached blob', () => {
+    const photoUrl = 'https://project.supabase.co/storage/v1/object/private-photo-sentinel';
+    vi.mocked(useCachedImage).mockReturnValue({ cachedUrl: 'blob:previous-person', isLoading: false, error: null });
+    const { container } = render(<SmartAvatar person={{ ...basePerson, photoUrl }} size={48} />);
+
+    expect(useCachedImage).toHaveBeenCalledWith(undefined, { width: 48, height: 48 });
+    expect(screen.getByRole('img', { name: 'Noura Jozor' })).toHaveAttribute('data-age-band', 'adult');
+    expect(container.innerHTML).not.toContain(photoUrl);
+    expect(container.innerHTML).not.toContain('blob:previous-person');
+  });
+
+  it('never falls back to legacy or cached bytes while a private asset is unresolved', () => {
+    const photoAsset = createPersonMediaAssetRef({
+      treeId: 'tree-1', assetId: '123e4567-e89b-42d3-a456-426614174000',
+      kind: 'profile-photo', mimeType: 'image/webp', byteLength: 128,
+      createdAt: '2026-09-05T00:00:00.000Z',
+    });
+    vi.mocked(useCachedImage).mockReturnValue({ cachedUrl: 'blob:previous-person', isLoading: false, error: null });
+    const { container } = render(
+      <SmartAvatar person={{ ...basePerson, photoAsset, photoUrl: 'https://legacy.test/photo.jpg' }} size={48} />
+    );
+    expect(container.querySelector('img')).toBeNull();
+    expect(container.innerHTML).not.toContain('legacy.test');
+    expect(container.innerHTML).not.toContain('blob:previous-person');
   });
 });
 

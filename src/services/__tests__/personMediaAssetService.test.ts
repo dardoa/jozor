@@ -27,6 +27,7 @@ import {
   createPersonMediaAssetResolver,
   createPersonMediaPosterSource,
   loadPersonMediaAssetBlob,
+  loadPersonMediaAssetBlobForCurrentSession,
   parsePersonMediaPosterSource,
   type PersonMediaAssetRequest,
 } from '../personMediaAssetService';
@@ -105,26 +106,14 @@ describe('personMediaAssetService', () => {
     expect(parsePersonMediaPosterSource('https://storage.example/private.webp')).toBeNull();
   });
 
-  it.each(['owner', 'editor'] as const)(
-    'loads %s media directly from the private bucket',
-    async (role) => {
-      const blob = await loadPersonMediaAssetBlob({ ...request, role });
-
-      expect(blob.type).toBe('image/webp');
-      expect(getSupabaseFullMock).toHaveBeenCalledWith(undefined, undefined, 'session-token');
-      expect(storageFromMock).toHaveBeenCalledWith(asset.bucket);
-      expect(downloadMock).toHaveBeenCalledWith(asset.objectPath);
-    }
-  );
-
-  it('routes viewer media through the authenticated gateway without exposing storage metadata', async () => {
+  it.each(['owner', 'editor', 'viewer'] as const)('routes %s media through the gateway without a direct Storage read', async (role) => {
     const fetchMock = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) => ({
       ok: true,
       blob: async () => new Blob(['RIFF'], { type: 'image/webp' }),
     }));
     vi.stubGlobal('fetch', fetchMock);
 
-    const blob = await loadPersonMediaAssetBlob({ ...request, role: 'viewer' });
+    const blob = await loadPersonMediaAssetBlob({ ...request, role });
 
     expect(blob.type).toBe('image/webp');
     expect(getSupabaseFullMock).not.toHaveBeenCalled();
@@ -135,8 +124,30 @@ describe('personMediaAssetService', () => {
     expect(JSON.stringify(init)).not.toContain(asset.objectPath);
     expect(init).toMatchObject({
       credentials: 'same-origin',
+      cache: 'no-store',
       headers: { Authorization: 'Bearer session-token' },
     });
+    expect(storageFromMock).not.toHaveBeenCalled();
+  });
+
+  it('routes asset-only archive/poster loads through fresh server authorization', async () => {
+    const fetchMock = vi.fn(async () => ({ ok: true, blob: async () => new Blob(['RIFF'], { type: 'image/webp' }) }));
+    vi.stubGlobal('fetch', fetchMock);
+    await expect(loadPersonMediaAssetBlobForCurrentSession(asset)).resolves.toBeInstanceOf(Blob);
+    const [url] = fetchMock.mock.calls[0] as unknown as [string];
+    const params = new URL(url, 'https://app.example.test').searchParams;
+    expect(params.has('personId')).toBe(false);
+    expect(params.get('mimeType')).toBe(asset.mimeType);
+    expect(params.get('byteLength')).toBe(String(asset.byteLength));
+    expect(url).not.toContain(asset.objectPath);
+    expect(getSupabaseFullMock).not.toHaveBeenCalled();
+  });
+
+  it('does not fall back to direct Storage when the gateway rejects stale access', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => ({ ok: false, status: 404 })));
+    await expect(loadPersonMediaAssetBlob(request)).rejects.toThrow('(404)');
+    await expect(loadPersonMediaAssetBlobForCurrentSession(asset)).rejects.toThrow('(404)');
+    expect(getSupabaseFullMock).not.toHaveBeenCalled();
   });
 
   it('rejects media bytes whose size does not match the immutable reference', async () => {

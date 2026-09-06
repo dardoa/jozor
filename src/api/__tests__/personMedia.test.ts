@@ -159,6 +159,47 @@ describe('person media delivery API', () => {
     expect(adminDownloadMock).not.toHaveBeenCalled();
   });
 
+  it.each(['owner', 'editor', 'viewer', 'removed', 'lookup-error'])('authorizes asset-only reads with current %s access', async (role) => {
+    const rpc = vi.fn(async (name: string) => ({
+      data: name === 'is_tree_owner' ? role === 'owner' : role === 'editor',
+      error: role === 'lookup-error' ? new Error('Permission lookup failed') : null,
+    }));
+    createSupabaseClientForUserMock.mockReturnValue({ rpc });
+    const res = createResponse();
+    await handler({ method: 'GET', headers: { authorization: 'Bearer session-token' },
+      query: { treeId: TREE_ID, assetId: ASSET_ID, kind: asset.kind,
+        mimeType: asset.mimeType, byteLength: String(asset.byteLength) },
+    } as never, res as never);
+    expect(rpc).toHaveBeenCalledWith('is_tree_owner', { p_tree_id: TREE_ID });
+    if (role === 'owner' || role === 'editor') {
+      expect(res.statusCode).toBe(200);
+      expect(adminDownloadMock).toHaveBeenCalledWith(asset.objectPath);
+    } else {
+      expect(res.statusCode).toBe(404);
+      expect(adminDownloadMock).not.toHaveBeenCalled();
+    }
+    if (role === 'editor') expect(rpc).toHaveBeenCalledWith('is_tree_collaborator', {
+      p_tree_id: TREE_ID, p_required_role: 'editor',
+    });
+  });
+
+  it.each([
+    { mimeType: 'image/svg+xml', byteLength: '12' },
+    { mimeType: 'image/webp', byteLength: '5242881' },
+    { mimeType: 'image/webp', byteLength: '12.5' },
+    { mimeType: 'image/webp', byteLength: '0' },
+    { mimeType: 'image/webp', byteLength: ['12'] },
+    { mimeType: ['image/webp'], byteLength: '12' },
+  ])('rejects malformed asset-only contracts before authorization', async (query) => {
+    const res = createResponse();
+    await handler({ method: 'GET', headers: { authorization: 'Bearer session-token' },
+      query: { treeId: TREE_ID, assetId: ASSET_ID, kind: asset.kind, ...query },
+    } as never, res as never);
+    expect(res.statusCode).toBe(400);
+    expect(createSupabaseClientForUserMock).not.toHaveBeenCalled();
+    expect(adminDownloadMock).not.toHaveBeenCalled();
+  });
+
   it('fails closed when stored bytes do not match the authorized media contract', async () => {
     const secureQuery = createSecurePersonQuery({
       id: PERSON_ID,

@@ -405,6 +405,7 @@ export const general = {
     migratePersonMedia: 'Secure Legacy Person Photos',
     migratePersonMediaRunning: 'Moving legacy person photos into private storage...',
     migratePersonMediaSuccess: 'Secured {migrated} photos and removed {cleaned} public references. External links left unchanged: {external}.',
+    migratePersonMediaCleanupPending: 'Photo references migrated. {pending} files await server cleanup; retained tree history or other legacy references may still require them.',
     migratePersonMediaNoop: 'All eligible person photos are already in private storage.',
     migratePersonMediaPartial: 'Migration paused: {failed} failed and {blocked} blocked items. Run it again after reviewing the affected media.',
     migratePersonMediaError: 'Failed to migrate legacy person photos.',

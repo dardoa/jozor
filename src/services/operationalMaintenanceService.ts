@@ -17,6 +17,7 @@ export interface LegacyPersonMediaMigrationSummary {
   externalCount: number;
   failedCount: number;
   complete: boolean;
+  pendingCleanupCount?: number;
 }
 
 interface LegacyPersonMediaMigrationBatch extends LegacyPersonMediaMigrationSummary {
@@ -60,6 +61,7 @@ const parsePersonMediaMigrationBatch = (value: unknown): LegacyPersonMediaMigrat
   ] as const;
   if (
     countKeys.some((key) => !isNonNegativeInteger(batch[key]))
+    || (batch.pendingCleanupCount !== undefined && !isNonNegativeInteger(batch.pendingCleanupCount))
     || typeof batch.complete !== 'boolean'
   ) {
     throw new Error('Person media migration returned an invalid response.');
@@ -191,6 +193,7 @@ export const migrateLegacyPersonMedia = async (
       summary.scannedCount += batch.scannedCount;
       summary.migratedCount += batch.migratedCount;
       summary.cleanedCount += batch.cleanedCount;
+      if (batch.pendingCleanupCount !== undefined) summary.pendingCleanupCount = batch.pendingCleanupCount;
       summary.blockedCount += batch.blockedCount;
       summary.externalCount += batch.externalCount;
       summary.failedCount += batch.failedCount;

@@ -49,6 +49,17 @@ describe('showToast', () => {
     expect(toast.success).toHaveBeenCalledWith('Invited test@example.com', expect.any(Object));
   });
 
+  it.each(['ar', 'en'] as const)('localizes the import recovery warning in %s', language => {
+    mockLanguage(language);
+    showToast.warning('messages.error.importCleanupReview');
+    expect(toast.warning).toHaveBeenCalledWith(
+      language === 'ar'
+        ? 'يحتاج استيراد غير مكتمل إلى مراجعة. لم يُحذف المحتوى المحفوظ. راجع أشجارك في الخزنة قبل إعادة الاستيراد.'
+        : 'An incomplete import needs review. Saved content was not deleted. Review your trees in the Vault before importing again.',
+      undefined
+    );
+  });
+
   it('falls back to string if key is not found', () => {
     showToast.success('Some literal string');
     expect(toast.success).toHaveBeenCalledWith('Some literal string', undefined);

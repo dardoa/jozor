@@ -45,6 +45,7 @@ export const buildPersonCustomFields = (person: Person) => ({
   events: person.events || [],
   partnerDetails: person.partnerDetails || {},
   isPrivate: !!person.isPrivate,
+  isDeceased: !!person.isDeceased,
 });
 
 export const mapDbPersonRowToPerson = (row: DbPersonRow): Person => {

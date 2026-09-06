@@ -2,6 +2,8 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import {
   detectPersonMediaImageMimeType,
+  createPersonMediaAssetRef,
+  isPersonMediaImageMimeType,
   isPersonMediaAssetForTree,
   isPersonMediaAssetRef,
   PERSON_MEDIA_MAX_IMAGE_BYTES,
@@ -16,7 +18,6 @@ import {
   isRequestOriginAllowed,
   resolveAllowedOriginFromEnv,
 } from '../../shared/http/cors';
-import { logError } from '../utils/errorLogger';
 import { isUuid } from '../utils/isUuid';
 
 interface SecurePersonMediaRow {
@@ -136,30 +137,42 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const treeId = typeof req.query.treeId === 'string' ? req.query.treeId : '';
-    const personId = typeof req.query.personId === 'string' ? req.query.personId : '';
+    const personId = req.query.personId;
     const assetId = typeof req.query.assetId === 'string' ? req.query.assetId : '';
     const kind = req.query.kind;
-    if (!isUuid(treeId) || !isSafePersonId(personId) || !isUuid(assetId) || !isMediaKind(kind)) {
+    const assetOnly = personId === undefined;
+    const byteLength = typeof req.query.byteLength === 'string' && /^[1-9][0-9]*$/.test(req.query.byteLength)
+      ? Number(req.query.byteLength) : 0;
+    if (!isUuid(treeId) || !isUuid(assetId) || !isMediaKind(kind)
+      || (!assetOnly && (typeof personId !== 'string' || !isSafePersonId(personId)))
+      || (assetOnly && (!isPersonMediaImageMimeType(req.query.mimeType)
+        || !Number.isSafeInteger(byteLength) || byteLength <= 0 || byteLength > PERSON_MEDIA_MAX_IMAGE_BYTES))) {
       return res.status(400).json({
         error: { message: 'Invalid media request.', code: 'INVALID_MEDIA_REQUEST' },
       });
     }
 
     const userClient = createSupabaseClientForUser(user);
-    const { data: row, error: rowError } = await userClient
-      .from('people_secure')
-      .select('id,tree_id,custom_fields')
-      .eq('tree_id', treeId)
-      .eq('id', personId)
-      .maybeSingle();
-
-    if (rowError || !row) {
-      return res.status(404).json({
-        error: { message: 'Media not found.', code: 'MEDIA_NOT_FOUND' },
-      });
+    let asset: PersonMediaAssetRef | null = null;
+    if (assetOnly && isPersonMediaImageMimeType(req.query.mimeType)) {
+      // Archive/checkpoint assets may not be attached to a current person row.
+      // Never trust the client role or accept a client-supplied storage path.
+      const owner = await userClient.rpc('is_tree_owner', { p_tree_id: treeId });
+      const editor = owner.error || owner.data === true ? null
+        : await userClient.rpc('is_tree_collaborator', { p_tree_id: treeId, p_required_role: 'editor' });
+      if (!owner.error && (owner.data === true || (!editor?.error && editor?.data === true))) {
+        asset = createPersonMediaAssetRef({ treeId, assetId, kind,
+          mimeType: req.query.mimeType, byteLength });
+      }
+    } else {
+      const { data: row, error: rowError } = await userClient
+        .from('people_secure')
+        .select('id,tree_id,custom_fields')
+        .eq('tree_id', treeId)
+        .eq('id', personId)
+        .maybeSingle();
+      if (!rowError && row) asset = resolveAuthorizedPersonMediaAsset(row as SecurePersonMediaRow, kind, assetId);
     }
-
-    const asset = resolveAuthorizedPersonMediaAsset(row as SecurePersonMediaRow, kind, assetId);
     if (!asset) {
       return res.status(404).json({
         error: { message: 'Media not found.', code: 'MEDIA_NOT_FOUND' },
@@ -203,7 +216,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.setHeader('Content-Length', String(bytes.byteLength));
     return res.status(200).send(Buffer.from(bytes));
   } catch (error) {
-    logError('PERSON_MEDIA_DELIVERY_FAILED', error, { showToast: false });
+    console.error('[PERSON_MEDIA_DELIVERY_FAILED]', { errorType: error instanceof Error ? error.name : 'UnknownError' });
     return res.status(500).json({
       error: { message: 'Unable to deliver media.', code: 'MEDIA_DELIVERY_FAILED' },
     });

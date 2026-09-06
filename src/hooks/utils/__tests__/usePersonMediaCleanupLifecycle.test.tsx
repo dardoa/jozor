@@ -21,6 +21,8 @@ vi.mock('../../../services/personMediaCleanupQueue', () => ({
 
 import { usePersonMediaCleanupLifecycle } from '../usePersonMediaCleanupLifecycle';
 
+vi.mock('../useArchiveImportCleanupLifecycle', () => ({ useArchiveImportCleanupLifecycle: vi.fn() }));
+
 const owner = {
   uid: 'owner-1',
   email: 'owner@example.test',

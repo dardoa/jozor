@@ -6,6 +6,7 @@ import { isPersonMediaAssetRef } from '../../types';
 
 import type { Person } from '../../types';
 import { stringToGradient } from '../../utils/stringToColor';
+import { getLegacyPersonMediaUrl } from '../../utils/legacyPersonMediaUrl';
 import {
   FEMALE_ADULT_PATHS,
   FEMALE_CHILD_PATHS,
@@ -172,7 +173,7 @@ export const SmartAvatar = memo<SmartAvatarProps>(({ person, size, className = '
     [person.id, privateAsset]
   );
   const privatePhotoUrl = usePersonMediaAssetUrl(privateDescriptor);
-  const legacyPhotoUrl = privateAsset ? undefined : person.photoUrl?.trim();
+  const legacyPhotoUrl = privateAsset ? undefined : getLegacyPersonMediaUrl(person.photoUrl) ?? undefined;
   const photoKey = privateAsset
     ? `${privateAsset.assetId}:${privateAsset.version}`
     : legacyPhotoUrl || null;
@@ -203,7 +204,7 @@ export const SmartAvatar = memo<SmartAvatarProps>(({ person, size, className = '
   );
 
   const { cachedUrl } = useCachedImage(isImageFailed ? undefined : legacyPhotoUrl, { width: size, height: size });
-  const displayUrl = privatePhotoUrl || cachedUrl || legacyPhotoUrl;
+  const displayUrl = privateAsset ? privatePhotoUrl : legacyPhotoUrl ? cachedUrl || legacyPhotoUrl : null;
 
   if (displayUrl && !isImageFailed) {
     return (

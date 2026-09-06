@@ -49,6 +49,13 @@ describe('resolveAppSurface', () => {
     expect(resolveAppSurface({
       ...defaultInput,
       hasCurrentTree: false,
+      hasRoutePerson: true,
+      routePersonExists: false,
+    })).toBe('not-found');
+
+    expect(resolveAppSurface({
+      ...defaultInput,
+      hasCurrentTree: false,
       hasRouteTree: true,
     })).toBe('not-found');
 

@@ -238,7 +238,9 @@ Before enabling this path against owner data:
 
 1. Review and apply `20260905000100_add_private_person_media_bucket.sql`, then
    `20260905000200_add_legacy_person_media_migration_rpcs.sql`, first to a
-   non-production Supabase project.
+   non-production Supabase project. Include the follow-up sync timestamp and
+   private-photo checkpoint migrations (`20260905000300` and `20260905000400`)
+   before exercising the current import/reload runtime.
 2. Verify owner, editor, viewer, role downgrade, masked living person, and
    revoked collaborator behavior with two real accounts.
 3. Upload, replace, delete, reload, and export both a profile photo and gallery
@@ -297,3 +299,11 @@ credentials are included in this report. Do not run the live integration suite,
 apply migrations, or execute legacy-media cleanup on an unverified target.
 
 Remote push and live Supabase migration remain pending.
+
+Follow-up: the [local Supabase rollout pass](private-media-local-supabase-rollout-2026-09-05.md)
+records a fresh 73-migration baseline followed by two forward migrations, plus
+real local Auth, Storage and PostgREST behavior. Browser upload/replace/delete,
+HTTP delivery, image-bearing archive export/import, gallery metadata/root
+restoration and upload-failure compensation are now verified on synthetic data.
+It does not replace hosted staging, poster export, offline compensation or
+private-audio rollout gates above.

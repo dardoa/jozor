@@ -51,6 +51,11 @@ const buildPerson = (): Person => ({
 });
 
 describe('personRowMapper', () => {
+  it('preserves an explicit deceased flag without a known death date', () => {
+    const row = mapPersonToDbRow({ ...buildPerson(), isDeceased: true, deathDate: '' }, 'tree-1');
+    expect(row.custom_fields.isDeceased).toBe(true);
+    expect(mapDbPersonRowToPerson(row).isDeceased).toBe(true);
+  });
   it('maps Person to DB row with explicit custom_fields payload', () => {
     const person = buildPerson();
 

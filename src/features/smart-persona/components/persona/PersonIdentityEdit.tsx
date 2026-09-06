@@ -65,38 +65,40 @@ export const PersonIdentityEdit = memo<PersonIdentityEditProps>(({ person, onUpd
     <>
       <div className='ds-persona-section flex items-start gap-4 relative mb-4 p-4'>
         <div className='shrink-0 space-y-1.5'>
-          <div
-            onClick={() => fileInputRef.current?.click()}
-            className='w-24 h-24 rounded-[var(--radius-md)] border-2 border-dashed border-[var(--border-soft)] hover:border-[var(--primary-500)] bg-[var(--surface-subtle)] flex flex-col items-center justify-center cursor-pointer relative overflow-hidden group transition-all'
-          >
-            {isUploading && (
-              <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10">
-                <Loader2 className="w-6 h-6 text-white animate-spin" />
-              </div>
-            )}
-            {hasPersonPhoto(person) ? (
-              <>
+          <div className='w-24 h-24 relative group'>
+            <button
+              type='button'
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading}
+              aria-label={t.uploadPhoto}
+              aria-busy={isUploading}
+              className='w-full h-full rounded-[var(--radius-md)] border-2 border-dashed border-[var(--border-soft)] hover:border-[var(--primary-500)] bg-[var(--surface-subtle)] flex flex-col items-center justify-center cursor-pointer relative overflow-hidden transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary-500)]'
+            >
+              {isUploading && (
+                <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10">
+                  <Loader2 className="w-6 h-6 text-white animate-spin" />
+                </div>
+              )}
+              {hasPersonPhoto(person) ? (
                 <SmartAvatar
                   person={{ ...person, photoUrl: getPersonPhoto(person) || person.photoUrl }}
                   size={96}
                   className='rounded-[var(--radius-md)] opacity-80 transition-opacity group-hover:opacity-100'
                 />
-                {!isUploading && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDelete(person.id);
-                    }}
-                    className='absolute top-1 right-1 p-0.5 bg-red-500/80 hover:bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity'
-                    title={t.removePhoto}
-                    aria-label={t.removePhoto}
-                  >
-                    <X className='w-3 h-3' />
-                  </button>
-                )}
-              </>
-            ) : (
-              <Camera className='w-8 h-8 text-[var(--text-dim)] group-hover:text-[var(--primary-500)] transition-colors' />
+              ) : (
+                <Camera className='w-8 h-8 text-[var(--text-dim)] group-hover:text-[var(--primary-500)] transition-colors' />
+              )}
+            </button>
+            {hasPersonPhoto(person) && !isUploading && (
+              <button
+                type='button'
+                onClick={() => handleDelete(person.id)}
+                className='absolute top-1 right-1 w-7 h-7 flex items-center justify-center bg-red-500/80 hover:bg-red-600 text-white rounded-full opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary-500)] transition-opacity'
+                title={t.removePhoto}
+                aria-label={t.removePhoto}
+              >
+                <X className='w-3 h-3' />
+              </button>
             )}
           </div>
           <input

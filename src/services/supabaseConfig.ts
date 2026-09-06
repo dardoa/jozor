@@ -1,4 +1,7 @@
-const viteEnv = (typeof import.meta !== 'undefined' ? import.meta.env : undefined) as ImportMetaEnv | undefined;
+const viteEnv = typeof import.meta.env === 'undefined' ? undefined : {
+  VITE_SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL,
+  VITE_SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY,
+};
 const runtimeEnv = typeof process !== 'undefined' ? process.env : undefined;
 
 export const resolveSupabaseConfig = (

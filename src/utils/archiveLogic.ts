@@ -259,6 +259,7 @@ export interface JozorArchiveData {
 }
 
 export interface JozorCloudArchiveData extends JozorArchiveData {
+  focusId?: string;
   mediaByPersonId: Record<string, ArchivePersonImageBlobs>;
   warnings: string[];
   mediaComplete: boolean;

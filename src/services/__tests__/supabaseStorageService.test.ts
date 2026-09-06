@@ -50,7 +50,7 @@ describe('SupabaseStorageService person photos', () => {
     const [objectPath, , uploadOptions] = uploadMock.mock.calls[0];
     expect(objectPath).toMatch(/^8beb27bc-7513-4349-9271-31cb39224986\/profile-photo\/[0-9a-f-]+\.webp$/);
     expect(objectPath).not.toContain('raw-person-id-must-not-enter-path');
-    expect(uploadOptions).toMatchObject({ upsert: false, contentType: 'image/webp' });
+    expect(uploadOptions).toMatchObject({ cacheControl: '0', upsert: false, contentType: 'image/webp' });
     expect(result.asset.objectPath).toBe(objectPath);
     expect(result.photoVersion).toBe(4);
     expect(result).not.toHaveProperty('publicUrl');
@@ -71,6 +71,22 @@ describe('SupabaseStorageService person photos', () => {
     expect(uploadMock).not.toHaveBeenCalled();
   });
 
+  it('keeps account avatars on the user-owned legacy path and updates the profile through its RPC', async () => {
+    const publicUrl = 'https://example.test/storage/v1/object/public/avatars/users/user-1/profile.webp';
+    fromMock.mockReturnValue({ upload: uploadMock, getPublicUrl: vi.fn(() => ({ data: { publicUrl } })) });
+    rpcMock.mockResolvedValue({ error: null });
+    const result = await SupabaseStorageService.uploadUserAvatar('user-1', 'owner@example.test',
+      new File(['image'], 'profile.png', { type: 'image/png' }), 'session-token', 2);
+    expect(fromMock).toHaveBeenCalledWith('avatars');
+    expect(uploadMock).toHaveBeenCalledWith('users/user-1/profile.webp', expect.any(Blob), {
+      upsert: true, contentType: 'image/webp',
+    });
+    expect(rpcMock).toHaveBeenCalledWith('update_user_avatar', {
+      p_photo_url: publicUrl, p_photo_path: 'users/user-1/profile.webp', p_photo_version: 3,
+    });
+    expect(result).toEqual({ publicUrl: `${publicUrl}?v=3`, photoPath: 'users/user-1/profile.webp', photoVersion: 3 });
+  });
+
   it('uploads an archive blob using its verified binary signature and normalizes its MIME type', async () => {
     const asset = await SupabaseStorageService.uploadPersonMediaBlob({
       treeId: '8beb27bc-7513-4349-9271-31cb39224986',
@@ -86,7 +102,7 @@ describe('SupabaseStorageService person photos', () => {
     expect(asset.objectPath).toMatch(/\/gallery-photo\/[0-9a-f-]+\.png$/);
     const [, uploadedBlob, options] = uploadMock.mock.calls[0];
     expect(uploadedBlob).toMatchObject({ type: 'image/png', size: 8 });
-    expect(options).toMatchObject({ contentType: 'image/png', upsert: false });
+    expect(options).toMatchObject({ cacheControl: '0', contentType: 'image/png', upsert: false });
   });
 
   it.each([

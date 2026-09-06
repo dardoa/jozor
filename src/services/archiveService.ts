@@ -3,6 +3,7 @@ import JSZip from 'jszip';
 import {
   isPersonMediaAssetRef,
   type BackupManifest,
+  type ArchiveGalleryMetadata,
   type FullState,
   type Person,
   type PersonMediaAssetRef,
@@ -56,6 +57,7 @@ export const buildBlueprintArchive = async (
   const normalizedPeople: Record<string, Person> = {};
   const avatars: Record<string, string> = {};
   const gallery: Record<string, string[]> = {};
+  const galleryMetadata: Record<string, ArchiveGalleryMetadata> = {};
 
   // We rewrite media references into manifest entries so tree.json stays purely
   // data-oriented and never embeds transport-specific image payloads.
@@ -123,18 +125,29 @@ export const buildBlueprintArchive = async (
       ]);
 
       const galleryPaths = galleryPathsRaw.filter((path): path is string => typeof path === 'string');
+      const galleryDetails = galleryPathsRaw.flatMap((filePath, index) => {
+        const item = person.gallery[index];
+        if (!filePath || typeof item !== 'object' || !item) return [];
+        const details: ArchiveGalleryMetadata = {};
+        if (typeof item.caption === 'string') details.caption = item.caption;
+        if (typeof item.createdAt === 'string' && Number.isFinite(Date.parse(item.createdAt))) {
+          details.createdAt = item.createdAt;
+        }
+        return Object.keys(details).length ? [[filePath, details] as const] : [];
+      });
 
       return {
         personId,
         normalizedPerson,
         avatarPath,
         galleryPaths,
+        galleryDetails,
       };
     })
   );
 
   // Populate maps in deterministic order of sortedPersonIds
-  for (const { personId, normalizedPerson, avatarPath, galleryPaths } of tempResults) {
+  for (const { personId, normalizedPerson, avatarPath, galleryPaths, galleryDetails } of tempResults) {
     normalizedPeople[personId] = normalizedPerson;
 
     if (avatarPath) {
@@ -144,6 +157,7 @@ export const buildBlueprintArchive = async (
     if (galleryPaths.length > 0) {
       gallery[personId] = galleryPaths;
     }
+    Object.assign(galleryMetadata, Object.fromEntries(galleryDetails));
   }
 
   const normalizedTree: ArchiveTreeState = {
@@ -170,6 +184,7 @@ export const buildBlueprintArchive = async (
     media: {
       avatars,
       gallery,
+      ...(Object.keys(galleryMetadata).length ? { galleryMetadata } : {}),
     },
   };
 

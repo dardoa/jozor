@@ -74,6 +74,7 @@ export const DiagnosticsMaintenancePanels: React.FC<{ layout?: 'stack' | 'grid' 
         external: String(summary.externalCount),
         failed: String(summary.failedCount),
         blocked: String(summary.blockedCount),
+        pending: String(summary.pendingCleanupCount ?? 0),
       };
       const interpolate = (template: string) => Object.entries(variables).reduce(
         (message, [key, value]) => message.replace(`{${key}}`, value),
@@ -85,6 +86,8 @@ export const DiagnosticsMaintenancePanels: React.FC<{ layout?: 'stack' | 'grid' 
           id: toastId,
           duration: 6500,
         });
+      } else if ((summary.pendingCleanupCount ?? 0) > 0) {
+        showToast.warning(interpolate(t.settings.migratePersonMediaCleanupPending), { id: toastId, duration: 6500 });
       } else if (summary.migratedCount === 0 && summary.cleanedCount === 0) {
         showToast.success(t.settings.migratePersonMediaNoop, { id: toastId, duration: 3500 });
       } else {

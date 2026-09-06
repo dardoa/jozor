@@ -35,7 +35,7 @@ export const resolveAppSurface = ({
   }
 
   if (hasUser && !hasCurrentTree) {
-    return hasRouteTree ? 'not-found' : 'tree-selector';
+    return hasRouteTree || hasRoutePerson ? 'not-found' : 'tree-selector';
   }
 
   if (hasRoutePerson && hasCurrentTree && !routePersonExists) {

@@ -9,8 +9,9 @@ import {
   type LegacyPersonMediaRow,
 } from '../services/privatePersonMediaLegacyMigration';
 import { resolvedSupabaseUrl } from '../services/supabaseConfig';
+import { cleanPersonMediaObject } from '../services/personMediaServerCleanup';
 import { authenticateUser } from '../utils/authUtils';
-import { logError, logInfo } from '../utils/errorLogger';
+import { PERSON_MEDIA_STORAGE_CACHE_CONTROL } from '../types/personMedia';
 import {
   buildCorsHeaders,
   getHeaderOrigin,
@@ -29,6 +30,7 @@ interface MigrationBatchResponse extends LegacyPersonMediaMigrationResult {
   externalCount: number;
   nextOffset: number;
   complete: boolean;
+  pendingCleanupCount: number;
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -74,7 +76,7 @@ export function createLegacyPersonMediaMigrationAdapter(
 
     async uploadPrivateObject(asset, blob) {
       const { error } = await admin.storage.from(asset.bucket).upload(asset.objectPath, blob, {
-        cacheControl: '3600',
+        cacheControl: PERSON_MEDIA_STORAGE_CACHE_CONTROL,
         contentType: asset.mimeType,
         upsert: false,
       });
@@ -110,13 +112,11 @@ export function createLegacyPersonMediaMigrationAdapter(
     },
 
     async removePrivateObject(asset) {
-      const { error } = await admin.storage.from(asset.bucket).remove([asset.objectPath]);
-      if (error) throw new Error('Private person media compensation failed');
+      await cleanPersonMediaObject(admin, { bucket: asset.bucket, object_path: asset.objectPath });
     },
 
     async removeLegacyObject(objectPath) {
-      const { error } = await admin.storage.from('avatars').remove([objectPath]);
-      if (error) throw new Error('Legacy person media cleanup failed');
+      await cleanPersonMediaObject(admin, { bucket: 'avatars', object_path: objectPath });
     },
 
     async finalizeLegacyReference(task, asset) {
@@ -131,11 +131,12 @@ export function createLegacyPersonMediaMigrationAdapter(
         }), 'Legacy profile photo finalization');
       }
 
-      return requireRpcSuccess(admin.rpc('finalize_legacy_gallery_person_media', {
+      return requireRpcSuccess(admin.rpc('finalize_legacy_gallery_person_media_checked', {
         p_tree_id: task.treeId,
         p_person_id: task.personId,
         p_source_object_path: task.sourceObjectPath,
         p_asset_id: asset.assetId,
+        p_expected_item: task.existingAsset ? task.expectedGalleryItem : buildMigratedGalleryItem(task.expectedGalleryItem, asset),
       }), 'Legacy gallery photo finalization');
     },
   };
@@ -181,6 +182,7 @@ export async function migrateLegacyPersonMediaBatch(
     failedCount: 0,
     nextOffset: offset + rawRows.length,
     complete: (data?.length ?? 0) < limit,
+    pendingCleanupCount: 0,
   };
 
   for (const row of rows) {
@@ -192,7 +194,9 @@ export async function migrateLegacyPersonMediaBatch(
     response.cleanedCount += result.cleanedCount;
     response.failedCount += result.failedCount;
   }
-
+  const pending = await admin.rpc('count_pending_person_media_cleanup', { p_tree_id: treeId });
+  if (pending.error || !Number.isSafeInteger(pending.data) || pending.data < 0) throw new Error('Media cleanup status failed');
+  response.pendingCleanupCount = pending.data;
   return response;
 }
 
@@ -267,14 +271,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const offset = parseBoundedInteger(body.offset, 0, MAX_OFFSET);
     const limit = Math.max(1, parseBoundedInteger(body.limit, DEFAULT_BATCH_SIZE, MAX_BATCH_SIZE));
     const result = await migrateLegacyPersonMediaBatch(admin, treeId, offset, limit, resolvedSupabaseUrl);
-    logInfo('PERSON_MEDIA_LEGACY_MIGRATION', 'Legacy person media batch completed.', {
-      treeId,
-      userId: user.uid,
+    console.info('[PERSON_MEDIA_LEGACY_MIGRATION]', {
       ...result,
     });
     return res.status(200).json(result);
   } catch (error) {
-    logError('PERSON_MEDIA_LEGACY_MIGRATION_FAILED', error, { showToast: false });
+    console.error('[PERSON_MEDIA_LEGACY_MIGRATION_FAILED]', { errorType: error instanceof Error ? error.name : 'UnknownError' });
     return res.status(500).json({
       error: { message: 'Person media migration failed.', code: 'PERSON_MEDIA_MIGRATION_FAILED' },
     });

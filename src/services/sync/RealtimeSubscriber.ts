@@ -15,7 +15,7 @@ type PermissionPayload = {
 export class RealtimeSubscriber {
     private operationChannel: RealtimeChannel | null = null;
     private permissionChannel: RealtimeChannel | null = null;
-    private lastReconcileTime = 0;
+    private changeSignalChannel: RealtimeChannel | null = null;
 
     constructor(
         private options: {
@@ -33,9 +33,18 @@ export class RealtimeSubscriber {
 
         if (user) {
             const client = getSupabaseFull(user.uid, user.email, user.supabaseToken || supabaseAccessToken || undefined);
+            const isCurrent = () => {
+                const state = useAppStore.getState();
+                return state.user?.uid === user.uid && state.currentTreeId === treeId;
+            };
+            const reconcileOnSubscribed = (status: string) => {
+                if (status === 'SUBSCRIBED' && isCurrent()) {
+                    this.options.onReconcile();
+                }
+            };
 
             // 1. Operations Subscription
-            this.operationChannel = client
+            this.operationChannel = useAppStore.getState().currentUserRole === 'viewer' ? null : client
             .channel(`public:tree_operations:tree_id=eq.${treeId}`)
             .on(
                 'postgres_changes',
@@ -46,18 +55,23 @@ export class RealtimeSubscriber {
                     filter: `tree_id=eq.${treeId}`
                 },
                 (payload) => {
+                    if (!isCurrent() || useAppStore.getState().currentUserRole === 'viewer') return;
                     this.options.onOperation(payload.new as DeltaOperation);
                 }
             )
-            .subscribe((status) => {
-                if (status === 'SUBSCRIBED') {
-                    const now = Date.now();
-                    if (now - this.lastReconcileTime > 5000) {
-                        this.lastReconcileTime = now;
-                        this.options.onReconcile();
-                    }
-                }
-            });
+            .subscribe(reconcileOnSubscribed);
+
+            // Viewers never need operation payloads. A two-field server signal
+            // invalidates the role-filtered people_secure snapshot instead.
+            this.changeSignalChannel = client.channel(`tree-change-signals:${treeId}`)
+                .on('postgres_changes', {
+                    event: '*', schema: 'public', table: 'tree_change_signals', filter: `tree_id=eq.${treeId}`,
+                }, () => {
+                    if (isCurrent() && useAppStore.getState().currentUserRole === 'viewer') this.options.onReconcile();
+                })
+                .subscribe(status => {
+                    if (useAppStore.getState().currentUserRole === 'viewer') reconcileOnSubscribed(status);
+                });
 
             // 2. Permissions Subscription
             this.permissionChannel = client
@@ -71,6 +85,7 @@ export class RealtimeSubscriber {
                     filter: `tree_id=eq.${treeId}`
                 },
                 (payload) => {
+                    if (!isCurrent()) return;
                     const row = payload.eventType === 'DELETE' ? payload.old : payload.new;
                     this.options.onPermissionUpdate({
                         eventType: payload.eventType as 'INSERT' | 'UPDATE' | 'DELETE',
@@ -83,6 +98,10 @@ export class RealtimeSubscriber {
     }
 
     public unsubscribe() {
+        if (this.changeSignalChannel) {
+            this.changeSignalChannel.unsubscribe();
+            this.changeSignalChannel = null;
+        }
         if (this.operationChannel) {
             this.operationChannel.unsubscribe();
             this.operationChannel = null;

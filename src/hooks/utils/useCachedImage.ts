@@ -17,19 +17,20 @@ export function useCachedImage(
   url?: string,
   options?: UseCachedImageOptions
 ): UseCachedImageResult {
-  const [cachedUrl, setCachedUrl] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-
   const width = options?.width;
   const height = options?.height;
   const format = options?.format;
+  const key = JSON.stringify([url, width, height, format]);
+  const [load, setLoad] = useState<{
+    key: string;
+    result: { cachedUrl: string; error: Error | null } | null;
+  }>({ key, result: null });
+
+  // Reset with the input, before committing a render with another source's blob.
+  if (load.key !== key) setLoad({ key, result: null });
 
   useEffect(() => {
     if (!url) {
-      setCachedUrl(null);
-      setError(null);
-      setIsLoading(false);
       return;
     }
 
@@ -37,7 +38,6 @@ export function useCachedImage(
     let hasAcquiredObjectUrl = false;
 
     const loadCachedImage = async () => {
-      setIsLoading(true);
       try {
         const objectUrl = await imageCacheService.getObjectUrl(url, { width, height, format });
         if (!isMounted) {
@@ -46,18 +46,17 @@ export function useCachedImage(
         }
         hasAcquiredObjectUrl = true;
         if (isMounted) {
-          setCachedUrl(objectUrl);
-          setError(null);
+          setLoad({ key, result: { cachedUrl: objectUrl, error: null } });
         }
       } catch (err) {
         if (isMounted) {
-          setError(err instanceof Error ? err : new Error(String(err)));
-          // Immediate fallback to original url on fetch/processing failure
-          setCachedUrl(url);
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
+          setLoad({
+            key,
+            result: {
+              cachedUrl: url,
+              error: err instanceof Error ? err : new Error(String(err)),
+            },
+          });
         }
       }
     };
@@ -72,7 +71,13 @@ export function useCachedImage(
         imageCacheService.releaseObjectUrl(url, { width, height, format });
       }
     };
-  }, [url, width, height, format]);
+  }, [url, width, height, format, key]);
 
-  return { cachedUrl, isLoading, error };
+  // Never display the previous person's blob while a new source is resolving.
+  const current = url && load.key === key ? load.result : null;
+  return {
+    cachedUrl: current?.cachedUrl ?? null,
+    isLoading: Boolean(url && !current),
+    error: current?.error ?? null,
+  };
 }

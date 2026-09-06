@@ -30,14 +30,8 @@ export const SyncStatusIndicator: React.FC<{
                 type="button"
                 onMouseEnter={() => setIsOpen(true)}
                 onFocus={() => setIsOpen(true)}
-                onClick={() => {
-                    if (onOpenVault) {
-                        setIsOpen(false);
-                        onOpenVault();
-                    } else {
-                        setIsOpen(true);
-                    }
-                }}
+                onClick={() => setIsOpen(true)}
+                aria-expanded={isOpen}
                 title={title}
                 className="relative inline-flex h-8 w-8 items-center justify-center rounded-xl text-[var(--text-dim)] transition-all duration-200 hover:bg-[var(--primary-100)] hover:text-[var(--primary-600)] active:scale-95"
                 aria-label={t.syncStatus.ariaLabel}

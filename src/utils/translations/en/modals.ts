@@ -349,6 +349,7 @@ export const modals = {
       snapshot: 'Failed to create snapshot',
       map: 'Failed to capture map',
       import: 'Failed to import file',
+      importCleanupReview: 'An incomplete import needs review. Saved content was not deleted. Review your trees in the Vault before importing again.',
       render: {
         title: 'Tree Rendering Failed',
         description: 'We encountered a problem while trying to draw the family tree. This is usually caused by corrupted data or an infinite loop in the relationships.',

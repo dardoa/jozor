@@ -26,6 +26,7 @@ export const useSupabaseSync = () => {
     const setCurrentUserRole = useAppStore((state) => state.setCurrentUserRole);
     const setCurrentTreeId = useAppStore((state) => state.setCurrentTreeId);
     const syncState = useAppStore((state) => state.syncStatus.state);
+    const isSyncInitialized = syncState !== 'checking';
     // Use supabaseToken (Supabase JWT) as the subscription guard — supabaseAccessToken is the backup.
     const supabaseToken = user?.supabaseToken ?? null;
 
@@ -36,7 +37,7 @@ export const useSupabaseSync = () => {
 
     // Realtime Delta Sync Lifecycle
     useEffect(() => {
-        if (!currentTreeId || isDemoMode || !supabaseToken || syncState !== 'synced') return;
+        if (!currentTreeId || isDemoMode || !supabaseToken || !isSyncInitialized) return;
 
         logInfo('SYNC', 'SUPABASE_REALTIME_SUBSCRIBED', { treeId: currentTreeId });
         const channel = deltaSyncService.subscribeToTreeOperations(currentTreeId, handleRemoteOperation);
@@ -47,11 +48,11 @@ export const useSupabaseSync = () => {
                 channel.unsubscribe();
             }
         };
-    }, [currentTreeId, isDemoMode, supabaseToken, handleRemoteOperation, syncState]);
+    }, [currentTreeId, isDemoMode, supabaseToken, handleRemoteOperation, isSyncInitialized, currentUserRole]);
 
     // Realtime Permission/RoleSync
     useEffect(() => {
-        if (!currentTreeId || isDemoMode || !supabaseToken || syncState !== 'synced' || (!user?.email && !user?.uid)) return;
+        if (!currentTreeId || isDemoMode || !supabaseToken || !isSyncInitialized || (!user?.email && !user?.uid)) return;
 
         logInfo('SYNC', 'SUPABASE_PERMISSION_SUBSCRIBED', { treeId: currentTreeId });
         const channel = deltaSyncService.subscribeToPermissions(currentTreeId, (permissionEvent: unknown) => {
@@ -97,5 +98,5 @@ export const useSupabaseSync = () => {
                 channel.unsubscribe();
             }
         };
-    }, [currentTreeId, isDemoMode, supabaseToken, user?.uid, user?.email, currentUserRole, setCurrentUserRole, setCurrentTreeId, syncState]);
+    }, [currentTreeId, isDemoMode, supabaseToken, user?.uid, user?.email, currentUserRole, setCurrentUserRole, setCurrentTreeId, isSyncInitialized]);
 };

@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import type { Person } from '../../../types';
 import { logError, logInfo, logWarn } from '../../../utils/errorLogger';
+import { showToast } from '../../../utils/showToast';
 import {
     importJozorArchiveDataForCloud,
     type JozorCloudArchiveData,
@@ -9,15 +10,16 @@ import { importFromGEDCOMWithReport } from '../../../utils/gedcomLogic';
 import {
     importTreeContent,
     createTree,
-    deleteWholeTree,
+    updateTreeRoot,
 } from '../../../services/supabaseTreeMutationService';
 import { SupabaseStorageService } from '../../../services/supabaseStorageService';
-import { deferPersonMediaObjectCleanup } from '../../../services/personMediaCleanupQueue';
+import { enqueueArchiveImportCleanup } from '../../../services/archiveImportCleanupQueue';
 import type { PersonMediaAssetRef } from '../../../types';
 import { createLimit } from '../../../../shared/concurrency';
 import { validatePerson } from '../../../utils/familyLogic';
 
 interface CloudArchiveImportOptions {
+    focusId?: string;
     mediaByPersonId: JozorCloudArchiveData['mediaByPersonId'];
     warnings: string[];
 }
@@ -25,50 +27,21 @@ interface CloudArchiveImportOptions {
 const rollbackCloudImport = async ({
     treeId,
     ownerId,
-    userEmail,
-    token,
     uploadedAssets,
 }: {
     treeId: string;
     ownerId: string;
-    userEmail: string;
-    token?: string;
     uploadedAssets: PersonMediaAssetRef[];
 }): Promise<void> => {
-    const cleanupResults = await Promise.allSettled(uploadedAssets.map((asset) =>
-        SupabaseStorageService.deletePersonMediaAsset(asset, ownerId, userEmail, token)
-    ));
-    let hasDeferredCleanup = false;
-    for (let index = 0; index < cleanupResults.length; index += 1) {
-        if (cleanupResults[index].status === 'fulfilled') continue;
-        hasDeferredCleanup = true;
-        const asset = uploadedAssets[index];
-        try {
-            await deferPersonMediaObjectCleanup(
-                { treeId, userId: ownerId, token },
-                { bucket: asset.bucket, objectPath: asset.objectPath, assetId: asset.assetId }
-            );
-        } catch (error) {
-            logError('ARCHIVE_IMPORT_CLEANUP_QUEUE_FAILED', error, {
-                showToast: false,
-                metadata: { treeId, assetId: asset.assetId },
-            });
-        }
-    }
-    if (hasDeferredCleanup) {
-        logError('ARCHIVE_IMPORT_ROLLBACK_DEFERRED', 'Uploaded archive media requires deferred cleanup.', {
-            showToast: false,
-            metadata: { treeId, deferredCount: cleanupResults.filter((result) => result.status === 'rejected').length },
-        });
-        return;
-    }
     try {
-        await deleteWholeTree(treeId, ownerId, userEmail, token);
+        await enqueueArchiveImportCleanup({ treeId, userId: ownerId }, uploadedAssets);
+        window.dispatchEvent(new Event('archive-import-cleanup-pending'));
     } catch (error) {
-        logError('ARCHIVE_IMPORT_TREE_ROLLBACK_FAILED', error, {
+        logError('ARCHIVE_IMPORT_CLEANUP_QUEUE_FAILED', error, {
             showToast: false,
             metadata: { treeId },
         });
+        showToast.warning('messages.error.importCleanupReview', { id: 'archive-import-cleanup-review' });
     }
 };
 
@@ -137,11 +110,14 @@ const attachCloudArchiveMedia = async ({
             person.photoAsset = result.value.asset;
             continue;
         }
+        const galleryDetails = mediaByPersonId[result.value.originalPersonId]
+            .galleryMetadata?.[result.value.galleryIndex];
         person.gallery[result.value.galleryIndex] = {
             id: result.value.asset.assetId,
             asset: result.value.asset,
             version: result.value.asset.version,
-            createdAt: result.value.asset.createdAt,
+            createdAt: galleryDetails?.createdAt ?? result.value.asset.createdAt,
+            ...(galleryDetails?.caption !== undefined ? { caption: galleryDetails.caption } : {}),
         };
     }
 };
@@ -278,6 +254,9 @@ export const importTreeFromJSONItem = async (
     });
 
     if (archiveOptions) {
+        if (archiveOptions.focusId && !idMap.has(archiveOptions.focusId)) {
+            throw new Error('Archive focus references a person that is not present in the tree.');
+        }
         for (const originalPersonId of Object.keys(archiveOptions.mediaByPersonId)) {
             if (!peopleByOriginalId.has(originalPersonId)) {
                 throw new Error('Archive media references a person that is not present in the tree.');
@@ -364,8 +343,11 @@ export const importTreeFromJSONItem = async (
         });
 
         await importTreeContent(treeId, ownerId, finalPeople, relationships, userEmail, token);
+        if (archiveOptions?.focusId) {
+            await updateTreeRoot(treeId, idMap.get(archiveOptions.focusId)!, ownerId, userEmail, token);
+        }
     } catch (error) {
-      await rollbackCloudImport({ treeId, ownerId, userEmail, token, uploadedAssets });
+      await rollbackCloudImport({ treeId, ownerId, uploadedAssets });
       throw error;
     }
 
@@ -395,7 +377,7 @@ export const importTreeFromFileItem = async (
             userEmail,
             JSON.stringify({ people: archiveData.people, settings: archiveData.settings }),
             token,
-            { mediaByPersonId: archiveData.mediaByPersonId, warnings: archiveData.warnings }
+            { mediaByPersonId: archiveData.mediaByPersonId, warnings: archiveData.warnings, focusId: archiveData.focusId }
         );
     }
 

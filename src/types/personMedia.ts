@@ -1,6 +1,8 @@
 export const PERSON_MEDIA_ASSET_SCHEMA_VERSION = 1 as const;
 export const PRIVATE_PERSON_MEDIA_BUCKET = 'person-media' as const;
 export const PERSON_MEDIA_MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+// Browser freshness only; authorization is enforced by the media gateway, not CDN TTL.
+export const PERSON_MEDIA_STORAGE_CACHE_CONTROL = '0' as const;
 export const PERSON_MEDIA_IMAGE_MIME_TYPES = [
   'image/jpeg',
   'image/png',

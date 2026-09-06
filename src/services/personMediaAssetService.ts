@@ -5,7 +5,7 @@ import {
   PERSON_MEDIA_MAX_IMAGE_BYTES,
 } from '../types';
 import { readBlobBytes } from '../utils/blobBytes';
-import { getSupabaseFull, getSupabaseSessionAccessToken } from './supabaseClient';
+import { getSupabaseSessionAccessToken } from './supabaseClient';
 
 export type PersonMediaAccessRole = 'owner' | 'editor' | 'viewer' | null;
 
@@ -62,34 +62,26 @@ const validateResolvedBlob = (blob: Blob, asset: PersonMediaAssetRef): Blob => {
   return blob;
 };
 
-const loadDirectStorageBlob = async (request: PersonMediaAssetRequest): Promise<Blob> => {
-  const token = await getSupabaseSessionAccessToken();
-  if (!token) throw new Error('Private person media requires an active session');
-
-  const client = getSupabaseFull(undefined, undefined, token);
-  const { data, error } = await client.storage
-    .from(request.asset.bucket)
-    .download(request.asset.objectPath);
-
-  if (error || !data) {
-    throw new Error('Private person media could not be downloaded');
-  }
-  return validateResolvedBlob(data, request.asset);
-};
-
 export const buildPersonMediaGatewayUrl = (
-  request: Pick<PersonMediaAssetRequest, 'treeId' | 'personId' | 'asset'>
+  request: Pick<PersonMediaAssetRequest, 'treeId' | 'asset'> & { personId?: string }
 ): string => {
   const params = new URLSearchParams({
     treeId: request.treeId,
-    personId: request.personId,
     assetId: request.asset.assetId,
     kind: request.asset.kind,
   });
+  if (request.personId !== undefined) params.set('personId', request.personId);
+  else {
+    // Asset-only archive/poster requests require fresh server-side owner/editor access.
+    params.set('mimeType', request.asset.mimeType);
+    params.set('byteLength', String(request.asset.byteLength));
+  }
   return `/api/person-media?${params.toString()}`;
 };
 
-const loadGatewayBlob = async (request: PersonMediaAssetRequest): Promise<Blob> => {
+const loadGatewayBlob = async (
+  request: Pick<PersonMediaAssetRequest, 'treeId' | 'asset'> & { personId?: string }
+): Promise<Blob> => {
   const token = await getSupabaseSessionAccessToken();
   if (!token) throw new Error('Private person media requires an active session');
 
@@ -110,21 +102,14 @@ export const loadPersonMediaAssetBlob = async (
   request: PersonMediaAssetRequest
 ): Promise<Blob> => {
   assertRequest(request);
-  return request.role === 'viewer'
-    ? loadGatewayBlob(request)
-    : loadDirectStorageBlob(request);
+  return loadGatewayBlob(request);
 };
 
 export const loadPersonMediaAssetBlobForCurrentSession = async (
   asset: PersonMediaAssetRef
 ): Promise<Blob> => {
   if (!isPersonMediaAssetRef(asset)) throw new Error('Invalid private person media reference');
-  const token = await getSupabaseSessionAccessToken();
-  if (!token) throw new Error('Private person media requires an active session');
-  const client = getSupabaseFull(undefined, undefined, token);
-  const { data, error } = await client.storage.from(asset.bucket).download(asset.objectPath);
-  if (error || !data) throw new Error('Private person media could not be downloaded');
-  return validateResolvedBlob(data, asset);
+  return loadGatewayBlob({ treeId: asset.objectPath.split('/')[0], asset });
 };
 
 export const loadPersonMediaAssetBlobThroughGateway = async (

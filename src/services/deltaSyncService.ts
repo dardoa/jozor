@@ -33,6 +33,7 @@ class DeltaSyncService {
     private operationApplier: DeltaOperationApplier;
     private remoteSyncClient: DeltaRemoteSyncClient;
     private reconcileInFlight = false;
+    private reconcileRequestedTreeId: string | null = null;
     private permissionListeners = new Set<(share: unknown) => void>();
     private permissionPausedTreeId: string | null = null;
     private lastCheckpointVersion = 0;
@@ -348,53 +349,74 @@ class DeltaSyncService {
 
 
 
-    private async reloadFullTreeFromServer(treeId: string): Promise<void> {
+    private async reloadFullTreeFromServer(treeId: string): Promise<boolean> {
         try {
             const store = useAppStore.getState();
             const user = store.user;
-            if (!user) return;
+            if (!user) return false;
 
             const full = await fetchTree(treeId, user.uid, user.email || '', user.supabaseToken || undefined);
+            const current = useAppStore.getState();
+            if (current.user?.uid !== user.uid || current.currentTreeId !== treeId
+                || current.currentUserRole !== store.currentUserRole) return false;
+            current.setConfirmedPeople(full.people);
+            current.setLastSyncedVersion(full.lastVersion);
 
-            store.setConfirmedPeople(full.people);
-            store.setLastSyncedVersion(full.lastVersion);
-
-            const { people: projected } = projectPendingOperations(full.people, store.pendingOperations);
-            store.setPeople(projected, false);
+            const { people: projected } = projectPendingOperations(full.people,
+                current.currentUserRole === 'viewer' ? [] : current.pendingOperations);
+            current.setPeople(projected, false);
 
             this.lastCheckpointVersion = full.lastVersion;
             logWarn('DeltaSyncService reloadFullTreeFromServer', 'Successfully reloaded tree from server checkpoint.', {
                 category: 'SYNC',
                 metadata: { treeId, lastVersion: full.lastVersion }
             });
+            return true;
         } catch (error) {
             logError('DeltaSyncService reloadFullTreeFromServer', error, {
                 category: 'SYNC',
                 severity: 'HIGH',
                 metadata: { treeId }
             });
+            throw error;
         }
     }
 
     public async reconcileTree(treeId: string) {
-        if (this.reconcileInFlight) return;
+        if (this.reconcileInFlight) {
+            this.reconcileRequestedTreeId = treeId;
+            return;
+        }
         this.reconcileInFlight = true;
 
         this.checkActiveTree(treeId);
 
-        const { lastSyncedVersion, setSyncStatus: updateSyncStatus, syncStatus } = useAppStore.getState();
+        const initialState = useAppStore.getState();
+        const { lastSyncedVersion, setSyncStatus: updateSyncStatus, syncStatus } = initialState;
         updateSyncStatus(buildSyncSaving(syncStatus, this.queue.getPendingOutgoingCount()));
 
         try {
+            if (useAppStore.getState().currentUserRole === 'viewer') {
+                if (await this.reloadFullTreeFromServer(treeId)) {
+                    updateSyncStatus(buildSyncSuccess(useAppStore.getState().syncStatus, 0, { lastSyncSupabase: new Date() }));
+                }
+                return;
+            }
+            const started = useAppStore.getState();
             const ops = await this.fetchRemoteOperations(treeId, lastSyncedVersion || 0);
+            const current = useAppStore.getState();
+            if (current.user?.uid !== started.user?.uid || current.currentTreeId !== treeId
+                || current.currentUserRole !== started.currentUserRole) return;
             if (ops.length > 0) {
                 if (lastSyncedVersion > 0 && ops[0].version_seq && Number(ops[0].version_seq) > lastSyncedVersion + 1) {
                     logWarn('DeltaSyncService reconcileTree', 'Operations gap detected (old operations pruned). Triggering full tree reload.', {
                         category: 'SYNC',
                         metadata: { lastSyncedVersion, dbFirstVersion: ops[0].version_seq, treeId }
                     });
-                    this.reconcileInFlight = false;
-                    await this.reloadFullTreeFromServer(treeId);
+                    if (await this.reloadFullTreeFromServer(treeId)) {
+                        updateSyncStatus(buildSyncSuccess(useAppStore.getState().syncStatus,
+                            this.queue.getPendingOutgoingCount(), { lastSyncSupabase: new Date() }));
+                    }
                     return;
                 }
                 await this.processIncomingBatch(ops);
@@ -403,8 +425,20 @@ class DeltaSyncService {
             updateSyncStatus(buildSyncSuccess(useAppStore.getState().syncStatus, this.queue.getPendingOutgoingCount(), { lastSyncSupabase: new Date() }));
         } catch (error) {
             logError('Sync Reconciliation', error, { category: 'SYNC', severity: 'HIGH' });
+            const current = useAppStore.getState();
+            if (current.currentTreeId === treeId && current.user?.uid === initialState.user?.uid
+                && current.currentUserRole === initialState.currentUserRole) {
+                updateSyncStatus(buildSyncError(useAppStore.getState().syncStatus, this.queue.getPendingOutgoingCount(), {
+                    message: 'Sync failed. Please try again.', retryable: true,
+                }));
+            }
         } finally {
             this.reconcileInFlight = false;
+            const requestedTreeId = this.reconcileRequestedTreeId;
+            this.reconcileRequestedTreeId = null;
+            if (requestedTreeId && useAppStore.getState().currentTreeId === requestedTreeId) {
+                void this.reconcileTree(requestedTreeId);
+            }
         }
     }
 
@@ -422,7 +456,8 @@ class DeltaSyncService {
 
             pending.forEach(op => this.queue.enqueueOutgoing(op));
             if (pending.length > 0) {
-                store.setSyncStatus(buildSyncSaving(store.syncStatus, this.queue.getPendingOutgoingCount()));
+                // Enqueue may restore a paused retry state from IndexedDB.
+                store.setSyncStatus(buildSyncSaving(useAppStore.getState().syncStatus, this.queue.getPendingOutgoingCount()));
             }
         } catch (error) {
             logError('Sync Recovery', error, { category: 'SYNC', severity: 'LOW' });

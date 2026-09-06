@@ -405,6 +405,7 @@ export const general = {
     migratePersonMedia: 'تأمين صور الأشخاص القديمة',
     migratePersonMediaRunning: 'جارٍ نقل صور الأشخاص القديمة إلى التخزين الخاص...',
     migratePersonMediaSuccess: 'تم تأمين {migrated} صورة وإزالة {cleaned} مرجعًا عامًا. تُركت الروابط الخارجية دون تغيير: {external}.',
+    migratePersonMediaCleanupPending: 'تم ترحيل مراجع الصور. ينتظر {pending} ملفًا التنظيف الخادمي؛ قد يبقيها سجل الشجرة المحفوظ أو مراجع قديمة أخرى مطلوبة.',
     migratePersonMediaNoop: 'جميع صور الأشخاص المؤهلة موجودة بالفعل في التخزين الخاص.',
     migratePersonMediaPartial: 'توقف الترحيل: تعذر {failed} عنصرًا وحُظر {blocked} عنصرًا. شغّله مجددًا بعد مراجعة الوسائط المتأثرة.',
     migratePersonMediaError: 'تعذر ترحيل صور الأشخاص القديمة.',

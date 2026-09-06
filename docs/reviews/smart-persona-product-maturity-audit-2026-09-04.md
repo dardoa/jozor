@@ -2,6 +2,22 @@
 
 Date: 2026-09-04
 
+## Current Follow-up Status: 2026-09-06
+
+The dated findings below are historical, not an instruction to repeat completed
+work. Private photo/gallery cleanup, orphan inventory, migration compensation,
+offline retry, viewer invalidation and real local Storage/websocket verification
+are covered by [the lifecycle closure](person-media-migration-realtime-closure-2026-09-06.md).
+The [staging gate](person-media-staging-readiness-2026-09-06.md) remains blocked
+on a separate hosted target; local verification is not hosted approval.
+
+[The cross-browser closure](kindi-cross-browser-closure-2026-09-06.md) fixes the
+legacy image URL boundary and stale cached image handoff and records 60 passing
+Kindi journeys across all three browsers. Firefox is no longer blocked. Kindi
+guided changes and help integration are already implemented, not a new backlog.
+Voice ownership/audio backup fidelity, bounded media extraction and record
+completeness remain separate product work rather than a Smart Persona rewrite.
+
 ## Product verdict
 
 Smart Persona already has the right product shape: it is the focused family-record workspace, while Kindi can open a precise tab, section, and field inside it. A ground-up rewrite is not justified. The correct path is a staged hardening and simplification pass around permissions, media lifecycle, record completeness, and evidence.

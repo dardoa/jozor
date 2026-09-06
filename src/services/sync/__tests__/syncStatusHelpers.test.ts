@@ -14,6 +14,13 @@ const defaultStatus: SyncStatus = {
 };
 
 describe('syncStatusHelpers', () => {
+    it('preserves paused outgoing work after a read reconciliation or a new local edit', () => {
+        const paused: SyncStatus = { ...defaultStatus, state: 'error', retryPaused: true, retryAttempt: 6, errorMessage: 'Failed' };
+        for (const result of [buildSyncSuccess(paused, 2), buildSyncSaving(paused, 2)]) {
+            expect(result).toMatchObject({ state: 'error', supabaseStatus: 'error', retryPaused: true, retryAttempt: 6, pendingCount: 2, errorMessage: 'Failed' });
+        }
+        expect(buildSyncSuccess(paused, 0)).toMatchObject({ state: 'synced', retryPaused: false, retryAttempt: 0 });
+    });
     describe('buildSyncSuccess', () => {
         it('sets synced state and clears errors', () => {
             const errorStatus: SyncStatus = {

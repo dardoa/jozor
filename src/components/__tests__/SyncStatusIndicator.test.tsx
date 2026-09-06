@@ -105,5 +105,16 @@ describe('SyncStatusIndicator', () => {
 
     expect(screen.getByRole('button', { name: 'Sync Status' }).querySelector('span')).toHaveClass('bg-gray-500');
   });
+
+  it('keeps retry actions reachable on click even when Vault navigation is available', async () => {
+    const onOpenVault = vi.fn();
+    render(<SyncStatusIndicator onOpenVault={onOpenVault} />);
+    const trigger = screen.getByRole('button', { name: 'Sync Status' });
+    fireEvent.click(trigger);
+    expect(await screen.findByTestId('sync-tooltip')).toBeInTheDocument();
+    expect(trigger).toHaveAttribute('aria-expanded', 'true');
+    expect(onOpenVault).not.toHaveBeenCalled();
+    expect(syncTooltipMock).toHaveBeenLastCalledWith(expect.objectContaining({ onOpenVault }));
+  });
 });
 

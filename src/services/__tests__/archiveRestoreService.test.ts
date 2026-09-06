@@ -29,12 +29,13 @@ describe('blueprint archive media restore', () => {
     const sourcePerson = person({
       photoAsset: profileAsset,
       photoUrl: 'https://storage.example.test/public-leak.png',
-      gallery: [{ id: galleryAsset.assetId, asset: galleryAsset, version: 1, createdAt: galleryAsset.createdAt }],
+      gallery: [{ id: galleryAsset.assetId, asset: galleryAsset, version: 1, createdAt: galleryAsset.createdAt, caption: 'صورة عائلية 2026' }],
       voiceNotes: ['https://drive.example.test/private-audio'],
     });
     const { blob } = await buildBlueprintArchive({
       version: 1,
       people: { 'person-1': sourcePerson },
+      focusId: 'person-1',
       settings: { treeSettings: { chartType: 'radial' } } as never,
     }, {
       label: 'private-media',
@@ -46,14 +47,23 @@ describe('blueprint archive media restore', () => {
 
     expect(result.warnings).toEqual([]);
     expect(result.mediaComplete).toBe(true);
+    expect(result.focusId).toBe('person-1');
     expect(result.settings).toEqual({ treeSettings: { chartType: 'radial' } });
     expect(result.people['person-1']).toMatchObject({ gallery: [], voiceNotes: [] });
     expect(result.people['person-1']).not.toHaveProperty('photoUrl');
     expect(result.people['person-1']).not.toHaveProperty('photoAsset');
     expect(result.mediaByPersonId['person-1'].avatar).toMatchObject({ type: 'image/png', size: 8 });
     expect(result.mediaByPersonId['person-1'].gallery).toHaveLength(1);
+    expect(result.mediaByPersonId['person-1'].galleryMetadata).toEqual([
+      { caption: 'صورة عائلية 2026', createdAt: galleryAsset.createdAt },
+    ]);
     expect(JSON.stringify(result.people)).not.toContain('storage.example');
     expect(JSON.stringify(result.people)).not.toContain('objectPath');
+
+    const local = await restoreBlueprintArchive(blob, { objectUrlFactory: () => 'blob:local-image' });
+    expect(local.state.people['person-1'].gallery).toEqual([
+      expect.objectContaining({ url: 'blob:local-image', caption: 'صورة عائلية 2026', createdAt: galleryAsset.createdAt }),
+    ]);
   });
 
   it('uses validated image blobs for local object URLs and revokes them', async () => {
@@ -122,6 +132,60 @@ describe('blueprint archive media restore', () => {
       expect.stringContaining('unknown person'),
       expect.stringContaining('count does not match'),
     ]));
+  });
+
+  it('keeps gallery metadata aligned when an unresolved source item is skipped', async () => {
+    const { blob, manifest } = await buildBlueprintArchive({
+      version: 1,
+      people: { 'person-1': person({ gallery: [
+        { id: 'missing', version: 1, createdAt: '', caption: 'Do not attach this caption' },
+        { id: 'valid', version: 1, createdAt: '2020-02-03T00:00:00Z', caption: 'Correct caption', url: 'https://example.test/photo.png' },
+      ] }) },
+      settings: {},
+    }, { label: 'alignment', mediaFetcher: async () => new Blob([PNG_BYTES], { type: 'image/png' }) });
+    expect(manifest.media.gallery['person-1']).toEqual(['media/gallery/person-1-2.png']);
+    expect(manifest.media.galleryMetadata).toEqual({
+      'media/gallery/person-1-2.png': { caption: 'Correct caption', createdAt: '2020-02-03T00:00:00Z' },
+    });
+    const restored = await extractBlueprintArchiveForCloudImport(blob);
+    expect(restored.mediaByPersonId['person-1'].galleryMetadata).toEqual([
+      { caption: 'Correct caption', createdAt: '2020-02-03T00:00:00Z' },
+    ]);
+  });
+
+  it.each([
+    { caption: 123 },
+    { createdAt: 'https://storage.example.test/photo' },
+    { caption: 'safe', objectPath: 'private/path' },
+    null,
+  ])('rejects malformed gallery metadata %j', async details => {
+    const zip = new JSZip();
+    zip.file('tree.json', JSON.stringify({ version: 1, people: { 'person-1': person() } }));
+    zip.file('manifest.json', JSON.stringify({
+      version: 2, treeFile: 'tree.json',
+      metadata: { createdAt: '2026-09-05T00:00:00Z', label: 'test', appVersion: '2', personCount: 1, photoCount: 1 },
+      media: { avatars: {}, gallery: { 'person-1': ['media/gallery/one.png'] }, galleryMetadata: { 'media/gallery/one.png': details } },
+    }));
+    zip.file('media/gallery/one.png', PNG_BYTES);
+    await expect(extractBlueprintArchiveForCloudImport(await zip.generateAsync({ type: 'blob' })))
+      .rejects.toThrow('manifest.json is malformed');
+  });
+
+  it('restores older v2 gallery files without metadata', async () => {
+    const zip = new JSZip();
+    zip.file('tree.json', JSON.stringify({ version: 1, people: { 'person-1': person() } }));
+    zip.file('manifest.json', JSON.stringify({
+      version: 2, treeFile: 'tree.json',
+      metadata: { createdAt: '2026-09-05T00:00:00Z', label: 'test', appVersion: '2', personCount: 1, photoCount: 1 },
+      media: { avatars: {}, gallery: { 'person-1': ['media/gallery/one.png'] } },
+    }));
+    zip.file('media/gallery/one.png', PNG_BYTES);
+    const blob = await zip.generateAsync({ type: 'blob' });
+    const local = await restoreBlueprintArchive(blob, { objectUrlFactory: () => 'blob:legacy-gallery' });
+    const cloud = await extractBlueprintArchiveForCloudImport(blob);
+    expect(local.state.people['person-1'].gallery).toEqual(['blob:legacy-gallery']);
+    expect(cloud.mediaComplete).toBe(true);
+    expect(cloud.mediaByPersonId['person-1'].galleryMetadata).toEqual([{}]);
   });
 
   it('rejects malformed manifest media structures and mismatched person identities', async () => {

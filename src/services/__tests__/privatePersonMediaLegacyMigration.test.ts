@@ -168,7 +168,7 @@ describe('private person media legacy migration', () => {
     const result = await migrateLegacyPersonMediaPlan(plan, adapter);
 
     expect(result).toEqual({ migratedCount: 0, cleanedCount: 1, failedCount: 0 });
-    expect(adapter.downloadLegacyObject).not.toHaveBeenCalled();
+    expect(adapter.downloadLegacyObject).toHaveBeenCalledTimes(1);
     expect(adapter.uploadPrivateObject).not.toHaveBeenCalled();
     expect(adapter.downloadPrivateObject).toHaveBeenCalledWith(asset);
     expect(adapter.removeLegacyObject).toHaveBeenCalledWith(`${TREE_ID}/person-1.webp`);
@@ -187,6 +187,43 @@ describe('private person media legacy migration', () => {
     expect(result).toEqual({ migratedCount: 0, cleanedCount: 0, failedCount: 1 });
     expect(adapter.removePrivateObject).toHaveBeenCalledTimes(1);
     expect(adapter.removeLegacyObject).not.toHaveBeenCalled();
+  });
+
+  it('never compensates an attachment whose response may have been lost after commit', async () => {
+    const plan = planLegacyPersonMediaMigration(makeRow({ photo_path: `${TREE_ID}/person.webp` }), SUPABASE_URL);
+    let committedAsset: PersonMediaAssetRef | undefined;
+    const adapter = createAdapter({ attachPrivateAsset: vi.fn(async (_task, asset) => {
+      committedAsset = asset;
+      throw new Error('Response lost after database commit');
+    }) });
+    const result = await migrateLegacyPersonMediaPlan(plan, adapter);
+    expect(committedAsset).toBeDefined();
+    expect(result.failedCount).toBe(1);
+    expect(adapter.removePrivateObject).not.toHaveBeenCalled();
+    expect(adapter.removeLegacyObject).not.toHaveBeenCalled();
+  });
+
+  it('verifies exact copied bytes, not just a matching MIME type and byte length', async () => {
+    const changed = WEBP_BYTES.slice();
+    changed[4] = 1;
+    const adapter = createAdapter({ downloadPrivateObject: vi.fn(async () => new Blob([changed], { type: 'image/webp' })) });
+    const plan = planLegacyPersonMediaMigration(makeRow({ photo_path: `${TREE_ID}/person.webp` }), SUPABASE_URL);
+    expect((await migrateLegacyPersonMediaPlan(plan, adapter)).failedCount).toBe(1);
+    expect(adapter.attachPrivateAsset).not.toHaveBeenCalled();
+    expect(adapter.removePrivateObject).toHaveBeenCalledTimes(1);
+  });
+
+  it('finalizes and queues the source before attempting Storage cleanup', async () => {
+    const order: string[] = [];
+    const adapter = createAdapter({
+      finalizeLegacyReference: vi.fn(async () => { order.push('finalize'); return true; }),
+      removeLegacyObject: vi.fn(async () => { order.push('cleanup'); throw new Error('offline'); }),
+    });
+    const plan = planLegacyPersonMediaMigration(makeRow({ photo_path: `${TREE_ID}/person.webp` }), SUPABASE_URL);
+    const result = await migrateLegacyPersonMediaPlan(plan, adapter);
+    expect(order).toEqual(['finalize', 'cleanup']);
+    expect(result).toEqual({ migratedCount: 1, cleanedCount: 1, failedCount: 1 });
+    expect(adapter.removePrivateObject).not.toHaveBeenCalled();
   });
 
   it('rejects invalid legacy bytes before upload or row mutation', async () => {

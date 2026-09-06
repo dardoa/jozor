@@ -143,14 +143,13 @@ export const usePhotoUpload = (): UsePhotoUploadReturn => {
         }
       }
 
-      showToast.success('Photo uploaded successfully');
+      showToast.success('messages.success.uploadSuccess');
     } catch (error: unknown) {
       if (rollbackUploadedObject) {
         await rollbackUploadedObject();
       }
       logError('PHOTO_UPLOAD_FAILED', error, { showToast: false, metadata: { personId, treeId: currentTreeId } });
-      const msg = error instanceof Error ? error.message : 'Unknown error';
-      showToast.error(`Failed to upload photo: ${msg}`);
+      showToast.error('galleryPhotoUploadError');
     } finally {
       uploadingRef.current.delete(personId);
       setIsUploading(false);
@@ -212,7 +211,7 @@ export const usePhotoUpload = (): UsePhotoUploadReturn => {
       showToast.success('photoRemoved');
     } catch (error: unknown) {
       logError('PHOTO_DELETE_FAILED', error, { showToast: false, metadata: { personId, treeId: currentTreeId } });
-      showToast.error('Failed to remove photo from server');
+      showToast.error('galleryPhotoRemoveError');
     } finally {
       setIsUploading(false);
     }

@@ -2,6 +2,10 @@
   "version": 2,
   "crons": [
     {
+      "path": "/api/person-media-cleanup-cron",
+      "schedule": "0 5 * * *"
+    },
+    {
       "path": "/api/push-reminder-cron",
       "schedule": "0 4 * * *"
     }

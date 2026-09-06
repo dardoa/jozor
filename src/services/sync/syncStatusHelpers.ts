@@ -1,6 +1,11 @@
 import { SyncStatus } from '../../types';
 
-export const buildSyncSuccess = (current: SyncStatus, pendingCount: number, options?: { lastSyncSupabase?: Date }): SyncStatus => ({
+export const buildSyncSuccess = (current: SyncStatus, pendingCount: number, options?: { lastSyncSupabase?: Date }): SyncStatus => current.retryPaused && pendingCount > 0 ? ({
+    ...current,
+    state: 'error',
+    supabaseStatus: 'error',
+    pendingCount,
+}) : ({
     ...current,
     state: pendingCount > 0 ? 'saving' : 'synced',
     supabaseStatus: pendingCount > 0 ? 'syncing' : 'idle',
@@ -32,7 +37,7 @@ export const buildSyncError = (
 
 export const buildSyncSaving = (current: SyncStatus, pendingCount: number): SyncStatus => ({
     ...current,
-    state: 'saving',
-    supabaseStatus: 'syncing',
+    state: current.retryPaused ? 'error' : 'saving',
+    supabaseStatus: current.retryPaused ? 'error' : 'syncing',
     pendingCount
 });

@@ -2,6 +2,7 @@ import { Person } from '../types';
 import type { GalleryItem, PersonMediaAssetRef } from '../types';
 import { isPersonMediaAssetRef } from '../types';
 import { supabaseUrl } from '../services/supabaseConfig';
+import { getLegacyPersonMediaUrl } from './legacyPersonMediaUrl';
 
 interface GalleryImageItem {
     asset?: PersonMediaAssetRef;
@@ -27,11 +28,11 @@ export const getPersonPhoto = (person: Partial<Person> | null | undefined): stri
         // Clean path to prevent double "avatars/" prefix
         const cleanPath = path.startsWith('avatars/') ? path.replace('avatars/', '') : path;
         const baseUrl = `${supabaseUrl}/storage/v1/object/public/avatars/${cleanPath}`;
-        return version ? `${baseUrl}?v=${version}` : baseUrl;
+        return getLegacyPersonMediaUrl(version ? `${baseUrl}?v=${version}` : baseUrl);
     }
 
     // Fallback to direct public URLs when the row does not yet have a storage path.
-    return person.photoUrl || null;
+    return getLegacyPersonMediaUrl(person.photoUrl);
 };
 
 export const getPersonPhotoAsset = (
@@ -50,17 +51,17 @@ export const hasPersonPhoto = (person: Partial<Person> | null | undefined): bool
 export const getGalleryImageUrl = (item: string | GalleryImageItem | null | undefined): string | null => {
     if (!item) return null;
 
-    if (typeof item === 'string') return item;
+    if (typeof item === 'string') return getLegacyPersonMediaUrl(item);
 
     if (isPersonMediaAssetRef(item.asset)) return null;
 
-    if (typeof item.url === 'string' && item.url.trim()) return item.url;
+    if (typeof item.url === 'string' && item.url.trim()) return getLegacyPersonMediaUrl(item.url);
 
     // If it's the new GalleryItem object
     if (typeof item.path === 'string' && item.path.trim()) {
         const cleanPath = item.path.startsWith('avatars/') ? item.path.replace('avatars/', '') : item.path;
         const baseUrl = `${supabaseUrl}/storage/v1/object/public/avatars/${cleanPath}`;
-        return item.version ? `${baseUrl}?v=${item.version}` : baseUrl;
+        return getLegacyPersonMediaUrl(item.version ? `${baseUrl}?v=${item.version}` : baseUrl);
     }
 
     return null;

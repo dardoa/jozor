@@ -3,13 +3,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const {
   authenticateUserMock,
   createClientMock,
-  logErrorMock,
-  logInfoMock,
 } = vi.hoisted(() => ({
   authenticateUserMock: vi.fn(),
   createClientMock: vi.fn(),
-  logErrorMock: vi.fn(),
-  logInfoMock: vi.fn(),
 }));
 
 vi.mock('../../utils/authUtils', () => ({
@@ -17,10 +13,6 @@ vi.mock('../../utils/authUtils', () => ({
 }));
 vi.mock('../../services/supabaseConfig', () => ({
   resolvedSupabaseUrl: 'https://project.supabase.co',
-}));
-vi.mock('../../utils/errorLogger', () => ({
-  logError: (...args: unknown[]) => logErrorMock(...args),
-  logInfo: (...args: unknown[]) => logInfoMock(...args),
 }));
 vi.mock('@supabase/supabase-js', () => ({
   createClient: (...args: unknown[]) => createClientMock(...args),
@@ -93,7 +85,7 @@ const createAdmin = (ownerId = 'owner-1') => {
     upload,
     remove,
   }));
-  const rpc = vi.fn(async (_name: string, _args: unknown) => ({ data: true, error: null }));
+  const rpc = vi.fn(async (name: string, _args: unknown) => ({ data: name === 'count_pending_person_media_cleanup' ? 0 : true, error: null }));
   const from = vi.fn((table: string) => {
     if (table === 'trees') return treeQuery;
     if (table === 'people') return peopleQuery;
@@ -168,12 +160,18 @@ describe('person media migration API', () => {
       failedCount: 0,
       nextOffset: 1,
       complete: true,
+      pendingCleanupCount: 0,
     });
     expect(fixture.download).toHaveBeenCalledWith(`${TREE_ID}/person-1.webp`);
     expect(fixture.upload).toHaveBeenCalledTimes(1);
+    expect(fixture.upload).toHaveBeenCalledWith(expect.any(String), expect.any(Blob),
+      expect.objectContaining({ cacheControl: '0', upsert: false }));
     expect(fixture.rpc.mock.calls.map(([name]) => name)).toEqual([
       'attach_legacy_profile_person_media',
       'finalize_legacy_profile_person_media',
+      'claim_person_media_cleanup',
+      'complete_person_media_cleanup',
+      'count_pending_person_media_cleanup',
     ]);
     expect(JSON.stringify(res.body)).not.toContain('person-1');
     expect(JSON.stringify(res.body)).not.toContain('/person-1.webp');
@@ -199,6 +197,7 @@ describe('person media migration API', () => {
   });
 
   it('hides internal migration failures from the response', async () => {
+    const serverLog = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     const fixture = createAdmin();
     fixture.admin.from = vi.fn(() => {
       throw new Error('private storage path detail');
@@ -220,6 +219,8 @@ describe('person media migration API', () => {
       },
     });
     expect(JSON.stringify(res.body)).not.toContain('private storage path detail');
-    expect(logErrorMock).toHaveBeenCalled();
+    expect(serverLog).toHaveBeenCalledWith('[PERSON_MEDIA_LEGACY_MIGRATION_FAILED]', { errorType: 'Error' });
+    expect(JSON.stringify(serverLog.mock.calls)).not.toContain('private storage path detail');
+    serverLog.mockRestore();
   });
 });

@@ -261,18 +261,20 @@ export async function migrateLegacyPersonMediaPlan(
 
   for (const [sourceObjectPath, tasks] of groups) {
     const attached: Array<{ task: LegacyPersonMediaTask; asset: PersonMediaAssetRef }> = [];
-    const pendingTasks = tasks.filter((task) => !task.existingAsset);
     let normalizedBlob: Blob | null = null;
+    let sourceBytes: Uint8Array | null = null;
     let mimeType: NonNullable<ReturnType<typeof detectPersonMediaImageMimeType>> | null = null;
 
-    if (pendingTasks.length > 0) {
+    if (tasks.length > 0) {
       try {
         const legacyBlob = await adapter.downloadLegacyObject(sourceObjectPath);
         const validated = await validateLegacyBlob(legacyBlob);
         mimeType = validated.mimeType;
+        sourceBytes = validated.bytes;
         normalizedBlob = new Blob([validated.bytes.buffer], { type: validated.mimeType });
       } catch {
-        result.failedCount += pendingTasks.length;
+        result.failedCount += tasks.length;
+        continue;
       }
     }
 
@@ -294,6 +296,7 @@ export async function migrateLegacyPersonMediaPlan(
       });
 
       let uploaded = false;
+      let attachmentMayHaveCommitted = false;
       try {
         await adapter.uploadPrivateObject(asset, normalizedBlob);
         uploaded = true;
@@ -302,20 +305,23 @@ export async function migrateLegacyPersonMediaPlan(
         if (
           verified.bytes.byteLength !== asset.byteLength
           || verified.mimeType !== asset.mimeType
+          || !verified.bytes.every((byte, index) => byte === sourceBytes?.[index])
         ) {
           throw new Error('Private person media copy does not match its asset reference');
         }
+        attachmentMayHaveCommitted = true;
         const didAttach = await adapter.attachPrivateAsset(task, asset);
+        attachmentMayHaveCommitted = didAttach;
         if (!didAttach) throw new Error('Legacy person media attachment lost its compare-and-set race');
         attached.push({ task, asset });
         result.migratedCount += 1;
       } catch {
         result.failedCount += 1;
-        if (uploaded) {
+        if (uploaded && !attachmentMayHaveCommitted) {
           try {
             await adapter.removePrivateObject(asset);
           } catch {
-            // A server-side orphan sweep is the final safety net for interrupted compensation.
+            // The server sweep retries unreferenced objects after the upload grace period.
           }
         }
       }
@@ -330,7 +336,9 @@ export async function migrateLegacyPersonMediaPlan(
         const verified = await validateLegacyBlob(privateBlob);
         if (
           verified.bytes.byteLength !== entry.asset.byteLength
+          || verified.bytes.byteLength !== sourceBytes?.byteLength
           || verified.mimeType !== entry.asset.mimeType
+          || !verified.bytes.every((byte, index) => byte === sourceBytes?.[index])
         ) {
           throw new Error('Private person media copy does not match its asset reference');
         }
@@ -341,13 +349,8 @@ export async function migrateLegacyPersonMediaPlan(
     }
     if (!allPrivateCopiesVerified) continue;
 
-    try {
-      await adapter.removeLegacyObject(sourceObjectPath);
-    } catch {
-      result.failedCount += attached.length;
-      continue;
-    }
-
+    // Finalization queues cleanup transactionally. Never remove bytes while a
+    // different person/batch may still depend on the public reference.
     for (const entry of attached) {
       try {
         const didFinalize = await adapter.finalizeLegacyReference(entry.task, entry.asset);
@@ -356,6 +359,11 @@ export async function migrateLegacyPersonMediaPlan(
       } catch {
         result.failedCount += 1;
       }
+    }
+    try {
+      await adapter.removeLegacyObject(sourceObjectPath);
+    } catch {
+      result.failedCount += 1;
     }
   }
 
