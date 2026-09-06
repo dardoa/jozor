@@ -5,6 +5,20 @@
 
 BEGIN;
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
+-- Fresh installations need this before the first ownership policies. Existing
+-- deployments may already use the later private-schema wrapper; leave it intact.
+DO $bootstrap$
+BEGIN
+  IF to_regprocedure('public.current_user_id_text()') IS NULL THEN
+    EXECUTE $definition$
+      CREATE FUNCTION public.current_user_id_text()
+      RETURNS text LANGUAGE sql STABLE SECURITY INVOKER
+      SET search_path = ''
+      AS $body$ SELECT auth.jwt() ->> 'sub' $body$
+    $definition$;
+  END IF;
+END;
+$bootstrap$;
 -- =========================================================
 -- Core tables
 -- =========================================================
@@ -79,6 +93,7 @@ CREATE TABLE IF NOT EXISTS public.tree_collaborators (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   tree_id UUID NOT NULL REFERENCES public.trees(id) ON DELETE CASCADE,
   email TEXT NOT NULL,
+  collaborator_uid TEXT,
   role TEXT NOT NULL,
   invited_by TEXT,
   invited_at TIMESTAMPTZ NOT NULL DEFAULT NOW()

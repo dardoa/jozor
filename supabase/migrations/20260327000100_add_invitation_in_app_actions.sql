@@ -5,7 +5,8 @@ RETURNS TABLE(out_tree_id UUID, out_role TEXT, out_invitation_id UUID) AS $$
 DECLARE
   v_caller_id TEXT;
   v_caller_email TEXT;
-  v_invitation public.tree_invitations%ROWTYPE;
+  -- The invitation table is installed by 20260327000300 before these RPCs run.
+  v_invitation RECORD;
 BEGIN
   v_caller_id := public.current_user_id_text();
   v_caller_email := lower(coalesce(auth.jwt() ->> 'email', ''));
@@ -84,7 +85,7 @@ CREATE OR REPLACE FUNCTION public.decline_tree_invitation(p_invitation_id UUID)
 RETURNS BOOLEAN AS $$
 DECLARE
   v_caller_email TEXT;
-  v_invitation public.tree_invitations%ROWTYPE;
+  v_invitation RECORD;
 BEGIN
   v_caller_email := lower(coalesce(auth.jwt() ->> 'email', ''));
 

@@ -1,55 +1,10 @@
 import { describe, expect, it, beforeEach, afterEach } from 'vitest';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { readFileSync } from 'fs';
-import { resolve } from 'path';
 import { v4 as uuidv4 } from 'uuid';
+import { loadSupabaseIntegrationEnvironment } from '../../scripts/testing/supabaseIntegrationEnvironment.mjs';
 
-// Helper to load environment variables directly from the project root .env.integration file
-function loadEnv() {
-  const envPath = resolve(__dirname, '../../.env.integration');
-  const content = readFileSync(envPath, 'utf8');
-  const env: Record<string, string> = {};
-  content.split('\n').forEach((line) => {
-    const trimmed = line.trim();
-    if (trimmed && !trimmed.startsWith('#')) {
-      const index = trimmed.indexOf('=');
-      if (index !== -1) {
-        const key = trimmed.substring(0, index).trim();
-        const val = trimmed.substring(index + 1).trim();
-        env[key] = val.replace(/['"]/g, '').trim(); // strip quotes and trim \r\n
-      }
-    }
-  });
-  return env;
-}
-
-const env = loadEnv();
-const supabaseUrl = env.VITE_SUPABASE_URL;
-const anonKey = env.VITE_SUPABASE_ANON_KEY;
-const serviceRoleKey = env.SUPABASE_SERVICE_ROLE_KEY;
-
-const projectRef = env.SUPABASE_INTEGRATION_PROJECT_REF;
-const productionProjectRef = env.SUPABASE_PRODUCTION_PROJECT_REF;
-if (env.ALLOW_INTEGRATION_MUTATIONS !== 'true') {
-  throw new Error('Safety Guard Triggered: ALLOW_INTEGRATION_MUTATIONS=true is required for integration tests.');
-}
-
-if (!supabaseUrl || !projectRef || !supabaseUrl.includes(projectRef)) {
-  throw new Error(`Safety Guard Triggered: SUPABASE_INTEGRATION_PROJECT_REF (${projectRef}) must be configured and match SUPABASE_URL (${supabaseUrl})`);
-}
-
-if (!productionProjectRef) {
-  throw new Error('SUPABASE_PRODUCTION_PROJECT_REF is required to prevent integration tests from targeting production.');
-}
-
-if (projectRef === productionProjectRef || supabaseUrl.includes(productionProjectRef)) {
-  throw new Error('Safety Guard Triggered: integration tests cannot target the production Supabase project.');
-}
-
-if (!anonKey || !serviceRoleKey) {
-  throw new Error('VITE_SUPABASE_ANON_KEY and SUPABASE_SERVICE_ROLE_KEY are required in .env.integration.');
-}
+const { env, supabaseUrl, anonKey, serviceRoleKey } = loadSupabaseIntegrationEnvironment();
 
 // Create a Supabase client with service role credentials to interact with protected schemas and bypass RLS
 const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {

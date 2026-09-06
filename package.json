@@ -8,6 +8,7 @@
   },
   "scripts": {
     "dev": "vite",
+    "dev:media-review": "vite --config vite.media-review.config.ts",
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint . --max-warnings 0",
@@ -19,6 +20,10 @@
     "test:unit:shard:1": "vitest run --shard=1/2",
     "test:unit:shard:2": "vitest run --shard=2/2",
     "test:integration:supabase": "vitest run --config vitest.integration.config.ts",
+    "test:integration:preflight": "node scripts/testing/supabaseIntegrationPreflight.mjs",
+    "test:staging:media-preflight": "node scripts/testing/personMediaStagingPreflight.mjs",
+    "test:prelaunch:media-preflight": "node scripts/testing/personMediaPrelaunchPreflight.mjs",
+    "test:integration:media": "vitest run --config vitest.media-integration.config.ts",
     "test:database:local": "vitest run --config vitest.database.config.ts",
     "test:e2e": "playwright test",
     "test:e2e:smoke": "playwright test tests/e2e/app-smoke.spec.ts --project=chromium --reporter=line",

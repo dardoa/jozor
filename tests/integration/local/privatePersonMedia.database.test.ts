@@ -11,6 +11,7 @@ const timestamp = '2026-09-05T12:00:00.000Z';
 const readMigration = (file: string) => readFileSync(path.resolve('supabase/migrations', file), 'utf8');
 const mediaMigration = readMigration('20260905000100_add_private_person_media_bucket.sql');
 const legacyMigration = readMigration('20260905000200_add_legacy_person_media_migration_rpcs.sql');
+const gatewayMigration = readMigration('20260906000700_gate_private_media_reads_through_api.sql');
 
 const photo = createPersonMediaAssetRef({
   treeId, assetId, kind: 'profile-photo', mimeType: 'image/png',
@@ -29,6 +30,11 @@ const platformSchema = `
   CREATE ROLE service_role;
   CREATE SCHEMA auth;
   CREATE SCHEMA storage;
+  -- Platform helper contract: exact operation match, optional storage. prefix.
+  CREATE FUNCTION storage.allow_any_operation(operations text[]) RETURNS boolean LANGUAGE sql STABLE AS $$
+    SELECT COALESCE(regexp_replace(current_setting('storage.operation', true), '^storage[.]', '')
+      = ANY(operations), false);
+  $$;
   CREATE FUNCTION auth.jwt() RETURNS jsonb LANGUAGE sql STABLE AS $$
     SELECT COALESCE(NULLIF(current_setting('request.jwt.claims', true), ''), '{}')::jsonb;
   $$;
@@ -57,11 +63,28 @@ const platformSchema = `
   GRANT SELECT, INSERT, UPDATE, DELETE ON storage.objects TO authenticated, anon;
 `;
 
+async function createMediaDatabase() {
+  const db = new PGlite();
+  await db.exec(platformSchema);
+  await db.exec(readMigration('20260523230000_isolate_db_helpers_to_private_schema.sql'));
+  const uuidHelper = readMigration('20260531195055_billing_fixes.sql')
+    .match(/CREATE OR REPLACE FUNCTION private\.is_valid_uuid[\s\S]*?\$\$;/)?.[0];
+  if (!uuidHelper) throw new Error('UUID prerequisite not found');
+  await db.exec(uuidHelper);
+  await db.exec(readMigration('20260623165619_living_person_privacy_v2.sql'));
+  await db.exec(mediaMigration);
+  await db.exec(legacyMigration);
+  await db.exec(gatewayMigration);
+  await db.exec('GRANT SELECT ON people_secure TO authenticated');
+  return db;
+}
+
 describe('private person media on isolated PostgreSQL', () => {
   let db: PGlite;
 
   const actAs = async (user: string, role = 'authenticated') => {
     await db.exec('RESET ROLE');
+    await db.query("SELECT set_config('storage.operation', 'storage.object.list', false)");
     await db.query("SELECT set_config('request.jwt.claims', $1, false)", [JSON.stringify({
       sub: user, email: `${user}@example.test`,
     })]);
@@ -86,17 +109,7 @@ describe('private person media on isolated PostgreSQL', () => {
   };
 
   beforeAll(async () => {
-    db = new PGlite();
-    await db.exec(platformSchema);
-    await db.exec(readMigration('20260523230000_isolate_db_helpers_to_private_schema.sql'));
-    const uuidHelper = readMigration('20260531195055_billing_fixes.sql')
-      .match(/CREATE OR REPLACE FUNCTION private\.is_valid_uuid[\s\S]*?\$\$;/)?.[0];
-    if (!uuidHelper) throw new Error('UUID prerequisite not found');
-    await db.exec(uuidHelper);
-    await db.exec(readMigration('20260623165619_living_person_privacy_v2.sql'));
-    await db.exec(mediaMigration);
-    await db.exec(legacyMigration);
-    await db.exec('GRANT SELECT ON people_secure TO authenticated');
+    db = await createMediaDatabase();
   });
 
   beforeEach(async () => {
@@ -117,12 +130,27 @@ describe('private person media on isolated PostgreSQL', () => {
       allowed_mime_types: ['image/jpeg', 'image/png', 'image/webp'] }]);
   });
 
-  it.each(['owner', 'editor'])('allows %s to read, upload and remove same-tree images', async (user) => {
+  it.each(['owner', 'editor'])('allows %s to list, upload and remove same-tree images', async (user) => {
     await actAs(user);
     expect((await db.query('SELECT name FROM storage.objects')).rows).toEqual([{ name: photo.objectPath }]);
     await db.query("INSERT INTO storage.objects VALUES ('person-media', $1)", [galleryPhoto.objectPath]);
     expect((await db.query('DELETE FROM storage.objects RETURNING name')).rows).toHaveLength(2);
   });
+
+  it.each(['', 'object.get_authenticated', 'storage.object.get_authenticated', 'object.sign',
+    'object.sign_many', 'render.image_authenticated', 'render.image_sign', 's3.object.get',
+    'object.copy', 'object.move'])('denies private object read operation %s even to owners', async (operation) => {
+    await actAs('owner');
+    await db.query("SELECT set_config('storage.operation', $1, false)", [operation]);
+    expect((await db.query('SELECT name FROM storage.objects')).rows).toEqual([]);
+  });
+
+  it.each(['object.upload', 'object.upload_update', 'object.delete', 'object.delete_many', 'object.list_v2'])(
+    'preserves authorized SDK management operation %s', async (operation) => {
+      await actAs('editor');
+      await db.query("SELECT set_config('storage.operation', $1, false)", [operation]);
+      expect((await db.query('SELECT name FROM storage.objects')).rows).toHaveLength(1);
+    });
 
   it.each(['viewer', 'outsider', 'anonymous'])('denies direct object access to %s', async (user) => {
     await actAs(user, user === 'anonymous' ? 'anon' : 'authenticated');
@@ -335,5 +363,186 @@ describe('private person media on isolated PostgreSQL', () => {
       [treeId, unsafePath]
     );
     expect(result.rows[0].safe).toBe(false);
+  });
+});
+
+describe('server cleanup and viewer invalidation on isolated PostgreSQL', () => {
+  let db: PGlite;
+  const sourcePath = `${treeId}/person-1/legacy.png`;
+  const role = async (user: string, databaseRole: 'authenticated' | 'service_role' | 'anon' = 'authenticated') => {
+    await db.exec('RESET ROLE');
+    await db.query("SELECT set_config('request.jwt.claims', $1, false)", [JSON.stringify({ sub: user })]);
+    await db.exec(`SET ROLE ${databaseRole}`);
+  };
+  const claim = async (bucket = 'person-media', objectPath = photo.objectPath) => {
+    const result = await db.query<{ claimed: boolean }>(
+      'SELECT public.claim_person_media_cleanup($1, $2) AS claimed', [bucket, objectPath]);
+    return result.rows[0].claimed;
+  };
+  const pending = async () => (await db.query<{ count: number }>(
+    'SELECT public.count_pending_person_media_cleanup($1)::int AS count', [treeId])).rows[0].count;
+
+  beforeAll(async () => {
+    db = await createMediaDatabase();
+    // Minimal platform extensions plus a deliberately permissive historical
+    // operations policy. The new restrictive migration must still protect it.
+    await db.exec(`
+      ALTER TABLE tree_checkpoints ADD COLUMN people jsonb;
+      ALTER TABLE storage.objects ADD COLUMN created_at timestamptz DEFAULT now();
+      ALTER TABLE tree_operations ADD COLUMN id uuid PRIMARY KEY DEFAULT gen_random_uuid();
+      ALTER TABLE tree_collaborators ADD COLUMN id uuid PRIMARY KEY DEFAULT gen_random_uuid();
+      CREATE TABLE relationships (tree_id uuid, from_id text, to_id text);
+      ALTER TABLE tree_operations ENABLE ROW LEVEL SECURITY;
+      GRANT SELECT ON tree_operations TO anon, authenticated;
+      CREATE POLICY historical_member_read ON tree_operations FOR SELECT TO authenticated
+        USING (private.is_tree_owner(tree_id) OR private.is_tree_collaborator(tree_id, 'viewer'));
+      CREATE PUBLICATION supabase_realtime;
+    `);
+    for (const migration of [
+      '20260906000200_guard_person_media_server_cleanup.sql',
+      '20260906000300_add_private_viewer_realtime_invalidation.sql',
+      '20260906000400_complete_tree_realtime_publication.sql',
+      '20260906000500_report_pending_person_media_cleanup.sql',
+      '20260906000600_index_person_media_cleanup_queue.sql',
+    ]) await db.exec(readMigration(migration));
+  });
+
+  beforeEach(async () => {
+    await db.exec(`RESET ROLE;
+      TRUNCATE private.person_media_cleanup, tree_change_signals, people, relationships,
+        tree_checkpoints, tree_operations, tree_collaborators, storage.objects, trees CASCADE;`);
+    await db.query('INSERT INTO trees(id, owner_id) VALUES ($1, $2), ($3, $4)', [treeId, 'owner', otherTreeId, 'outsider']);
+    await db.query("INSERT INTO tree_collaborators(tree_id, collaborator_uid, email, role) VALUES ($1, 'editor', NULL, 'editor'), ($1, 'viewer', NULL, 'viewer')", [treeId]);
+    await db.query("INSERT INTO people(id, tree_id, first_name) VALUES ('person-1', $1, 'private-name-sentinel')", [treeId]);
+    await db.query("INSERT INTO storage.objects(bucket_id, name) VALUES ('person-media', $1)", [photo.objectPath]);
+  });
+  afterAll(async () => { await db?.close(); });
+
+  it.each(['owner', 'viewer', 'anonymous'])('does not grant cleanup RPCs or queue access to %s', async user => {
+    await role(user, user === 'anonymous' ? 'anon' : 'authenticated');
+    await expect(claim()).rejects.toThrow(/permission denied/);
+    await expect(pending()).rejects.toThrow(/permission denied/);
+    await expect(db.query('SELECT * FROM private.person_media_cleanup')).rejects.toThrow(/permission denied/);
+    await expect(db.query('SELECT public.list_person_media_cleanup_candidates()')).rejects.toThrow(/permission denied/);
+    await expect(db.query('SELECT public.complete_person_media_cleanup($1, $2)', ['person-media', photo.objectPath]))
+      .rejects.toThrow(/permission denied/);
+  });
+
+  it.each(['people', 'checkpoint', 'operation'])('retains an asset referenced by %s, then fences stale writes after claim', async reference => {
+    if (reference === 'people') await db.query("UPDATE people SET custom_fields = $1 WHERE id = 'person-1'", [{ photoAsset: photo }]);
+    if (reference === 'checkpoint') await db.query('INSERT INTO tree_checkpoints(tree_id, people) VALUES ($1, $2)', [treeId, [{ photoAsset: photo }]]);
+    if (reference === 'operation') await db.query('INSERT INTO tree_operations(tree_id, payload) VALUES ($1, $2)', [treeId, { photoAsset: photo }]);
+    await role('service', 'service_role');
+    expect(await claim()).toBe(false);
+    expect(await pending()).toBe(1);
+    await db.exec('RESET ROLE');
+    await db.exec("UPDATE people SET custom_fields = '{}'; DELETE FROM tree_checkpoints; DELETE FROM tree_operations;");
+    await role('service', 'service_role');
+    expect(await claim()).toBe(true);
+    await db.exec('RESET ROLE');
+    await expect(db.query("UPDATE people SET custom_fields = $1 WHERE id = 'person-1'", [{ photoAsset: photo }])).rejects.toThrow(/retired/);
+    await expect(db.query('INSERT INTO tree_checkpoints(tree_id, people) VALUES ($1, $2)', [treeId, [{ photoAsset: photo }]])).rejects.toThrow(/retired/);
+    await expect(db.query('INSERT INTO tree_operations(tree_id, payload) VALUES ($1, $2)', [treeId, { photoAsset: photo }])).rejects.toThrow(/retired/);
+    expect((await db.query('SELECT name FROM storage.objects')).rows).toEqual([{ name: photo.objectPath }]);
+  });
+
+  it('requires Storage deletion acknowledgement and preserves the tombstone after completion', async () => {
+    await role('service', 'service_role');
+    expect(await claim()).toBe(true);
+    const complete = async () => (await db.query<{ done: boolean }>(
+      'SELECT public.complete_person_media_cleanup($1, $2) AS done', ['person-media', photo.objectPath])).rows[0].done;
+    expect(await complete()).toBe(false);
+    await db.exec('RESET ROLE');
+    // Simulate only Storage's metadata acknowledgement, not a production SQL deletion.
+    await db.query('DELETE FROM storage.objects WHERE name = $1', [photo.objectPath]);
+    await role('service', 'service_role');
+    expect(await complete()).toBe(true);
+    expect(await pending()).toBe(0);
+    await db.exec('RESET ROLE');
+    await expect(db.query("UPDATE people SET custom_fields = $1 WHERE id = 'person-1'", [{ photoAsset: photo }])).rejects.toThrow(/retired/);
+  });
+
+  it('inventories only old valid private uploads, not fresh uploads or arbitrary public avatars', async () => {
+    await db.query("UPDATE storage.objects SET created_at = now() - interval '25 hours'");
+    await db.query("INSERT INTO storage.objects(bucket_id, name, created_at) VALUES ('person-media', $1, now()), ('avatars', $2, now() - interval '2 days')",
+      [galleryPhoto.objectPath, sourcePath]);
+    await role('service', 'service_role');
+    expect((await db.query('SELECT * FROM public.list_person_media_cleanup_candidates()')).rows)
+      .toEqual([{ bucket: 'person-media', object_path: photo.objectPath }]);
+  });
+
+  it('finalizes only the unchanged gallery item and queues public cleanup in the same transaction', async () => {
+    const item = { asset: galleryPhoto, path: sourcePath, caption: 'edited caption' };
+    await db.query("UPDATE people SET custom_fields = $1 WHERE id = 'person-1'", [{ gallery: [item] }]);
+    const finalize = async (expected: unknown) => (await db.query<{ done: boolean }>(
+      'SELECT public.finalize_legacy_gallery_person_media_checked($1, $2, $3, $4, $5) AS done',
+      [treeId, 'person-1', sourcePath, galleryPhoto.assetId, expected])).rows[0].done;
+    await role('service', 'service_role');
+    await expect(db.query('SELECT public.finalize_legacy_gallery_person_media($1, $2, $3, $4)',
+      [treeId, 'person-1', sourcePath, galleryPhoto.assetId])).rejects.toThrow(/permission denied/);
+    expect(await finalize({ ...item, caption: 'stale caption' })).toBe(false);
+    expect(await pending()).toBe(0);
+    expect(await finalize(item)).toBe(true);
+    expect(await pending()).toBe(1);
+    await db.exec('RESET ROLE');
+    const row = (await db.query<{ custom_fields: unknown }>("SELECT custom_fields FROM people WHERE id = 'person-1'")).rows[0];
+    expect(row.custom_fields).toEqual({ gallery: [{ asset: galleryPhoto, caption: 'edited caption' }] });
+    await db.query('INSERT INTO tree_checkpoints(tree_id, people) VALUES ($1, $2)', [treeId, [{ gallery: [{ path: sourcePath }] }]]);
+    await role('service', 'service_role');
+    expect(await claim('avatars', sourcePath)).toBe(false);
+  });
+
+  it('restricts viewer payload access despite a historical permissive policy', async () => {
+    await db.query('INSERT INTO tree_operations(tree_id, payload) VALUES ($1, $2)', [treeId, { privateEmail: 'private-email-sentinel' }]);
+    for (const user of ['owner', 'editor']) {
+      await role(user);
+      expect((await db.query('SELECT payload FROM tree_operations')).rows).toHaveLength(1);
+    }
+    await role('viewer');
+    expect((await db.query('SELECT payload FROM tree_operations')).rows).toEqual([]);
+    const signals = (await db.query('SELECT * FROM tree_change_signals')).rows;
+    expect(signals).toHaveLength(1);
+    expect(Object.keys(signals[0]).sort()).toEqual(['revision', 'tree_id']);
+    expect(JSON.stringify(signals)).not.toMatch(/private-name-sentinel|private-email-sentinel/);
+    await expect(db.query('UPDATE tree_change_signals SET revision = 999')).rejects.toThrow(/permission denied/);
+    await role('anonymous', 'anon');
+    await expect(db.query('SELECT * FROM tree_operations')).rejects.toThrow(/permission denied/);
+    await expect(db.query('SELECT * FROM tree_change_signals')).rejects.toThrow(/permission denied/);
+  });
+
+  it('applies downgrade and revocation on the next read without leaking another tree', async () => {
+    await db.query('INSERT INTO tree_operations(tree_id, payload) VALUES ($1, $2)', [treeId, {}]);
+    await role('editor');
+    expect((await db.query('SELECT * FROM tree_operations')).rows).toHaveLength(1);
+    await db.exec("RESET ROLE; UPDATE tree_collaborators SET role = 'viewer' WHERE collaborator_uid = 'editor'");
+    await role('editor');
+    expect((await db.query('SELECT * FROM tree_operations')).rows).toHaveLength(0);
+    expect((await db.query('SELECT * FROM tree_change_signals')).rows).toHaveLength(1);
+    await db.exec("RESET ROLE; DELETE FROM tree_collaborators WHERE collaborator_uid = 'editor'");
+    await role('editor');
+    expect((await db.query('SELECT * FROM tree_change_signals')).rows).toHaveLength(0);
+    await role('outsider');
+    expect((await db.query('SELECT * FROM tree_change_signals')).rows).toHaveLength(0);
+  });
+
+  it('bumps the revision for person, relationship and operation changes and publishes the required tables', async () => {
+    const revision = async () => Number((await db.query<{ revision: number }>('SELECT revision FROM tree_change_signals WHERE tree_id = $1', [treeId])).rows[0].revision);
+    let previous = await revision();
+    for (const statement of [
+      "UPDATE people SET first_name = 'updated' WHERE id = 'person-1'",
+      `INSERT INTO relationships VALUES ('${treeId}', 'person-1', 'person-2')`,
+      "UPDATE relationships SET to_id = 'person-3'", 'DELETE FROM relationships',
+      `INSERT INTO tree_operations(tree_id, payload) VALUES ('${treeId}', '{}')`,
+      'DELETE FROM people',
+    ]) {
+      await db.exec(statement);
+      const next = await revision();
+      expect(next).toBeGreaterThan(previous);
+      previous = next;
+    }
+    // Publication completion is idempotent; this verifies SQL metadata, not websocket delivery.
+    await db.exec(readMigration('20260906000400_complete_tree_realtime_publication.sql'));
+    expect((await db.query("SELECT tablename FROM pg_publication_tables WHERE pubname = 'supabase_realtime' ORDER BY tablename")).rows)
+      .toEqual(['tree_change_signals', 'tree_collaborators', 'tree_operations'].map(tablename => ({ tablename })));
   });
 });

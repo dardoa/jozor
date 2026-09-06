@@ -6,21 +6,29 @@ BEGIN;
 
 -- Enable RLS (already enabled, but let's make sure it's consistent)
 ALTER TABLE public.ai_usage ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.media ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.push_reminder_deliveries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_keys ENABLE ROW LEVEL SECURITY;
 
 -- Drop existing service role policies if any
 DROP POLICY IF EXISTS "service_role_all" ON public.ai_usage;
-DROP POLICY IF EXISTS "service_role_all" ON public.media;
 DROP POLICY IF EXISTS "service_role_all" ON public.push_reminder_deliveries;
 DROP POLICY IF EXISTS "service_role_all" ON public.user_keys;
 
 -- Create service role policies to resolve "RLS Enabled No Policy" warnings
 CREATE POLICY "service_role_all" ON public.ai_usage FOR ALL TO service_role USING (true) WITH CHECK (true);
-CREATE POLICY "service_role_all" ON public.media FOR ALL TO service_role USING (true) WITH CHECK (true);
 CREATE POLICY "service_role_all" ON public.push_reminder_deliveries FOR ALL TO service_role USING (true) WITH CHECK (true);
 CREATE POLICY "service_role_all" ON public.user_keys FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+-- The old media table is not part of the current fresh-install schema.
+DO $legacy_media$
+BEGIN
+  IF to_regclass('public.media') IS NOT NULL THEN
+    ALTER TABLE public.media ENABLE ROW LEVEL SECURITY;
+    DROP POLICY IF EXISTS "service_role_all" ON public.media;
+    CREATE POLICY "service_role_all" ON public.media FOR ALL TO service_role USING (true) WITH CHECK (true);
+  END IF;
+END;
+$legacy_media$;
 
 
 -- =========================================================================

@@ -10,6 +10,7 @@ type LocalRequest = IncomingMessage & {
 type LocalResponse = ServerResponse & {
   status: (code: number) => LocalResponse;
   json: (payload: unknown) => LocalResponse;
+  send: (payload: string | Uint8Array) => LocalResponse;
 };
 type VercelHandler = (
   req: VercelRequest,
@@ -102,6 +103,10 @@ const createLocalResponse = (res: ServerResponse): LocalResponse => {
     json(payload: unknown) {
       res.setHeader('Content-Type', 'application/json');
       res.end(JSON.stringify(payload));
+      return localResponse;
+    },
+    send(payload: string | Uint8Array) {
+      res.end(payload);
       return localResponse;
     },
   });
@@ -352,6 +357,24 @@ export const createLocalApiProxyMiddleware = (env: LocalApiProxyEnv): Plugin => 
       }
 
       const body = await parseJsonBody(req);
+
+      if (pathName === '/api/person-media' || pathName === '/api/person-media-migration') {
+        try {
+          syncProcessEnv(env);
+          const { default: handler } = await server.ssrLoadModule(
+            pathName === '/api/person-media'
+              ? '/src/api/person-media.ts'
+              : '/src/api/person-media-migration.ts'
+          );
+          const localRequest = req as LocalRequest;
+          localRequest.query = toQueryObject(url);
+          localRequest.body = body;
+          await invokeVercelHandler(handler, localRequest, createLocalResponse(res));
+        } catch {
+          sendJson(res, 500, { error: 'Local person media request failed.' });
+        }
+        return;
+      }
 
       if (pathName === '/api/ai-proxy') {
         await handleAiProxy(req as LocalRequest, res, body, originalUrl, env);
