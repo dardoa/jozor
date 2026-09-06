@@ -83,3 +83,27 @@ that automated scanning proves absence of every possible secret.
 
 No family photos, test credentials or backup bytes are published by this
 checkpoint. The original-data preservation evidence remains private locally.
+
+## Vercel Deployment Correction
+
+The first push reached `d10bdbe`. Its Vercel build succeeded, but deployment
+`dpl_EkQhMz3b2ucthnzqpvShfFAUnNdf` was rejected with
+`exceeded_serverless_functions_per_deployment`. The authenticated deployment
+metadata identified the current Hobby limit of twelve functions, consistent
+with [Vercel's runtime limits](https://vercel.com/docs/functions/runtimes).
+The root API directory contained fourteen entrypoints.
+
+The three person-media entrypoints are consolidated into
+`api/person-media/[action].ts`, reducing the root API entrypoint count to twelve.
+Explicit rewrites preserve the existing read, migration and cleanup URLs and
+their query parameters. The scheduled cleanup targets the canonical dynamic
+route and remains gated by the same secret and disabled activation flag.
+The existing handlers retain all method, CORS, session, role and asset checks.
+Unknown, array-valued and prototype-property actions return 404 without
+dispatching a handler.
+
+The routing/media/boundary/config regression run passed 43 tests in six files.
+API typecheck and scoped ESLint passed. A function-count regression now protects
+the deployment budget. These focused post-push checks supplement, rather than
+replace or relabel, the earlier complete local gates. The corrected pushed tip
+still requires its own remote CI and Vercel result.

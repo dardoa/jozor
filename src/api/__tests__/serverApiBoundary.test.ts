@@ -7,9 +7,9 @@ const srcRoot = path.resolve(process.cwd(), 'src');
 const allowedSrcImports = new Set([
   'api/ai-proxy.ts -> ../src/api/ai-proxy',
   'api/proxy.ts -> ../src/api/proxy',
-  'api/person-media.ts -> ../src/api/person-media',
-  'api/person-media-migration.ts -> ../src/api/person-media-migration',
-  'api/person-media-cleanup-cron.ts -> ../src/api/person-media-cleanup-cron',
+  'api/person-media/[action].ts -> ../../src/api/person-media',
+  'api/person-media/[action].ts -> ../../src/api/person-media-migration',
+  'api/person-media/[action].ts -> ../../src/api/person-media-cleanup-cron',
   'api/push-reminder-cron.ts -> ../src/services/pushSubscriptionService',
   'api/push-reminder-cron.ts -> ../src/services/reminders/reminderProcessor',
 ]);
@@ -47,6 +47,10 @@ function resolveLocalImport(filePath: string, importSource: string): string | nu
 }
 
 describe('Vercel server API boundaries', () => {
+  it('keeps API entrypoints within the current deployment function budget', async () => {
+    expect((await listApiFiles(apiRoot)).length).toBeLessThanOrEqual(12);
+  });
+
   it('uses explicit .js extensions for shared modules imported by root API handlers', async () => {
     const violations: string[] = [];
     const apiFiles = await listApiFiles(apiRoot);

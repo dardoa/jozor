@@ -2,7 +2,7 @@
   "version": 2,
   "crons": [
     {
-      "path": "/api/person-media-cleanup-cron",
+      "path": "/api/person-media/cleanup",
       "schedule": "0 5 * * *"
     },
     {
@@ -11,6 +11,18 @@
     }
   ],
   "rewrites": [
+    {
+      "source": "/api/person-media",
+      "destination": "/api/person-media/read"
+    },
+    {
+      "source": "/api/person-media-migration",
+      "destination": "/api/person-media/migrate"
+    },
+    {
+      "source": "/api/person-media-cleanup-cron",
+      "destination": "/api/person-media/cleanup"
+    },
     {
       "source": "/((?!api/).*)",
       "destination": "/index.html"
