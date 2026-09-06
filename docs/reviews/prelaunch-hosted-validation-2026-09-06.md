@@ -224,11 +224,12 @@ object hashes and the original inventory match the backup. See the
 for the current 13-test hosted result and local verification. The earlier
 six-test run above remains the record of the private gateway correction.
 
-1. Deploy reviewed matching API/Edge/client code, then test actual HTTP routes.
-   The hosted Storage boundary is already applied and intentionally fails
-   closed for old clients attempting direct private downloads. Existing legacy
-   public-photo paths are unchanged. Do not call the deployed private-photo
-   workflow complete before this coordinated deployment gate.
+1. **Closed for the targeted HTTP boundary:** the matching API/client code is
+   deployed at `a15bdcf`, and `resolve-tree-context` is deployed as Edge version 5
+   with JWT verification enabled. Actual hosted Edge tests passed 12/12 and the
+   deployed Vercel media/policy suite passed 13/13. See the
+   [deployed HTTP closure](deployed-person-route-media-http-closure-2026-09-06.md)
+   for exact scope, preservation checks, and the distinction from browser QA.
 2. Browser checks for role changes, reconnect, private photo display and poster/
    archive export against the deployed code; account-deletion lifecycle remains
    a separate synthetic-resource test.

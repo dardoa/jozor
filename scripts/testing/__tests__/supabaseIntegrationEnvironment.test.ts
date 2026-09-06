@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import {
   LOCAL_INTEGRATION_URL,
   loadSupabaseIntegrationEnvironment,
+  resolvePersonMediaIntegrationHttpOrigin,
   validateSupabaseIntegrationEnvironment,
 } from '../supabaseIntegrationEnvironment.mjs';
 
@@ -20,12 +21,41 @@ const config = {
 };
 
 describe('Supabase integration target safety', () => {
+  it('defaults to in-process media tests and accepts only the approved deployed HTTP origin', () => {
+    expect(resolvePersonMediaIntegrationHttpOrigin({ mode: 'prelaunch', env: {} })).toBeNull();
+    expect(resolvePersonMediaIntegrationHttpOrigin({ mode: 'prelaunch', env: {
+      PERSON_MEDIA_INTEGRATION_HTTP_ORIGIN: 'https://jozor.vercel.app',
+    } })).toBe('https://jozor.vercel.app');
+    for (const origin of ['', 'http://jozor.vercel.app', 'https://jozor.vercel.app.evil.test',
+      'https://jozor.vercel.app/', 'https://jozor.vercel.app/api', 'https://user:pass@jozor.vercel.app']) {
+      expect(() => resolvePersonMediaIntegrationHttpOrigin({ mode: 'prelaunch', env: {
+        PERSON_MEDIA_INTEGRATION_HTTP_ORIGIN: origin,
+      } })).toThrow('approved prelaunch application origin');
+    }
+    for (const mode of ['local', 'staging']) {
+      expect(() => resolvePersonMediaIntegrationHttpOrigin({ mode, env: {
+        PERSON_MEDIA_INTEGRATION_HTTP_ORIGIN: 'https://jozor.vercel.app',
+      } })).toThrow('approved prelaunch application origin');
+    }
+  });
+
   const prelaunch = {
     ...config, SUPABASE_INTEGRATION_TARGET: 'prelaunch',
     SUPABASE_PRELAUNCH_APPROVED_PROJECT_REF: ref,
     SUPABASE_PRELAUNCH_ACKNOWLEDGEMENT: 'owner-approved-test-data',
   };
   const mediaScope = { suite: 'private-person-media' as const, linkedProjectRef: ref };
+
+  it('permits the reviewed person-route suite without relaxing target or mutation guards', () => {
+    const scope = { suite: 'person-route-context' as const, linkedProjectRef: ref };
+    expect(validateSupabaseIntegrationEnvironment(prelaunch, [config.VITE_SUPABASE_URL], scope).mode).toBe('prelaunch');
+    expect(() => validateSupabaseIntegrationEnvironment({ ...prelaunch, ALLOW_INTEGRATION_MUTATIONS: 'false' },
+      [config.VITE_SUPABASE_URL], scope)).toThrow('ALLOW_INTEGRATION_MUTATIONS=true');
+    expect(() => validateSupabaseIntegrationEnvironment(prelaunch, [], scope)).toThrow('application project URL');
+    expect(() => validateSupabaseIntegrationEnvironment(prelaunch, [config.VITE_SUPABASE_URL], {
+      ...scope, linkedProjectRef: production,
+    })).toThrow('exact linked project');
+  });
 
   it('allows only explicitly approved prelaunch media tests on the exact app/linked target', () => {
     expect(validateSupabaseIntegrationEnvironment(prelaunch, [config.VITE_SUPABASE_URL], mediaScope))

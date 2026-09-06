@@ -1,7 +1,9 @@
 import { defineConfig } from 'vitest/config';
-import { loadSupabaseIntegrationEnvironment } from './scripts/testing/supabaseIntegrationEnvironment.mjs';
+import { loadSupabaseIntegrationEnvironment, resolvePersonMediaIntegrationHttpOrigin } from './scripts/testing/supabaseIntegrationEnvironment.mjs';
 
-const { mode, supabaseUrl, anonKey, serviceRoleKey } = loadSupabaseIntegrationEnvironment({ suite: 'private-person-media' });
+const verified = loadSupabaseIntegrationEnvironment({ suite: 'private-person-media' });
+resolvePersonMediaIntegrationHttpOrigin(verified);
+const { mode, supabaseUrl, anonKey, serviceRoleKey } = verified;
 
 export default defineConfig({
   envDir: false,

@@ -5,6 +5,20 @@ import { parseEnv } from 'node:util';
 const projectRefPattern = /^[a-z]{20}$/;
 export const LOCAL_INTEGRATION_URL = 'http://127.0.0.1:55321';
 
+/**
+ * Only the approved app may receive synthetic user bearer tokens. Never follow
+ * redirects or accept an arbitrary HTTP origin from integration configuration.
+ * @param {{ mode: string, env: Record<string, string | undefined> }} config
+ */
+export function resolvePersonMediaIntegrationHttpOrigin(config) {
+  const origin = config.env.PERSON_MEDIA_INTEGRATION_HTTP_ORIGIN;
+  if (origin === undefined) return null;
+  if (config.mode !== 'prelaunch' || origin !== 'https://jozor.vercel.app') {
+    reject('deployed media HTTP tests require the approved prelaunch application origin.');
+  }
+  return origin;
+}
+
 /** @param {string} message */
 function reject(message) {
   throw new Error(`Integration safety guard: ${message}`);
@@ -24,7 +38,7 @@ function getUrl(env) {
  * Pure, offline validation. No client is constructed before this gate passes.
  * @param {Record<string, string | undefined>} env
  * @param {string[]} protectedUrls
- * @param {{ readOnly?: boolean, suite?: 'private-person-media', linkedProjectRef?: string }} options
+ * @param {{ readOnly?: boolean, suite?: 'private-person-media' | 'person-route-context', linkedProjectRef?: string }} options
  */
 export function validateSupabaseIntegrationEnvironment(env, protectedUrls = [], options = {}) {
   if (!options.readOnly && env.ALLOW_INTEGRATION_MUTATIONS !== 'true') {
@@ -61,8 +75,8 @@ export function validateSupabaseIntegrationEnvironment(env, protectedUrls = [], 
       }
     }
   } else if (mode === 'prelaunch') {
-    if (options.suite !== 'private-person-media') {
-      reject('prelaunch is restricted to the reviewed private-person-media suite.');
+    if (options.suite !== 'private-person-media' && options.suite !== 'person-route-context') {
+      reject('prelaunch is restricted to the reviewed private-person-media and person-route-context suites.');
     }
     const ref = env.SUPABASE_INTEGRATION_PROJECT_REF || '';
     if (!projectRefPattern.test(ref)
@@ -90,7 +104,7 @@ export function validateSupabaseIntegrationEnvironment(env, protectedUrls = [], 
  * Never falls back to .env for credentials. Application/deployment files are
  * read only for target validation. The narrow prelaunch exception also requires
  * an exact match to the CLI-linked project and explicit owner acknowledgement.
- * @param {{ rootDirectory?: string, envFile?: string, readOnly?: boolean, suite?: 'private-person-media' }} options
+ * @param {{ rootDirectory?: string, envFile?: string, readOnly?: boolean, suite?: 'private-person-media' | 'person-route-context' }} options
  */
 export function loadSupabaseIntegrationEnvironment(options = {}) {
   const rootDirectory = options.rootDirectory || process.cwd();

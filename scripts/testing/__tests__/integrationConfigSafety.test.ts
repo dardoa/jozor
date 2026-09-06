@@ -55,4 +55,10 @@ describe('integration suite target isolation', () => {
     ]);
     expect(config.envDir).toBe(false);
   });
+
+  it.each(['staging', 'local', 'prelaunch'] as const)('isolates person-route HTTP tests for %s', mode => {
+    const config = readConfig('vitest.person-route-integration.config.ts', mode);
+    expect(config.include).toEqual(['tests/integration/personRouteContext.integration.test.ts']);
+    expect(config.envDir).toBe(false);
+  });
 });

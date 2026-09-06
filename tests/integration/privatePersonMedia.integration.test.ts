@@ -2,12 +2,14 @@ import { randomUUID } from 'node:crypto';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { loadSupabaseIntegrationEnvironment } from '../../scripts/testing/supabaseIntegrationEnvironment.mjs';
+import { loadSupabaseIntegrationEnvironment, resolvePersonMediaIntegrationHttpOrigin } from '../../scripts/testing/supabaseIntegrationEnvironment.mjs';
 import { createPersonMediaAssetRef, PERSON_MEDIA_STORAGE_CACHE_CONTROL, type PersonMediaAssetRef } from '../../src/types/personMedia';
 import mediaHandler from '../../src/api/person-media';
 import { resolvedSupabaseKey, resolvedSupabaseUrl } from '../../src/services/supabaseConfig';
 
-const { supabaseUrl, anonKey, serviceRoleKey } = loadSupabaseIntegrationEnvironment({ suite: 'private-person-media' });
+const verified = loadSupabaseIntegrationEnvironment({ suite: 'private-person-media' });
+const mediaHttpOrigin = resolvePersonMediaIntegrationHttpOrigin(verified);
+const { supabaseUrl, anonKey, serviceRoleKey } = verified;
 if (resolvedSupabaseUrl !== supabaseUrl || resolvedSupabaseKey !== anonKey
   || process.env.SUPABASE_SERVICE_ROLE_KEY !== serviceRoleKey) {
   throw new Error('Integration safety guard: API runtime credentials differ from the verified test target.');
@@ -17,7 +19,7 @@ const admin = createClient(supabaseUrl, serviceRoleKey, { auth: authOptions });
 const anonymous = createClient(supabaseUrl, anonKey, { auth: authOptions });
 const bytes = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=', 'base64');
 
-describe('private person media with isolated synthetic resources on verified Supabase HTTP services', () => {
+describe(`private person media: ${mediaHttpOrigin ? 'deployed Vercel HTTP' : 'in-process gateway'} with synthetic Supabase resources`, () => {
   const treeId = randomUUID();
   const users: { id: string; email: string; token: string; client: SupabaseClient }[] = [];
   const objects: string[] = [];
@@ -35,6 +37,22 @@ describe('private person media with isolated synthetic resources on verified Sup
   const personIds = { deceased: randomUUID(), living: randomUUID(), private: randomUUID() };
 
   const deliver = async (token: string | undefined, personId: string | undefined, asset = photo) => {
+    const query = { treeId, assetId: asset.assetId, kind: asset.kind,
+      ...(personId === undefined ? { mimeType: asset.mimeType, byteLength: String(asset.byteLength) } : { personId }) };
+    if (mediaHttpOrigin) {
+      const url = new URL('/api/person-media', mediaHttpOrigin);
+      for (const [key, value] of Object.entries(query)) if (value !== undefined) url.searchParams.set(key, value);
+      const result = await fetch(url, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        redirect: 'error', signal: AbortSignal.timeout(30000),
+      });
+      return {
+        status: result.status,
+        body: result.headers.get('content-type')?.startsWith('image/')
+          ? Buffer.from(await result.arrayBuffer()) : await result.json(),
+        headers: { 'Cache-Control': result.headers.get('cache-control'), 'Content-Type': result.headers.get('content-type') },
+      };
+    }
     const headers: Record<string, unknown> = {};
     let status = 200;
     let body: unknown;
@@ -44,11 +62,11 @@ describe('private person media with isolated synthetic resources on verified Sup
       json: (value: unknown) => { body = value; return response; },
       send: (value: unknown) => { body = value; return response; },
     };
-    await mediaHandler({
+    const request: Pick<VercelRequest, 'method' | 'headers' | 'query'> = {
       method: 'GET', headers: { authorization: token ? `Bearer ${token}` : undefined },
-      query: { treeId, assetId: asset.assetId, kind: asset.kind,
-        ...(personId === undefined ? { mimeType: asset.mimeType, byteLength: String(asset.byteLength) } : { personId }) },
-    } as VercelRequest, response as unknown as VercelResponse);
+      query,
+    };
+    await mediaHandler(request as VercelRequest, response as unknown as VercelResponse);
     return { status, body, headers };
   };
 
@@ -198,6 +216,8 @@ describe('private person media with isolated synthetic resources on verified Sup
       expect((await deliver(owner.token, personIds.living, asset)).status).toBe(200);
     }
     expect((await deliver(undefined, personIds.deceased)).status).toBe(401);
+    expect((await deliver(outsider.token, personIds.deceased)).status).toBe(404);
+    expect((await deliver(outsider.token, undefined)).status).toBe(404);
     expect((await deliver(viewer.token, personIds.deceased, { ...photo, assetId: randomUUID() })).status).toBe(404);
   });
 
