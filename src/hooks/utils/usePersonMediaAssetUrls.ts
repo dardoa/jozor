@@ -52,6 +52,12 @@ export function usePersonMediaAssetUrls(
     ? `${user.uid}:${treeId}:${role}:${descriptorKey}`
     : null;
 
+  // A -> disabled/masked -> A must acquire a new URL, not briefly render the
+  // old URL already revoked by the previous effect's cleanup.
+  if (resolution.requestKey !== null && resolution.requestKey !== requestKey) {
+    setResolution({ requestKey: null, urlsByAssetId: EMPTY_RESOLVED_URLS });
+  }
+
   useEffect(() => {
     const activeDescriptors = descriptorsRef.current;
     if (!requestKey || !user?.uid || !treeId || !role) return undefined;

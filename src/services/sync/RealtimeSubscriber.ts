@@ -13,6 +13,8 @@ type PermissionPayload = {
 };
 
 export class RealtimeSubscriber {
+    private readonly channelNamespace = crypto.randomUUID();
+    private subscriptionGeneration = 0;
     private operationChannel: RealtimeChannel | null = null;
     private permissionChannel: RealtimeChannel | null = null;
     private changeSignalChannel: RealtimeChannel | null = null;
@@ -27,6 +29,9 @@ export class RealtimeSubscriber {
 
     public subscribe(treeId: string) {
         this.unsubscribe();
+        const generation = this.subscriptionGeneration;
+        // Supabase reuses channels by topic, even across independent consumers.
+        const topic = (name: string) => `${name}:${treeId}:${this.channelNamespace}:${generation}`;
 
         const { user, supabaseAccessToken } = useAppStore.getState();
         if (!user) return;
@@ -35,7 +40,8 @@ export class RealtimeSubscriber {
             const client = getSupabaseFull(user.uid, user.email, user.supabaseToken || supabaseAccessToken || undefined);
             const isCurrent = () => {
                 const state = useAppStore.getState();
-                return state.user?.uid === user.uid && state.currentTreeId === treeId;
+                return this.subscriptionGeneration === generation
+                    && state.user?.uid === user.uid && state.currentTreeId === treeId;
             };
             const reconcileOnSubscribed = (status: string) => {
                 if (status === 'SUBSCRIBED' && isCurrent()) {
@@ -45,7 +51,7 @@ export class RealtimeSubscriber {
 
             // 1. Operations Subscription
             this.operationChannel = useAppStore.getState().currentUserRole === 'viewer' ? null : client
-            .channel(`public:tree_operations:tree_id=eq.${treeId}`)
+            .channel(topic('tree-operations'))
             .on(
                 'postgres_changes',
                 {
@@ -63,7 +69,7 @@ export class RealtimeSubscriber {
 
             // Viewers never need operation payloads. A two-field server signal
             // invalidates the role-filtered people_secure snapshot instead.
-            this.changeSignalChannel = client.channel(`tree-change-signals:${treeId}`)
+            this.changeSignalChannel = client.channel(topic('tree-change-signals'))
                 .on('postgres_changes', {
                     event: '*', schema: 'public', table: 'tree_change_signals', filter: `tree_id=eq.${treeId}`,
                 }, () => {
@@ -75,7 +81,7 @@ export class RealtimeSubscriber {
 
             // 2. Permissions Subscription
             this.permissionChannel = client
-            .channel(`public:tree_collaborators:tree_id=eq.${treeId}`)
+            .channel(topic('tree-permissions'))
             .on(
                 'postgres_changes',
                 {
@@ -93,11 +99,16 @@ export class RealtimeSubscriber {
                     } as PermissionPayload);
                 }
             )
-            .subscribe();
+            .subscribe(status => {
+                if (status === 'SUBSCRIBED' && isCurrent()) {
+                    this.options.onPermissionUpdate({ tree_id: treeId });
+                }
+            });
         }
     }
 
     public unsubscribe() {
+        this.subscriptionGeneration += 1;
         if (this.changeSignalChannel) {
             this.changeSignalChannel.unsubscribe();
             this.changeSignalChannel = null;

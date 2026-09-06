@@ -34,6 +34,7 @@ class DeltaSyncService {
     private remoteSyncClient: DeltaRemoteSyncClient;
     private reconcileInFlight = false;
     private reconcileRequestedTreeId: string | null = null;
+    private reconcileRequestedFullSnapshot = false;
     private permissionListeners = new Set<(share: unknown) => void>();
     private permissionPausedTreeId: string | null = null;
     private lastCheckpointVersion = 0;
@@ -382,8 +383,10 @@ class DeltaSyncService {
         }
     }
 
-    public async reconcileTree(treeId: string) {
+    public async reconcileTree(treeId: string, refreshSnapshot = false) {
         if (this.reconcileInFlight) {
+            this.reconcileRequestedFullSnapshot = this.reconcileRequestedTreeId === treeId
+                ? this.reconcileRequestedFullSnapshot || refreshSnapshot : refreshSnapshot;
             this.reconcileRequestedTreeId = treeId;
             return;
         }
@@ -396,9 +399,10 @@ class DeltaSyncService {
         updateSyncStatus(buildSyncSaving(syncStatus, this.queue.getPendingOutgoingCount()));
 
         try {
-            if (useAppStore.getState().currentUserRole === 'viewer') {
+            if (refreshSnapshot || useAppStore.getState().currentUserRole === 'viewer') {
                 if (await this.reloadFullTreeFromServer(treeId)) {
-                    updateSyncStatus(buildSyncSuccess(useAppStore.getState().syncStatus, 0, { lastSyncSupabase: new Date() }));
+                    updateSyncStatus(buildSyncSuccess(useAppStore.getState().syncStatus,
+                        this.queue.getPendingOutgoingCount(), { lastSyncSupabase: new Date() }));
                 }
                 return;
             }
@@ -435,9 +439,11 @@ class DeltaSyncService {
         } finally {
             this.reconcileInFlight = false;
             const requestedTreeId = this.reconcileRequestedTreeId;
+            const requestedFullSnapshot = this.reconcileRequestedFullSnapshot;
             this.reconcileRequestedTreeId = null;
+            this.reconcileRequestedFullSnapshot = false;
             if (requestedTreeId && useAppStore.getState().currentTreeId === requestedTreeId) {
-                void this.reconcileTree(requestedTreeId);
+                void this.reconcileTree(requestedTreeId, requestedFullSnapshot);
             }
         }
     }

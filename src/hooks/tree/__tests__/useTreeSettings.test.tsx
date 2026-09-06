@@ -31,6 +31,8 @@ describe('useTreeSettings', () => {
       ...state,
       user,
       currentTreeId: 'tree-1',
+      currentUserRole: 'owner',
+      authLoading: false,
       treeSettings: DEFAULT_TREE_SETTINGS,
     }));
   });
@@ -54,7 +56,8 @@ describe('useTreeSettings', () => {
       'tree-1',
       'user-1',
       'user@example.com',
-      expect.objectContaining({ nodeWidth: DEFAULT_TREE_SETTINGS.nodeWidth })
+      expect.objectContaining({ nodeWidth: DEFAULT_TREE_SETTINGS.nodeWidth }),
+      'token-1'
     );
   });
 
@@ -92,7 +95,41 @@ describe('useTreeSettings', () => {
       'tree-2',
       'user-1',
       'user@example.com',
-      expect.any(Object)
+      expect.any(Object),
+      'token-1'
     );
+  });
+
+  it.each(['viewer', 'editor', null] as const)('keeps %s preferences local without attempting a cloud write', async role => {
+    useAppStore.setState({ currentUserRole: role });
+    renderHook(() => useTreeSettings());
+    act(() => useAppStore.setState({ treeSettings: { ...DEFAULT_TREE_SETTINGS, nodeWidth: 245 } }));
+    await act(async () => { await vi.advanceTimersByTimeAsync(1500); });
+    expect(localStorage.getItem('treeSettings')).not.toBeNull();
+    expect(updateTreeSettings).not.toHaveBeenCalled();
+  });
+
+  it.each(['viewer', 'editor', null] as const)('cancels a pending owner write after the role becomes %s', async role => {
+    renderHook(() => useTreeSettings());
+    act(() => { vi.advanceTimersByTime(500); useAppStore.setState({ currentUserRole: role }); });
+    await act(async () => { await vi.advanceTimersByTimeAsync(1500); });
+    expect(updateTreeSettings).not.toHaveBeenCalled();
+  });
+
+  it('waits until authentication resolves before syncing owner settings', async () => {
+    useAppStore.setState({ authLoading: true });
+    renderHook(() => useTreeSettings());
+    await act(async () => { await vi.advanceTimersByTimeAsync(1500); });
+    expect(updateTreeSettings).not.toHaveBeenCalled();
+    act(() => useAppStore.setState({ authLoading: false }));
+    await act(async () => { await vi.advanceTimersByTimeAsync(1000); });
+    expect(updateTreeSettings).toHaveBeenCalledTimes(1);
+  });
+
+  it('cancels a pending write when the account signs out', async () => {
+    renderHook(() => useTreeSettings());
+    act(() => { vi.advanceTimersByTime(500); useAppStore.setState({ user: null }); });
+    await act(async () => { await vi.advanceTimersByTimeAsync(1500); });
+    expect(updateTreeSettings).not.toHaveBeenCalled();
   });
 });

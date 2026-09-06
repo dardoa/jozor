@@ -129,6 +129,21 @@ describe('SmartAvatar', () => {
     expect(container.innerHTML).not.toContain(photoUrl);
     expect(container.innerHTML).not.toContain('blob:previous-person');
   });
+  it('retries the same private asset when a fresh object URL replaces a failed one', () => {
+    const photoAsset = createPersonMediaAssetRef({
+      treeId: 'tree-1', assetId: '123e4567-e89b-42d3-a456-426614174000',
+      kind: 'profile-photo', mimeType: 'image/webp', byteLength: 128,
+      createdAt: '2026-09-05T00:00:00.000Z',
+    });
+    const person = { ...basePerson, photoAsset };
+    usePersonMediaAssetUrlMock.mockReturnValue('blob:expired');
+    const hook = render(<SmartAvatar person={person} size={48} />);
+    fireEvent.error(screen.getByRole('img', { name: 'Noura Jozor' }));
+    expect(hook.container.querySelector('img')).toBeNull();
+    usePersonMediaAssetUrlMock.mockReturnValue('blob:reacquired');
+    hook.rerender(<SmartAvatar person={{ ...person }} size={48} />);
+    expect(screen.getByRole('img', { name: 'Noura Jozor' })).toHaveAttribute('src', 'blob:reacquired');
+  });
 
   it('never falls back to legacy or cached bytes while a private asset is unresolved', () => {
     const photoAsset = createPersonMediaAssetRef({

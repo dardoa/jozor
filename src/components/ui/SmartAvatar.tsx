@@ -175,7 +175,7 @@ export const SmartAvatar = memo<SmartAvatarProps>(({ person, size, className = '
   const privatePhotoUrl = usePersonMediaAssetUrl(privateDescriptor);
   const legacyPhotoUrl = privateAsset ? undefined : getLegacyPersonMediaUrl(person.photoUrl) ?? undefined;
   const photoKey = privateAsset
-    ? `${privateAsset.assetId}:${privateAsset.version}`
+    ? `${privateAsset.assetId}:${privateAsset.version}:${privatePhotoUrl ?? ''}`
     : legacyPhotoUrl || null;
   const displayName = [person.firstName, person.lastName].filter(Boolean).join(' ') || 'Person';
 

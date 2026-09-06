@@ -31,6 +31,8 @@ export const useTreeSettings = () => {
   const importSettings = useAppStore((state) => state.importSettings);
   const currentTreeId = useAppStore((state) => state.currentTreeId);
   const user = useAppStore((state) => state.user);
+  const currentUserRole = useAppStore((state) => state.currentUserRole);
+  const authLoading = useAppStore((state) => state.authLoading);
 
   const appearanceSettings = useAppStore(useShallow((state) => ({
     coreEngine: state.appearance.coreEngine,
@@ -83,7 +85,8 @@ export const useTreeSettings = () => {
 
   // Sync settings to Supabase (Debounced)
   useEffect(() => {
-    if (!currentTreeId || !user) return;
+    // Shared tree settings belong to the owner; other roles keep local preferences.
+    if (!currentTreeId || !user || authLoading || currentUserRole !== 'owner') return;
 
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
@@ -94,8 +97,11 @@ export const useTreeSettings = () => {
     debounceRef.current = setTimeout(async () => {
       try {
         if (!active) return;
+        const current = useAppStore.getState();
+        if (current.authLoading || current.currentUserRole !== 'owner'
+          || current.currentTreeId !== syncTreeId || current.user?.uid !== syncUser.uid) return;
         const persistedSettings = buildPersistedTreeSettings(treeSettings, appearanceSettings);
-        await updateTreeSettings(syncTreeId, syncUser.uid, syncUser.email, persistedSettings);
+        await updateTreeSettings(syncTreeId, syncUser.uid, syncUser.email, persistedSettings, syncUser.supabaseToken);
       } catch (e) {
         if (!active) return;
         logError('useTreeSettings syncSupabase', e, {
@@ -110,7 +116,7 @@ export const useTreeSettings = () => {
       active = false;
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [appearanceSettings, currentTreeId, treeSettings, user]);
+  }, [appearanceSettings, authLoading, currentTreeId, currentUserRole, treeSettings, user]);
 
   return { treeSettings: mergedSettings, setTreeSettings };
 };

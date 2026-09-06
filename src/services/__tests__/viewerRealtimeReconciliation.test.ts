@@ -60,6 +60,29 @@ describe('viewer realtime snapshot reconciliation', () => {
     await deltaSyncService.reconcileTree(treeId);
     expect(useAppStore.getState().syncStatus).toMatchObject({ state: 'error', lastErrorRetryable: true });
   });
+  it('refreshes a promoted editor snapshot even when the operation log has not changed', async () => {
+    useAppStore.setState({ currentUserRole: 'editor' });
+    const raw = vi.spyOn(DeltaRemoteSyncClient.prototype, 'fetchRemoteOperations').mockResolvedValue([]);
+    vi.mocked(fetchTree).mockResolvedValue(snapshot());
+    await deltaSyncService.reconcileTree(treeId, true);
+    expect(fetchTree).toHaveBeenCalledOnce();
+    expect(raw).not.toHaveBeenCalled();
+    expect(useAppStore.getState().people.masked.firstName).toBe('Private person');
+  });
+  it('preserves a queued permission refresh when ordinary reconciliation is already running', async () => {
+    useAppStore.setState({ currentUserRole: 'editor' });
+    let resolve!: (value: []) => void;
+    vi.spyOn(DeltaRemoteSyncClient.prototype, 'fetchRemoteOperations').mockReturnValue(new Promise(done => { resolve = done; }));
+    vi.mocked(fetchTree).mockResolvedValue(snapshot());
+    const first = deltaSyncService.reconcileTree(treeId);
+    await deltaSyncService.reconcileTree(treeId, true);
+    await deltaSyncService.reconcileTree(treeId);
+    resolve([]);
+    await first;
+    await vi.waitFor(() => expect(fetchTree).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(useAppStore.getState().syncStatus.state).toBe('synced'));
+    expect(useAppStore.getState().people.masked.firstName).toBe('Private person');
+  });
 });
 
 describe('editor reconciliation after an operation history gap', () => {

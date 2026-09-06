@@ -68,4 +68,18 @@ describe('usePersonMediaAssetUrl', () => {
     expect(result.current).toBeNull();
     expect(acquireObjectUrlMock).not.toHaveBeenCalled();
   });
+  it('does not resurrect a released URL after descriptors are masked then restored', async () => {
+    const descriptor = { personId: 'person-1', asset };
+    const hook = renderHook(({ visible }) => usePersonMediaAssetUrl(visible ? descriptor : null), { initialProps: { visible: true } });
+    await waitFor(() => expect(hook.result.current).toBe('blob:private-photo'));
+    hook.rerender({ visible: false });
+    expect(hook.result.current).toBeNull();
+    expect(releaseObjectUrlMock).toHaveBeenCalledOnce();
+    let resolve!: (url: string) => void;
+    acquireObjectUrlMock.mockReturnValue(new Promise<string>(done => { resolve = done; }));
+    hook.rerender({ visible: true });
+    expect(hook.result.current).toBeNull();
+    await act(async () => { resolve('blob:fresh-photo'); });
+    expect(hook.result.current).toBe('blob:fresh-photo');
+  });
 });
