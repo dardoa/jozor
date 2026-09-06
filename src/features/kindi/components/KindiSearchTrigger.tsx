@@ -8,11 +8,20 @@ import type { SearchProps } from '../../../types/ui';
 const LazyKindiOverlayWrapper = React.lazy(() => import('./KindiOverlayWrapper'));
 
 const focusPersonDestinationAfterNavigation = () => {
-  let attempt = 0;
+  const deadline = Date.now() + 3000;
+  let timer: number;
+  let cancelled = false;
+  const cancel = () => {
+    cancelled = true;
+    window.clearTimeout(timer);
+    window.removeEventListener('pointerdown', cancel, true);
+    window.removeEventListener('keydown', cancel, true);
+  };
 
-  // The source trigger may unmount while the person route and drawer settle.
-  // Keep this short handoff independent from the trigger component lifecycle.
+  // Lazy person routes can mount/remount after the trigger disappears. Preserve
+  // this bounded handoff until they settle, but never override new user intent.
   const focusDestination = () => {
+    if (cancelled || Date.now() >= deadline) { cancel(); return; }
     const activeElement = document.activeElement as HTMLElement | null;
     const personDrawer = document.getElementById('smart-persona-drawer');
     const treeCanvas = document.getElementById('family-tree-canvas');
@@ -21,18 +30,20 @@ const focusPersonDestinationAfterNavigation = () => {
       && activeElement !== document.body
       && activeElement.id !== 'tree-search-input'
       && activeElement.id !== 'family-tree-canvas'
-      && activeElement.id !== 'smart-persona-drawer';
+      && activeElement.id !== 'smart-persona-drawer'
+      && !activeElement.closest('#kindi-dialog');
 
-    if (focusWasMovedElsewhere) return;
-    destination?.focus({ preventScroll: true });
-
-    attempt += 1;
-    if (!personDrawer && attempt < 5) {
-      window.setTimeout(focusDestination, 40);
+    if (focusWasMovedElsewhere) { cancel(); return; }
+    if (!document.getElementById('kindi-dialog') && destination !== activeElement) {
+      destination?.focus({ preventScroll: true });
     }
+    timer = window.setTimeout(focusDestination, 50);
   };
 
-  window.setTimeout(focusDestination, 0);
+  window.addEventListener('pointerdown', cancel, true);
+  window.addEventListener('keydown', cancel, true);
+  timer = window.setTimeout(focusDestination, 0);
+  return cancel;
 };
 
 export const KindiSearchTrigger: React.FC<SearchProps> = memo(({
@@ -47,8 +58,10 @@ export const KindiSearchTrigger: React.FC<SearchProps> = memo(({
   const isOpenRef = useRef(false);
   const shouldRestoreFocusRef = useRef(false);
   const suppressNextFocusRestoreRef = useRef(false);
+  const cancelPersonHandoffRef = useRef<(() => void) | null>(null);
 
   const handleOpen = useCallback(() => {
+    cancelPersonHandoffRef.current?.();
     suppressNextFocusRestoreRef.current = false;
     shouldRestoreFocusRef.current = false;
     isOpenRef.current = true;
@@ -65,9 +78,10 @@ export const KindiSearchTrigger: React.FC<SearchProps> = memo(({
   }, []);
 
   const handleFocusPerson = useCallback((personId: string) => {
+    cancelPersonHandoffRef.current?.();
     suppressNextFocusRestoreRef.current = true;
     onFocusPerson(personId);
-    focusPersonDestinationAfterNavigation();
+    cancelPersonHandoffRef.current = focusPersonDestinationAfterNavigation();
   }, [onFocusPerson]);
 
   const handleOpenPersonRecord = useCallback<NonNullable<SearchProps['onOpenPersonRecord']>>((
@@ -76,6 +90,7 @@ export const KindiSearchTrigger: React.FC<SearchProps> = memo(({
     targetSection,
     targetField
   ) => {
+    cancelPersonHandoffRef.current?.();
     suppressNextFocusRestoreRef.current = true;
     onOpenPersonRecord?.(personId, targetTab, targetSection, targetField);
   }, [onOpenPersonRecord]);

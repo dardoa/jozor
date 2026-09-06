@@ -193,6 +193,31 @@ const getKindiStorageSnapshot = (page: Page) => page.evaluate(() => {
 
 test.describe('Kindi product maturity journeys', () => {
   test.setTimeout(90_000);
+  test.use({ serviceWorkers: 'block' });
+
+  test.beforeEach(async ({ context, baseURL }) => {
+    if (!baseURL) throw new Error('Kindi fixtures require a local application URL');
+    const app = new URL(baseURL);
+    if (!['localhost', '127.0.0.1'].includes(app.hostname)) {
+      throw new Error('Kindi fixtures must not run against a hosted application');
+    }
+    // Synthetic roles must never contact the configured hosted Auth/DB/Realtime.
+    await context.route('**/*', async (route) => {
+      const url = new URL(route.request().url());
+      if (url.origin === app.origin && !url.pathname.startsWith('/api/')) return route.continue();
+      await route.fulfill({
+        status: 503,
+        headers: { 'access-control-allow-origin': '*' },
+        contentType: 'application/json',
+        body: '{"error":"Synthetic test: external service unavailable"}',
+      });
+    });
+    await context.routeWebSocket('**/*', (socket) => {
+      const url = new URL(socket.url());
+      if (url.host === app.host) socket.connectToServer();
+      else socket.close();
+    });
+  });
 
   test('uses current context, limits long relationship results, and resets the conversation', async ({ page }) => {
     await seedScenario(page, 'ar');
@@ -759,8 +784,10 @@ test.describe('Kindi product maturity journeys', () => {
     };
     const consoleMessages: string[] = [];
     const aiRequestBodies: string[] = [];
+    const privatePhotoRequests: string[] = [];
     page.on('console', (message) => consoleMessages.push(message.text()));
     page.on('request', (request) => {
+      if (request.url().includes('private-photo-sentinel')) privatePhotoRequests.push(request.url());
       if (new URL(request.url()).pathname === '/api/ai-proxy') {
         aiRequestBodies.push(request.postData() ?? '');
       }
@@ -787,6 +814,7 @@ test.describe('Kindi product maturity journeys', () => {
 
     await expect(dialog.getByText(/Cloud understanding is unavailable right now/)).toBeVisible({ timeout: 15_000 });
     expect(aiRequestBodies).toHaveLength(1);
+    expect(privatePhotoRequests).toEqual([]);
     expect(aiRequestBodies[0]).toContain('[NAME_1]');
     expect(aiRequestBodies[0]).not.toContain('سامي');
     expect(aiRequestBodies[0]).not.toContain(privateRawId);

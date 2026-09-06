@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { KindiSearchTrigger } from '../components/KindiSearchTrigger';
 
@@ -48,6 +48,10 @@ vi.mock('../components/KindiOverlayWrapper', () => ({
 }));
 
 describe('KindiSearchTrigger', () => {
+  afterEach(() => {
+    window.dispatchEvent(new Event('pointerdown'));
+    vi.useRealTimers();
+  });
   it('opens from the Help Center application action event', async () => {
     render(<KindiSearchTrigger people={{}} onFocusPerson={vi.fn()} />);
 
@@ -104,5 +108,53 @@ describe('KindiSearchTrigger', () => {
     expect(onOpenPersonRecord).toHaveBeenCalledWith('person-1', undefined, undefined, undefined);
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     expect(trigger).not.toHaveFocus();
+  });
+
+  it('hands focus to a lazy drawer that mounts after the old 160ms retry window', async () => {
+    const onFocusPerson = vi.fn();
+    const view = render(<KindiSearchTrigger people={{}} onFocusPerson={onFocusPerson} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Open Kindi' }));
+    const result = await screen.findByRole('button', { name: 'Focus person' });
+    vi.useFakeTimers();
+    fireEvent.click(result);
+    await act(async () => { await vi.advanceTimersByTimeAsync(400); });
+    view.rerender(<>
+      <KindiSearchTrigger people={{}} onFocusPerson={onFocusPerson} />
+      <aside id="smart-persona-drawer" tabIndex={-1}>Lazy person details</aside>
+    </>);
+    await act(async () => { await vi.advanceTimersByTimeAsync(50); });
+    expect(screen.getByText('Lazy person details')).toHaveFocus();
+    // A route remount may remove the first focused element before settling.
+    view.rerender(<>
+      <KindiSearchTrigger people={{}} onFocusPerson={onFocusPerson} />
+      <aside key="settled" id="smart-persona-drawer" tabIndex={-1}>Settled person details</aside>
+    </>);
+    await act(async () => { await vi.advanceTimersByTimeAsync(50); });
+    expect(screen.getByText('Settled person details')).toHaveFocus();
+    await act(async () => { await vi.advanceTimersByTimeAsync(3000); });
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it.each(['keyboard', 'other-control'])('cancels a delayed handoff after %s interaction', async interaction => {
+    const onFocusPerson = vi.fn();
+    const view = render(<>
+      <KindiSearchTrigger people={{}} onFocusPerson={onFocusPerson} />
+      <button>Another action</button>
+    </>);
+    fireEvent.click(screen.getByRole('button', { name: 'Open Kindi' }));
+    const result = await screen.findByRole('button', { name: 'Focus person' });
+    vi.useFakeTimers();
+    fireEvent.click(result);
+    if (interaction === 'keyboard') window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab' }));
+    else screen.getByRole('button', { name: 'Another action' }).focus();
+    await act(async () => { await vi.advanceTimersByTimeAsync(400); });
+    view.rerender(<>
+      <KindiSearchTrigger people={{}} onFocusPerson={onFocusPerson} />
+      <button>Another action</button>
+      <aside id="smart-persona-drawer" tabIndex={-1}>Late details</aside>
+    </>);
+    await act(async () => { await vi.advanceTimersByTimeAsync(3000); });
+    expect(screen.getByText('Late details')).not.toHaveFocus();
+    expect(vi.getTimerCount()).toBe(0);
   });
 });
