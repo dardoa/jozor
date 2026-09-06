@@ -9,16 +9,16 @@ import {
   PERSON_MEDIA_MAX_IMAGE_BYTES,
   type PersonMediaAssetKind,
   type PersonMediaAssetRef,
-} from '../types';
-import { resolvedSupabaseUrl } from '../services/supabaseConfig';
-import { authenticateUser, createSupabaseClientForUser } from '../utils/authUtils';
+} from '../types/personMedia.js';
+import { resolvedSupabaseUrl } from '../services/supabaseConfig.js';
+import { authenticateUser, createSupabaseClientForUser } from '../utils/authUtils.js';
 import {
   buildCorsHeaders,
   getHeaderOrigin,
   isRequestOriginAllowed,
   resolveAllowedOriginFromEnv,
-} from '../../shared/http/cors';
-import { isUuid } from '../utils/isUuid';
+} from '../../shared/http/cors.js';
+import { isUuid } from '../utils/isUuid.js';
 
 interface SecurePersonMediaRow {
   readonly id: string;

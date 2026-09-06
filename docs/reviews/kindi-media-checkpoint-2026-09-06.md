@@ -107,3 +107,28 @@ API typecheck and scoped ESLint passed. A function-count regression now protects
 the deployment budget. These focused post-push checks supplement, rather than
 replace or relabel, the earlier complete local gates. The corrected pushed tip
 still requires its own remote CI and Vercel result.
+
+## Native API Runtime Correction
+
+The consolidated deployment for `c61ec8e` reached Ready and its GitHub Actions
+run passed. The independent public HTTP probe nevertheless returned 500 for
+media routes. Vercel's runtime log identified `ERR_MODULE_NOT_FOUND`: the
+compiled ESM entrypoint imported an extensionless source path. The existing
+Vite/Vitest resolver and `noEmit` typecheck had not exercised Node's native
+module loader.
+
+The entrypoint and its local runtime dependency graph now use explicit `.js`
+specifiers. Media handlers import the narrow media contract module rather than
+the shared type barrel. Authentication and permission behavior are unchanged.
+The new regression transpiles the real transitive graph into an ignored,
+temporary ESM directory and imports it in a separate native Node process,
+without a bundler and with network calls blocked. It requires read, migration
+and cleanup to return 401 anonymously, and an unknown action to return 404.
+The temporary directory is removed after the test.
+
+Verification: 63 tests passed across eight media/runtime files; the native
+smoke also passed independently after its cleanup-path adjustment. Application
+and API typechecks, scoped ESLint and the production build passed. The emitted
+entry bundle remains unchanged at 882.30 kB / 287.61 kB gzip. This regression
+checks native startup and anonymous rejection, not authenticated image delivery
+or the still-separate Edge deployment gate.

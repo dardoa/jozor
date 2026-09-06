@@ -5,8 +5,8 @@ import {
   isPersonMediaAssetRef,
   PERSON_MEDIA_MAX_IMAGE_BYTES,
   type PersonMediaAssetRef,
-} from '../types';
-import { readBlobBytes } from '../utils/blobBytes';
+} from '../types/personMedia.js';
+import { readBlobBytes } from '../utils/blobBytes.js';
 
 export interface LegacyPersonMediaRow {
   id: string;

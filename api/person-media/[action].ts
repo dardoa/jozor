@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import readHandler from '../../src/api/person-media';
-import migrateHandler from '../../src/api/person-media-migration';
-import cleanupHandler from '../../src/api/person-media-cleanup-cron';
+import readHandler from '../../src/api/person-media.js';
+import migrateHandler from '../../src/api/person-media-migration.js';
+import cleanupHandler from '../../src/api/person-media-cleanup-cron.js';
 
 const handlers = {
   read: readHandler,

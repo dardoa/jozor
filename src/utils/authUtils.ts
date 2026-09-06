@@ -1,6 +1,6 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import { resolvedSupabaseKey, resolvedSupabaseUrl } from '../services/supabaseConfig';
-import { verifyInternalToken as verifyInternalJwt } from '../../shared/auth/internalJwt';
+import { resolvedSupabaseKey, resolvedSupabaseUrl } from '../services/supabaseConfig.js';
+import { verifyInternalToken as verifyInternalJwt } from '../../shared/auth/internalJwt.js';
 let directAuthClient: SupabaseClient | null = null;
 
 export interface AuthenticatedUser {

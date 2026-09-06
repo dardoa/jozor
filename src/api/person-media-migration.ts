@@ -7,17 +7,17 @@ import {
   type LegacyPersonMediaMigrationAdapter,
   type LegacyPersonMediaMigrationResult,
   type LegacyPersonMediaRow,
-} from '../services/privatePersonMediaLegacyMigration';
-import { resolvedSupabaseUrl } from '../services/supabaseConfig';
-import { cleanPersonMediaObject } from '../services/personMediaServerCleanup';
-import { authenticateUser } from '../utils/authUtils';
-import { PERSON_MEDIA_STORAGE_CACHE_CONTROL } from '../types/personMedia';
+} from '../services/privatePersonMediaLegacyMigration.js';
+import { resolvedSupabaseUrl } from '../services/supabaseConfig.js';
+import { cleanPersonMediaObject } from '../services/personMediaServerCleanup.js';
+import { authenticateUser } from '../utils/authUtils.js';
+import { PERSON_MEDIA_STORAGE_CACHE_CONTROL } from '../types/personMedia.js';
 import {
   buildCorsHeaders,
   getHeaderOrigin,
   isRequestOriginAllowed,
   resolveAllowedOriginFromEnv,
-} from '../../shared/http/cors';
+} from '../../shared/http/cors.js';
 
 const TREE_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const DEFAULT_BATCH_SIZE = 10;
