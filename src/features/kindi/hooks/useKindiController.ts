@@ -6,10 +6,8 @@ import type { Person } from '../../../types/person';
 import { getSafeKindiRedactedQuery } from '../logic/kindiInteractionContext';
 import { createKindiGuidedUpdateDraft } from '../logic/kindiGuidedUpdate';
 import { canKindiMutateTree } from '../logic/kindiPermissions';
-import type {
-  KindiDiagnosticSuggestion,
-  KindiLearningTrace,
-} from '../types';
+import type { KindiDiagnosticSuggestion } from '../types';
+import { logKindiLearningEvent, logKindiLearningSuccess } from '../services/kindiLearningDispatch';
 import { useKindiCommandPlanningFlow } from './useKindiCommandPlanningFlow';
 import { useKindiExecutionFlow } from './useKindiExecutionFlow';
 import { useKindiAIFallbackFlow } from './useKindiAIFallbackFlow';
@@ -33,21 +31,6 @@ const logKindiAIDebug = (message: string, metadata?: Record<string, unknown>) =>
   if (import.meta.env.DEV) {
     console.info(`[Kindi AI] ${message}`, metadata ?? {});
   }
-};
-
-const logKindiLearningEvent = (
-  event: import('../services/kindiLearningService').KindiLearningEventInput
-): void => {
-  void import('../services/kindiLearningService').then(({ logKindiLearningEvent: logEvent }) => {
-    logEvent(event);
-  });
-};
-
-const logKindiLearningSuccess = (trace?: KindiLearningTrace): void => {
-  if (!trace) return;
-  void import('../services/kindiLearningService').then(({ logKindiSuccess }) => {
-    logKindiSuccess(trace);
-  });
 };
 
 export const useKindiController = ({ people, onFocusPerson }: UseKindiControllerArgs) => {

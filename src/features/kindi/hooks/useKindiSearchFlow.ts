@@ -9,6 +9,7 @@ import {
   type KindiLearningFailureReason,
 } from '../logic/kindiLearningTaxonomy';
 import type { KindiLearningEventInput } from '../services/kindiLearningService';
+import { logKindiLearningEvent } from '../services/kindiLearningDispatch';
 
 export type KindiFailureReason = KindiLearningFailureReason;
 
@@ -113,9 +114,7 @@ const logKindiFailure = (
     parserName: metadata?.route === 'QUERY' ? 'searchService' : 'intentRouter',
     metadata,
   };
-  void import('../services/kindiLearningService').then(({ logKindiLearningEvent }) => {
-    logKindiLearningEvent(event);
-  });
+  logKindiLearningEvent(event);
 };
 
 const splitKindiSearchConfidence = (results: SearchResult[]) => {

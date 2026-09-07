@@ -1,5 +1,5 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { searchService } from '../../../services/searchService';
 import { getKindiStrings } from '../logic/kindiLocales';
@@ -75,6 +75,34 @@ describe('useKindiMessageActions', () => {
     appState.undo.mockReturnValue({ success: true });
     vi.mocked(searchService.updateSearchIndex).mockReset();
     logKindiLearningEventMock.mockReset();
+  });
+
+  afterEach(async () => {
+    await vi.dynamicImportSettled();
+    vi.restoreAllMocks();
+  });
+
+  it('retains a single local rating when diagnostic delivery throws', async () => {
+    const rawError = 'private-diagnostic-error-sentinel';
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    logKindiLearningEventMock.mockImplementation(() => { throw new Error(rawError); });
+    const message: KindiMessage = {
+      id: 'answer-1', role: 'assistant', text: 'Local answer',
+      answerMeta: { source: 'help-center', kind: 'guide', feedbackEnabled: true },
+    };
+    const { result, actions } = createHarness({ messages: [message] });
+
+    await act(async () => {
+      result.current.rateKindiAnswer(message.id, 'helpful');
+      await vi.dynamicImportSettled();
+      result.current.rateKindiAnswer(message.id, 'not-helpful');
+      await vi.dynamicImportSettled();
+    });
+
+    expect(actions.setAnswerFeedback).toHaveBeenCalledExactlyOnceWith(message.id, 'helpful');
+    expect(logKindiLearningEventMock).toHaveBeenCalledOnce();
+    expect(actions.addAssistantMessage).not.toHaveBeenCalled();
+    expect(JSON.stringify(warning.mock.calls)).not.toContain(rawError);
   });
 
   it('resets transient conversation state only when no decision or execution is active', () => {

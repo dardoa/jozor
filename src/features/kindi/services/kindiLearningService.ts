@@ -139,9 +139,9 @@ export const insertKindiLearningEvent = async (event: KindiLearningEventInput): 
 };
 
 export const logKindiLearningEvent = (event: KindiLearningEventInput): void => {
-  void insertKindiLearningEvent(event).catch((error) => {
+  void insertKindiLearningEvent(event).catch(() => {
     if (import.meta.env.DEV) {
-      console.warn('[Kindi learning] Failed to log learning event.', error);
+      console.warn('[Kindi learning] Failed to log learning event.');
     }
   });
 };
@@ -168,9 +168,9 @@ export const insertKindiLearningLog = async (trace: KindiLearningTrace): Promise
 export const logKindiSuccess = (trace?: KindiLearningTrace): void => {
   if (!shouldLogKindiLearningTrace(trace)) return;
 
-  void insertKindiLearningLog(trace).catch((error) => {
+  void insertKindiLearningLog(trace).catch(() => {
     if (import.meta.env.DEV) {
-      console.warn('[Kindi learning] Failed to log successful AI trace.', error);
+      console.warn('[Kindi learning] Failed to log successful AI trace.');
     }
   });
 };

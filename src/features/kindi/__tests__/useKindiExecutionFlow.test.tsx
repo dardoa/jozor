@@ -1,5 +1,5 @@
 import { act, renderHook } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { Person } from '../../../types/person';
 import { useKindiExecutionFlow } from '../hooks/useKindiExecutionFlow';
@@ -131,6 +131,29 @@ describe('useKindiExecutionFlow', () => {
     appState.peopleVersion = 1;
     appState.past = [];
     appState.future = [];
+  });
+
+  afterEach(async () => {
+    await vi.dynamicImportSettled();
+    vi.restoreAllMocks();
+  });
+
+  it('keeps a successful mutation confirmed when optional diagnostics throw', async () => {
+    const rawError = 'private-diagnostic-error-sentinel';
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    logKindiLearningEventMock.mockImplementation(() => { throw new Error(rawError); });
+    const { result, setConfirmationStatus, addAssistantMessage } = createHarness();
+
+    await act(async () => {
+      await result.current.confirm(updateConfirmation());
+      await vi.dynamicImportSettled();
+    });
+
+    expect(treeActionMocks.updatePerson).toHaveBeenCalledOnce();
+    expect(setConfirmationStatus).toHaveBeenLastCalledWith('confirmation-1', 'confirmed', undefined);
+    expect(logKindiLearningEventMock).toHaveBeenCalledOnce();
+    expect(JSON.stringify(addAssistantMessage.mock.calls)).not.toContain(rawError);
+    expect(JSON.stringify(warning.mock.calls)).not.toContain(rawError);
   });
 
   it('distinguishes editable local trees from unresolved cloud roles', () => {

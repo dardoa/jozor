@@ -7,35 +7,29 @@ import type { Person } from '../../../types/person';
 import type { Language } from '../../../types/common';
 import { getFullName } from '../../../utils/familyLogic';
 import { getKindiStrings } from '../logic/kindiLocales';
-import type { KindiLearningTrace } from '../types';
+import {
+  logKindiLearningEvent,
+  logKindiLearningSuccess as logSuccessfulKindiTrace,
+} from '../services/kindiLearningDispatch';
 import { KINDI_LEARNING_FAILURE_REASONS } from '../logic/kindiLearningTaxonomy';
 import { getKindiUndoHistoryToken } from '../logic/kindiUndoHistoryToken';
 import { canKindiMutateTree, type KindiTreeRole } from '../logic/kindiPermissions';
 import type { KindiLearningFailureReason } from '../logic/kindiLearningTaxonomy';
 
-const logSuccessfulKindiTrace = (trace?: KindiLearningTrace): void => {
-  if (!trace) return;
-  void import('../services/kindiLearningService').then(({ logKindiSuccess }) => {
-    logKindiSuccess(trace);
-  });
-};
-
 const logConfirmedKindiEvent = (confirmation: KindiConfirmation): void => {
-  void import('../services/kindiLearningService').then(({ logKindiLearningEvent }) => {
-    logKindiLearningEvent({
-      eventType: 'confirmation_confirmed',
-      interactionId: confirmation.interactionId,
-      routeKind: confirmation.kind,
-      resultKind: confirmation.learningTrace ? 'ai_success' : 'local_success',
-      redactedQuery: confirmation.learningTrace?.redactedQuery,
-      confidence: confirmation.learningTrace?.confidence,
-      intentGuess: confirmation.kind,
-      parserStage: 'execution',
-      parserName: 'useKindiExecutionFlow',
-      metadata: {
-        planType: confirmation.plan?.type,
-      },
-    });
+  logKindiLearningEvent({
+    eventType: 'confirmation_confirmed',
+    interactionId: confirmation.interactionId,
+    routeKind: confirmation.kind,
+    resultKind: confirmation.learningTrace ? 'ai_success' : 'local_success',
+    redactedQuery: confirmation.learningTrace?.redactedQuery,
+    confidence: confirmation.learningTrace?.confidence,
+    intentGuess: confirmation.kind,
+    parserStage: 'execution',
+    parserName: 'useKindiExecutionFlow',
+    metadata: {
+      planType: confirmation.plan?.type,
+    },
   });
 };
 
@@ -43,21 +37,19 @@ const logFailedKindiEvent = (
   confirmation: KindiConfirmation,
   failureReason: KindiLearningFailureReason
 ): void => {
-  void import('../services/kindiLearningService').then(({ logKindiLearningEvent }) => {
-    logKindiLearningEvent({
-      eventType: 'confirmation_failed',
-      interactionId: confirmation.interactionId,
-      routeKind: confirmation.kind,
-      failureReason,
-      redactedQuery: confirmation.learningTrace?.redactedQuery,
-      confidence: confirmation.learningTrace?.confidence,
-      intentGuess: confirmation.kind,
-      parserStage: 'execution',
-      parserName: 'useKindiExecutionFlow',
-      metadata: {
-        planType: confirmation.plan?.type,
-      },
-    });
+  logKindiLearningEvent({
+    eventType: 'confirmation_failed',
+    interactionId: confirmation.interactionId,
+    routeKind: confirmation.kind,
+    failureReason,
+    redactedQuery: confirmation.learningTrace?.redactedQuery,
+    confidence: confirmation.learningTrace?.confidence,
+    intentGuess: confirmation.kind,
+    parserStage: 'execution',
+    parserName: 'useKindiExecutionFlow',
+    metadata: {
+      planType: confirmation.plan?.type,
+    },
   });
 };
 

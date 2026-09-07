@@ -5,6 +5,7 @@ import { useAppStore } from '../../../store/useAppStore';
 import type { Language } from '../../../types/common';
 import { getKindiStrings } from '../logic/kindiLocales';
 import { getKindiUndoHistoryToken } from '../logic/kindiUndoHistoryToken';
+import { logKindiLearningEvent } from '../services/kindiLearningDispatch';
 import type {
   KindiAnswerFeedback,
   KindiMessage,
@@ -29,36 +30,34 @@ const logAnswerFeedback = (
   answer: NonNullable<KindiMessage['answerMeta']>,
   feedback: KindiAnswerFeedback
 ): void => {
-  void import('../services/kindiLearningService').then(({ logKindiLearningEvent }) => {
-    logKindiLearningEvent({
-      eventType: feedback === 'helpful' ? 'answer_feedback_helpful' : 'answer_feedback_unhelpful',
-      interactionId: answer.interactionId,
-      routeKind: answer.kind === 'guide' ? 'SUPPORT' : 'QUERY',
-      resultKind: answer.kind,
-      parserStage: answer.source === 'cloud-assisted'
-        ? 'ai_fallback'
-        : answer.source === 'help-center'
-          ? 'support_guide'
-          : 'local_search',
-      parserName: answer.source === 'cloud-assisted'
-        ? 'kindiAIService'
-        : answer.source === 'help-center'
-          ? 'kindiHelpKnowledgeService'
-          : answer.kind === 'diagnostic'
-            ? 'kindiTreeDiagnosticsEngine'
-            : answer.kind === 'biography'
-              ? 'kindiBiographyDraftEngine'
-              : answer.kind === 'record-review'
-                ? 'kindiRecordReviewEngine'
-                : answer.kind === 'search'
-                  ? 'kindiSearchFlow'
-                  : 'kindiLocalQueryEngine',
-      metadata: {
-        answerSource: answer.source,
-        answerKind: answer.kind,
-        ...(answer.topicId ? { topicId: answer.topicId } : {}),
-      },
-    });
+  logKindiLearningEvent({
+    eventType: feedback === 'helpful' ? 'answer_feedback_helpful' : 'answer_feedback_unhelpful',
+    interactionId: answer.interactionId,
+    routeKind: answer.kind === 'guide' ? 'SUPPORT' : 'QUERY',
+    resultKind: answer.kind,
+    parserStage: answer.source === 'cloud-assisted'
+      ? 'ai_fallback'
+      : answer.source === 'help-center'
+        ? 'support_guide'
+        : 'local_search',
+    parserName: answer.source === 'cloud-assisted'
+      ? 'kindiAIService'
+      : answer.source === 'help-center'
+        ? 'kindiHelpKnowledgeService'
+        : answer.kind === 'diagnostic'
+          ? 'kindiTreeDiagnosticsEngine'
+          : answer.kind === 'biography'
+            ? 'kindiBiographyDraftEngine'
+            : answer.kind === 'record-review'
+              ? 'kindiRecordReviewEngine'
+              : answer.kind === 'search'
+                ? 'kindiSearchFlow'
+                : 'kindiLocalQueryEngine',
+    metadata: {
+      answerSource: answer.source,
+      answerKind: answer.kind,
+      ...(answer.topicId ? { topicId: answer.topicId } : {}),
+    },
   });
 };
 

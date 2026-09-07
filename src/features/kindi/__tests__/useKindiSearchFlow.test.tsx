@@ -178,4 +178,19 @@ describe('useKindiSearchFlow', () => {
     }));
     expect(JSON.stringify(logKindiLearningEventMock.mock.calls)).not.toContain('another private query');
   });
+
+  it('preserves the search response when optional diagnostic delivery throws', async () => {
+    const rawError = 'private-diagnostic-error-sentinel';
+    logKindiLearningEventMock.mockImplementation(() => { throw new Error(rawError); });
+    vi.mocked(searchService.search).mockResolvedValue([]);
+    const { result } = renderHook(() => useKindiSearchFlow());
+
+    const response = await runFlow(result, 'private query');
+
+    expect(response.kind).toBe('not_found');
+    expect(logKindiLearningEventMock).toHaveBeenCalledOnce();
+    expect(JSON.stringify(response)).not.toContain(rawError);
+    expect(JSON.stringify(vi.mocked(console.warn).mock.calls)).not.toContain(rawError);
+    expect(window.sessionStorage.getItem('jozor:kindi:failure-log')).not.toContain(rawError);
+  });
 });

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const insertMock = vi.hoisted(() => vi.fn());
 const fromMock = vi.hoisted(() => vi.fn(() => ({ insert: insertMock })));
@@ -18,6 +18,7 @@ vi.mock('../../../services/authTokenService', () => ({
 import {
   insertKindiLearningEvent,
   insertKindiLearningLog,
+  logKindiLearningEvent,
   logKindiSuccess,
   type KindiLearningEventInput,
 } from '../services/kindiLearningService';
@@ -43,6 +44,41 @@ describe('kindiLearningService', () => {
     fromMock.mockClear();
     getSupabaseFullMock.mockClear();
     getPreferredSupabaseTokenMock.mockReset().mockResolvedValue('token');
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllEnvs();
+  });
+
+  it.each([
+    ['event', '[Kindi learning] Failed to log learning event.'],
+    ['success', '[Kindi learning] Failed to log successful AI trace.'],
+  ] as const)('contains rejected %s inserts without logging private server errors', async (kind, warning) => {
+    vi.stubEnv('DEV', true);
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    insertMock.mockRejectedValue(new Error('private-name email@example.test bearer-secret storage-path'));
+
+    if (kind === 'event') logKindiLearningEvent({ eventType: 'search_failure' });
+    else logKindiSuccess(validTrace);
+
+    await vi.waitFor(() => expect(warn).toHaveBeenCalledExactlyOnceWith(warning));
+    expect(insertMock).toHaveBeenCalledOnce();
+  });
+
+  it.each(['event', 'success'] as const)('keeps returned %s database errors out of the production console', async (kind) => {
+    vi.stubEnv('DEV', false);
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const failedInsert = Promise.resolve({ error: new Error('private server response') });
+    insertMock.mockReturnValue(failedInsert);
+
+    if (kind === 'event') logKindiLearningEvent({ eventType: 'search_failure' });
+    else logKindiSuccess(validTrace);
+
+    await vi.waitFor(() => expect(insertMock).toHaveBeenCalledOnce());
+    await failedInsert;
+    await Promise.resolve();
+    expect(warn).not.toHaveBeenCalled();
   });
 
   it('ignores learning traces that do not contain redacted name tokens', () => {
