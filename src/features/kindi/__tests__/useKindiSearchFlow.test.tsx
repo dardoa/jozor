@@ -4,6 +4,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { searchService, type SearchResult } from '../../../services/searchService';
 import type { Person } from '../../../types';
 import { useKindiSearchFlow } from '../hooks/useKindiSearchFlow';
+import type { KindiLearningEventInput } from '../services/kindiLearningService';
+
+const logKindiLearningEventMock = vi.hoisted(() => vi.fn<(event: KindiLearningEventInput) => void>());
+
+vi.mock('../services/kindiLearningService', () => ({
+  logKindiLearningEvent: logKindiLearningEventMock,
+}));
 
 vi.mock('../../../services/searchService', () => ({
   searchService: {
@@ -69,6 +76,8 @@ const runFlow = async (
     const pending = result.current.runSearchFlow(query);
     await vi.advanceTimersByTimeAsync(1100);
     response = await pending;
+    // Search returns before its diagnostic service import has settled.
+    await vi.dynamicImportSettled();
   });
   return response!;
 };
@@ -79,10 +88,12 @@ describe('useKindiSearchFlow', () => {
     vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     window.sessionStorage.clear();
     vi.mocked(searchService.search).mockReset();
+    logKindiLearningEventMock.mockReset();
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     vi.useRealTimers();
+    await vi.dynamicImportSettled();
     vi.restoreAllMocks();
     window.sessionStorage.clear();
   });
@@ -101,6 +112,7 @@ describe('useKindiSearchFlow', () => {
       score: 95,
     }]);
     expect(window.sessionStorage.getItem('jozor:kindi:failure-log')).toBeNull();
+    expect(logKindiLearningEventMock).not.toHaveBeenCalled();
   });
 
   it('returns medium person results for nearby matches', async () => {
@@ -112,6 +124,7 @@ describe('useKindiSearchFlow', () => {
 
     expect(response.kind).toBe('nearby');
     expect('peopleResults' in response ? response.peopleResults[0].matchLevel : undefined).toBe('medium');
+    expect(logKindiLearningEventMock).not.toHaveBeenCalled();
   });
 
   it('hides low-confidence matches and logs them locally', async () => {
@@ -127,6 +140,14 @@ describe('useKindiSearchFlow', () => {
       reason: 'AI_LOW_CONFIDENCE',
     });
     expect(log[0]).not.toHaveProperty('query');
+    expect(logKindiLearningEventMock).toHaveBeenCalledTimes(1);
+    expect(logKindiLearningEventMock).toHaveBeenCalledWith(expect.objectContaining({
+      eventType: 'search_failure',
+      failureReason: 'AI_LOW_CONFIDENCE',
+      resultKind: 'AI_LOW_CONFIDENCE',
+      metadata: { bestScore: 40, bestFuseScore: 0.41, lowConfidenceCount: 1 },
+    }));
+    expect(JSON.stringify(logKindiLearningEventMock.mock.calls)).not.toContain('unrelated');
   });
 
   it('removes legacy raw queries when updating the local diagnostic log', async () => {
@@ -139,11 +160,22 @@ describe('useKindiSearchFlow', () => {
     vi.mocked(searchService.search).mockResolvedValue([]);
     const { result } = renderHook(() => useKindiSearchFlow());
 
-    await runFlow(result, 'another private query');
+    const response = await runFlow(result, 'another private query');
 
+    expect(response.kind).toBe('not_found');
     const log = JSON.parse(window.sessionStorage.getItem('jozor:kindi:failure-log') || '[]');
     expect(log).toHaveLength(2);
     expect(log.every((entry: Record<string, unknown>) => !('query' in entry))).toBe(true);
     expect(JSON.stringify(log)).not.toContain('legacy private person name');
+    expect(logKindiLearningEventMock).toHaveBeenCalledTimes(1);
+    expect(logKindiLearningEventMock).toHaveBeenCalledWith(expect.objectContaining({
+      eventType: 'search_failure',
+      failureReason: 'LOCAL_SEARCH_FAILED',
+      resultKind: 'LOCAL_SEARCH_FAILED',
+      routeKind: 'QUERY',
+      parserStage: 'local_search',
+      parserName: 'searchService',
+    }));
+    expect(JSON.stringify(logKindiLearningEventMock.mock.calls)).not.toContain('another private query');
   });
 });
