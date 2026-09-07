@@ -50,7 +50,7 @@ vi.mock('../../../../utils/errorLogger', () => ({
   logWarn: vi.fn(),
 }));
 
-import { importTreeFromFileItem } from '../importTreeService';
+import { importTreeFromFileItem, importTreeFromJSONItem } from '../importTreeService';
 
 const peopleMap = {
   old_parent: {
@@ -168,6 +168,78 @@ describe('importTreeService', () => {
       'token_1'
     );
   });
+
+  it.each(['archive', 'json', 'gedcom'] as const)('remaps partner details along with spouse identities for %s imports', async (format) => {
+    const marriage = { type: 'divorced', startDate: '1999-02-03', startPlace: 'Damascus', endDate: '2015-04-05' };
+    const source = {
+      old_parent: { ...peopleMap.old_parent, children: [], spouses: ['old_child'], partnerDetails: { old_child: marriage } },
+      old_child: { ...peopleMap.old_child, parents: [], spouses: ['old_parent'], partnerDetails: { old_parent: marriage } },
+    };
+    const original = JSON.stringify(source);
+    if (format === 'archive') {
+      mockImportJozorArchiveDataForCloud.mockResolvedValue({ people: source, mediaByPersonId: {}, warnings: [], mediaComplete: true });
+      await importTreeFromFileItem('owner_1', 'owner@example.com', { name: 'family.jozor' } as File);
+    } else if (format === 'gedcom') {
+      mockImportFromGEDCOMWithReport.mockReturnValue({ people: source, report: { warnings: [] } });
+      await importTreeFromFileItem('owner_1', 'owner@example.com', { name: 'family.ged', text: async () => 'fixture' } as File);
+    } else {
+      await importTreeFromJSONItem('owner_1', 'owner@example.com', original);
+    }
+
+    const imported = mockImportTreeContent.mock.calls[0][2];
+    expect(imported[0].partnerDetails).toEqual({ new_child: marriage });
+    expect(imported[1].partnerDetails).toEqual({ new_parent: marriage });
+    expect(JSON.stringify(source)).toBe(original);
+    expect(mockImportTreeContent.mock.calls[0][3]).toEqual([
+      { person_id: 'new_parent', relative_id: 'new_child', type: 'spouse' },
+    ]);
+  });
+
+  it('rejects dangling archive partner details before allocating cloud resources', async () => {
+    mockImportJozorArchiveDataForCloud.mockResolvedValue({
+      people: { old_parent: { ...peopleMap.old_parent, children: [], partnerDetails: { missing_spouse: { type: 'married', startDate: '2000' } } } },
+      mediaByPersonId: {}, warnings: [], mediaComplete: true,
+    });
+    await expect(importTreeFromFileItem('owner_1', 'owner@example.com', { name: 'family.jozor' } as File))
+      .rejects.toThrow('relationships reference a person');
+    expect(mockCreateTree).not.toHaveBeenCalled();
+    expect(mockUploadPersonMediaBlob).not.toHaveBeenCalled();
+  });
+
+  it('drops unresolved partner keys in permissive JSON imports just like unresolved relationship IDs', async () => {
+    await importTreeFromJSONItem('owner_1', 'owner@example.com', JSON.stringify({
+      old_parent: { ...peopleMap.old_parent, children: [], spouses: ['missing'], partnerDetails: { missing: { type: 'married', startDate: '2000' } } },
+    }));
+    expect(mockImportTreeContent.mock.calls[0][2][0]).toMatchObject({ spouses: [], partnerDetails: {} });
+  });
+
+  it.each([true, false])('remaps known person selections in imported settings (nested: %s)', async (nested) => {
+    const settings = { ownerPersonId: 'old_parent', highlightedBranchRootId: 'old_child', chartType: 'radial', highlightBranch: true };
+    await importTreeFromJSONItem('owner_1', 'owner@example.com', JSON.stringify({
+      people: peopleMap, settings: nested ? { treeSettings: settings, language: 'ar' } : settings,
+    }));
+    const expected = { ...settings, ownerPersonId: 'new_parent', highlightedBranchRootId: 'new_child' };
+    expect(mockCreateTree.mock.calls[0][4]).toEqual(nested ? { treeSettings: expected, language: 'ar' } : expected);
+  });
+
+  it('clears missing optional person selections without changing unrelated settings', async () => {
+    await importTreeFromJSONItem('owner_1', 'owner@example.com', JSON.stringify({
+      people: peopleMap,
+      settings: { treeSettings: { ownerPersonId: 'absent', highlightedBranchRootId: 'absent', showPhotos: true } },
+    }));
+    expect(mockCreateTree.mock.calls[0][4]).toEqual({ treeSettings: { ownerPersonId: null, highlightedBranchRootId: null, showPhotos: true } });
+  });
+
+  it.each([null, 123, [], { people: [] }, { people: { invalid: null } }, { people: { invalid: { firstName: 'Missing ID' } } }])(
+    'rejects malformed imports without creating a tree or manufacturing missing identities: %j', async (data) => {
+      const failure = await importTreeFromJSONItem('owner_1', 'owner@example.com', JSON.stringify(data))
+        .catch((error: unknown) => error);
+      expect(failure).toBeInstanceOf(Error);
+      expect(failure).not.toBeInstanceOf(TypeError);
+      expect(mockCreateTree).not.toHaveBeenCalled();
+      expect(mockImportTreeContent).not.toHaveBeenCalled();
+    }
+  );
 
   it('uploads archive images privately and imports only typed references', async () => {
     const profileBlob = new Blob(['profile'], { type: 'image/png' });

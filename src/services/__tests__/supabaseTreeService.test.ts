@@ -26,6 +26,7 @@ const createQueryBuilder = <T>(result: QueryResult<T>) => {
     gt: vi.fn(() => builder),
     order: vi.fn(() => builder),
     limit: vi.fn(() => builder),
+    range: vi.fn(async () => result),
     in: vi.fn(() => builder),
     single: vi.fn(async () => result),
     maybeSingle: vi.fn(async () => result),
@@ -233,6 +234,7 @@ describe('supabaseTreeService.fetchTree', () => {
       if (table === 'tree_checkpoints') return createQueryBuilder({ data: checkpointRow, error: null });
       if (table === 'trees') return createQueryBuilder({ data: treeRow, error: null });
       if (table === 'tree_operations') return createQueryBuilder({ data: operationRows, error: null });
+      if (table === 'relationships') return createQueryBuilder({ data: [], error: null });
       throw new Error(`Should not access table ${table} when checkpoint is present`);
     });
 
@@ -253,6 +255,6 @@ describe('supabaseTreeService.fetchTree', () => {
     expect(fromMock).toHaveBeenCalledWith('tree_checkpoints');
     expect(fromMock).toHaveBeenCalledWith('tree_operations');
     expect(fromMock).not.toHaveBeenCalledWith('people');
-    expect(fromMock).not.toHaveBeenCalledWith('relationships');
+    expect(fromMock).toHaveBeenCalledWith('relationships');
   });
 });

@@ -128,12 +128,15 @@ const attachCloudArchiveMedia = async ({
  * @returns True if valid, throws error otherwise.
  */
 const validateImportData = (data: unknown): boolean => {
-    if (!data || typeof data !== 'object') {
+    if (!data || typeof data !== 'object' || Array.isArray(data)) {
         throw new Error('Invalid JSON format: Root must be an object.');
     }
     const record = data as Record<string, unknown>;
     // Check if it's the wrapped format { people: ... } or the direct format { "id": Person ... }
-    if (record.people && typeof record.people === 'object') {
+    if ('people' in record) {
+        if (!record.people || typeof record.people !== 'object' || Array.isArray(record.people)) {
+            throw new Error('Invalid JSON format: People must be an object.');
+        }
         return true;
     }
 
@@ -177,6 +180,7 @@ export const importTreeFromJSONItem = async (
         throw new Error('Invalid JSON file.');
     }
 
+    validateImportData(data);
     logInfo('importTreeFromJSONItem validate', 'Importing tree data structure verified.', {
         operationType: 'import_tree_validate'
     });
@@ -190,19 +194,22 @@ export const importTreeFromJSONItem = async (
 
     if (record.people && typeof record.people === 'object') {
         peopleMap = record.people as Record<string, Person>;
-    } else if (validateImportData(data)) {
+    } else {
         // It IS the map
         peopleMap = record as Record<string, Person>;
-    } else {
-        logError('importTreeFromJSONItem structure', 'Validation failed for imported data.', {
-            category: 'VALIDATION',
-            severity: 'MEDIUM',
-            metadata: { operationType: 'import_tree_structure' }
-        });
-        throw new Error('Invalid tree data structure.');
     }
 
-    const peopleArray = Object.values(peopleMap).map((person) => validatePerson(person));
+    const peopleArray = Object.values(peopleMap).map((person) => {
+        // validatePerson supplies a fallback identity; new-tree imports must not.
+        if (!person || typeof person !== 'object' || Array.isArray(person)
+            || typeof person.id !== 'string' || !person.id.trim()) {
+            throw new Error('The imported tree contains a person with a missing or invalid ID.');
+        }
+        if (person.partnerDetails && (typeof person.partnerDetails !== 'object' || Array.isArray(person.partnerDetails))) {
+            throw new Error('The imported tree contains invalid partner details.');
+        }
+        return validatePerson(person);
+    });
 
     if (peopleArray.length === 0) {
         throw new Error('The imported tree contains no people.');
@@ -220,6 +227,20 @@ export const importTreeFromJSONItem = async (
         }
         idMap.set(p.id, uuidv4());
     });
+
+    const remapSettingsSelections = (settings: Record<string, unknown>): Record<string, unknown> => {
+        const remapped = { ...settings };
+        for (const key of ['ownerPersonId', 'highlightedBranchRootId']) {
+            if (typeof remapped[key] === 'string') {
+                remapped[key] = idMap.get(remapped[key]) ?? null;
+            }
+        }
+        return remapped;
+    };
+    const remappedSettings = importedSettings ? remapSettingsSelections(importedSettings) : undefined;
+    if (remappedSettings?.treeSettings && typeof remappedSettings.treeSettings === 'object' && !Array.isArray(remappedSettings.treeSettings)) {
+        remappedSettings.treeSettings = remapSettingsSelections(remappedSettings.treeSettings as Record<string, unknown>);
+    }
 
     // Remap people and their relationships in memory
     logInfo('importTreeFromJSONItem remap', 'Remapping imported people.', {
@@ -248,6 +269,11 @@ export const importTreeFromJSONItem = async (
             parents: remapIds(p.parents || []),
             children: remapIds(p.children || []),
             spouses: remapIds(p.spouses || []),
+            partnerDetails: Object.fromEntries(
+                Object.entries(p.partnerDetails ?? {}).flatMap(([partnerId, details]) =>
+                    remapIds([partnerId]).map((newPartnerId) => [newPartnerId, { ...details }])
+                )
+            ),
         };
         peopleByOriginalId.set(p.id, remapped);
         return remapped;
@@ -311,7 +337,7 @@ export const importTreeFromJSONItem = async (
 
     // 3. Create cloud resources only after the archive has passed validation.
     const treeName = `Imported Tree ${new Date().toLocaleDateString()}`;
-    const treeId = await createTree(ownerId, userEmail, treeName, token, importedSettings);
+    const treeId = await createTree(ownerId, userEmail, treeName, token, remappedSettings);
     const uploadedAssets: PersonMediaAssetRef[] = [];
 
     try {

@@ -1,5 +1,5 @@
 import type { FullState, Person } from '../types';
-import { buildTreeFetchResult } from './supabaseTreeMapper';
+import { applyRelationshipRows, buildTreeFetchResult } from './supabaseTreeMapper';
 import { getTreeClient } from './supabaseTreeClient';
 import type { TreeSummary } from './supabaseTreeTypes';
 import type { DeltaOperation } from './sync/SyncTypes';
@@ -207,9 +207,23 @@ export const fetchTree = async (
       return applyOperationToMap(people, op) ?? people;
     }, result.people);
 
+    // Older checkpoints inferred parenthood from marriage. Rebuild only the
+    // relationship arrays from persisted edges; never publish those inferred links.
+    const canonicalPeople = Object.fromEntries(Object.entries(replayed).map(([id, person]) => [
+      id, { ...person, parents: [], children: [], spouses: [] },
+    ])) as Record<string, Person>;
+    for (let offset = 0; ; offset += 1000) {
+      const { data: edges, error: edgeError } = await client.from('relationships')
+        .select('person_id,relative_id,type').eq('tree_id', treeId)
+        .order('id', { ascending: true }).range(offset, offset + 999);
+      if (edgeError) throw edgeError;
+      applyRelationshipRows(canonicalPeople, edges);
+      if (!edges || edges.length < 1000) break;
+    }
+
     return {
       ...result,
-      people: replayed,
+      people: canonicalPeople,
       lastVersion: maxVersion,
     };
   }

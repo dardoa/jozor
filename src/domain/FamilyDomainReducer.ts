@@ -43,6 +43,27 @@ const normalizePersonRelationships = (person: Person): Person => ({
   children: uniqueIds(person.children),
 });
 
+// Sync operations describe persisted edges, not interactive requests to infer family links.
+const applyRecordedRelationship = (
+  people: Record<string, Person>,
+  focusId: string,
+  existingId: string,
+  type: RelationshipType
+): Record<string, Person> => {
+  const focus = people[focusId];
+  const existing = people[existingId];
+  if (!focus || !existing || focusId === existingId) return people;
+
+  const forward = type === 'parent' ? 'parents' : type === 'child' ? 'children' : 'spouses';
+  const reverse = type === 'parent' ? 'children' : type === 'child' ? 'parents' : 'spouses';
+  if (focus[forward].includes(existingId) && existing[reverse].includes(focusId)) return people;
+  return {
+    ...people,
+    [focusId]: { ...focus, [forward]: uniqueIds([...focus[forward], existingId]) },
+    [existingId]: { ...existing, [reverse]: uniqueIds([...existing[reverse], focusId]) },
+  };
+};
+
 const relationalPersonKeys = new Set<keyof Person>(['parents', 'spouses', 'children', 'partnerDetails']);
 
 const shouldOverwriteProperty = (
@@ -293,13 +314,7 @@ export const applyDeltaOperationToFamily = (
     case 'ADD_RELATION': {
       const relationshipType = toRelationshipType(payload.type);
       if (!payload.focusId || !payload.existingId || !relationshipType) return people;
-      return reduceFamilyDomain(people, {
-        type: 'linkPerson',
-        focusId: payload.focusId,
-        existingId: payload.existingId,
-        relationshipType,
-        relatedPersonId: typeof payload.relativeId === 'string' ? payload.relativeId : undefined,
-      });
+      return applyRecordedRelationship(people, payload.focusId, payload.existingId, relationshipType);
     }
     case 'DELETE_RELATION': {
       const relationshipType = toRelationshipType(payload.type);

@@ -40,7 +40,7 @@ describe('FamilyDomainReducer', () => {
     expect(result?.people['parent-1'].children).toContain(result?.newId);
   });
 
-  it('applies remote parent links with the same implicit spouse rule used by local tree operations', () => {
+  it('applies only the recorded remote parent link without inventing a marriage', () => {
     const child = makePerson({
       id: 'child-1',
       firstName: 'Child',
@@ -77,8 +77,67 @@ describe('FamilyDomainReducer', () => {
 
     expect(result?.['child-1'].parents).toEqual(['parent-1', 'parent-2']);
     expect(result?.['parent-2'].children).toContain('child-1');
-    expect(result?.['parent-1'].spouses).toContain('parent-2');
-    expect(result?.['parent-2'].spouses).toContain('parent-1');
+    expect(result?.['parent-1'].spouses).toEqual([]);
+    expect(result?.['parent-2'].spouses).toEqual([]);
+
+    const local = applyFamilyDomainAction({ 'child-1': child, 'parent-1': existingParent, 'parent-2': newParent }, {
+      type: 'linkPerson', focusId: 'child-1', existingId: 'parent-2', relationshipType: 'parent',
+    });
+    expect(local?.people['parent-1'].spouses).toEqual(['parent-2']);
+    expect(local?.people['parent-2'].spouses).toEqual(['parent-1']);
+  });
+
+  it('replays imported family relationships in every order without assigning a former spouse as parent', () => {
+    const edges = [
+      ['father', 'mother', 'spouse'], ['father', 'former', 'spouse'],
+      ['mother', 'child', 'child'], ['father', 'child', 'child'],
+    ] as const;
+    const permutations = <T,>(items: readonly T[]): T[][] => items.length === 0 ? [[]]
+      : items.flatMap((item, index) => permutations(items.filter((_, i) => i !== index)).map(rest => [item, ...rest]));
+    for (const ordered of permutations(edges)) {
+      let people = Object.fromEntries(['father', 'mother', 'former', 'child'].map(id => [id,
+        makePerson({ id, parents: [], children: [], spouses: [] }),
+      ]));
+      const input = JSON.stringify(people);
+      const original = people;
+      for (const [focusId, existingId, type] of [...ordered, ...ordered]) {
+        people = applyDeltaOperationToFamily(people, makeOperation({
+          type: 'ADD_RELATION', payload: { focusId, existingId, type },
+        }))!;
+      }
+      expect(people.child.parents.slice().sort()).toEqual(['father', 'mother']);
+      expect(people.former.children).toEqual([]);
+      expect(people.father.children).toEqual(['child']);
+      expect(people.mother.children).toEqual(['child']);
+      expect(people.father.spouses.slice().sort()).toEqual(['former', 'mother']);
+      expect(JSON.stringify(original)).toBe(input);
+    }
+  });
+
+  it('repairs one-sided remote links and preserves explicit relationships beyond UI entry limits', () => {
+    const people = {
+      child: makePerson({ id: 'child', parents: ['first', 'second'], children: [], spouses: [] }),
+      first: makePerson({ id: 'first', parents: [], children: [], spouses: [] }),
+      second: makePerson({ id: 'second', parents: [], children: ['child'], spouses: [] }),
+      third: makePerson({ id: 'third', parents: [], children: [], spouses: [] }),
+    };
+    const repaired = applyDeltaOperationToFamily(people, makeOperation({ type: 'ADD_RELATION',
+      payload: { focusId: 'child', existingId: 'first', type: 'parent' } }))!;
+    expect(repaired.first.children).toEqual(['child']);
+    expect(repaired.child.parents).toEqual(['first', 'second']);
+    const extended = applyDeltaOperationToFamily(repaired, makeOperation({ type: 'ADD_RELATION',
+      payload: { focusId: 'child', existingId: 'third', type: 'parent' } }))!;
+    expect(extended.child.parents).toEqual(['first', 'second', 'third']);
+    expect(extended.third.children).toEqual(['child']);
+  });
+
+  it.each(['parent', 'child', 'spouse'])('ignores self and missing remote %s endpoints', type => {
+    const people = { first: makePerson({ id: 'first', parents: [], children: [], spouses: [] }) };
+    for (const existingId of ['first', 'missing']) {
+      expect(applyDeltaOperationToFamily(people, makeOperation({ type: 'ADD_RELATION',
+        payload: { focusId: 'first', existingId, type },
+      }))).toBe(people);
+    }
   });
 
   it('cleans reciprocal references and partner details when applying remote deletions', () => {
