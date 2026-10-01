@@ -66,7 +66,7 @@ const validateBody = (body: PushNotifierBody) => {
  * cold starts both see the latest environment state instead of a stale snapshot.
  */
 const getVapidConfig = (): VapidConfig => {
-  const publicKey = process.env.VAPID_PUBLIC_KEY;
+  const publicKey = process.env.VAPID_PUBLIC_KEY?.trim() || process.env.VITE_VAPID_PUBLIC_KEY?.trim();
   const privateKey = process.env.VAPID_PRIVATE_KEY;
   const subject = process.env.VAPID_SUBJECT || 'mailto:hello@jozor.app';
 

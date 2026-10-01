@@ -1,14 +1,14 @@
-import { useEffect, useRef, useState, type ChangeEvent } from 'react';
+import { useCallback, useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { showToast } from '../../utils/showToast';
 
 import { EMPTY_STRING } from '../../constants';
 import { useTranslation } from '../../context/TranslationContext';
-import { deleteUserAccount, updateUserProfile } from '../../services/supabaseProfileService';
+import { AccountDeletionCheckoutError, AccountDeletionRetainedFilesError, AccountDeletionSubscriptionError, deleteUserAccount, updateUserProfile } from '../../services/supabaseProfileService';
 import { useAppStore } from '../../store/useAppStore';
 
 export type GlobalSettingsTab = 'profile' | 'preferences' | 'security';
 
-export const useGlobalSettingsModalState = (onClose: () => void) => {
+export const useGlobalSettingsModalState = (onClose: () => void, isOpen = true) => {
   const { t, language, setLanguage } = useTranslation();
   const user = useAppStore((state) => state.user);
   const darkMode = useAppStore((state) => state.darkMode);
@@ -25,12 +25,44 @@ export const useGlobalSettingsModalState = (onClose: () => void) => {
   const [deleteProgress, setDeleteProgress] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeletionBillingBlocked, setIsDeletionBillingBlocked] = useState(false);
+  const [isDeletionCheckoutBlocked, setIsDeletionCheckoutBlocked] = useState(false);
   const [showTourConfirm, setShowTourConfirm] = useState(false);
 
   const deleteTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const deleteInFlightRef = useRef(false);
   const resetTourTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isMountedRef = useRef(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const cancelDeleteHold = useCallback(() => {
+    if (deleteTimerRef.current !== null) {
+      clearInterval(deleteTimerRef.current);
+      deleteTimerRef.current = null;
+    }
+    setDeleteProgress(0);
+  }, []);
+
+  useEffect(() => {
+    cancelDeleteHold();
+  }, [activeTab, showDeleteConfirm, isOpen, user?.uid, cancelDeleteHold]);
+
+  useEffect(() => {
+    setIsDeletionBillingBlocked(false);
+    setIsDeletionCheckoutBlocked(false);
+  }, [showDeleteConfirm, isOpen, user?.uid]);
+
+  useEffect(() => {
+    const onVisibilityChange = () => {
+      if (document.hidden) cancelDeleteHold();
+    };
+    window.addEventListener('blur', cancelDeleteHold);
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => {
+      window.removeEventListener('blur', cancelDeleteHold);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
+  }, [cancelDeleteHold]);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -125,52 +157,61 @@ export const useGlobalSettingsModalState = (onClose: () => void) => {
   };
 
   const executeDelete = async () => {
-    if (!user) return;
+    if (!user || deleteInFlightRef.current) return;
 
+    deleteInFlightRef.current = true;
     setIsDeleting(true);
+    setIsDeletionBillingBlocked(false);
     try {
-      await deleteUserAccount(user.uid, user.email, user.supabaseToken);
-      await logout();
+      const deletionStatus = await deleteUserAccount(user.uid, user.email, user.supabaseToken);
+      await logout({ accountDeleted: true });
       onClose();
-      showToast.success('globalSettings.security.deleteSuccess');
+      showToast.success(deletionStatus === 'pending' ? 'globalSettings.security.deletePending' : 'globalSettings.security.deleteSuccess');
     } catch (error) {
+      if (error instanceof AccountDeletionSubscriptionError) {
+        if (isMountedRef.current) {
+          cancelDeleteHold();
+          setIsDeleting(false);
+          setIsDeletionBillingBlocked(true);
+          setIsDeletionCheckoutBlocked(error instanceof AccountDeletionCheckoutError);
+        }
+        return;
+      }
       console.error('Delete failed:', error);
       if (isMountedRef.current) {
         setIsDeleting(false);
       }
-      showToast.error('globalSettings.security.deleteError');
+      showToast.error(error instanceof AccountDeletionRetainedFilesError ? 'globalSettings.security.retainedUploads' : 'globalSettings.security.deleteError');
+    } finally {
+      deleteInFlightRef.current = false;
     }
+  };
+
+  const openSubscriptionManagement = () => {
+    if (deleteInFlightRef.current) return;
+    cancelDeleteHold();
+    onClose();
+    window.dispatchEvent(new CustomEvent('open-paywall'));
   };
 
   const startDeleteHold = () => {
-    if (deleteTimerRef.current) {
-      clearInterval(deleteTimerRef.current);
-      deleteTimerRef.current = null;
-    }
+    if (!user || !isOpen || activeTab !== 'security' || !showDeleteConfirm
+      || deleteInFlightRef.current || isDeleting) return;
 
-    setDeleteProgress(0);
-    const step = 20;
+    cancelDeleteHold();
     const duration = 5000;
-    const increment = (step / duration) * 100;
+    const startedAt = Date.now();
 
     deleteTimerRef.current = setInterval(() => {
-      setDeleteProgress((previous) => {
-        if (previous >= 100) {
-          if (deleteTimerRef.current) clearInterval(deleteTimerRef.current);
-          void executeDelete();
-          return 100;
-        }
-        return previous + increment;
-      });
-    }, step);
-  };
-
-  const cancelDeleteHold = () => {
-    if (deleteTimerRef.current) {
-      clearInterval(deleteTimerRef.current);
-      deleteTimerRef.current = null;
-      setDeleteProgress(0);
-    }
+      const progress = Math.min(100, ((Date.now() - startedAt) / duration) * 100);
+      setDeleteProgress(progress);
+      if (progress >= 100) {
+        if (deleteTimerRef.current !== null) clearInterval(deleteTimerRef.current);
+        deleteTimerRef.current = null;
+        // React may replay state updaters; destructive work must run outside them.
+        void executeDelete();
+      }
+    }, 20);
   };
 
   return {
@@ -188,6 +229,9 @@ export const useGlobalSettingsModalState = (onClose: () => void) => {
     deleteProgress,
     setDeleteProgress,
     isDeleting,
+    isDeletionBillingBlocked,
+    isDeletionCheckoutBlocked,
+    openSubscriptionManagement,
     showDeleteConfirm,
     setShowDeleteConfirm,
     showTourConfirm,

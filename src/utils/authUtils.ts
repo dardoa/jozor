@@ -1,6 +1,7 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { resolvedSupabaseKey, resolvedSupabaseUrl } from '../services/supabaseConfig.js';
 import { verifyInternalToken as verifyInternalJwt } from '../../shared/auth/internalJwt.js';
+import { isAccountSessionActive } from '../../shared/auth/accountSession.js';
 let directAuthClient: SupabaseClient | null = null;
 
 export interface AuthenticatedUser {
@@ -60,6 +61,7 @@ export async function authenticateUser(authHeader?: string): Promise<Authenticat
     if (!authHeader || !authHeader.startsWith('Bearer ')) return null;
 
     const token = authHeader.split(' ')[1];
+    if (!await isAccountSessionActive(token, resolvedSupabaseUrl, resolvedSupabaseKey)) return null;
 
     const internalUser = await verifyInternalJwt(token, process.env.SUPABASE_JWT_SECRET);
     if (internalUser) {

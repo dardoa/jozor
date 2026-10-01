@@ -1,4 +1,4 @@
-import { BrainCircuit, Loader2, ShieldAlert, Trash2 } from 'lucide-react';
+import { BrainCircuit, CreditCard, Loader2, ShieldAlert, Trash2 } from 'lucide-react';
 import { Button } from '../../ui/Button';
 import type { GlobalSettingsModalState } from '../useGlobalSettingsModalState';
 
@@ -8,6 +8,9 @@ type GlobalSettingsSecurityTabProps = Pick<
   | 'deleteProgress'
   | 'setDeleteProgress'
   | 'isDeleting'
+  | 'isDeletionBillingBlocked'
+  | 'isDeletionCheckoutBlocked'
+  | 'openSubscriptionManagement'
   | 'showDeleteConfirm'
   | 'setShowDeleteConfirm'
   | 'startDeleteHold'
@@ -19,6 +22,9 @@ export const GlobalSettingsSecurityTab = ({
   deleteProgress,
   setDeleteProgress,
   isDeleting,
+  isDeletionBillingBlocked,
+  isDeletionCheckoutBlocked,
+  openSubscriptionManagement,
   showDeleteConfirm,
   setShowDeleteConfirm,
   startDeleteHold,
@@ -72,14 +78,44 @@ export const GlobalSettingsSecurityTab = ({
         </div>
 
         <div className="pt-4 space-y-3">
+          {isDeletionBillingBlocked && (
+            <div className="space-y-3 text-sm">
+              <p role="alert" className="text-[var(--text-main)]">
+                {isDeletionCheckoutBlocked ? t.globalSettings.security.checkoutBlocksDeletion : t.globalSettings.security.subscriptionBlocksDeletion}
+              </p>
+              <Button variant="secondary" className="w-full" onClick={openSubscriptionManagement}>
+                <CreditCard className="h-4 w-4 shrink-0" aria-hidden="true" />
+                {t.globalSettings.security.manageSubscription}
+              </Button>
+            </div>
+          )}
           <button
-            onMouseDown={startDeleteHold}
+            type="button"
+            aria-label={t.deleteAccountAction}
+            aria-busy={isDeleting}
+            onMouseDown={(event) => {
+              if (event.button === 0) startDeleteHold();
+            }}
             onMouseUp={cancelDeleteHold}
             onMouseLeave={cancelDeleteHold}
             onTouchStart={startDeleteHold}
             onTouchEnd={cancelDeleteHold}
+            onTouchCancel={cancelDeleteHold}
+            onBlur={cancelDeleteHold}
+            onKeyDown={(event) => {
+              if (event.key === ' ' || event.key === 'Enter') {
+                event.preventDefault();
+                if (!event.repeat) startDeleteHold();
+              }
+            }}
+            onKeyUp={(event) => {
+              if (event.key === ' ' || event.key === 'Enter') {
+                event.preventDefault();
+                cancelDeleteHold();
+              }
+            }}
             disabled={isDeleting}
-            className="group relative flex h-16 w-full items-center justify-center gap-3 overflow-hidden rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-panel)] font-bold text-[var(--text-main)] transition-all"
+            className="group relative flex h-16 w-full items-center justify-center gap-3 overflow-hidden rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-panel)] font-bold text-[var(--text-main)] transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--danger-500)]"
           >
             <div
               className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[var(--danger-600)] to-[var(--danger-500)] opacity-90 transition-all duration-100 ease-linear"
@@ -105,6 +141,7 @@ export const GlobalSettingsSecurityTab = ({
             variant="ghost"
             className="w-full h-12 rounded-2xl font-bold text-[var(--text-dim)] hover:text-[var(--text-main)]"
             onClick={() => {
+              cancelDeleteHold();
               setShowDeleteConfirm(false);
               setDeleteProgress(0);
             }}

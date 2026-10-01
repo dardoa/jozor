@@ -116,7 +116,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const tokens = await tokenResponse.json();
 
-    if (tokens.error) {
+    if (!tokenResponse.ok || tokens.error) {
       console.error('Google Token Exchange Error:', {
         error: tokens.error,
         hasDescription: Boolean(tokens.error_description),
@@ -135,9 +135,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
     const userInfo = await userResponse.json();
-    const uid = typeof userInfo.sub === 'string' ? userInfo.sub : '';
-    if (!uid) {
-      throw new Error('Google userinfo response did not include a user id.');
+    const uid = typeof userInfo.sub === 'string' ? userInfo.sub.trim() : '';
+    const email = typeof userInfo.email === 'string' ? userInfo.email.trim() : '';
+    if (!userResponse.ok || !uid || !email || userInfo.email_verified !== true) {
+      throw new Error('Google userinfo did not provide a verified account identity.');
     }
 
     const supabase = createClient(supabaseUrl, supabaseServiceRole, {
@@ -160,6 +161,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         code: profileError.code,
       });
       throw new Error('Failed to initialize user profile.');
+    }
+
+    const { data: generation, error: sessionError } = await supabase.rpc('issue_account_session', { p_user_id: uid });
+    if (sessionError || typeof generation !== 'string'
+      || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(generation)) {
+      throw new Error('Failed to initialize account session.');
     }
 
     // 2. Store Google refresh token if provided
@@ -192,8 +199,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       aud: 'authenticated',
       role: 'authenticated',
       sub: uid,
-      email: userInfo.email,
+      email,
       iat: now,
+      account_session: generation,
       exp: now + (24 * 60 * 60),
     }, supabaseJwtSecret);
 
@@ -202,7 +210,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       supabase_token: supabaseToken,
       user: {
         uid,
-        email: userInfo.email,
+        email,
         displayName: userInfo.name,
         photoURL: userInfo.picture,
       },

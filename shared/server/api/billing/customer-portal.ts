@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { isAccountSessionActive } from '../../../auth/accountSession.js';
 import { createClient } from '@supabase/supabase-js';
 import { verifyInternalToken } from '../../../auth/internalJwt.js';
 import {
@@ -91,6 +92,7 @@ async function authenticateUser(authHeader?: string): Promise<AuthenticatedUser 
   if (!authHeader?.startsWith('Bearer ')) return null;
 
   const token = authHeader.slice('Bearer '.length);
+  if (!await isAccountSessionActive(token)) return null;
   const internalUser = await verifyInternalToken(token, getEnv('SUPABASE_JWT_SECRET'));
   if (internalUser) {
     return {
@@ -193,6 +195,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.end(JSON.stringify({ error: 'Unauthorized: Invalid session.' }));
   }
 
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    res.writeHead(400, { ...headers, 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ error: 'Invalid portal request.' }));
+  }
   const action = body.action ?? 'overview';
   if (action !== 'overview' && action !== 'cancel' && action !== 'payment') {
     res.writeHead(400, { ...headers, 'Content-Type': 'application/json' });
@@ -218,43 +224,55 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   });
 
   try {
-    const { data: subscription, error: subscriptionError } = await supabaseAdmin
+    const { data: subscriptions, count, error: subscriptionError } = await supabaseAdmin
       .from('subscriptions')
-      .select('id, user_id, status, paddle_customer_id')
+      .select('id, user_id, status, paddle_customer_id', { count: 'exact' })
       .eq('user_id', user.uid)
-      .in('status', ['active', 'trialing', 'past_due'])
-      .order('updated_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
+      .in('status', ['active', 'trialing', 'past_due', 'paused'])
+      .order('id', { ascending: true })
+      .limit(101);
 
     if (subscriptionError) {
       throw new Error(`Subscription lookup failed: ${subscriptionError.message}`);
     }
 
-    const row = subscription as SubscriptionRow | null;
-    if (!row?.id || !row.paddle_customer_id) {
+    const rows = (subscriptions ?? []) as SubscriptionRow[];
+    if (rows.length === 0 && count === 0) {
       res.writeHead(404, { ...headers, 'Content-Type': 'application/json' });
       return res.end(JSON.stringify({ error: 'No active Paddle subscription found.' }));
     }
 
+    const row = rows[0];
+    // A customer portal is customer-scoped. Never silently select just one
+    // customer or an incomplete page of subscriptions for this account.
+    if (count !== rows.length || rows.length > 100 || rows.some(entry => !entry.id || !entry.paddle_customer_id)
+      || new Set(rows.map(entry => entry.paddle_customer_id)).size !== 1) {
+      res.writeHead(409, { ...headers, 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ code: 'BILLING_REVIEW_REQUIRED', error: 'Subscription records require account review before opening billing management.' }));
+    }
+    const portalAction = rows.length === 1 ? action : 'overview';
+
     const paddleEnv = getEnv('PADDLE_ENVIRONMENT') || getEnv('VITE_PADDLE_ENVIRONMENT') || 'sandbox';
     const paddleHost = paddleEnv === 'production' ? 'api.paddle.com' : 'sandbox-api.paddle.com';
-    const response = await fetch(`https://${paddleHost}/customers/${row.paddle_customer_id}/portal-sessions`, {
+    const response = await fetch(`https://${paddleHost}/customers/${encodeURIComponent(row.paddle_customer_id!)}/portal-sessions`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${paddleApiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ subscription_ids: [row.id] }),
+      // General overview includes the customer's subscriptions without a deep
+      // link to an arbitrary cancellation target (or the API's 25-ID limit).
+      body: JSON.stringify(rows.length === 1 ? { subscription_ids: [row.id] } : {}),
+      redirect: 'error',
+      signal: AbortSignal.timeout(15000),
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Paddle portal response error (${response.status}): ${errorText}`);
+      throw new Error(`Paddle portal response error (${response.status})`);
     }
 
     const paddleResult = await response.json();
-    const portalUrl = selectPortalUrl(paddleResult.data, action, row.id);
+    const portalUrl = selectPortalUrl(paddleResult.data, portalAction, row.id);
 
     if (!portalUrl) {
       throw new Error('Paddle portal response is missing the requested portal URL.');

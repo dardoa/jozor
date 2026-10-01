@@ -235,11 +235,13 @@ describe('Supabase SaaS & Security Integration Tests', () => {
         .single();
       expect(profile?.tier).toBe('pro');
 
-      const { data: sub } = await supabaseAdmin
+      const { data: sub, error: subscriptionError } = await supabaseAdmin
         .from('subscriptions')
         .select('status, plan_id')
         .eq('user_id', testUserId)
+        .eq('id', subscriptionId)
         .single();
+      expect(subscriptionError).toBeNull();
       expect(sub?.status).toBe('active');
       expect(sub?.plan_id).toBe('pro_monthly_price_id');
 

@@ -1,6 +1,7 @@
 import type { AuthChangeEvent, AuthError, Session } from '@supabase/supabase-js';
 import { authTokenService } from './authTokenService';
 import { supabaseAuth } from './supabaseClient';
+import { SUPABASE_SESSION_STORAGE_KEY } from './supabaseConfig';
 
 const getCleanOrigin = () => window.location.origin.replace(/\/$/, '');
 
@@ -100,6 +101,32 @@ export const supabaseAuthService = {
     if (error) {
       wrapAuthError(error);
     }
+  },
+
+  async forgetDeletedAccount(): Promise<void> {
+    const clearLocal = () => {
+      for (const suffix of ['', '-code-verifier', '-user']) {
+        try { localStorage.removeItem(SUPABASE_SESSION_STORAGE_KEY + suffix); } catch { /* Storage may be unavailable. */ }
+      }
+      try { authTokenService.setStoredSupabaseToken(null); } catch { /* Still clear the in-memory session below. */ }
+    };
+    // The server already revoked this account. Local logout must not depend on
+    // another successful HTTP round trip to a now-deleted Auth identity.
+    clearLocal();
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    try {
+      await Promise.race([
+        (async () => {
+          try {
+            await supabaseAuth.auth.stopAutoRefresh();
+            clearLocal();
+            await supabaseAuth.auth.signOut({ scope: 'local' });
+          } finally { clearLocal(); }
+        })(),
+        new Promise<void>(resolve => { timeout = setTimeout(resolve, 3000); }),
+      ]);
+    } catch { /* Server revocation is already durable; finish local teardown. */ }
+    finally { clearTimeout(timeout); clearLocal(); }
   },
 
   getSession(): Promise<{ data: { session: Session | null }; error: AuthError | null }> {

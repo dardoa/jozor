@@ -22,6 +22,8 @@ interface LocalApiProxyEnv {
   VITE_SUPABASE_URL?: string;
   SUPABASE_SERVICE_ROLE_KEY?: string;
   ENABLE_LOCAL_API_PROXY?: string;
+  ACCOUNT_DELETION_CLEANUP_ENABLED?: string;
+  CRON_SECRET?: string;
   GOOGLE_AI_KEY?: string;
   GEMINI_API_KEY?: string;
   VITE_KINDI_AI_ENABLED?: string;
@@ -393,6 +395,18 @@ export const createLocalApiProxyMiddleware = (env: LocalApiProxyEnv): Plugin => 
 
       if (pathName === '/api/auth/exchange') {
         await handleAuthExchange(req as LocalRequest, res, body, env);
+        return;
+      }
+
+      if (pathName === '/api/auth/delete-account') {
+        try {
+          syncProcessEnv(env);
+          const { default: handler } = await import('../../api/auth/delete-account');
+          (req as LocalRequest).body = body;
+          await invokeVercelHandler(handler, req as LocalRequest, createLocalResponse(res));
+        } catch {
+          sendJson(res, 503, { error: 'Account deletion is temporarily unavailable' });
+        }
         return;
       }
 

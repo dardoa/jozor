@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "vite",
     "dev:media-review": "vite --config vite.media-review.config.ts",
+    "prebuild": "node scripts/buildPushReminderCron.mjs",
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint . --max-warnings 0",
@@ -49,10 +50,10 @@
     "d3": "^7.9.0",
     "date-fns": "^4.1.0",
     "dexie": "^4.2.1",
-    "dompurify": "^3.3.0",
+    "dompurify": "^3.4.15",
     "fuse.js": "^7.1.0",
     "html-to-image": "^1.11.13",
-    "jspdf": "^3.0.4",
+    "jspdf": "^4.2.1",
     "jszip": "^3.10.1",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.554.0",
@@ -61,10 +62,10 @@
     "react-dom": "^19.2.0",
     "react-joyride": "^2.9.3",
     "react-leaflet": "^5.0.0",
-    "react-router-dom": "^7.13.1",
+    "react-router-dom": "^7.18.3",
     "sonner": "^1.7.0",
     "supercluster": "^8.0.1",
-    "uuid": "^13.0.0",
+    "uuid": "^13.0.2",
     "web-push": "^3.6.7",
     "zustand": "^5.0.9"
   },
@@ -93,7 +94,8 @@
     "@types/web-push": "^3.6.4",
     "@typescript-eslint/eslint-plugin": "^8.49.0",
     "@typescript-eslint/parser": "^8.49.0",
-    "@vercel/node": "^2.3.0",
+    "@vercel/build-utils": "14.9.3",
+    "@vercel/node": "^12.0.3",
     "@vitejs/plugin-react": "latest",
     "autoprefixer": "^10.4.24",
     "eslint": "^9.39.2",
@@ -104,14 +106,23 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "globals": "^16.5.0",
     "jsdom": "^27.3.0",
-    "postcss": "^8.5.6",
+    "postcss": "^8.5.28",
     "prettier": "^3.7.4",
     "rollup-plugin-visualizer": "^7.0.1",
     "tailwindcss": "^3.4.17",
     "typescript": "~5.8.2",
     "typescript-eslint": "^8.49.0",
-    "vite": "^6.2.0",
-    "vitest": "^4.0.15"
+    "vite": "^6.4.3",
+    "vitest": "^4.1.11"
+  },
+  "overrides": {
+    "@vercel/node": {
+      "undici": "6.28.0",
+      "path-to-regexp": "6.3.0"
+    },
+    "@vercel/static-config": {
+      "ajv": "8.18.0"
+    }
   },
   "pnpm": {
     "overrides": {

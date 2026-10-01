@@ -2,6 +2,10 @@
   "version": 2,
   "crons": [
     {
+      "path": "/api/auth/delete-account",
+      "schedule": "0 6 * * *"
+    },
+    {
       "path": "/api/person-media/cleanup",
       "schedule": "0 5 * * *"
     },

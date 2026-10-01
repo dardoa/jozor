@@ -159,7 +159,7 @@ export const SupabaseStorageService = {
 
     /**
      * Uploads a user profile avatar.
-     * Path: avatars/users/{user_id}/profile.webp
+     * Each upload has its own key so retired deletion targets cannot be reused.
      */
     async uploadUserAvatar(userId: string, email: string, file: File, token?: string, currentVersion = 0): Promise<UserAvatarUploadResult> {
         if (!isPersonMediaImageMimeType(file.type)) {
@@ -167,7 +167,7 @@ export const SupabaseStorageService = {
         }
 
         const bucketName = 'avatars';
-        const filePath = `users/${userId}/profile.webp`;
+        const filePath = `users/${userId}/profile-${crypto.randomUUID()}.webp`;
         const nextVersion = currentVersion + 1;
 
         try {
@@ -184,7 +184,7 @@ export const SupabaseStorageService = {
             const { error: uploadError } = await client.storage
                 .from(bucketName)
                 .upload(filePath, compressedBlob, {
-                    upsert: true,
+                    upsert: false,
                     contentType: 'image/webp',
                 });
 

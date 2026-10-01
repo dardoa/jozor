@@ -6,6 +6,10 @@ describe('vercel API configuration', () => {
   it('schedules reminders and guarded media cleanup once per day', () => {
     expect(vercelConfig.crons).toEqual([
       {
+        path: '/api/auth/delete-account',
+        schedule: '0 6 * * *',
+      },
+      {
         path: '/api/person-media/cleanup',
         schedule: '0 5 * * *',
       },

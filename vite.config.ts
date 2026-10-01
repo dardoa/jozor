@@ -166,6 +166,7 @@ export default defineConfig(({ mode }) => {
       exclude: [
         '**/node_modules/**',
         '**/.git/**',
+        'output/**',
         'domain/legacy/visibleTree/__tests__/**',
         'tests/e2e/**',
         'tests/integration/**',

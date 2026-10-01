@@ -23,7 +23,7 @@ const HeaderMenuTrigger = ({ icon, label, testId, ...buttonProps }: { icon: Reac
   </button>
 );
 
-export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(({ themeLanguage, auth, searchProps }) => {
+export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(({ themeLanguage, auth, searchProps, globalActions }) => {
   const { t } = useTranslation();
   const setVaultOpen = useAppStore((state) => state.setVaultOpen);
   const setVaultTab = useAppStore((state) => state.setVaultTab);
@@ -100,7 +100,7 @@ export const HeaderRightSection: React.FC<HeaderRightSectionProps> = memo(({ the
               }
               align='end'
             >
-              <AccountMenu themeLanguage={themeLanguage} user={auth.user} onLogin={auth.onOpenLoginModal} onLogout={auth.onLogout} />
+              <AccountMenu themeLanguage={themeLanguage} user={auth.user} onLogin={auth.onOpenLoginModal} onLogout={auth.onLogout} onOpenGlobalSettings={globalActions.onOpenGlobalSettings} />
             </Dropdown>
           </>
         ) : (

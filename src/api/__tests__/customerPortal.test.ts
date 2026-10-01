@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import crypto from 'node:crypto';
 import { Readable } from 'node:stream';
 import type { VercelRequest } from '@vercel/node';
@@ -54,20 +54,24 @@ const createInternalJwt = () => {
   return `${header}.${payload}.${signature}`;
 };
 
-const createSubscriptionQuery = (result: unknown) => {
+const createSubscriptionQuery = (result: { data: unknown[]; error: unknown; count?: number }) => {
   const query = {
     select: vi.fn(() => query),
     eq: vi.fn(() => query),
     in: vi.fn(() => query),
     order: vi.fn(() => query),
     limit: vi.fn(() => query),
-    maybeSingle: vi.fn(async () => result),
+    then: (resolve: (value: unknown) => unknown) => Promise.resolve({ count: result.data.length, ...result }).then(resolve),
   };
 
   return query;
 };
 
+// Session refusal is exercised with the real gate in accountSessionBoundary.test.ts.
+vi.mock('../../../shared/auth/accountSession.js', () => ({ isAccountSessionActive: vi.fn(async () => true) }));
+
 describe('customer portal API', () => {
+  afterEach(() => { vi.restoreAllMocks(); });
   beforeEach(() => {
     vi.clearAllMocks();
     process.env.SUPABASE_JWT_SECRET = 'test-jwt-secret-with-at-least-32-chars';
@@ -78,14 +82,14 @@ describe('customer portal API', () => {
     process.env.APP_ORIGIN = 'http://localhost:3000';
   });
 
-  it('returns a Paddle cancel subscription portal URL for the authenticated user', async () => {
+  it.each(['active', 'paused'])('returns a Paddle cancel portal for an authenticated %s subscriber', async status => {
     const subscriptionQuery = createSubscriptionQuery({
-      data: {
+      data: [{
         id: 'sub_123',
         user_id: 'user-1',
-        status: 'active',
+        status,
         paddle_customer_id: 'ctm_123',
-      },
+      }],
       error: null,
     });
     createClientMock.mockReturnValue({ from: vi.fn(() => subscriptionQuery) });
@@ -128,18 +132,21 @@ describe('customer portal API', () => {
     );
     expect(res.statusCode).toBe(200);
     expect(res.body).toEqual({ portalUrl: 'https://customer-portal.paddle.com/cancel' });
+    expect(subscriptionQuery.eq).toHaveBeenCalledWith('user_id', 'user-1');
+    expect(subscriptionQuery.in).toHaveBeenCalledWith('status', ['active', 'trialing', 'past_due', 'paused']);
 
     fetchMock.mockRestore();
   });
 
   it('does not expose Paddle API error details to the client', async () => {
+    const errorLog = vi.spyOn(console, 'error').mockImplementation(() => {});
     const subscriptionQuery = createSubscriptionQuery({
-      data: {
+      data: [{
         id: 'sub_123',
         user_id: 'user-1',
         status: 'active',
         paddle_customer_id: 'ctm_123',
-      },
+      }],
       error: null,
     });
     createClientMock.mockReturnValue({ from: vi.fn(() => subscriptionQuery) });
@@ -164,7 +171,71 @@ describe('customer portal API', () => {
     expect(res.statusCode).toBe(500);
     expect(res.body).toEqual({ error: 'Failed to open subscription management.' });
     expect(JSON.stringify(res.body)).not.toContain('private portal credential detail');
+    expect(JSON.stringify(errorLog.mock.calls)).not.toContain('private portal credential detail');
 
     fetchMock.mockRestore();
+  });
+
+  it.each(['overview', 'cancel', 'payment'])('opens the general portal for multiple subscriptions, including a %s request', async action => {
+    const query = createSubscriptionQuery({ data: ['sub_a', 'sub_b'].map(id => ({
+      id, user_id: 'user-1', status: 'active', paddle_customer_id: 'ctm_owner',
+    })), error: null });
+    createClientMock.mockReturnValue({ from: vi.fn(() => query) });
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue({ ok: true, json: async () => ({ data: { urls: {
+      general: { overview: 'https://customer-portal.paddle.com/overview' },
+      subscriptions: [{ id: 'sub_a', cancel_subscription: 'https://customer-portal.paddle.com/cancel-a' }],
+    } } }) } as Response);
+    const res = createResponse();
+    await handler(createRequest({ action }, { authorization: `Bearer ${createInternalJwt()}`, origin: 'http://localhost:3000' }), res as never);
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toEqual({ portalUrl: 'https://customer-portal.paddle.com/overview' });
+    expect(fetchMock).toHaveBeenCalledExactlyOnceWith('https://sandbox-api.paddle.com/customers/ctm_owner/portal-sessions',
+      expect.objectContaining({ body: '{}', redirect: 'error', signal: expect.any(AbortSignal) }));
+    expect(query.limit).toHaveBeenCalledWith(101);
+    expect(query.eq).toHaveBeenCalledWith('user_id', 'user-1');
+  });
+
+  it.each([
+    ['different customers', ['ctm_a', 'ctm_b']],
+    ['missing customer', ['ctm_a', null]],
+    ['incomplete page', Array.from({ length: 101 }, () => 'ctm_a')],
+  ] as const)('refuses ambiguous billing records: %s', async (_name, customers) => {
+    createClientMock.mockReturnValue({ from: () => createSubscriptionQuery({ data: customers.map((customer, index) => ({
+      id: `sub_${index}`, user_id: 'user-1', status: 'active', paddle_customer_id: customer,
+    })), error: null }) });
+    const fetchMock = vi.spyOn(globalThis, 'fetch');
+    const res = createResponse();
+    await handler(createRequest({ action: 'cancel' }, { authorization: `Bearer ${createInternalJwt()}`, origin: 'http://localhost:3000' }), res as never);
+    expect(res.statusCode).toBe(409);
+    expect(res.body).toMatchObject({ code: 'BILLING_REVIEW_REQUIRED' });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('does not call Paddle when no eligible subscriptions exist', async () => {
+    createClientMock.mockReturnValue({ from: () => createSubscriptionQuery({ data: [], error: null }) });
+    const fetchMock = vi.spyOn(globalThis, 'fetch');
+    const res = createResponse();
+    await handler(createRequest({}, { authorization: `Bearer ${createInternalJwt()}`, origin: 'http://localhost:3000' }), res as never);
+    expect(res.statusCode).toBe(404);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('refuses a server-capped query instead of treating one returned row as the only subscription', async () => {
+    createClientMock.mockReturnValue({ from: () => createSubscriptionQuery({ count: 2, data: [
+      { id: 'sub_first', user_id: 'user-1', status: 'active', paddle_customer_id: 'ctm_one' },
+    ], error: null }) });
+    const fetchMock = vi.spyOn(globalThis, 'fetch');
+    const res = createResponse();
+    await handler(createRequest({ action: 'cancel' }, { authorization: `Bearer ${createInternalJwt()}`, origin: 'http://localhost:3000' }), res as never);
+    expect(res.statusCode).toBe(409);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it.each([null, [], 'cancel'])('rejects non-object request bodies: %j', async body => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch');
+    const res = createResponse();
+    await handler(createRequest(body, { authorization: `Bearer ${createInternalJwt()}`, origin: 'http://localhost:3000' }), res as never);
+    expect(res.statusCode).toBe(400);
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });

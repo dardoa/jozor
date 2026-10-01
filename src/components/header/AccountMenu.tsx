@@ -8,6 +8,7 @@ import { useAppStore } from '../../store/useAppStore';
 import { openAdminBillingDiagnostics, openAdminDashboard, useKindiReportsAdminAccess } from '../../features/admin';
 import { supabaseAuthService } from '../../services/supabaseAuthService';
 import { showToast } from '../../utils/showToast';
+import { AccountDeletionStatusItem } from './AccountDeletionStatusItem';
 
 interface AccountMenuProps {
   themeLanguage: ThemeLanguageProps;
@@ -27,7 +28,7 @@ type AccountMenuTranslations = {
 };
 
 export const AccountMenu = memo<AccountMenuProps>(
-  ({ themeLanguage, user, onLogin, onLogout }) => {
+  ({ themeLanguage, user, onLogin, onLogout, onOpenGlobalSettings }) => {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const text = t as typeof t & AccountMenuTranslations;
@@ -123,6 +124,13 @@ export const AccountMenu = memo<AccountMenuProps>(
                 )}
               </div>
             </div>
+            {onOpenGlobalSettings && (
+              <DropdownMenuItem
+                onClick={onOpenGlobalSettings}
+                icon={<Settings className="w-4 h-4" />}
+                label={t.globalSettings.title}
+              />
+            )}
             <DropdownMenuDivider />
             <DropdownMenuHeader icon={<Sparkles className="w-3 h-3" />} label={themeLanguage.language === 'ar' ? 'الاشتراك والباقات' : 'Subscription'} />
             <DropdownMenuItem
@@ -221,6 +229,7 @@ export const AccountMenu = memo<AccountMenuProps>(
         {/* Session */}
         <DropdownMenuDivider />
         <DropdownMenuHeader icon={user ? <LogOut className="w-3 h-3" /> : <LogIn className="w-3 h-3" />} label={t.sessionLabel} />
+        <AccountDeletionStatusItem />
         {user ? (
           <DropdownMenuItem
             onClick={() => { void onLogout(); }}

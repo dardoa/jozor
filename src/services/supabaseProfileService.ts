@@ -1,5 +1,6 @@
 import { logError, logWarn } from '../utils/errorLogger';
 import { getTreeClient } from './supabaseTreeClient';
+import { clearAccountDeletionReceipt, getAccountDeletionReceipt, readAccountDeletionStatus } from './accountDeletionReceipt';
 
 type BillingTier = 'free' | 'pro' | 'family';
 
@@ -117,25 +118,79 @@ export const updateUserProfile = async (
   }
 };
 
-export const deleteUserAccount = async (uid: string, _email?: string, token?: string): Promise<void> => {
-  const response = await fetch('/api/auth/delete-account', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token && { Authorization: `Bearer ${token}` }),
-    },
-  });
+export class AccountDeletionSubscriptionError extends Error {
+  constructor() {
+    super('Subscription cancellation must take effect before deleting the account.');
+    this.name = 'AccountDeletionSubscriptionError';
+  }
+}
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    const message = errorData.error || 'Failed to delete account';
-    const errorObj = new Error(message);
-    logError('SupabaseProfileService deleteUserAccount', errorObj, {
-      category: 'DATABASE',
-      severity: 'HIGH',
-      metadata: { uid, responseStatus: response.status },
+export class AccountDeletionCheckoutError extends AccountDeletionSubscriptionError {
+  constructor() {
+    super();
+    this.name = 'AccountDeletionCheckoutError';
+    this.message = 'An unresolved checkout must be verified before account deletion.';
+  }
+}
+
+export class AccountDeletionRetainedFilesError extends Error {
+  constructor() { super('Retained shared uploads require ownership review before account deletion.'); this.name = 'AccountDeletionRetainedFilesError'; }
+}
+
+export const deleteUserAccount = async (uid: string, _email?: string, token?: string): Promise<'complete' | 'pending'> => {
+  const { receipt, existing } = await getAccountDeletionReceipt(uid, token);
+  const recover = async () => {
+    const status = await readAccountDeletionStatus(receipt);
+    if (status === 'complete') clearAccountDeletionReceipt(receipt);
+    return status;
+  };
+  if (existing) {
+    const previous = await recover();
+    if (previous) return previous;
+  }
+  try {
+    const response = await fetch('/api/auth/delete-account', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+      body: JSON.stringify({ receipt }),
+      signal: AbortSignal.timeout(30000),
     });
-    throw errorObj;
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      if (response.status === 409 && errorData?.code === 'ACCOUNT_HAS_RETAINED_UPLOADS') {
+        clearAccountDeletionReceipt(receipt);
+        throw new AccountDeletionRetainedFilesError();
+      }
+      if (response.status === 409 && (errorData?.code === 'ACCOUNT_HAS_OPEN_SUBSCRIPTION' || errorData?.code === 'ACCOUNT_HAS_PENDING_CHECKOUT')) {
+        clearAccountDeletionReceipt(receipt);
+        if (errorData.code === 'ACCOUNT_HAS_PENDING_CHECKOUT') throw new AccountDeletionCheckoutError();
+        throw new AccountDeletionSubscriptionError();
+      }
+      const message = typeof errorData?.error === 'string' ? errorData.error : 'Failed to delete account';
+      const errorObj = new Error(message);
+      logError('SupabaseProfileService deleteUserAccount', errorObj, {
+        category: 'DATABASE',
+        severity: 'HIGH',
+        metadata: { responseStatus: response.status },
+      });
+      throw errorObj;
+    }
+    const result = await response.json().catch(() => null);
+    if (response.status === 202 && result?.success === true && result.status === 'pending') return 'pending';
+    if (response.status === 200 && result?.success === true && (result.status === 'complete' || result.status === undefined)) {
+      clearAccountDeletionReceipt(receipt);
+      return 'complete';
+    }
+    throw new Error('Unable to confirm account deletion');
+  } catch (error) {
+    if (error instanceof AccountDeletionSubscriptionError || error instanceof AccountDeletionRetainedFilesError) throw error;
+    // Recovery is read-only and does not reuse the now-revoked account bearer.
+    try { const status = await recover(); if (status) return status; } catch { /* Keep the receipt for a later retry. */ }
+    throw error;
   }
 };
 

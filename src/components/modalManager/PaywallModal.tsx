@@ -146,6 +146,7 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ isOpen, onClose }) =
     loginRequired: isRtl ? 'يرجى تسجيل الدخول أولاً لإتمام الاشتراك.' : 'Please log in to subscribe.',
     gatewayError: isRtl ? 'تعذر تحميل بوابة الدفع. يرجى المحاولة لاحقاً.' : 'Payment gateway failed to load. Please try again.',
     checkoutError: isRtl ? 'عذراً، فشل فتح بوابة الدفع' : 'Failed to open checkout',
+    checkoutPaused: isRtl ? 'الدفع متوقف مؤقتًا للصيانة. يرجى المحاولة لاحقًا.' : 'Checkout is temporarily paused for maintenance. Please try again later.',
     manageTitle: isRtl ? 'إدارة الاشتراك' : 'Manage subscription',
     manageSubtitle: isRtl
       ? 'راجع باقتك الحالية، أو ترقّ إلى باقة أعلى، أو افتح Paddle للإلغاء وتحديث الدفع.'
@@ -157,8 +158,8 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ isOpen, onClose }) =
     cancelSubscription: isRtl ? 'إلغاء الاشتراك' : 'Cancel subscription',
     portalLoading: isRtl ? 'جاري فتح Paddle...' : 'Opening Paddle...',
     portalUnavailable: isRtl
-      ? 'لا يوجد اشتراك Paddle نشط لهذا الحساب. قد تكون الباقة منحة إدارية.'
-      : 'No active Paddle subscription was found for this account. This plan may be an admin grant.',
+      ? 'لا يوجد اشتراك Paddle قابل للإدارة لهذا الحساب. قد تكون الباقة منحة إدارية.'
+      : 'No manageable Paddle subscription was found for this account. This plan may be an admin grant.',
     noUpgrade: isRtl ? 'أنت على أعلى باقة متاحة.' : 'You are already on the highest available plan.',
     portalError: isRtl ? 'تعذر فتح إدارة الاشتراك' : 'Failed to open subscription management',
   }), [isRtl]);
@@ -239,6 +240,9 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ isOpen, onClose }) =
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        if (response.status === 503 && errorData?.code === 'ACCOUNT_ADMISSION_PAUSED') {
+          throw new Error(text.checkoutPaused);
+        }
         throw new Error(errorData.error || `HTTP error ${response.status}`);
       }
 
@@ -322,7 +326,8 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ isOpen, onClose }) =
   const tierRank: Record<BillingTier, number> = { free: 0, pro: 1, family: 2 };
   const currentPlan = plans.find((plan) => plan.tier === currentTier) ?? plans[0];
   const upgradePlans = plans.filter((plan) => tierRank[plan.tier] > tierRank[currentTier]);
-  const hasPaddleActions = currentTier === 'pro' || currentTier === 'family';
+  // A paused or overdue subscription may no longer grant a paid tier.
+  const hasPaddleActions = Boolean(user);
   const isBusy = checkoutLoading !== null || portalLoading !== null;
   const CurrentIcon = currentPlan.icon;
 

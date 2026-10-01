@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { isAccountSessionActive } from '../shared/auth/accountSession.js';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 type MaintenanceMode = 'operations' | 'activity';
@@ -50,6 +51,7 @@ async function authenticateRequest(authHeader?: string): Promise<AuthenticatedUs
   }
 
   const token = authHeader.slice('Bearer '.length);
+  if (!await isAccountSessionActive(token)) return null;
   const authClient = getSupabaseAuthClient();
   const { data, error } = await authClient.auth.getUser(token);
 

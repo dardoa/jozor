@@ -43,7 +43,7 @@ export interface AuthSlice {
     setSubscriptionTier: (tier: 'free' | 'pro' | 'family') => void;
     setAiCloudQuotaRemaining: (quota: number) => void;
     login: (returnTo?: string) => Promise<void>;
-    logout: () => Promise<void>;
+    logout: (options?: { accountDeleted?: boolean }) => Promise<void>;
     updateTourStatus: (hasCompleted: boolean) => Promise<void>;
 }
 
@@ -184,9 +184,14 @@ export const createAuthSlice: StateCreator<AppStore, [["zustand/devtools", never
         }
     },
 
-    logout: async () => {
-        await supabaseAuthService.signOut();
-        googleAuthService.logout();
+    logout: async (options) => {
+        if (options?.accountDeleted) {
+            try { await supabaseAuthService.forgetDeletedAccount(); } catch { /* Accepted deletion still requires local teardown. */ }
+            try { googleAuthService.logout(); } catch { /* Google transport cannot undo server revocation. */ }
+        } else {
+            await supabaseAuthService.signOut();
+            googleAuthService.logout();
+        }
         clearSupabaseInstances();
         storageService?.setRole?.(null);
         set({

@@ -5,6 +5,7 @@ import { LandingFeatures } from './LandingFeatures';
 import { LandingFooter } from './LandingFooter';
 import { GuestModeModal } from './GuestModeModal';
 import { LandingPricing } from './LandingPricing';
+import { AccountDeletionStatusItem } from '../../../components/header/AccountDeletionStatusItem';
 
 interface LandingPageProps {
   onStartNew: () => void;
@@ -47,7 +48,8 @@ export const LandingPage: React.FC<LandingPageProps> = memo(({ onStartNew, onImp
 
       <LandingHeader onLogin={handleLogin} />
       
-      <main className="relative z-10 pt-16 flex flex-col gap-0">
+      <main className="relative z-10 pt-24 flex flex-col gap-0">
+        <AccountDeletionStatusItem variant="page" />
         <LandingHero onLogin={handleLogin} onBrowseGuest={handleBrowseGuest} />
         <div className="-mt-12 md:-mt-20">
           <LandingFeatures />

@@ -29,7 +29,9 @@ type SubscribedUserBatch = {
   nextCursor?: string;
 };
 
-const getServerEnv = (key: 'SUPABASE_URL' | 'SUPABASE_SERVICE_ROLE_KEY'): string | undefined => {
+const getServerEnv = (
+  key: 'SUPABASE_URL' | 'VITE_SUPABASE_URL' | 'SUPABASE_SERVICE_ROLE_KEY'
+): string | undefined => {
   if (typeof window !== 'undefined') {
     return undefined;
   }
@@ -44,7 +46,7 @@ const getPushSubscriptionClient = async (userId: string, token?: string) => {
 };
 
 export const getPushSubscriptionAdminClient = async () => {
-  const serverSupabaseUrl = getServerEnv('SUPABASE_URL');
+  const serverSupabaseUrl = getServerEnv('SUPABASE_URL') || getServerEnv('VITE_SUPABASE_URL');
   const serverSupabaseServiceRoleKey = getServerEnv('SUPABASE_SERVICE_ROLE_KEY');
 
   if (!serverSupabaseUrl || !serverSupabaseServiceRoleKey) {

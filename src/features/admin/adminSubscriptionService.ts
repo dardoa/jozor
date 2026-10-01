@@ -51,6 +51,7 @@ export interface AdminSubscriptionUser {
   paddleTier: AdminBillingTier;
   effectiveTier: AdminBillingTier;
   paddleSubscription: AdminPaddleSubscription | null;
+  paddleSubscriptions?: AdminPaddleSubscription[];
   override: AdminSubscriptionOverride | null;
   createdAt: string | null;
   updatedAt: string | null;

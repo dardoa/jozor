@@ -10,8 +10,6 @@ const allowedSrcImports = new Set([
   'api/person-media/[action].ts -> ../../src/api/person-media.js',
   'api/person-media/[action].ts -> ../../src/api/person-media-migration.js',
   'api/person-media/[action].ts -> ../../src/api/person-media-cleanup-cron.js',
-  'api/push-reminder-cron.ts -> ../src/services/pushSubscriptionService',
-  'api/push-reminder-cron.ts -> ../src/services/reminders/reminderProcessor',
 ]);
 async function listApiFiles(dir: string): Promise<string[]> {
   const entries = await readdir(dir, { withFileTypes: true });
