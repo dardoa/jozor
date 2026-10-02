@@ -7,6 +7,7 @@ import { showToast } from '../../../utils/showToast';
 import { AccountDeletionSubscriptionError, deleteUserAccount, updateUserProfile } from '../../../services/supabaseProfileService';
 import { useGlobalSettingsModalState } from '../useGlobalSettingsModalState';
 import { GlobalSettingsSecurityTab } from '../globalSettings/GlobalSettingsSecurityTab';
+import { SupabaseStorageService } from '../../../services/supabaseStorageService';
 
 interface Deferred<T> {
   promise: Promise<T>;
@@ -79,6 +80,19 @@ describe('useGlobalSettingsModalState', () => {
 
   afterEach(() => {
     vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  it('reports a committed avatar replacement without a redundant profile write', async () => {
+    const avatar = { publicUrl: 'https://example.test/new.webp?v=4', photoPath: 'users/user-1/new.webp', photoVersion: 4 };
+    vi.spyOn(SupabaseStorageService, 'uploadUserAvatar').mockResolvedValue(avatar);
+    vi.mocked(updateUserProfile).mockRejectedValue(new Error('Versioned URL cannot be persisted'));
+    const { result } = renderHook(() => useGlobalSettingsModalState(vi.fn()));
+    await act(async () => result.current.onFileChange({ target: { files: [new File(['photo'], 'photo.png', { type: 'image/png' })] } } as unknown as Parameters<typeof result.current.onFileChange>[0]));
+    expect(useAppStore.getState().user).toMatchObject({ photoURL: avatar.publicUrl, photoVersion: 4 });
+    expect(updateUserProfile).not.toHaveBeenCalled();
+    expect(showToast.success).toHaveBeenCalledWith('globalSettings.profile.avatarUpdateSuccess');
+    expect(showToast.error).not.toHaveBeenCalled();
   });
 
   it('does not emit stale profile save UI after unmount', async () => {

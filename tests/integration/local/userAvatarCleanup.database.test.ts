@@ -156,6 +156,45 @@ describe('durable user avatar retirement on PostgreSQL', () => {
     expect(await rpc('complete_user_avatar_cleanup')).toBe(true);
     expect((await db.query('SELECT * FROM public.list_my_user_avatar_cleanup()')).rows).toEqual([]);
   });
+
+  it('allows normal updates on an unchanged versioned legacy avatar and replaces it canonically', async () => {
+    await db.exec('RESET ROLE; ALTER TABLE user_profiles DISABLE TRIGGER USER');
+    await db.query('UPDATE user_profiles SET photo_url=$1 WHERE id=$2', [url(oldPath) + '?v=3', owner]);
+    await db.exec('ALTER TABLE user_profiles ENABLE TRIGGER USER'); await role();
+    await expect(db.query('UPDATE user_profiles SET display_name=$1,photo_url=photo_url,photo_path=photo_path WHERE id=$2 RETURNING display_name',
+      ['legacy owner', owner])).resolves.toMatchObject({ rows: [{ display_name: 'legacy owner' }] });
+    await replace();
+    expect(await scalar('SELECT photo_url AS value FROM user_profiles WHERE id=$1', [owner])).toBe(url(fresh()));
+    expect(await queue()).toHaveLength(1);
+  });
+
+  it('does not let twenty referenced retirements hide a newer removable target', async () => {
+    await db.exec('RESET ROLE; ALTER TABLE user_profiles DISABLE TRIGGER USER');
+    for (let i = 1; i <= 20; i++) {
+      const target = fresh(`${String(i).padStart(8, '0')}-1111-4111-8111-111111111111`);
+      await db.query('INSERT INTO private.user_avatar_cleanup(object_path,user_id,requested_at) VALUES($1,$2,now()-interval \'1 day\')', [target, owner]);
+      await db.query('INSERT INTO user_profiles(id,photo_url) VALUES($1,$2)', [`keeper-${i}`, url(target)]);
+    }
+    const removable = fresh('99999999-1111-4111-8111-111111111111');
+    await db.query('INSERT INTO private.user_avatar_cleanup(object_path,user_id) VALUES($1,$2)', [removable, owner]);
+    await db.exec('ALTER TABLE user_profiles ENABLE TRIGGER USER'); await role();
+    expect((await db.query('SELECT * FROM public.list_my_user_avatar_cleanup()')).rows).toEqual([{ object_path: removable }]);
+    await role('', 'service_role');
+    expect((await db.query('SELECT * FROM public.list_user_avatar_cleanup_candidates()')).rows).toEqual([{ object_path: removable }]);
+  });
+
+  it('moves a claimed-but-failed batch behind newer pending targets', async () => {
+    await db.exec('RESET ROLE');
+    const targets = Array.from({ length: 21 }, (_, i) => fresh(`${String(i + 1).padStart(8, '0')}-1111-4111-8111-111111111111`));
+    for (const target of targets) {
+      await db.query('INSERT INTO private.user_avatar_cleanup(object_path,user_id,requested_at) VALUES($1,$2,now()-interval \'1 day\')', [target, owner]);
+    }
+    await role();
+    for (const target of targets.slice(0, 20)) expect(await rpc('claim_user_avatar_cleanup', target)).toBe(true);
+    expect((await db.query('SELECT * FROM public.list_my_user_avatar_cleanup()')).rows[0]).toEqual({ object_path: targets[20] });
+    await role('', 'service_role');
+    expect((await db.query('SELECT * FROM public.list_user_avatar_cleanup_candidates()')).rows[0]).toEqual({ object_path: targets[20] });
+  });
   it('retains a matching legacy URL in any profile, then rejects later reattachment', async () => {
     await db.exec('RESET ROLE');
     await db.query('UPDATE user_profiles SET photo_url=$1 WHERE id=$2', [url(oldPath), 'other']);

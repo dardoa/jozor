@@ -100,9 +100,6 @@ export const useGlobalSettingsModalState = (onClose: () => void, isOpen = true) 
       if (!isMountedRef.current) return;
 
       useAppStore.setState({ user: { ...user, ...userUpdate } });
-      await updateUserProfile(user.uid, user.email, userUpdate, user.supabaseToken);
-      if (!isMountedRef.current) return;
-
       showToast.success('globalSettings.profile.avatarUpdateSuccess');
     } catch (error) {
       if (!isMountedRef.current) return;

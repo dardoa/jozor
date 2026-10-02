@@ -123,6 +123,20 @@ describe('SupabaseStorageService person photos', () => {
     expect(rpcMock.mock.calls.map(([name]) => name)).toEqual(['replace_user_avatar', 'list_my_user_avatar_cleanup', 'claim_user_avatar_cleanup', 'complete_user_avatar_cleanup']);
     expect(rpcMock.mock.invocationCallOrder[0]).toBeLessThan(removeMock.mock.invocationCallOrder[0]);
   });
+
+  it('can replace an owned legacy avatar with its legitimate versioned display URL', async () => {
+    fromMock.mockReturnValue({ upload: uploadMock, getPublicUrl: publicUrlMock, remove: removeMock });
+    profileQueryMock.mockResolvedValue({ data: { photo_path: oldPath, photo_url: `${avatarUrl(oldPath)}?v=2`, photo_version: 2 }, error: null });
+    const result = await changeAvatar();
+    expect(result.photoVersion).toBe(3);
+    expect(rpcMock).toHaveBeenCalledWith('replace_user_avatar', expect.objectContaining({ p_expected_photo_path: oldPath, p_expected_photo_version: 2 }));
+  });
+
+  it.each(['?v=2&other=1', '?v=bogus', '#fragment', '?other=2'])('refuses ambiguous legacy avatar suffix %s', async suffix => {
+    profileQueryMock.mockResolvedValue({ data: { photo_path: oldPath, photo_url: avatarUrl(oldPath) + suffix, photo_version: 2 }, error: null });
+    await expect(changeAvatar()).rejects.toThrow(/snapshot/i);
+    expect(uploadMock).not.toHaveBeenCalled();
+  });
   it('reports a committed upload as successful despite cleanup failure and retries at the next change', async () => {
     fromMock.mockReturnValue({ upload: uploadMock, getPublicUrl: publicUrlMock, remove: removeMock });
     removeMock.mockResolvedValueOnce({ error: { message: 'offline' } });

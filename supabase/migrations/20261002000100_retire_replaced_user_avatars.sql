@@ -34,10 +34,15 @@ $$;
 
 -- One transaction lock also covers references from a different profile. Statement
 -- triggers acquire it before row locks, including direct/legacy profile writes.
+CREATE FUNCTION private.lock_user_avatar_retirement() RETURNS VOID
+LANGUAGE sql SET search_path = '' AS $$
+  SELECT pg_advisory_xact_lock(hashtextextended('user-avatar-retirement',0));
+$$;
+
 CREATE FUNCTION private.lock_user_avatar_changes() RETURNS TRIGGER
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $$
 BEGIN
-  PERFORM pg_advisory_xact_lock(hashtextextended('user-avatar-retirement', 0));
+  PERFORM private.lock_user_avatar_retirement();
   RETURN NULL;
 END;
 $$;
@@ -54,7 +59,9 @@ BEGIN
       AND (TG_OP = 'INSERT' OR NEW.photo_path IS DISTINCT FROM OLD.photo_path OR NEW.photo_url IS DISTINCT FROM OLD.photo_url) THEN
       RAISE EXCEPTION 'Avatar is retired; upload a new asset.' USING ERRCODE = '23514';
     END IF;
-    IF NEW.photo_path IS NOT NULL AND (
+    -- An unchanged historical reference must not block name/metadata updates.
+    IF (TG_OP = 'INSERT' OR NEW.photo_path IS DISTINCT FROM OLD.photo_path OR NEW.photo_url IS DISTINCT FROM OLD.photo_url)
+      AND NEW.photo_path IS NOT NULL AND (
       NOT private.is_user_avatar_path(NEW.photo_path, NEW.id, true)
       OR private.user_avatar_url_path(NEW.photo_url) IS DISTINCT FROM NEW.photo_path
       OR NEW.photo_url ~ '[?#%[:cntrl:]]') THEN
@@ -66,7 +73,8 @@ BEGIN
         RAISE EXCEPTION 'Invalid new legacy avatar path.' USING ERRCODE = '23514';
       END IF;
     END IF;
-    IF NEW.photo_url LIKE '%/storage/v1/object/public/avatars/%' AND NEW.photo_url ~ '[%[:cntrl:]]' THEN
+    IF (TG_OP = 'INSERT' OR NEW.photo_url IS DISTINCT FROM OLD.photo_url)
+      AND NEW.photo_url LIKE '%/storage/v1/object/public/avatars/%' AND NEW.photo_url ~ '[%[:cntrl:]]' THEN
       RAISE EXCEPTION 'Invalid ambiguous avatar URL.' USING ERRCODE = '23514';
     END IF;
   END IF;
@@ -90,10 +98,10 @@ CREATE FUNCTION private.guard_retired_user_avatar_write() RETURNS TRIGGER
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $$
 BEGIN
   IF NEW.bucket_id = 'avatars' AND split_part(NEW.name,'/',1) = 'users' THEN
-    PERFORM pg_advisory_xact_lock(hashtextextended('user-avatar-retirement',0));
+    PERFORM private.lock_user_avatar_retirement();
   ELSIF TG_OP = 'UPDATE' THEN
     IF OLD.bucket_id = 'avatars' AND split_part(OLD.name,'/',1) = 'users' THEN
-      PERFORM pg_advisory_xact_lock(hashtextextended('user-avatar-retirement',0));
+      PERFORM private.lock_user_avatar_retirement();
     END IF;
   END IF;
   IF TG_OP = 'UPDATE' THEN
@@ -120,7 +128,7 @@ BEGIN
     OR p_photo_url ~ '[?#%[:cntrl:]]' THEN
     RAISE EXCEPTION 'Invalid owned avatar path or URL mismatch.' USING ERRCODE = '23514';
   END IF;
-  PERFORM pg_advisory_xact_lock(hashtextextended('user-avatar-retirement',0));
+  PERFORM private.lock_user_avatar_retirement();
   SELECT * INTO v_profile FROM public.user_profiles WHERE id = v_actor FOR UPDATE;
   IF NOT FOUND THEN RAISE EXCEPTION 'Profile not found.'; END IF;
   IF v_profile.photo_path IS DISTINCT FROM p_expected_photo_path
@@ -138,7 +146,8 @@ CREATE FUNCTION public.list_my_user_avatar_cleanup() RETURNS TABLE(object_path T
 LANGUAGE sql SECURITY DEFINER SET search_path = '' AS $$
   SELECT c.object_path FROM private.user_avatar_cleanup c
     WHERE c.user_id = private.current_user_id_text() AND c.completed_at IS NULL
-    ORDER BY c.requested_at,c.object_path LIMIT 20;
+      AND NOT private.user_avatar_is_referenced(c.object_path)
+    ORDER BY COALESCE(c.claimed_at,c.requested_at),c.requested_at,c.object_path LIMIT 20;
 $$;
 
 CREATE FUNCTION public.request_user_avatar_cleanup(p_object_path TEXT) RETURNS BOOLEAN
@@ -146,7 +155,7 @@ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $$
 DECLARE v_actor TEXT := private.current_user_id_text();
 BEGIN
   IF NOT private.is_user_avatar_path(p_object_path,v_actor) THEN RETURN false; END IF;
-  PERFORM pg_advisory_xact_lock(hashtextextended('user-avatar-retirement',0));
+  PERFORM private.lock_user_avatar_retirement();
   PERFORM 1 FROM public.user_profiles WHERE id = v_actor FOR UPDATE;
   IF private.user_avatar_is_referenced(p_object_path) THEN RETURN false; END IF;
   INSERT INTO private.user_avatar_cleanup(object_path,user_id) VALUES(p_object_path,v_actor) ON CONFLICT DO NOTHING;
@@ -158,14 +167,14 @@ CREATE FUNCTION public.claim_user_avatar_cleanup(p_object_path TEXT) RETURNS BOO
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $$
 DECLARE v_owner TEXT;
 BEGIN
-  PERFORM pg_advisory_xact_lock(hashtextextended('user-avatar-retirement',0));
+  PERFORM private.lock_user_avatar_retirement();
   SELECT user_id INTO v_owner FROM private.user_avatar_cleanup WHERE object_path = p_object_path AND completed_at IS NULL;
   IF NOT FOUND OR (current_setting('role',true) <> 'service_role'
     AND v_owner IS DISTINCT FROM private.current_user_id_text())
     OR NOT private.is_user_avatar_path(p_object_path,v_owner,true)
     OR private.user_avatar_is_referenced(p_object_path) THEN RETURN false; END IF;
   PERFORM 1 FROM public.user_profiles WHERE id = v_owner FOR UPDATE;
-  UPDATE private.user_avatar_cleanup SET claimed_at = COALESCE(claimed_at,now()) WHERE object_path = p_object_path;
+  UPDATE private.user_avatar_cleanup SET claimed_at = now() WHERE object_path = p_object_path;
   RETURN true;
 END;
 $$;
@@ -173,7 +182,7 @@ $$;
 CREATE FUNCTION public.complete_user_avatar_cleanup(p_object_path TEXT) RETURNS BOOLEAN
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $$
 BEGIN
-  PERFORM pg_advisory_xact_lock(hashtextextended('user-avatar-retirement',0));
+  PERFORM private.lock_user_avatar_retirement();
   IF EXISTS(SELECT 1 FROM storage.objects WHERE bucket_id = 'avatars' AND name = p_object_path)
     OR private.user_avatar_is_referenced(p_object_path) THEN RETURN false; END IF;
   UPDATE private.user_avatar_cleanup c SET completed_at = COALESCE(c.completed_at,now())
@@ -186,10 +195,51 @@ $$;
 CREATE FUNCTION public.list_user_avatar_cleanup_candidates() RETURNS TABLE(object_path TEXT)
 LANGUAGE sql SECURITY DEFINER SET search_path = '' AS $$
   SELECT c.object_path FROM private.user_avatar_cleanup c WHERE c.completed_at IS NULL
-    ORDER BY c.requested_at,c.object_path LIMIT 20;
+    AND NOT private.user_avatar_is_referenced(c.object_path)
+    ORDER BY COALESCE(c.claimed_at,c.requested_at),c.requested_at,c.object_path LIMIT 20;
 $$;
 
-REVOKE ALL ON FUNCTION private.is_user_avatar_path(TEXT,TEXT,BOOLEAN), private.user_avatar_url_path(TEXT),
+-- Preserve the existing deletion boundary and ACL; acquire the shared avatar
+-- lock before its first profile lock so deletion cannot invert the ordering.
+CREATE OR REPLACE FUNCTION private.request_account_deletion(p_receipt_hash text DEFAULT NULL)
+RETURNS uuid LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $$
+DECLARE uid text := private.current_user_id_text(); recipient text; job uuid; roots uuid[]; native_id uuid;
+BEGIN
+  IF uid IS NULL OR uid !~ '^[A-Za-z0-9_-]{1,128}$' THEN RAISE EXCEPTION 'Missing authenticated user'; END IF;
+  IF p_receipt_hash IS NOT NULL AND p_receipt_hash !~ '^[0-9a-f]{64}$' THEN RAISE EXCEPTION 'Invalid deletion receipt'; END IF;
+  PERFORM private.lock_user_avatar_retirement();
+  PERFORM 1 FROM public.user_profiles WHERE id = uid FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'Missing authenticated user'; END IF;
+  IF EXISTS (SELECT 1 FROM private.account_checkout_attempts WHERE user_id = uid AND resolved_at IS NULL) THEN
+    RAISE EXCEPTION 'ACCOUNT_HAS_PENDING_CHECKOUT';
+  END IF;
+  PERFORM 1 FROM public.subscriptions WHERE user_id = uid FOR UPDATE;
+  IF EXISTS (SELECT 1 FROM public.subscriptions WHERE user_id = uid AND status IS DISTINCT FROM 'canceled') THEN
+    RAISE EXCEPTION 'ACCOUNT_HAS_OPEN_SUBSCRIPTION';
+  END IF;
+  roots := ARRAY(SELECT id FROM public.trees WHERE owner_id = uid ORDER BY id FOR UPDATE);
+  SELECT id INTO native_id FROM auth.users WHERE id::text = uid;
+  IF native_id IS NOT NULL AND EXISTS (
+    SELECT 1 FROM storage.objects o
+    WHERE coalesce(nullif(to_jsonb(o)->>'owner_id', ''), to_jsonb(o)->>'owner') = uid
+      AND NOT ((o.bucket_id = 'avatars' AND starts_with(o.name, 'users/' || uid || '/'))
+        OR (o.bucket_id IN ('avatars', 'person-media') AND split_part(o.name, '/', 1) = ANY(roots::text[])))
+  ) THEN RAISE EXCEPTION 'ACCOUNT_HAS_RETAINED_UPLOADS'; END IF;
+  INSERT INTO private.account_deletion_jobs(user_id, auth_id, tree_ids, receipt_hash, subscription_ids)
+    VALUES (uid, native_id, roots, p_receipt_hash, ARRAY(SELECT id::text FROM public.subscriptions WHERE user_id = uid)) RETURNING id INTO job;
+  PERFORM private.inventory_account_deletion_objects(job);
+  recipient := nullif(lower(auth.jwt()->>'email'), '');
+  DELETE FROM public.tree_collaborators WHERE collaborator_uid = uid OR lower(email) = recipient;
+  DELETE FROM public.tree_invitations WHERE invited_uid = uid OR accepted_by = uid OR lower(invited_email) = recipient;
+  DELETE FROM public.user_keys WHERE user_id = uid;
+  DELETE FROM public.trees WHERE owner_id = uid;
+  DELETE FROM public.user_profiles WHERE id = uid;
+  RETURN job;
+END;
+$$;
+REVOKE ALL ON FUNCTION private.request_account_deletion(TEXT) FROM PUBLIC, anon;
+
+REVOKE ALL ON FUNCTION private.lock_user_avatar_retirement(), private.is_user_avatar_path(TEXT,TEXT,BOOLEAN), private.user_avatar_url_path(TEXT),
   private.user_avatar_is_referenced(TEXT), private.lock_user_avatar_changes(), private.guard_user_avatar_profile(),
   private.guard_retired_user_avatar_write() FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.replace_user_avatar(TEXT,TEXT,TEXT,INTEGER), public.list_my_user_avatar_cleanup(),

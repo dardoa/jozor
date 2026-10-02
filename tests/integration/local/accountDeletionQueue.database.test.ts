@@ -35,7 +35,7 @@ describe('durable account deletion queue on PostgreSQL', () => {
       CREATE SCHEMA auth; CREATE SCHEMA storage;
       CREATE FUNCTION auth.jwt() RETURNS jsonb LANGUAGE sql STABLE AS $$ SELECT current_setting('request.jwt.claims')::jsonb $$;
       CREATE TABLE auth.users (id uuid PRIMARY KEY);
-      CREATE TABLE user_profiles (id text PRIMARY KEY);
+      CREATE TABLE user_profiles (id text PRIMARY KEY, photo_path text, photo_url text, photo_version integer);
       CREATE TABLE subscriptions (id text PRIMARY KEY, user_id text REFERENCES user_profiles ON DELETE CASCADE, status text NOT NULL);
       CREATE TABLE trees (id uuid PRIMARY KEY, owner_id text);
       CREATE TABLE people (id text PRIMARY KEY, tree_id uuid REFERENCES trees ON DELETE CASCADE);
@@ -72,6 +72,7 @@ describe('durable account deletion queue on PostgreSQL', () => {
     await db.exec(read('20260908000200_fence_account_billing_events.sql'));
     await db.exec(read('20260908000300_track_all_account_subscriptions.sql'));
     await db.exec(read('20260908000400_guard_billing_reconciliation_inserts.sql'));
+    await db.exec(read('20261002000100_retire_replaced_user_avatars.sql'));
     if (existsSync(path.resolve('supabase/migrations/20261002000200_resolve_rejected_account_checkouts.sql'))) {
       await db.exec(read('20261002000200_resolve_rejected_account_checkouts.sql'));
     }

@@ -16,11 +16,12 @@ import { cleanupMyUserAvatars, isUserAvatarObjectPath } from './userAvatarCleanu
 
 const MAX_FILE_SIZE_MB = 1;
 
-const isAvatarPublicUrl = (value: unknown, objectPath: string): value is string => {
+const isAvatarPublicUrl = (value: unknown, objectPath: string, allowLegacyVersion = false): value is string => {
     if (typeof value !== 'string') return false;
     try {
         const expected = new URL(`/storage/v1/object/public/avatars/${objectPath}`, supabaseUrl);
-        return value === expected.href;
+        return value === expected.href || (allowLegacyVersion && value.startsWith(expected.href)
+            && /^\?v=[0-9]+$/.test(value.slice(expected.href.length)));
     } catch { return false; }
 };
 
@@ -36,7 +37,7 @@ const isAvatarProfileSnapshot = (value: unknown, userId: string): value is Avata
     return (profile.photo_path === null || isUserAvatarObjectPath(profile.photo_path, userId))
         && (profile.photo_url === null || typeof profile.photo_url === 'string')
         && (profile.photo_version === null || (Number.isInteger(profile.photo_version) && profile.photo_version >= 0))
-        && (profile.photo_path === null || isAvatarPublicUrl(profile.photo_url, profile.photo_path));
+        && (profile.photo_path === null || isAvatarPublicUrl(profile.photo_url, profile.photo_path, true));
 };
 
 interface UploadParams {
