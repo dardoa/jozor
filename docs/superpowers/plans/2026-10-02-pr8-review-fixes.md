@@ -10,7 +10,7 @@
 
 **Spec:** `docs/superpowers/specs/2026-10-01-pr8-review-fixes-design.md`
 
-**Execution status:** Tasks 1-6 implemented and locally tested; Task 7 next. Final broad verification/review (Task 8) remains.
+**Execution status:** Tasks 1-8 complete locally. Independent final review returned; all three Important findings have regression fixes committed. All final local verification gates pass. No push, merge, deployment or hosted migration was performed.
 
 ## Global Constraints
 
@@ -203,11 +203,11 @@ expect(rpc.mock.calls.some(([name]) => name === 'record_account_checkout')).toBe
 
 **Interfaces:** All task interfaces above are complete. Production activation, historical cleanup/reconciliation, pushing, merging and deployment are outside this execution plan.
 
-- [ ] **Run broader local verification:** `node node_modules/vitest/vitest.mjs run --config vitest.review-fixes.config.ts --shard=1/2`, then `--shard=2/2`; `node node_modules/vitest/vitest.mjs run --config vitest.database.config.ts`; `npm run typecheck`; `npm run typecheck:api`; `npm run lint`. All must exit 0; record test counts and any skipped/blocked checks. Never substitute earlier CI success for this new verification.
-- [ ] **Check generated artifact:** Run `node scripts/buildPushReminderCron.mjs`; inspect its diff and run existing `pushReminderCronRoot.test.ts` and `pushReminderCronNativeRuntime.test.ts` with isolated config. Keep generator output only when it accurately reflects changed dependencies, without unrelated manual edits.
-- [ ] **Review final diff:** Check against the six findings and spec; no ownership relaxation, broad Storage removal, unknown checkout resolution, obsolete public methods, secret/report staging, changed schedules or enabled workers. Obtain fresh independent review of the branch and address substantive findings through regression tests. Do not specify a different reviewer model unless authorized by the user.
-- [ ] **Verify repository preservation:** `git diff --check`, `git status --short --branch`, and an explicit staged-file list before every commit. Preserve the existing untracked reports and unrelated changes. Check that commits contain only intended source/test/migration/plan files and main remains unchanged.
-- [ ] **Report outcome:** State which six defects passed their regression tests, commit IDs, local verification results, and that forward migrations remain unapplied and server avatar retries remain off. Report PGlite/concurrency and public cache limitations separately. Keep PR 8 draft; do not imply production fixes or push/deploy without a later explicit request.
+- [x] **Run broader local verification:** `node node_modules/vitest/vitest.mjs run --config vitest.review-fixes.config.ts --shard=1/2`, then `--shard=2/2`; `node node_modules/vitest/vitest.mjs run --config vitest.database.config.ts`; `npm run typecheck`; `npm run typecheck:api`; `npm run lint`. All must exit 0; record test counts and any skipped/blocked checks. Never substitute earlier CI success for this new verification.
+- [x] **Check generated artifact:** Run `node scripts/buildPushReminderCron.mjs`; inspect its diff and run existing `pushReminderCronRoot.test.ts` and `pushReminderCronNativeRuntime.test.ts` with isolated config. Keep generator output only when it accurately reflects changed dependencies, without unrelated manual edits.
+- [x] **Review final diff:** Check against the six findings and spec; no ownership relaxation, broad Storage removal, unknown checkout resolution, obsolete public methods, secret/report staging, changed schedules or enabled workers. Obtain fresh independent review of the branch and address substantive findings through regression tests. Do not specify a different reviewer model unless authorized by the user.
+- [x] **Verify repository preservation:** `git diff --check`, `git status --short --branch`, and an explicit staged-file list before every commit. Preserve the existing untracked reports and unrelated changes. Check that commits contain only intended source/test/migration/plan files and main remains unchanged.
+- [x] **Report outcome:** State which six defects passed their regression tests, commit IDs, local verification results, and that forward migrations remain unapplied and server avatar retries remain off. Report PGlite/concurrency and public cache limitations separately. Keep PR 8 draft; do not imply production fixes or push/deploy without a later explicit request.
 
 ## Execution Handoff
 
@@ -216,3 +216,35 @@ Recommended method: **Native execution in this chat**, task by task, then one fr
 Alternative: **Subagent-driven execution**, with an implementer and reviewer gate for each task. Use this if the user prefers more independent per-task review despite the additional contexts/time.
 
 Implementation starts after the user reviews this plan and selects an execution method. Neither document approval nor plan generation authorizes production activation.
+
+## Final Review Record
+
+The independent, read-only reviewer inspected `a38921e..e3942f4` with the configured default model, after the user explicitly approved exporting only necessary code to OpenAI. No secrets, `.env` files or operational reports were included. The report found no Critical issues, three Important issues, and no Minor issues. No second review was dispatched; the single final fix pass uses regression tests and fresh broad verification.
+
+- Versioned avatar URLs: the settings handler no longer persists the UI-only cache suffix after the replacement RPC already committed. Legacy snapshots accept only an exact owned public URL plus a numeric `?v=` suffix; unchanged historical references permit ordinary profile updates. UI/service regressions failed first, then passed 47/47.
+- Lock ordering: avatar and deletion paths use the same private advisory-lock gate before their profile lock. The deletion body is otherwise unchanged; its existing ACL/pause state is preserved. Two gate regressions failed first, then passed. PGlite runtime `pg_locks` observation verifies entry ordering, not simultaneous deadlock scheduling; a local multi-connection PostgreSQL server was unavailable.
+- Queue progress: currently referenced rows are excluded before the twenty-target limit, and every successful claim advances retry order so failed removals cannot monopolize the oldest batch. Both regressions failed first, then passed.
+- Additional local review regressions fixed in `e3942f4`: password/signup/OAuth admission microtask gap, external URL-only deletion authorization, and ordinary updates with an unchanged grandfathered reference. Each was observed failing before its fix.
+
+Final fixes are committed in `e3942f4` and `226513c`. The combined deletion/avatar integration suite passes 72/72. The full final SQL suite passes 308/308 in 15 files; app/API typechecks and lint pass. Final full unit shards pass 1553 and 1524 tests, totaling 3077 passing tests in 393 files. One pre-existing real-tree visual test/file remains skipped (`src/domain/__tests__/familyGraphClusterLayout.visual.test.ts`); existing jsdom canvas warnings are not failures. The push-cron generator produced no further semantic diff, and fresh native/root runtime checks pass 3/3.
+
+Regression commits for the original six defects: dropdown `2844801`, push `0446755`, auth `d3af61a`, avatar SQL/client `ba5870c` and `29e6a22`, checkout SQL/handler `7c98d9d` and `2082cb4`. Verification alignment is `9339845`. Main and origin/main remain `0137d52`; all 76 existing untracked operational reports are preserved. Forward migrations remain unapplied, server avatar retries remain off, and no production settings, payment keys or schedules were changed. These results establish local regression verification, not production activation or immediate public cache eviction.
+
+### Rulings and Costs
+
+| Decision | Reason | Cost or Remaining Risk |
+| --- | --- | --- |
+| Keep the approved current checkout/branch | The plan explicitly keeps implementation here | No separate worktree isolation; scoped local commits preserve the work |
+| Add a shared avatar advisory lock alongside owner locks | Claims inspect references in other profiles | Avatar writes serialize; unrelated pre-held locks may require transaction retry |
+| Fence retired Storage writes with triggers | The same atomic lock also covers service writes | Maintenance must use fresh keys rather than rewrite a retired key |
+| Include the owner-row-lock follow-up in the consumer commit | Shared serialization does not replace owner locking | The migration follow-up spans the Task 5 commit boundary |
+| Ignore `.vercel/output/**` in lint | Its generated local bundle has stale lint directives; source remains checked | Generated deployment output is not linted |
+| Replace the unavailable native-agent report with an ephemeral read-only CLI reviewer | Conversation ownership attribution refused report retrieval; explicit export consent was obtained | Extra failed setup time; only the successfully returned CLI report counts |
+| Never derive retirement authority from URL-only images | SQL cannot prove their configured origin | Valid legacy URL-only objects remain for separately approved reconciliation |
+| Centralize lock entry and acquire it early in deletion | Removes the reviewed deletion/avatar inversion while preserving deletion checks and ACL | Deletion joins global avatar serialization; true multi-connection testing remains required |
+| Leave cross-tab coordination and broader auth bootstrap unchanged | Outside the six approved adapter fixes; the reviewer declined to judge them | A different tab/bootstrap path may need a separate audit |
+| Exclude historical reconciliation and undiscovered upload orphans | Cleanup authority is limited to recorded retirement targets | Historical/unrecorded uploads can remain until separately approved reconciliation |
+| Make no claims about production activation, provider behavior or immediate CDN eviction | No remote migrations, workers or live provider checks were authorized | Staged PostgreSQL/provider checks are still required; cached public bytes can outlive origin removal |
+| Accept broad-suite results only after reading their completed exit/count summaries | The reviewer did not run or judge those suites | Closure waits for final-tree verification; partial/old results do not count |
+
+Deferred minors: none.
