@@ -6,7 +6,7 @@ import tseslint from 'typescript-eslint';
 import prettierConfig from 'eslint-config-prettier';
 
 export default tseslint.config(
-    { ignores: ['dist', 'node_modules', 'dist-electron', 'release', 'output', 'playwright-report', 'test-results', 'legacy_archive', 'scratch', '.next', '.turbo'] },
+    { ignores: ['dist', 'node_modules', 'dist-electron', 'release', 'output', '.vercel/output/**', 'playwright-report', 'test-results', 'legacy_archive', 'scratch', '.next', '.turbo'] },
     {
         extends: [js.configs.recommended, ...tseslint.configs.recommended, prettierConfig],
         files: ['**/*.{ts,tsx}'],

@@ -1994,6 +1994,52 @@ var GoogleApiService = class {
 
 // src/services/supabaseAuthService.ts
 var getCleanOrigin = () => window.location.origin.replace(/\/$/, "");
+var deletionTeardown = null;
+var readStorage = (key) => {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return void 0;
+  }
+};
+var sessionIdentity = (raw) => {
+  try {
+    const value = JSON.parse(raw ?? "null");
+    return typeof value?.user?.id === "string" ? value.user.id : void 0;
+  } catch {
+    return void 0;
+  }
+};
+var tokenIdentity = (raw) => {
+  try {
+    const payload = raw?.split(".")[1];
+    if (!payload) return void 0;
+    const value = JSON.parse(atob(payload.replace(/-/g, "+").replace(/_/g, "/")));
+    return typeof value.sub === "string" ? value.sub : void 0;
+  } catch {
+    return void 0;
+  }
+};
+var settleWithinTimeout = async (operation) => {
+  let timeout;
+  try {
+    return await Promise.race([
+      operation.then(() => true),
+      new Promise((resolve) => {
+        timeout = setTimeout(() => resolve(false), 3e3);
+      })
+    ]);
+  } finally {
+    clearTimeout(timeout);
+  }
+};
+var waitForDeletionTeardown = async () => {
+  while (deletionTeardown) {
+    if (!await settleWithinTimeout(deletionTeardown)) {
+      throw new Error("Account sign-out is still pending. Please try again.");
+    }
+  }
+};
 var normalizeSupabaseAuthError = (error) => {
   if (error instanceof Error) {
     const message = error.message.trim();
@@ -2015,6 +2061,7 @@ var wrapAuthError = (error) => {
 var supabaseAuthService = {
   normalizeAuthError: normalizeSupabaseAuthError,
   async startGoogleSignIn(returnTo) {
+    await waitForDeletionTeardown();
     const redirectTo = returnTo || getCleanOrigin();
     const { error } = await supabaseAuth.auth.signInWithOAuth({
       provider: "google",
@@ -2030,6 +2077,7 @@ var supabaseAuthService = {
     }
   },
   async signInWithPassword(email, password) {
+    await waitForDeletionTeardown();
     const { data, error } = await supabaseAuth.auth.signInWithPassword({
       email,
       password
@@ -2041,6 +2089,7 @@ var supabaseAuthService = {
     return data.session ?? null;
   },
   async signUpWithPassword(email, password, displayName) {
+    await waitForDeletionTeardown();
     const { data, error } = await supabaseAuth.auth.signUp({
       email,
       password,
@@ -2071,40 +2120,47 @@ var supabaseAuthService = {
     }
   },
   async forgetDeletedAccount() {
-    const clearLocal = () => {
-      for (const suffix of ["", "-code-verifier", "-user"]) {
-        try {
-          localStorage.removeItem(SUPABASE_SESSION_STORAGE_KEY + suffix);
-        } catch {
-        }
-      }
-      try {
-        authTokenService.setStoredSupabaseToken(null);
-      } catch {
-      }
-    };
-    clearLocal();
-    let timeout;
-    try {
-      await Promise.race([
-        (async () => {
-          try {
-            await supabaseAuth.auth.stopAutoRefresh();
-            clearLocal();
-            await supabaseAuth.auth.signOut({ scope: "local" });
-          } finally {
-            clearLocal();
+    if (!deletionTeardown) {
+      const keys = ["", "-code-verifier", "-user"].map((suffix) => SUPABASE_SESSION_STORAGE_KEY + suffix);
+      const captured = new Map(keys.map((key) => [key, readStorage(key)]));
+      const deletedIdentity = sessionIdentity(captured.get(SUPABASE_SESSION_STORAGE_KEY));
+      const capturedToken = readStorage(JOZOR_SUPABASE_TOKEN_KEY);
+      const clearLocal = () => {
+        const currentSession = readStorage(SUPABASE_SESSION_STORAGE_KEY);
+        const sameIdentity = deletedIdentity !== void 0 && sessionIdentity(currentSession) === deletedIdentity;
+        const foreignSession = currentSession !== null && currentSession !== captured.get(SUPABASE_SESSION_STORAGE_KEY) && !sameIdentity;
+        if (foreignSession || currentSession === void 0) return;
+        for (const key of keys) {
+          const current = readStorage(key);
+          if (current !== void 0 && (current === captured.get(key) || key === SUPABASE_SESSION_STORAGE_KEY && sameIdentity)) {
+            try {
+              localStorage.removeItem(key);
+            } catch {
+            }
           }
-        })(),
-        new Promise((resolve) => {
-          timeout = setTimeout(resolve, 3e3);
-        })
-      ]);
-    } catch {
-    } finally {
-      clearTimeout(timeout);
+        }
+        const currentToken = readStorage(JOZOR_SUPABASE_TOKEN_KEY);
+        if (currentToken !== void 0 && (currentToken === null || currentToken === capturedToken || deletedIdentity !== void 0 && tokenIdentity(currentToken) === deletedIdentity)) {
+          try {
+            authTokenService.setStoredSupabaseToken(null);
+          } catch {
+          }
+        }
+      };
       clearLocal();
+      const operation = Promise.resolve().then(async () => {
+        try {
+          await supabaseAuth.auth.signOut({ scope: "local" });
+        } catch {
+        } finally {
+          clearLocal();
+        }
+      }).finally(() => {
+        if (deletionTeardown === operation) deletionTeardown = null;
+      });
+      deletionTeardown = operation;
     }
+    await settleWithinTimeout(deletionTeardown);
   },
   getSession() {
     return supabaseAuth.auth.getSession();

@@ -10,6 +10,8 @@
 
 **Spec:** `docs/superpowers/specs/2026-10-01-pr8-review-fixes-design.md`
 
+**Execution status:** Tasks 1-6 implemented and locally tested; Task 7 next. Final broad verification/review (Task 8) remains.
+
 ## Global Constraints
 
 - Work stays on `codex/source-backup-2026-10-01`.
@@ -46,7 +48,7 @@ Each listed test file must include the named cases/assertions below. Use existin
 
 **Interfaces:** Preserve `Dropdown` and `DropdownMenuItem` props, especially `closeOnClick: boolean` and the default `true`. The new unit config uses existing React plugin/setup, `envDir: false`, one fork worker, alias `@` to `src`, `define: { __APP_VERSION__: JSON.stringify('2.0.0') }`, and the repository's existing test exclusions. Set synthetic loopback Supabase URL for both client/server variables, dummy anon/service keys, a dummy JWT secret of at least 32 characters, dummy Paddle key, and existing `VITE_KINDI_AI_ENABLED: 'true'`; never read `.env` or a hosted integration environment. No live browser or API calls are required.
 
-- [ ] **Write failing tests:** Render the actual Dropdown containing `AccountDeletionStatusItem`, seed a synthetic receipt, open with ArrowDown and activate with Enter. A deferred completion response must leave the menu and status mounted, clear the receipt only on completion, and invoke fetch exactly once. Parameterize pending/error/completion. Add normal `closeOnClick` command, Escape/outside-click, and a disabled active status item followed by a different command: a second Enter must not invoke either command.
+- [x] **Write failing tests:** Render the actual Dropdown containing `AccountDeletionStatusItem`, seed a synthetic receipt, open with ArrowDown and activate with Enter. A deferred completion response must leave the menu and status mounted, clear the receipt only on completion, and invoke fetch exactly once. Parameterize pending/error/completion. Add normal `closeOnClick` command, Escape/outside-click, and a disabled active status item followed by a different command: a second Enter must not invoke either command.
 
 ```ts
 expect(screen.getByRole('menu')).toBeVisible();
@@ -56,10 +58,10 @@ expect(fetchMock).toHaveBeenCalledOnce();
 expect(neighborAction).not.toHaveBeenCalled();
 ```
 
-- [ ] **Verify red:** `node node_modules/vitest/vitest.mjs run --config vitest.review-fixes.config.ts src/components/ui/__tests__/Dropdown.test.tsx src/components/header/__tests__/AccountDeletionStatusItem.test.tsx`. Expected: the new keep-open test fails because Enter unmounts the menu.
-- [ ] **Implement:** In `Dropdown.handleKeyDown`, respect already-handled events and activate the actual eligible focused menu item exactly once. Remove parent-owned unconditional closure; the item applies its own close contract. Do not activate a new neighbor through a stale filtered index.
-- [ ] **Verify green:** Repeat the command. Expected: both suites pass, including normal closing and read-only deletion-status request assertions.
-- [ ] **Commit only listed files:** `fix: preserve dropdown item close policy on keyboard activation`.
+- [x] **Verify red:** `node node_modules/vitest/vitest.mjs run --config vitest.review-fixes.config.ts src/components/ui/__tests__/Dropdown.test.tsx src/components/header/__tests__/AccountDeletionStatusItem.test.tsx`. Expected: the new keep-open test fails because Enter unmounts the menu.
+- [x] **Implement:** In `Dropdown.handleKeyDown`, respect already-handled events and activate the actual eligible focused menu item exactly once. Remove parent-owned unconditional closure; the item applies its own close contract. Do not activate a new neighbor through a stale filtered index.
+- [x] **Verify green:** Repeat the command. Expected: both suites pass, including normal closing and read-only deletion-status request assertions.
+- [x] **Commit only listed files:** `fix: preserve dropdown item close policy on keyboard activation`.
 
 ### Task 2: Account-Scoped Web Push State and Endpoint Rotation
 
@@ -67,7 +69,7 @@ expect(neighborAction).not.toHaveBeenCalled();
 
 **Interfaces:** Add `isEnabled: boolean` (confirmed preference/retry direction) and `canSendTest: boolean` (browser subscription and server registration are both confirmed) to the existing hook result. Preserve `status`, `isWorking`, `canActivate`, `registerAndSubscribe(): Promise<boolean>` and `unsubscribe(): Promise<boolean>`. Consume existing `listSubscriptions`, `registerSubscription` and `removeSubscription` signatures unchanged.
 
-- [ ] **Write failing UI tests:** A saved enabled subscription plus rejected server removal leaves the switch checked and error visible; the next click retries removal, not registration. Browser unsubscribe failure after server removal keeps disable retry but disables test send. Cover same-account reuse without a permission prompt; B enabling with A's endpoint unsubscribes A in the browser and saves a different B endpoint without deleting A's database row. Reject same-endpoint rotation and failed ownership lookup. Parameterize UID changes during permission, ownership lookup, rotation, subscribe, save and disable; include A/null/A and same-UID token refresh.
+- [x] **Write failing UI tests:** A saved enabled subscription plus rejected server removal leaves the switch checked and error visible; the next click retries removal, not registration. Browser unsubscribe failure after server removal keeps disable retry but disables test send. Cover same-account reuse without a permission prompt; B enabling with A's endpoint unsubscribes A in the browser and saves a different B endpoint without deleting A's database row. Reject same-endpoint rotation and failed ownership lookup. Parameterize UID changes during permission, ownership lookup, rotation, subscribe, save and disable; include A/null/A and same-UID token refresh.
 
 ```ts
 expect(toggle).toBeChecked();
@@ -76,11 +78,11 @@ expect(doubles.removeSubscription).toHaveBeenCalledTimes(2);
 expect(doubles.registerSubscription).not.toHaveBeenCalled();
 ```
 
-- [ ] **Write ownership SQL test:** Install `20260404000100_add_push_subscriptions.sql` with local `auth.users`, `auth.uid()`, roles and grants. Under real owner RLS, B's upsert of A's globally unique endpoint must fail, A's row stays unchanged, and B can insert a fresh endpoint. This baseline contract must pass before changing hook behavior; no RLS migration is needed.
-- [ ] **Verify red:** Run `node node_modules/vitest/vitest.mjs run --config vitest.review-fixes.config.ts src/components/modals/__tests__/GlobalSettingsPreferencesTab.push.test.tsx`; expected new disable/rotation assertions fail. Run the SQL baseline with `node node_modules/vitest/vitest.mjs run --config vitest.database.config.ts tests/integration/local/pushSubscriptionOwnership.database.test.ts`; expected baseline PASS.
-- [ ] **Implement:** Scope confirmed preference and delivery readiness to UID plus a session/operation epoch, reset on account departure, preserve partial-disable retry, and invalidate inspection callbacks when mutations start. Before reusing an existing endpoint, confirm it is in the current owner's list; otherwise rotate it and validate the returned endpoint. Capture only the matching account's token for persistence. A stale operation cannot mutate another session or re-enable the earlier A session after A/null/A.
-- [ ] **Verify green:** Repeat both commands; existing activation, blocked permission, token refresh and test-send suites remain green.
-- [ ] **Commit only listed files:** `fix: keep web push state accurate across failures and account switches`.
+- [x] **Write ownership SQL test:** Install `20260404000100_add_push_subscriptions.sql` with local `auth.users`, `auth.uid()`, roles and grants. Under real owner RLS, B's upsert of A's globally unique endpoint must fail, A's row stays unchanged, and B can insert a fresh endpoint. This baseline contract must pass before changing hook behavior; no RLS migration is needed.
+- [x] **Verify red:** Run `node node_modules/vitest/vitest.mjs run --config vitest.review-fixes.config.ts src/components/modals/__tests__/GlobalSettingsPreferencesTab.push.test.tsx`; expected new disable/rotation assertions fail. Run the SQL baseline with `node node_modules/vitest/vitest.mjs run --config vitest.database.config.ts tests/integration/local/pushSubscriptionOwnership.database.test.ts`; expected baseline PASS.
+- [x] **Implement:** Scope confirmed preference and delivery readiness to UID plus a session/operation epoch, reset on account departure, preserve partial-disable retry, and invalidate inspection callbacks when mutations start. Before reusing an existing endpoint, confirm it is in the current owner's list; otherwise rotate it and validate the returned endpoint. Capture only the matching account's token for persistence. A stale operation cannot mutate another session or re-enable the earlier A session after A/null/A.
+- [x] **Verify green:** Repeat both commands; existing activation, blocked permission, token refresh and test-send suites remain green.
+- [x] **Commit only listed files:** `fix: keep web push state accurate across failures and account switches`.
 
 ### Task 3: Safe Local Auth Teardown Without Stopping Refresh
 
@@ -88,8 +90,8 @@ expect(doubles.registerSubscription).not.toHaveBeenCalled();
 
 **Interfaces:** Preserve all exported service signatures. Add a module-private `waitForDeletionTeardown(): Promise<void>` barrier used before password login, signup and Supabase OAuth initiation. Preserve the **3000 ms** deletion UI timeout; bound waiting for the underlying teardown to **3000 ms** per login attempt, then reject with a retryable error rather than begin SDK sign-in. No new global listeners or refresh timers.
 
-- [ ] **Write failing service tests:** Replace the old expectation that `stopAutoRefresh` is called with `expect(stopAutoRefreshMock).not.toHaveBeenCalled()`. Assert successful deletion/new login retains the new stored token. A pending actual sign-out outlives deletion's UI timeout; SDK sign-in is not called until it settles, and an additional 3000 ms wait fails retryably. After it settles, retry succeeds. Parameterize password/signup/OAuth barrier use, teardown rejection, storage exceptions and malformed stored sessions. Final clearing removes only captured/deleted identity state; unrelated preferences and a newer identity remain intact.
-- [ ] **Write failing offline SDK test:** Inject a real installed AuthClient through the existing service's mocked adapter, not mocked refresh methods. Use fake timers, synthetic sessions and a mocked fetch transport that rejects any unexpected URL. Following deletion and next password login, advancing refresh time must produce a `grant_type=refresh_token` request for the new session. Dispatch hidden/visible visibility changes: no background refresh while hidden, refresh resumes while visible. An existing auth listener still receives the new sign-in/refresh events. Clean up test clients and timers.
+- [x] **Write failing service tests:** Replace the old expectation that `stopAutoRefresh` is called with `expect(stopAutoRefreshMock).not.toHaveBeenCalled()`. Assert successful deletion/new login retains the new stored token. A pending actual sign-out outlives deletion's UI timeout; SDK sign-in is not called until it settles, and an additional 3000 ms wait fails retryably. After it settles, retry succeeds. Parameterize password/signup/OAuth barrier use, teardown rejection, storage exceptions and malformed stored sessions. Final clearing removes only captured/deleted identity state; unrelated preferences and a newer identity remain intact.
+- [x] **Write failing offline SDK test:** Inject a real installed AuthClient through the existing service's mocked adapter, not mocked refresh methods. Use fake timers, synthetic sessions and a mocked fetch transport that rejects any unexpected URL. Following deletion and next password login, advancing refresh time must produce a `grant_type=refresh_token` request for the new session. Dispatch hidden/visible visibility changes: no background refresh while hidden, refresh resumes while visible. An existing auth listener still receives the new sign-in/refresh events. Clean up test clients and timers.
 
 ```ts
 expect(refreshRequests).toHaveLength(1);
@@ -98,10 +100,10 @@ expect(events).toContain('SIGNED_IN');
 expect(events).toContain('TOKEN_REFRESHED');
 ```
 
-- [ ] **Verify red:** `node node_modules/vitest/vitest.mjs run --config vitest.review-fixes.config.ts src/services/__tests__/supabaseAuthService.test.ts src/services/__tests__/supabaseAuthLifecycle.test.ts`; expected no-stop and real-refresh assertions fail.
-- [ ] **Implement:** Remove unconditional `stopAutoRefresh`; track the underlying teardown promise independently of the UI timeout. Clear captured identity/session keys locally before SDK logout so a revoked identity needs no successful remote round trip. Keep late cleanup identity/generation-scoped and use the bounded barrier before new session establishment. A failed storage read must not authorize wiping an unknown newer value. Do not call SDK-private lifecycle methods.
-- [ ] **Verify green:** Repeat the command and run `src/store/__tests__/accountDeletionLogout.test.ts` plus `src/hooks/auth/__tests__/useAuthInit.test.tsx` with the same isolated config. Expected all pass with no lingering timers/SDK clients.
-- [ ] **Commit only listed files:** `fix: preserve auth refresh and isolate deleted-account teardown`.
+- [x] **Verify red:** `node node_modules/vitest/vitest.mjs run --config vitest.review-fixes.config.ts src/services/__tests__/supabaseAuthService.test.ts src/services/__tests__/supabaseAuthLifecycle.test.ts`; expected no-stop and real-refresh assertions fail.
+- [x] **Implement:** Remove unconditional `stopAutoRefresh`; track the underlying teardown promise independently of the UI timeout. Clear captured identity/session keys locally before SDK logout so a revoked identity needs no successful remote round trip. Keep late cleanup identity/generation-scoped and use the bounded barrier before new session establishment. A failed storage read must not authorize wiping an unknown newer value. Do not call SDK-private lifecycle methods.
+- [x] **Verify green:** Repeat the command and run `src/store/__tests__/accountDeletionLogout.test.ts` plus `src/hooks/auth/__tests__/useAuthInit.test.tsx` with the same isolated config. Expected all pass with no lingering timers/SDK clients.
+- [x] **Commit only listed files:** `fix: preserve auth refresh and isolate deleted-account teardown`.
 
 ### Task 4: Avatar Retirement Database Contract
 
@@ -120,12 +122,12 @@ expect(events).toContain('TOKEN_REFRESHED');
 
 Queue columns: `object_path text PRIMARY KEY`, `user_id text NOT NULL`, `requested_at timestamptz NOT NULL DEFAULT now()`, nullable `claimed_at`, nullable `completed_at`; pending index ordered by requested time/path. No cascading profile foreign key and no direct anon/authenticated table grants.
 
-- [ ] **Write failing SQL tests:** Use PGlite role fixtures like `avatarStorage.database.test.ts`, adding profiles with photo fields and the existing legacy avatar RPC. Test successful CAS queues old path, advances version, leaves current object; a second replacement with stale expectations fails without modifying profile or queue. Test profile clearing/old RPC retirement, own/foreign/anonymous access, malformed path, mismatched URL/path, queue persistence after profile deletion, idempotent completion and Storage absence checks. Claim must refuse any current profile reference, not only the queue owner's current row; test another profile retaining a matching public URL. Assert OAuth/ordinary profile changes that do not reattach a retired key still work.
-- [ ] **Pin filename boundaries:** New keys are `users/<authenticated-id>/profile-<uuid>.webp`. Recognized legacy targets are only the actual previous owned `profile.webp`, `profile.png`, `profile.jpg`, or `profile.jpeg`; no arbitrary nested filename, external URL or whole-folder inventory. User IDs may be native UUIDs or the existing Google text IDs, not UUID-only. Compare path segments exactly, rejecting traversal, backslashes, control characters and encoded separators. Client validates configured-origin correspondence in Task 5; SQL validates the literal public avatar suffix/path and rejects URL query/fragment ambiguity.
-- [ ] **Verify red:** `node node_modules/vitest/vitest.mjs run --config vitest.database.config.ts tests/integration/local/userAvatarCleanup.database.test.ts`; establish the old-schema replacement leak, then expect new contract assertions to fail because retirement does not exist.
-- [ ] **Implement migration:** Add the queue, RPCs and shared retirement guards. Serialize replacement/claim on the owner profile or equivalent owner lock when it is absent. Derive version from the locked database value, preserve null version/path CAS correctly, and refuse attaching tombstoned keys. Capture retirement through profile mutation so the legacy RPC cannot bypass it. Add restrictive Storage INSERT/UPDATE fencing for retired user-avatar keys; do not block the SELECT/DELETE needed for cleanup or unrelated buckets/tree avatars. Retired-key writes must share the same ownership serialization, not just perform a racy unlocked lookup. Never delete object metadata directly in SQL.
-- [ ] **Verify green:** Repeat the new SQL suite, then run `avatarStorage.database.test.ts` and `accountDeletionQueue.database.test.ts` with the database config. Include replace/claim/reattach serial interleavings and account-deletion overlap. Report that PGlite interleavings prove contract behavior but not simultaneous multi-connection lock scheduling.
-- [ ] **Commit only listed files:** `fix: durably retire superseded account avatars`.
+- [x] **Write failing SQL tests:** Use PGlite role fixtures like `avatarStorage.database.test.ts`, adding profiles with photo fields and the existing legacy avatar RPC. Test successful CAS queues old path, advances version, leaves current object; a second replacement with stale expectations fails without modifying profile or queue. Test profile clearing/old RPC retirement, own/foreign/anonymous access, malformed path, mismatched URL/path, queue persistence after profile deletion, idempotent completion and Storage absence checks. Claim must refuse any current profile reference, not only the queue owner's current row; test another profile retaining a matching public URL. Assert OAuth/ordinary profile changes that do not reattach a retired key still work.
+- [x] **Pin filename boundaries:** New keys are `users/<authenticated-id>/profile-<uuid>.webp`. Recognized legacy targets are only the actual previous owned `profile.webp`, `profile.png`, `profile.jpg`, or `profile.jpeg`; no arbitrary nested filename, external URL or whole-folder inventory. User IDs may be native UUIDs or the existing Google text IDs, not UUID-only. Compare path segments exactly, rejecting traversal, backslashes, control characters and encoded separators. Client validates configured-origin correspondence in Task 5; SQL validates the literal public avatar suffix/path and rejects URL query/fragment ambiguity.
+- [x] **Verify red:** `node node_modules/vitest/vitest.mjs run --config vitest.database.config.ts tests/integration/local/userAvatarCleanup.database.test.ts`; establish the old-schema replacement leak, then expect new contract assertions to fail because retirement does not exist.
+- [x] **Implement migration:** Add the queue, RPCs and shared retirement guards. Serialize replacement/claim on the owner profile or equivalent owner lock when it is absent. Derive version from the locked database value, preserve null version/path CAS correctly, and refuse attaching tombstoned keys. Capture retirement through profile mutation so the legacy RPC cannot bypass it. Add restrictive Storage INSERT/UPDATE fencing for retired user-avatar keys; do not block the SELECT/DELETE needed for cleanup or unrelated buckets/tree avatars. Retired-key writes must share the same ownership serialization, not just perform a racy unlocked lookup. Never delete object metadata directly in SQL.
+- [x] **Verify green:** Repeat the new SQL suite, then run `avatarStorage.database.test.ts` and `accountDeletionQueue.database.test.ts` with the database config. Include replace/claim/reattach serial interleavings and account-deletion overlap. Report that PGlite interleavings prove contract behavior but not simultaneous multi-connection lock scheduling.
+- [x] **Commit only listed files:** `fix: durably retire superseded account avatars`.
 
 ### Task 5: Avatar Upload Cleanup and Gated Server Retry
 
@@ -137,7 +139,7 @@ Queue columns: `object_path text PRIMARY KEY`, `user_id text NOT NULL`, `request
 - `sweepUserAvatarCleanup(admin: SupabaseClient): Promise<UserAvatarCleanupCounts>` uses service inventory.
 - A private shared exact-object remover performs claim, `storage.from('avatars').remove([object_path])`, complete, in that order.
 
-- [ ] **Write failing tests:** Mock owner profile query before upload, immutable upload, replacement RPC and cleanup. Confirm old object removal only after replacement commit, Storage failure leaves pending work while upload returns success, and a later upload retries it. Unknown/failed replacement must call the retirement/reconciliation contract before any deletion; if its path is current, do not remove it. Lost commit response reconciles to success from the own profile; another winning upload does not falsely report this upload as current. Reject mismatched public origin/path against `supabaseUrl`, malformed RPC returns, failed profile snapshot, failed inventory/claim, and any arbitrary bucket/path. Assert result version comes from SQL.
+- [x] **Write failing tests:** Mock owner profile query before upload, immutable upload, replacement RPC and cleanup. Confirm old object removal only after replacement commit, Storage failure leaves pending work while upload returns success, and a later upload retries it. Unknown/failed replacement must call the retirement/reconciliation contract before any deletion; if its path is current, do not remove it. Lost commit response reconciles to success from the own profile; another winning upload does not falsely report this upload as current. Reject mismatched public origin/path against `supabaseUrl`, malformed RPC returns, failed profile snapshot, failed inventory/claim, and any arbitrary bucket/path. Assert result version comes from SQL.
 
 ```ts
 expect(removeMock).toHaveBeenCalledWith([oldPath]);
@@ -146,11 +148,11 @@ expect(result.photoVersion).toBe(committedVersion);
 expect(uploadMock.mock.calls[0][2].upsert).toBe(false);
 ```
 
-- [ ] **Write gated retry tests:** With no `USER_AVATAR_CLEANUP_ENABLED`, avatar sweep is never called and existing cron counts remain unchanged. Only when both flags equal `true`, secret matches, method/config are valid, invoke both helpers and sum their four count fields. Missing secret/config, wrong authorization, disabled flags and malformed flag values invoke no avatar sweep. Missing RPC/error does not cause a Storage delete or expose paths.
-- [ ] **Verify red:** `node node_modules/vitest/vitest.mjs run --config vitest.review-fixes.config.ts src/services/__tests__/supabaseStorageService.test.ts src/services/__tests__/userAvatarCleanup.test.ts src/api/__tests__/personMediaCleanupCron.test.ts`; expected retirement/removal assertions fail while old person-photo cases still run.
-- [ ] **Implement:** Query only the owner's needed profile fields before upload, validate compressed WebP and the configured public URL, call CAS RPC, use its version, and run owner cleanup best-effort without reverting a committed update. Reconcile ambiguous responses safely; a missing retirement migration never permits direct cleanup. Validate every inventory item before Storage use. Integrate server retry under both existing and additional flags, preserving response privacy and existing behavior when the new flag is absent. Do not alter `vercel.json`, create schedules, or set flags.
-- [ ] **Verify green:** Repeat the command and `src/services/__tests__/personMediaServerCleanup.test.ts` to prove tree cleanup remains unaffected; run Task 4 SQL suites again.
-- [ ] **Commit only listed files:** `fix: clean retired account avatars with durable safe retries`.
+- [x] **Write gated retry tests:** With no `USER_AVATAR_CLEANUP_ENABLED`, avatar sweep is never called and existing cron counts remain unchanged. Only when both flags equal `true`, secret matches, method/config are valid, invoke both helpers and sum their four count fields. Missing secret/config, wrong authorization, disabled flags and malformed flag values invoke no avatar sweep. Missing RPC/error does not cause a Storage delete or expose paths.
+- [x] **Verify red:** `node node_modules/vitest/vitest.mjs run --config vitest.review-fixes.config.ts src/services/__tests__/supabaseStorageService.test.ts src/services/__tests__/userAvatarCleanup.test.ts src/api/__tests__/personMediaCleanupCron.test.ts`; expected retirement/removal assertions fail while old person-photo cases still run.
+- [x] **Implement:** Query only the owner's needed profile fields before upload, validate compressed WebP and the configured public URL, call CAS RPC, use its version, and run owner cleanup best-effort without reverting a committed update. Reconcile ambiguous responses safely; a missing retirement migration never permits direct cleanup. Validate every inventory item before Storage use. Integrate server retry under both existing and additional flags, preserving response privacy and existing behavior when the new flag is absent. Do not alter `vercel.json`, create schedules, or set flags.
+- [x] **Verify green:** Repeat the command and `src/services/__tests__/personMediaServerCleanup.test.ts` to prove tree cleanup remains unaffected; run Task 4 SQL suites again.
+- [x] **Commit only listed files:** `fix: clean retired account avatars with durable safe retries`.
 
 ### Task 6: Service-Only Rejected Checkout Resolution
 
@@ -158,7 +160,7 @@ expect(uploadMock.mock.calls[0][2].upsert).toBe(false);
 
 **Interfaces:** Add nullable `resolution_reason text CHECK (resolution_reason IS NULL OR resolution_reason = 'rejected')` to `private.account_checkout_attempts`. Implement `public.resolve_rejected_account_checkout(p_user_id text, p_attempt_id uuid) RETURNS boolean`, granting only `service_role`. Preserve `record_account_checkout(uuid, text, boolean, text) RETURNS boolean` and its existing defaults, adding refusal for an already rejected attempt.
 
-- [ ] **Write failing SQL tests:** An owned, unresolved ID-less reservation can resolve; only it changes to `resolution_reason = 'rejected'` plus nonnull `resolved_at`. A second call is true and changes no timestamp. Wrong owner, missing profile/attempt, null inputs, correlated transaction or another resolved state returns false. Anonymous/authenticated invocation is denied. A late transaction correlation on rejected attempt returns false. A second unresolved attempt still blocks account deletion and billing repair; resolving a proven rejection removes only its own guard.
+- [x] **Write failing SQL tests:** An owned, unresolved ID-less reservation can resolve; only it changes to `resolution_reason = 'rejected'` plus nonnull `resolved_at`. A second call is true and changes no timestamp. Wrong owner, missing profile/attempt, null inputs, correlated transaction or another resolved state returns false. Anonymous/authenticated invocation is denied. A late transaction correlation on rejected attempt returns false. A second unresolved attempt still blocks account deletion and billing repair; resolving a proven rejection removes only its own guard.
 
 ```ts
 expect(rejectedAttempt.transaction_id).toBeNull();
@@ -167,10 +169,10 @@ expect(pendingAttempts).toHaveLength(1);
 expect(lateRecordResult).toBe(false);
 ```
 
-- [ ] **Verify red:** `node node_modules/vitest/vitest.mjs run --config vitest.database.config.ts tests/integration/local/accountDeletionQueue.database.test.ts`; new contract assertions fail on the prior schema without breaking fixture setup.
-- [ ] **Implement migration:** Lock profile first, then the owned attempt; use null-safe predicates and refuse already correlated attempts. Preserve history and set reason/time atomically; idempotent success requires this exact rejection reason and no transaction. Extend the existing record function without changing successful/canceled/subscription correlation. Use fixed search paths, explicit revoke/grant and transactional migration boundaries.
-- [ ] **Verify green:** Repeat the SQL command and `tests/integration/local/billingReconciliation.database.test.ts`, `tests/integration/local/subscriptionLedger.database.test.ts`, `tests/integration/local/accountDeletion.database.test.ts`. Expected role/guard/idempotency and existing billing/deletion cases pass.
-- [ ] **Commit only listed files:** `fix: resolve proven rejected checkout reservations safely`.
+- [x] **Verify red:** `node node_modules/vitest/vitest.mjs run --config vitest.database.config.ts tests/integration/local/accountDeletionQueue.database.test.ts`; new contract assertions fail on the prior schema without breaking fixture setup.
+- [x] **Implement migration:** Lock profile first, then the owned attempt; use null-safe predicates and refuse already correlated attempts. Preserve history and set reason/time atomically; idempotent success requires this exact rejection reason and no transaction. Extend the existing record function without changing successful/canceled/subscription correlation. Use fixed search paths, explicit revoke/grant and transactional migration boundaries.
+- [x] **Verify green:** Repeat the SQL command and `tests/integration/local/billingReconciliation.database.test.ts`, `tests/integration/local/subscriptionLedger.database.test.ts`, `tests/integration/local/accountDeletion.database.test.ts`. Expected role/guard/idempotency and existing billing/deletion cases pass.
+- [x] **Commit only listed files:** `fix: resolve proven rejected checkout reservations safely`.
 
 ### Task 7: Bounded Paddle Rejection Classification and Handler Integration
 
@@ -178,8 +180,8 @@ expect(lateRecordResult).toBe(false);
 
 **Interfaces:** Export `isDefinitiveCheckoutRejection(response: Response, signal: AbortSignal): Promise<boolean>`. Consume Task 6 resolution RPC with the captured authenticated UID and attempt UUID. No new provider requests, retry policy, external dependencies or public response shape.
 
-- [ ] **Write failing classifier tests:** Both allowed codes return true only with status 400, object envelope, `error.type === 'request_error'`, no `data` property and complete bounded JSON. False for arrays, null/scalar error, unknown/wrong-type code, transaction-bearing response, malformed/truncated JSON, generic 4xx, 408/429, 5xx, redirects, body read failure, oversized or hanging streams and aborted signal. Count actual streamed bytes and cap at 32768; cancel on overflow/abort, ignoring falsely low Content-Length. Include a multibyte stream whose character count is under the limit but UTF-8 byte count is over it.
-- [ ] **Write failing handler tests:** Allowed rejection invokes `resolve_rejected_account_checkout` exactly once for its UID/attempt, never `record_account_checkout`/cancellation, and returns the existing generic 500. Unknown outcomes never resolve. RPC false/error leaves the failure generic; successful creation still records transaction before returning 200. Console and public response must not contain synthetic private provider details/keys. Include transport timeout and successful response missing ID.
+- [x] **Write failing classifier tests:** Both allowed codes return true only with status 400, object envelope, `error.type === 'request_error'`, no `data` property and complete bounded JSON. False for arrays, null/scalar error, unknown/wrong-type code, transaction-bearing response, malformed/truncated JSON, generic 4xx, 408/429, 5xx, redirects, body read failure, oversized or hanging streams and aborted signal. Count actual streamed bytes and cap at 32768; cancel on overflow/abort, ignoring falsely low Content-Length. Include a multibyte stream whose character count is under the limit but UTF-8 byte count is over it.
+- [x] **Write failing handler tests:** Allowed rejection invokes `resolve_rejected_account_checkout` exactly once for its UID/attempt, never `record_account_checkout`/cancellation, and returns the existing generic 500. Unknown outcomes never resolve. RPC false/error leaves the failure generic; successful creation still records transaction before returning 200. Console and public response must not contain synthetic private provider details/keys. Include transport timeout and successful response missing ID.
 
 ```ts
 expect(rpc).toHaveBeenCalledWith('resolve_rejected_account_checkout', {
@@ -190,10 +192,10 @@ expect(res.body).toEqual({ error: 'Failed to initiate checkout session' });
 expect(rpc.mock.calls.some(([name]) => name === 'record_account_checkout')).toBe(false);
 ```
 
-- [ ] **Verify red:** `node node_modules/vitest/vitest.mjs run --config vitest.review-fixes.config.ts shared/server/__tests__/paddleCheckoutRejection.test.ts src/api/__tests__/createCheckoutSession.test.ts`; intended classifier/resolution assertions fail.
-- [ ] **Implement:** Stream/read the error envelope under one captured `AbortSignal.timeout(10000)` shared with provider fetch. Classify only the pinned allowlist; no `documentation_url` authority, status-only shortcut or catch-all resolution. Invoke service-only rejection RPC only for true classification; require true result and hide provider body in all error paths. Preserve existing success/reservation, admission/origin/session/rate-limit gates.
-- [ ] **Verify green:** Repeat the command plus `shared/server/__tests__/accountCheckoutFence.test.ts` and `src/api/__tests__/accountSessionBoundary.test.ts`; run Task 6 SQL tests. Expected unknown-outcome safeguards remain intact.
-- [ ] **Commit only listed files:** `fix: release checkout fences only on definitive Paddle rejection`.
+- [x] **Verify red:** `node node_modules/vitest/vitest.mjs run --config vitest.review-fixes.config.ts shared/server/__tests__/paddleCheckoutRejection.test.ts src/api/__tests__/createCheckoutSession.test.ts`; intended classifier/resolution assertions fail.
+- [x] **Implement:** Stream/read the error envelope under one captured `AbortSignal.timeout(10000)` shared with provider fetch. Classify only the pinned allowlist; no `documentation_url` authority, status-only shortcut or catch-all resolution. Invoke service-only rejection RPC only for true classification; require true result and hide provider body in all error paths. Preserve existing success/reservation, admission/origin/session/rate-limit gates.
+- [x] **Verify green:** Repeat the command plus `shared/server/__tests__/accountCheckoutFence.test.ts` and `src/api/__tests__/accountSessionBoundary.test.ts`; run Task 6 SQL tests. Expected unknown-outcome safeguards remain intact.
+- [x] **Commit only listed files:** `fix: release checkout fences only on definitive Paddle rejection`.
 
 ### Task 8: Whole-Branch Verification and Handoff
 

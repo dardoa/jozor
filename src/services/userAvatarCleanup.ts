@@ -8,7 +8,8 @@ export interface UserAvatarCleanupCounts {
 }
 
 export const isUserAvatarObjectPath = (value: unknown, owner?: string, allowLegacy = true): value is string => {
-  if (typeof value !== 'string' || value.length > 1024 || /[\\%?#\u0000-\u001f\u007f]/.test(value)) return false;
+  if (typeof value !== 'string' || value.length > 1024 || /[\\%?#]/.test(value)
+    || Array.from(value).some(character => character.charCodeAt(0) < 32 || character.charCodeAt(0) === 127)) return false;
   const parts = value.split('/');
   if (parts.length !== 3 || parts[0] !== 'users' || !parts[1] || ['.', '..'].includes(parts[1])) return false;
   if (owner !== undefined && parts[1] !== owner) return false;

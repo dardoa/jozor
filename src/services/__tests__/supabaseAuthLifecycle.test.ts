@@ -1,7 +1,7 @@
 import { AuthClient } from '@supabase/auth-js';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-const adapter = vi.hoisted(() => ({ client: null as AuthClient | null }));
+const adapter = vi.hoisted(() => ({ client: null as InstanceType<typeof AuthClient> | null }));
 vi.mock('../supabaseClient', () => ({ supabaseAuth: { get auth() { return adapter.client!; } } }));
 
 const jwt = (exp: number) => `${btoa('{"alg":"HS256","typ":"JWT"}')}.${btoa(JSON.stringify({ sub: 'new-user', exp }))}.signature`;
