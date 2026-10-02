@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { isAccountSessionActive } from '../../../auth/accountSession.js';
 import { createClient } from '@supabase/supabase-js';
 import { verifyInternalToken } from '../../../auth/internalJwt.js';
 import {
@@ -8,6 +9,8 @@ import {
   resolveAllowedOriginFromEnv,
 } from '../../../http/cors.js';
 import { MAX_JSON_BODY_SIZE, PayloadTooLargeError } from '../../http/bodyLimits.js';
+import { ACCOUNT_ADMISSION_PAUSE_BODY, ACCOUNT_ADMISSION_PAUSE_HEADERS, isAccountAdmissionPaused } from '../../../http/accountAdmission.js';
+import { isDefinitiveCheckoutRejection } from '../../paddleCheckoutRejection.js';
 
 export const config = {
   api: {
@@ -78,6 +81,7 @@ async function authenticateUser(authHeader?: string): Promise<AuthenticatedUser 
   if (!authHeader?.startsWith('Bearer ')) return null;
 
   const token = authHeader.slice('Bearer '.length);
+  if (!await isAccountSessionActive(token)) return null;
   const internalUser = await verifyInternalToken(token, getEnv('SUPABASE_JWT_SECRET'));
   if (internalUser) {
     return {
@@ -131,6 +135,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     res.writeHead(405, { ...headers, 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({ error: 'Method Not Allowed' }));
+  }
+
+  if (isAccountAdmissionPaused(process.env)) {
+    res.writeHead(503, { ...headers, ...ACCOUNT_ADMISSION_PAUSE_HEADERS, 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify(ACCOUNT_ADMISSION_PAUSE_BODY));
   }
 
   let body: CheckoutRequestBody;
@@ -217,12 +226,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const paddleEnv = getEnv('PADDLE_ENVIRONMENT') || getEnv('VITE_PADDLE_ENVIRONMENT') || 'sandbox';
+    if (paddleEnv !== 'sandbox' && paddleEnv !== 'production') throw new Error('Invalid Paddle environment');
     const paddleHost = paddleEnv === 'production' ? 'api.paddle.com' : 'sandbox-api.paddle.com';
     const paddleUrl = `https://${paddleHost}/transactions`;
 
+    // Reserve under the same profile lock used by account deletion, before any
+    // external transaction can exist. An uncertain response stays unresolved.
+    const attempt = await supabaseAdmin.rpc('begin_account_checkout', { p_user_id: user.uid });
+    if (attempt.error || typeof attempt.data !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(attempt.data)) {
+      res.writeHead(409, { ...headers, 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ error: 'Account checkout is temporarily unavailable.' }));
+    }
     // 6. Request transaction creation from Paddle API
+    const providerSignal = AbortSignal.timeout(10000);
     const response = await fetch(paddleUrl, {
       method: 'POST',
+      signal: providerSignal,
+      redirect: 'error',
       headers: {
         'Authorization': `Bearer ${paddleApiKey}`,
         'Content-Type': 'application/json',
@@ -236,28 +256,36 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         ],
         custom_data: {
           userId: user.uid,
+          checkoutAttemptId: attempt.data,
         },
       }),
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Paddle API response error (${response.status}): ${errorText}`);
+      if (await isDefinitiveCheckoutRejection(response, providerSignal)) {
+        const resolved = await supabaseAdmin.rpc('resolve_rejected_account_checkout', {
+          p_user_id: user.uid, p_attempt_id: attempt.data,
+        });
+        if (resolved.error || resolved.data !== true) throw new Error('Checkout rejection persistence unavailable');
+      }
+      throw new Error(`Paddle API response error (${response.status})`);
     }
 
     const paddleResult = await response.json();
     const transactionId = paddleResult.data?.id;
 
-    if (!transactionId) {
+    if (typeof transactionId !== 'string' || !/^txn_[a-z0-9]+$/.test(transactionId)) {
       throw new Error('Paddle transaction creation response is missing data.id');
     }
+
+    const recorded = await supabaseAdmin.rpc('record_account_checkout', { p_attempt_id: attempt.data, p_transaction_id: transactionId });
+    if (recorded.error || recorded.data !== true) throw new Error('Checkout transaction persistence unavailable');
 
     // 7. Return securely generated transactionId to client
     res.writeHead(200, { ...headers, 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({ transactionId }));
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Unknown error';
-    console.error('[CREATE_CHECKOUT] Failed to create checkout transaction:', message);
+  } catch {
+    console.error('[CREATE_CHECKOUT] Failed to create checkout transaction.');
     res.writeHead(500, { ...headers, 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({ error: 'Failed to initiate checkout session' }));
   }

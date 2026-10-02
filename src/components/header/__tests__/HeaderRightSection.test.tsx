@@ -41,7 +41,10 @@ vi.mock('../NotificationBell', () => ({
 }));
 
 vi.mock('../AccountMenu', () => ({
-  AccountMenu: () => <div>Account menu content</div>,
+  AccountMenu: ({ onOpenGlobalSettings }: { onOpenGlobalSettings?: () => void }) => <div>
+    Account menu content
+    {onOpenGlobalSettings && <button onClick={onOpenGlobalSettings}>Open account settings</button>}
+  </div>,
 }));
 
 const buildProps = (): HeaderRightSectionProps => ({
@@ -118,11 +121,14 @@ describe('HeaderRightSection', () => {
   });
 
   it('opens the account menu for authenticated users', () => {
-    render(<HeaderRightSection {...buildProps()} />);
+    const props = buildProps();
+    render(<HeaderRightSection {...props} />);
 
     fireEvent.click(screen.getByTestId('account-menu-trigger'));
 
     expect(screen.getByText('Account menu content')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Open account settings' }));
+    expect(props.globalActions.onOpenGlobalSettings).toHaveBeenCalledTimes(1);
   });
 
   it('resets the Kindi session at tree, permission, and account boundaries', () => {

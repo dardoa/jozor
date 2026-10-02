@@ -148,7 +148,7 @@ export const AdminSubscriptions: React.FC = () => {
   };
 
   const loadSubscriptions = useCallback(async () => {
-    if (!user) return;
+    if (!user || !isAdmin) return;
     setIsLoading(true);
     setError(null);
     try {
@@ -156,15 +156,13 @@ export const AdminSubscriptions: React.FC = () => {
       const nextUsers = Array.isArray(report.users) ? report.users : [];
       setUsers(nextUsers);
       setAuditEvents(Array.isArray(report.auditEvents) ? report.auditEvents : []);
-      if (nextUsers.length > 0 && !nextUsers.some((row) => row.id === selectedUserId)) {
-        setSelectedUserId(nextUsers[0].id);
-      }
+      setSelectedUserId(current => nextUsers.some(row => row.id === current) ? current : nextUsers[0]?.id ?? '');
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : 'Failed to load subscriptions.');
     } finally {
       setIsLoading(false);
     }
-  }, [query, selectedUserId, user]);
+  }, [query, user, isAdmin]);
 
   useEffect(() => {
     void loadSubscriptions();
@@ -354,7 +352,7 @@ export const AdminSubscriptions: React.FC = () => {
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="mdardoa@gmail.com"
+              placeholder="name@example.com"
               className="w-full rounded-md border border-[var(--border-soft)] bg-[var(--surface-app)] px-9 py-2 text-[var(--text-main)]"
             />
           </span>
@@ -404,8 +402,13 @@ export const AdminSubscriptions: React.FC = () => {
                     <td className="px-4 py-3 align-top">
                       <Badge tone={entry.paddleTier === 'free' ? 'neutral' : 'success'}>{tierLabel(entry.paddleTier)}</Badge>
                       <div className="mt-2 text-xs text-[var(--text-muted)]">
-                        {entry.paddleSubscription
-                          ? `${entry.paddleSubscription.status} / ${entry.paddleSubscription.plan_id}`
+                        {(entry.paddleSubscriptions ?? (entry.paddleSubscription ? [entry.paddleSubscription] : [])).length > 0
+                          ? (entry.paddleSubscriptions ?? [entry.paddleSubscription!]).map(subscription => (
+                            <div key={subscription.id} className="mb-2 break-words last:mb-0">
+                              <div>{subscription.status} / {subscription.plan_id}</div>
+                              <div className="font-mono text-xs">{subscription.id}</div>
+                            </div>
+                          ))
                           : 'No Paddle row'}
                       </div>
                     </td>

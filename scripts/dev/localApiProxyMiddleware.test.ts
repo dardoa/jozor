@@ -46,6 +46,22 @@ const createResponse = () => {
 };
 
 describe('createLocalApiProxyMiddleware', () => {
+  it('routes account deletion through the real root handler without falling through to the SPA', async () => {
+    let handler: ((req: IncomingMessage, res: ServerResponse, next: () => void) => Promise<void>) | undefined;
+    const plugin = createLocalApiProxyMiddleware({
+      SUPABASE_URL: 'https://example.supabase.co', SUPABASE_SERVICE_ROLE_KEY: 'service-role',
+      ENABLE_LOCAL_API_PROXY: 'true', APP_ORIGIN: 'http://localhost:3000',
+    });
+    plugin.configureServer?.({ middlewares: { use: (_prefix: string, callback: typeof handler) => { handler = callback; } } } as never);
+    const req = Readable.from(Buffer.from('{}')) as MutableIncomingRequest;
+    req.method = 'POST'; req.url = '/auth/delete-account'; req.headers = { host: 'localhost:3000' };
+    const res = createResponse(); const next = vi.fn();
+    expect(handler).toBeTypeOf('function');
+    await handler!(req, res as never, next);
+    expect(res.statusCode).toBe(401);
+    expect(JSON.parse(res.body)).toEqual({ error: 'Unauthorized: Invalid token' });
+    expect(next).not.toHaveBeenCalled();
+  });
   it('reports Paddle readiness without exposing secret values', async () => {
     let handler:
       | ((req: IncomingMessage, res: ServerResponse, next: () => void) => Promise<void>)

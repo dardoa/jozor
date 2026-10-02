@@ -99,6 +99,9 @@ const setupMockClient = (input: {
   return client;
 };
 
+// Session refusal is exercised with the real gate in accountSessionBoundary.test.ts.
+vi.mock('../../../shared/auth/accountSession.js', () => ({ isAccountSessionActive: vi.fn(async () => true) }));
+
 describe('admin billing diagnostics API', () => {
   beforeEach(() => {
     vi.clearAllMocks();

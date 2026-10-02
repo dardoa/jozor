@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { isAccountSessionActive } from '../shared/auth/accountSession.js';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import webpush from 'web-push';
 import { verifyInternalToken } from '../shared/auth/internalJwt.js';
@@ -100,6 +101,7 @@ async function authenticateUser(authHeader?: string): Promise<AuthenticatedUser 
   if (!authHeader?.startsWith('Bearer ')) return null;
 
   const token = authHeader.slice('Bearer '.length);
+  if (!await isAccountSessionActive(token)) return null;
   const internalUser = await verifyInternalToken(token, getEnv('SUPABASE_JWT_SECRET'));
   if (internalUser) {
     return {
@@ -129,7 +131,7 @@ function isExpiredSubscriptionError(error: unknown) {
 }
 
 function getVapidConfig() {
-  const publicKey = getEnv('VAPID_PUBLIC_KEY');
+  const publicKey = getEnv('VAPID_PUBLIC_KEY') || getEnv('VITE_VAPID_PUBLIC_KEY');
   const privateKey = getEnv('VAPID_PRIVATE_KEY');
   const subject = getEnv('VAPID_SUBJECT') || 'mailto:hello@jozor.app';
 

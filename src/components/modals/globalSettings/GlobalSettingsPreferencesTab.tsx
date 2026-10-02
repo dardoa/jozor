@@ -1,6 +1,7 @@
 import { Check, Languages, Moon, RotateCcw, Sun, Zap } from 'lucide-react';
 import { Button } from '../../ui/Button';
 import type { GlobalSettingsModalState } from '../useGlobalSettingsModalState';
+import { GlobalSettingsPushPreference } from './GlobalSettingsPushPreference';
 
 type GlobalSettingsPreferencesTabProps = Pick<
   GlobalSettingsModalState,
@@ -25,6 +26,7 @@ export const GlobalSettingsPreferencesTab = ({
   setShowTourConfirm,
 }: GlobalSettingsPreferencesTabProps) => (
   <div className="space-y-6 animate-in slide-in-from-bottom-2 duration-300">
+    <GlobalSettingsPushPreference t={t} />
     <div className="ds-panel-subtle flex items-center justify-between rounded-2xl p-5 shadow-[var(--shadow-sm)]">
       <div className="flex items-center gap-3">
         <div className={`rounded-lg border border-[var(--border-soft)] p-2 ${darkMode ? 'bg-[var(--surface-subtle)] text-[var(--color-accent-500)]' : 'bg-[var(--surface-subtle)] text-[var(--color-info-500)]'}`}>

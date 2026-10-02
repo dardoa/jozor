@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { isAccountSessionActive } from '../../shared/auth/accountSession.js';
 import {
   createClient,
   type SupabaseClient,
@@ -109,6 +110,7 @@ async function authenticateRequest(authHeader?: string): Promise<AuthenticatedUs
   if (!authHeader?.startsWith('Bearer ')) return null;
 
   const token = authHeader.slice('Bearer '.length);
+  if (!await isAccountSessionActive(token)) return null;
 
   // 1. Attempt local JWT verification
   const internalUser = await verifyInternalToken(token, getEnv('SUPABASE_JWT_SECRET'));
@@ -231,6 +233,30 @@ async function listAuthUsers(supabaseAdmin: SupabaseClient, query: string) {
     }));
 }
 
+async function listUserSubscriptionRows(supabaseAdmin: SupabaseClient, userIds: string[]) {
+  const rows: SubscriptionRow[] = [];
+  const pageSize = 500;
+  let expectedCount: number | null = null;
+  for (let page = 0; page < 20; page += 1) {
+    const { data, count, error } = await supabaseAdmin.from('subscriptions')
+      .select('user_id, id, status, plan_id, paddle_customer_id, current_period_end, updated_at', { count: 'exact' })
+      .in('user_id', userIds).order('id', { ascending: true })
+      .range(page * pageSize, (page + 1) * pageSize - 1);
+    if (error) throw error;
+    if (count === null || (expectedCount !== null && expectedCount !== count)) {
+      throw new Error('Subscription inventory count unavailable or changed during pagination.');
+    }
+    expectedCount = count;
+    rows.push(...((data ?? []) as SubscriptionRow[]));
+    if (rows.length === count && new Set(rows.map(row => row.id)).size === count) return rows;
+    if (!data || data.length < pageSize || rows.length >= count) {
+      throw new Error('Subscription inventory is incomplete.');
+    }
+  }
+  // Never report a partial ledger as the complete subscription list.
+  throw new Error('Subscription inventory exceeds the bounded admin query. Narrow the user search.');
+}
+
 async function listSubscriptions(
   req: VercelRequest,
   res: VercelResponse,
@@ -246,7 +272,7 @@ async function listSubscriptions(
 
   const [
     { data: profiles, error: profilesError },
-    { data: subscriptions, error: subscriptionsError },
+    subscriptions,
     { data: overrides, error: overridesError },
     { data: auditEvents, error: auditEventsError },
   ] = await Promise.all([
@@ -254,10 +280,7 @@ async function listSubscriptions(
       .from('user_profiles')
       .select('id, display_name, photo_url, metadata, tier, created_at, updated_at')
       .in('id', userIds),
-    supabaseAdmin
-      .from('subscriptions')
-      .select('user_id, id, status, plan_id, paddle_customer_id, current_period_end, updated_at')
-      .in('user_id', userIds),
+    listUserSubscriptionRows(supabaseAdmin, userIds),
     supabaseAdmin
       .from('subscription_overrides')
       .select(
@@ -277,19 +300,18 @@ async function listSubscriptions(
   ]);
 
   if (profilesError) throw profilesError;
-  if (subscriptionsError) throw subscriptionsError;
   if (overridesError) throw overridesError;
   if (auditEventsError) throw auditEventsError;
 
   const profilesById = new Map(
     ((profiles ?? []) as UserProfileRow[]).map((profile) => [profile.id, profile])
   );
-  const subscriptionsByUser = new Map(
-    ((subscriptions ?? []) as SubscriptionRow[]).map((subscription) => [
-      subscription.user_id,
-      subscription,
-    ])
-  );
+  const subscriptionsByUser = new Map<string, SubscriptionRow[]>();
+  for (const subscription of (subscriptions ?? []) as SubscriptionRow[]) {
+    const rows = subscriptionsByUser.get(subscription.user_id) ?? [];
+    rows.push(subscription);
+    subscriptionsByUser.set(subscription.user_id, rows);
+  }
   const overridesByUser = new Map(
     ((overrides ?? []) as OverrideRow[]).map((override) => [override.user_id, override])
   );
@@ -299,7 +321,7 @@ async function listSubscriptions(
     auditEvents: auditRows,
     users: authUsers.map((authUser) => {
       const profile = profilesById.get(authUser.id);
-      const subscription = subscriptionsByUser.get(authUser.id);
+      const userSubscriptions = (subscriptionsByUser.get(authUser.id) ?? []).sort((a, b) => a.id.localeCompare(b.id));
       const override = overridesByUser.get(authUser.id);
       const paddleTier = isBillingTier(profile?.tier) ? profile.tier : 'free';
       const effectiveTier = resolveEffectiveTier(paddleTier, override);
@@ -310,7 +332,9 @@ async function listSubscriptions(
         displayName: profile?.display_name ?? '',
         paddleTier,
         effectiveTier,
-        paddleSubscription: subscription ?? null,
+        paddleSubscriptions: userSubscriptions,
+        // Retain the old single-row field only when it is unambiguous.
+        paddleSubscription: userSubscriptions.length === 1 ? userSubscriptions[0] : null,
         override: override ?? null,
         createdAt: profile?.created_at ?? authUser.created_at ?? null,
         updatedAt: profile?.updated_at ?? null,

@@ -55,6 +55,9 @@ const createResponse = () => {
   return response;
 };
 
+// Session refusal is exercised with the real gate in accountSessionBoundary.test.ts.
+vi.mock('../../../shared/auth/accountSession.js', () => ({ isAccountSessionActive: vi.fn(async () => true) }));
+
 describe('root push notifier API function', () => {
   const originalEnv = process.env;
 
@@ -80,6 +83,15 @@ describe('root push notifier API function', () => {
   it('exports Vercel push notifier handlers', () => {
     expect(rootHandler).toEqual(expect.any(Function));
     expect(rootSendPushNotificationToUser).toEqual(expect.any(Function));
+  });
+
+  it('accepts the production Vite public key name for server delivery', async () => {
+    delete process.env.VAPID_PUBLIC_KEY;
+    process.env.VITE_VAPID_PUBLIC_KEY = 'vite-public-key';
+
+    await expect(rootSendPushNotificationToUser({
+      userId: 'user-1', title: 'Hello', body: 'World',
+    })).resolves.toEqual({ sent: 0, pruned: 0, totalSubscriptions: 0 });
   });
 
   it('returns 204 No Content and sets CORS headers for OPTIONS requests', async () => {

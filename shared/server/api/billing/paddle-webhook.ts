@@ -87,23 +87,32 @@ async function recordBillingWebhookDiagnostic(input: {
   const supabaseAdmin = input.supabaseAdmin ?? createSupabaseAdminClient();
   if (!supabaseAdmin) return;
 
-  const { error } = await supabaseAdmin
+  const diagnostic = {
+    provider: 'paddle',
+    event_id: input.eventId ?? null,
+    event_type: input.eventType ?? null,
+    processing_status: input.processingStatus,
+    reason: input.reason ?? null,
+    target_user_id: input.targetUserId ?? null,
+    subscription_id: input.subscriptionId ?? null,
+    customer_id: input.customerId ?? null,
+    price_id: input.priceId ?? null,
+    tier: input.tier ?? null,
+    http_status: input.httpStatus ?? null,
+    occurred_at: input.occurredAt ?? null,
+    metadata: input.metadata ?? {},
+  };
+  let { error } = await supabaseAdmin
     .from('billing_webhook_diagnostics')
-    .insert({
-      provider: 'paddle',
-      event_id: input.eventId ?? null,
-      event_type: input.eventType ?? null,
-      processing_status: input.processingStatus,
-      reason: input.reason ?? null,
-      target_user_id: input.targetUserId ?? null,
-      subscription_id: input.subscriptionId ?? null,
-      customer_id: input.customerId ?? null,
-      price_id: input.priceId ?? null,
-      tier: input.tier ?? null,
-      http_status: input.httpStatus ?? null,
-      occurred_at: input.occurredAt ?? null,
-      metadata: input.metadata ?? {},
-    });
+    .insert(diagnostic);
+
+  if (error?.code === '23503'
+    && error.message.includes('billing_webhook_diagnostics_target_user_id_fkey')
+    && diagnostic.target_user_id !== null) {
+    ({ error } = await supabaseAdmin
+      .from('billing_webhook_diagnostics')
+      .insert({ ...diagnostic, target_user_id: null }));
+  }
 
   if (error) {
     console.warn('[PADDLE_WEBHOOK] Failed to record diagnostic event.', { message: error.message });
@@ -235,7 +244,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const userId = data.custom_data?.userId;
   const status = data.status;
   const customerId = data.customer_id;
-  const currentPeriodEnd = data.current_billing_period?.ends_at;
+  const currentPeriodEnd = data.current_billing_period?.ends_at ?? null;
   const priceId = data.items?.[0]?.price?.id || 'unknown';
 
   if (!userId) {
@@ -317,6 +326,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         p_plan_id: priceId,
         p_current_period_end: currentPeriodEnd,
         p_tier: tier,
+        p_checkout_attempt_id: typeof data.custom_data?.checkoutAttemptId === 'string' ? data.custom_data.checkoutAttemptId : null,
       }
     );
 

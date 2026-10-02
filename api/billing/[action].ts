@@ -18,7 +18,7 @@ const handlers = {
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const actionValue = req.query.action;
   const action = Array.isArray(actionValue) ? actionValue[0] : actionValue;
-  const actionHandler = action && action in handlers
+  const actionHandler = action && Object.hasOwn(handlers, action)
     ? handlers[action as keyof typeof handlers]
     : undefined;
 

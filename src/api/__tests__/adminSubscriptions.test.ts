@@ -120,6 +120,9 @@ const setupMockClient = (input: {
   return client;
 };
 
+// Session refusal is exercised with the real gate in accountSessionBoundary.test.ts.
+vi.mock('../../../shared/auth/accountSession.js', () => ({ isAccountSessionActive: vi.fn(async () => true) }));
+
 describe('admin subscriptions API', () => {
   beforeEach(() => {
     createClientMock.mockReset();
@@ -141,6 +144,45 @@ describe('admin subscriptions API', () => {
     expect(res.body).toEqual({
       error: { code: 'METHOD_NOT_ALLOWED', message: 'Method not allowed.' },
     });
+  });
+
+  it.each([false, true])('returns the full ledger or refuses a server-truncated page (truncated: %s)', async truncated => {
+    const client = setupMockClient({ isAdmin: true });
+    client.auth.admin.listUsers.mockResolvedValue({ data: { users: [
+      { id: 'owner', email: 'owner@example.test' }, { id: 'single', email: 'single@example.test' },
+    ] }, error: null });
+    const subscriptions = Array.from({ length: 501 }, (_, index) => ({
+      id: `sub_${String(index).padStart(3, '0')}`, user_id: index === 500 ? 'single' : 'owner',
+      status: index === 0 ? 'canceled' : 'active', plan_id: 'pri_pro',
+    }));
+    const ranges: number[][] = [];
+    const originalFrom = client.from;
+    client.from = (table: string) => {
+      if (table === 'admin_users') return originalFrom(table);
+      const data = table === 'user_profiles' ? [{ id: 'owner', tier: 'pro' }] : [];
+      const query = {
+        select: () => query, in: () => query, is: () => query, eq: () => query, order: () => query, limit: () => query,
+        range: async (from: number, to: number) => {
+          ranges.push([from, to]); return { data: subscriptions.slice(from, truncated ? from + 100 : to + 1), count: subscriptions.length, error: null };
+        },
+        then: (resolve: (value: unknown) => unknown) => Promise.resolve({ data, error: null }).then(resolve),
+      };
+      return query;
+    };
+    const res = createResponse();
+    await handler({ method: 'GET', headers: { authorization: `Bearer ${createInternalJwt()}` }, query: {} } as never, res as never);
+    if (truncated) {
+      expect(res.statusCode).toBe(500);
+      expect(res.body).not.toHaveProperty('users');
+      expect(ranges).toEqual([[0, 499]]);
+      return;
+    }
+    expect(res.statusCode).toBe(200);
+    expect(ranges).toEqual([[0, 499], [500, 999]]);
+    expect(res.body).toMatchObject({ users: [
+      { id: 'owner', paddleTier: 'pro', effectiveTier: 'pro', paddleSubscription: null, paddleSubscriptions: subscriptions.slice(0, 500) },
+      { id: 'single', paddleSubscription: subscriptions[500], paddleSubscriptions: [subscriptions[500]] },
+    ] });
   });
 
   it('does not expose internal server error details to the client', async () => {

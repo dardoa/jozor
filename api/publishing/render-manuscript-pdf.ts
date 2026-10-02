@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { isAccountSessionActive } from '../../shared/auth/accountSession.js';
 import { createClient } from '@supabase/supabase-js';
 
 import { verifyInternalToken } from '../../shared/auth/internalJwt.js';
@@ -27,6 +28,7 @@ function getEnv(name: string): string | undefined {
 async function authenticateUser(authHeader?: string): Promise<boolean> {
   if (!authHeader?.startsWith('Bearer ')) return false;
   const token = authHeader.slice('Bearer '.length);
+  if (!await isAccountSessionActive(token)) return false;
   const internalUser = await verifyInternalToken(token, getEnv('SUPABASE_JWT_SECRET'));
   if (internalUser) return true;
 

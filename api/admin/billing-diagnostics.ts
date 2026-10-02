@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { isAccountSessionActive } from '../../shared/auth/accountSession.js';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { verifyInternalToken } from '../../shared/auth/internalJwt.js';
 
@@ -65,6 +66,7 @@ async function authenticateRequest(authHeader?: string): Promise<AuthenticatedUs
   if (!authHeader?.startsWith('Bearer ')) return null;
 
   const token = authHeader.slice('Bearer '.length);
+  if (!await isAccountSessionActive(token)) return null;
 
   // 1. Attempt local JWT verification
   const internalUser = await verifyInternalToken(token, getEnv('SUPABASE_JWT_SECRET'));

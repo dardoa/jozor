@@ -11,8 +11,34 @@ import {
 } from '../types';
 import { logError } from '../utils/errorLogger';
 import { readBlobBytes } from '../utils/blobBytes';
+import { supabaseUrl } from './supabaseConfig';
+import { cleanupMyUserAvatars, isUserAvatarObjectPath } from './userAvatarCleanup';
 
 const MAX_FILE_SIZE_MB = 1;
+
+const isAvatarPublicUrl = (value: unknown, objectPath: string, allowLegacyVersion = false): value is string => {
+    if (typeof value !== 'string') return false;
+    try {
+        const expected = new URL(`/storage/v1/object/public/avatars/${objectPath}`, supabaseUrl);
+        return value === expected.href || (allowLegacyVersion && value.startsWith(expected.href)
+            && /^\?v=[0-9]+$/.test(value.slice(expected.href.length)));
+    } catch { return false; }
+};
+
+interface AvatarProfileSnapshot {
+    photo_path: string | null;
+    photo_url: string | null;
+    photo_version: number | null;
+}
+
+const isAvatarProfileSnapshot = (value: unknown, userId: string): value is AvatarProfileSnapshot => {
+    if (!value || typeof value !== 'object') return false;
+    const profile = value as AvatarProfileSnapshot;
+    return (profile.photo_path === null || isUserAvatarObjectPath(profile.photo_path, userId))
+        && (profile.photo_url === null || typeof profile.photo_url === 'string')
+        && (profile.photo_version === null || (Number.isInteger(profile.photo_version) && profile.photo_version >= 0))
+        && (profile.photo_path === null || isAvatarPublicUrl(profile.photo_url, profile.photo_path, true));
+};
 
 interface UploadParams {
     treeId: string;
@@ -159,18 +185,25 @@ export const SupabaseStorageService = {
 
     /**
      * Uploads a user profile avatar.
-     * Path: avatars/users/{user_id}/profile.webp
+     * Each upload has its own key so retired deletion targets cannot be reused.
      */
-    async uploadUserAvatar(userId: string, email: string, file: File, token?: string, currentVersion = 0): Promise<UserAvatarUploadResult> {
+    async uploadUserAvatar(userId: string, email: string, file: File, token?: string, _currentVersion = 0): Promise<UserAvatarUploadResult> {
         if (!isPersonMediaImageMimeType(file.type)) {
             throw new Error('Invalid file type. Only JPEG, PNG, and WebP are allowed.');
         }
 
         const bucketName = 'avatars';
-        const filePath = `users/${userId}/profile.webp`;
-        const nextVersion = currentVersion + 1;
+        const filePath = `users/${userId}/profile-${crypto.randomUUID()}.webp`;
+        if (!isUserAvatarObjectPath(filePath, userId, false)) throw new Error('Invalid owned avatar path');
 
         try {
+            const client = getSupabaseFull(userId, email, token);
+            const readProfile = async () => {
+                const result = await client.from('user_profiles').select('photo_path,photo_url,photo_version').eq('id', userId).single();
+                if (result.error || !isAvatarProfileSnapshot(result.data, userId)) throw new Error('Avatar profile snapshot failed');
+                return result.data;
+            };
+            const previous = await readProfile();
             const options: ImageCompressionOptions = {
                 maxSizeMB: 0.5,
                 maxWidthOrHeight: 512,
@@ -178,13 +211,16 @@ export const SupabaseStorageService = {
                 fileType: 'image/webp',
             };
             const compressedBlob = await imageCompression(file, options);
-
-            const client = getSupabaseFull(userId, email, token);
+            const bytes = await readBlobBytes(compressedBlob, 'Avatar processing could not read WebP content');
+            if (compressedBlob.type !== 'image/webp' || compressedBlob.size <= 0
+                || compressedBlob.size > PERSON_MEDIA_MAX_IMAGE_BYTES || detectPersonMediaImageMimeType(bytes) !== 'image/webp') {
+                throw new Error('Avatar processing did not produce a valid WebP image');
+            }
 
             const { error: uploadError } = await client.storage
                 .from(bucketName)
                 .upload(filePath, compressedBlob, {
-                    upsert: true,
+                    upsert: false,
                     contentType: 'image/webp',
                 });
 
@@ -196,15 +232,41 @@ export const SupabaseStorageService = {
                 .from(bucketName)
                 .getPublicUrl(filePath);
 
-            // Update user profile in DB using secure RPC
-            const { error: dbError } = await client.rpc('update_user_avatar', {
-                p_photo_url: data.publicUrl,
-                p_photo_path: filePath,
-                p_photo_version: nextVersion
-            });
-
-            if (dbError) {
-                throw new Error(`Profile update failed: ${dbError.message}`);
+            const retireUncertainUpload = async () => {
+                try { await client.rpc('request_user_avatar_cleanup', { p_object_path: filePath }); }
+                catch { /* No unscoped deletion fallback when the migration or network is unavailable. */ }
+            };
+            if (!isAvatarPublicUrl(data.publicUrl, filePath)) {
+                await retireUncertainUpload();
+                throw new Error('Avatar public URL does not match its configured origin and path');
+            }
+            let nextVersion: number | undefined;
+            try {
+                const replacement = await client.rpc('replace_user_avatar', {
+                    p_photo_url: data.publicUrl, p_photo_path: filePath,
+                    p_expected_photo_path: previous.photo_path, p_expected_photo_version: previous.photo_version,
+                });
+                const committed = replacement.data as { photoPath?: unknown; photoVersion?: unknown } | null;
+                if (replacement.error || committed?.photoPath !== filePath || typeof committed.photoVersion !== 'number'
+                    || !Number.isInteger(committed.photoVersion) || committed.photoVersion <= 0) throw new Error('Unconfirmed replacement');
+                nextVersion = committed.photoVersion;
+            } catch {
+                try {
+                    const current = await readProfile();
+                    if (current.photo_path === filePath && current.photo_url === data.publicUrl && current.photo_version !== null && current.photo_version > 0) {
+                        nextVersion = current.photo_version;
+                    }
+                } catch { /* The retirement RPC performs its own locked reconciliation. */ }
+                if (nextVersion === undefined) {
+                    await retireUncertainUpload();
+                    throw new Error('Profile update failed; retry avatar replacement');
+                }
+            }
+            try {
+                const counts = await cleanupMyUserAvatars(client);
+                if (counts.failed > 0) throw new Error('Avatar cleanup remains pending');
+            } catch {
+                logError('USER_AVATAR_CLEANUP_PENDING', new Error('Avatar cleanup remains pending'), { showToast: false });
             }
 
             return {

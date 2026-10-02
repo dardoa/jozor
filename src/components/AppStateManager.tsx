@@ -6,7 +6,6 @@ import { useConsistency } from '../hooks/sync/useConsistency';
 import { useGeocodingSync } from '../features/geography';
 import { useNotifications } from '../hooks/sync/useNotifications';
 import { useRealtimeNotifications } from '../hooks/sync/useRealtimeNotifications';
-import { useWebPush } from '../hooks/sync/useWebPush';
 import { AppUIManager } from './AppUIManager';
 import { logInfo } from '../utils/errorLogger';
 
@@ -25,7 +24,6 @@ export const AppStateManager: React.FC = () => {
   useConsistency();
   useGeocodingSync();
   useNotifications();
-  useWebPush();
   useSessionBootstrap();
 
   const user = useAppStore(state => state.user);
