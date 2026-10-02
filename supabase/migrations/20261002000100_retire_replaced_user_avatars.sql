@@ -144,6 +144,7 @@ DECLARE v_actor TEXT := private.current_user_id_text();
 BEGIN
   IF NOT private.is_user_avatar_path(p_object_path,v_actor) THEN RETURN false; END IF;
   PERFORM pg_advisory_xact_lock(hashtextextended('user-avatar-retirement',0));
+  PERFORM 1 FROM public.user_profiles WHERE id = v_actor FOR UPDATE;
   IF private.user_avatar_is_referenced(p_object_path) THEN RETURN false; END IF;
   INSERT INTO private.user_avatar_cleanup(object_path,user_id) VALUES(p_object_path,v_actor) ON CONFLICT DO NOTHING;
   RETURN true;
@@ -160,6 +161,7 @@ BEGIN
     AND v_owner IS DISTINCT FROM private.current_user_id_text())
     OR NOT private.is_user_avatar_path(p_object_path,v_owner,true)
     OR private.user_avatar_is_referenced(p_object_path) THEN RETURN false; END IF;
+  PERFORM 1 FROM public.user_profiles WHERE id = v_owner FOR UPDATE;
   UPDATE private.user_avatar_cleanup SET claimed_at = COALESCE(claimed_at,now()) WHERE object_path = p_object_path;
   RETURN true;
 END;

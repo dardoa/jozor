@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 import { sweepPersonMediaOrphans } from '../services/personMediaServerCleanup.js';
+import { sweepUserAvatarCleanup } from '../services/userAvatarCleanup.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Cache-Control', 'no-store');
@@ -15,7 +16,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!url || !key) return res.status(503).json({ error: 'Cleanup is not configured' });
   try {
     const admin = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
-    return res.status(200).json(await sweepPersonMediaOrphans(admin));
+    const counts = await sweepPersonMediaOrphans(admin);
+    if (process.env.USER_AVATAR_CLEANUP_ENABLED === 'true') {
+      const avatars = await sweepUserAvatarCleanup(admin);
+      return res.status(200).json({
+        checked: counts.checked + avatars.checked, removed: counts.removed + avatars.removed,
+        retained: counts.retained + avatars.retained, failed: counts.failed + avatars.failed,
+      });
+    }
+    return res.status(200).json(counts);
   } catch {
     return res.status(500).json({ error: 'Media cleanup failed' });
   }
