@@ -10,6 +10,7 @@ import {
 } from '../../../http/cors.js';
 import { MAX_JSON_BODY_SIZE, PayloadTooLargeError } from '../../http/bodyLimits.js';
 import { ACCOUNT_ADMISSION_PAUSE_BODY, ACCOUNT_ADMISSION_PAUSE_HEADERS, isAccountAdmissionPaused } from '../../../http/accountAdmission.js';
+import { isDefinitiveCheckoutRejection } from '../../paddleCheckoutRejection.js';
 
 export const config = {
   api: {
@@ -237,9 +238,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.end(JSON.stringify({ error: 'Account checkout is temporarily unavailable.' }));
     }
     // 6. Request transaction creation from Paddle API
+    const providerSignal = AbortSignal.timeout(10000);
     const response = await fetch(paddleUrl, {
       method: 'POST',
-      signal: AbortSignal.timeout(10000),
+      signal: providerSignal,
       redirect: 'error',
       headers: {
         'Authorization': `Bearer ${paddleApiKey}`,
@@ -260,6 +262,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
 
     if (!response.ok) {
+      if (await isDefinitiveCheckoutRejection(response, providerSignal)) {
+        const resolved = await supabaseAdmin.rpc('resolve_rejected_account_checkout', {
+          p_user_id: user.uid, p_attempt_id: attempt.data,
+        });
+        if (resolved.error || resolved.data !== true) throw new Error('Checkout rejection persistence unavailable');
+      }
       throw new Error(`Paddle API response error (${response.status})`);
     }
 
@@ -276,9 +284,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // 7. Return securely generated transactionId to client
     res.writeHead(200, { ...headers, 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({ transactionId }));
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Unknown error';
-    console.error('[CREATE_CHECKOUT] Failed to create checkout transaction:', message);
+  } catch {
+    console.error('[CREATE_CHECKOUT] Failed to create checkout transaction.');
     res.writeHead(500, { ...headers, 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({ error: 'Failed to initiate checkout session' }));
   }
