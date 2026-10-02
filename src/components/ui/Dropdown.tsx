@@ -50,25 +50,31 @@ export const Dropdown: React.FC<DropdownProps> = ({
   }, []);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (!isOpen) return;
-
-    const items = getFocusableItems();
-    if (!items || items.length === 0) return;
+    if (!isOpen || e.defaultPrevented) return;
 
     if (e.key === 'Escape') {
       e.preventDefault();
       handleClose();
       dropdownRef.current?.querySelector<HTMLElement>('[data-dropdown-trigger="true"]')?.focus();
-    } else if (e.key === 'ArrowDown') {
+      return;
+    }
+
+    const items = getFocusableItems();
+    if (e.key === 'Enter') {
+      const target = e.target instanceof HTMLElement ? e.target.closest<HTMLElement>('[role="menuitem"]') : null;
+      if (target && contentRef.current?.contains(target)) {
+        e.preventDefault();
+        if (target.getAttribute('aria-disabled') !== 'true' && !target.hasAttribute('disabled')) target.click();
+      }
+      return;
+    }
+    if (!items || items.length === 0) return;
+    if (e.key === 'ArrowDown') {
       e.preventDefault();
       setFocusIndex((prev) => (prev + 1) % items.length);
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
       setFocusIndex((prev) => (prev - 1 + items.length) % items.length);
-    } else if (e.key === 'Enter' && activeIndex >= 0) {
-      e.preventDefault();
-      items[activeIndex]?.click();
-      handleClose();
     }
   };
 
