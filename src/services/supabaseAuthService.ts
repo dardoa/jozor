@@ -71,7 +71,8 @@ export const supabaseAuthService = {
   normalizeAuthError: normalizeSupabaseAuthError,
 
   async startGoogleSignIn(returnTo?: string): Promise<void> {
-    await waitForDeletionTeardown();
+    // Recheck in the caller's continuation before entering the SDK.
+    do { await waitForDeletionTeardown(); } while (deletionTeardown);
     const redirectTo = returnTo || getCleanOrigin();
 
     const { error } = await supabaseAuth.auth.signInWithOAuth({
@@ -90,7 +91,7 @@ export const supabaseAuthService = {
   },
 
   async signInWithPassword(email: string, password: string): Promise<Session | null> {
-    await waitForDeletionTeardown();
+    do { await waitForDeletionTeardown(); } while (deletionTeardown);
     const { data, error } = await supabaseAuth.auth.signInWithPassword({
       email,
       password,
@@ -109,7 +110,7 @@ export const supabaseAuthService = {
     password: string,
     displayName?: string
   ): Promise<Session | null> {
-    await waitForDeletionTeardown();
+    do { await waitForDeletionTeardown(); } while (deletionTeardown);
     const { data, error } = await supabaseAuth.auth.signUp({
       email,
       password,

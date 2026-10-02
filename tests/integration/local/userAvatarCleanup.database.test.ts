@@ -122,6 +122,28 @@ describe('durable user avatar retirement on PostgreSQL', () => {
     await role('', 'service_role');
     expect((await db.query('SELECT * FROM public.list_user_avatar_cleanup_candidates()')).rows).toHaveLength(20);
   });
+  it('does not derive a Storage deletion target from an external URL-only profile image', async () => {
+    await db.exec('RESET ROLE; ALTER TABLE user_profiles DISABLE TRIGGER USER');
+    await db.query('UPDATE user_profiles SET photo_path=NULL,photo_url=$1 WHERE id=$2',
+      [url(oldPath).replace('example.test', 'external.test'), owner]);
+    await db.exec('ALTER TABLE user_profiles ENABLE TRIGGER USER'); await role();
+    await replace(fresh(), null);
+    expect(await queue()).toHaveLength(0);
+    expect((await db.query('SELECT name FROM storage.objects WHERE name=$1', [oldPath])).rows).toHaveLength(1);
+  });
+  it('preserves ordinary profile updates with unchanged photo columns on a grandfathered live reference', async () => {
+    await db.exec('RESET ROLE');
+    await db.query('UPDATE user_profiles SET photo_url=$1 WHERE id=$2', [url(oldPath), 'other']);
+    await role(); await replace();
+    expect(await rpc('claim_user_avatar_cleanup')).toBe(false);
+    await role('other');
+    // update_my_profile includes these columns in SET even for metadata/name-only updates.
+    await expect(db.query('UPDATE user_profiles SET display_name=$1,photo_path=photo_path,photo_url=photo_url WHERE id=$2 RETURNING display_name',
+      ['new name', 'other'])).resolves.toMatchObject({ rows: [{ display_name: 'new name' }] });
+    await db.query('UPDATE user_profiles SET photo_url=NULL WHERE id=$1', ['other']);
+    await expect(db.query('UPDATE user_profiles SET photo_url=$1 WHERE id=$2', [url(oldPath), 'other'])).rejects.toThrow(/retired/i);
+    await role(); expect(await rpc('claim_user_avatar_cleanup')).toBe(true);
+  });
   it('claims only retired unreferenced objects and completes only after confirmed absence', async () => {
     expect(await rpc('claim_user_avatar_cleanup')).toBe(false);
     expect(await rpc('request_user_avatar_cleanup')).toBe(false);

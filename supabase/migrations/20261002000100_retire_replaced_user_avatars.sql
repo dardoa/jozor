@@ -50,7 +50,8 @@ DECLARE v_old_path TEXT; v_new_path TEXT;
 BEGIN
   IF TG_OP <> 'DELETE' THEN
     v_new_path := COALESCE(NEW.photo_path, private.user_avatar_url_path(NEW.photo_url));
-    IF EXISTS(SELECT 1 FROM private.user_avatar_cleanup c WHERE c.object_path = v_new_path) THEN
+    IF EXISTS(SELECT 1 FROM private.user_avatar_cleanup c WHERE c.object_path = v_new_path)
+      AND (TG_OP = 'INSERT' OR NEW.photo_path IS DISTINCT FROM OLD.photo_path OR NEW.photo_url IS DISTINCT FROM OLD.photo_url) THEN
       RAISE EXCEPTION 'Avatar is retired; upload a new asset.' USING ERRCODE = '23514';
     END IF;
     IF NEW.photo_path IS NOT NULL AND (
@@ -70,7 +71,9 @@ BEGIN
     END IF;
   END IF;
   IF TG_OP <> 'INSERT' THEN
-    v_old_path := COALESCE(OLD.photo_path, private.user_avatar_url_path(OLD.photo_url));
+    -- SQL cannot establish the configured origin of a URL-only legacy image.
+    -- Such URLs can protect a live reference, but cannot authorize deletion.
+    v_old_path := OLD.photo_path;
     IF (TG_OP = 'DELETE' OR v_old_path IS DISTINCT FROM v_new_path)
       AND private.is_user_avatar_path(v_old_path, OLD.id, true) THEN
       INSERT INTO private.user_avatar_cleanup(object_path,user_id) VALUES(v_old_path,OLD.id) ON CONFLICT DO NOTHING;

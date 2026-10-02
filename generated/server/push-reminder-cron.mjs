@@ -2061,7 +2061,9 @@ var wrapAuthError = (error) => {
 var supabaseAuthService = {
   normalizeAuthError: normalizeSupabaseAuthError,
   async startGoogleSignIn(returnTo) {
-    await waitForDeletionTeardown();
+    do {
+      await waitForDeletionTeardown();
+    } while (deletionTeardown);
     const redirectTo = returnTo || getCleanOrigin();
     const { error } = await supabaseAuth.auth.signInWithOAuth({
       provider: "google",
@@ -2077,7 +2079,9 @@ var supabaseAuthService = {
     }
   },
   async signInWithPassword(email, password) {
-    await waitForDeletionTeardown();
+    do {
+      await waitForDeletionTeardown();
+    } while (deletionTeardown);
     const { data, error } = await supabaseAuth.auth.signInWithPassword({
       email,
       password
@@ -2089,7 +2093,9 @@ var supabaseAuthService = {
     return data.session ?? null;
   },
   async signUpWithPassword(email, password, displayName) {
-    await waitForDeletionTeardown();
+    do {
+      await waitForDeletionTeardown();
+    } while (deletionTeardown);
     const { data, error } = await supabaseAuth.auth.signUp({
       email,
       password,

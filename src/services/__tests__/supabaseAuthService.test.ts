@@ -175,5 +175,25 @@ describe('supabaseAuthService', () => {
     await service.signInWithPassword('new@example.test', 'password');
     expect(setStoredSupabaseTokenMock).toHaveBeenLastCalledWith('new-token');
   });
+  it.each(['password', 'signup', 'oauth'])('rechecks teardown started in the %s admission microtask gap', async method => {
+    vi.useFakeTimers();
+    let finish!: () => void;
+    signOutMock.mockImplementationOnce(() => new Promise<void>(resolve => { finish = resolve; }));
+    signInWithPasswordMock.mockResolvedValue({ data: { session: { access_token: 'new-token' } }, error: null });
+    signUpMock.mockResolvedValue({ data: { session: { access_token: 'new-token' } }, error: null });
+    signInWithOAuthMock.mockResolvedValue({ error: null });
+    const { supabaseAuthService: service } = await import('../supabaseAuthService');
+    const signin = method === 'password' ? service.signInWithPassword('new@example.test', 'password')
+      : method === 'signup' ? service.signUpWithPassword('new@example.test', 'password') : service.startGoogleSignIn();
+    const logout = service.forgetDeletedAccount();
+    await vi.advanceTimersByTimeAsync(0);
+    try {
+      expect(signInWithPasswordMock).not.toHaveBeenCalled();
+      expect(signUpMock).not.toHaveBeenCalled();
+      expect(signInWithOAuthMock).not.toHaveBeenCalled();
+    } finally {
+      finish(); await vi.advanceTimersByTimeAsync(0); await logout; await signin;
+    }
+  });
 });
 
