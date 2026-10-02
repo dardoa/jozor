@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { PGlite } from '@electric-sql/pglite';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
@@ -72,6 +72,9 @@ describe('durable account deletion queue on PostgreSQL', () => {
     await db.exec(read('20260908000200_fence_account_billing_events.sql'));
     await db.exec(read('20260908000300_track_all_account_subscriptions.sql'));
     await db.exec(read('20260908000400_guard_billing_reconciliation_inserts.sql'));
+    if (existsSync(path.resolve('supabase/migrations/20261002000200_resolve_rejected_account_checkouts.sql'))) {
+      await db.exec(read('20261002000200_resolve_rejected_account_checkouts.sql'));
+    }
   });
   afterAll(async () => { await db?.close(); });
   beforeEach(async () => {
@@ -386,5 +389,69 @@ describe('durable account deletion queue on PostgreSQL', () => {
     expect(await scalar('SELECT public.get_pending_account_checkouts($1) AS value', [uid])).toEqual([]);
     await role('authenticated');
     await rejected('SELECT public.request_account_deletion()', /ACCOUNT_HAS_OPEN_SUBSCRIPTION/);
+  });
+
+  it('resolves only the exact ID-less rejection and idempotently preserves its timestamp and history', async () => {
+    await role('service_role');
+    const attempt = await scalar<string>('SELECT public.begin_account_checkout($1) AS value', [uid]);
+    const unknown = await scalar<string>('SELECT public.begin_account_checkout($1) AS value', [uid]);
+    expect(await scalar('SELECT public.resolve_rejected_account_checkout($1,$2) AS value', [uid, attempt])).toBe(true);
+    await db.exec('RESET ROLE');
+    const state = await scalar('SELECT to_jsonb(a) AS value FROM private.account_checkout_attempts a WHERE id=$1', [attempt]);
+    expect(state).toMatchObject({ transaction_id: null, resolution_reason: 'rejected', resolved_at: expect.any(String) });
+    await role('service_role');
+    expect(await scalar('SELECT public.resolve_rejected_account_checkout($1,$2) AS value', [uid, attempt])).toBe(true);
+    expect(await scalar('SELECT public.record_account_checkout($1,$2,true) AS value', [attempt, 'txn_late'])).toBe(false);
+    expect(await scalar('SELECT public.get_pending_account_checkouts($1) AS value', [uid])).toEqual([{ id: unknown, transactionId: null }]);
+    await db.exec('RESET ROLE');
+    expect(await scalar('SELECT to_jsonb(a) AS value FROM private.account_checkout_attempts a WHERE id=$1', [attempt])).toEqual(state);
+    expect(await scalar('SELECT count(*)::int AS value FROM private.account_checkout_attempts')).toBe(2);
+    await role('authenticated');
+    await rejected('SELECT public.request_account_deletion()', /ACCOUNT_HAS_PENDING_CHECKOUT/);
+    await role('service_role');
+    expect(await scalar('SELECT public.resolve_rejected_account_checkout($1,$2) AS value', [uid, unknown])).toBe(true);
+    await role('authenticated'); expect(await request()).toEqual(expect.any(String));
+  });
+  it.each(['authenticated', 'anon'])('denies %s rejected-resolution authority', async name => {
+    await role(name);
+    await rejected(`SELECT public.resolve_rejected_account_checkout('${uid}',gen_random_uuid())`, /permission denied/);
+  });
+  it.each(['wrong-owner', 'missing-profile', 'missing-attempt', 'null-owner', 'null-attempt', 'correlated', 'resolved'])('refuses ineligible rejection: %s', async kind => {
+    await role('service_role');
+    const attempt = await scalar<string>('SELECT public.begin_account_checkout($1) AS value', [uid]);
+    if (kind === 'correlated') expect(await scalar('SELECT public.record_account_checkout($1,$2) AS value', [attempt, 'txn_created'])).toBe(true);
+    await db.exec('RESET ROLE');
+    if (kind === 'missing-profile') await db.query('DELETE FROM user_profiles WHERE id=$1', [uid]);
+    if (kind === 'resolved') await db.query('UPDATE private.account_checkout_attempts SET resolved_at=now() WHERE id=$1', [attempt]);
+    const before = await scalar('SELECT to_jsonb(a) AS value FROM private.account_checkout_attempts a WHERE id=$1', [attempt]);
+    await role('service_role');
+    expect(await scalar('SELECT public.resolve_rejected_account_checkout($1,$2) AS value',
+      [kind === 'null-owner' ? null : kind === 'wrong-owner' ? 'keeper' : uid,
+        kind === 'null-attempt' ? null : kind === 'missing-attempt' ? '99999999-9999-4999-8999-999999999999' : attempt])).toBe(false);
+    await db.exec('RESET ROLE');
+    expect(await scalar('SELECT to_jsonb(a) AS value FROM private.account_checkout_attempts a WHERE id=$1', [attempt])).toEqual(before);
+  });
+  it('retains the billing repair fence for a second unknown attempt while resolving a proven rejection', async () => {
+    await role('service_role');
+    const attempt = await scalar<string>('SELECT public.begin_account_checkout($1) AS value', [uid]);
+    const unknown = await scalar<string>('SELECT public.begin_account_checkout($1) AS value', [uid]);
+    expect(await scalar('SELECT public.resolve_rejected_account_checkout($1,$2) AS value', [uid, attempt])).toBe(true);
+    await db.exec('RESET ROLE');
+    const time = new Date().toISOString(); const id = (prefix: string, letter: string) => `${prefix}_${letter.repeat(26)}`;
+    await db.query('UPDATE user_profiles SET tier=$1,updated_at=$2 WHERE id=$3', ['free', time, uid]);
+    const existing = { id: id('sub', 'a'), user_id: uid, paddle_customer_id: id('ctm', 'a'), status: 'canceled', plan_id: id('pri', 'a'),
+      current_period_end: null, last_event_occurred_at: null, entitlement_tier: 'free', updated_at: time };
+    await db.query('INSERT INTO subscriptions(id,user_id,paddle_customer_id,status,plan_id,current_period_end,last_event_occurred_at,entitlement_tier,updated_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)', Object.values(existing));
+    const { updated_at: ignored, ...insert } = existing; expect(ignored).toBe(time);
+    const batch = { version: 1, request_id: '99999999-9999-4999-8999-999999999999', observed_at: time, snapshot_fingerprint: 'a'.repeat(64),
+      price_ids: { pro: id('pri', 'a'), family: id('pri', 'b') }, accounts: [{ user_id: uid, tier: 'free', updated_at: time,
+        before: [existing], inserts: [{ ...insert, id: id('sub', 'b'), last_event_occurred_at: time }] }] };
+    await db.exec('SAVEPOINT repair_denied');
+    await expect(scalar('SELECT private.apply_account_billing_insert_batch($1) AS value', [JSON.stringify(batch)])).rejects.toThrow(/BILLING_RECONCILIATION_PENDING_CHECKOUT/);
+    await db.exec('ROLLBACK TO SAVEPOINT repair_denied');
+    await role('service_role');
+    expect(await scalar('SELECT public.resolve_rejected_account_checkout($1,$2) AS value', [uid, unknown])).toBe(true);
+    await db.exec('RESET ROLE');
+    expect(await scalar('SELECT private.apply_account_billing_insert_batch($1) AS value', [JSON.stringify(batch)])).toMatchObject({ insertedCount: 1 });
   });
 });
