@@ -30,7 +30,13 @@ export const useWebPush = () => {
   const user = useAppStore(state => state.user);
   const [status, setStatus] = useState<PushStatus>('checking');
   const [isWorking, setIsWorking] = useState(false);
-  const inFlightRef = useRef<string | null>(null);
+  const [device, setDevice] = useState({ epoch: 0, enabled: false, ready: false, disabling: false });
+  const accountRef = useRef({ uid: user?.uid, epoch: 0 });
+  if (accountRef.current.uid !== user?.uid) {
+    accountRef.current = { uid: user?.uid, epoch: accountRef.current.epoch + 1 };
+  }
+  const inFlightRef = useRef<{ uid: string; epoch: number } | null>(null);
+  const inspectionRef = useRef(0);
   const mountedRef = useRef(false);
   const userRef = useRef(user);
   userRef.current = user;
@@ -42,25 +48,40 @@ export const useWebPush = () => {
 
   useEffect(() => {
     let active = true;
+    const epoch = accountRef.current.epoch;
+    const inspection = ++inspectionRef.current;
+    const isCurrentInspection = () => active && accountRef.current.epoch === epoch
+      && inspectionRef.current === inspection;
+    const confirm = (enabled: boolean) => {
+      if (!isCurrentInspection()) return;
+      setDevice(previous => previous.epoch === epoch && previous.disabling ? previous
+        : { epoch, enabled, ready: enabled, disabling: false });
+      setStatus(enabled ? 'enabled' : 'idle');
+    };
     if (!supportsWebPush()) {
+      confirm(false);
       setStatus('unsupported');
       return;
     }
     if (!user?.uid) {
+      confirm(false);
       setStatus('idle');
       return;
     }
     // A token refresh must not race a pending mutation for the same account.
-    if (inFlightRef.current === user.uid) return;
+    if (inFlightRef.current?.epoch === epoch) return;
     if (Notification.permission === 'denied') {
+      confirm(false);
       setStatus('blocked');
       return;
     }
     if (!import.meta.env.VITE_VAPID_PUBLIC_KEY) {
+      confirm(false);
       setStatus('unconfigured');
       return;
     }
     if (Notification.permission !== 'granted') {
+      confirm(false);
       setStatus('idle');
       return;
     }
@@ -68,13 +89,13 @@ export const useWebPush = () => {
     const inspectSubscription = async () => {
       try {
         const registration = await navigator.serviceWorker.getRegistration('/sw.js');
+        if (!isCurrentInspection()) return;
         const subscription = await registration?.pushManager.getSubscription();
+        if (!isCurrentInspection()) return;
         const saved = subscription ? await listSubscriptions(user.uid, user.supabaseToken) : [];
-        if (active) {
-          setStatus(subscription && saved.some(row => row.endpoint === subscription.endpoint) ? 'enabled' : 'idle');
-        }
+        confirm(Boolean(subscription && saved.some(row => row.endpoint === subscription.endpoint)));
       } catch {
-        if (active) setStatus('error');
+        if (isCurrentInspection()) setStatus('error');
       }
     };
     void inspectSubscription();
@@ -84,8 +105,9 @@ export const useWebPush = () => {
   const initializeAndSubscribe = useCallback(
     async (promptUser = false) => {
       if (!user?.uid || inFlightRef.current) return false;
+      const epoch = accountRef.current.epoch;
       const isCurrentUser = () => mountedRef.current
-        && userRef.current?.uid === user.uid;
+        && userRef.current?.uid === user.uid && accountRef.current.epoch === epoch;
 
       // Ensure browser support
       if (!supportsWebPush()) {
@@ -93,7 +115,8 @@ export const useWebPush = () => {
         return false;
       }
 
-      inFlightRef.current = user.uid;
+      inFlightRef.current = { uid: user.uid, epoch };
+      ++inspectionRef.current;
       setIsWorking(true);
       try {
         // Request permission while the click still supplies user activation.
@@ -120,14 +143,28 @@ export const useWebPush = () => {
         await navigator.serviceWorker.ready;
         if (!isCurrentUser()) return false;
 
-        // Obtain or reuse this device's subscription.
+        // A globally unique endpoint cannot be transferred through another owner's RLS.
         let subscription = await registration.pushManager.getSubscription();
+        if (!isCurrentUser()) return false;
+        let retiredEndpoint: string | undefined;
+        if (subscription) {
+          const saved = await listSubscriptions(user.uid, userRef.current?.supabaseToken);
+          if (!isCurrentUser()) return false;
+          if (!saved.some(row => row.endpoint === subscription!.endpoint)) {
+            retiredEndpoint = subscription.endpoint;
+            if (!await subscription.unsubscribe()) throw new Error('Could not rotate this device subscription.');
+            if (!isCurrentUser()) return false;
+            subscription = null;
+          }
+        }
         if (!subscription) {
           subscription = await registration.pushManager.subscribe({
             userVisibleOnly: true,
             applicationServerKey: urlBase64ToUint8Array(publicKey),
           });
         }
+        if (!isCurrentUser()) return false;
+        if (subscription.endpoint === retiredEndpoint) throw new Error('Subscription rotation did not produce a new endpoint.');
 
         // 4. Extract standard JSONB format mapping expected by backend
         const subJSON = subscription.toJSON();
@@ -143,6 +180,7 @@ export const useWebPush = () => {
           if (!isCurrentUser()) return false;
           await registerSubscription(input, user.uid, userRef.current?.supabaseToken);
           if (!isCurrentUser()) return false;
+          setDevice({ epoch, enabled: true, ready: true, disabling: false });
           setStatus('enabled');
           logInfo('WebPush', 'Successfully synced push subscription to Supabase.');
           return true;
@@ -168,20 +206,26 @@ export const useWebPush = () => {
 
   const unsubscribe = useCallback(async () => {
     if (!user?.uid || inFlightRef.current || !supportsWebPush()) return false;
+    const epoch = accountRef.current.epoch;
     const isCurrentUser = () => mountedRef.current
-      && userRef.current?.uid === user.uid;
-    inFlightRef.current = user.uid;
+      && userRef.current?.uid === user.uid && accountRef.current.epoch === epoch;
+    inFlightRef.current = { uid: user.uid, epoch };
+    ++inspectionRef.current;
+    setDevice(previous => ({ ...previous, epoch, disabling: true }));
     setIsWorking(true);
     try {
       const registration = await navigator.serviceWorker.getRegistration('/sw.js');
+      if (!isCurrentUser()) return false;
       const subscription = await registration?.pushManager.getSubscription();
       if (!isCurrentUser()) return false;
       if (subscription) {
         await removeSubscription(subscription.endpoint, user.uid, userRef.current?.supabaseToken);
         if (!isCurrentUser()) return false;
+        setDevice(previous => ({ ...previous, ready: false }));
         if (!await subscription.unsubscribe()) throw new Error('Could not unsubscribe this device.');
       }
       if (!isCurrentUser()) return false;
+      setDevice({ epoch, enabled: false, ready: false, disabling: false });
       setStatus('idle');
       return true;
     } catch {
@@ -196,6 +240,8 @@ export const useWebPush = () => {
   return {
     status,
     isWorking,
+    isEnabled: device.epoch === accountRef.current.epoch && device.enabled,
+    canSendTest: device.epoch === accountRef.current.epoch && device.ready && !device.disabling,
     canActivate: Boolean(user?.uid) && supportsWebPush() && status !== 'blocked'
       && status !== 'unconfigured' && status !== 'checking',
     registerAndSubscribe: () => initializeAndSubscribe(true),

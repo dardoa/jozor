@@ -37,10 +37,14 @@ const renderPreferences = () => render(<GlobalSettingsPreferencesTab
   handleToggleTheme={vi.fn()} isLowGraphicsMode={false}
   setIsLowGraphicsMode={vi.fn()} setShowTourConfirm={vi.fn()}
 />);
+const rerenderPreferences = (view: ReturnType<typeof renderPreferences>) => view.rerender(
+  <GlobalSettingsPreferencesTab t={en} language="en" setLanguage={vi.fn()} darkMode={false}
+    handleToggleTheme={vi.fn()} isLowGraphicsMode={false} setIsLowGraphicsMode={vi.fn()} setShowTourConfirm={vi.fn()} />
+);
 
 describe('push notification preference', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
     doubles.user = { uid: 'user-1', supabaseToken: 'token-1' };
     doubles.listSubscriptions.mockResolvedValue([]);
     doubles.registerSubscription.mockResolvedValue({ id: 'stored-subscription' });
@@ -67,6 +71,148 @@ describe('push notification preference', () => {
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
     vi.unstubAllEnvs();
+  });
+
+  it('retains enabled state and retries disable when server removal fails', async () => {
+    notifications.permission = 'granted';
+    registration.pushManager.getSubscription.mockResolvedValue(subscription);
+    doubles.listSubscriptions.mockResolvedValue([{ endpoint: subscription.endpoint }]);
+    doubles.removeSubscription.mockRejectedValueOnce(new Error('offline'));
+    renderPreferences();
+    const toggle = screen.getByRole('switch', { name: 'Push notifications' });
+    await waitFor(() => expect(toggle).toBeChecked());
+    fireEvent.click(toggle);
+    expect(await screen.findByText('Could not update push notifications')).toBeVisible();
+    expect(toggle).toBeChecked();
+    expect(subscription.unsubscribe).not.toHaveBeenCalled();
+    fireEvent.click(toggle);
+    await waitFor(() => expect(toggle).not.toBeChecked());
+    expect(doubles.removeSubscription).toHaveBeenCalledTimes(2);
+    expect(doubles.registerSubscription).not.toHaveBeenCalled();
+  });
+
+  it('retains disable retry but blocks test send after browser unsubscribe fails', async () => {
+    notifications.permission = 'granted';
+    registration.pushManager.getSubscription.mockResolvedValue(subscription);
+    doubles.listSubscriptions.mockResolvedValue([{ endpoint: subscription.endpoint }]);
+    subscription.unsubscribe.mockResolvedValueOnce(false).mockResolvedValue(true);
+    renderPreferences();
+    const toggle = screen.getByRole('switch', { name: 'Push notifications' });
+    await waitFor(() => expect(toggle).toBeChecked());
+    fireEvent.click(toggle);
+    expect(await screen.findByText('Could not update push notifications')).toBeVisible();
+    expect(toggle).toBeChecked();
+    expect(screen.getByRole('button', { name: 'Send test notification' })).toBeDisabled();
+    fireEvent.click(toggle);
+    await waitFor(() => expect(toggle).not.toBeChecked());
+    expect(subscription.unsubscribe).toHaveBeenCalledTimes(2);
+    expect(doubles.registerSubscription).not.toHaveBeenCalled();
+  });
+
+  it('rotates an unowned browser endpoint without removing another account row', async () => {
+    notifications.permission = 'granted';
+    registration.pushManager.getSubscription.mockResolvedValue(subscription);
+    const fresh = { ...subscription, endpoint: 'https://push.example/fresh',
+      toJSON: () => ({ endpoint: 'https://push.example/fresh', keys: { p256dh: 'new-key', auth: 'new-auth' } }) };
+    registration.pushManager.subscribe.mockResolvedValue(fresh);
+    doubles.user = { uid: 'user-2', supabaseToken: 'token-2' };
+    renderPreferences();
+    const toggle = screen.getByRole('switch', { name: 'Push notifications' });
+    await waitFor(() => expect(toggle).not.toBeDisabled());
+    fireEvent.click(toggle);
+    await waitFor(() => expect(toggle).toBeChecked());
+    expect(subscription.unsubscribe).toHaveBeenCalledOnce();
+    expect(doubles.registerSubscription).toHaveBeenCalledWith({ endpoint: fresh.endpoint,
+      keys: { p256dh: 'new-key', auth: 'new-auth' } }, 'user-2', 'token-2');
+    expect(doubles.removeSubscription).not.toHaveBeenCalled();
+    expect(notifications.requestPermission).not.toHaveBeenCalled();
+  });
+
+  it('reuses a confirmed same-owner endpoint without rotation or permission prompting', async () => {
+    notifications.permission = 'granted';
+    registration.pushManager.getSubscription.mockResolvedValue(subscription);
+    doubles.listSubscriptions.mockResolvedValueOnce([]).mockResolvedValue([{ endpoint: subscription.endpoint }]);
+    renderPreferences();
+    const toggle = screen.getByRole('switch', { name: 'Push notifications' });
+    await waitFor(() => expect(toggle).not.toBeDisabled());
+    fireEvent.click(toggle);
+    await waitFor(() => expect(toggle).toBeChecked());
+    expect(subscription.unsubscribe).not.toHaveBeenCalled();
+    expect(registration.pushManager.subscribe).not.toHaveBeenCalled();
+    expect(notifications.requestPermission).not.toHaveBeenCalled();
+  });
+
+  it('fails closed when rotation returns the same unowned endpoint', async () => {
+    notifications.permission = 'granted';
+    registration.pushManager.getSubscription.mockResolvedValue(subscription);
+    renderPreferences();
+    const toggle = screen.getByRole('switch', { name: 'Push notifications' });
+    await waitFor(() => expect(toggle).not.toBeDisabled());
+    fireEvent.click(toggle);
+    expect(await screen.findByText('Could not update push notifications')).toBeVisible();
+    expect(toggle).not.toBeChecked();
+    expect(doubles.registerSubscription).not.toHaveBeenCalled();
+  });
+
+  it('does not rotate or save when ownership lookup fails', async () => {
+    notifications.permission = 'granted';
+    registration.pushManager.getSubscription.mockResolvedValue(subscription);
+    doubles.listSubscriptions.mockResolvedValueOnce([]).mockRejectedValue(new Error('lookup offline'));
+    renderPreferences();
+    const toggle = screen.getByRole('switch', { name: 'Push notifications' });
+    await waitFor(() => expect(toggle).not.toBeDisabled());
+    fireEvent.click(toggle);
+    expect(await screen.findByText('Could not update push notifications')).toBeVisible();
+    expect(subscription.unsubscribe).not.toHaveBeenCalled();
+    expect(doubles.registerSubscription).not.toHaveBeenCalled();
+  });
+
+  it.each(['permission', 'ownership', 'rotation', 'subscribe', 'save', 'disable'])(
+    'stops account-specific follow-up when account changes during %s', async stage => {
+      if (['ownership', 'rotation', 'disable'].includes(stage)) {
+        notifications.permission = 'granted';
+        registration.pushManager.getSubscription.mockResolvedValue(subscription);
+      }
+      if (stage === 'disable') doubles.listSubscriptions.mockResolvedValue([{ endpoint: subscription.endpoint }]);
+      const view = renderPreferences();
+      const toggle = screen.getByRole('switch', { name: 'Push notifications' });
+      await waitFor(() => expect(toggle).not.toBeDisabled());
+      let finish: (() => void) | undefined;
+      const pending = <T,>(result: T) => new Promise<T>(resolve => { finish = () => resolve(result); });
+      if (stage === 'permission') notifications.requestPermission.mockImplementationOnce(() => pending('granted'));
+      if (stage === 'ownership') doubles.listSubscriptions.mockImplementationOnce(() => pending([]));
+      if (stage === 'rotation') subscription.unsubscribe.mockImplementationOnce(() => pending(true));
+      if (stage === 'subscribe') registration.pushManager.subscribe.mockImplementationOnce(() => pending(subscription));
+      if (stage === 'save') doubles.registerSubscription.mockImplementationOnce(() => pending({ id: 'saved' }));
+      if (stage === 'disable') doubles.removeSubscription.mockImplementationOnce(() => pending(undefined));
+      fireEvent.click(toggle);
+      await waitFor(() => expect(finish).toBeTypeOf('function'));
+      doubles.listSubscriptions.mockResolvedValue([]);
+      doubles.user = { uid: 'user-2', supabaseToken: 'token-2' };
+      await act(async () => rerenderPreferences(view));
+      await act(async () => finish!());
+      expect(toggle).not.toBeChecked();
+      if (stage === 'permission') expect(worker.register).not.toHaveBeenCalled();
+      if (stage === 'ownership' || stage === 'disable') expect(subscription.unsubscribe).not.toHaveBeenCalled();
+      if (stage === 'rotation') expect(registration.pushManager.subscribe).not.toHaveBeenCalled();
+      if (stage === 'subscribe') expect(doubles.registerSubscription).not.toHaveBeenCalled();
+      expect(doubles.registerSubscription.mock.calls.every(call => call[1] === 'user-1' && call[2] === 'token-1')).toBe(true);
+    }
+  );
+
+  it('does not revive a stale save after logout and login to the same UID', async () => {
+    let finish!: () => void;
+    doubles.registerSubscription.mockImplementationOnce(() => new Promise<void>(resolve => { finish = resolve; }));
+    const view = renderPreferences();
+    const toggle = screen.getByRole('switch', { name: 'Push notifications' });
+    fireEvent.click(toggle);
+    await waitFor(() => expect(doubles.registerSubscription).toHaveBeenCalledOnce());
+    doubles.user = null;
+    await act(async () => rerenderPreferences(view));
+    doubles.user = { uid: 'user-1', supabaseToken: 'new-session-token' };
+    await act(async () => rerenderPreferences(view));
+    await act(async () => finish());
+    expect(toggle).not.toBeChecked();
   });
 
   it('requests permission only on activation and stores the device before marking it enabled', async () => {

@@ -7,9 +7,8 @@ import type { TranslationSchema } from '../../../utils/translationLoader';
 import { Button } from '../../ui/Button';
 
 export const GlobalSettingsPushPreference = ({ t }: { t: TranslationSchema }) => {
-  const { status, isWorking, canActivate, registerAndSubscribe, unsubscribe } = useWebPush();
+  const { status, isWorking, isEnabled: enabled, canSendTest, canActivate, registerAndSubscribe, unsubscribe } = useWebPush();
   const labels = t.globalSettings.preferences.push;
-  const enabled = status === 'enabled';
   const user = useAppStore(state => state.user);
   const [testStatus, setTestStatus] = useState<'idle' | 'sending' | 'accepted' | 'failed'>('idle');
   const testRequestRef = useRef<AbortController | null>(null);
@@ -27,7 +26,7 @@ export const GlobalSettingsPushPreference = ({ t }: { t: TranslationSchema }) =>
   }, [enabled]);
 
   const sendTest = async () => {
-    if (!enabled || !user?.uid || isWorking || testRequestRef.current) return;
+    if (!canSendTest || !user?.uid || isWorking || testRequestRef.current) return;
     const controller = new AbortController();
     testRequestRef.current = controller;
     setTestStatus('sending');
@@ -75,7 +74,7 @@ export const GlobalSettingsPushPreference = ({ t }: { t: TranslationSchema }) =>
         <Button
           type="button" variant="secondary" size="icon"
           aria-label={labels.testAction} title={labels.testAction}
-          disabled={!enabled || isWorking} isLoading={testStatus === 'sending'}
+          disabled={!canSendTest || isWorking} isLoading={testStatus === 'sending'}
           onClick={() => { void sendTest(); }}
         >
           <Send className="h-4 w-4" aria-hidden="true" />
