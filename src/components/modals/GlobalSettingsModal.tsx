@@ -23,7 +23,7 @@ interface GlobalSettingsModalProps {
 }
 
 export const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen, onClose }) => {
-  const state = useGlobalSettingsModalState(onClose);
+  const state = useGlobalSettingsModalState(onClose, isOpen);
   const { t, user, activeTab, setActiveTab, showTourConfirm } = state;
 
   if (!user) return null;
@@ -107,6 +107,9 @@ export const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ isOpen
                 setShowDeleteConfirm={state.setShowDeleteConfirm}
                 startDeleteHold={state.startDeleteHold}
                 cancelDeleteHold={state.cancelDeleteHold}
+                isDeletionBillingBlocked={state.isDeletionBillingBlocked}
+                isDeletionCheckoutBlocked={state.isDeletionCheckoutBlocked}
+                openSubscriptionManagement={state.openSubscriptionManagement}
               />
             )}
           </React.Suspense>

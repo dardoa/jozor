@@ -97,6 +97,26 @@ describe('push-notifier API', () => {
     });
   });
 
+  it('sends using the Vite public key when the server public key name is absent', async () => {
+    delete process.env.VAPID_PUBLIC_KEY;
+    process.env.VITE_VAPID_PUBLIC_KEY = 'vite-public-key';
+    authenticateUserMock.mockResolvedValue({ uid: 'user-1' });
+    listSubscriptionsForUserServerMock.mockResolvedValue([
+      { endpoint: 'https://push.example/1', keys: { p256dh: 'p256dh-1', auth: 'auth-1' } },
+    ]);
+    sendNotificationMock.mockResolvedValue(undefined);
+    const res = createResponse();
+
+    await handler({ method: 'POST', headers: { authorization: 'Bearer token' },
+      body: { title: 'Hello', body: 'World' } } as never, res as never);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toEqual({ sent: 1, pruned: 0, totalSubscriptions: 1 });
+    expect(setVapidDetailsMock).toHaveBeenCalledWith(
+      'mailto:test@example.com', 'vite-public-key', 'private-key'
+    );
+  });
+
   it('prunes expired subscriptions when the push provider returns 410', async () => {
     authenticateUserMock.mockResolvedValue({ uid: 'user-1', email: 'user@example.com' });
     listSubscriptionsForUserServerMock.mockResolvedValue([

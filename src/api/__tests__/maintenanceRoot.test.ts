@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import handler from '../../../api/maintenance';
 
 const createResponse = () => {
@@ -21,6 +21,9 @@ const createResponse = () => {
 
   return response;
 };
+
+// Session refusal is exercised with the real gate in accountSessionBoundary.test.ts.
+vi.mock('../../../shared/auth/accountSession.js', () => ({ isAccountSessionActive: vi.fn(async () => true) }));
 
 describe('root maintenance API function', () => {
   it('handles unsupported methods before reading Supabase environment', async () => {

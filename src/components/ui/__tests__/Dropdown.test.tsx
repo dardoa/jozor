@@ -16,6 +16,59 @@ const CustomTrigger = ({
 );
 
 describe('Dropdown', () => {
+  it('activates a normal command exactly once with Enter and closes', () => {
+    const onSelect = vi.fn();
+    render(<Dropdown trigger={<CustomTrigger label="Commands" />}>
+      <DropdownContent><DropdownMenuItem label="Run" onClick={onSelect} /></DropdownContent>
+    </Dropdown>);
+    fireEvent.keyDown(screen.getByRole('button', { name: 'Commands' }), { key: 'ArrowDown' });
+    fireEvent.keyDown(screen.getByRole('menuitem', { name: 'Run' }), { key: 'Enter' });
+    expect(onSelect).toHaveBeenCalledOnce();
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+  });
+
+  it('keeps keyboard-activated items open when closeOnClick is false', () => {
+    const onSelect = vi.fn();
+    render(<Dropdown trigger={<CustomTrigger label="Keep open" />}>
+      <DropdownContent><DropdownMenuItem label="Check" closeOnClick={false} onClick={onSelect} /></DropdownContent>
+    </Dropdown>);
+    fireEvent.keyDown(screen.getByRole('button', { name: 'Keep open' }), { key: 'ArrowDown' });
+    fireEvent.keyDown(screen.getByRole('menuitem', { name: 'Check' }), { key: 'Enter' });
+    expect(onSelect).toHaveBeenCalledOnce();
+    expect(screen.getByRole('menu')).toBeVisible();
+    fireEvent.keyDown(screen.getByRole('menuitem'), { key: 'Escape' });
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Keep open' })).toHaveFocus();
+  });
+
+  it('does not activate a command when the trigger handles Enter to close', () => {
+    const onSelect = vi.fn();
+    render(<Dropdown trigger={<CustomTrigger label="Toggle" />}>
+      <DropdownContent><DropdownMenuItem label="Unselected" onClick={onSelect} /></DropdownContent>
+    </Dropdown>);
+    const trigger = screen.getByRole('button', { name: 'Toggle' });
+    fireEvent.keyDown(trigger, { key: 'ArrowDown' });
+    trigger.focus();
+    fireEvent.keyDown(trigger, { key: 'Enter' });
+    expect(onSelect).not.toHaveBeenCalled();
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+  });
+
+  it('skips disabled commands and closes on an outside click', () => {
+    const disabled = vi.fn();
+    render(<Dropdown trigger={<CustomTrigger label="Disabled menu" />}>
+      <DropdownContent>
+        <DropdownMenuItem label="Disabled" disabled onClick={disabled} />
+        <DropdownMenuItem label="Available" closeOnClick={false} />
+      </DropdownContent>
+    </Dropdown>);
+    fireEvent.keyDown(screen.getByRole('button', { name: 'Disabled menu' }), { key: 'ArrowDown' });
+    expect(screen.getByRole('menuitem', { name: 'Available' })).toHaveFocus();
+    fireEvent.mouseDown(document.body);
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+    expect(disabled).not.toHaveBeenCalled();
+  });
+
   it('opens when a custom trigger is clicked', () => {
     render(
       <Dropdown trigger={<CustomTrigger label="Open menu" />}>

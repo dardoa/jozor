@@ -55,6 +55,8 @@ describe('auth exchange API', () => {
   });
 
   it('does not log raw Google token exchange responses when Google returns an error', async () => {
+    process.env.SUPABASE_URL = 'https://example.supabase.co';
+    process.env.SUPABASE_SERVICE_ROLE_KEY = 'synthetic-service-key';
     const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     vi.stubGlobal('fetch', vi.fn(async () => ({
       status: 400,

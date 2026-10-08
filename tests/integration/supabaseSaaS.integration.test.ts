@@ -1,10 +1,10 @@
-import { describe, expect, it, beforeEach, afterEach } from 'vitest';
+import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { v4 as uuidv4 } from 'uuid';
 import { loadSupabaseIntegrationEnvironment } from '../../scripts/testing/supabaseIntegrationEnvironment.mjs';
 
-const { env, supabaseUrl, anonKey, serviceRoleKey } = loadSupabaseIntegrationEnvironment();
+const { supabaseUrl, anonKey, serviceRoleKey } = loadSupabaseIntegrationEnvironment();
 
 // Create a Supabase client with service role credentials to interact with protected schemas and bypass RLS
 const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
@@ -100,6 +100,7 @@ describe('Supabase SaaS & Security Integration Tests', () => {
   }, 30000);
 
   afterEach(async () => {
+    vi.unstubAllEnvs();
     // Explicit cleanup keeps staging deterministic even when Auth rows do not
     // cascade into application tables.
     if (testUserId) {
@@ -235,11 +236,13 @@ describe('Supabase SaaS & Security Integration Tests', () => {
         .single();
       expect(profile?.tier).toBe('pro');
 
-      const { data: sub } = await supabaseAdmin
+      const { data: sub, error: subscriptionError } = await supabaseAdmin
         .from('subscriptions')
         .select('status, plan_id')
         .eq('user_id', testUserId)
+        .eq('id', subscriptionId)
         .single();
+      expect(subscriptionError).toBeNull();
       expect(sub?.status).toBe('active');
       expect(sub?.plan_id).toBe('pro_monthly_price_id');
 
@@ -388,24 +391,26 @@ describe('Supabase SaaS & Security Integration Tests', () => {
   });
 
   describe('Checkpoints Relationship Reconstruction & Serialization', () => {
-    it('generates a checkpoint that accurately rebuilds parents, children, and spouses relationships', async () => {
+    it('preserves explicit checkpoint relationships without inferring parenthood from marriage', async () => {
       const p1 = uuidv4();
       const p2 = uuidv4();
       const p3 = uuidv4();
 
       // Insert three family members:
       // p1 (Lina) is spouse of p2 (Samer). p3 (Firas) is child of p1.
-      await supabaseAdmin.from('people').insert([
+      const { error: peopleError } = await supabaseAdmin.from('people').insert([
         { id: p1, tree_id: testTreeId, first_name: 'Lina', last_name: 'Alqarji', gender: 'female' },
         { id: p2, tree_id: testTreeId, first_name: 'Samer', last_name: 'Alqarji', gender: 'male' },
         { id: p3, tree_id: testTreeId, first_name: 'Firas', last_name: 'Alqarji', gender: 'male' },
       ]);
+      expect(peopleError).toBeNull();
 
       // Add relationships
-      await supabaseAdmin.from('relationships').insert([
+      const { error: relationshipsError } = await supabaseAdmin.from('relationships').insert([
         { tree_id: testTreeId, person_id: p1, relative_id: p2, type: 'spouse' },
         { tree_id: testTreeId, person_id: p1, relative_id: p3, type: 'child' },
       ]);
+      expect(relationshipsError).toBeNull();
 
       // Add a dummy operation at version 49
       const { error: opInitError } = await supabaseAdmin.from('tree_operations').insert({
@@ -457,14 +462,13 @@ describe('Supabase SaaS & Security Integration Tests', () => {
       expect(firas).toBeDefined();
 
       // Assert correct relationship serialization
-      expect(lina.spouses).toContain(p2);
-      expect(lina.children).toContain(p3);
+      expect(lina.spouses).toEqual([p2]);
+      expect(lina.children).toEqual([p3]);
 
-      expect(samer.spouses).toContain(p1);
-      expect(samer.children).toContain(p3); // derived child from p1's child since they are spouses!
+      expect(samer.spouses).toEqual([p1]);
+      expect(samer.children).toEqual([]);
 
-      expect(firas.parents).toContain(p1);
-      expect(firas.parents).toContain(p2); // derived parent from spouse of parent!
+      expect(firas.parents).toEqual([p1]);
     });
   });
 
@@ -575,7 +579,11 @@ describe('Supabase SaaS & Security Integration Tests', () => {
         expect(profile).toBeDefined();
         expect(profile.tier).toBe('free');
       } finally {
-        await supabaseAdmin.auth.admin.deleteUser(signupUserId);
+        try {
+          expect((await supabaseAdmin.from('user_profiles').delete().eq('id', signupUserId)).error).toBeNull();
+        } finally {
+          expect((await supabaseAdmin.auth.admin.deleteUser(signupUserId)).error).toBeNull();
+        }
       }
     });
   });
@@ -660,15 +668,15 @@ describe('Supabase SaaS & Security Integration Tests', () => {
   });
 
   describe('Account Deletion serverless endpoint', () => {
-    it('deletes account and storage assets securely via the serverless function', async () => {
-      const { default: deleteAccountHandler } = await import('../../api/auth/delete-account');
+    beforeEach(() => {
+      vi.stubEnv('ACCOUNT_ADMISSION_PAUSED', 'false');
+      vi.stubEnv('ACCOUNT_DELETION_CLEANUP_ENABLED', 'false');
+      vi.stubEnv('CRON_SECRET', 'synthetic-disabled-cleanup-test');
+      vi.stubEnv('APP_ORIGIN', 'http://127.0.0.1:3000');
+    });
 
-      // Set environment variables for the handler call
-      process.env.SUPABASE_URL = supabaseUrl;
-      process.env.VITE_SUPABASE_URL = supabaseUrl;
-      process.env.SUPABASE_SERVICE_ROLE_KEY = serviceRoleKey;
-      process.env.VITE_SUPABASE_ANON_KEY = env.VITE_SUPABASE_ANON_KEY;
-      process.env.SUPABASE_JWT_SECRET = env.SUPABASE_JWT_SECRET;
+    it('preserves account and storage assets when cleanup is disabled', async () => {
+      const { default: deleteAccountHandler } = await import('../../api/auth/delete-account');
 
       // Upload dummy file to avatars storage under users/{testUserId}/avatar.webp
       const testFileContent = Buffer.from('dummy image content');
@@ -684,11 +692,12 @@ describe('Supabase SaaS & Security Integration Tests', () => {
         method: 'POST',
         headers: {
           authorization: `Bearer ${testUserToken}`,
+          origin: 'http://127.0.0.1:3000',
         },
       } as unknown as VercelRequest;
 
       let resStatus = 0;
-      let resJson: { success?: boolean } | null = null;
+      let resJson: { error?: string } | null = null;
       const mockRes = {
         setHeader(_name: string, _value: string) {
           return this;
@@ -698,112 +707,86 @@ describe('Supabase SaaS & Security Integration Tests', () => {
           return this;
         },
         json(data: unknown) {
-          resJson = data as { success?: boolean };
+          resJson = data as { error?: string };
           return this;
         }
       } as unknown as VercelResponse;
 
       await deleteAccountHandler(mockReq, mockRes);
 
-      expect(resStatus).toBe(200);
-      expect(resJson?.success).toBe(true);
+      expect(resStatus).toBe(503);
+      expect(resJson).toEqual({ error: 'Account deletion is temporarily unavailable' });
 
-      // Verify DB records are gone
-      const { data: profile } = await supabaseAdmin
+      const { data: profile, error: profileError } = await supabaseAdmin
         .from('user_profiles')
         .select('*')
         .eq('id', testUserId)
         .maybeSingle();
-      expect(profile).toBeNull();
+      expect(profileError).toBeNull();
+      expect(profile?.id).toBe(testUserId);
 
-      const { data: tree } = await supabaseAdmin
+      const { data: tree, error: treeError } = await supabaseAdmin
         .from('trees')
         .select('*')
         .eq('id', testTreeId)
         .maybeSingle();
-      expect(tree).toBeNull();
+      expect(treeError).toBeNull();
+      expect(tree?.owner_id).toBe(testUserId);
 
-      // Verify storage file is gone
-      const { data: storageFiles } = await supabaseAdmin.storage
+      const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.getUserById(testUserId);
+      expect(authError).toBeNull();
+      expect(authUser.user?.id).toBe(testUserId);
+      expect((await userClient.rpc('is_my_account_session_active')).data).toBe(true);
+
+      const { data: storedFile, error: storageError } = await supabaseAdmin.storage
         .from('avatars')
-        .list(`users/${testUserId}`);
-      expect(storageFiles || []).toHaveLength(0);
-
-      // Nullify testUserId in test context so afterEach doesn't fail trying to delete already deleted user
-      testUserId = '';
+        .download(`users/${testUserId}/avatar.webp`);
+      expect(storageError).toBeNull();
+      expect(Buffer.from(await storedFile!.arrayBuffer())).toEqual(testFileContent);
     });
 
-    it('tolerates non-existent auth users (Google users) during deletion', async () => {
+    it('preserves a Google-only profile and tree during admission pause', async () => {
       const { default: deleteAccountHandler } = await import('../../api/auth/delete-account');
-
+      vi.stubEnv('ACCOUNT_ADMISSION_PAUSED', 'true');
       const googleUid = `google-${uuidv4()}`;
-      const now = Math.floor(Date.now() / 1000);
-
-      const crypto = await import('node:crypto');
-      const base64UrlEncode = (val: string | Buffer) => {
-        const buffer = typeof val === 'string' ? Buffer.from(val) : val;
-        return buffer.toString('base64').replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-      };
-
-      const payload = {
-        aud: 'authenticated',
-        role: 'authenticated',
-        sub: googleUid,
-        email: 'google-user@example.com',
-        iat: now,
-        exp: now + 3600
-      };
-      const header = { alg: 'HS256', typ: 'JWT' };
-      const encodedHeader = base64UrlEncode(JSON.stringify(header));
-      const encodedPayload = base64UrlEncode(JSON.stringify(payload));
-      const data = `${encodedHeader}.${encodedPayload}`;
-      const encodedSignature = base64UrlEncode(
-        crypto.createHmac('sha256', env.SUPABASE_JWT_SECRET).update(data).digest()
-      );
-      const googleToken = `${data}.${encodedSignature}`;
-
-      // Insert user_profile and tree for this google user
-      await supabaseAdmin.from('user_profiles').insert({
-        id: googleUid,
-        display_name: 'Google User',
-        tier: 'free'
-      });
       const googleTreeId = uuidv4();
-      await supabaseAdmin.from('trees').insert({
-        id: googleTreeId,
-        owner_id: googleUid,
-        name: 'Google Tree'
-      });
+      try {
+        expect((await supabaseAdmin.from('user_profiles').insert({
+          id: googleUid, display_name: 'Google User', tier: 'free',
+        })).error).toBeNull();
+        expect((await supabaseAdmin.from('trees').insert({
+          id: googleTreeId, owner_id: googleUid, name: 'Google Tree',
+        })).error).toBeNull();
 
-      const mockReq = {
-        method: 'POST',
-        headers: {
-          authorization: `Bearer ${googleToken}`
+        const mockReq = {
+          method: 'POST', headers: { origin: 'http://127.0.0.1:3000' },
+        } as unknown as VercelRequest;
+        let resStatus = 0;
+        let resJson: unknown;
+        const headers: Record<string, unknown> = {};
+        const mockRes = {
+          setHeader(name: string, value: unknown) { headers[name] = value; return this; },
+          status(code: number) { resStatus = code; return this; },
+          json(data: unknown) { resJson = data; return this; },
+        } as unknown as VercelResponse;
+
+        await deleteAccountHandler(mockReq, mockRes);
+        expect(resStatus).toBe(503);
+        expect(resJson).toMatchObject({ code: 'ACCOUNT_ADMISSION_PAUSED' });
+        expect(headers['Retry-After']).toBe('300');
+        const profile = await supabaseAdmin.from('user_profiles').select('id').eq('id', googleUid).single();
+        expect(profile.error).toBeNull();
+        expect(profile.data?.id).toBe(googleUid);
+        const tree = await supabaseAdmin.from('trees').select('owner_id').eq('id', googleTreeId).single();
+        expect(tree.error).toBeNull();
+        expect(tree.data?.owner_id).toBe(googleUid);
+      } finally {
+        try {
+          expect((await supabaseAdmin.from('trees').delete().eq('id', googleTreeId)).error).toBeNull();
+        } finally {
+          expect((await supabaseAdmin.from('user_profiles').delete().eq('id', googleUid)).error).toBeNull();
         }
-      } as unknown as VercelRequest;
-
-      let resStatus = 0;
-      let resJson: { success?: boolean } | null = null;
-      const mockRes = {
-        setHeader(_name: string, _value: string) {
-          return this;
-        },
-        status(code: number) {
-          resStatus = code;
-          return this;
-        },
-        json(data: unknown) {
-          resJson = data as { success?: boolean };
-          return this;
-        }
-      } as unknown as VercelResponse;
-
-      await deleteAccountHandler(mockReq, mockRes);
-      expect(resStatus).toBe(200);
-      expect(resJson?.success).toBe(true);
-
-      const { data: profile } = await supabaseAdmin.from('user_profiles').select('*').eq('id', googleUid).maybeSingle();
-      expect(profile).toBeNull();
+      }
     });
   });
 }, 30000);

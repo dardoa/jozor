@@ -58,6 +58,21 @@ vi.mock('../../../services/supabaseAuthService', () => ({
 }));
 
 describe('AccountMenu', () => {
+  it('opens existing account settings for a signed-in user, but never for a guest', async () => {
+    const onOpenGlobalSettings = vi.fn();
+    const props = {
+      themeLanguage: { language: 'en' as const, setLanguage: vi.fn(), darkMode: false, setDarkMode: vi.fn() },
+      onLogin: vi.fn(async () => {}), onLogout: vi.fn(async () => {}), onOpenGlobalSettings,
+    };
+    const { rerender } = render(<AccountMenu {...props}
+      user={{ uid: 'settings-user', displayName: 'Settings User', email: 'settings@example.test', photoURL: '' }} />);
+    await waitFor(() => expect(screen.getByRole('menuitem', { name: /Reset password/i })).toBeEnabled());
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Global Settings' }));
+    expect(onOpenGlobalSettings).toHaveBeenCalledTimes(1);
+    rerender(<AccountMenu {...props} user={null} />);
+    expect(screen.queryByRole('menuitem', { name: 'Global Settings' })).not.toBeInTheDocument();
+  });
+
   it('links the account menu to the Help Center', () => {
     render(
       <AccountMenu

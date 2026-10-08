@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import crypto from 'node:crypto';
 
 const { createClientMock } = vi.hoisted(() => ({
@@ -12,6 +12,7 @@ vi.mock('@supabase/supabase-js', () => ({
 import { Readable } from 'stream';
 import type { VercelRequest } from '@vercel/node';
 import handler from '../../../shared/server/api/billing/create-checkout-session';
+import { isAccountSessionActive } from '../../../shared/auth/accountSession';
 
 const createRequest = (body: unknown, headers: Record<string, string>) => {
   const rawBody = Buffer.from(JSON.stringify(body));
@@ -54,9 +55,14 @@ const createInternalJwt = () => {
   return `${header}.${payload}.${signature}`;
 };
 
+// Session refusal is exercised with the real gate in accountSessionBoundary.test.ts.
+vi.mock('../../../shared/auth/accountSession.js', () => ({ isAccountSessionActive: vi.fn(async () => true) }));
+
 describe('create checkout session API', () => {
+  afterEach(() => { vi.restoreAllMocks(); vi.unstubAllEnvs(); });
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubEnv('ACCOUNT_ADMISSION_PAUSED', undefined);
     process.env.SUPABASE_JWT_SECRET = 'test-jwt-secret-with-at-least-32-chars';
     process.env.SUPABASE_URL = 'https://example.supabase.co';
     process.env.SUPABASE_SERVICE_ROLE_KEY = 'service-role-key';
@@ -66,16 +72,12 @@ describe('create checkout session API', () => {
     process.env.PADDLE_ENVIRONMENT = 'sandbox';
     process.env.APP_ORIGIN = 'http://localhost:3000';
     createClientMock.mockReturnValue({
-      rpc: vi.fn(async () => ({ data: true, error: null })),
+      rpc: vi.fn(async (name: string) => ({ data: name === 'begin_account_checkout' ? '11111111-1111-4111-8111-111111111111' : true, error: null })),
     });
   });
 
   it('does not expose Paddle API error details to the client', async () => {
-    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
-      ok: false,
-      status: 403,
-      text: vi.fn(async () => '{"error":{"code":"authentication_malformed","detail":"private paddle detail"}}'),
-    } as never);
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('{"error":{"code":"authentication_malformed","detail":"private paddle detail"}}', { status: 403 }));
 
     const req = createRequest(
       { tier: 'pro' },
@@ -131,5 +133,112 @@ describe('create checkout session API', () => {
     expect(fetchMock).not.toHaveBeenCalled();
 
     fetchMock.mockRestore();
+  });
+
+  it.each(['true', '', 'invalid'])('rejects paused admission before body reads, session checks or any external effect: %s', async value => {
+    vi.stubEnv('ACCOUNT_ADMISSION_PAUSED', value);
+    const fetchMock = vi.spyOn(globalThis, 'fetch');
+    const req = createRequest({ tier: 'pro' }, { authorization: `Bearer ${createInternalJwt()}`, origin: 'http://localhost:3000' });
+    const on = vi.spyOn(req, 'on');
+    const res = createResponse();
+    await handler(req, res as never);
+    expect(res.statusCode).toBe(503);
+    expect(res.body).toMatchObject({ code: 'ACCOUNT_ADMISSION_PAUSED' });
+    expect(res.headers).toMatchObject({ 'Cache-Control': 'no-store', 'Retry-After': '300' });
+    expect(on).not.toHaveBeenCalled(); expect(isAccountSessionActive).not.toHaveBeenCalled();
+    expect(createClientMock).not.toHaveBeenCalled(); expect(fetchMock).not.toHaveBeenCalled();
+    req.destroy();
+  });
+
+  it('keeps OPTIONS and method validation available while paused', async () => {
+    vi.stubEnv('ACCOUNT_ADMISSION_PAUSED', 'true');
+    for (const [method, status] of [['OPTIONS', 204], ['GET', 405]] as const) {
+      const res = createResponse();
+      await handler({ method, headers: { origin: 'http://localhost:3000' } } as never, res as never);
+      expect(res.statusCode).toBe(status);
+    }
+    expect(createClientMock).not.toHaveBeenCalled();
+  });
+  it('persists the checkout reservation before provider creation and the transaction before returning it', async () => {
+    const rpc = createClientMock().rpc;
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('{"data":{"id":"txn_created"}}'));
+    const res = createResponse();
+    await handler(createRequest({ tier: 'pro' }, { authorization: `Bearer ${createInternalJwt()}`, origin: 'http://localhost:3000' }), res as never);
+    expect(res.statusCode).toBe(200); expect(res.body).toEqual({ transactionId: 'txn_created' });
+    const attempt = '11111111-1111-4111-8111-111111111111';
+    expect(rpc).toHaveBeenCalledWith('begin_account_checkout', { p_user_id: 'user-1' });
+    expect(rpc).toHaveBeenCalledWith('record_account_checkout', { p_attempt_id: attempt, p_transaction_id: 'txn_created' });
+    expect(rpc.mock.invocationCallOrder[1]).toBeLessThan(fetchMock.mock.invocationCallOrder[0]);
+    expect(JSON.parse(fetchMock.mock.calls[0][1]!.body as string).custom_data).toEqual({ userId: 'user-1', checkoutAttemptId: attempt });
+  });
+  it.each(['reservation-denied', 'reply-lost', 'record-failed'])('does not expose a checkout when %s', async failure => {
+    const rpc = vi.fn(async (name: string, _args?: Record<string, unknown>) => ({
+      data: name === 'begin_account_checkout' ? (failure === 'reservation-denied' ? null : '11111111-1111-4111-8111-111111111111')
+        : name === 'record_account_checkout' ? false : true,
+      error: null,
+    }));
+    createClientMock.mockReturnValue({ rpc });
+    const fetchMock = vi.spyOn(globalThis, 'fetch');
+    if (failure === 'reply-lost') fetchMock.mockRejectedValue(new Error('network timeout'));
+    else fetchMock.mockResolvedValue(new Response('{"data":{"id":"txn_created"}}'));
+    const res = createResponse();
+    await handler(createRequest({ tier: 'pro' }, { authorization: `Bearer ${createInternalJwt()}`, origin: 'http://localhost:3000' }), res as never);
+    expect(res.statusCode).toBe(failure === 'reservation-denied' ? 409 : 500);
+    expect(res.body).not.toHaveProperty('transactionId');
+    if (failure === 'reservation-denied') expect(fetchMock).not.toHaveBeenCalled();
+    // A transport failure never marks an unknown provider outcome canceled.
+    expect(rpc.mock.calls.some(call => 'p_canceled' in (call[1] ?? {}))).toBe(false);
+  });
+  it.each(['invalid_field', 'transaction_price_not_found'])('resolves exactly its rejected attempt for %s without logging provider details', async code => {
+    const rpc = createClientMock().rpc;
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(JSON.stringify({ error: { type: 'request_error', code, detail: 'synthetic private provider detail' } }), { status: 400 }));
+    const res = createResponse();
+    await handler(createRequest({ tier: 'pro' }, { authorization: `Bearer ${createInternalJwt()}`, origin: 'http://localhost:3000' }), res as never);
+    expect(rpc).toHaveBeenCalledWith('resolve_rejected_account_checkout', { p_user_id: 'user-1', p_attempt_id: '11111111-1111-4111-8111-111111111111' });
+    expect(rpc.mock.calls.filter(([name]: [string]) => name === 'resolve_rejected_account_checkout')).toHaveLength(1);
+    expect(rpc.mock.calls.some(([name]: [string]) => name === 'record_account_checkout')).toBe(false);
+    expect(res.statusCode).toBe(500); expect(res.body).toEqual({ error: 'Failed to initiate checkout session' });
+    expect(JSON.stringify(consoleError.mock.calls)).not.toMatch(/synthetic private|paddle-api-key/);
+  });
+  it.each(['unknown', 'server', 'rate-limit', 'success-missing-id', 'transport', 'partial', 'data-present'])('never resolves an unknown creation outcome: %s', async kind => {
+    const rpc = createClientMock().rpc; const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const fetchMock = vi.spyOn(globalThis, 'fetch');
+    if (kind === 'transport') fetchMock.mockRejectedValue(new Error('synthetic private provider detail paddle-api-key'));
+    else fetchMock.mockResolvedValue(new Response(kind === 'partial' ? '{"error":' : JSON.stringify(kind === 'success-missing-id' ? { data: {} }
+      : { error: { type: 'request_error', code: kind === 'unknown' ? 'unknown' : 'invalid_field', detail: 'synthetic private provider detail' }, ...(kind === 'data-present' ? { data: null } : {}) }),
+      { status: kind === 'server' ? 500 : kind === 'rate-limit' ? 429 : kind === 'success-missing-id' ? 200 : 400 }));
+    const res = createResponse();
+    await handler(createRequest({ tier: 'pro' }, { authorization: `Bearer ${createInternalJwt()}`, origin: 'http://localhost:3000' }), res as never);
+    expect(rpc.mock.calls.some(([name]: [string]) => name === 'resolve_rejected_account_checkout')).toBe(false);
+    expect(res.statusCode).toBe(500); expect(res.body).toEqual({ error: 'Failed to initiate checkout session' });
+    expect(JSON.stringify(consoleError.mock.calls)).not.toMatch(/synthetic private|paddle-api-key/);
+  });
+  it.each(['false', 'error'])('keeps resolution %s generic and never fabricates a transaction', async failure => {
+    const rpc = vi.fn(async (name: string) => ({ data: name === 'begin_account_checkout' ? '11111111-1111-4111-8111-111111111111' : name === 'resolve_rejected_account_checkout' ? false : true,
+      error: name === 'resolve_rejected_account_checkout' && failure === 'error' ? { message: 'synthetic private' } : null }));
+    createClientMock.mockReturnValue({ rpc });
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('{"error":{"type":"request_error","code":"invalid_field"}}', { status: 400 }));
+    const res = createResponse();
+    await handler(createRequest({ tier: 'pro' }, { authorization: `Bearer ${createInternalJwt()}`, origin: 'http://localhost:3000' }), res as never);
+    expect(rpc.mock.calls.filter(([name]) => name === 'resolve_rejected_account_checkout')).toHaveLength(1);
+    expect(rpc.mock.calls.some(([name]) => name === 'record_account_checkout')).toBe(false);
+    expect(res.statusCode).toBe(500); expect(res.body).toEqual({ error: 'Failed to initiate checkout session' });
+  });
+  it('shares one deadline between provider fetch and a hanging rejection body', async () => {
+    const rpc = createClientMock().rpc; const controller = new AbortController();
+    const timeout = vi.spyOn(AbortSignal, 'timeout').mockReturnValue(controller.signal);
+    const cancel = vi.fn(); vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (_input, init) => {
+      expect(init?.signal).toBe(controller.signal);
+      setTimeout(() => controller.abort(), 10);
+      return new Response(new ReadableStream({ cancel }), { status: 400 });
+    });
+    const res = createResponse();
+    await handler(createRequest({ tier: 'pro' }, { authorization: `Bearer ${createInternalJwt()}`, origin: 'http://localhost:3000' }), res as never);
+    expect(timeout).toHaveBeenCalledExactlyOnceWith(10000); expect(cancel).toHaveBeenCalledOnce();
+    expect(res.statusCode).toBe(500);
+    expect(rpc.mock.calls.some(([name]: [string]) => name === 'resolve_rejected_account_checkout')).toBe(false);
   });
 });

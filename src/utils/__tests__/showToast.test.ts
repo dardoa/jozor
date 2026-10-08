@@ -65,6 +65,17 @@ describe('showToast', () => {
     expect(toast.success).toHaveBeenCalledWith('Some literal string', undefined);
   });
 
+  it.each(['ar', 'en'] as const)('localizes pending account deletion without claiming completed cleanup in %s', language => {
+    mockLanguage(language);
+    showToast.success('globalSettings.security.deletePending');
+    expect(toast.success).toHaveBeenCalledWith(
+      language === 'ar'
+        ? 'تم قبول حذف الحساب. سيستمر تنظيف الملفات المتبقية تلقائيًا.'
+        : 'Account deletion accepted. Remaining cleanup will continue automatically.',
+      undefined
+    );
+  });
+
   it('calls sonner toast.promise correctly', () => {
     const p = Promise.resolve();
     showToast.promise(p, {

@@ -84,6 +84,9 @@ const request = (overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 });
 
+// Session refusal is exercised with the real gate in accountSessionBoundary.test.ts.
+vi.mock('../../../shared/auth/accountSession.js', () => ({ isAccountSessionActive: vi.fn(async () => true) }));
+
 describe('root renderManuscriptPdf API function', () => {
   const originalEnv = process.env;
 

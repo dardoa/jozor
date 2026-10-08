@@ -1,0 +1,42 @@
+# Dependencies and generated output
+node_modules/
+dist/
+dist-ssr/
+build/
+out/
+.next/
+.turbo/
+.cache/
+
+# Local Vercel and repository metadata
+.vercel/
+.git/
+
+# Local test and review artifacts
+.auth/
+output/
+legacy_archive/
+scratch/
+tmp/
+test-results/
+playwright-report/
+blob-report/
+.playwright-cli/
+playwright/.cache/
+
+# Logs, temporary files, and secrets
+*.log
+tmp-*
+.tmp-*
+.env
+.env.*
+!.env.example
+!.env.integration.example
+
+# Editor and OS metadata
+.vscode/
+.idea/
+.DS_Store
+
+# Supabase CLI state
+supabase/.temp/
